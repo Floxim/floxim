@@ -1,0 +1,54 @@
+<!--[input ? _c.type == 'image']-->
+<div class="fx_image_field">
+    <input type="hidden" <?=$t.field_id_name(_c)?> class="real_value" value="<?=_c.value?>" />
+    <div class="preview">
+        <img <?=(_c.value ? ' src="'+_c.value+'"' : ' style="display:none;"')?> />
+        <a class="uploader fx_admin_button fx_admin_button_text">
+            <span>
+                <?= _c.value ? 'change' : 'upload' ?>
+            </span>
+        </a>
+        <a class="killer fx_admin_button fx_admin_button_text" style="display:<?=(_c.value ? 'block' : 'none')?>"><span>delete</span></a>
+    </div>
+    <div class="file_input" style="display:<?=(_c.path ? 'none' : 'block')?>">
+    	<input type="file" name="file" id="image_file_<?=_c.name.replace(/[^a-z0-9]+/g, '_')?>" />
+    </div>
+</div>
+
+<!--jquery-->
+
+var inp_id = 'image_file_'+_c.name.replace(/[^a-z0-9]+/g, '_');
+
+html.on('change', function(){
+    var field = $(this);
+    var res_inp = $('.real_value', field);
+    $.ajaxFileUpload({
+        url:'/floxim/index.php',
+        secureuri:false,
+        fileElementId:inp_id,
+        dataType: 'json',
+        data: { essence:'file', fx_admin:1, action:'upload_save' },
+        success: function ( data, status ) {
+            res_inp.val(data.path);
+            $('.preview img', field).attr('src', data.path).show();
+            $('.killer', field).show();
+            $('.file_input', field).hide();
+            res_inp.trigger('fx_change_file');
+        },
+        error: function (data, status, e) {
+        	console.log('error uploda', e);
+        }
+    });
+});
+
+html.on('click', '.uploader', function() {
+	$('#'+inp_id).focus().click();
+});
+
+html.on('click', '.killer', function() {
+   var field = $(this).closest('.fx_image_field'); 
+   $('.preview img', field).hide();
+   $('.real_value', field).val('');
+   $('.file_input', field).show();
+   $(this).hide();
+});

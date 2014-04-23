@@ -1,0 +1,288 @@
+<!--[form_row]-->
+<div class="field field_<?=_c.type?><?=_c.class_name ? ' '+_c.class_name : ''?>">
+    <?=$t.label(_c)?>
+    <div class="input_container"></div>
+</div>
+
+<!--jquery-->
+$('.input_container', html).append($t.jQuery('input', _c));
+
+<!--[form_row ? (_c.type == 'checkbox' || _c.type == 'bool') && typeof _c.values == 'undefined' && _c.context !== 'panel']-->
+<div class="field field_checkbox">
+    <?=$t.input(_c)?>
+    <label style="display:inline;" for="<?=_c.name?>"><?=_c.label?></label>
+</div>
+
+<!--[form_row ? (_c.type == 'select' || _c.type == 'radio') && _c.hidden_on_one_value && !_c.extendable && _c.values && fx_object_length(_c.values) == 1]-->
+<?
+    print($t.input({type:'hidden', name:_c.name,value:fx_object_get_first_key(_c.values)}));
+?>
+
+<!--[form_row ? _c.type == 'hidden' || _c.type == 'button' || _c.type == 'list' || _c.type == 'tree']-->
+<div class="<?=_c.type === 'hidden' ? 'field field_'+_c.type : ''?>"></div>
+
+<!--jquery-->
+html.append($t.jQuery('input', _c));
+
+<!--[data_input]-->
+<input type="hidden" value="<?=$t.clear($.toJSON(_c))?>" class="data_input" />
+
+<!--[data_attr]-->
+<?
+print('data-', (_o && _o.key != undefined ? _o.key : 'inline'),	 '="', $t.clear($.toJSON(_c)), '"');
+?>
+
+<!--[label]-->
+<div class="form_label">
+    <label for="<?=_c.name?>" title="<?=_c.tip?>"><?=_c.label?></label>
+    <?if (_c.current) {?>
+        <span class="fx_admin_current"> (<?=$fx.lang('by default')?> &mdash; <?=_c.current?>)</span>
+    <?}?>
+</div>
+
+<!--[field_label]-->
+<label class="<?=_c.status ? 'ui-corner-all ui-state-'+_c.status : ''?>">
+    <?=_c.label || _c.value?>
+</label>
+
+<!--[field_id_name]-->
+name="<?=_c.name?>" id="<?=_c.name?>"
+
+<!--[input]-->
+	<input 
+		type="<?=_c.password ? 'password' : 'text'?>" 
+                <?= _c.disabled ? ' disabled="disabled"' : ''?>
+        class="fx_input" 
+		<?=$t.field_id_name(_c)?> 
+		value="<?=$t.clear(_c.value || '')?>" />
+
+<!--[input ? _c.type == 'hidden']-->
+<input <?=$t.field_id_name(_c)?> value="<?=_c.value === false ? '' : $t.clear(_c.value)?>" type="hidden" />
+
+
+<!--[input ? _c.field_type == 'textarea']-->
+<?
+var c_val = _c.value || '';
+c_val = $t.clear(c_val);
+?>
+<div class="fx_textarea_container">
+<?
+_o.hide_in_panel = _c.context == 'panel' && _c.wysiwyg;
+if (_o.hide_in_panel) {
+    ?><a class="fx_panel_text_expander" title="Click here to edit">...</a><?
+}
+?>
+<textarea 
+    <?=$t.field_id_name(_c)?>
+    class="<?=
+        _c.wysiwyg ? 'fx_wysiwyg' : 'fx_input'
+        ?> <?=
+        _c.code ? 'fx_code fx_code_'+_c.code : ''?>"
+    <?if (_o.hide_in_panel) {?> style="display:none;"<?}?>
+        ><?=c_val?></textarea>
+</div>
+
+<!--jquery-->
+
+function set_snippet(val) {
+    var $temp_container = $('<div />');
+    $temp_container.html(val);
+    var text = $temp_container.text().replace(/^\s+/, '').slice(0, 20)+'...';
+    $('.fx_panel_text_expander', html).html(text);
+}
+if (_o.hide_in_panel) {
+    set_snippet(_c.value);
+}
+
+if (_c.context !== 'panel') {
+    $('textarea.fx_wysiwyg', html).redactor();
+} else {
+    var expander = $('.fx_panel_text_expander', html);
+    expander.click(function() {
+        var real_ta = $('textarea.fx_wysiwyg', html);
+        var ta = real_ta.clone();
+        if (expander.data('popup')) {
+            return;
+        }
+        
+        var popup = new $fx.popup({
+            target:this,
+            maxWidth:500,
+            onfinish:function() {
+                var res = ta.redactor('get');
+                $('textarea.fx_wysiwyg', html).val(res).html(res);
+                set_snippet(res);
+                ta.redactor('destroy');
+            }
+        });
+        popup.$body.append(ta);
+        ta.redactor({minHeight:300,autoresize:false});
+        popup.position();
+    });
+}
+
+html.find('textarea.fx_code').each( function(){
+    var code_type = this.className.match(/fx_code_([^\s]+)/)[1];
+    var $textarea = $(this);
+    if (!window.CodeMirror) {
+        var codemirror_path = '/floxim/lib/codemirror/';
+        $.ajax({
+            url:codemirror_path+'codemirror.all.php',
+            dataType:'script',
+            async:false
+        });
+        $(document.head).append('<link type="text/css" rel="stylesheet" href="'+codemirror_path+'lib/codemirror.css" />');
+    }
+    var config_map = {
+        html:'htmlmixed',
+        php:'php',
+        css:'css'
+    };
+
+    code_type = config_map[code_type] || 'htmlmixed';
+
+    var config = {
+        mode:code_type,
+        lineNumbers: true,
+        matchBrackets: true,
+        tabMode: "indent",
+        electricChars: false,
+        smartIndent: false
+    };
+    var cCodeMirror = CodeMirror.fromTextArea(this, config);
+    $textarea.data('codemirror', cCodeMirror);
+    
+    setTimeout(function() {
+        var $container = $textarea.closest('#fx_admin_content');
+        if ($container.length > 0) {
+            var fix_cm_size = function() {
+                setTimeout( function() {
+                    var max_height = $container.outerHeight() - 150;
+                    console.log('resizing', max_height);
+                    $(cCodeMirror.getScrollerElement()).css('max-height', max_height);
+                    cCodeMirror.refresh();
+                }, 50);
+            }
+            $container.resize(fix_cm_size);
+        }
+        cCodeMirror.refresh();
+    },50);
+
+    var save_cm_fields = function() {
+        $('textarea.fx_code', $(this)).each(function() {
+            $(this).data('codemirror').save();
+        });
+        return false;
+    };
+
+    $(document.body).off('fx_form_submit.save_cm_fields').on('fx_form_submit.save_cm_fields', 'form', save_cm_fields);
+});
+
+<!--[input ? _c.type == 'select']-->
+<?
+if (_c.extendable) {
+    _c.values.fx_new = _c.extendable === true ? 'Add...' : _c.extendable;
+}
+?>
+<select 
+    id="<?=_c.id? _c.id : _c.name?>"
+    name="<?=_c.name+(_c.multiple? '[]' : '')?>"
+    class="fx_input<?=_c.inline ? ' inline' : ''?> <?=_c.extendable ? ' extendable' : ''?>"
+    <?=_c.multiple ? ' multiple="multiple"' : ''?>>
+    <?for (var vk in _c.values) {
+        var val = _c.values[vk], opt_name = null;
+        if (typeof val == 'string') {
+            var opt_val = vk;
+            var opt_name = val;
+        } else if (val instanceof Array) {
+            var opt_val = val[0];
+            var opt_name = val[1];
+        }
+
+        if (opt_name !== null) {
+            var is_selected = opt_val == _c.value || ( _c.value instanceof Array  && $.inArray(opt_val, _c.value) > -1);
+            ?><option value="<?=opt_val?>"<?=is_selected ? ' selected="selected"':  ''?>><?=opt_name?></option><?
+        }
+    }?>
+</select>
+<?if (_c.extendable){?>
+    <input type="text" name="fx_new_<?=_c.name?>" class="new" style="display:none;" />
+<?}?>
+
+<!--jquery-->
+html.find('select.extendable').change(function() {
+    var new_inp = $(this).parent().find('input.new');
+    $(this).val() === 'fx_new' ? new_inp.show().focus() : new_inp.hide();
+});
+
+<!--[input ? _c.type == 'radio']-->
+<div class="fx_admin_group">
+    <?
+    var i = 0;
+    for (var vk in _c.values) {
+        if (typeof _c.values[vk] == 'string') {
+            i++;
+            var is_checked = (_c.value && _c.value == vk) || (!_c.value && _c.selected_first && i == 1);?>
+            <label class="fx_admin_radio_label">
+                <input 
+                    type="radio" 
+                    value="<?=vk?>" 
+                    id="<?=_c.name+'_'+vk?>"
+                    name="<?=_c.name?>"
+                    <?=is_checked  ? ' checked="checked"' : ''?>>
+                    <?=_c.values[vk]?>
+            </label>
+        <?
+        }
+    }?>
+</div>
+
+<!--[input ? (_c.type == 'checkbox' || _c.type == 'bool') && typeof _c.values == 'undefined']-->
+<input type="hidden" name="<?=_c.name?>" value="0">
+<input type="checkbox" style="display:inline;" <?=$t.field_id_name(_c)?> value="1" <?=_c.value && _c.value !== '0' ? ' checked="checked"' : ''?> />
+
+
+<!--[input ? _c.type == 'checkbox' && typeof _c.values != 'undefined' ]-->
+<div class="fx_admin_group fx_admin_multi_checkbox">
+    <?
+    for (var vk in _c.values) {
+        var iid = _c.name+'_'+vk;
+        var is_checked = (_c.value instanceof Array && $.inArray(vk, _c.value) > -1) || ( _c.value == vk);
+        ?>
+        <div class="val">
+            <input 
+                style="display:inline;" 
+                type="checkbox"
+                id="<?=iid?>" name="<?=_c.name?>[]" 
+                value="<?=vk?>" 
+                <?=is_checked ? ' checked="checked"' : ''?> />
+            <label class="fx_admin_checkbox_label" for="<?=iid?>"><?=_c.values[vk]?></label>
+        </div>
+    <?}?>
+</div>
+
+<!--[form_cols]-->
+<?
+var count_cols = 0;
+for (var i in _c.tabs) {
+    count_cols++;
+}
+?>
+<table class="fx_form_cols_table fx_form_<?=count_cols?>_cols">
+    <tr>
+    <?
+    $.each(_c.tabs, function(k,v) {
+        ?>
+        <td 
+            class="fx_tab_data fx_tab_data_<?=k?>" 
+            id="<?=_c.form.id?>_<?=k?>">
+        </td>
+        <?
+    });
+    ?>
+    </tr>
+</table>
+
+<!--jquery-->
+$('td', html).first().addClass('fx_tab_data_first');
+$('td', html).last().addClass('fx_tab_data_last');

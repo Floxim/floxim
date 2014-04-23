@@ -1,0 +1,15 @@
+.comment_add form {
+	margin-top: 20px;
+}
+
+
+	.comment_add form label {
+		display: block;
+	}
+
+
+		.comment_add form label span {
+			display: block;
+			float: left;
+			width: 120px;
+		}

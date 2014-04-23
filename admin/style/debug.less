@@ -1,0 +1,53 @@
+.fx_debug_entries {
+    clear:both;
+    padding-top:15px;
+}
+.fx_debug_entry, .fx_overlay .fx_debug_entry {
+    pre.fx_debug_one_line {
+        margin:0;
+    }
+    &, & * {
+        font:12px 'Courier New'; 
+    }
+    margin:10px 0; 
+    padding:3px; 
+    border:1px solid #EEF;
+    background:#FFF;
+    color:#000;
+    clear:both;
+    .fx_debug_bad {
+        font-weight:bold;
+        background:#FCC;
+    }
+    .fx_debug_line span {
+        white-space:pre;
+    }
+    .fx_debug_collapse {
+        padding-left:40px; 
+        display:none;
+    }
+    .fx_debug_collapser span, a {
+        cursor:pointer; 
+        color:#33F;
+    }
+    i.ln {
+        color:#666; 
+        font-size:10px; 
+        font-style:normal; 
+        position:relative; 
+        top:-6px;
+    }
+    .pn .protected {
+        color:#090;
+    }
+    .fx_debug_title {
+        background:#EEE; 
+        color:#555; 
+        font:10px verdana;
+    }
+    .fx_debug_separator {
+        border-top:1px dotted #CCC; 
+        margin:5px 0;
+    }
+
+}

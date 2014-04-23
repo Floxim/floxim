@@ -1,0 +1,37 @@
+<!--[input ? _c.type == 'color']-->
+<?_c.value = _c.value || '#00ff00';?>
+<div class="field_colorpicker">
+	<input <?=$t.field_id_name(_c)?> value="<?=_c.value?>" type="hidden" />
+	<div style="position:relative; height:36px;">
+		<div class="colorSelector2"><div style="background-color: <?=_c.value?>"></div></div>
+		<div class="colorpickerHolder2"></div>
+	</div>
+</div>
+
+<!--jquery-->
+$('head').append('<link rel="stylesheet" media="screen" type="text/css" href="/floxim/lib/colorpicker/css/colorpicker.css" />'+
+    '<script type="text/javascript" src="/floxim/lib/colorpicker/js/colorpicker.js"></script>');
+var cp = html;
+var holder = $('.colorpickerHolder2', cp);
+var widt = false;
+holder.ColorPicker({
+    flat: true,
+    color: _c.value,
+    onSubmit: function(hsb, hex, rgb, el) {
+        $('.colorSelector2 div', cp).css('backgroundColor', '#' + hex);
+        holder.stop().animate({
+            height: widt ? 0 : 173
+        }, 500);
+        $('input', cp).attr('value', '#' + hex);
+        widt = !widt;
+    }
+});
+$('>div', holder).css('position', 'absolute');
+$('.colorSelector2 div', cp).css('backgroundColor', _c.value);
+
+$('.colorSelector2', cp).bind('click', function() {
+    $('.colorpickerHolder2', cp).stop().animate({
+        height: widt ? 0 : 173
+    }, 500);
+    widt = !widt;
+});

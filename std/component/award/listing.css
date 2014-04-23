@@ -1,0 +1,83 @@
+.clear {
+    clear: both;
+}
+
+.award_list {
+}
+    .award_list .award {
+        padding: 15px 10px;
+        border: 1px solid #ccc;
+        margin-bottom: 20px;
+    }
+        .award_list .award .year, .award_record_wrap .award_record .left_block .year {
+            float: left;
+            font-size: 26px;
+            padding: 5px;
+            background-color: rgba(255, 255, 255, 0.3); 
+            margin-right: 30px;
+        }
+        .award_list .award .image {
+            float: left;
+            width: 150px;
+            position: relative; 
+            margin-right: 30px;
+        }
+   
+            .award_list .award .image img, .award_record_wrap .award_record .right_block .image img {
+                width: 100%;
+            }
+       
+       
+        .award_list .award .description {
+            float: right;
+            width: 260px;
+            font-size: 20px;        
+        }
+       
+       
+            .award_list .award .description h2 {
+               font-size: 24px; 
+            }
+            .award_list .award .description * {
+                padding: 0;
+                margin: 0;
+                width: 100%;
+            }
+       
+.award_record_wrap {
+}
+
+    .award_record_wrap .award_record {
+        padding: 15px 10px;
+    }
+        .award_record_wrap .award_record .left_block {
+            float: left;
+            width: 20%;
+        }
+        .award_record_wrap .award_record .right_block {
+            float: right;
+            width: 390px;
+            padding: 0 20px;
+        }
+   
+            
+            .award_record_wrap .award_record .right_block .image {
+                width: 100%;
+            }
+   
+            
+            .award_record_wrap .award_record .right_block .description {
+                width: 100%;
+                font-size: 22px;
+                margin-top: 20px;
+            }
+                .award_record_wrap .award_record .right_block .description * {
+                    padding: 0;
+                    margin: 0;                
+                }
+
+
+
+
+
+

@@ -1,0 +1,146 @@
+<!--[input ? _c.type =='tree' && _c.name == 'controller']-->
+<div class="fx_controller_select">
+    <input type="hidden" <?=$t.field_id_name(_c)?> class="tree_value_input" />
+    <?
+    var children = _c.children || _c.values;
+    ?>
+    <div>
+        <div class="filter_box filter_search">
+            <label>&nbsp;</label>
+            <input class="fx_input" type="text" placeholder="Search..." />
+        </div>
+        <div class="filter_box filter" data-filter="type">
+            <label>Type: </label>
+            <select class="fx_controller_groups filter_type fx_input">
+                <option value="">-any-</option>
+                <?
+                $.each({content:'Content', mirror:'Mirror',widget:'Widget'}, function(i, child) {
+                    ?><option value="<?=i?>"><?=child?></option><?
+                });
+                ?>
+            </select>
+        </div>
+        <div class="filter_box filter" data-filter="controller">
+            <label>Component:</label>
+            <select class="fx_controller_groups filter_controller fx_input">
+                <option value="">-any-</option>
+                <?
+                $.each(children, function(i, child) {
+                    ?><option value="<?=child.metadata.id?>"><?=child.data?></option><?
+                });
+                ?>
+            </select>
+        </div>
+        <div class="filter_box drop_filters"><a>Show all</a></div>
+    </div>
+    <div class="fx_controller_list">
+        <?
+        var c = 0;
+        
+        for (var i = 0; i < children.length; i++){
+            var child = children[i];
+            var color = fx_controller_tree.get_color(child.metadata.id);
+            var subs = child.children;
+            var sub_name;
+            var icon = subs[0].metadata.icon;
+            if (!icon) {
+                icon = child.data.slice(0,2);
+            }
+            var is_hidden = false;
+            if (subs.length > 1) {
+                is_hidden = true;
+                ?>
+                <?= $t.controller_pane({
+                    controller:child.metadata.id,
+                    is_group:true,
+                    bg_color:color.bg,
+                    text_color:color.text,
+                    icon:icon,
+                    id: child.metadata.id,
+                    title:child.data+' ('+subs.length+')',
+                    is_hidden:false
+                })?><?
+            }
+            for (var j = 0; j < subs.length; j++) {
+                var sub = subs[j];
+                var pic = '';
+                if (sub.data !== null) {
+                    pic = sub.data.slice(0,2);
+                }
+                var sign = '';
+                if (sub.metadata.icon_extra !== null) {
+                    sign = sub.metadata.icon_extra;
+                } 
+                ?>
+                <?= $t.controller_pane({
+                    controller:child.metadata.id,
+                    type:sub.metadata.type,
+                    id:sub.metadata.id,
+                    is_group:false,
+                    bg_color:color.bg,
+                    text_color:color.text,
+                    icon:icon,
+                    sign:sign,
+                    title:sub.data,
+                    description:sub.metadata.description,
+                    is_hidden:is_hidden
+                })?>
+                <?
+            }
+        }
+        ?>
+    </div>
+</div>
+
+<!--priority-->
+2
+
+<!--jquery-->
+
+fx_controller_tree(html);
+
+<!--[controller_pane]-->
+<div 
+    class="
+        sub 
+        <?=_c.is_group ? ' group': ''?>
+        <?=_c.is_hidden ? ' hidden' : ''?>
+        controller_<?=_c.controller?> 
+        type_<?=_c.type?>" data-id="<?=_c.id?>"
+    >
+    <div class="sub_data">
+        <div class="pic" style="background-color: <?=_c.bg_color?>; color:<?=_c.text_color?>;">
+            <div class="icon"><?=_c.icon?></div>
+            <div class="sign"><?=_c.sign?></div>
+        </div>
+        <div class="body">
+            <div class="title"><?=_c.title?></div>
+            <div class="description"><?=_c.description?></div>
+        </div>
+    </div>
+</div>
+
+<!--[input ? _c.type =='select' && _c.name == 'visual[wrapper]']-->
+<div class="visual_wrapper">
+    <input type="hidden" <?=$t.field_id_name(_c)?> value="<?=_c.value?>" />
+    <?
+        var cnt = 0;
+        $.each(_c.values, function(i, v) {
+            ?><span 
+                class="variant<?=i === _c.value ? ' active' : ''?>" 
+                data-value="<?=i?>" title="<?=i?>"><?=i === '' ? '-' : cnt?></span><?
+            cnt++;
+        });
+    ?>
+</div>
+
+<!--jquery-->
+
+html.on('click', '.variant', function() {
+    $('.variant', html).removeClass('active');
+    $(this).addClass('active');
+    $('input[type="hidden"]',html).val($(this).data('value')).trigger('change');
+});
+
+<!--priority-->
+2

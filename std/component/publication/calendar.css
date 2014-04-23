@@ -1,0 +1,17 @@
+.publication_calendar .year_title {
+    cursor:pointer;
+}
+
+.publication_calendar .months {
+    display: none;
+    padding-left:15pt;
+    padding-bottom:5pt;
+}
+
+.publication_calendar .year_active .months {
+    display: block;
+}
+
+.publication_calendar .year_active .year_title {
+    font-weight: bold;
+}

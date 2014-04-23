@@ -1,0 +1,281 @@
+<!--[input ? _c.type == 'list']-->
+<div class="fx_list<?=_c.className ? ' '+_c.className : ''?>">
+<?if (_c.filter && _c.values && _c.values.length > 10) {?>
+	<div class="fx_list_filter"><label><?=$fx.lang('Find')?>:<input type="text" /></label></div>
+<?}
+?>
+<input type="hidden" <?=$t.field_id_name(_c)?> class="list_value_input"/>
+<table class="fx_list_table">
+<?
+if (_c.labels !== undefined && _c.values ) {?>
+    <tr class="fx_list_labels">
+        <?$.each(_c.labels, function(name, label){?>
+            <td>
+                <?=typeof label == 'object' ? label.label : label?>
+                <?
+                if (label.filter && label.filter == 'select') {
+                    var l_values = {};
+                    $.each(_c.values, function(i,value) {
+                            l_values[value[name]]=true;
+                    });
+                    ?>
+                    <select class="filter filter_<?=name?>">
+                        <option value="">--all--</option>
+                        <?
+                        $.each(l_values, function(value_name, i) {
+                            ?><option value="<?=value_name?>">
+                                <?=value_name?>
+                            </option><?
+                        });
+                        ?>
+                    </select>
+                    <?
+                } else if (label.filter == 'text') {
+                    ?><input class="filter filter_<?=name?>" type="text" placeholder="<?=$fx.lang('Find')?>" /><?
+                }
+                ?>
+            </td>
+        <?});?>
+    </tr>
+<?}
+if (_c.values) {
+    $.each(_c.values, function(i, value) {
+        if (_c.essence) {
+            value.essence = _c.essence;
+        }
+        ?>
+        <tr 
+            class="fx_list_row 
+                    <?=value.unchecked ? 'fx_admin_unchecked' : ''?> 
+                    <?=i == 0 ? ' fx_list_row_first' : ''?>" 
+            <?=$t.data_attr(value)?>
+        >
+            <?
+            print($t.list_field_row(value, {labels:_c.labels}));
+            ?>
+        </tr>
+        <?
+    });
+}
+?>
+</table>
+</div>
+
+<!--jquery-->
+var list =  html;
+
+$('.fx_list_filter input', list).keyup(function(){
+    var t = $(this).val().toLowerCase();
+    $('.fx_list_row', list).each(function(){
+        var row = $(this);
+        row.text().toLowerCase().indexOf(t) !== -1 ? row.show() : row.hide();
+    });
+});
+
+function filter_list() {
+        var vals = [];
+        $('.filter', list).each(function(){
+                var cv = $(this).val();
+                if (cv != '') {
+                        vals.push(cv.toLowerCase());
+                }
+        });
+
+        $('.fx_list_row', list).each(function(){
+                var row = $(this);
+                var row_text = row.text().toLowerCase();
+                row.show();
+                $.each(vals, function(vid, v) {
+                        if (row_text.indexOf(v) === -1) {
+                                row.hide();
+                        }
+                });
+        });
+};
+
+$('select.filter', list).change(filter_list);
+$('input:text.filter', list).keyup(filter_list);
+
+function set_input_value() {
+    var inp = list.find('input.list_value_input');
+    var ids = [];
+    list.find('.fx_admin_selected').each(function(){
+            ids.push( $(this).data('id'));
+    });
+    inp.val(ids.join(','));
+}
+
+$('.fx_list_row', list).each( function() {
+    var row = $(this);
+    var value = $t.inline_data(row);
+    row.data(value);
+    if ( value.id !== undefined ) {
+        row.click(function(e){
+            var c_row = $(this);
+            if (e.metaKey || e.ctrlKey) {
+                    c_row.toggleClass('fx_admin_selected');
+            } else {
+                    if ($(this).hasClass('fx_admin_selected') && $('.fx_list_row.fx_admin_selected').length === 1) {
+                            c_row.removeClass('fx_admin_selected');
+                    } else {
+                            $('.fx_list_row').removeClass('fx_admin_selected');
+                            c_row.addClass('fx_admin_selected');
+                    }
+            }
+            if (c_row.parents('.ui-dialog').length == 0) {
+                $fx.buttons.update_available_buttons();
+            }
+            set_input_value();
+        });
+    }
+    $(this).hover(function() {
+        $(this).addClass('fx_list_row_hover');	
+    }, function() {
+        $(this).removeClass('fx_list_row_hover');
+    });
+});
+
+if (_c.is_sortable) {
+    list.sortable({
+        disabled: false,
+        placeholder: 'fx_sortable_placeholder',
+        axis: 'y',
+        cursor: 'move',
+        start: function(event, ui){ 
+                var h = ui.item.height();
+                if ( h < 5  ) {
+                        h = 50;
+                }
+                ui.placeholder.height(h); 
+        },
+        items:'.fx_list_row',
+        update: function(event, ui) {
+                var pos = [];
+                var order = $('.fx_list_row', $(this)).sortable('serialize');      
+                if ( order.length < 1 ) return false;
+                order.each( function() {
+                        var id = $(this).data('id');
+                        pos.push( id );
+                });
+                var post = {
+                        'essence': $fx.admin.get_essence(),
+                        'action': 'move',
+                        'positions': pos
+                };
+                $fx.post_front(post);
+        }
+    });
+}
+if ($fx.mode == 'admin' ) {
+    $fx.buttons.update_available_buttons();
+}
+
+list.on('blur', '.fx_list_field_editable', function() {
+    var $inp = $(this);
+    var field = $inp.data('field');
+    var label = _c.labels[field];
+    if (!label || !label.editable) {
+        return;
+    }
+    var new_value = $inp.text();
+    if (new_value === '...') {
+        new_value = null;
+    }
+    var $row = $inp.closest('.fx_list_row');
+    var row_data = $row.data('inline_data');
+    if (row_data[field] == new_value) {
+        return;
+    }
+    
+    var data = $.extend(label.editable, {});
+    data[field] = new_value;
+    data.id = row_data.id;
+    console.log('saving', row_data[field], new_value, data);
+    $fx.post_front(data, function() {
+        row_data[field] = new_value;
+        $row.data('inline_data', row_data);
+    });
+});
+
+<!--[list_field_row]-->
+<?
+var labels_length = $t.countLength(_o.labels);
+var i = 0;
+$.each(_o.labels, function(label_key, label) {
+    i++;
+    var level_padding = 0;
+    if  (!_c[label_key]) {
+        _c[label_key] = '';
+        //return;
+    }
+    if (_c[label_key].level) {
+        level_padding = 25*_c[label_key].level;
+    }
+    ?>
+        <td class="
+                fx_list_cell
+                fx_list_cell_<?=label_key?>
+                <?=i == labels_length ? ' fx_list_cell_last' : ''?>"
+                <?=level_padding ? 'style="padding-left:'+level_padding+'px;"' : ''?>
+                >
+            <?=$t.list_field_cell(_c[label_key], {label:label,row:_c,field:label_key})?>
+        </td><?
+});
+?>
+
+<!--[list_field_row ? _o.labels === undefined || _o.labels.length == 0]-->
+<?if (_c.img) {?>
+    <td class="fx_list_cell fx_list_cell_image"><?=$t.list_field_cell(_c.img,{type:'image'})?></td>
+<?}?>
+<td class="fx_list_cell fx_list_cell_last">
+    <h2><?
+    if (_c.header.url) {
+        var url = /^\#/.test(_c.header.url) ? _c.header.url : '#' + $fx.mode + '.' + _c.header.url;
+        ?><a href="<?=url?>"><?=_c.header.name?></a><?
+    } else {
+        print(_c.header);
+    }?></h2><?
+    if (_c.text) {
+        ?><p class="fx_list_text"><?=_c.text?></p><?
+    }
+    ?>
+</td>
+
+<!--[list_field_cell]-->
+<?=_c?>
+
+<!--[list_field_cell ? _c && _c.url !== undefined]-->
+<?
+var url = _c.url == null ? null : (/^#/.test(_c.url) ? _c.url : '#' + $fx.mode + '.' + _c.url);
+?>
+<a <?=url == null ? '' : 'href="'+url+'"'?>><?=_c.name?></a>
+
+
+<!--[list_field_cell ? _c && _c.button !== undefined]-->
+<?=$t.input({type:'button',post:_c.button, label:_c.name})?>
+
+<!--[list_field_cell ? _o && (_o.type == 'buttons' || _o.label && _o.label.type == 'buttons')]-->
+<div class="fx_list_buttons">
+    <?$.each(_c, function(i, button) {
+        ?><span><?=$t.input($.extend(button, {type:'button'}))?></span><?
+    });?>
+</div>
+
+<!--[list_field_cell ? _o && (_o.label && _o.label.type == 'image' || _o.type == 'image') ]-->
+<img src="<?=_c?>" class="fx_list_image" />
+
+
+<!--[list_field_row ? _o.template == 'imgh']-->
+<div class="fx_list_row_item"><img style="width:130px;" src="<?=_c.img?>" /></div>
+<div class="fx_list_row_item" style="width:600px;">
+    <h2><?
+    if (_c.header.url) {
+        ?><a href="#<?=$fx.mode?>.<?=_c.header.url?>"><?=_c.header.name?></a><?
+    } else {
+        print(_c.header);
+    }?></h2>
+    <?=_c.text?>
+</div>
+
+<!--[list_field_cell ? _o && _o.label && _o.label.editable]-->
+<span data-field="<?=_o.field?>" class="fx_list_field_editable" contenteditable="true"><?=_c ? _c : '...' ?></span>

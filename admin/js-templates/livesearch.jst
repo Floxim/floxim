@@ -1,0 +1,43 @@
+<!--[input ? _c.type == 'livesearch']-->
+<?
+var f_postfix = _c.name_postfix ? '['+_c.name_postfix+']' : '';
+?>
+<div class="livesearch" 
+    data-params="<?=$t.json_att(_c.params)?>" 
+    data-prototype_name="<?=_c.name?>[prototype]<?=f_postfix?>"
+    data-is_multiple="<?=(_c.is_multiple ? 'Y' : 'N')?>">
+    <?
+    if (_c.is_multiple) {
+        if (_c.value && !_c.ajax_preload) {
+            $.each(_c.value, function(vi, vv) {
+                ?><input class="preset_value" type="hidden" 
+                    name="<?=_c.name?>[<?=vv.value_id?>]<?=f_postfix?>"
+                    value="<?=vv.id?>"
+                    data-name="<?=vv.name?>" /><?
+            });
+        }
+    } else {
+        ?><input class="preset_value" type="hidden" <?=$t.field_id_name(_c)?>
+                <?if (_c.value) {?>
+                value="<?=_c.value.id?>" 
+                data-name="<?=_c.value.name?>" 
+                <?}?>/><?
+                    
+    }
+    ?>
+    <ul class="livesearch_items">
+        <li class="livesearch_input">
+            <input type="text" name="livesearch_input" style="width:3px;" />
+        </li>
+    </ul>
+    <div class="livesearch_results">
+    </div>
+</div>
+
+<!--jquery-->
+var ls = new fx_livesearch(html);
+html.data('livesearch', ls);
+
+if (_c.ajax_preload && _c.value) {
+    ls.loadValues( _c.value);
+}

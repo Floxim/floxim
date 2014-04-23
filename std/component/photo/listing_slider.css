@@ -1,0 +1,44 @@
+.img-list .images {
+    padding: 10px;
+    overflow: hidden;
+    background: #fff;
+    font-size: 18px;
+    width: 881px;
+    height: 571px;
+    position: relative;
+    color: #33373a;
+}
+
+.img-block {
+    display:none;
+    position: absolute;
+    width: 881px;
+    top:10px;
+    left:10px;
+}
+
+.img-block-active {
+    display: block;
+    cursor: pointer;
+}
+
+.img-block img {
+    display: block;
+    margin: 0 auto;
+    max-width:880px; 
+    max-height:550px;
+}
+.img-block .left { float: left; }
+.img-block .right { float: right; }
+
+.img-slider {
+    margin:15px 0;
+    overflow: hidden;
+    width:901px;
+}
+
+.img-slider div.preview {
+    cursor:pointer;
+    float:left;
+    margin-right:15px;
+}

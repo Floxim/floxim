@@ -1,0 +1,93 @@
+.clear {
+    clear: both;
+}
+
+.project_list {
+}
+    .project_list .project {
+        padding: 15px 10px;
+        border: 1px solid #ccc;
+        margin-bottom: 20px;
+    }
+        .project_list .project .year, .project_record_wrap .project_record .left_block .year {
+            float: left;
+            font-size: 26px;
+            padding: 5px;
+            background-color: rgba(255, 255, 255, 0.3); 
+            margin-right: 30px;
+        }
+        .project_list .project .image {
+            float: left;
+            width: 150px;
+            position: relative; 
+            margin-right: 30px;
+        }
+   
+            .project_list .project .image img, .project_record_wrap .project_record .right_block .image img {
+                width: 100%;
+            }
+       
+       
+        .project_list .project .description {
+            float: right;
+            width: 200px;
+            font-size: 20px;        
+        }
+       
+       
+            .project_list .project .description h2 {
+               font-size: 24px; 
+            }
+       
+       
+            .project_list .project .description h3 {
+               font-size: 18px; 
+            }
+            .project_list .project .description * {
+                padding: 0;
+                margin: 0;
+                width: 100%;
+            }
+       
+.project_record_wrap {
+}
+
+    .project_record_wrap .project_record {
+        padding: 15px 10px;
+    }
+        .project_record_wrap .project_record .left_block {
+            float: left;
+            width: 20%;
+        }
+        .project_record_wrap .project_record .right_block {
+            float: right;
+            width: 390px;
+            padding: 0 20px;
+        }
+   
+            
+            .project_record_wrap .project_record .right_block .image {
+                width: 100%;
+            }
+   
+            
+            .project_record_wrap .project_record .right_block .description {
+                width: 100%;
+                font-size: 22px;
+                margin-top: 20px;
+            }
+   
+            
+                .project_record_wrap .project_record .right_block .description h3 {
+                    font-size: 18px; 
+                }
+                .project_record_wrap .project_record .right_block .description * {
+                    padding: 0;
+                    margin: 0;                
+                }
+
+
+
+
+
+

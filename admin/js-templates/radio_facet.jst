@@ -1,0 +1,18 @@
+<!--[input ? _c.type == 'radio_facet']-->
+<?
+var c_val = _c.value !== undefined ? _c.value : fx_object_get_first_key(_c.values);
+?>
+<div class="fx_admin_radio_facet">
+	<input type="hidden" <?=$t.field_id_name(_c)?> value="<?=c_val?>" />
+	<?for(var vk in _c.values) {?>
+		<span class="val_<?=vk?> <?=vk == c_val ? 'fx_admin_radio_facet_current' : ''?>"><?=_c.values[vk]?></span>
+	<?}?>
+</div>
+
+<!--jquery-->
+html.find('.fx_admin_radio_facet span').click(function () {
+	var par = $(this).parent();
+	par.find('.fx_admin_radio_facet_current').removeClass('fx_admin_radio_facet_current');
+	$(this).addClass('fx_admin_radio_facet_current');
+	par.find('input').val(this.className.match(/val_([^\s]+)/)[1]).change();
+});

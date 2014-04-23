@@ -1,0 +1,40 @@
+<!--[input ? _c.type == 'button']-->
+<div 
+    class="fx_button fx_admin_button_text<?=_c['class'] ? ' fx_admin_button_'+_c['class'] : ''?>" 
+    <?=$t.data_attr(_c)?>>
+    <span><?=_c.label || ''?></span>
+</div>
+
+<!--jquery-->
+if (_c.options){ 
+    html.on('click', function() {
+        console.log('clicka', _c.options);
+        $fx.post(_c.options);
+    })
+}
+
+<!--[form_row ? _c.type == 'button' && _c.role == 'preset']-->
+<div class="field field_preset">
+    <?=$t.label({})?>
+    <div class="input_container"></div>
+</div>
+
+<!--jquery-->
+$('.input_container', html).append($t.jQuery('input', _c));
+
+<!--[input ? _c.type == 'button' && _c.role == 'preset']-->
+<div class="fx_button_preset" <?=$t.data_attr(_c.data)?>><?=_c.label?></div>
+
+<!--priority-->
+2
+
+<!--jquery-->
+html.click(function() {
+    var $b = $(this);
+    var vals = $b.data('inline');
+    var $form = $b.closest('form');
+    $.each(vals, function(k, v) {
+        console.log($(':input[name="'+k+'"]'), v);
+        $(':input[name="'+k+'"]').val(v);
+    });
+});

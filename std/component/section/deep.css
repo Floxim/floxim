@@ -1,0 +1,19 @@
+.deep_menu .menu_item_1 li {
+    padding-left:15px;
+}
+
+.deep_menu li.menu_item_2 {
+    font-size:16px;
+}
+
+.deep_menu li.menu_item_3 {
+    font-size:14px;
+}
+
+.deep_menu li.menu_item_4 {
+    font-size:12px;
+}
+
+.deep_menu a.active {
+    color:#FF0;
+}

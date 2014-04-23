@@ -1,0 +1,32 @@
+<!--[input ? _c.type == 'colorbasic']-->
+<?
+var colors = {
+	red: ['#ff0000', 'Red'],
+	orange: ['#FB940B', 'Orange'],
+	yellow: ['#FFFF00', 'Yellow'],
+	green: ['#00FF00', 'Green'],
+	lightblue: ['#00FFFF', 'Light-blue'],
+	blue: ['#0000FF',  'Blue'],
+	purple: [ '#FF00FF', 'Purple'],
+	grey:  ['#C0C0C0', 'Grey'],
+	black: ['#000000',  'Black']
+};
+?><div class="fx_admin_colorbasic">
+<input type="hidden" <?=$t.field_id_name(_c)?> value="<?=_c.value?>" /><?
+$.each(colors, function (key, val) {
+	val.push(key);
+	?><div><span style="background-color:<?=val[0]?>;" class="color <?=key == _c.value ? 'fx_admin_colorbasic_selected' : ''?>" <?=$t.data_attr(val)?>></span></div><?
+});
+?></div>
+
+
+<!--jquery-->
+$('.fx_admin_colorbasic', html).each( function() {
+	var cb = $(this);
+	$('.color', cb).click( function() {
+		var c = $(this);
+		$('.fx_admin_colorbasic_selected', cb).removeClass('fx_admin_colorbasic_selected');
+		c.addClass('fx_admin_colorbasic_selected');
+		$('input', cb).val( $t.inline_data( c )[2] );
+	});
+});

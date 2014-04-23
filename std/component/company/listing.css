@@ -1,0 +1,67 @@
+.clear {
+    clear: both;
+}
+
+.company_list {
+}
+    .company_list .company_item {
+        padding: 15px 10px;
+        border: 1px solid #ccc;
+        margin-bottom: 20px;
+    }
+        .company_list .company_item .image {
+            float: left;
+            width: 150px;
+            position: relative; 
+            margin-right: 30px;
+        }
+   
+            .company_list .company_item .image img, .company_item_record_wrap .company_item_record .image img {
+                width: 100%;
+            }
+       
+       
+        .company_list .company_item .description {
+            float: right;
+            width: 350px;
+            font-size: 20px;        
+        }
+       
+       
+            .company_list .company_item .description h2 {
+               font-size: 24px; 
+            }
+            .company_list .company_item .description * {
+                padding: 0;
+                margin: 0;
+                width: 100%;
+            }
+       
+.company_item_record_wrap {
+}
+
+    .company_item_record_wrap .company_item_record {
+        padding: 15px 10px;
+        width: 100%;
+    }
+            
+        .company_item_record_wrap .company_item_record .image {
+            width: 100%;
+        }
+   
+        
+        .company_item_record_wrap .company_item_record .description {
+            width: 100%;
+            font-size: 22px;
+            margin-top: 20px;
+        }
+            .company_item_record_wrap .company_item_record .description * {
+                padding: 0;
+                margin: 0;                
+            }
+
+
+
+
+
+

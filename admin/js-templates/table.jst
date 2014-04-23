@@ -1,0 +1,19 @@
+<!--[input ? _c.type == 'table']-->
+<table>
+	<?if (_c.labels) {?>
+		<tr>
+			<?$.each(_c.labels, function(k, v) {?>
+				<th><?=_c.labels[i]?></th>
+			<?});?>
+		</tr>
+	<?} 
+	if (_c.values) {
+		$.each(_c.values, function(k, row) {?>
+			<tr>
+			<?$.each(_v, function(key,value){?>
+				<td><?=value?></td>
+			<?});?>
+			</tr><?
+		});
+	}?>
+</table>

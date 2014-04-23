@@ -1,0 +1,43 @@
+<!--[input ? _c.type == 'datetime']-->
+	<div class="date_field">
+		<input 
+            type="text" 
+            class="date_input fx_input" 
+            value="<?=_c.value?>" 
+            <?=$t.field_id_name(_c)?> />
+            <div class="icon"></div>
+	</div>
+
+<!--jquery-->
+var inp  = $('input.date_input', html);
+$('.icon', html).click(function(){
+    console.log('asdf')
+    inp.focus();
+});
+function get_inp_time(inp) {
+    var v = inp.val();
+    var v_time = v.replace(/^[^\s]+\s/, '');
+    inp.data('time', v_time);
+}
+get_inp_time(inp);
+inp.keyup(function() {get_inp_time($(this))});
+inp.click(function() {
+    $(this).datepicker('show');
+});
+
+var show_format = 'yy-mm-dd';
+inp.datepicker({
+		changeMonth: true,
+		changeYear: true,
+		firstDay:1,
+		dateFormat: show_format,
+		onSelect:function(dateText, datepicker) {
+            var c_val = inp.val();
+            console.log(dateText, c_val, datepicker);
+			inp.focus();
+            if (inp.data('time')) {
+                inp.val( dateText + ' ' +inp.data('time'));
+            }
+		}
+});
+inp.datepicker('widget').addClass('fx_overlay');

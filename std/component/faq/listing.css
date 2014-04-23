@@ -1,0 +1,16 @@
+.faq_list {
+}
+	.faq_list .faq {
+		padding: 15px 10px;
+		border: 1px solid #ccc;
+	}	
+		.faq_list .faq a {
+			text-decoration: none;
+		}
+			.faq_list .faq a h3 {
+				font-size: 20px;
+				color: white;
+			}	
+		.faq_list .faq .answer {
+			font-size: 16px;
+		}	
