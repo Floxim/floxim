@@ -266,7 +266,7 @@ class fx_debug {
         $e = call_user_func_array(array($this, '_entry'), func_get_args());
         $this->_print_entry($e);
         if (!$this->head_files_added) {
-            fx::page()->add_css_file(fx::path('floxim', 'admin/skins/default/css/debug.less'));
+            fx::page()->add_css_file(fx::path('floxim', 'admin/style/debug.less'));
             fx::page()->add_js_file(FX_JQUERY_PATH);
             fx::page()->add_js_file('/floxim/admin/js/fxj.js');
             fx::page()->add_js_file(fx::path('floxim', 'admin/js/debug.js'));

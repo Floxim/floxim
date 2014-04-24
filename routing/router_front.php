@@ -8,12 +8,8 @@ class fx_router_front extends fx_router {
         }
         fx::env('page', $page['id']);
         fx::http()->status('200');
-        $layout_ib = $page->get_layout_infoblock();
+        $layout_ib = $this->get_layout_infoblock($page);
         return $layout_ib->render();
-    }
-    
-    public function get_path($url) {
-        
     }
     
     protected $_ib_cache = array();
@@ -54,5 +50,18 @@ class fx_router_front extends fx_router {
         }
         $this->_ib_cache[$cache_key] = $areas;
         return $areas;
+    }
+    
+    public function get_layout_infoblock($page) {
+        $layout_ib = $page->get_layout_infoblock();
+        if ($layout_ib->get_visual()->get('is_stub')) {
+            $suitable = new fx_template_suitable();
+            $infoblocks = $page->get_page_infoblocks();
+            $suitable->suit($infoblocks, fx::env('layout_id'));
+            return $infoblocks->find_one(function ($ib) {
+               return $ib->is_layout(); 
+            });
+        }
+        return $layout_ib;
     }
 }

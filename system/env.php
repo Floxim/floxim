@@ -129,4 +129,8 @@ class fx_system_env {
         }
         return $this->current['layout'];
     }
+    
+    public function get_layout_id() {
+        return $this->get_layout();
+    }
 }
