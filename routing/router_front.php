@@ -28,7 +28,7 @@ class fx_router_front extends fx_router {
                         ->find(function($ib) {
                             return !$ib->is_layout();
                         });
-        $areas = array();
+        $areas = fx::collection();//array();
         $visual = fx::data('infoblock_visual')->
                 where('infoblock_id', $infoblocks->get_values('id'))->
                 where('layout_id', $layout_id)->

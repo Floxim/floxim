@@ -332,6 +332,11 @@ class fx_form_field implements ArrayAccess {
         
     }
     
+    public function set($offset, $value) {
+        $this->offsetSet($offset, $value);
+        return $this;
+    }
+    
     public function offsetSet($offset, $value) {
         if ($offset === 'value') {
             $this->set_value($value);

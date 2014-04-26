@@ -279,7 +279,12 @@ class fx_infoblock extends fx_essence {
         if (!$controller) {
             $res = false;
         } else {
-            $res = $controller->process();
+            try {
+                $res = $controller->process();
+            } catch (Exception $e) {
+                fx::log('controller exception', $controller, $e);
+                $res = '';
+            }
         }
         $this->result_is_cached = true;
         $this->result_cache = $res;

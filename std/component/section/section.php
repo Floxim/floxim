@@ -34,7 +34,7 @@ class fx_controller_component_section extends fx_controller_component_page {
     public function do_list() {
         $this->listen('items_ready', function($items, $ctr) {
             $extra_ibs =  $ctr->get_param('extra_infoblocks', array());
-            if (count($extra_ibs)) {
+            if (is_array($extra_ibs) && count($extra_ibs) > 0) {
                 $extra_ibs = fx::data('infoblock', $extra_ibs);
                 foreach ($extra_ibs as $extra_ib) {
                     $extra_res = $extra_ib->get_result();
@@ -42,8 +42,6 @@ class fx_controller_component_section extends fx_controller_component_page {
                         $items->concat($extra_res['items']);
                     }
                 }
-                //$extra_pages = fx::content('page')->where('infoblock_id', $extra_ibs)->all();
-                //$items->concat($extra_pages);
             }
             fx::data('content_page')->make_tree($items, 'submenu');
         });

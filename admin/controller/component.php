@@ -13,6 +13,7 @@ class fx_controller_admin_component extends fx_controller_admin {
         $field = array('type' => 'list', 'filter' => true);
         $field['labels'] = array(
             'name' => fx::alang('Name', 'system'),
+            'keyword' => fx::alang('Keyword'),
             'count' => fx::alang('Count', 'system'),
             'buttons' => array('type' => 'buttons')
         );
@@ -24,6 +25,7 @@ class fx_controller_admin_component extends fx_controller_admin {
                 $submenu_first = current($submenu);
                 $r = array(
                     'id' => $v['id'],
+                    'keyword' => $v['keyword'],
                     'count' => fx::db()->get_col("SELECT count(*) from  {{".$v->get_content_table()."}}"),
                     'name' => array(
                         'name' => $v['name'],
@@ -225,6 +227,7 @@ class fx_controller_admin_component extends fx_controller_admin {
     }
 
     public function add_save($input) {
+        fx::log($input);
         $result = array('status' => 'ok');
 
         $data['name'] = trim($input['name']);
@@ -234,7 +237,6 @@ class fx_controller_admin_component extends fx_controller_admin {
         $data['item_name'] = $input['item_name'];
 
         $component = fx::data('component')->create($data);
-
         if (!$component->validate()) {
             $result['status'] = 'error';
             $result['errors'] = $component->get_validate_error();

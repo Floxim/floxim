@@ -78,7 +78,7 @@ class fx_controller_admin_field extends fx_controller_admin {
     protected function _form ( $info = array() ) {
         $fields[] = $this->ui->input('name', fx::alang('Field keyword','system'), $info['name']);
         $fields[] = $this->ui->input('description', fx::alang('Description','system'), $info['description']);
-        
+        /*
         $fields []= array(
             'type' => 'select',
             'name' => 'form_tab',
@@ -91,7 +91,7 @@ class fx_controller_admin_field extends fx_controller_admin {
                 array(4, '4')
             ),
             'value' => $info['form_tab']
-        );
+        );*/
         
         foreach (fx::data('datatype')->all() as $v ) {
             $values[$v['id']] = fx::alang("FX_ADMIN_FIELD_".strtoupper($v['name']), 'system');

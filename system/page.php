@@ -359,7 +359,7 @@ class fx_system_page {
             return $this->areas_cache[$area_id];
         }
         $area_blocks = isset($this->areas[$area_id]) ? $this->areas[$area_id] : array();
-        if (!$area_blocks || !is_array($area_blocks)) {
+        if (!$area_blocks || !(is_array($area_blocks) || $area_blocks instanceof ArrayAccess) ) {
             $area_blocks = array();
         }
         $area_blocks = fx::collection($area_blocks)->sort(function($a, $b) {

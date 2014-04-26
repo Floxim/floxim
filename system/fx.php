@@ -262,6 +262,9 @@ class fx {
         if (func_num_args() == 0) {
             return new fx_template_loader();
         }
+        if (!is_string($template)) {
+            fx::log('ool tpl', $template, debug_backtrace());
+        }
         $parts= explode(".", $template);
         if (count($parts) == 2) {
             $template = $parts[0];
@@ -321,24 +324,30 @@ class fx {
     }
     
     public static function dig_set(&$collection, $var_path, $var_value, $merge = false) {
-        //static $cnt = 0;
-        //$cnt++;
-        //echo fx_debug($var_path, $var_value, $cnt);
         $var_path = explode('.', $var_path);
+        
         $arr =& $collection;
-        foreach ($var_path as $pp) {
-            if (!is_array($arr)) {
+        $total = count($var_path);
+        foreach ($var_path as $num => $pp) {
+            $is_arr = is_array($arr);
+            $is_aa = $arr instanceof ArrayAccess;
+            if (!$is_arr && !$is_aa) {
                 return null;
             }
             if (empty($pp)) {
                 $arr[]= $var_value;
                 return;
             }
-            if (!array_key_exists($pp, $arr)) {
-                $arr[$pp]=array();
+            if (($is_arr && !array_key_exists($pp, $arr)) || ($is_aa && !isset($arr[$pp])) ) {
+                if ($num + 1 === $total && !$merge) {
+                    $arr[$pp] = $var_value;
+                    return;
+                }
+                $arr[$pp]= fx::collection(); //array();
             }
             $arr =&  $arr[$pp];
         }
+        
         if ($merge && is_array($arr) && is_array($var_value)) {
             $arr = array_merge_recursive($arr, $var_value);
         } else {

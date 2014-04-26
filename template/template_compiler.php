@@ -635,13 +635,26 @@ class fx_template_compiler {
     
     protected function _token_set_to_code($token) {
         $var = $token->get_prop('var');
-        $var = $this->varialize($var);
+        $value = self::parse_expression($token->get_prop('value'));
         $is_default = $token->get_prop('default');
         $code .= "<?php\n";
+        
+        if (preg_match("~\.~",$var)) {
+            $parts = explode('.', $var, 2);
+            $var_name = trim($parts[0], '$');
+            $var_path = $parts[1];
+            $code .= 'fx::dig_set($this->v("'.$var_name.'"), "'.$var_path.'", '.$value.");\n";
+            $code .= "?>\n";
+            return $code;
+        }
+        
+        $var = $this->varialize($var);
+        
         if ($is_default) {
             $code .= "if (is_null(\$this->v('".$var."','local'))) {\n";
         }
-        $code .= '$this->set_var("'.$var.'", '.self::parse_expression($token->get_prop('value')).');'."\n";
+        
+        $code .= '$this->set_var("'.$var.'", '.$value.');'."\n";
         if ($is_default) {
             $code .= "}\n";
         }

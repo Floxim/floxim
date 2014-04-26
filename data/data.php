@@ -594,7 +594,13 @@ class fx_data {
      * @return fx_essence
      */
     public function create($data = array()) {
-        return $this->essence($data);
+        if ($data instanceof fx_form) {
+            $essence = $this->essence();
+            $essence->load_from_form($data);
+        } else {
+            $essence = $this->essence($data);
+        }
+        return $essence;
     }
     
     /**

@@ -224,6 +224,14 @@ class fx_template_html {
                 $n->add_child_first(fx_template_html_token::create($area));
                 $n->add_child(fx_template_html_token::create('{/area}'));
             }
+            if ( $n->has_attribute('fx:item') ) {
+                $item_att = $n->get_attribute('fx:item');
+                $n->remove_attribute('fx:item');
+                $n->wrap(
+                    '{item'.($item_att ? ' test="'.$item_att.'"' : '').$subroot.'}',
+                    '{/item}'
+                );
+            }
             if ( ($if_test = $n->get_attribute('fx:if'))) {
                 $n->remove_attribute('fx:if');
                 $n->wrap(
@@ -243,14 +251,6 @@ class fx_template_html {
                 $n->wrap(
                     '{with select="'.$with.'" '.$subroot.'}',
                     '{/with}'
-                );
-            }
-            if ( $n->has_attribute('fx:item') ) {
-                $item_att = $n->get_attribute('fx:item');
-                $n->remove_attribute('fx:item');
-                $n->wrap(
-                    '{item'.($item_att ? ' test="'.$item_att.'"' : '').$subroot.'}',
-                    '{/item}'
                 );
             }
             if ($n->has_attribute('fx:separator')) {

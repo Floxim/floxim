@@ -5,7 +5,7 @@ abstract class fx_essence implements ArrayAccess {
     // reference to the class object fx_data_
     //protected $finder;
     // field values
-    protected $data;
+    protected $data = array();
     // the set of fields that have changed
     protected $modified = array();
     protected $modified_data = array();
@@ -19,8 +19,11 @@ abstract class fx_essence implements ArrayAccess {
     protected static $_field_map = array();
     
     public function __construct($input = array()) {
-        if (isset($input['data'])) {
-            $this->data = $input['data'];
+        if (isset($input['data']) && $input['data']) {
+            foreach ($input['data'] as $k => $v) {
+                $this[$k] = $v;
+            }
+            //$this->data = $input['data'];
         }
         
         // cache relations & ml on first use
@@ -72,10 +75,21 @@ abstract class fx_essence implements ArrayAccess {
     }
     
     protected function throw_invalid() {
-        throw new Exception(
-                "Unable to save essence \"".$this->get_type()."\": ".
-                join("<br />", $this->validate_errors)
+        $exception = new fx_essence_validation_exception(
+            fx::lang("Unable to save essence \"".$this->get_type()."\"")
         );
+        $exception->add_errors($this->validate_errors);
+        throw $exception;
+    }
+    
+    protected function _invalid($message, $field = null) {
+        $error = array(
+            'text' => $message
+        );
+        if ($field) {
+            $error['field'] = $field;
+        }
+        $this->validate_errors[]= $error;
     }
 
 
@@ -107,7 +121,7 @@ abstract class fx_essence implements ArrayAccess {
     }
 
     public function set($item, $value = '') {
-        if ( is_array($item) ) {
+        if ( is_array($item) || $item instanceof Traversable) {
             foreach ( $item as $k => $v ) {
                 $this->set($k, $v);
             }
@@ -139,6 +153,38 @@ abstract class fx_essence implements ArrayAccess {
     
     public function validate () {
         return true;
+    }
+    
+    public function load_from_form($form, $fields = true) {
+        $vals = $this->_get_from_form($form, $fields);
+        $this->set($vals);
+        return $this->validate_with_form($form, false);
+    }
+    
+    protected function _get_from_form($form, $fields) {
+        if (is_array($fields)) {
+            $vals = array();
+            foreach ($fields as $f) {
+                $vals[]= $form->$f;
+            }
+        } else {
+            $vals = $form->get_values();
+        }
+        return $vals;
+    }
+    
+    public function validate_with_form($form, $fields = true) {
+        if ($fields !== false) {
+            $vals = $this->_get_from_form($form, $fields);
+            $this->set($vals);
+        }
+        if (!$this->validate()) {
+            try {
+                $this->throw_invalid();
+            } catch (fx_essence_validation_exception $ex) {
+                $ex->to_form($form);
+            }
+        }
     }
     
     public function get_validate_error () {
@@ -286,5 +332,17 @@ abstract class fx_essence implements ArrayAccess {
             return null;
         }
         return $this->modified_data[$field];
+    }
+}
+
+class fx_essence_validation_exception extends Exception {
+    public function add_errors($errors) {
+        $this->validate_errors = $errors;
+    }
+    public $validate_errors = array();
+    public function to_form(fx_form $form) {
+        foreach ($this->validate_errors as $e) {
+            $form->add_error($e['text'], isset($e['field']) ? $e['field'] : false);
+        }
     }
 }

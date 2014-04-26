@@ -110,7 +110,7 @@ class fx_data_content extends fx_data {
     }
 
     public function create($data = array()) {
-        $obj = $this->essence($data);
+        $obj = parent::create($data);
         
         $component = fx::data('component', $this->component_id);
         

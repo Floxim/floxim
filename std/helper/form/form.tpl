@@ -43,19 +43,27 @@
     <span fx:if="$required" class="required">*</span>
 </label>
 
-<div fx:template="input_block" class="fx_input_block">
-    {apply input /}
+<div fx:template="input_block" class="fx_input_block"> 
+    {if $render.input}
+        {apply $render.input}
+    {else}
+        {apply input /}
+    {/if}
 </div>
 
 {template id="input_atts"}
+    {set $is_textlike = in_array($type, array('text', 'number', 'password', 'textarea'))}
     class="fx_input fx_input_type_{$type}"
     id="{$id}"
     name="{$name}"
     {if $is_disabled}disabled="disabled"{/if}
-    {if $value && in_array($type, array('text', 'number', 'password'))}
+    {if $is_textlike}
         value="{$value | htmlspecialchars}"
     {/if}
-    {if $placeholder && in_array($type, array('text', 'number', 'password', 'textarea'))}
+    {if $autocomplete === false}
+        autocomplete="off"
+    {/if}
+    {if $placeholder && $is_textlike}
         placeholder="{$placeholder}" 
     {/if}
     

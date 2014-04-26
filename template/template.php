@@ -272,7 +272,7 @@ class fx_template {
 
 
     public function render($data = array()) {
-        if ($this->_level > 5) {
+        if ($this->_level > 10) {
             return '<div class="fx_template_error">bad recursion?</div>';
         }
         if (count($data) > 0) {
