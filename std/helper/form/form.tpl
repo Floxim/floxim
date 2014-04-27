@@ -98,4 +98,15 @@
         value="{$key}" 
         {if $value == $key}selected="selected"{/if}>{$name}</option>
 </select>
+
+<div class="fx_captcha_input" fx:template="input[$type == 'captcha']">
+    <input {apply input_atts /} value="1111" />
+    <div class="fx_captcha_image_block">
+        <img src="{$captcha_url}" class="fx_captcha_image" />
+        <a class="fx_refresh_captcha">{%refresh_captcha}Show another image{/%}</a>
+    </div>
+</div>
     
+<div class="fx_captcha_row_valid" fx:template="row[$type == 'captcha' && $was_valid]">
+    <input type="hidden" {apply input_atts /} />
+</div>

@@ -293,15 +293,15 @@ class fx_form_field implements ArrayAccess {
         return $is_valid;
     }
     
-    public static function validate_email($f) {
-        $v = $f->get_value();
+    public function validate_email() {
+        $v = $this->get_value();
         if (!fx::util()->validate_email($v)) {
             return "Please enter valid e-mail adress!";
         }
     }
     
-    public static function validate_filled($f) {
-        if ($f->is_empty()) {
+    public function validate_filled() {
+        if ($this->is_empty()) {
             return 'This field is required';
         }
     }
@@ -373,7 +373,7 @@ class fx_form_field implements ArrayAccess {
                     'type' => 'regexp',
                     'regexp' => $v
                 );
-            } elseif (method_exists('fx_form_field', 'validate_'.$v)) {
+            } elseif (method_exists($this, 'validate_'.$v)) {
                 // prevent double-adding of the same validator by shortcode
                 if ($this->params['validators']->find_one('code', $v)) {
                     return;
@@ -381,7 +381,7 @@ class fx_form_field implements ArrayAccess {
                 $v = array(
                     'type' => 'callback',
                     'code' => $v,
-                    'callback' => 'fx_form_field::validate_'.$v
+                    'callback' => array($this, 'validate_'.$v)
                 );
             }
             $v['is_last'] = $is_last;
@@ -397,5 +397,55 @@ class fx_form_field implements ArrayAccess {
 
     public function offsetUnset($offset) {
         unset($this->params[$offset]);
+    }
+}
+
+class fx_form_field_captcha extends fx_form_field {
+    public function __construct($params = array()) {
+        if (!session_id()) {
+            session_start();
+        }
+        
+        if (!isset($params['label'])) {
+            $params['label'] = 'Aren\'t you a robot?';
+        }
+        $params['required'] = true;
+        $url = fx::path()->to_http(dirname(realpath(__FILE__)));
+        $url .= '/captcha.php?fx_field_name='.urlencode($params['name']);
+        $url .= '&rand='.rand(0, 1000000);
+        $params['captcha_url'] = $url;
+        
+        if (!isset($params['validators'])) {
+            $params['validators'] = array();
+            $params['validators'] []= 'captcha';
+        }
+        parent::__construct($params);
+        if ($this->was_valid()) {
+            $this['was_valid'] = true;
+        }
+    }
+    
+    public function validate_captcha() {
+        if ($this->was_valid()) {
+            return;
+        }
+        if ($_SESSION['captcha_code_'.$this['name']] != $this->get_value()) {
+            return 'Invalid code';
+        }
+        $this->was_valid(true);
+    }
+    
+    public function was_valid($set = null) {
+        $prop = 'captcha_was_valid_'.$this['name'];
+        fx::log($_SESSION, $prop, $_SESSION[$prop]);
+        if ($set === null) {
+            return isset($_SESSION[$prop]) && $_SESSION[$prop] + 60*60*5 > time();
+        }
+        if ($set === true) {
+            $_SESSION[$prop] = time();
+        } else {
+            unset($_SESSION[$prop]);
+        }
+        return $this;
     }
 }
