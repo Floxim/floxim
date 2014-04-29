@@ -40,7 +40,7 @@ class fx_form implements ArrayAccess {
     public function is_sent() {
         if (is_null($this->is_sent)) {
             $input = $this->_get_input();
-            $this->is_sent = isset($input[$this->get_id()]);
+            $this->is_sent = isset($input[$this->get_id().'_sent']);
             if ($this->is_sent) {
                 $this->load_values();
                 $this->validate();
@@ -409,19 +409,17 @@ class fx_form_field_captcha extends fx_form_field {
         if (!isset($params['label'])) {
             $params['label'] = 'Aren\'t you a robot?';
         }
-        $params['required'] = true;
         $url = fx::path()->to_http(dirname(realpath(__FILE__)));
         $url .= '/captcha.php?fx_field_name='.urlencode($params['name']);
         $url .= '&rand='.rand(0, 1000000);
         $params['captcha_url'] = $url;
         
-        if (!isset($params['validators'])) {
-            $params['validators'] = array();
-            $params['validators'] []= 'captcha';
-        }
         parent::__construct($params);
         if ($this->was_valid()) {
             $this['was_valid'] = true;
+        } else {
+            $this['required'] = true;
+            $this->add_validator('captcha');
         }
     }
     
@@ -437,7 +435,6 @@ class fx_form_field_captcha extends fx_form_field {
     
     public function was_valid($set = null) {
         $prop = 'captcha_was_valid_'.$this['name'];
-        fx::log($_SESSION, $prop, $_SESSION[$prop]);
         if ($set === null) {
             return isset($_SESSION[$prop]) && $_SESSION[$prop] + 60*60*5 > time();
         }

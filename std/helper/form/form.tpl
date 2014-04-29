@@ -3,8 +3,13 @@
     fx:if="$ instanceof fx_form"
     action="{$action}" 
     method="{$method}" 
-    class="fx_form {$class} {if $is_sent} fx_form_sent{/if}">
-    <input type="hidden" name="{$.get_id()}" value="1" />
+    id="{$.get_id()}"
+    class="fx_form {$class} {if $is_sent} fx_form_sent{/if}{if $.ajax} fx_form_ajax{/if}">
+    {js}
+        FX_JQUERY_PATH as jquery
+        form.js
+    {/js}
+    <input type="hidden" name="{$.get_id()}_sent" value="1" />
     {$.content}
         {apply messages /}
         {apply errors /}
@@ -34,6 +39,10 @@
     {apply input_block /}
 </div>
 
+<div fx:template="row[$type === 'hidden']" fx:omit='true'>
+    {apply input /}
+</div>
+
 <div fx:template="errors" fx:each="$.errors as $error" class="fx_form_error">
     {$error}
 </div>
@@ -52,25 +61,24 @@
 </div>
 
 {template id="input_atts"}
-    {set $is_textlike = in_array($type, array('text', 'number', 'password', 'textarea'))}
+    {set $is_textlike = in_array($type, array('text', 'number', 'password'))}
     class="fx_input fx_input_type_{$type}"
     id="{$id}"
     name="{$name}"
     {if $is_disabled}disabled="disabled"{/if}
-    {if $is_textlike}
+    {if $is_textlike || $type == 'hidden'}
         value="{$value | htmlspecialchars}"
     {/if}
     {if $autocomplete === false}
         autocomplete="off"
     {/if}
-    {if $placeholder && $is_textlike}
+    {if $placeholder && ($is_textlike || $type == 'textarea')}
         placeholder="{$placeholder}" 
     {/if}
-    
 {/template}
 
 <input 
-    fx:template="input[in_array($type, array('text', 'password'))]"
+    fx:template="input[in_array($type, array('text', 'password', 'hidden'))]"
     type="{$type}"
     {apply input_atts /} />
 

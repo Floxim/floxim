@@ -254,9 +254,7 @@ class fx_infoblock extends fx_essence {
         //return fx::controller('infoblock.render', array('infoblock' => $this))->process();
         $output = $this->get_output();
         $output = $this->_wrap_output($output);
-        if (fx::is_admin()) {
-            $output = $this->_add_infoblock_meta($output);
-        }
+        $output = $this->_add_infoblock_meta($output);
         if ( ($controller = $this->_get_controller())) {
             $output = $controller->postprocess($output);
         }
@@ -381,6 +379,10 @@ class fx_infoblock extends fx_essence {
     }
     
     protected function _add_infoblock_meta($html_result) {
+        $controller_meta = $this->_get_result_meta();
+        if (!fx::is_admin() && !$controller_meta['ajax_access']) {
+            return $html_result;
+        }
         $ib_info = array('id' => $this['id']);
         if (($vis = $this->get_visual()) && $vis['id']) {
             $ib_info['visual_id'] = $vis['id'];
@@ -391,9 +393,6 @@ class fx_infoblock extends fx_essence {
             'class' => 'fx_infoblock fx_infoblock_'.$this['id']
         );
         
-        
-        $controller_meta = $this->_get_result_meta();
-        
         if ($this->is_fake()) {
             $meta['class'] .= ' fx_infoblock_fake';
             if (!$this->_get_controller()) {
@@ -401,11 +400,10 @@ class fx_infoblock extends fx_essence {
             }
         }
          
-        
         if ($controller_meta['hidden']) {
             $meta['class'] .= ' fx_infoblock_hidden';
         }
-        if (count($controller_meta) > 0) {
+        if (count($controller_meta) > 0 && fx::is_admin()) {
             $meta['data-fx_controller_meta'] = $controller_meta;
         }
         if ($this->is_layout()) {
