@@ -122,7 +122,10 @@ class fx_controller_admin_content extends fx_controller_admin {
         if (!$content) {
             return;
         }
-        $current_page_path = fx::data('content_page' , $input['page_id'])->get_path()->get_values('id');
+        $current_page_path = null;
+        if ($input['page_id']) {
+            $current_page_path = fx::data('content_page' , $input['page_id'])->get_path()->get_values('id');
+        }
         $response = array('status'=>'ok');
         if ($content->is_instanceof('page') && is_array($current_page_path) && in_array($content['id'], $current_page_path) ) {
             if ($content['parent_id'] == 0){
