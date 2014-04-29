@@ -1,30 +1,15 @@
 <?php
-class fx_controller_component extends fx_controller {
+class fx_controller_component extends fx_controller_frontoffice {
     
-    protected $_meta = array();
-    
-    protected $_action_prefix = 'do_';
-
     protected function _count_parent_id() {
         if (preg_match("~^list_infoblock~", $this->action)) {
             $this->set_param('parent_id', $this->_get_parent_id());
         }
     }
     
-
     public function process() {
-        fx::profiler()->block('com '.$this->content_type.'.'.$this->action);
         $this->listen('before_action_run', array($this, '_count_parent_id'));
         $result = parent::process();
-        if (is_string($result) || is_bool($result)) {
-            fx::profiler()->stop();
-            return $result;
-        }
-        if (!isset($result['_meta'])) {
-            $result['_meta'] = array();
-        }
-        $result['_meta'] = array_merge_recursive($result['_meta'], $this->_meta);
-        fx::profiler()->stop();
         return $result;
     }
     
@@ -90,8 +75,7 @@ class fx_controller_component extends fx_controller {
         }
     }
     
-    public function drop_selected_linkers() {
-        
+    public function drop_selected_linkers() {    
         $linkers = fx::data('content_select_linker')
                 ->where('infoblock_id', $this->get_param('infoblock_id'))
                 ->all();
