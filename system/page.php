@@ -166,7 +166,14 @@ class fx_system_page {
         }
     }
     
-    
+    protected $_file_aliases = array();
+    public function has_file_alias($alias, $type, $set = null) {
+        $key = $alias.'_'.$type;
+        if ($set === null) {
+            return isset($this->_file_aliases[$key]) && $this->_file_aliases[$key];
+        }
+        $this->_file_aliases[$key] = (bool) $set;
+    }
     
     public function add_js_bundle($files, $params = array()) {
         // for dev mode
@@ -270,13 +277,6 @@ class fx_system_page {
     }
 
     public function post_process($buffer) {
-        /*
-        if ( fx::core()->is_admin_mode() ) {
-            return $buffer;
-        }
-         * 
-         */
-
         if ($this->metatags['seo_title']) {
             $r = "<title>".strip_tags($this->metatags['seo_title'])."</title>".PHP_EOL;;
         }
