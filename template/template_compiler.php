@@ -780,23 +780,36 @@ class fx_template_compiler {
     
     protected function _token_headfile_to_code($token, $type) {
         $code .= "<?php\n";
-        foreach ($token->get_children() as $js_set) {
-            $js_set = preg_split("~[\n\r]~", $js_set->get_prop('value'));
-            foreach ($js_set as $js_file) {
-                $js_file = trim($js_file);
-                if (empty($js_file)) {
+        foreach ($token->get_children() as $set) {
+            $set = preg_split("~[\n]~", $set->get_prop('value'));
+            foreach ($set as $file) {
+                $file = trim($file);
+                if (empty($file)) {
                     continue;
                 }
                 $res_string = '';
+                $alias = null;
+                if (preg_match('~\sas\s~', $file)) {
+                    $file_parts = explode(" as ", $file);
+                    $file = trim($file_parts[0]);
+                    $alias = trim($file_parts[1]);
+                }
                 // constant
-                if (preg_match("~^[A-Z0-9_]+$~", $js_file)) {
-                    $res_string = $js_file;
-                } elseif (!preg_match("~^(/|https?://)~", $js_file)) {
-                    $res_string = '$template_dir."'.$js_file.'"';
+                if (preg_match("~^[A-Z0-9_]+$~", $file)) {
+                    $res_string = $file;
+                } elseif (!preg_match("~^(/|https?://)~", $file)) {
+                    $res_string = '$template_dir."'.$file.'"';
                 } else {
-                    $res_string = '"'.$js_file.'"';
+                    $res_string = '"'.$file.'"';
+                }
+                if ($alias) {
+                    $code .= "if (!fx::page()->has_file_alias('".$alias."', '".$type."')) {\n";
                 }
                 $code .= 'fx::page()->add_'.$type.'_file('.$res_string.");\n";
+                if ($alias) {
+                    $code .= "fx::page()->has_file_alias('".$alias."', '".$type."', true);\n";
+                    $code .= "}\n";
+                }
             }
         }
         $code .= "\n?>";
