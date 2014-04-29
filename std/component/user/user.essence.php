@@ -59,8 +59,14 @@ class fx_content_user extends fx_content {
         if ($this->is_modified('password')) {
             $this['password'] = crypt($this['password'],  uniqid(mt_rand(), true));
         }
-        if ($this->is_modified('email') && fx::data('content_user')->where('email', $this['email'])->one()) {
-            throw new Exception("Ununique email");
+        if ($this->is_modified('email')) {
+            $existing = fx::data('content_user')
+                            ->where('email', $this['email'])
+                            ->where('id', $this['id'], '!=')
+                            ->one();
+            if ($existing) {
+                throw new Exception("Ununique email");
+            }
         }
     }
     
