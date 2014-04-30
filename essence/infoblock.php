@@ -310,6 +310,12 @@ class fx_infoblock extends fx_essence {
         return isset($meta['disabled']) && $meta['disabled'];
     }
     
+    public function get_template() {
+        $tpl_name = $this->get_prop_inherited('visual.template');
+        $tpl = fx::template($tpl_name);
+        return $tpl;
+    }
+    
     protected $output_is_cached = false;
     protected $output_cache = null;
     protected $output_is_subroot = false;
@@ -328,8 +334,7 @@ class fx_infoblock extends fx_essence {
         if ($meta['disabled']) {
             return false;
         }
-        $tpl_name = $this->get_prop_inherited('visual.template');
-        $tpl = fx::template($tpl_name);
+        $tpl = $this->get_template();
         $tpl_params = $this->get_prop_inherited('visual.template_visual');
         if (!is_array($tpl_params)) {
             $tpl_params = array();
