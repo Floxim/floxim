@@ -690,8 +690,6 @@ class fx_system_files {
          */
         $local_new_filename = fx::path()->to_abs($new_filename);
         
-        fx::log('movng', $local_old_filename, $local_new_filename);
-
         $local_parent_dir = dirname($local_new_filename);
 
         if (!is_dir($local_parent_dir)) {  // check whether there is a destination directory
@@ -704,7 +702,6 @@ class fx_system_files {
 
 
         if (!is_dir($local_old_filename)) {  // copy 1 file
-            fx::log('call ccp');
             return $this->_copy_file($local_old_filename, $local_new_filename);
         }
 
@@ -842,7 +839,7 @@ class fx_system_files {
 
     public function save_file($file, $dir) {
         $dir = trim($dir, '/').'/';
-        $this->mkdir(fx::config()->HTTP_FILES_PATH.$dir);
+        $this->mkdir(fx::path('files', $dir));
 
         // normal FILES
         if (is_array($file) && !$file['link'] && !$file['source_id'] && !$file['path']) {
@@ -854,13 +851,6 @@ class fx_system_files {
             $type = 4;
             $filename = $file['real_name'];
             $filetype = $file['type'];
-        }
-        else if (is_array($file) && $file['source_id']) {
-            $type = 2;
-            $fileinfo = fx::db()->get_row("SELECT `real_name`, `type`, `path` FROM {{filetable}} WHERE id = '".intval($file['source_id'])."' ");
-            $filename = $fileinfo['real_name'];
-            $filetype = $fileinfo['type'];
-            $link = fx::config()->FILES_FOLDER.$fileinfo['path'];
         } else if (($link = $file['link']) || ( is_string($file) && $link = $file)) {
             $type = 3;
             $filename = substr($link, strrpos($link, '/') + 1);
@@ -869,34 +859,22 @@ class fx_system_files {
 
         $put_file = $this->get_put_filename($dir, $filename);
         
-        $stored_path = $dir.$put_file;
-        $http_path = fx::config()->HTTP_FILES_PATH.$dir.$put_file;
-        $full_path = fx::config()->FILES_FOLDER.$dir.$put_file;
+        $full_path = fx::path('files', $dir.'/'.$put_file);
+        $http_path = fx::path()->to_http($full_path);
         
         if ($type == 1) {
             $res= move_uploaded_file($file['tmp_name'], $full_path);
             if (!$res) {
             	die();
             }
-            //$this->move_uploaded_file($file['tmp_name'], $full_path);
         } else if ( $type == 2 || $type == 3) {
             $content = file_get_contents($link);
             file_put_contents($full_path, $content);
         } else {
             fx::files()->copy($file['path'], $full_path);
         }
-        /*
-        $q = "INSERT INTO `{{filetable}}` SET
-            `real_name` = '" . fx::db()->escape($filename) . "',
-            `path` = '" . $stored_path. "',
-            `type` = '" . $filetype . "',
-            `size` = '" . filesize($full_path) . "'";
-
-        fx::db()->query($q);
-        */
         
         return array(
-            //'id' => fx::db()->insert_id(), 
             'path' => $http_path,
             'filename' => $filename,
             'fullpath' => $full_path
@@ -908,20 +886,16 @@ class fx_system_files {
         $name = preg_replace("~[^a-z0-9_\.-]~i", '_', $name);
         $name = trim($name, "_");
         $name = preg_replace("~_+~", "_", $name);
-        if ( $this->file_exists(fx::config()->HTTP_FILES_PATH.$dir.$name) ) {
-            return $name;
+        
+        $path = fx::path('files', $dir.'/'.$name);
+        
+        $try = 0;
+        while (fx::path()->exists($path)) {
+            $c_name = preg_replace("~(\.[^\.]+)$~", "_".$try."\$1", $name);
+            $try++;
+            $path = fx::path('files', $dir.'/'.$c_name);
         }
-
-        $point_pos = strrpos($name, '.');
-        $without_ext = substr($name, 0, $point_pos);
-        $ext = substr($name, $point_pos + 1);
-        $i = 0;
-
-        while ( $this->file_exists(fx::config()->HTTP_FILES_PATH.$dir.$without_ext.'_'.$i++.'.'.$ext)){
-            ;
-        }
-
-        return $without_ext.'_'.--$i.'.'.$ext;
+        return fx::path()->file_name($path);
     }
 
     private function tar_check() {

@@ -296,7 +296,7 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
      */
     public function apply($callback) {
         foreach ($this->data as &$di) {
-            call_user_func($callback, $di);
+            call_user_func($callback, &$di);
         }
         return $this;
     }

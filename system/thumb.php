@@ -1,4 +1,4 @@
-<?
+<?php
 class fx_thumb
 {
     protected $source_path = null;
@@ -215,7 +215,6 @@ class fx_thumb
         } else {
             $params = $this->config;
         }
-        fx::log($params);
         $st = array_merge(array(
             'width' => false,
             'height' => false,

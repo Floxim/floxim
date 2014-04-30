@@ -431,6 +431,11 @@ class fx {
             }
             $res = $string;
         }
+        if (func_num_args() > 2) {
+            $replacements = array_slice(func_get_args(), 2);
+            array_unshift($replacements, $res);
+            $res = call_user_func_array('sprintf', $replacements);
+        }
         return $res;
     }
 

@@ -178,10 +178,14 @@ fx_buttons.prototype.handle = function ( button ) {
         if (sel.length === 0) {
             return;
         }
+        var cid = sel.data('id');
+        if (cid.name) {
+            cid = cid.name;
+        }
         var opts = {
             essence:sel.data('essence'),
             action:'delete',
-            id:sel.data('id'),
+            id:cid,
             posting:true
         };
         $fx.post(

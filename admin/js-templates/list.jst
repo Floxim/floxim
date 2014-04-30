@@ -100,7 +100,11 @@ function set_input_value() {
     var inp = list.find('input.list_value_input');
     var ids = [];
     list.find('.fx_admin_selected').each(function(){
-            ids.push( $(this).data('id'));
+        var cid = $(this).data('id');
+        if (cid.name) {
+            cid = cid.name;
+        }
+        ids.push( cid );
     });
     inp.val(ids.join(','));
 }

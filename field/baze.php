@@ -14,7 +14,6 @@ class fx_field_baze extends fx_field {
         $data = $this->get_js_field($content);
         unset($data['label'], $data['id'], $data['parent'], $data['name']);
         return $data;
-        return $this->_edit_jsdata;
     }
 
     public function get_js_field($content) {
@@ -59,10 +58,6 @@ class fx_field_baze extends fx_field {
 
     public function get_savestring() {
         return $this->value;
-    }
-
-    public function post_save($content) {
-        return false;
     }
 
     public function get_error() {

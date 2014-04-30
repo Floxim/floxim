@@ -35,25 +35,39 @@ class fx_controller_admin_content extends fx_controller_admin {
         
         $this->response->add_fields($fields);
         $content_fields = fx::collection($content->get_form_fields());
-        $tabbed = $content_fields->group('tab');
-        foreach ($tabbed as $tab => $tab_fields) {
-            $this->response->add_tab($tab, $tab);
-            $this->response->add_fields($tab_fields, $tab, 'content');
+        
+        $is_backoffice = $input['mode'] == 'backoffice';
+        
+        if (!$is_backoffice){ 
+            $tabbed = $content_fields->group('tab');
+            foreach ($tabbed as $tab => $tab_fields) {
+                $this->response->add_tab($tab, $tab);
+                $this->response->add_fields($tab_fields, $tab, 'content');
+            }
+        } else {
+            $content_fields->apply(function(&$f) {
+                unset($f['tab']);
+            });
+            $this->response->add_fields($content_fields, '', 'content');
+            $this->response->add_fields(array(
+                $this->ui->hidden('mode', 'backoffice'),
+                $this->ui->hidden('reload_url', $input['reload_url'])
+            ));
         }
-        /*
-        fx::log('content fields', $content_fields, $tabbed);
-        $this->response->add_fields($content_fields, false, 'content');
-         * 
-         */
-
+        
+        $res = array('status' => 'ok');
+        
         if ($input['data_sent']) {
-            fx::log('ready to save', $content);
+            $res['is_new'] = !$content['id'];
             $content->set_field_values($input['content']);
-            fx::log('saving', $content, $input);
             $content->save();
+            $res['saved_id'] = $content['id'];
+            if ($is_backoffice) {
+                $res['reload'] = str_replace("%d", $content['id'], $input['reload_url']);
+            }
         }
         $com_item_name = fx::data('component', $content_type)->get('item_name');
-        $res = array('status' => 'ok');
+        
         if ($input['content_id']) {
             $res['header'] = fx::alang('Editing ', 'system') . 
                     ' <span title="#'.$input['content_id'].'">'.$com_item_name.'</span>';
@@ -61,6 +75,7 @@ class fx_controller_admin_content extends fx_controller_admin {
             $res['header'] = fx::alang('Adding new ', 'system'). ' '.$com_item_name;
         }
         $res['view'] = 'cols';
+        $this->response->add_form_button('save');
         return $res;
     }
 
@@ -204,5 +219,75 @@ class fx_controller_admin_content extends fx_controller_admin {
             $content['priority'] = $c_priority;
             $content->save();
         }
+    }
+    
+    /**
+     * List all content of specified type
+     * @param type $input
+     */
+    public function all($input) {
+        $content_type = $input['content_type'];
+        $list = array(
+            'type' => 'list',
+            'values' => array(),
+            'labels' => array('id' => 'ID'),
+            'essence' => 'content'
+        );
+        
+        if ($content_type === 'content') {
+            $list['labels']['type'] = 'Type';
+        }
+        
+        $com = fx::data('component', $content_type);
+        
+        $fields = $com->all_fields();
+        
+        $fields->find_remove(function($f) {
+            return $f['type_of_edit'] == fx_field::EDIT_NONE;
+        });
+        
+        foreach ($fields as $f) {
+            $list['labels'][$f['name']] = $f['description'];
+        }
+        
+        $finder = fx::content($content_type);
+        
+        $items = $finder->all();
+        
+        foreach ($items as $item) {
+            $r = array('id' => $item['id']);
+            $r['type'] = $item['type'];
+            foreach ($fields as $f) {
+                $val = $item[$f['name']];
+                switch ($f['type']) {
+                    case fx_field::FIELD_LINK:
+                        if ($val) {
+                            $linked = fx::content($val);
+                            $val = $linked['name'];
+                        }
+                        break;
+                    case fx_field::FIELD_STRING: case fx_field::FIELD_TEXT:
+                        $val = strip_tags($val);
+                        $val = mb_substr($val, 0, 250);
+                        break;
+                    case fx_field::FIELD_IMAGE:
+                        $val = fx::image($val, 'max-width:100px,max-height:50px');
+                        $val = '<img src="'.$val.'" alt="" />';
+                        break;
+                    case fx_field::FIELD_MULTILINK:
+                        $val = fx::alang('%d items', 'system', count($val));
+                        break;
+                }
+                
+                $r[$f['name']] = $val;
+            }
+            $list['values'][]= $r;
+        }
+        
+        $this->response->add_buttons(array(
+            "delete"
+        ));
+        
+        return array('fields' => array('list' => $list));
     }
 }

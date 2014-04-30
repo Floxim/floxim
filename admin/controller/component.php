@@ -81,7 +81,8 @@ class fx_controller_admin_component extends fx_controller_admin {
                 'settings' => fx::alang('Settings','system'),
                 'fields' => fx::alang('Fields','system'),
                 //'actions' => fx::lang('Component actions', 'system'),
-                'templates' => fx::alang('Templates', 'system')
+                'items' => fx::alang('Items', 'system'),
+                'templates' => fx::alang('Templates', 'system'),
             ), 
             'widget' => array(
                 'settings' => fx::alang('Settings','system'),
@@ -193,14 +194,13 @@ class fx_controller_admin_component extends fx_controller_admin {
 
         $component = fx::data($essence_code)->get_by_id($input['params'][0]);
         
-        $action = isset($input['params'][1]) ? $input['params'][1] : 'ctpl';
+        $action = isset($input['params'][1]) ? $input['params'][1] : 'settings';
         
         self::make_breadcrumb($component, $action, $this->response->breadcrumb);
         
         if (method_exists($this, $action)) {
             $result = call_user_func(array($this, $action), $component, $input);
         }
-        
         $result['tree']['mode'] = $essence_code.'-'.$component['id'];
         $this->response->submenu->set_menu($essence_code.'-'.$component['id']);
         
@@ -227,7 +227,6 @@ class fx_controller_admin_component extends fx_controller_admin {
     }
 
     public function add_save($input) {
-        fx::log($input);
         $result = array('status' => 'ok');
 
         $data['name'] = trim($input['name']);
@@ -507,5 +506,69 @@ class fx_controller_admin_component extends fx_controller_admin {
     	$this->response->submenu->set_subactive('field-'.$field_id);
     	
     	return $result;
+    }
+    
+    public function items($component, $input) {
+        $this->response->submenu->set_subactive('items');
+        //$this->response->breadcrumb->add_item(fx::alang('Items'));
+        $ctr = new fx_controller_admin_content(
+                array(
+                    'content_type' => $component['keyword'],
+                    'do_return' => true
+                ),
+                'all'
+        );
+        $res = $ctr->process();
+        $this->response->add_buttons(array(
+            array(
+                'key' => "add", 
+                'title' => 'Add new '.$component['keyword'],
+                'url' => '#admin.component.edit('.$component['id'].',add_item)'
+            ),
+            "delete"
+        ));
+        foreach ($res['fields'][0]['values'] as &$item) {
+            $url = '#admin.component.edit('.$component['id'].',edit_item,'.$item['id'].')';
+            $item['id'] = array('url' => $url, 'name' => $item['id']);
+            //$item['id'] = '<a href="">'.$item['id'].'</a>';
+        }
+        return $res;
+    }
+    
+    public function add_item($component, $input) {
+        $items_url = '#admin.component.edit('.$component['id'].',items)';
+        $this->response->submenu->set_subactive('items');
+        $this->response->breadcrumb->add_item(fx::alang('Items'), $items_url);
+        $this->response->breadcrumb->add_item(fx::alang('Add'));
+        $ctr = new fx_controller_admin_content(
+                array(
+                    'content_type' => $component['keyword'],
+                    'mode' => 'backoffice',
+                    'reload_url' => $items_url,
+                    'do_return' => true
+                ),
+                'add_edit'
+        );
+        $res = $ctr->process();
+        return $res;
+    }
+    
+    public function edit_item($component, $input) {
+        $this->response->submenu->set_subactive('items');
+        $items_url = '#admin.component.edit('.$component['id'].',items)';
+        $this->response->breadcrumb->add_item(fx::alang('Items'), $items_url);
+        $this->response->breadcrumb->add_item(fx::alang('Edit'));
+        $ctr = new fx_controller_admin_content(
+                array(
+                    'content_type' => $component['keyword'],
+                    'content_id' => $input['params'][2],
+                    'reload_url' => $items_url,
+                    'mode' => 'backoffice',
+                    'do_return' => true
+                ),
+                'add_edit'
+        );
+        $res = $ctr->process();
+        return $res;
     }
 }

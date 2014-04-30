@@ -129,14 +129,12 @@ class fx_content extends fx_essence {
             } else {
                 $jsf = $field->get_js_field($this);
             }
-            fx::log('gotta jsf', $jsf);
             if ($jsf) {
                 if (!$jsf['tab']) {
                     if ($field['form_tab']) {
                         $jsf['tab'] = $field['form_tab'];
                     } else {
                         $coms [$field['component_id']] = true;
-                        fx::log($jsf, $coms);
                         $jsf['tab'] = count($coms);
                     }
                 }

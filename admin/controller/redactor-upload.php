@@ -7,4 +7,3 @@ if (!$path) {
     die("OOPS");
 }
 echo stripslashes(json_encode(array('filelink' => $path)));
-?>
