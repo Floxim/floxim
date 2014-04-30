@@ -1499,7 +1499,7 @@ fx_front.prototype.reload_layout = function(callback) {
 
 fx_front.prototype.move_down_body =function () {
     $("body").css('margin-top','34px'); //34 - panel height
-    $('.fx_top_fixed').css('top', '+=34px').css('z-index', 3000);
+    $('.fx_top_fixed').css('top', '+=34px').css('z-index', 2674);
 };
 
 fx_front.prototype.get_node_panel = function() {

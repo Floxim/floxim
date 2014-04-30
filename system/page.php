@@ -278,15 +278,15 @@ class fx_system_page {
 
     public function post_process($buffer) {
         if ($this->metatags['seo_title']) {
-            $r = "<title>".strip_tags($this->metatags['seo_title'])."</title>".PHP_EOL;;
+            $r = "<title>".strip_tags($this->metatags['seo_title'])."</title>".PHP_EOL;
         }
         if ($this->metatags['seo_description']) {
             $r .= '<meta name="description" content="' 
-                    . strip_tags($this->metatags['seo_description']) . '" />'.PHP_EOL;;
+                    . strip_tags($this->metatags['seo_description']) . '" />'.PHP_EOL;
         }
         if ($this->metatags['seo_keywords']) {
             $r .= '<meta name="keywords" content="' 
-                    . strip_tags($this->metatags['seo_keywords']) . '" />'.PHP_EOL;;
+                    . strip_tags($this->metatags['seo_keywords']) . '" />'.PHP_EOL;
         }
 
         if ($this->_files_css) {

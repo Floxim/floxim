@@ -29,7 +29,7 @@ class fx_controller_layout extends fx_controller {
             $html = preg_replace("~^.+?<body[^>]*?>~is", '', $html);
             $html = preg_replace("~</body>.+?$~is", '', $html);
         } else {
-            $page = fx::data('content_page', $this->get_param('page_id'));
+            $page = fx::env('page');
             $meta_title = empty($page['title']) ? $page['name'] : $page['title'];
             $this->_show_admin_panel();
             $html = fx::page()->set_metatags('title',$meta_title)

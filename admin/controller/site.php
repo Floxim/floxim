@@ -222,14 +222,28 @@ class fx_controller_admin_site extends fx_controller_admin {
         $main_fields[] = $this->ui->input('mirrors', fx::alang('Aliases','system'), $site['mirrors']);
         
         $languages = fx::data('lang')->all()->get_values('lang_code', 'lang_code');
-        $main_fields[] =
-            array(
-                'name' => 'language',
-                'type' => 'select',
-                'values' => $languages,
-                'value' => $site['language'],
-                'label' => fx::alang('Language','system')
-            );
+        $main_fields[] = array(
+            'name' => 'language',
+            'type' => 'select',
+            'values' => $languages,
+            'value' => $site['language'],
+            'label' => fx::alang('Language','system')
+        );
+        
+        $layouts = fx::data('layout')->all();
+        $layouts_select = array();
+        foreach ( $layouts  as $layout ) {
+            $layouts_select[] = array($layout['id'], $layout['name']);
+        }
+
+        $main_fields []= array(
+            'name' => 'layout_id',
+            'type' => 'select',
+            'values' => $layouts_select,
+            'value' => $site['layout_id'],
+            'label' => fx::alang('Layout','system')
+        );
+            
         $this->response->add_fields($main_fields);
 
         $fields = array();
@@ -249,7 +263,17 @@ class fx_controller_admin_site extends fx_controller_admin {
             'status' => 'ok',
             'reload' => '#admin.site.all'
         );
-        $params = array('name', 'domain', 'mirrors', 'language', 'robots', 'language', 'robots', 'index_page_id', 'error_page_id', 'offline_text');
+        $params = array(
+            'name', 
+            'domain', 
+            'mirrors', 
+            'language', 
+            'robots', 
+            'layout_id',
+            'index_page_id', 
+            'error_page_id', 
+            'offline_text'
+        );
 
         foreach ($params as $v) {
             if (isset($input[$v])) {
