@@ -93,7 +93,7 @@ class fx_controller_admin_site extends fx_controller_admin {
 
         if (!$site->validate()) {
             $result['status'] = 'error';
-            $result['errors'] = $site->get_validate_error();
+            $result['errors'] = $site->get_validate_errors();
             return $result;
         }
 

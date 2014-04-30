@@ -77,7 +77,7 @@ class fx_controller_admin_lang extends fx_controller_admin {
 
         if (!$lang->validate()) {
             $result['status'] = 'error';
-            $result['errors'] = $lang->get_validate_error();
+            $result['errors'] = $lang->get_validate_errors();
             return $result;
         }
         try {

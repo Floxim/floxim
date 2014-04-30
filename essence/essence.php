@@ -12,6 +12,8 @@ abstract class fx_essence implements ArrayAccess {
     
     protected $validate_errors = array();
     
+    protected $_form = null;
+    
     protected function get_finder() {
         return fx::data($this->get_type());
     }
@@ -49,6 +51,7 @@ abstract class fx_essence implements ArrayAccess {
             $this->_before_update();
             if ($this->validate() === false) {
                 $this->throw_invalid();
+                return false;
             }
             // updated only fields that have changed
             $data = array();
@@ -63,6 +66,7 @@ abstract class fx_essence implements ArrayAccess {
             $this->_before_insert();
             if ($this->validate() === false) {
                 $this->throw_invalid();
+                return false;
             }
             $id = $this->get_finder()->insert($this->data);
             $this->data['id'] = $id;
@@ -74,12 +78,20 @@ abstract class fx_essence implements ArrayAccess {
         return $this;
     }
     
+    /**
+     * Throw validation exception or append errors to form if it exists
+     * @throws fx_essence_validation_exception
+     */
     protected function throw_invalid() {
         $exception = new fx_essence_validation_exception(
             fx::lang("Unable to save essence \"".$this->get_type()."\"")
         );
         $exception->add_errors($this->validate_errors);
-        throw $exception;
+        if ($this->_form) {
+            $exception->to_form($this->_form);
+        } else {
+            throw $exception;
+        }
     }
     
     protected function _invalid($message, $field = null) {
@@ -158,8 +170,15 @@ abstract class fx_essence implements ArrayAccess {
     public function load_from_form($form, $fields = true) {
         $vals = $this->_get_from_form($form, $fields);
         $this->set($vals);
-        return $this->validate_with_form($form, false);
+        $this->bind_form($form);
+        return $this;
     }
+    
+    public function bind_form(fx_form $form) {
+        $this->_form = $form;
+    }
+    
+    
     
     protected function _get_from_form($form, $fields) {
         if (is_array($fields)) {
@@ -178,16 +197,15 @@ abstract class fx_essence implements ArrayAccess {
             $vals = $this->_get_from_form($form, $fields);
             $this->set($vals);
         }
+        $this->bind_form($form);
         if (!$this->validate()) {
-            try {
-                $this->throw_invalid();
-            } catch (fx_essence_validation_exception $ex) {
-                $ex->to_form($form);
-            }
+            $this->throw_invalid();
+            return false;
         }
+        return true;
     }
     
-    public function get_validate_error () {
+    public function get_validate_errors () {
         return $this->validate_errors;
     }
     
@@ -197,8 +215,9 @@ abstract class fx_essence implements ArrayAccess {
 
     public function __toString() {
         $res = '';
-        foreach ($this->data as $k => $v)
+        foreach ($this->data as $k => $v) {
             $res .= "$k = $v " . PHP_EOL;
+        }
         return $res;
     }
     

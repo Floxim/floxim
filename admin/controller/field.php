@@ -143,7 +143,7 @@ class fx_controller_admin_field extends fx_controller_admin {
         
         if (!$field->validate()) {
             $result['status'] = 'error';
-            $result['errors'] = $field->get_validate_error();
+            $result['errors'] = $field->get_validate_errors();
         }
         else {
             $result = array('status' => 'ok');
@@ -181,7 +181,7 @@ class fx_controller_admin_field extends fx_controller_admin {
 
         if (!$field->validate()) {
             $result['status'] = 'error';
-            $result['errors'] = $field->get_validate_error();
+            $result['errors'] = $field->get_validate_errors();
         }
         else {
             $result = array('status' => 'ok');

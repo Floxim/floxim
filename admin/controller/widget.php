@@ -90,7 +90,7 @@ class fx_controller_admin_widget extends fx_controller_admin_component {
         
         if (!$widget->validate()) {
             $result['status'] = 'error';
-            $result['errors'] = $widget->get_validate_error();
+            $result['errors'] = $widget->get_validate_errors();
             return $result;
         }
         $widget->save();

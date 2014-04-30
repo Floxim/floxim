@@ -238,7 +238,7 @@ class fx_controller_admin_component extends fx_controller_admin {
         $component = fx::data('component')->create($data);
         if (!$component->validate()) {
             $result['status'] = 'error';
-            $result['errors'] = $component->get_validate_error();
+            $result['errors'] = $component->get_validate_errors();
             return $result;
         }
 
