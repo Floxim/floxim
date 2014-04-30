@@ -2,7 +2,7 @@
 class fx_router_ajax extends fx_router {
     public function route($url = null, $context = null) {
         $action_info = null;
-        if (!preg_match("~^/\~ajax/([a-z0-9_\.\:-]+)?/?$~", $url, $action_info)) {
+        if (!preg_match("~^/\~ajax/([a-z0-9_\.\:-]+)?~", $url, $action_info)) {
             return null;
         }
         if (isset($_POST['_ajax_base_url'])) {
