@@ -61,8 +61,6 @@ class fx_router_ajax extends fx_router {
                 //$res = fx::page()->post_process($res);
             }
         }
-        return $res;
-        //fx::debug($action, $controller, $res, json_encode($res));
-        //die();
+        return $res ? $res : true;
     }
 }

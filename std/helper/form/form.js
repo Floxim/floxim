@@ -15,11 +15,13 @@ $('html').on('submit', 'form.fx_form_ajax', function() {
         dataType:'html',
         data:$form.serialize(),
         success: function(data) {
+            var $data = $(data);
             var $ib = $form.closest('.fx_infoblock');
             var $container = $ib.parent();
-            $ib.before(data);
+            $ib.before($data);
             $ib.remove();
             $('form.fx_form_sent .fx_form_row_error :input', $container).first().focus();
+            $data.trigger('fx_form_loaded');
         }
     });
     return false;

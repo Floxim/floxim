@@ -133,12 +133,10 @@ class fx_system_mail {
      * @return \fx_system_mail
      */
     public function from($address, $name = null) {
-        $from_name = null;
-        if (preg_match("~<(.+?)>~", $address, $from_name)) {
-            $address = trim(preg_replace("~<(.+?)>~", '', $address));
-            if (!$name) {
-                $name = $from_name[1];
-            }
+        $real_address = null;
+        if (preg_match("~<(.+?)>~", $address, $real_address)) {
+            $name = trim(preg_replace("~<(.+?)>~", '', $address));
+            $address = $real_address[1];
         }
         $this->mailer->From = $address;
         if ($name) {
