@@ -118,6 +118,7 @@ class fx_controller_admin_user extends fx_controller_admin {
             $result['text'][] = fx::alang($e->getMessage(),'system');
             $result['fields'][] = 'email';
         }
+        $result['reload'] = '#admin.user.all';
         return $result;
     }
 
@@ -156,13 +157,32 @@ class fx_controller_admin_user extends fx_controller_admin {
         );
         return $result;
     }
+    
+    protected function _allow_edit_admin($user) {
+        if (!$user['id'] || !$user['is_admin']) {
+            return true;
+        }
+        $another_admin = fx::data('content_user')
+                            ->where('is_admin', 1)
+                            ->where('id', $user['id'], '!=')
+                            ->one();
+        return $another_admin ? true : false;
+    }
 
     protected function _form($info) {
         $fields[] = $this->ui->input('f_email', fx::alang('Email','system'), $info['email']);
         $fields[] = $this->ui->input('f_name', fx::alang('User name','system'), $info['name']);
         $fields[] = $this->ui->password('password', fx::alang('Password','system'));
         $fields[] = $this->ui->password('password2', fx::alang('Confirm password','system'));
-        $fields[] = array('type' => 'checkbox', 'name' => 'f_is_admin', 'label' => fx::alang('Admin','system'), 'value' => $info['is_admin']);
+        
+        if ($this->_allow_edit_admin($info)) {
+            $fields[] = array(
+                'type' => 'checkbox', 
+                'name' => 'f_is_admin', 
+                'label' => fx::alang('Is admin?','system'), 
+                'value' => $info['is_admin']
+            );
+        }
 
         $fields[] = $this->ui->hidden('posting');
         $fields[] = $this->ui->hidden('essence', 'user');

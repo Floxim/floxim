@@ -86,6 +86,9 @@ class fx_system_mail {
      */
     public function message($message) {
         $this->mailer->Body = $message;
+        if (preg_match("~<[a-z].+>~", $message)) {
+            $this->mailer->isHTML(true);
+        }
         return $this;
     }
     
