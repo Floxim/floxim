@@ -29,7 +29,6 @@ class fx_controller_component_user extends fx_controller_component {
     public function do__crossite_auth() {
         if (isset($_POST['email']) && isset($_POST['password'])) {
             fx::user()->login($_POST['email'], $_POST['password']);
-            return false;
         }
     }
     
