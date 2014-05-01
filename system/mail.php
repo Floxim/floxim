@@ -59,6 +59,10 @@ class fx_system_mail {
             );
         }
         
+        if (isset($params['subject'])) {
+            $this->subject($params['subject']);
+        }
+        
         if (isset($params['to'])) {
             $this->to($params['to']);
         }
