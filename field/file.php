@@ -13,7 +13,7 @@ class fx_field_file extends fx_field_baze {
     }
 
     public function get_savestring(fx_essence $content = null) {
-        $old_value = $content[$this['name']];
+        $old_value = $content[$this['keyword']];
         if ($old_value != $this->value) {
             if (!empty($old_value)) {
                 $old_value = fx::path()->to_abs($old_value);
@@ -28,7 +28,7 @@ class fx_field_file extends fx_field_baze {
 
                     $path = fx::path()->http(
                         'content_files', 
-                        $content['type'].'/'.$this->name.'/'.$fn[0]
+                        $content['type'].'/'.$this['keyword'].'/'.$fn[0]
                     );
                     
                     $try = 0;
@@ -37,7 +37,7 @@ class fx_field_file extends fx_field_baze {
                         $try++;
                         $path = fx::path()->http(
                             'content_files',
-                            $content['type'].'/'.$this->name.'/'.$file_name
+                            $content['type'].'/'.$this['keyword'].'/'.$file_name
                         );
                     }
 

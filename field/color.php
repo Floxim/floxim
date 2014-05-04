@@ -5,5 +5,3 @@ class fx_field_color extends fx_field_baze {
         return "VARCHAR(7)";
     }
 }
-
-?>

@@ -472,7 +472,7 @@ class fx_data {
         if (!$rel_finder){
             $rel_finder = $this->_get_default_relation_finder($rel);
         }
-
+        
         // e.g. $rel = array(fx_data::HAS_MANY, 'field', 'component_id');
         switch ($rel_type) {
             case self::BELONGS_TO:

@@ -6,28 +6,27 @@ class fx_controller_admin_field extends fx_controller_admin {
         $essence = $input['essence'];
         
         $items = $essence->all_fields();
-        $ar = array('type' => 'list', 'filter' => true, 'sortable' => true);
+        $ar = array('type' => 'list', 'filter' => true, 'is_sortable' => true);
         
         $essence_code = str_replace('fx_','',get_class($essence));
         
         $ar['essence'] = 'field';
         $ar['values'] = array();
         $ar['labels'] = array(
+            'keyword' => fx::alang('Keyword','system'),
             'name' => fx::alang('Name','system'),
-            'label' => fx::alang('Description','system'),
             'type' => fx::alang('Type','system'),
             'inherited' => fx::alang('Inherited from','system'),
             'editable' => fx::alang('Editable', 'system')
         );
         foreach ( $items as $field ) {
-            $desc = $field['description'];
             $r = array(
                 'id' => $field->get_id(), 
-                'name' => array(
-                    'name' => $field->get_name(), 
-                    'url' =>  '#admin.'.$essence_code.'.edit('.$field['component_id'].',edit_field,'.$field->get_id().')'
+                'keyword' => array(
+                    'name' => $field['keyword'], 
+                    'url' =>  '#admin.'.$essence_code.'.edit('.$field['component_id'].',edit_field,'.$field['id'].')'
                 ),
-                'label' => $desc, 
+                'name' => $field['name'], 
                 'type' => fx::alang("FX_ADMIN_FIELD_".strtoupper($field->get_type(false)), 'system')
             );
             if ($essence['id'] != $field['component_id']) {
@@ -76,8 +75,8 @@ class fx_controller_admin_field extends fx_controller_admin {
     
     
     protected function _form ( $info = array() ) {
-        $fields[] = $this->ui->input('name', fx::alang('Field keyword','system'), $info['name']);
-        $fields[] = $this->ui->input('description', fx::alang('Description','system'), $info['description']);
+        $fields[] = $this->ui->input('keyword', fx::alang('Field keyword','system'), $info['keyword']);
+        $fields[] = $this->ui->input('name', fx::alang('Field name','system'), $info['name']);
         /*
         $fields []= array(
             'type' => 'select',
@@ -130,8 +129,8 @@ class fx_controller_admin_field extends fx_controller_admin {
     
     public function add_save( $input ) {
         $params = array('format', 'type', 'not_null', 'searchable', 'default', 'type_of_edit', 'form_tab');
+        $data['keyword'] = trim($input['keyword']);
         $data['name'] = trim($input['name']);
-        $data['description'] = trim($input['description']);
         foreach ( $params as $v ) {
             $data[$v] = $input[$v];
         }
@@ -140,7 +139,6 @@ class fx_controller_admin_field extends fx_controller_admin {
         $field['checked'] = 1;
         $field[ $input['to_essence'].'_id'] = $input['to_id'];
         $field['priority'] = fx::data('field')->next_priority();
-        
         if (!$field->validate()) {
             $result['status'] = 'error';
             $result['errors'] = $field->get_validate_errors();
@@ -172,9 +170,9 @@ class fx_controller_admin_field extends fx_controller_admin {
     public function edit_save ( $input ) {
         $field = fx::data('field')->get_by_id( $input['id']);
 
-        $params = array('name', 'description', 'format', 'type', 'not_null', 'searchable', 'default', 'type_of_edit', 'form_tab');
+        $params = array('keyword', 'name', 'format', 'type', 'not_null', 'searchable', 'default', 'type_of_edit', 'form_tab');
+        $input['keyword'] = trim($input['keyword']);
         $input['name'] = trim($input['name']);
-        $input['description'] = trim($input['description']);
         foreach ( $params as $v ) {
             $field->set( $v, $input[$v]);
         }
@@ -222,9 +220,12 @@ class fx_controller_admin_field extends fx_controller_admin {
         if ( $datatype['not_null'] ) {
             $fields[] = $this->ui->checkbox('not_null', fx::alang('Required','system'), null, $field['not_null']);
         }
+        /*
         if ( $datatype['searchable'] ) {
             $fields[] = $this->ui->checkbox('searchable', fx::alang('Field can be used for searching','system'), null, $field['searchable']);
         }
+         * 
+         */
         if ( $datatype['default'] ) {
             if ($datatype['name'] == 'datetime') {
                 $fields[] = array(

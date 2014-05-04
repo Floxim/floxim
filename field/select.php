@@ -3,10 +3,7 @@
 class fx_field_select extends fx_field_baze {
 
     public function get_js_field($content) {
-        if ($this->format['multiple']) {
-            $tname .= '[]';
-        }
-
+        
         parent::get_js_field($content);
 
         $values = $this->get_options();
@@ -22,7 +19,7 @@ class fx_field_select extends fx_field_baze {
             $this->_js_field['type'] = 'radio';
         }
 
-        $this->_js_field['value'] = $content[$this->name];
+        $this->_js_field['value'] = $content[$this['keyword']];
         return $this->_js_field;
     }
 

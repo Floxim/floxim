@@ -15,7 +15,7 @@ class fx_data_content extends fx_data {
                     $relations[$f->get_prop_name()] = $relation;
                     break;
                 case fx_field::FIELD_MULTILINK:
-                    $relations[$f['name']] = $relation;
+                    $relations[$f['keyword']] = $relation;
                     break;
             }
         }
@@ -24,7 +24,9 @@ class fx_data_content extends fx_data {
     
     protected function _get_default_relation_finder($rel) {
         $finder = parent::_get_default_relation_finder($rel);
-        $finder->order('priority');
+        if ( ! $finder instanceof fx_data_lang ) {
+            $finder->order('priority');
+        }
         return $finder;
     }
     
@@ -125,11 +127,11 @@ class fx_data_content extends fx_data {
         }
         $fields = $component->all_fields()->find('default', '', fx_collection::FILTER_NEQ);
         foreach ($fields as $f) {
-            if (!isset($obj[$f['name']])) {
+            if (!isset($obj[$f['keyword']])) {
                 if ($f['type'] == fx_field::FIELD_DATETIME) {
-                    $obj[$f['name']] = date('Y-m-d H:i:s');
+                    $obj[$f['keyword']] = date('Y-m-d H:i:s');
                 } else {
-                    $obj[$f['name']] = $f['default'];
+                    $obj[$f['keyword']] = $f['default'];
                 }
             }
         }
@@ -276,10 +278,10 @@ class fx_data_content extends fx_data {
         foreach ($chain as $level_component) {
             $table_res = array();
             $fields = $level_component->fields();
-            $field_names = $fields->get_values('name');
+            $field_keywords = $fields->get_values('keyword');
             // while the underlying field content manually prescription
             if ($level_component['keyword'] == 'content') {
-                $field_names = array_merge($field_names, array(
+                $field_keywords = array_merge($field_keywords, array(
                     'priority', 
                     'checked',
                     'last_updated',
@@ -291,18 +293,18 @@ class fx_data_content extends fx_data {
             }
             $table_name = $level_component->get_content_table();
             $table_cols = $this->_get_columns($table_name);
-            foreach ($field_names as $field_name) {
-                if (!in_array($field_name, $table_cols)) {
+            foreach ($field_keywords as $field_keyword) {
+                if (!in_array($field_keyword, $table_cols)) {
                     continue;
                 }
                 
-                $field = $fields->find_one('name', $field_name);
+                $field = $fields->find_one('keyword', $field_keyword);
                 if ($field && !$field->get_sql_type()) {
                     continue;
                 }
                 // put only if the sql type of the field is not false (e.g. multilink)
-                if (isset($data[$field_name]) ) {
-                    $table_res[]= "`".fx::db()->escape($field_name)."` = '".fx::db()->escape($data[$field_name])."' ";
+                if (isset($data[$field_keyword]) ) {
+                    $table_res[]= "`".fx::db()->escape($field_keyword)."` = '".fx::db()->escape($data[$field_keyword])."' ";
                 }
             }
             if (count($table_res) > 0) {

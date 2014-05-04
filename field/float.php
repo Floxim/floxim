@@ -12,7 +12,3 @@ class fx_field_float extends fx_field_baze {
         return "DOUBLE";
     }
 }
-
-
-
-?>

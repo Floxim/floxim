@@ -94,6 +94,7 @@ class fx_controller_component extends fx_controller_frontoffice {
         if ($this->get_param('parent_type') == 'current_page_id') {
            $q->where('parent_id', fx::env('page_id')); 
         }
+        //fx::log('sel lkr', $q);
         return $q->all();
     }
     
@@ -189,7 +190,7 @@ class fx_controller_component extends fx_controller_frontoffice {
                 $relation = $field->get_relation();
                 $res['content_type'] = $relation[0] == fx_data::MANY_MANY ? $relation[4] : $relation[1] ;
             }
-            $fields['conditions']['tpl'][0]['values'][$field['name']] = $res;
+            $fields['conditions']['tpl'][0]['values'][$field['keyword']] = $res;
         }
         $ib_field_params = array(
             'description' => 'Infoblock',
@@ -511,7 +512,7 @@ class fx_controller_component extends fx_controller_frontoffice {
             }
 
             foreach ($conditions as $condition) {
-                $field = $fields->find_one('name', $condition['name']);
+                $field = $fields->find_one('keyword', $condition['name']);
                 $error = false;
                 switch ($condition['operator']) {
                     case 'contains': case 'not_contains':
