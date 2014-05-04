@@ -860,7 +860,7 @@ class fx_template_compiler {
         $template_dir = preg_replace("~/[^/]+$~", '', $template_path).'/';
         
         $code .= "\$template_dir = '".$template_dir."';\n";
-        $code .= "\$_is_admin = fx::is_admin();\n";
+        $code .= "\$_is_admin = \$this->is_admin();\n";
         
         if (isset($tpl_props['_variants'])) {
             foreach ($tpl_props['_variants'] as &$v) {

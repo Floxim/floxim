@@ -5,6 +5,7 @@ class fx_template {
     protected $_parent = null;
     protected $_inherit_context = false;
     protected $_level = 0;
+    protected $_admin_disabled = false;
     
     public function __construct($action, $data = array()) {
         if (count($data) > 0) {
@@ -17,6 +18,14 @@ class fx_template {
         $this->_parent = $parent_template;
         $this->_inherit_context = $inherit;
         $this->_level = $parent_template->get_level() + 1;
+        return $this;
+    }
+    
+    public function is_admin($set = null) {
+        if ($set === null) {
+            return !$this->_admin_disabled && fx::is_admin();
+        }
+        $this->_admin_disabled = ! $set;
         return $this;
     }
     
@@ -70,7 +79,6 @@ class fx_template {
         } else {
             echo $res;
         }
-        
     }
     
     protected function get_var_meta($var_name = null, $source = null) {
