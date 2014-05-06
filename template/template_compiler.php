@@ -317,7 +317,7 @@ class fx_template_compiler {
             $real_val_defined = true;
         }
         if ($has_default) {
-            $code .= "\nif (!".$real_val_var.") {\n";
+            $code .= "\nif (is_null(".$real_val_var.") || ".$real_val_var." == '') {\n";
             
             if (!($default = $token->get_prop('default')) ) {
                 // ~= src="{%img}{$img /}{/%}" --> src="{%img}{$img type="image" /}{/%}
