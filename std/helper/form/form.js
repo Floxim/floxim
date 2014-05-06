@@ -5,6 +5,7 @@ $('html').on('click', '.fx_refresh_captcha', function() {
     var src = $pic.attr('src');
     var new_src = src.replace(/rand=\d+/, 'rand='+Math.round(Math.random()*10000));
     $pic.attr('src', new_src);
+    $pic.closest('.fx_captcha_input').find('.fx_input_type_captcha').val('').focus();
 });
 
 $('html').on('submit', 'form.fx_form_ajax', function() {

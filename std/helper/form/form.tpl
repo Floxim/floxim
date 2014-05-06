@@ -108,7 +108,7 @@
 </select>
 
 <div class="fx_captcha_input" fx:template="input[$type == 'captcha']">
-    <input {apply input_atts /} />
+    <input {apply input_atts /} autocomplete="off" />
     <div class="fx_captcha_image_block">
         <img src="{$captcha_url}" class="fx_captcha_image" />
         <a class="fx_refresh_captcha">{%refresh_captcha}Show another image{/%}</a>
