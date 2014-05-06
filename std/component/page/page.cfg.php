@@ -7,10 +7,36 @@ $page_config = array(
                 $res = $page['type'] === $component['keyword'];
                 return $res;
             }
-        ),/*
-        '.*' => array(
-            'disabled' => true
-        ),*/
+        ),
+        '*neighbours' => array(
+            'check_context' => function($page) use ($component) {
+                $res = $page['type'] === $component['keyword'];
+                return $res;
+            },
+            'settings' => array(
+                'sorting' => array(
+                    'name' => 'sorting',
+                    'label' => fx::alang('Sorting','controller_component'),
+                    'type' => 'select',
+                    'values' => array('auto' => fx::alang('Auto', 'controller_component')) + $sort_fields
+                ),
+                'sorting_dir' => array(
+                    'name' => 'sorting_dir',
+                    'label' => fx::alang('Order','controller_component'),
+                    'type' => 'select',
+                    'values' => array(
+                        'asc' => fx::alang('Ascending','controller_component'), 
+                        'desc' => fx::alang('Descending','controller_component')
+                    ),
+                    'parent' => array('sorting' => '!=auto')
+                ),
+                'group_by_parent' => array(
+                    'name' => 'group_by_parent',
+                    'label' => fx::alang('Group by parent', 'controller_component'),
+                    'type' => 'checkbox'
+                )
+            )
+        ),
         'list_infoblock' => array(
             'disabled' => false
         ),

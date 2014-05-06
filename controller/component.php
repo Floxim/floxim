@@ -17,7 +17,12 @@ class fx_controller_component extends fx_controller_frontoffice {
         $sources = array();
         $com_dir = fx::path()->to_abs('component');
         $sources []= fx::path('floxim', '/controller/component.cfg.php');
-        $chain = $this->get_component()->get_chain();
+        $com = $this->get_component();
+        if (!$com) {
+            fx::log('no com', $this, debug_backtrace());
+            die();
+        }
+        $chain = $com->get_chain();
         foreach ($chain as $com) {
             $com_file = fx::path('std', '/component/'.$com['keyword'].'/'.$com['keyword'].'.cfg.php');
             if (file_exists($com_file)) {
@@ -180,7 +185,7 @@ class fx_controller_component extends fx_controller_frontoffice {
                 ->find('type', fx_field::FIELD_IMAGE, '!=');
         foreach ($searchable_fields as $field) {
             $res = array(
-                'description' => $field['description'],
+                'description' => $field['name'],
                 'type' => fx_field::get_type_by_id($field['type'])
             );
             if ($field['type'] == fx_field::FIELD_LINK) {
