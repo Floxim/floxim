@@ -80,6 +80,32 @@ class fx_data {
         return $this;
     }
     
+    /**
+     * For relational fields: join related item and prepare real field name
+     * @param string $field
+     */
+    protected function _prepare_complex_field($field, $value = null, $type = null) {
+        list($rel, $field_name) = explode('.', $field, 2);
+        if (!isset($this->with[$rel])) {
+            $this->only_with($rel);
+        } 
+        $c_with = $this->with[$rel];
+        if (!$c_with[2]) {
+            $this->with[$rel][2] = true;
+            $this->_join_with($c_with);
+        }
+
+        $with_name = $c_with[0];
+        $with_finder = $c_with[1];
+        $relation = $this->get_relation($rel);
+        if (func_num_args() == 3 && $relation[0] != fx_data::MANY_MANY) {
+            //$with_finder->where($field_name, $value, $type);
+        }
+        $table = $with_finder->get_col_table($field_name);
+        $field = $with_name.'__'.$table.'.'.$field_name;
+        return $field;
+    }
+    
     protected function _prepare_condition($field, $value, $type) {
         if (is_array($field)) {
             foreach ($field as $n => $c_cond) {
@@ -88,24 +114,7 @@ class fx_data {
             return array($field, $value, $type);
         }
         if (strstr($field, '.')) {
-            list($rel, $field_name) = explode('.', $field, 2);
-            if (!isset($this->with[$rel])) {
-                $this->only_with($rel);
-            } 
-            $c_with = $this->with[$rel];
-            if (!$c_with[2]) {
-                $this->with[$rel][2] = true;
-                $this->_join_with($c_with);
-            }
-            
-            $with_name = $c_with[0];
-            $with_finder = $c_with[1];
-            $relation = $this->get_relation($rel);
-            if ($relation[0] != fx_data::MANY_MANY) {
-                $with_finder->where($field_name, $value, $type);
-            }
-            $table = $with_finder->get_col_table($field_name);
-            $field = $with_name.'__'.$table.'.'.$field_name;
+            $field = $this->_prepare_complex_field($field, $value, $type);
         } elseif (preg_match("~^[a-z0-9_-]~", $field)) {
             $table = $this->get_col_table($field);
             $field = '{{'.$table.'}}.'.$field;
@@ -145,7 +154,11 @@ class fx_data {
         if (!preg_match("~asc|desc~i", $direction)) {
             $direction = 'ASC';
         }
-        $this->order []= "`".$field."` ".$direction;
+        if (strstr($field, '.')) {
+            $this->order []= $this->_prepare_complex_field($field).' '.$direction;
+        } else {
+            $this->order []= "`".$field."` ".$direction;
+        }
         return $this;
     }
         
@@ -240,19 +253,19 @@ class fx_data {
             foreach ($this->where as $cond) {
                 $conds []= $this->_make_cond($cond, $base_table);
             }
-            $q .= "WHERE ".join(" AND ", $conds);
+            $q .= "\nWHERE ".join(" AND ", $conds);
         }
         if (count($this->group) > 0) {
-            $q .= " GROUP BY ".join(", ", $this->group);
+            $q .= "\n GROUP BY ".join(", ", $this->group);
         }
         if (is_string($this->order)) {
             $this->order = array($this->order);
         }
         if (is_array($this->order) && count($this->order) > 0) {
-            $q .= " ORDER BY ".join(", ", $this->order);
+            $q .= "\n ORDER BY ".join(", ", $this->order);
         }
         if ($this->limit){
-            $q .= ' LIMIT '.$this->limit;
+            $q .= "\n LIMIT ".$this->limit;
         }
         //fx::debug(fx::db()->prepare_query($q));
         return $q;
@@ -638,7 +651,7 @@ class fx_data {
         if ($update) {
             fx::db()->query(
                 "UPDATE `{{".$this->table."}}` SET ".join(',', $update)." ".
-                        ( $wh ? " WHERE ".join(' AND ', $wh) : "")." "
+                        ( $wh ? "\n WHERE ".join(' AND ', $wh) : "")." "
             );
         }
     }
@@ -659,7 +672,7 @@ class fx_data {
             $where[] = "`".$argv[$i]."` = '".fx::db()->escape($argv[$i + 1])."'";
         }
         if ($where) {
-            $where = " WHERE ".join(" AND ", $where);
+            $where = "\n WHERE ".join(" AND ", $where);
         }
 
         fx::db()->get_results("DELETE FROM `{{".$this->table."}}`".$where);
