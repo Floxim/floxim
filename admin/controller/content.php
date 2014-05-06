@@ -60,7 +60,9 @@ class fx_controller_admin_content extends fx_controller_admin {
         if ($input['data_sent']) {
             $res['is_new'] = !$content['id'];
             $content->set_field_values($input['content']);
+            fx::log('sfv don', $content, $input);
             $content->save();
+            fx::log('svd', $content);
             $res['saved_id'] = $content['id'];
             if ($is_backoffice) {
                 $res['reload'] = str_replace("%d", $content['id'], $input['reload_url']);
@@ -262,13 +264,13 @@ class fx_controller_admin_content extends fx_controller_admin {
                 switch ($f['type']) {
                     case fx_field::FIELD_LINK:
                         if ($val) {
-                            $linked = fx::content($val);
+                            $linked = fx::data($f->get_related_type(), $val);
                             $val = $linked['name'];
                         }
                         break;
                     case fx_field::FIELD_STRING: case fx_field::FIELD_TEXT:
                         $val = strip_tags($val);
-                        $val = mb_substr($val, 0, 250);
+                        $val = mb_substr($val, 0, 150);
                         break;
                     case fx_field::FIELD_IMAGE:
                         $val = fx::image($val, 'max-width:100px,max-height:50px');

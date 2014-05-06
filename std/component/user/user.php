@@ -68,13 +68,10 @@ class fx_controller_component_user extends fx_controller_component {
                 $form->add_message('New password is sent to '.$form->email);
                 fx::mail()
                     ->to($form->email)
-                    ->subject( fx::lang('New %s password', 'component_user', fx::env('host') ) )
-                    ->message( fx::lang(
-                        'Hello, %s! Your new password: %s', 
-                        'component_user',
-                        $user['name'], 
-                        $password
-                    ))
+                    ->data('user', $user)
+                    ->data('password', $password)
+                    ->data('site', fx::env('site'))
+                    ->template('user.password_recover')
                     ->send();
             }
         }

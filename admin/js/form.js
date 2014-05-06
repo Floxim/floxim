@@ -200,6 +200,7 @@ fx_form = {
         if (json.type === undefined) {
             json.type = 'input';
         }
+        json.type = json.type.replace(/^field_/, '');
         var type='';
         switch(json.type) {
             case 'hidden': case 'string': case 'short': case 'medium': case 'long': case 'int':
@@ -215,7 +216,7 @@ fx_form = {
                 type = json.type;
                 break;
         }
-
+        
         var node = $fx_fields[type](json);
         target.append(node);
         if (node === '') {

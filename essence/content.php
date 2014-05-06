@@ -52,24 +52,23 @@ class fx_content extends fx_essence {
 
     /*
      * Populates $this->data based on administrative forms
-     * @param array $values an array of the form array('f_name' => 'Name', 'f_title => ")
      */
     public function set_field_values($values = array(), $save_fields = null) {
         if (count($values) == 0) {
             return;
         }
-        $fields = $save_fields ? $this->get_fields()->find('name', $save_fields) : $this->get_fields();
+        $fields = $save_fields ? $this->get_fields()->find('keyword', $save_fields) : $this->get_fields();
         $result = array('status' => 'ok');
         foreach ($fields as $field) {
-            $field_name = $field->get_name();
-            if (!isset($values[$field_name])) {
+            $field_keyword = $field['keyword'];
+            if (!isset($values[$field_keyword])) {
                 if ($field['type'] == fx_field::FIELD_MULTILINK) {
                     $value = array();
                 } else {
                     continue;
                 }
             } else {
-                $value = $values[$field_name];
+                $value = $values[$field_keyword];
             }
             
             if (!$field->check_rights()) {
@@ -78,12 +77,12 @@ class fx_content extends fx_essence {
             
             if ($field->validate_value($value)) {
                 $field->set_value($value);
-                $this[$field_name] = $field->get_savestring($this);
+                $this[$field_keyword] = $field->get_savestring($this);
             } else {
                 $field->set_error();
                 $result['status'] = 'error';
                 $result['text'][] = $field->get_error();
-                $result['fields'][] = $field_name;
+                $result['fields'][] = $field_keyword;
             }
         }
         return $result;
@@ -95,19 +94,19 @@ class fx_content extends fx_essence {
 
     protected $_fields_to_show = null;
     
-    public function get_field_meta($field_name) {
+    public function get_field_meta($field_keyword) {
         $fields = $this->get_fields();
-        if (!isset($fields[$field_name])) {
+        if (!isset($fields[$field_keyword])) {
             return false;
         }
-        $cf = $fields[$field_name];
+        $cf = $fields[$field_keyword];
         $field_meta = array(
             'var_type' => 'content', 
             'content_id' => $this['id'],
             'content_type_id' => $this->component_id,
             'id' => $cf['id'],
-            'name' => $cf['name'],
-            'label' => $cf['description'],
+            'name' => $cf['keyword'],
+            'label' => $cf['name'],
             'type' => $cf->type
         );
         if ($cf->type == 'text') {
@@ -124,8 +123,8 @@ class fx_content extends fx_essence {
             if ($field['type_of_edit'] == fx_field::EDIT_NONE) {
                 continue;
             }
-            if (method_exists($this, 'get_form_field_'.$field['name'])) {
-                $jsf = call_user_func(array($this, 'get_form_field_'.$field['name']), $field);
+            if (method_exists($this, 'get_form_field_'.$field['keyword'])) {
+                $jsf = call_user_func(array($this, 'get_form_field_'.$field['keyword']), $field);
             } else {
                 $jsf = $field->get_js_field($this);
             }
@@ -257,21 +256,21 @@ class fx_content extends fx_essence {
             if (
                     isset($this[$lf_prop]) && 
                     $this[$lf_prop] instanceof fx_content && 
-                    empty($this[$lf['name']])
+                    empty($this[$lf['keyword']])
                 ) {
                 if (!$this[$lf_prop]['id']) {
                     $this[$lf_prop]->save();
                 }
-                $this[$lf['name']] = $this[$lf_prop]['id'];
+                $this[$lf['keyword']] = $this[$lf_prop]['id'];
             }
             // synchronize the field bound to the parent
             if ($lf['format']['is_parent']) {
-                $lfv = $this[$lf['name']];
+                $lfv = $this[$lf['keyword']];
                 if ($lfv != $this['parent_id']) {
                     if (!$this['parent_id'] && $lfv) {
                         $this['parent_id'] = $lfv;
                     } elseif ($lfv != $this['parent_id']) {
-                        $this[$lf['name']] = $this['parent_id'];
+                        $this[$lf['keyword']] = $this['parent_id'];
                     }
                 }
             }
@@ -284,20 +283,20 @@ class fx_content extends fx_essence {
     protected function _save_multi_links() {
         $link_fields = 
             $this->get_fields()->
-            find('name', $this->modified)->
+            find('keyword', $this->modified)->
             find('type', fx_field::FIELD_MULTILINK);
         foreach ($link_fields as $link_field) {
-            $val = $this[$link_field['name']];
+            $val = $this[$link_field['keyword']];
             $relation = $link_field->get_relation();
-            $related_field_name = $relation[2];
+            $related_field_keyword = $relation[2];
             
             switch ($relation[0]) {
                 case fx_data::HAS_MANY:
-                    $old_data = isset($this->modified_data[$link_field['name']]) ? 
-                        $this->modified_data[$link_field['name']] :
+                    $old_data = isset($this->modified_data[$link_field['keyword']]) ? 
+                        $this->modified_data[$link_field['keyword']] :
                         new fx_collection();
                     foreach ($val as $linked_item) {
-                        $linked_item[$related_field_name] = $this['id'];
+                        $linked_item[$related_field_keyword] = $this['id'];
                         $linked_item->save();
                     }
                     $old_data->find_remove('id', $val->get_values('id'));
@@ -306,8 +305,8 @@ class fx_content extends fx_essence {
                     });
                     break;
                 case fx_data::MANY_MANY:
-                    $old_linkers = isset($this->modified_data[$link_field['name']]->linker_map) ? 
-                        $this->modified_data[$link_field['name']]->linker_map : 
+                    $old_linkers = isset($this->modified_data[$link_field['keyword']]->linker_map) ? 
+                        $this->modified_data[$link_field['keyword']]->linker_map : 
                         new fx_collection();
                     
                     // new linkers
@@ -317,7 +316,7 @@ class fx_content extends fx_essence {
                         throw new Exception('Wrong linker map');
                     }
                     foreach ($val->linker_map as $linker_obj) {
-                        $linker_obj[$related_field_name] = $this['id'];
+                        $linker_obj[$related_field_keyword] = $this['id'];
                         $linker_obj->save();
                     }
                     
@@ -345,16 +344,16 @@ class fx_content extends fx_essence {
         if (!isset(self::$content_fields_by_component[$com_id])) {
             $fields = array();
             foreach ( fx::data('component', $com_id)->all_fields()  as $f) {
-                $fields[$f['name']] = $f;
+                $fields[$f['keyword']] = $f;
             }
             self::$content_fields_by_component[$com_id] = fx::collection($fields);
         }
         return self::$content_fields_by_component[$com_id];
     }
     
-    public function has_field($field_name) {
+    public function has_field($field_keyword) {
         $fields = $this->get_fields();
-        return isset($fields[$field_name]);
+        return isset($fields[$field_keyword]);
     }
 
     protected function _after_delete() {
@@ -363,7 +362,7 @@ class fx_content extends fx_essence {
         $image_fields = $this->get_fields()->
                         find('type', fx_field::FIELD_IMAGE);
         foreach ($image_fields as $f) {
-            $c_prop = $this[$f['name']];
+            $c_prop = $this[$f['keyword']];
             if (fx::path()->is_file($c_prop)) {
                 fx::files()->rm($c_prop);
             }
@@ -374,10 +373,10 @@ class fx_content extends fx_essence {
         parent::_after_update();
         // modified image fields
         $image_fields = $this->get_fields()->
-                        find('name', $this->modified)->
+                        find('keyword', $this->modified)->
                         find('type', fx_field::FIELD_IMAGE);
         foreach ($image_fields as $img_field) {
-            $old_value = $this->modified_data[$img_field['name']];
+            $old_value = $this->modified_data[$img_field['keyword']];
             if (fx::path()->is_file($old_value)) {
                 fx::files()->rm($old_value);
             }
@@ -410,8 +409,7 @@ class fx_content extends fx_essence {
     public function fake() {
         $fields = $this->get_fields();
         foreach ($fields as $f) {
-            $this[$f['name']] = $f->fake_value();
+            $this[$f['keyword']] = $f->fake_value();
         }
-        //echo fx_debug($fields);
     }
 }

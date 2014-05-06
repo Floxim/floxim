@@ -1,5 +1,5 @@
 <?php
-class fx_controller_component_publication extends fx_controller_component {
+class fx_controller_component_publication extends fx_controller_component_page {
     
     public function do_list () {
         $this->listen('query_ready', function (fx_data $query) {
@@ -89,9 +89,8 @@ class fx_controller_component_publication extends fx_controller_component {
                 $query->where('publish_date', $start, '>=');
                 $query->where('publish_date', $end, '<=');
             });
-        };
+        }
         $res = parent::do_list_infoblock();
         return $res;
     }
 }
-?>

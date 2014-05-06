@@ -4,7 +4,7 @@ $sort_fields = $this
             ->all_fields()
             ->find('type', fx_field::FIELD_MULTILINK, '!=')
             ->find('type', fx_field::FIELD_LINK, '!=')
-            ->get_values('description', 'name');
+            ->get_values('name', 'keyword');
 
 $component = $this->get_component();
 

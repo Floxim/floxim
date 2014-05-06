@@ -7,7 +7,7 @@ class fx_field_datetime extends fx_field_baze {
     public function get_js_field($content) {
         parent::get_js_field($content);
 
-        $this->load_values_by_str($content[$this->name]);
+        $this->load_values_by_str($content[$this['keyword']]);
         $this->_js_field['day'] = $this->day;
         $this->_js_field['month'] = $this->month;
         $this->_js_field['year'] = $this->year;
@@ -52,7 +52,4 @@ class fx_field_datetime extends fx_field_baze {
             $this->seconds = date('s', $timestamp);
         }
     }
-
 }
-
-?>

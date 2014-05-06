@@ -18,10 +18,10 @@ class fx_field_multilink extends fx_field_baze {
             $linker_field = $related_relation[$rel[3]][2];
             
             $this->_js_field['name_postfix'] = $linker_field;
-            if (isset($content[$this['name']])) {
+            if (isset($content[$this['keyword']])) {
                 $this->_js_field['value'] = array();
-                $linkers = $content[$this['name']]->linker_map;
-                foreach ($content[$this['name']] as $num => $v) {
+                $linkers = $content[$this['keyword']]->linker_map;
+                foreach ($content[$this['keyword']] as $num => $v) {
                     $this->_js_field['value'] []= array(
                         'id' => $v['id'], 
                         'name' => $v['name'], 
@@ -40,17 +40,17 @@ class fx_field_multilink extends fx_field_baze {
                 $this->_js_field['labels'] []= $ef['label'];
             }
             $this->_js_field['values'] = array();
-            if (isset($content[$this['name']])) {
+            if (isset($content[$this['keyword']])) {
                 if ($rel[0] === fx_data::HAS_MANY) {
-                    $linkers = $content[$this['name']];
+                    $linkers = $content[$this['keyword']];
                 } else {
-                    $linkers = $content[$this['name']]->linker_map;
+                    $linkers = $content[$this['keyword']]->linker_map;
                 }
                 foreach ($linkers as $linker) {
                     $linker_fields = $linker->get_form_fields();
                     $val_array = array('_index' => $linker['id']);
                     foreach ($linker_fields as $lf) {
-                        $val_array [$lf['name']]= $lf['value'];
+                        $val_array [$lf['keyword']]= $lf['value'];
                     }
                     $this->_js_field['values'] []= $val_array;
                 }
@@ -94,7 +94,7 @@ class fx_field_multilink extends fx_field_baze {
                 
                 $linking_field_values[]= array(
                     $lf['id'], 
-                    $linking_field_owner_component['keyword'].'.'.$lf['name']
+                    $linking_field_owner_component['keyword'].'.'.$lf['keyword']
                 );
                 
                 // get the list of references component and all of its descendants
@@ -117,7 +117,7 @@ class fx_field_multilink extends fx_field_baze {
                     
                     // exclude fields, connected to the parent
                     if ($lf['format']['is_parent']){
-                        $linking_component_links = $linking_component_links->find('name', 'parent_id', '!=');
+                        $linking_component_links = $linking_component_links->find('keyword', 'parent_id', '!=');
                     }
                     if (count($linking_component_links) === 0) {
                         continue;
@@ -129,7 +129,7 @@ class fx_field_multilink extends fx_field_baze {
                     foreach ($linking_component_links as $linking_component_link) {
                         $res_many_many_fields[$mmf_key] []= array(
                             $linking_component_link['id'],
-                            $linking_component_link['name'],
+                            $linking_component_link['keyword'],
                         );
                         
                         $target_component = fx::data(
@@ -259,7 +259,7 @@ class fx_field_multilink extends fx_field_baze {
     protected function _append_many_many($content) {
         // pull the previous value
         // to fill it
-        $existing_items = $content->get($this['name']);
+        $existing_items = $content->get($this['keyword']);
         $rel = $this->get_relation();
         // end type (for fields lot)
         $linked_data_type = $this->get_end_data_type();
@@ -280,8 +280,8 @@ class fx_field_multilink extends fx_field_baze {
                 //!!! some tin
                 return isset($i['format']['prop_name']) && $i['format']['prop_name'] == $linker_prop_name;
             })
-            ->get('name');
-        $linker_infoblock_id = null;
+            ->get('keyword');
+        $linked_infoblock_id = null;
         foreach ($this->value as $item_props) {
             $linked_props = $item_props[$end_link_field_name];
             // if the linked entity doesn't yet exist
@@ -374,11 +374,12 @@ class fx_field_multilink extends fx_field_baze {
         }
         
         if (!$this['format']['mm_field']) {
-            return array(
+            $res_rel = array(
                 fx_data::HAS_MANY,
                 $first_type,
-                $direct_target_field['name']
+                $direct_target_field['keyword']
             );
+            return $res_rel;
         }
         
         $end_target_field = fx::data('field', $this['format']['mm_field']);
@@ -392,10 +393,10 @@ class fx_field_multilink extends fx_field_baze {
         return array(
             fx_data::MANY_MANY,
             $first_type,
-            $direct_target_field['name'],
+            $direct_target_field['keyword'],
             $end_target_field->get_prop_name(),
             $end_type,
-            $end_target_field['name']
+            $end_target_field['keyword']
         );
     }
 }

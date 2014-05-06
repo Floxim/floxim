@@ -317,7 +317,7 @@ class fx_template_compiler {
             $real_val_defined = true;
         }
         if ($has_default) {
-            $code .= "\nif (!".$real_val_var.") {\n";
+            $code .= "\nif (is_null(".$real_val_var.") || ".$real_val_var." == '') {\n";
             
             if (!($default = $token->get_prop('default')) ) {
                 // ~= src="{%img}{$img /}{/%}" --> src="{%img}{$img type="image" /}{/%}
@@ -860,7 +860,7 @@ class fx_template_compiler {
         $template_dir = preg_replace("~/[^/]+$~", '', $template_path).'/';
         
         $code .= "\$template_dir = '".$template_dir."';\n";
-        $code .= "\$_is_admin = fx::is_admin();\n";
+        $code .= "\$_is_admin = \$this->is_admin();\n";
         
         if (isset($tpl_props['_variants'])) {
             foreach ($tpl_props['_variants'] as &$v) {

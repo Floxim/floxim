@@ -28,7 +28,8 @@ class fx_field_link extends fx_field_baze {
             array(
                 array('site', 'Site'),
                 array('component', 'Component'),
-                array('infoblock', 'Infoblock')
+                array('infoblock', 'Infoblock'),
+                array('lang', 'Language')
             )
         );
         $fields[] = array(
@@ -87,7 +88,7 @@ class fx_field_link extends fx_field_baze {
         if ($this['format']['render_type'] == 'livesearch') {
             $this->_js_field['type'] = 'livesearch';
             $this->_js_field['params'] = array('content_type' => $target_content);
-            if ( ($c_val = $content[$this->name])) {
+            if ( ($c_val = $content[$this['keyword']])) {
                 $c_val_obj = $finder->where('id', $c_val)->one();
                 if ($c_val_obj) {
                     $this->_js_field['value'] = array(
@@ -100,10 +101,14 @@ class fx_field_link extends fx_field_baze {
         }
         
         $this->_js_field['type'] = 'select';
-        
-        $finder->where('site_id', $content['site_id']);
+        if ($target_content !== 'lang') {
+            $finder->where('site_id', $content['site_id']);
+            $name_prop = 'name';
+        } else {
+            $name_prop = 'en_name';
+        }
         $val_items = $finder->all();
-        $this->_js_field['values'] = $val_items->get_values('name', 'id');
+        $this->_js_field['values'] = $val_items->get_values($name_prop, 'id');
         return $this->_js_field;
     }
     
@@ -125,7 +130,7 @@ class fx_field_link extends fx_field_baze {
         return array(
             fx_data::BELONGS_TO,
             $rel_target,
-            $this['name']
+            $this['keyword']
         );
     }
     
@@ -140,6 +145,12 @@ class fx_field_link extends fx_field_baze {
         );
     }
     
+    public function get_related_type() {
+        $rel = $this->get_relation();
+        return $rel[1];
+    }
+
+
     public function get_savestring($content) {
         if (is_array($this->value) && isset($this->value['title'])) {
             $title = $this->value['title'];

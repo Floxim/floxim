@@ -5,7 +5,3 @@ class fx_field_bool extends fx_field_baze {
         return "TINYINT";
     }
 }
-
-
-
-?>

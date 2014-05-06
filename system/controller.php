@@ -147,10 +147,7 @@ class fx_controller {
                 );
             }
         }
-        $is_test = $this->action == 'two_columns';
-        if ($is_test) {
-            fx::log($template_variants, $layout_names);
-        }
+        
         // now - all the variants of templates from template from the controller
         foreach ($controller_variants as $controller_variant) {
             if (($controller_template = fx::template($controller_variant))) {
@@ -426,53 +423,4 @@ class fx_controller {
             }
         }
     }
-    /*
-    public function after_save_infoblock($is_new) {
-        if (! ($ib_id = $this->get_param('infoblock_id')) ) {
-            return;
-        }
-        $infoblock = fx::data('infoblock', $ib_id);
-        $action = $infoblock['action'];
-        $full_config = $this->get_config();
-        if (!isset($full_config['actions'][$action])) {
-            return;
-        }
-        $config = $full_config['actions'][$action];
-        if ($is_new && isset($config['install'])) {
-            foreach ($config['install'] as $install_callback) {
-                if (is_callable($install_callback)) {
-                    call_user_func($install_callback, $infoblock, $this);
-                }
-            }
-        }
-        if (isset($config['save'])) {
-            foreach ($config['save'] as $save_callback) {
-                if (is_callable($save_callback)) {
-                    call_user_func($save_callback, $infoblock, $this);
-                }
-            }
-        }
-    }
-    
-    public function before_delete_infoblock() {
-        if (! ($ib_id = $this->get_param('infoblock_id')) ) {
-            return;
-        }
-        $infoblock = fx::data('infoblock', $ib_id);
-        $action = $infoblock['action'];
-        $full_config = $this->get_config();
-        if (!isset($full_config['actions'][$action])) {
-            return;
-        }
-        $config = $full_config['actions'][$action];
-        if (isset($config['delete'])) {
-            foreach ($config['delete'] as $delete_callback) {
-                if (is_callable($delete_callback)) {
-                    call_user_func($delete_callback, $infoblock, $this);
-                }
-            }
-        }
-    }
-     * 
-     */
 }

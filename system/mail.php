@@ -44,6 +44,10 @@ class fx_system_mail {
      */
     public function set_params($params = array()) {
         
+        if (isset($params['template'])) {
+            $this->template($params['template']);
+        }
+        
         if (isset($params['message'])) {
             $this->message($params['message']);
         }
@@ -80,11 +84,14 @@ class fx_system_mail {
     }
     
     /**
-     * Set mail body
+     * Set or get mail body
      * @param string $message
      * @return \fx_system_mail
      */
-    public function message($message) {
+    public function message($message = null) {
+        if ($message === null) {
+            return $this->mailer->Body;
+        }
         $this->mailer->Body = $message;
         if (preg_match("~<[a-z].+>~", $message)) {
             $this->mailer->isHTML(true);
@@ -145,8 +152,73 @@ class fx_system_mail {
         return $this;
     }
     
-    
+    /**
+     * Send message
+     * @return boolean
+     */
     public function send() {
         return $this->mailer->send();
+    }
+    
+    /**
+     * Load message template
+     * @param string $template template code
+     */
+    public function template($template) {
+        $tpl = fx::content('mail_template')
+                                ->where('keyword', $template)
+                                ->one();
+        if ($tpl) {
+            $this->_mail_template = $tpl;
+            if ($tpl['from']) {
+                $this->from($tpl['from']);
+            }
+            if ($tpl['bcc']) {
+                $this->bcc($tpl['bcc']);
+            }
+        }
+        $this->_process_template();
+        return $this;
+    }
+    
+    /**
+     * Append data for message template
+     * @param mixed $key
+     * @param mixed $value
+     * @return \fx_system_mail
+     */
+    public function data($key, $value = null) {
+        if (func_num_args() == 2 && is_string($key)) {
+            $this->_data[$key] = $value;
+            return $this;
+        }
+        if (func_num_args() == 1 && is_array($key)) {
+            $this->_data = array_merge_recursive($this->_data, $key);
+        }
+        return $this;
+    }
+    
+    protected function _process_template() {
+        if (!$this->_mail_template) {
+            return;
+        }
+        $props = array('subject', 'message');
+        $res = array();
+        foreach ($props as $prop) {
+            $prop_tpl = $this->_mail_template[$prop];
+            $tpl = fx::template()->virtual($prop_tpl);
+            $tpl->is_admin(false);
+            $res[$prop] = $tpl->render($this->_data);
+        }
+        $this->subject($res['subject']);
+        $this->message($res['message']);
+    }
+    
+    public function bcc($recievers) {
+        $recievers = explode(",", $recievers);
+        foreach ($recievers as $address) {
+            $this->mailer->addBCC($address);
+        }
+        return $this;
     }
 }

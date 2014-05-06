@@ -14,6 +14,7 @@ class fx_data_field extends fx_data {
     
     public function get_multi_lang_fields() {
         return array(
+            'name',
             'description'
         );
     }

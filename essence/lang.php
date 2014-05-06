@@ -1,5 +1,9 @@
 <?php
 class fx_lang extends fx_essence {
+    
+    public function get_name() {
+        return $this->data['en_name'];
+    }
 
     public function validate() {
         $res = true;

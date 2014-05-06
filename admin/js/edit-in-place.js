@@ -1,8 +1,6 @@
 (function($){
 $.fn.edit_in_place = function(command) {
-    //var $nodes = this.first();
     var $nodes = this;
-    //console.log($nodes);
     $nodes.each(function() {
         var $node = $(this);
         var eip = $node.data('edit_in_place');
@@ -220,11 +218,9 @@ fx_edit_in_place.prototype.get_vars = function() {
         if (pf_meta.type === 'bool') {
             var c_input = $('input[name="'+pf_meta['name']+'"][type="checkbox"]', pf);
             var new_value = c_input.is(':checked') ? "1" : "0";
-            //console.log('was', old_value);
             if (old_value === null) {
                 old_value = '0';
             }
-            //old_value = old_value ? '1' : '0';
         } else if (pf_meta.type === 'livesearch') {
             var livesearch = $('.livesearch', pf).data('livesearch');
             var new_value = livesearch.getValues();
@@ -239,10 +235,8 @@ fx_edit_in_place.prototype.get_vars = function() {
             value_changed = new_value !== old_value;
         }
         
-        console.log(new_value, old_value, pf_meta);
-        //if (old_value !== new_value) {
-        if (value_changed) {
-            
+        //console.log(new_value, old_value, pf_meta);
+        if (value_changed) {    
             vars.push({
                 'var': pf_meta,
                 value:new_value

@@ -146,6 +146,7 @@ if (_c.is_sortable) {
         axis: 'y',
         cursor: 'move',
         start: function(event, ui){ 
+            return;
                 var h = ui.item.height();
                 if ( h < 5  ) {
                         h = 50;
@@ -154,19 +155,17 @@ if (_c.is_sortable) {
         },
         items:'.fx_list_row',
         update: function(event, ui) {
-                var pos = [];
-                var order = $('.fx_list_row', $(this)).sortable('serialize');      
-                if ( order.length < 1 ) return false;
-                order.each( function() {
-                        var id = $(this).data('id');
-                        pos.push( id );
-                });
-                var post = {
-                        'essence': $fx.admin.get_essence(),
-                        'action': 'move',
-                        'positions': pos
-                };
-                $fx.post_front(post);
+            console.log('updatng', event, ui, this);
+            var pos = [];
+            $('.fx_list_row', this).each(function() {
+                pos.push ( $(this).data('id') );
+            });
+            var post = {
+                    'essence': _c.essence,
+                    'action': 'move',
+                    'positions': pos
+            };
+            $fx.post_front(post);
         }
     });
 }

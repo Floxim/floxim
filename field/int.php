@@ -7,7 +7,7 @@ class fx_field_int extends fx_field_baze {
             return false;
         }
         if ($value && ($value != strval(intval($value)))) {
-            $this->error = sprintf(FX_FRONT_FIELD_INT_ENTER_INTEGER, $this['description']);
+            $this->error = sprintf(FX_FRONT_FIELD_INT_ENTER_INTEGER, $this['name']);
             return false;
         }
         return true;

@@ -148,11 +148,16 @@ fx_mode_menu = function ( ) {
 fx_mode_menu.prototype.load = function ( active ) {
     var cont = this.container.html('');
     $.each(this.data, function(key, value) {
-        $('<a/>').
-                data('key', value.href).
-                text(value.name).
-                attr('href', '#page.'+value.href ).
-                appendTo(cont);
+        var $mode = $('<a/>').
+                        data('key', value.href).
+                        text(value.name).
+                        attr('href', '#page.'+value.href ).
+                        appendTo(cont);
+        if (value.href === 'edit') {
+            $mode.attr('title', 'F2');
+        } else if (value.href === 'design') {
+            $mode.attr('title', 'F4');
+        }
     });
 }
 fx_mode_menu.prototype.set_active = function ( active ) {
@@ -165,7 +170,7 @@ fx_mode_menu.prototype.set_active = function ( active ) {
     
     $.each( $('a', this.container), function(key, value) {
         var item = $(this);
-        if ( active ==  item.data('key') ) {
+        if ( active ===  item.data('key') ) {
             item.addClass('fx_admin_page_modes_active').append(arrow).append(line);
             arrow.css('left', 0.5*item.width()-3); // 3 - half-width of the arrow
             line.width(item.width() + parseInt(item.css('margin-left')) + parseInt(item.css('margin-right')) );
