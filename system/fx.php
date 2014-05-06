@@ -110,12 +110,6 @@ class fx {
                             $not_existing []= $c_datatype;
                         }
                     }
-                    /*
-                    fx::debug($component, fx::collection($component->get_ancestors())->get_values('keyword'));
-                    $data_finder = new fx_data_content();
-                    $data_classes_cache[$datatype] = 'fx_data_content';
-                     * 
-                     */
                 } elseif (preg_match("~^field_~", $datatype)) {
                     $data_finder = new fx_data_field();
                     $data_classes_cache[$datatype] = 'fx_data_field';
@@ -235,16 +229,32 @@ class fx {
             $controller_instance = new $c_class($input, $action);
             return $controller_instance;
     	} catch (Exception $e) {
+            if ($controller === 'component_content') {
+                $controller_instance = new fx_controller_component($input, $action);
+                $controller_instance->set_content_type('content');
+                return $controller_instance;
+            }
             if (preg_match("~^(component|widget|layout)_(.+)$~", $controller, $c_parts)) {
                 $ctr_type = $c_parts[1];
                 $ctr_name = $c_parts[2];
+                if ($ctr_type === 'component') {
+                    $component = fx::data('component', $ctr_name);
+                    foreach ($component->get_ancestors() as $parent_com) {
+                        try {
+                            $keyword = $parent_com['keyword'];
+                            $c_class = 'fx_controller_component'.($keyword == 'content' ? '' : '_'.$keyword);
+                            $controller_instance = new $c_class($input, $action);
+                            $controller_instance->set_content_type($ctr_name);
+                            return $controller_instance;
+                        } catch (Exception $ex) {
+                            
+                        }
+                    }
+                }
                 $c_class = 'fx_controller_'.$ctr_type;
                 try {
                     $controller_instance = new $c_class($input, $action);
                     switch ($ctr_type) {
-                        case 'component':
-                            $controller_instance->set_content_type($ctr_name);
-                            break;
                         case 'widget':
                             $controller_instance->set_keyword($ctr_name);
                             break;
@@ -261,9 +271,6 @@ class fx {
     public static function template($template = null, $data = array()) {
         if (func_num_args() == 0) {
             return new fx_template_loader();
-        }
-        if (!is_string($template)) {
-            fx::log('ool tpl', $template, debug_backtrace());
         }
         $parts= explode(".", $template);
         if (count($parts) == 2) {
