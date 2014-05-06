@@ -60,6 +60,9 @@ class fx_data_lang_string extends fx_data {
 
     public function drop_dict_files($dict) {
         $files = glob(fx::path('files', '/php_dictionaries/*.'.$dict.'.php'));
+        if (!$files) {
+            return;
+        }
         foreach($files as $file) {
             unlink($file);
         }
