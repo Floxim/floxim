@@ -36,6 +36,32 @@ class fx_form implements ArrayAccess {
         return $this['id'];
     }
     
+    protected $_listeners = array();
+    
+    public function __call($name, $args) {
+        if (preg_match("~^on_~", $name) && count($args) == 1) {
+            $this->on(preg_replace("~^on_~", '', $name), $args[0]);
+            return $this;
+        }
+    }
+    
+    public function on($event, $callback) {
+        if (!isset($this->_listeners[$event])) {
+            $this->_listeners[$event] = array();
+        }
+        $this->_listeners[$event] []= $callback;
+    }
+    
+    public function trigger($event) {
+        if (is_string($event) && isset($this->_listeners[$event])) {
+            foreach ($this->_listeners[$event] as $listener) {
+                if (is_callable($listener)) {
+                    call_user_func($listener, $this); 
+                }
+            }
+        }
+    }
+    
     protected $is_sent = null;
     public function is_sent() {
         if (is_null($this->is_sent)) {
@@ -44,6 +70,7 @@ class fx_form implements ArrayAccess {
             if ($this->is_sent) {
                 $this->load_values();
                 $this->validate();
+                $this->trigger('sent');
             }
         }
         return $this->is_sent;
@@ -101,6 +128,7 @@ class fx_form implements ArrayAccess {
         if ($message) {
             $this->add_message($message, true);
         }
+        $this->trigger('finish');
     }
     
     public function has_errors() {
@@ -168,8 +196,7 @@ class fx_form_fields extends fx_collection {
     }
     
     public function add_field($params) {
-        $field = fx_form_field::create($params);
-        $field->owner= $this;
+        $field = fx_form_field::create($params + array('owner' => $this));
         $this[$field['name']] = $field;
     }
     
@@ -235,6 +262,10 @@ class fx_form_field implements ArrayAccess {
     }
     
     public function __construct($params = array()) {
+        if (isset($params['owner'])) {
+            $this->owner = $params['owner'];
+            unset($params['owner']);
+        }
         foreach ($params as $k => $v) {
             $this[$k] = $v;
         }
@@ -312,7 +343,7 @@ class fx_form_field implements ArrayAccess {
     
     public function get_id() {
         $form = $this->get_form();
-        return $form['id'].'_'.$this['name'];
+        return $form->get_id().'_'.$this['name'];
     }
 
     /* ArrayAccess methods */
@@ -409,36 +440,49 @@ class fx_form_field_captcha extends fx_form_field {
         if (!isset($params['label'])) {
             $params['label'] = 'Aren\'t you a robot?';
         }
-        $url = fx::path()->to_http(dirname(realpath(__FILE__)));
-        $url .= '/captcha.php?fx_field_name='.urlencode($params['name']);
-        $url .= '&rand='.rand(0, 1000000);
-        $params['captcha_url'] = $url;
+        if (!isset($params['valid_for'])) {
+            $params['valid_for'] = 6*5; // 3 min
+        }
         
         parent::__construct($params);
-        if ($this->was_valid()) {
-            $this['was_valid'] = true;
-        } else {
+        
+        $url = fx::path()->to_http(dirname(realpath(__FILE__)));
+        $url .= '/captcha.php?fx_field_name='.urlencode($this->get_id());
+        $url .= '&rand='.rand(0, 1000000);
+        $this['captcha_url'] = $url;
+        
+        if (!$this->was_valid()) {
             $this['required'] = true;
             $this->add_validator('captcha');
         }
+        $field = $this;
+        $this->get_form()->on_finish(function($f) use ($field) {
+            $field->was_valid(false);
+        });
     }
     
     public function validate_captcha() {
         if ($this->was_valid()) {
             return;
         }
-        if ($_SESSION['captcha_code_'.$this['name']] != $this->get_value()) {
+        if ($_SESSION['captcha_code_'.$this->get_id()] != $this->get_value()) {
             return 'Invalid code';
         }
         $this->was_valid(true);
     }
     
     public function was_valid($set = null) {
-        $prop = 'captcha_was_valid_'.$this['name'];
+        $prop = 'captcha_was_valid_'.$this->get_id();
         if ($set === null) {
-            return isset($_SESSION[$prop]) && $_SESSION[$prop] + 60*60*5 > time();
+            $was = isset($_SESSION[$prop]) && $_SESSION[$prop] + $this['valid_for'] > time();
+            if ($was) {
+                $this['was_valid'] = true;
+                $this['was_valid_time_left'] = $_SESSION[$prop] + $this['valid_for'] - time();
+            }
+            return $was;
         }
         if ($set === true) {
+            $this['was_valid'] = true;
             $_SESSION[$prop] = time();
         } else {
             unset($_SESSION[$prop]);
