@@ -559,7 +559,7 @@ fx_front.prototype.is_selectable = function(node) {
                 return true;
             }
             var c_meta = n.data('fx_controller_meta');
-            if (c_meta && c_meta.accept_content) {
+            if (c_meta && (c_meta.accept_content || c_meta.fields)) {
                 return true;
             }
             if ( n.hasClass('fx_template_var') || n.hasClass('fx_template_var_in_att') ) {
