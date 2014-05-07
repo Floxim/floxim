@@ -61,17 +61,18 @@ class fx_content_page extends fx_content {
     protected function _before_save() {
         parent::_before_save();
         if (empty($this['url']) && !empty($this['name'])) {
-            $this['url'] = $this['name'];
+            $url = fx::util()->str_to_latin($this['name']);
+            $url  = preg_replace("~[^a-z0-9_-]+~i", '-', $url);
+            $url = trim($url, '-');
+            $url = preg_replace("~\-+~", '-', $url);
+            $this['url'] = $url;
         }
         if (
                 in_array('url', $this->modified) && 
                 !empty($this['url']) && 
                 !preg_match("~^https?://~", $this['url'])
             ) {
-            $url = fx::util()->str_to_latin($this['url']);
-            $url  = preg_replace("~[^a-z0-9_-]+~i", '-', $url);
-            $url = trim($url, '-');
-            $url = preg_replace("~\-+~", '-', $url);
+            $url = $this['url'];
             if (!preg_match("~^/~", $url)) {
                 $url = '/'.$url;
             }

@@ -2,7 +2,7 @@
 class fx_router_front extends fx_router {
 
     public function route($url = null, $context = null) {
-        $page = fx::data('content_page')->get_by_url($url, $context['site_id']);
+        $page = fx::data('content_page')->get_by_url(urldecode($url), $context['site_id']);
         if (!$page) {
             return null;
         }
