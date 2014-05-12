@@ -2,7 +2,9 @@
 class fx_controller_admin_log extends fx_controller_admin {
     
     public function process() {
-        fx::debug()->disable();
+        //if ($this->action == 'all') {
+            fx::debug()->disable();
+        //}
         return parent::process();
     }
     

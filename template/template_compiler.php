@@ -90,7 +90,7 @@ class fx_template_compiler {
          * like this:
          * {call id="wrap"}{var id="content"}<div>Something</div>{/var}{/call}
          */
-        $has_content_param = true;
+        $has_content_param = count($token->get_children()) > 0;
         foreach ($call_children as $call_child) {
             if ($call_child->name == 'var') {
                 $has_content_param = false;
@@ -112,10 +112,9 @@ class fx_template_compiler {
         }
         $switch_context = is_array($with_expr) && isset($with_expr['$']);
         if ($switch_context) {
-            //$code .= '$this->context_stack[]= '.$this->parse_expression($with_expr['$']).";\n";
             $code .= '$this->push_context('.$this->parse_expression($with_expr['$']).");\n";
         }
-        $code .= $tpl."->push_context(array(), array('transparent' => true));\n";
+        $code .= $tpl."->push_context(array(), array('transparent' => false));\n";
         if (is_array($with_expr)) {
             foreach ($with_expr as $alias => $var) {
                 if ($alias == '$') {
@@ -305,12 +304,6 @@ class fx_template_compiler {
             $code .= $real_val_var . ' = '.$expr.";\n";
             if ($token_is_file) {
                 $code .= $this->_make_file_check($real_val_var);
-                /*
-                $code .= "\nif (".$real_val_var." && !preg_match('~^(https?://|/)~', ".$real_val_var.")) {\n";
-                $code .= $real_val_var . '= $template_dir.'.$real_val_var.";\n";
-                $code .= "}\n";
-                 * 
-                 */
             }
             $code .= $display_val_var . ' = '.$real_val_var.";\n";
             $expr = $display_val_var;
@@ -378,7 +371,9 @@ class fx_template_compiler {
         if ($token->get_prop('var_type') == 'visual') {
             $token_props = $token->get_all_props();
             $code .= " array(";
-            $tp_parts = array('"template" => $this->_get_template_sign()');
+            
+            $tp_parts = array('"template_is_wrapper" => $this->is_wrapper() ? 1 : 0');
+            
             foreach ($token_props as $tp => $tpval) {
                 $token_prop_entry = "'".$tp."' => ";
                 if ($tp == 'id') {
@@ -533,9 +528,6 @@ class fx_template_compiler {
         $code = '';
         $is_essence = '$'.$item_alias."_is_essence";
         $code .=  $is_essence ." = \$".$item_alias." instanceof fx_essence;\n";
-        //$is_complex = '$'.$item_alias.'_is_complex';
-        //$code .= $is_complex.' = is_array($'.$item_alias.') || is_object($'.$item_alias.');'."\n";
-        //$code .= '$this->context_stack[]= '.$is_complex.' ? $'.$item_alias." : array();\n";
         $is_complex = 'is_array($'.$item_alias.') || is_object($'.$item_alias.')';
         $code .= '$this->push_context( '.$is_complex.' ? $'.$item_alias." : array());\n";
         
@@ -548,11 +540,10 @@ class fx_template_compiler {
         $code .= "\t\techo \$".$item_alias."->add_template_record_meta(".
                     "ob_get_clean(), ".
                     $arr_id.", ".
-                    ($counter_id ? '$'.$counter_id." - 1, " : '0, ').
+                    ($counter_id ? '$'.$counter_id." - 1, " : '$this->v("position") - 1, ').
                     ($token->get_prop('subroot') ? 'true' : 'false').
                 ");\n";
         $code .= "\t}\n";
-        //$code .= 'array_pop($this->context_stack);'."\n";
         $code .= "\$this->pop_context();\n";
         return $code;
     }
@@ -1081,7 +1072,6 @@ class fx_template_compiler {
         // $code could throw a "Cannot redeclare" fatal error.
 
         $braces || $code = "if(0){{$code}\n}";
-        //fx::debug($code);
         if (false === eval($code)) {
             if ($braces) {
                 $braces = PHP_INT_MAX;

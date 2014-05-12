@@ -20,14 +20,28 @@ abstract class fx_essence implements ArrayAccess {
 
     protected static $_field_map = array();
     
+    // virtual field types
+    const VIRTUAL_RELATION = 0;
+    const VIRTUAL_MULTILANG = 1;
+    
     public function __construct($input = array()) {
+        
+        $this->_load_field_map();
+        
         if (isset($input['data']) && $input['data']) {
-            foreach ($input['data'] as $k => $v) {
+            $data = $input['data'];
+            if (isset($data['id'])) {
+                $this->_loaded = false;
+            }
+            foreach ($data as $k => $v) {
                 $this[$k] = $v;
             }
+            $this->_loaded = true;
             //$this->data = $input['data'];
         }
-        
+    }
+    
+    protected function _load_field_map() {
         // cache relations & ml on first use
         // to increase offsetExists() speed (for isset($n[$val]) in templates)
         $c_type = $this->get_type();
@@ -35,12 +49,16 @@ abstract class fx_essence implements ArrayAccess {
             $finder = $this->get_finder();
             self::$_field_map[$c_type] = array();
             foreach ($finder->relations() as $rel_name => $rel) {
-                self::$_field_map[$c_type][$rel_name] = array('type' => 'relation', 'data' => $rel);
+                self::$_field_map[$c_type][$rel_name] = array(self::VIRTUAL_RELATION, $rel);
             }
             foreach ($finder->get_multi_lang_fields() as $f) {
-                self::$_field_map[$c_type][$f] = array('type' => 'multi_lang');
+                self::$_field_map[$c_type][$f] = array(self::VIRTUAL_MULTILANG);
             }
         }
+    }
+    
+    public function __wakeup() {
+        $this->_load_field_map();
     }
 
     public function save() {
@@ -248,36 +266,44 @@ abstract class fx_essence implements ArrayAccess {
     /* Array access */
     public function offsetGet($offset) {
         
-        if (isset($this->data[$offset])) {
+        if (array_key_exists($offset, $this->data)) {
             return $this->data[$offset];
         }
         if ($offset == 'id') {
             return null;
         }
-        if (method_exists($this, 'get_'.$offset)) {
-            return call_user_func(array($this, 'get_'.$offset));
+        /*
+        //if ($this->get_type() == 'field_datetime') {
+            fx::log('ogc', $this->get_type(), $offset); 
+            //die();
+        //}
+         * 
+         */
+        if (method_exists($this, '_get_'.$offset)) {
+            return call_user_func(array($this, '_get_'.$offset));
         }
         
-        $finder = $this->get_finder();
-        $multi_lang_fields = $finder->get_multi_lang_fields();
-        if (in_array($offset, $multi_lang_fields)) {
-            if (!empty($this->data[$offset.'_'.fx::config()->ADMIN_LANG])) {
-                return $this->data[$offset.'_'.fx::config()->ADMIN_LANG];
-            } else {
-                return $this->data[$offset.'_en'];
+        $c_type = $this->get_type();
+        $c_field = self::$_field_map[$c_type][$offset];
+        
+        if (!$c_field) {
+            return null;
+        }
+        
+        if ($c_field[0] == self::VIRTUAL_MULTILANG) {
+            $lang_offset = $offset.'_'.fx::config('ADMIN_LANG');
+            if (!empty($this->data[$lang_offset])) {
+                return $this->data[$lang_offset];
             }
+            return $this->data[$offset.'_en'];
         }
         
         /**
          * For example, for $post['tags'], where tags - field-multiphase
          * If connected not loaded, ask finder download
          */
-         
         
-        $rels = $finder->relations();
-        if (!isset($rels[$offset])) {
-            return null;
-        }
+        $finder = $this->get_finder();
         $finder->add_related($offset, new fx_collection(array($this)));
         if (!isset($this->data[$offset])) {
             return null;
@@ -292,10 +318,19 @@ abstract class fx_essence implements ArrayAccess {
         $offset_exists = array_key_exists($offset, $this->data);
         
         if (!$offset_exists) {
-            $multi_lang_fields = $this->get_finder()->get_multi_lang_fields();
-            if (in_array($offset, $multi_lang_fields)) {
+            $c_type = $this->get_type();
+            $c_field = self::$_field_map[$c_type][$offset];
+            if ($c_field && $c_field[0] == self::VIRTUAL_MULTILANG) {
+                //$multi_lang_fields = $this->get_finder()->get_multi_lang_fields();
+                //if (in_array($offset, $multi_lang_fields)) {
                 $offset = $offset.'_'.fx::config('ADMIN_LANG');
+                //}
             }
+        }
+        
+        if (!$this->_loaded) {
+            $this->data[$offset] = $value;
+            return;
         }
         
         // use non-strict '==' because int values from db becomes strings - should be fixed
@@ -316,7 +351,7 @@ abstract class fx_essence implements ArrayAccess {
         if  (array_key_exists($offset, $this->data)) {
             return true;
         }
-        if (method_exists($this, 'get_'.$offset)) {
+        if (method_exists($this, '_get_'.$offset)) {
             return true;
         }
         return isset(self::$_field_map[$this->get_type()][$offset]);
@@ -325,9 +360,13 @@ abstract class fx_essence implements ArrayAccess {
     public function offsetUnset($offset) {
         unset($this->data[$offset]);
     }
-
+    
+    protected $_type = null;
     public function get_type() {
-        return str_replace("fx_", "", get_class($this));
+        if (is_null($this->_type)) {
+            $this->_type = str_replace("fx_", "", get_class($this));
+        }
+        return $this->_type;
     }
     
     /*

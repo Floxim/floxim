@@ -224,10 +224,10 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
     	}
 
         if (!isset($infoblock['params']) || !is_array($infoblock['params'])) {
-            $infoblock['params'] = array();
+            $infoblock->add_params(array());
         }
         
-        $controller_name = $controller;
+        //fx::log($infoblock['params'], $infoblock['id']);
         $controller = fx::controller(
                 $controller.'.'.$action, 
                 array('infoblock_id' => $infoblock['id']) + $infoblock['params']
@@ -643,33 +643,17 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
                 $value = array();
             }
             if ($var['var_type'] == 'visual' && $ib_visual) {
-
-
-                $wrapper_name = $ib_visual['wrapper'];
-                if ($var['template'] == $wrapper_name) {
-                    $wrapper_visual = $ib_visual['wrapper_visual'];
-                    if (!is_array($wrapper_visual)) {
-                        $wrapper_visual = array();
-                    }
-                    if ($value == 'null') {
-                        unset($wrapper_visual[$var['id']]);
-                    } else {
-                        $wrapper_visual[$var['id']] = $value;
-                    }
-                    $ib_visual['wrapper_visual'] = $wrapper_visual;
-                } else {
-                    $template_visual = $ib_visual['template_visual'];
-                    if (!is_array($template_visual)) {
-                        $template_visual = array();
-                    }
-                    if ($value == 'null') {
-                        unset($template_visual[$var['id']]);
-                    } else {
-                        $template_visual[$var['id']] = $value;
-                    }
-                    $ib_visual['template_visual'] = $template_visual;
+                $visual_set = $var['template_is_wrapper'] ? 'wrapper_visual' : 'template_visual';
+                $c_visual = $ib_visual[$visual_set];
+                if (!is_array($c_visual)) {
+                    $c_visual = array();
                 }
-                $ib_visual->save();
+                if ($value == 'null') {
+                    unset($c_visual[$var[$id]]);
+                } else {
+                    $c_visual[$var['id']] = $value;
+                }
+                $ib_visual->set($visual_set, $c_visual)->save();
             } elseif ($var['var_type'] == 'content') {
 
                 if (!isset($contents[$var['content_id']])) {
@@ -693,7 +677,10 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
         }
 
         foreach ($contents as $content_id => $content_info) {
-            $content = fx::data(array('content', $content_info['content_type_id']), $content_id);
+            $content = fx::data(
+                'content_'.fx::data('component', $content_info['content_type_id'])->get('keyword'), 
+                $content_id
+            );
             if ($content) {
                 $content->set_field_values($content_info['values'], array_keys($content_info['values']));
                 $content->save();
@@ -705,16 +692,10 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
     
     
     public function delete_infoblock($input) {
-        /* @var $infoblock fx_infoblock */
         $infoblock = fx::data('infoblock', $input['id']);
-        $controller_name = $infoblock->get_prop_inherited('controller');
-        $action = $infoblock->get_prop_inherited('action');
-        /*$controller = fx::controller($controller_name);
-        $controller->set_action($action);
-        $controller->set_input($input);
-        $controller->set_param('infoblock_id', $infoblock['id']);
-         * 
-         */
+        if (!$infoblock) {
+            return;
+        }
         $controller = $infoblock->init_controller();
         $fields = array(
             array(
@@ -748,6 +729,10 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
             if ($input['content_handle'] == 'delete') {
                 foreach ($ib_content as $ci) {
                     $ci->delete();
+                }
+            } else {
+                foreach ($ib_content as $ci) {
+                    $ci->set('infoblock_id', 0)->save();
                 }
             }
             $controller->handle_infoblock('delete', $infoblock, $input);

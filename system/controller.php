@@ -64,15 +64,45 @@ class fx_controller {
      * $input = null, $action = null, $do_return = false
      */
     public function process() {
-    	$action = $this->get_action_method();
-        $cfg = $this->get_config();
-        if (isset($cfg['actions'][$this->action]['force'])) {
-            foreach ($cfg['actions'][$this->action]['force'] as $param => $value) {
-                $this->set_param($param, $value);
-            }
-        }
+        $this->_apply_forced_params();
         $this->trigger('before_action_run');
+        $action = $this->get_action_method();
         return $this->$action($this->input);
+    }
+    
+    protected static $cfg_time = 0;
+    
+    protected function _apply_forced_params() {
+        /*
+        static $time = 0;
+        $start = microtime(true);
+        */
+        $cache_file = fx::path('files', 'cache/ctr_defaults_'.$this->get_signature().'.php');
+        if (!fx::path()->exists($cache_file)) {
+            $forced = array();
+            $cfg = $this->get_config();
+            if (isset($cfg['actions'][$this->action]['force'])) {
+                $forced = $cfg['actions'][$this->action]['force'];
+                /*
+                foreach ($cfg['actions'][$this->action]['force'] as $param => $value) {
+                    $forced[$param] = $value;
+                }
+                 * 
+                 */
+            }
+            fx::files()->writefile($cache_file, "<?php return ".var_export($forced, true).";");
+        } else {
+            $forced = include $cache_file;
+        }
+        foreach ($forced as $param => $value) {
+            $this->set_param($param, $value);
+        }
+        /*
+        $end = microtime(true);
+        self::$cfg_time += $end - $start;
+        fx::log('go!', $cache_file, self::$cfg_time);
+         * 
+         */
     }
     
     protected $_action_prefix = '';
@@ -80,14 +110,14 @@ class fx_controller {
 
     static protected function _get_abbr($name) {
         $vowels = array('a', 'e', 'i', 'o', 'u', 'y');
-        $head = substr($name,0,1);
+        $head = mb_substr($name,0,1);
         $words = explode(" ", $name);
         if (count($words) > 1) {
-            $tail = substr($name, 1, 1).'.'.substr($words[1], 0, 1);
+            $tail = mb_substr($name, 1, 1).'.'.mb_substr($words[1], 0, 1);
         } else {
-            $tail = substr(str_replace($vowels, '', strtolower(substr($name,1))), 0, 2);
-            if (strlen($name) > 2 && strlen($tail) < 2) {
-                $tail = substr($name, 1, 2);
+            $tail = mb_substr(str_replace($vowels, '', mb_strtolower(mb_substr($name,1))), 0, 2);
+            if (mb_strlen($name) > 2 && mb_strlen($tail) < 2) {
+                $tail = mb_substr($name, 1, 2);
             }
         }
         return $head.$tail;
@@ -104,11 +134,15 @@ class fx_controller {
         }
         return  'default_action';
     }
+    
+    // controller_name.action_name
+    public function get_signature() {
+        return str_replace('fx_controller_', '', get_class($this)).'.'.$this->action;
+    }
 
 
     public function find_template() {
-        $tpl = str_replace('fx_controller_', '', get_class($this));
-        return fx::template($tpl.'.'.$this->action);
+        return fx::template($this->get_signature());
     }
     
     /*

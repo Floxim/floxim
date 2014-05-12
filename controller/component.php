@@ -18,10 +18,6 @@ class fx_controller_component extends fx_controller_frontoffice {
         $com_dir = fx::path()->to_abs('component');
         $sources []= fx::path('floxim', '/controller/component.cfg.php');
         $com = $this->get_component();
-        if (!$com) {
-            fx::log('no com', $this, debug_backtrace());
-            die();
-        }
         $chain = $com->get_chain();
         foreach ($chain as $com) {
             $com_file = fx::path('std', '/component/'.$com['keyword'].'/'.$com['keyword'].'.cfg.php');
@@ -99,7 +95,6 @@ class fx_controller_component extends fx_controller_frontoffice {
         if ($this->get_param('parent_type') == 'current_page_id') {
            $q->where('parent_id', fx::env('page_id')); 
         }
-        //fx::log('sel lkr', $q);
         return $q->all();
     }
     
@@ -231,7 +226,6 @@ class fx_controller_component extends fx_controller_frontoffice {
                             all_fields()->
                             find('type', array(fx_field::FIELD_LINK, fx_field::FIELD_MULTILINK))->
                             find('type_of_edit', fx_field::EDIT_NONE, fx_collection::FILTER_NEQ);
-        
         $fields = array();
         foreach ($link_fields as $lf) {
             if ($lf['type'] == fx_field::FIELD_LINK) {
@@ -275,6 +269,49 @@ class fx_controller_component extends fx_controller_frontoffice {
             $fields[$c_ib_field['name']]= $c_ib_field;
         }
         return $fields;
+    }
+    
+    /**
+     * Get option to bind lost content (having no infoblock_id) to the newly created infoblock
+     * @return array
+     */
+    public function get_lost_content_field() {
+        // infoblock already exists
+        if ($this->get_param('infoblock_id')) {
+            return array();
+        }
+        $com = $this->get_component();
+        $lost = fx::content($com['keyword'])
+                    ->where('infoblock_id', 0)
+                    ->where('site_id', fx::env('site_id'))
+                    ->all();
+        if (count($lost) == 0) {
+            return array();
+        }
+        return array(
+            'bind_lost_content' => array(
+                'type' => 'checkbox',
+                'label' => 'Bind lost content ('.count($lost).')'
+            )
+        );
+    }
+    
+    public function bind_lost_content($ib, $params) {
+        if (!isset($params['params']['bind_lost_content']) || !$params['params']['bind_lost_content']) {
+            return;
+        }
+        $com = $this->get_component();
+        $lost = fx::content($com['keyword'])
+                    ->where('infoblock_id', 0)
+                    ->where('site_id', fx::env('site_id'))
+                    ->all();
+        foreach ($lost as $lc) {
+            $lc->set('infoblock_id', $ib['id']);
+            if (!$lc['parent_id'] && $ib['page_id']) {
+                $lc['parent_id'] = $ib['page_id'];
+            }
+            $lc->save();
+        }
     }
     
     public function do_record() {
@@ -376,10 +413,12 @@ class fx_controller_component extends fx_controller_frontoffice {
     }
 
     protected function _get_pagination() {
-        if (!$this->get_param('show_pagination')){
+        
+        if (!$this->get_param('pagination')){
             return null;
         }
         $total_rows = $this->get_finder()->get_found_rows();
+        
         if ($total_rows == 0) {
             return null;
         }
@@ -439,7 +478,6 @@ class fx_controller_component extends fx_controller_frontoffice {
     }
     
     public function do_list_selected() {
-        $parent_id = fx::env('page')->get('id');
         
         // preview
         if ( $this->get_param('is_overriden') ) {
@@ -673,11 +711,14 @@ class fx_controller_component extends fx_controller_frontoffice {
     }
     
     
-    //protected $_finder = null;
+    protected $_finder = null;
     /**
      * @return fx_data_content data finder
      */
     public function get_finder() {
+        if (!is_null($this->_finder)) {
+            return $this->_finder;
+        }
         $finder = fx::data('content_'.$this->get_content_type());
         $show_pagination = $this->get_param('pagination');
         $c_page = $this->_get_current_page_number();
@@ -706,22 +747,17 @@ class fx_controller_component extends fx_controller_frontoffice {
             }
             $finder->order($sorting, $dir);
         }
-        //$this->_finder = $finder;
+        $this->_finder = $finder;
         return $finder;
     }
     
-    public function find_template() {
-        $tpl_name = 'component_'.$this->get_content_type().".".$this->action;
-        return fx::template($tpl_name);
+    public function get_signature() {
+        return 'component_'.$this->get_content_type().".".$this->action;;
     }
     
     protected function _get_controller_variants() {
         $vars = parent::_get_controller_variants();
         $com = $this->get_component();
-        if (!$com) {
-            fx::log($this);
-            die();
-        }
         $chain = $com->get_chain();
         $chain = array_reverse($chain);
         //$chain = array_reverse($this->get_component()->get_chain());

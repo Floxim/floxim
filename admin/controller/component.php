@@ -46,7 +46,7 @@ class fx_controller_admin_component extends fx_controller_admin {
                 }
 
                 $field['values'][] = $r;
-                if (isset($v['children'])) {
+                if (isset($v['children']) && $v['children']) {
                     $append_coms($v['children'], $level+1);
                 }
             }

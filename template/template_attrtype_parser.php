@@ -29,6 +29,7 @@ class fx_template_attrtype_parser extends fx_template_fsm {
 
         $this->add_rule(self::ATT_NAME, '~^fx:$~', self::FX, null);
         $this->add_rule(self::FX, '~^=[\'\"]$~', self::FX_VAL, 'start_val');
+        $this->add_rule(self::FX, '~^\s+$~', self::ATT_NAME, null);
 
         $this->add_rule(self::ATT_NAME, '~^=[\'\"]$~', self::ATT_VAL, 'start_val');
 
@@ -130,5 +131,4 @@ class fx_template_attrtype_parser extends fx_template_fsm {
     public function default_callback($ch) {
         $this->res .= $ch;
     }
-
 } 

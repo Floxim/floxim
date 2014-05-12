@@ -4,7 +4,7 @@ $sort_fields = $this
             ->all_fields()
             ->find('type', fx_field::FIELD_MULTILINK, '!=')
             ->find('type', fx_field::FIELD_LINK, '!=')
-            ->get_values('name', 'keyword');
+            ->get_values(fx::is_admin() ? 'name' : 'id', 'keyword');
 
 $component = $this->get_component();
 
@@ -54,8 +54,8 @@ return array(
         '*list_infoblock' => array(
             'name' => $component['name'],
             // ! APC fatal error occured here sometimes
-            'install' => function() {
-            	return false;
+            'install' => function($ib, $ctr, $params) {
+                $ctr->bind_lost_content($ib, $params);
             },
             'settings' => array(
                 'sorting' => array(
@@ -70,7 +70,9 @@ return array(
                     ),
                     'parent' => array('scope[complex_scope]' => '!~this')
                 )
-            ) + $this->get_target_config_fields(),
+            ) 
+                + $this->get_target_config_fields()
+                + $this->get_lost_content_field(),
             'defaults' => array(
                 '!pagination' => true
             )
@@ -78,7 +80,7 @@ return array(
         '*list_filtered' => array(
             'name' => $component['name'].' '.fx::alang('by filter', 'controller_component'),
             'icon_extra' => 'fil',
-            'settings' => $this->_config_conditions()
+            'settings' => fx::is_admin() ? $this->_config_conditions() : array()
         ),
         '*list_selected' => array(
             'name' => $component['name'].' selected',

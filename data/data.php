@@ -85,6 +85,7 @@ class fx_data {
      * @param string $field
      */
     protected function _prepare_complex_field($field, $value = null, $type = null) {
+        fx::log('pcf', $field);
         list($rel, $field_name) = explode('.', $field, 2);
         if (!isset($this->with[$rel])) {
             $this->only_with($rel);
@@ -570,6 +571,9 @@ class fx_data {
     
     public function get_col_table($col) {
         $tables = $this->get_tables();
+        if (count($tables) == 1) {
+            return $tables[0];
+        }
         foreach ($tables as $t) {
             $cols = $this->_get_columns($t);
             if (in_array($col, $cols)) {

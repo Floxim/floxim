@@ -27,7 +27,7 @@ class fx_controller_admin_field extends fx_controller_admin {
                     'url' =>  '#admin.'.$essence_code.'.edit('.$field['component_id'].',edit_field,'.$field['id'].')'
                 ),
                 'name' => $field['name'], 
-                'type' => fx::alang("FX_ADMIN_FIELD_".strtoupper($field->get_type(false)), 'system')
+                'type' => fx::alang("FX_ADMIN_FIELD_".strtoupper($field->get_type_keyword()), 'system')
             );
             if ($essence['id'] != $field['component_id']) {
                 $component_name = fx::data('component', $field['component_id'])->get('name');

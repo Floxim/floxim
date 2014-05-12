@@ -60,9 +60,7 @@ class fx_controller_admin_content extends fx_controller_admin {
         if ($input['data_sent']) {
             $res['is_new'] = !$content['id'];
             $content->set_field_values($input['content']);
-            fx::log('sfv don', $content, $input);
             $content->save();
-            fx::log('svd', $content);
             $res['saved_id'] = $content['id'];
             if ($is_backoffice) {
                 $res['reload'] = str_replace("%d", $content['id'], $input['reload_url']);
@@ -249,7 +247,7 @@ class fx_controller_admin_content extends fx_controller_admin {
         });
         
         foreach ($fields as $f) {
-            $list['labels'][$f['name']] = $f['description'];
+            $list['labels'][$f['keyword']] = $f['name'];
         }
         
         $finder = fx::content($content_type);
@@ -260,7 +258,7 @@ class fx_controller_admin_content extends fx_controller_admin {
             $r = array('id' => $item['id']);
             $r['type'] = $item['type'];
             foreach ($fields as $f) {
-                $val = $item[$f['name']];
+                $val = $item[$f['keyword']];
                 switch ($f['type']) {
                     case fx_field::FIELD_LINK:
                         if ($val) {
@@ -281,7 +279,7 @@ class fx_controller_admin_content extends fx_controller_admin {
                         break;
                 }
                 
-                $r[$f['name']] = $val;
+                $r[$f['keyword']] = $val;
             }
             $list['values'][]= $r;
         }

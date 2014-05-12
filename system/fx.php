@@ -48,9 +48,11 @@ class fx {
     public static function  data($datatype, $id = null) {
     	
     	static $data_classes_cache = array();
+        
         if (is_array($datatype)) {
             $datatype = join("_", $datatype);
         }
+        
         // fx::data($page) instead of $page_id
         if (is_object($id) && $id instanceof fx_essence) {
             return $id;
@@ -61,6 +63,7 @@ class fx {
             isset(self::$data_cache[$datatype]) &&  
             isset(self::$data_cache[$datatype][$id])
         ) {
+            //fx::log('cached', $datatype, $id);
                 return self::$data_cache[$datatype][$id];
         }
         
@@ -391,6 +394,34 @@ class fx {
             require_once fx::config()->SYSTEM_FOLDER . 'loader.php';
             $loader = new fx_loader();
         }
+        //return $loader;
+        // preload meta info
+        $cache_file = fx::path('files', 'cache/meta_cache.php');
+        
+        if (!file_exists($cache_file)) {
+            $coms = fx::data('component')->with('fields')->all();
+            $com_cache = array();
+            $field_cache = array();
+            foreach ($coms as $com) {
+                $com_cache[$com['keyword']] = $com;
+                $com_cache[$com['id']] = $com;
+                foreach ($com->fields() as $com_field) {
+                    $field_cache[$com_field['id']] = $com_field;
+                }
+            }
+            fx::files()->writefile(
+                $cache_file, serialize(array(
+                    'component' => $com_cache,
+                    'field' => $field_cache
+                ))
+            );
+        } else {
+            $cache = unserialize(fx::files()->readfile($cache_file));
+            $com_cache = $cache['component'];
+            $field_cache = $cache['field'];
+        }
+        self::$data_cache['component'] = $com_cache;
+        //self::$data_cache['field'] = $field_cache;
         return $loader;
     }
 

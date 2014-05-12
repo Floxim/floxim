@@ -224,12 +224,9 @@ class fx_debug {
         }
         $this->_print_entry(unserialize($entry));
         fclose($fh);
-        
-        /*$entries = explode($this->separator, file_get_contents($file));
-        foreach ($entries as $entry) {
-            $this->_print_entry(unserialize($entry));
-        }*/
-        return ob_get_clean();
+        $res = ob_get_clean();
+        fx::log('shown', strlen($res), $item_id);
+        return $res;
     }
 
     /**

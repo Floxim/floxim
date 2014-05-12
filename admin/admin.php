@@ -67,8 +67,7 @@ class fx_controller_admin extends fx_controller {
         if ($this->process_do_return) {
             return $result;
         }
-        $res = json_encode($result);
-        return $res;
+        return json_encode($result);
     }
 
     protected function get_status_text() {

@@ -53,7 +53,7 @@
                     params.onfinish(data);
                 }
             });
-            //setTimeout(function() {
+            setTimeout(function() {
                 $fx.front_panel.animate_panel_height(null, function () {
                     $form.resize(function() {
                         $fx.front_panel.animate_panel_height();
@@ -63,8 +63,7 @@
                         params.onready($form);
                     }
                 });
-                
-            //}, 100);
+            }, 100);
         };
         
         this.animate_panel_height = function(panel_height, callback) {

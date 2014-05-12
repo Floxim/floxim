@@ -109,7 +109,7 @@ class fx_infoblock extends fx_essence {
     }
     
     protected $controller_cache = null;
-    protected function _get_controller() {
+    protected function _get_ib_controller() {
         if (!$this->controller_cache) {
             $this->controller_cache = $this->init_controller();
         }
@@ -121,7 +121,7 @@ class fx_infoblock extends fx_essence {
         if (!is_array($c_params)) {
             $c_params = array();
         }
-        $this['params'] = array_merge($c_params, $params);
+        $this->data['params'] = array_merge($c_params, $params);
         return $this;
     }
     
@@ -255,7 +255,7 @@ class fx_infoblock extends fx_essence {
         $output = $this->get_output();
         $output = $this->_wrap_output($output);
         $output = $this->_add_infoblock_meta($output);
-        if ( ($controller = $this->_get_controller())) {
+        if ( ($controller = $this->_get_ib_controller())) {
             $output = $controller->postprocess($output);
         }
         return $output;
@@ -273,7 +273,7 @@ class fx_infoblock extends fx_essence {
         if ($this->is_fake()) {
             $this->data['params']['is_fake'] = true;
         }
-        $controller = $this->_get_controller();
+        $controller = $this->_get_ib_controller();
         if (!$controller) {
             $res = false;
         } else {
@@ -363,6 +363,7 @@ class fx_infoblock extends fx_essence {
         if (!$tpl_wrap->has_action()) {
             return $output;
         }
+        $tpl_wrap->is_wrapper(true);
         $wrap_params = $this->get_prop_inherited('visual.wrapper_visual');
         if (!is_array($wrap_params)) {
             $wrap_params = array();
@@ -400,7 +401,7 @@ class fx_infoblock extends fx_essence {
         
         if ($this->is_fake()) {
             $meta['class'] .= ' fx_infoblock_fake';
-            if (!$this->_get_controller()) {
+            if (!$this->_get_ib_controller()) {
                 $controller_meta['hidden_placeholder'] = fx::alang('Fake infoblock data', 'system');
             }
         }

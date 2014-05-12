@@ -71,6 +71,9 @@ class fx_template {
     protected function print_var($val, $meta = null) {
         $tf = null;
         if ($meta && fx::is_admin() && isset($meta['var_type'])) {
+            if (isset($meta['template_is_wrapper']) && !$meta['template_is_wrapper']) {
+                unset($meta['template_is_wrapper']);
+            }
             $tf = new fx_template_field($val, $meta);
         }
         $res = $tf ? $tf : $val;
@@ -101,6 +104,14 @@ class fx_template {
             return $this->_parent->get_var_meta($var_name);
         }
         return array();
+    }
+    
+    protected $is_wrapper = false;
+    public function is_wrapper($set = null){
+        if (func_num_args() == 0) {
+            return $this->is_wrapper ? true : ($this->_parent ? $this->_parent->is_wrapper() : false);
+        }
+        $this->is_wrapper = (bool) $set;
     }
     
     protected $context_stack = array();

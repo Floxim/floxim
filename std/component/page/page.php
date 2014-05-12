@@ -3,7 +3,7 @@ class fx_controller_component_page extends fx_controller_component {
     public function do_neighbours() {
         $item = fx::env('page');
         
-        $q = $this->get_finder()->order(null)->limit(1);
+        $q = $this->get_finder()->order(null)->limit(1)->where('site_id', fx::env('site_id'));
         
         $q_next = clone $q;
         $q_prev = clone $q;

@@ -63,10 +63,11 @@ class fx_db extends PDO {
             echo "</div>\n";
             fx::log($statement, debug_backtrace());
         }
+        
+        return $this->last_result;
         $end_time = microtime(true);
         $q_time = $end_time - $start_time;
         self::$q_time += $q_time;
-        return $this->last_result;
         fx::log(
                 '#'.self::$q_count, 
                 'q_time: '.$q_time, 

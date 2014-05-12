@@ -63,6 +63,7 @@ class fx_component extends fx_essence {
 
     protected $_stored_fields = null;
     public function fields() {
+        return $this['fields'];
         if (!$this->_stored_fields) {
             $this->_stored_fields = fx::data('field')->get_by_component($this->_class_id);
         }

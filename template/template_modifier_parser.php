@@ -63,7 +63,7 @@ class fx_template_modifier_parser extends fx_template_fsm {
         if (count($m['args']) == 0 && preg_match("~^[\'\"]~", $m['name'])) {
             $m['args'] = array($m['name']);
             $m['name'] = '';
-        } elseif (preg_match("~\.~", $m['name'])) {
+        } elseif (preg_match("~\.[a-z0-9]+~", $m['name'])) {
             $m['name'] = preg_replace("~^\.~", '', $m['name']);
             $m['is_template']  = true;
             $parts = explode(' with ', $m['name'], 2);
@@ -72,7 +72,6 @@ class fx_template_modifier_parser extends fx_template_fsm {
                 $m['with'] = trim($parts[1]);
             }
         }
-        
         $this->res []= $m;
     }
     

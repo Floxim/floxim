@@ -671,7 +671,7 @@ fx_front.prototype.select_item = function(node) {
             });
             scrolling = true;
         }
-    }, 50);
+    }, 150);
     
     // if you delete the selected node from the tree pull deselect_item()
     $(node).bind('remove.deselect_removed', function(e) {
@@ -681,6 +681,9 @@ fx_front.prototype.select_item = function(node) {
     $fx.front.disable_hilight();
     
     $('html').on('keydown.fx_selected', function(e) {
+        if ($fx.front_panel.is_visible) {
+            return;
+        }
         // Escape
         if (e.which === 27) {
             if (e.isDefaultPrevented && e.isDefaultPrevented()) {
@@ -705,47 +708,6 @@ fx_front.prototype.select_item = function(node) {
                 return;
             }
         }
-        return;
-        /*
-        switch(e.which) {
-            // Up
-            case 38:
-                if (selectable_up) {
-                    $fx.front.select_level_up();
-                }
-                return;
-            // Down
-            case 40:
-                var $hi = $('.fx_hilight', node);
-                for (var i = 0; i < $hi.length; i++) {
-                    if ($fx.front.is_selectable($hi.eq(i))) {
-                        $fx.front.select_item($hi.eq(i));
-                        return;
-                    }
-                }
-                return;
-            // Right and Left
-            case 39: case 37:
-                return;
-                var sel_container = selectable_up ? selectable_up : $('body');
-                //if (selectable_up) {
-                    var $hi = $('.fx_hilight', sel_container);
-                    var c_index = $hi.index(node);
-                    var is_left = e.which === 37;
-                    var ii = is_left ? -1 : 1;
-                    var ie = is_left ? 0 : $hi.length;
-                    for (var i = c_index + ii; i !== ie + ii; i+= ii ) {
-                        var $ci = $hi.eq(i);
-                        var cin = $ci[0];
-                        if (!$.contains(node, cin) && $fx.front.is_selectable(cin)) {
-                            $fx.front.select_item($ci);
-                            return;
-                        }
-                    }
-                //}
-                break;
-        }
-        */
     });
 };
 
@@ -1306,11 +1268,6 @@ fx_front.prototype.start_areas_sortable = function() {
     });
     $('.fx_area_sortable').each(function(){
         var cp = $(this);
-        /*if (cp.hasClass('fx_area_sortable')) {
-            return;
-        }
-        cp.addClass('fx_area_sortable');
-        */
         cp.sortable({
             items:'>.fx_infoblock',
             connectWith:'.fx_area_sortable',
@@ -1318,12 +1275,15 @@ fx_front.prototype.start_areas_sortable = function() {
             distance:35,
             start:function(e, ui) {
                 $('.fx_area_sortable').addClass('fx_area_target');
+                cp.trigger('fx_start_sort_infoblocks');
                 cp.sortable('refreshPositions');
                 var ph = ui.placeholder;
                 var item = ui.item;
+                console.log(item);
                 ph.css({
-                    'height':'100px',
-                    'max-width':'300px'
+                    'min-height':'30px',
+                    height:item.outerHeight()
+                    //'max-width':'300px'
                 });
                 $c_selected = $($fx.front.get_selected_item());
                 $fx.front.outline_block_off($c_selected);
@@ -1332,6 +1292,7 @@ fx_front.prototype.start_areas_sortable = function() {
             },
             stop:function(e, ui) {
                 $('.fx_area_sortable').removeClass('fx_area_target');
+                cp.trigger('fx_stop_sort_infoblocks');
                 var ce = ui.item;
                 var ce_data = ce.data('fx_infoblock');
                 $fx.front.outline_block_off(ce);
@@ -1354,7 +1315,7 @@ fx_front.prototype.start_areas_sortable = function() {
                 }
 
                 $fx.post(params, function(res) {
-
+                    $fx.front.reload_layout();
                 });
             }
         });
@@ -1398,6 +1359,7 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
     if(selected.length > 0) {
          selected_selector = selected.first().generate_selector(ib_parent);
     }
+    $('body').stop();
     var xhr = $.ajax({
         type:'post',
         data:post_data,
@@ -1423,7 +1385,7 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
                });
                var $new_infoblock_node = $('body');
            } else {
-               var $new_infoblock_node = $(res);
+               var $new_infoblock_node = $( $.trim(res) );
                $infoblock_node.hide().before($new_infoblock_node);
                $infoblock_node.remove();
            }
@@ -1493,7 +1455,7 @@ fx_front.prototype.scrollTo = function($node, if_invisible, callback) {
     if (move) {
         var distance = Math.abs(st - top_offset);
         var speed = distance*2;
-        $('body').scrollTo(
+        $('body').stop().scrollTo(
             top_offset,
             speed
             //800

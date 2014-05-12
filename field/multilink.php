@@ -282,6 +282,7 @@ class fx_field_multilink extends fx_field_baze {
             })
             ->get('keyword');
         $linked_infoblock_id = null;
+        $linked_parent_id = null;
         foreach ($this->value as $item_props) {
             $linked_props = $item_props[$end_link_field_name];
             // if the linked entity doesn't yet exist
@@ -293,13 +294,24 @@ class fx_field_multilink extends fx_field_baze {
                     $linked_infoblock_id = $content->get_link_field_infoblock($this['id']);
                 }
                 $linked_props['type'] = $linked_data_type;
-                $linked_props['infoblock_id'] = $linked_infoblock_id;
+                if ($linked_infoblock_id) {
+                    $linked_props['infoblock_id'] = $linked_infoblock_id;
+                } else {
+                    if (is_null($linked_parent_id) && $content['infoblock_id']) {
+                        $our_infoblock = fx::data('infoblock', $content['infoblock_id']);
+                        $linked_parent_id = $our_infoblock['page_id'];
+                    }
+                    if ($linked_parent_id) {
+                        $linked_props['parent_id'] = $linked_parent_id;
+                    }
+                }
             } elseif (isset($existing_items->linker_map)) {
                 $linker_item = $existing_items->linker_map->find_one($end_link_field_name, $linked_props);
             }
             if (!$linker_item) {
                 $linker_item = fx::data($linker_data_type)->create();
             }
+            fx::log('lit', $linker_item, $end_link_field_name, $linked_props);
             $linker_item->set_field_values(
                 array($end_link_field_name => $linked_props), 
                 array($end_link_field_name)

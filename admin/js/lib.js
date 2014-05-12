@@ -67,7 +67,7 @@ function fx_object_get_first_key ( obj ) {
     } 
     return key
 }
-
+/*
 Array.prototype.unique = function( b ) {
     var a = [], i, l = this.length;
     for( i=0; i<l; i++ ) {
@@ -87,6 +87,7 @@ Array.prototype.contains = function( elem ) {
 
     return false;
 };
+*/
 
 function array_diff (arr1) {
     // http://kevin.vanzonneveld.net

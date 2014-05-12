@@ -31,15 +31,6 @@ class fx_template_html {
             return $tree->serialize();
         }
         return $this->add_meta_wrapper($meta);
-        /*
-        $wrapper = fx_template_html_token::create('<'.self::get_wrapper_tag($this->_string).'>');
-        $wrapper->add_meta($meta);
-        foreach ($children as $child) {
-            $wrapper->add_child($child);
-        }
-        return $wrapper->serialize();
-         * 
-         */
     }
     
     public function add_meta_wrapper($meta) {

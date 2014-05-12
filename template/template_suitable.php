@@ -22,7 +22,7 @@ class fx_template_suitable {
             if ($ib->get_visual()->get('is_stub')) {
                 $stub_ibs[]= $ib;
             }
-            if ($ib->get_prop_inherited('controller') == 'layout') {
+            if ($ib->is_layout()) {
                 $layout_ib = $ib;
             }
         }
@@ -40,6 +40,10 @@ class fx_template_suitable {
         }
         
         $source_layout_id = $c_layout_id;
+        
+        if (!$layout_ib) {
+            $layout_ib = fx::env('page')->get_layout_infoblock();
+        }
         
         if ($layout_ib->get_visual()->get('is_stub')) {
             $this->_adjust_layout_visual($layout_ib, $layout_id, $source_layout_id);

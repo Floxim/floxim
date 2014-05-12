@@ -16,10 +16,14 @@ class fx_content extends fx_essence {
      * And if $full = false type "page"
      */
     public function get_type($full = true) {
-        if (!$this->component_id) {
-            return parent::get_type($full);
+        if (is_null($this->_type)) {
+            if (!$this->component_id) {
+                $this->_type = parent::get_type();
+            } else {
+                $this->_type = fx::data('component', $this->component_id)->get('keyword');
+            }
         }
-        return ($full ? 'content_' : '').fx::data('component', $this->component_id)->get('keyword');
+        return ($full ? 'content_' : '').$this->_type;
     }
     
     public function set_component_id($component_id) {
@@ -100,6 +104,7 @@ class fx_content extends fx_essence {
             return false;
         }
         $cf = $fields[$field_keyword];
+        fx::log('gfm', $cf);
         $field_meta = array(
             'var_type' => 'content', 
             'content_id' => $this['id'],
@@ -209,7 +214,7 @@ class fx_content extends fx_essence {
             $this->get('id'),
             $this->get_type(false)
         );
-        //return $html;
+        
         if ($collection->linker_map && isset($collection->linker_map[$index])) {
             $linker = $collection->linker_map[$index];
             $essence_meta[]= $linker['id'];

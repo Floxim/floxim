@@ -7,7 +7,7 @@ class fx_controller_component_publication extends fx_controller_component_page {
         });
         return parent::do_list();
     }
-    public function do_listing_by_tag() {
+    public function do_list_by_tag() {
         $this->listen('query_ready', function($query) {
             $ids = fx::data('content_classifier_linker')->
                     where('classifier_id', fx::env('page')->get('id'))->
@@ -15,8 +15,7 @@ class fx_controller_component_publication extends fx_controller_component_page {
                     get_data()->get_values('content_id');
             $query->where('id', $ids);
         });
-        $this->set_param('skip_infoblock_filter',true);
-        return $this->do_list_infoblock();
+        return $this->do_list();
     }
 
     protected function _get_publication_page() {

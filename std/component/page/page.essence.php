@@ -32,7 +32,7 @@ class fx_content_page extends fx_content {
     
     protected $_active;
     
-    public function get_is_active() {
+    public function _get_is_active() {
         return $this->is_active();
     }
 
@@ -54,7 +54,7 @@ class fx_content_page extends fx_content {
         return $this['id'] == fx::env('page_id');
     }
     
-    public function get_is_current() {
+    public function _get_is_current() {
         return $this->is_current();
     }
     
@@ -106,7 +106,7 @@ class fx_content_page extends fx_content {
         fx::data('infoblock')->where('page_id', $this['id'])->all()->apply($killer);
     }
     
-    public function get_external_host() {
+    public function _get_external_host() {
         $url = $this['url'];
         if (!preg_match('~^https?~', $url)) {
             return '';
