@@ -374,4 +374,25 @@ fx_edit_in_place.prototype.destroy_wysiwyg = function() {
     this.node.get(0).normalize();
 };
 
+$(function() {
+    for (var i = 0; i < document.styleSheets.length; i++) {
+        var sheet = document.styleSheets[i];
+        if (sheet.href.match(/floxim.+\/redactor\.css$/)) {
+            for (var j = 0; j < sheet.cssRules.length; j++) {
+                var rule = sheet.cssRules[j];
+                if (rule.type !== 1) {
+                    continue;
+                }
+                if (rule.selectorText.match(/\.redactor_editor/)) {
+                    sheet.deleteRule(j);
+                    sheet.insertRule(rule.cssText.replace(/\.redactor_editor/g, '.redactor_fx_wysiwyg'), j);
+                } else if ( rule.selectorText === '.redactor_box') {
+                    sheet.deleteRule(j);
+                }
+            }
+            break;
+        }
+    }
+});
+
 })($fxj);
