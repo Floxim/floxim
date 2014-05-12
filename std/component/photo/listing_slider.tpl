@@ -12,9 +12,9 @@
         <div 
             fx:each="$items" 
             class="img-block {if $item_is_first}img-block-active{/if} pic_{$id}">
-            <img src="{$photo}" alt="{$description editable="false"}" />
-                <span class="left">{$description}</span>
-                <span class="right" fx:if="$copy">&copy; {$copy}</span>
+            <img src="{$photo}" alt="{$description editable='false' | strip_tags}" />
+            <span class="left">{$description}</span>
+            <span class="right" fx:if="$copy">&copy; {$copy}</span>
         </div>
     </div>
     <div class="img-slider">
