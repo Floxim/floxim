@@ -104,7 +104,6 @@ class fx_content extends fx_essence {
             return false;
         }
         $cf = $fields[$field_keyword];
-        fx::log('gfm', $cf);
         $field_meta = array(
             'var_type' => 'content', 
             'content_id' => $this['id'],

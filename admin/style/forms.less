@@ -27,32 +27,57 @@
 }
 
 .fx_admin_form label {
-    font-size: 14px;
+    font-size: 13px;
     color: #333;
 }
 
-.fx_admin_form input.fx_input, .fx_admin_form select.fx_input, .fx_admin_form textarea.fx_input {
+.fx_admin_form {
+    .fx_input {
+        display: block;
+        margin: 7px 0 20px 0;
+        box-sizing:border-box;
+        -moz-box-sizing:border-box;
+        //padding: .4em;
+        padding:2px;
+        font-size:14px;
+    }
+}
+
+#fx_admin_content .fx_admin_form {
+    .fx_input, .redactor_box, .livesearch {
+        width:50%;
+    }
+}
+
+/*
+.fx_admin_form input.fx_input, 
+.fx_admin_form select.fx_input, 
+.fx_admin_form textarea.fx_input {
     display: block;
     margin: 7px 0 0;
 }
 
 
-.fx_admin_form input[type=text].fx_input, .fx_admin_form select.fx_input {
-    width: 50%;
-}
-
-.fx_admin_form select.fx_input {
-    margin-bottom: 12px;
-    padding: 0;
-}
-
+.fx_admin_form input[type=text].fx_input, 
+.fx_admin_form select.fx_input,
 .fx_admin_form textarea.fx_input {
-    width: 95%;
+    width: 50%;
+    box-sizing:border-box;
+    -moz-box-sizing:border-box;
 }
+
+.fx_admin_form input.fx_input, 
+.fx_admin_form textarea.fx_input,
+.fx_admin_form select.fx_input {
+    margin-bottom: 10px;
+    padding: .4em;
+}
+*/
 
 .date_field {
-    position: relative;
+    //position: relative;
     .icon {
+        display:none; //hide it for it looks ugly now ;(
         width: 26px;
         height: 26px;
         position: absolute;
@@ -72,11 +97,6 @@
 .fx_admin_form label input[type=checkbox], .fx_admin_form label input[type=radio] {
     display: inline !important;
     margin: 0 5px 0 0;
-}
-
-.fx_admin_form input.fx_input, .fx_admin_form textarea.fx_input {
-    margin-bottom: 10px;
-    padding: .4em;
 }
 
 .fx_admin_form .fx_file_choice {
