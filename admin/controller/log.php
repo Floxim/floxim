@@ -39,9 +39,20 @@ class fx_controller_admin_log extends fx_controller_admin {
         
         $this->response->breadcrumb->add_item(fx::alang('Logs'), '#admin.log.all');
         $this->response->submenu->set_menu('log');
-        return array(
-            'fields' => array($field)
-        );
+        $fields = array();
+        if (count($field['values']) > 0) {
+            $fields []= array(
+                'type' => 'button',
+                'label' => fx::alang('Delete all', 'system'),
+                'options' => array(
+                    'action' => 'drop_all',
+                    'essence' => 'log',
+                    'fx_admin' => 'true'
+                )
+            );
+        }
+        $fields []= $field;
+        return array('fields' => $fields);
     }
     
     public function show($input) {

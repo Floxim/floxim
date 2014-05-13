@@ -60,6 +60,7 @@ class fx_controller_admin_widget extends fx_controller_admin_component {
                 $fields[] = $this->ui->hidden('action', 'add');
                 $fields[] = array('label' => fx::alang('Name','system'), 'name' => 'name');
                 $fields[] = array('label' => fx::alang('Keyword','system'), 'name' => 'keyword');
+                $fields[]= $this->_get_vendor_field();
         }
 
         $fields[] = $this->ui->hidden('source', $input['source']);

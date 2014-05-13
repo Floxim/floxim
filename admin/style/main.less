@@ -15,6 +15,9 @@ font-family:Arial;
     border: none !important;
     list-style:none;
     //height: 29px;
+    &, & * {
+        outline:none !important;
+    }
 }
 
 .ui-tabs .ui-tabs-nav li {
@@ -41,6 +44,7 @@ font-family:Arial;
     padding: 3px 5px;
     text-decoration:none;
     display:inline-block;
+    outline:none !important;
 }
 
 .ui-tabs-nav .ui-state-default {
@@ -306,10 +310,15 @@ font-family:Arial;
         position: relative !important;
         left: auto;
         top: auto;
-        height: 31px;
+        //height: 31px;
     }
     #fx_admin_buttons {
-        margin: 6px 0 0 10px;
+        //margin: 6px 0 0 10px;
+        overflow:hidden;
+        margin-left:20px;
+        &>div {
+            margin-top:20px;
+        }
     }
 
     #fx_admin_statustext span {
@@ -468,7 +477,8 @@ font-family:Arial;
 
 /* Хлебные крошки */
 #fx_admin_breadcrumb {
-    padding: 10px 0 0 30px;
+    padding: 10px 0 10px 20px;
+    border-bottom: 1px solid #EEE;
 }
 
 #fx_admin_breadcrumb a, #fx_admin_breadcrumb span {
@@ -688,9 +698,13 @@ font-family:Arial;
     display:none;
 }
 
-.fx_list_row:hover .fx_list_buttons {
-    display:block;
-    opacity:0.6;
+.fx_list_row:hover {
+    background:#F9F9F9;
+    border-bottom:1px solid #ddd;
+    .fx_list_buttons {
+        display:block;
+        opacity:0.6;
+    }
 }
 
 .fx_admin_selected .fx_list_buttons {

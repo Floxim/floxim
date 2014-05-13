@@ -16,7 +16,8 @@ class fx_controller_admin_layout extends fx_controller_admin {
 
         $layout_use = array(); // [room layout][number of website] => 'website Name'
         foreach (fx::data('site')->all() as $site) {
-            $layout_use[$site['layout_id']][$site['id']] = '<a href="#admin.site.map('.$site['id'].')">'.$site['name'].'</a>';
+            $layout_use[$site['layout_id']][$site['id']] = 
+                    '<a href="#admin.site.settings('.$site['id'].')">'.$site['name'].'</a>';
         }
 
         $ar = array('type' => 'list', 'filter' => true, 'essence' => 'layout');

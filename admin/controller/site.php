@@ -5,12 +5,22 @@ class fx_controller_admin_site extends fx_controller_admin {
     public function all() {
         $sites = fx::data('site')->all();
 
-        $list = array('type' => 'list', 'filter' => true, 'tpl' => 'imgh', 'sortable' => true);
-        $list['labels'] = array();
+        $list = array(
+            'type' => 'list', 
+            'filter' => true, 
+            //'tpl' => 'imgh', 
+            'sortable' => true
+        );
+        $list['labels'] = array(
+            'name' => fx::alang('Site name','system'),
+            'domain' => fx::alang('Domain','system'),
+            'language' => fx::alang('Language', 'system')
+        );
 
         $list['values'] = array();
         $list['essence'] = 'site';
         foreach ($sites as $v) {
+            /*
             $text = fx::alang('Language:','system') . ' ' . $v['language'];
             if ($v['domain']) {
                 $text .= "<br />".$v['domain'];
@@ -24,6 +34,18 @@ class fx_controller_admin_site extends fx_controller_admin {
                     'text' => $text
             );
             $list['values'][] = $r;
+             * 
+             */
+            $r = array(
+                'id' => $v['id'],
+                'domain' => $v['domain'],
+                'name' => array(
+                    'url' => 'site.settings('.$v['id'].')',
+                    'name' => $v['name']
+                ),
+                'language' => $v['language']
+            );
+            $list['values'][]= $r;
         }
 
         $this->response->add_field($list);

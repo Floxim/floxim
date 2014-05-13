@@ -135,35 +135,6 @@ window.$fx = {
         return true;
     },
 
-    update_history: function () {
-        return;
-        
-        if ( $fx.history.undo !== undefined && $fx.history.undo.length > 0 ) {
-            $fx.buttons.update_button('undo', {
-                'available' : true,
-                'title': $fx.history.undo
-            } );
-        }
-        else {
-            $fx.buttons.update_button('undo', {
-                'available' : false,
-                'title': ''
-            } );
-        }
-        if ( $fx.history.redo !== undefined && $fx.history.redo.length > 0 ) {
-            $fx.buttons.update_button('redo', {
-                'available' : true,
-                'title': $fx.history.redo
-            } );
-        }
-        else {
-            $fx.buttons.update_button('redo', {
-                'available' : false,
-                'title': ''
-            } );
-        }
-    },
-    
     show_status_text: function ( text, status ) { 
         $("#fx_admin_statustext").removeClass();
         $("#fx_admin_statustext").html("<span>"+text+"</span>").addClass(status).fadeIn('slow');
@@ -174,9 +145,14 @@ window.$fx = {
         }
     },
     
-    reload:function(new_location) {
+    reload: function(new_location) {
         if (/^#/.test(new_location)) {
-            document.location.hash = new_location.replace(/^#/, '');
+            if (new_location === document.location.hash) {
+                $(window).trigger('hashchange');
+            } else {
+                document.location.hash = new_location.replace(/^#/, '');
+            }
+            
             return;
         }
         $('html, body').html('').css({

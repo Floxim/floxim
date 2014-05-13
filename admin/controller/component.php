@@ -80,7 +80,6 @@ class fx_controller_admin_component extends fx_controller_admin {
             'component' => array(
                 'settings' => fx::alang('Settings','system'),
                 'fields' => fx::alang('Fields','system'),
-                //'actions' => fx::lang('Component actions', 'system'),
                 'items' => fx::alang('Items', 'system'),
                 'templates' => fx::alang('Templates', 'system'),
             ), 
@@ -129,22 +128,35 @@ class fx_controller_admin_component extends fx_controller_admin {
     }
 
     public function add($input) {
-        $fields = array();
-
         switch ($input['source']) {
             case 'import':
-                $fields[] = array('name' => 'importfile', 'type' => 'file', 'label' => fx::alang('File','system'));
-                $fields[] = $this->ui->hidden('action', 'import');
+                $fields = array(
+                    array('name' => 'importfile', 'type' => 'file', 'label' => fx::alang('File','system')),
+                    $this->ui->hidden('action', 'import')
+                );
                 break;
             case 'store':
-                $fields[] = $this->ui->store('component');
+                $fields = array($this->ui->store('component'));
                 break;
             default:
                 $input['source'] = 'new';
-                $fields[] = $this->ui->hidden('action', 'add');
-                $fields[] = array('label' => fx::alang('Component name','system'), 'name' => 'name');
-                $fields[] = array('label' => fx::alang('Name of an entity created by the component','system'), 'name' => 'item_name');
-                $fields[] = array('label' => fx::alang('Keyword','system'), 'name' => 'keyword');
+                $fields = array(
+                    $this->ui->hidden('action', 'add'),
+                    array(
+                        'label' => fx::alang('Component name','system'), 
+                        'name' => 'name'
+                    ),
+                    array(
+                        'label' => fx::alang('Name of an entity created by the component','system'), 
+                        'name' => 'item_name'
+                    ),
+                    array(
+                        'label' => fx::alang('Keyword','system'), 
+                        'name' => 'keyword'
+                    ),
+                    $this->_get_vendor_field()
+                );
+                break;
         }
 
         $fields[] = $this->ui->hidden('source', $input['source']);
@@ -166,6 +178,19 @@ class fx_controller_admin_component extends fx_controller_admin {
         $this->response->add_form_button('save');
 
         return array('fields' => $fields);
+    }
+    
+    protected function _get_vendor_field() {
+        if (1 || fx::config('dev.floxim_team')) {
+            return array(
+                'label' => 'Vendor',
+                'name' => 'vendor',
+                'type' => 'select',
+                'values' => array('std', 'local'),
+                'value' => ''
+            );
+        }
+        return $this->ui->hidden('vendor', 'local');
     }
 
     public function store($input) {
@@ -349,8 +374,6 @@ class fx_controller_admin_component extends fx_controller_admin {
                 'action' => preg_replace("~^.+\.~", '', $tpl['of']),
                 'used' => count($visuals->find('template', $tpl['full_id']))
             );
-            //$owner_com = preg_replace("~\..+$~", '', $tpl['of']);
-            //$owner_com = preg_replace("~^(component|widget)_~", '', $owner_com);
             $owner_ctr_match = null;
             preg_match("~^(component_|widget_)?(.+?)\..+$~", $tpl['of'], $owner_ctr_match);
             $owner_ctr = $owner_ctr_match ? $owner_ctr_match[2] : null;
@@ -461,13 +484,6 @@ class fx_controller_admin_component extends fx_controller_admin {
             $field['value'] = $component['parent_id'];
         }
         $field['values'] = $c_finder->get_select_values();
-        /*
-        $field['values'] = array_merge(
-                array(array('', fx::alang('--no--','system'))),
-                $c_finder->get_select_values()
-        );
-         * 
-         */
         return $field;
     }
 
