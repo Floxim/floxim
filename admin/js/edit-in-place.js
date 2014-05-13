@@ -377,7 +377,10 @@ fx_edit_in_place.prototype.destroy_wysiwyg = function() {
 $(function() {
     for (var i = 0; i < document.styleSheets.length; i++) {
         var sheet = document.styleSheets[i];
-        if (sheet.href.match(/floxim.+\/redactor\.css$/)) {
+        if (!sheet.cssRules) {
+            continue;
+        }
+        //if (sheet.href.match(/floxim.+\/redactor\.css$/)) {
             for (var j = 0; j < sheet.cssRules.length; j++) {
                 var rule = sheet.cssRules[j];
                 if (rule.type !== 1) {
@@ -390,8 +393,8 @@ $(function() {
                     sheet.deleteRule(j);
                 }
             }
-            break;
-        }
+            //break;
+        //}
     }
 });
 
