@@ -10,7 +10,7 @@
         form.js
     {/js}
     <input type="hidden" name="{$.get_id()}_sent" value="1" />
-    {$.content}
+    {$_.content}
         {apply messages /}
         {apply errors /}
         {$fields.find('type', 'submit', '!=') || .row /}
