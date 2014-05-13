@@ -377,24 +377,30 @@ fx_edit_in_place.prototype.destroy_wysiwyg = function() {
 $(function() {
     for (var i = 0; i < document.styleSheets.length; i++) {
         var sheet = document.styleSheets[i];
-        if (!sheet.cssRules) {
+        try {
+            if (!sheet.cssRules) {
+                continue;
+            }
+        } catch (e) {
             continue;
         }
-        //if (sheet.href.match(/floxim.+\/redactor\.css$/)) {
-            for (var j = 0; j < sheet.cssRules.length; j++) {
-                var rule = sheet.cssRules[j];
-                if (rule.type !== 1) {
-                    continue;
-                }
-                if (rule.selectorText.match(/\.redactor_editor/)) {
-                    sheet.deleteRule(j);
-                    sheet.insertRule(rule.cssText.replace(/\.redactor_editor/g, '.redactor_fx_wysiwyg'), j);
-                } else if ( rule.selectorText === '.redactor_box') {
-                    sheet.deleteRule(j);
-                }
+        
+        for (var j = 0; j < sheet.cssRules.length; j++) {
+            var rule = sheet.cssRules[j];
+            if (rule.type !== 1 || !rule.cssText) {
+                continue;
             }
-            //break;
-        //}
+            if (rule.selectorText.match(/\.redactor_editor/)) {
+                var new_css = rule.cssText.replace(/\.redactor_editor/g, '.redactor_fx_wysiwyg');
+                sheet.deleteRule(j);
+                sheet.insertRule(
+                    new_css,
+                    j
+                );
+            } else if ( rule.selectorText === '.redactor_box') {
+                sheet.deleteRule(j);
+            }
+        }
     }
 });
 
