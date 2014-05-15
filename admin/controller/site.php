@@ -8,7 +8,6 @@ class fx_controller_admin_site extends fx_controller_admin {
         $list = array(
             'type' => 'list', 
             'filter' => true, 
-            //'tpl' => 'imgh', 
             'sortable' => true
         );
         $list['labels'] = array(
@@ -20,22 +19,6 @@ class fx_controller_admin_site extends fx_controller_admin {
         $list['values'] = array();
         $list['essence'] = 'site';
         foreach ($sites as $v) {
-            /*
-            $text = fx::alang('Language:','system') . ' ' . $v['language'];
-            if ($v['domain']) {
-                $text .= "<br />".$v['domain'];
-            }
-            $text = '<a href="http://'.$v['domain'].'" style="color:#666;" target="_blank"> '.$v['domain'].'</a>';
-            $text .=" <span style='font-size:10px; color:#777;'>&middot;</span> ".$v['language'];
-            if ($v['type'] == 'mobile') $text .= "<br/>" . fx::alang('for mobile devices','system');
-            $r = array(
-                    'id' => $v['id'],
-                    'header' => array('name' => $v['name'], 'url' => 'site.settings('.$v['id'].')'),
-                    'text' => $text
-            );
-            $list['values'][] = $r;
-             * 
-             */
             $r = array(
                 'id' => $v['id'],
                 'domain' => $v['domain'],

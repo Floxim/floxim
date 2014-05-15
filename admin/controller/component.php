@@ -35,8 +35,9 @@ class fx_controller_admin_component extends fx_controller_admin {
                 );
 
                 $r['buttons'] = array();
-                foreach ($submenu as $submenu_item) {
-                    if (!$submenu_item['parent']) {
+                //fx::log($submenu);
+                foreach ($submenu as $submenu_item_key => $submenu_item) {
+                    if (!$submenu_item['parent'] && $submenu_item_key != 'settings') {
                         $r['buttons'] []= array(
                             'type' => 'button', 
                             'label' => $submenu_item['title'], 

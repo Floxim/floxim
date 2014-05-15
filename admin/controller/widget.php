@@ -126,7 +126,13 @@ class fx_controller_admin_widget extends fx_controller_admin_component {
     public function settings($widget) {
 
         
-        $fields[] = array('label' => fx::alang('Keyword:','system') . ' '.$widget['keyword'], 'type' => 'label');
+        //$fields[] = array('label' => fx::alang('Keyword:','system') . ' '.$widget['keyword'], 'type' => 'label');
+        $fields[] = array(
+            'label' => fx::alang('Keyword','system'), 
+            'name' => 'keyword',
+            'disabled' => true,
+            'value' => $widget['keyword']
+        );
 
         $fields[] = array('label' => fx::alang('Name','system'), 'name' => 'name', 'value' => $widget['name']);
         
