@@ -726,13 +726,15 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
         $this->response->add_fields($fields);
         if ($input['delete_confirm']) {
             $this->response->set_status_ok();
-            if ($input['content_handle'] == 'delete') {
-                foreach ($ib_content as $ci) {
-                    $ci->delete();
-                }
-            } else {
-                foreach ($ib_content as $ci) {
-                    $ci->set('infoblock_id', 0)->save();
+            if ($ib_content) {
+                if ($input['content_handle'] == 'delete') {
+                    foreach ($ib_content as $ci) {
+                        $ci->delete();
+                    }
+                } else {
+                    foreach ($ib_content as $ci) {
+                        $ci->set('infoblock_id', 0)->save();
+                    }
                 }
             }
             $controller->handle_infoblock('delete', $infoblock, $input);
