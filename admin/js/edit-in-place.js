@@ -114,14 +114,12 @@ fx_edit_in_place.prototype.start = function(meta) {
                         this.node.html('');
                     }
                     this.node.addClass('fx_var_editable');
-                    if ( (meta.type === 'text' && meta.html) || meta.type === 'html') {
+                    this.node.data('fx_saved_value', this.node.html());
+                    if ( (meta.type === 'text' && meta.html && meta.html !== '0') || meta.type === 'html') {
                         this.is_wysiwyg = true;
-                        this.node.data('fx_saved_value', this.node.html());
                         this.make_wysiwyg();
                     }
-                    if (!((meta.type === 'text' && meta.html) || meta.type === 'html')) {
-                        this.node.data('fx_saved_value', this.node.html());
-                    }
+                    
                     var $n = this.node;
                     setTimeout(function() {
                         $n.attr('contenteditable', 'true').focus();
