@@ -50,7 +50,8 @@ class fx_field_multilink extends fx_field_baze {
                     $linker_fields = $linker->get_form_fields();
                     $val_array = array('_index' => $linker['id']);
                     foreach ($linker_fields as $lf) {
-                        $val_array [$lf['keyword']]= $lf['value'];
+                        // form field has "name" prop instead of "keyword"
+                        $val_array [$lf['name']]= $lf['value'];
                     }
                     $this->_js_field['values'] []= $val_array;
                 }
