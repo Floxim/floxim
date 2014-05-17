@@ -85,7 +85,7 @@ class fx_system_page {
 
     public function add_css_bundle ($files, $params = array()) {
 
-        if (fx::config()->IS_DEV_MODE) {
+        if (fx::config('dev.on')) {
             foreach ($files as $f) {
                 $this->add_css_file($f);
             }
@@ -177,7 +177,7 @@ class fx_system_page {
     
     public function add_js_bundle($files, $params = array()) {
         // for dev mode
-        if (fx::config()->IS_DEV_MODE) {
+        if (fx::config('dev.on')) {
             foreach ($files as $f) {
                 $this->add_js_file($f);
             }
@@ -224,6 +224,9 @@ class fx_system_page {
     
     protected function _accept_gzip() {
         if (!isset($_SERVER['HTTP_ACCEPT_ENCODING'])) {
+            return false;
+        }
+        if (!fx::config('cache.gzip_bundles')) {
             return false;
         }
         return in_array('gzip', explode(",", $_SERVER['HTTP_ACCEPT_ENCODING']));

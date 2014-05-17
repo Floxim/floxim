@@ -95,7 +95,9 @@ if (_o.hide_in_panel) {
 }
 
 if (_c.context !== 'panel') {
-    $('textarea.fx_wysiwyg', html).redactor();
+    $('textarea.fx_wysiwyg', html).redactor({
+        imageUpload : '/floxim/admin/controller/redactor-upload.php'
+    });
 } else {
     var expander = $('.fx_panel_text_expander', html);
     expander.click(function() {

@@ -198,7 +198,11 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
     }
     
     public function slice($offset, $length = null) {
-        return fx::collection(array_slice($this->data, $offset, $length));
+        $collection = fx::collection(array_slice($this->data, $offset, $length));
+        if ($this->is_sortable) {
+            $collection->is_sortable = true;
+        }
+        return $collection;
     }
     
     public function eq($offset) {

@@ -1,11 +1,10 @@
 <?php
 class fx_config {
     private $config = array(
-        'SUB_FOLDER' => '',
-        'DB_DSN' => '',
-        'DB_USER' => '',
-        'DB_PASSWORD' => '',
-        'DB_PREFIX' => 'fx',
+        'db.prefix' => 'fx',
+        'path.jquery' => '/floxim/lib/js/jquery-1.9.1.min.js',
+        'path.jquery-ui' => '/floxim/lib/js/jquery-ui-1.10.3.custom.min.js',
+        'dev.on' => false,
         'DB_CHARSET' => 'utf8',
         'CHARSET' => 'utf-8',
         
@@ -43,24 +42,25 @@ class fx_config {
         'FX_VERSION' => '0.1.1.1',
         'FLOXIM_SITE_PROTOCOL' => 'http',
         'FLOXIM_SITE_HOST' => 'floxim.org',
-        'COMPILED_TEMPLATES_TTL' => 0,
-        'IS_DEV_MODE' => false
+        'templates.ttl' => 0,
+        'cache.gzip_bundles' => true,
+        'cache.meta' => true
     );
 
     public function __construct() {
         error_reporting(E_ALL & ~(E_NOTICE | E_STRICT));
-        @date_default_timezone_set(@date_default_timezone_get());
+        date_default_timezone_set(date_default_timezone_get());
 
-        @ini_set("session.auto_start", "0");
-        @ini_set("session.use_trans_sid", "0");
-        @ini_set("session.use_cookies", "1");
-        @ini_set("session.use_only_cookies", "1");
-        @ini_set("url_rewriter.tags", "");
-        @ini_set("session.gc_probability", "1");
-        @ini_set("session.gc_maxlifetime", "1800");
-        @ini_set("session.hash_bits_per_character", "5");
-        @ini_set("mbstring.internal_encoding", "UTF-8");
-        @ini_set("session.name", ini_get("session.hash_bits_per_character") >= 5 ? "sid" : "ced");
+        ini_set("session.auto_start", "0");
+        ini_set("session.use_trans_sid", "0");
+        ini_set("session.use_cookies", "1");
+        ini_set("session.use_only_cookies", "1");
+        ini_set("url_rewriter.tags", "");
+        ini_set("session.gc_probability", "1");
+        ini_set("session.gc_maxlifetime", "1800");
+        ini_set("session.hash_bits_per_character", "5");
+        ini_set("mbstring.internal_encoding", "UTF-8");
+        ini_set("session.name", ini_get("session.hash_bits_per_character") >= 5 ? "sid" : "ced");
         
         
         fx::path()->register('root', DOCUMENT_ROOT);
@@ -75,14 +75,14 @@ class fx_config {
         fx::path()->register('content_files', fx::path('files', '/content'));
                 
         
-        $this->config['DOCUMENT_ROOT'] = DOCUMENT_ROOT;//rtrim(getenv("DOCUMENT_ROOT"), "/\\");
+        $this->config['DOCUMENT_ROOT'] = DOCUMENT_ROOT;
         $this->config['HTTP_HOST'] = getenv("HTTP_HOST");
-        $this->config['FLOXIM_FOLDER'] = $this->config['DOCUMENT_ROOT'] . $this->config['SUB_FOLDER'];
+        $this->config['FLOXIM_FOLDER'] = $this->config['DOCUMENT_ROOT'];
 
         $this->config['HTTP_MODULE_PATH'] = $this->config['HTTP_ROOT_PATH'] . 'modules/';
         $this->config['HTTP_ACTION_LINK'] = $this->config['HTTP_ROOT_PATH'] . 'index.php';
 
-        $this->config['ADMIN_PATH'] = $this->config['SUB_FOLDER'].$this->config['HTTP_ROOT_PATH'].'admin/';
+        $this->config['ADMIN_PATH'] = $this->config['HTTP_ROOT_PATH'].'admin/';
         $this->config['ADMIN_TEMPLATE'] = $this->config['ADMIN_PATH'].'skins/default/';
 
         $this->config['ROOT_FOLDER'] = $this->config['FLOXIM_FOLDER'].$this->config['HTTP_ROOT_PATH'];
@@ -98,10 +98,19 @@ class fx_config {
     }
 
     public function load(array $config = array()) {
+        static $loaded = false;
         $this->config = array_merge($this->config, $config);
-        if (!$this->config['IS_DEV_MODE'] && !defined("FX_ALLOW_DEBUG")) {
-            define("FX_ALLOW_DEBUG", false);
+        if (!$loaded) {
+            if (!$this->config['dev.on'] && !defined("FX_ALLOW_DEBUG")) {
+                define("FX_ALLOW_DEBUG", false);
+            }
+            if (!$this->config['db.dsn']) {
+                $this->config['db.dsn'] = 'mysql:dbname='.$this->config['db.name'].';host='.$this->config['db.host'];
+            }
+            define('FX_JQUERY_PATH', $this->config['path.jquery']);
+            define('FX_JQUERY_UI_PATH', $this->config['path.jquery-ui']);
         }
+        $loaded = true;
         return $this;
     }
 

@@ -6,6 +6,7 @@ class fx_controller_admin_widget extends fx_controller_admin_component {
         $field = array('type' => 'list', 'filter' => true);
         $field['labels'] = array(
             'name' => fx::alang('Name', 'system'),
+            'keyword' => fx::alang('Keyword', 'system'),
             'buttons' => array('type' => 'buttons')
         );
         $field['values'] = array();
@@ -16,6 +17,7 @@ class fx_controller_admin_widget extends fx_controller_admin_component {
             $submenu_first = current($submenu);
             $r = array(
                 'id' => $widget['id'],
+                'keyword' => $widget['keyword'],
                 'name' => array(
                     'name' => $widget['name'],
                     'url' => $submenu_first['url']
@@ -85,6 +87,11 @@ class fx_controller_admin_widget extends fx_controller_admin_component {
 
         $data['name'] = trim($input['name']);
         $data['keyword'] = trim($input['keyword']);
+        
+        if (!$data['keyword'] && $data['name']) {
+            $data['keyword'] = fx::util()->str_to_keyword($data['name']);
+        }
+        $data['vendor'] = $input['vendor'] ? $input['vendor'] : 'local';
 
         
         $widget = fx::data('widget')->create($data);

@@ -130,15 +130,6 @@ class fx_controller_admin_component extends fx_controller_admin {
 
     public function add($input) {
         switch ($input['source']) {
-            case 'import':
-                $fields = array(
-                    array('name' => 'importfile', 'type' => 'file', 'label' => fx::alang('File','system')),
-                    $this->ui->hidden('action', 'import')
-                );
-                break;
-            case 'store':
-                $fields = array($this->ui->store('component'));
-                break;
             default:
                 $input['source'] = 'new';
                 $fields = array(
@@ -182,36 +173,19 @@ class fx_controller_admin_component extends fx_controller_admin {
     }
     
     protected function _get_vendor_field() {
-        if (1 || fx::config('dev.floxim_team')) {
+        if (fx::config('dev.floxim_team')) {
             return array(
                 'label' => 'Vendor',
                 'name' => 'vendor',
                 'type' => 'select',
-                'values' => array('std', 'local'),
+                'values' => array(
+                    'local' => fx::alang('Local', 'system'),
+                    'std' => fx::alang('Standard', 'system') 
+                ),
                 'value' => ''
             );
         }
         return $this->ui->hidden('vendor', 'local');
-    }
-
-    public function store($input) {
-        return $this->ui->store('component', $input['filter'], $input['reason'], $input['position']);
-    }
-
-    public function store_save($input) {
-        $store = new fx_admin_store();
-        $file = $store->get_file($input['store_id']);
-
-        $result = array('status' => 'ok');
-        try {
-            $imex = new fx_import();
-            $imex->import_by_content($file);
-        } catch (Exception $e) {
-            $result = array('status' => 'error');
-            $result['text'][] = $e->getMessage();
-        }
-
-        return $result;
     }
 
     public function edit($input) {
@@ -257,9 +231,16 @@ class fx_controller_admin_component extends fx_controller_admin {
 
         $data['name'] = trim($input['name']);
         $data['keyword'] = trim($input['keyword']);
-
+        
+        if (!$data['keyword'] && $data['name']) {
+            $data['keyword'] = fx::util()->str_to_keyword($data['name']);
+        }
+        $data['vendor'] = $input['vendor'] ? $input['vendor'] : 'local';
+        
         $data['parent_id'] = $input['parent_id'];
         $data['item_name'] = $input['item_name'];
+        
+        
 
         $component = fx::data('component')->create($data);
         if (!$component->validate()) {

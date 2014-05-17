@@ -388,13 +388,26 @@ class fx {
     /*
      * @return fx_core
      */
-    public static function load() {
+    public static function load($config = null) {
+        
+        if ($config !== null) {
+            require_once DOCUMENT_ROOT.'/floxim/system/config.php';
+            self::config()->load($config);
+        }
+        
         static $loader = false;
         if ($loader === false) {
             require_once fx::config()->SYSTEM_FOLDER . 'loader.php';
             $loader = new fx_loader();
         }
-        //return $loader;
+        
+        if (fx::config('cache.meta')) {
+            self::_load_meta_cache();
+        }
+        return $loader;
+    }
+    
+    protected static function _load_meta_cache() {
         // preload meta info
         $cache_file = fx::path('files', 'cache/meta_cache.php');
         
@@ -421,8 +434,6 @@ class fx {
             $field_cache = $cache['field'];
         }
         self::$data_cache['component'] = $com_cache;
-        //self::$data_cache['field'] = $field_cache;
-        return $loader;
     }
 
     public static function lang ( $string = null, $dict = null) {

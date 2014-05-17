@@ -101,6 +101,7 @@ class fx_component extends fx_essence {
 
     protected function _after_insert() {
         $this->create_content_table();
+        $this->scaffold();
     }
     
     protected function create_content_table() {
@@ -113,9 +114,14 @@ class fx_component extends fx_essence {
     }
 
     protected function _before_delete() {
+        if ($this['children']) {
+            foreach ($this['children'] as $child_com) {
+                $child_com->delete();
+            }
+        }
         $this->delete_fields();
-        $this->delete_content_table();
         $this->delete_infoblocks();
+        $this->delete_content_table();
     }
 
     protected function delete_fields() {
@@ -159,5 +165,55 @@ class fx_component extends fx_essence {
         $res = fx::collection($this);
         $res->concat($this->get_all_children());
         return $res;
+    }
+    
+    public function scaffold() {
+        $keyword = $this['keyword'];
+        $base_path = fx::path(
+            ($this['vendor'] === 'std') ? 'std' : 'root', 
+            'component/'.$keyword.'/'
+        ).'/';
+        fx::log('pase', $base_path);
+        $controller_file = $base_path.$keyword.'.php';
+        fx::log('cf', $controller_file);
+        $parent_com = fx::data('component', $this['parent_id']);
+        fx::log('parent com', $parent_com);
+        $parent_ctr = fx::controller('component_'.$parent_com['keyword']);
+        fx::log('pctr', $parent_ctr);
+        $parent_ctr_class = get_class($parent_ctr);
+        
+        $parent_finder = fx::content($parent_com['keyword']);
+        fx::log('pfind', $parent_finder);
+        $parent_finder_class = get_class($parent_finder);
+        
+        $parent_essence = $parent_finder->create();
+        fx::log('pess', $parent_essence);
+        
+        $parent_essence_class = get_class($parent_essence);
+        ob_start();
+        echo "<?php\n";?>
+class fx_controller_component_<?php echo  $keyword; ?> extends <?php echo $parent_ctr_class; ?> {
+    // create component controller logic
+}<?php
+        $code = ob_get_clean();
+        fx::files()->writefile($controller_file, $code);
+        
+        $finder_file = $base_path.$keyword.'.data.php';
+        ob_start();
+        echo "<?php\n";?>
+class fx_data_content_<?php echo  $keyword; ?> extends <?php echo $parent_finder_class; ?> {
+    // create component finder logic
+}<?php
+        $code = ob_get_clean();
+        fx::files()->writefile($finder_file, $code);
+        
+        $essence_file = $base_path.$keyword.'.essence.php';
+        ob_start();
+        echo "<?php\n";?>
+class fx_content_<?php echo  $keyword; ?> extends <?php echo $parent_essence_class; ?> {
+    // create component finder logic
+}<?php
+        $code = ob_get_clean();
+        fx::files()->writefile($essence_file, $code);
     }
 }

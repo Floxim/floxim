@@ -117,8 +117,8 @@ class fx_template_loader {
     }
     
     public function is_fresh($target_path) {
-        $ttl = fx::config('COMPILED_TEMPLATES_TTL');
-        // special mode, templates are recompile every time
+        $ttl = fx::config('templates.ttl');
+        // special mode, templates are recompiled every time
         if ($ttl < 0) {
             return false;
         }

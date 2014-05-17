@@ -201,6 +201,7 @@ fx_edit_in_place.prototype.get_vars = function() {
         var text_val = this.is_wysiwyg ? node.redactor('get') : node.text();
         var html_val = this.is_wysiwyg ? node.redactor('get') : node.html();
         var saved_val = node.data('fx_saved_value');
+        console.log(saved_val, html_val, text_val);
 
         if (text_val !== saved_val && html_val !== saved_val ) {
             vars.push({
@@ -233,7 +234,6 @@ fx_edit_in_place.prototype.get_vars = function() {
             value_changed = new_value !== old_value;
         }
         
-        //console.log(new_value, old_value, pf_meta);
         if (value_changed) {    
             vars.push({
                 'var': pf_meta,
@@ -310,8 +310,6 @@ fx_edit_in_place.prototype.make_wysiwyg = function () {
     if (!this.node.attr('id')) {
         this.node.attr('id', 'stub'+Math.round(Math.random()*1000));
     }
-    //    $('#fx_admin_control').append('<div class="editor_panel" />');
-    //this.node.data('fx_node_panel').append('<div class="editor_panel" />').show();
     var $panel = $fx.front.get_node_panel();
     $panel.append('<div class="editor_panel" />').show();
     var linebreaks = this.meta.var_type === 'visual';
@@ -321,7 +319,6 @@ fx_edit_in_place.prototype.make_wysiwyg = function () {
     
     var _node = this.node;
     this.node.redactor({
-        //focus:true,
         linebreaks:linebreaks,
         toolbarExternal: '.editor_panel',
         imageUpload : '/floxim/admin/controller/redactor-upload.php',

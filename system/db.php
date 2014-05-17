@@ -15,12 +15,12 @@ class fx_db extends PDO {
 
     public function __construct() {
         try {
-            parent::__construct(fx::config()->DB_DSN, fx::config()->DB_USER, fx::config()->DB_PASSWORD);
+            parent::__construct(fx::config('db.dsn'), fx::config('db.user'), fx::config('db.password'));
         } catch (Exception $e) {
             echo $e->getMessage();
         }
-
-        $this->prefix = fx::config()->DB_PREFIX ? fx::config()->DB_PREFIX.'_' : '';
+        $prefix = fx::config('db.prefix');
+        $this->prefix = $prefix ? $prefix.'_' : '';
     }
 
     public function escape($str) {

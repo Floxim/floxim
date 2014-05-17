@@ -39,7 +39,10 @@ class fx_widget extends fx_essence {
     
     public function scaffold() {
         $keyword = $this['keyword'];
-        $controller_file = fx::path('root', '/widget/'.$keyword.'/'.$keyword.'.php');
+        $controller_file = fx::path(
+            ($this['vendor'] === 'std') ? 'std' : 'root', 
+            'widget/'.$keyword.'/'.$keyword.'.php'
+        );
         ob_start();
         echo "<?php\n";?>
 class fx_controller_widget_<?=$keyword?> extends fx_controller_widget {
