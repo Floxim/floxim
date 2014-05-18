@@ -222,8 +222,7 @@ class fx_thumb
             'min-height' => false,
             'max-width' => false,
             'max-height' => false,
-            'crop' => true,
-            'quality' => 90
+            'crop' => true
         ), $params);
         
         // the calculated sizes based on min-max, the size of the picture and a set of w-h
@@ -336,7 +335,16 @@ class fx_thumb
         imagecolortransparent($dst, $t_index);
     }
     
-    public function save($target_path = false, $quality = 90) {
+    public function save($target_path = false, $params = null) {
+        if (isset($params)) {
+            $params = $this->_read_config($params);
+        } else {
+            $params = $this->config;
+        }
+        $params = array_merge(array('quality' => 90), $params);
+        
+        $quality = $params['quality'];
+        
         if ($this->info['imagetype'] == IMAGETYPE_PNG) {
             $quality = round($quality / 10);
         }
@@ -347,7 +355,10 @@ class fx_thumb
         } else {
             fx::files()->mkdir( dirname($target_path) );
         }
-        $res_image = call_user_func($this->info['save_func'], $this->image, $target_path, $quality);
+        if (!$this->image) {
+            $this->_load_image();
+        }
+        call_user_func($this->info['save_func'], $this->image, $target_path, $quality);
     }
     
     protected static $_types = array(
@@ -368,8 +379,13 @@ class fx_thumb
         )
     );
     
-    public function process($full_path = false) {
+    protected function _load_image(){
         $this->image = call_user_func($this->info['create_func'], $this->source_path);
+    }
+
+
+    public function process($full_path = false) {
+        $this->_load_image();
         $this->resize();
         $this->save($full_path);
         $this->image = null;
