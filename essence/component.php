@@ -173,21 +173,17 @@ class fx_component extends fx_essence {
             ($this['vendor'] === 'std') ? 'std' : 'root', 
             'component/'.$keyword.'/'
         ).'/';
-        fx::log('pase', $base_path);
+        
         $controller_file = $base_path.$keyword.'.php';
-        fx::log('cf', $controller_file);
+        
         $parent_com = fx::data('component', $this['parent_id']);
-        fx::log('parent com', $parent_com);
         $parent_ctr = fx::controller('component_'.$parent_com['keyword']);
-        fx::log('pctr', $parent_ctr);
         $parent_ctr_class = get_class($parent_ctr);
         
         $parent_finder = fx::content($parent_com['keyword']);
-        fx::log('pfind', $parent_finder);
         $parent_finder_class = get_class($parent_finder);
         
         $parent_essence = $parent_finder->create();
-        fx::log('pess', $parent_essence);
         
         $parent_essence_class = get_class($parent_essence);
         ob_start();
