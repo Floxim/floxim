@@ -142,9 +142,9 @@ function font()
 		 	}
 		}
 	}
+        
 	if(count($ar))
 	{
-	//	shuffle($ar);
 		$i = rand(0,(count($ar) - 1));
 		return 'fonts/' . $ar[$i];
 	}
