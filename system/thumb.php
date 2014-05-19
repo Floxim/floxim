@@ -286,6 +286,9 @@ class fx_thumb
             }
         }
         
+        if (!$this->image) {
+            $this->_load_image();
+        }
         $source_i = $this->image;
         $target_i = imagecreatetruecolor($st['width'], $st['height']);
         
@@ -343,10 +346,25 @@ class fx_thumb
         }
         $params = array_merge(array('quality' => 90), $params);
         
+        $type_props = null;
+        if (isset($params['type'])) {
+            $type_props = self::image_type_by_path('pic.'.$params['type']);
+        } elseif ($target_path) {
+            $type_props = self::image_type_by_path($target_path);
+        }
+        
+        if ($type_props && $type_props['type'] !== $this->info['imagetype']) {
+            $image_type = $type_props['type'];
+            $save_function = $type_props['save_func'];
+        } else {
+            $image_type = $this->info['imagetype'];
+            $save_function = $this->info['save_func'];
+        }
+        
         $quality = $params['quality'];
         
-        if ($this->info['imagetype'] == IMAGETYPE_PNG) {
-            $quality = round($quality / 10);
+        if ($image_type == IMAGETYPE_PNG) {
+            $quality = 10 - round($quality / 10);
         }
         if ($target_path === false) {
             $target_path = $this->source_path;
@@ -358,7 +376,8 @@ class fx_thumb
         if (!$this->image) {
             $this->_load_image();
         }
-        call_user_func($this->info['save_func'], $this->image, $target_path, $quality);
+        //fx::debug('sav', $this->info['save_func'], $quality);
+        call_user_func($save_function, $this->image, $target_path, $quality);
     }
     
     protected static $_types = array(
@@ -379,6 +398,16 @@ class fx_thumb
         )
     );
     
+    public static function image_type_by_path($path) {
+        $name = fx::path()->file_name($path);
+        $ext = strtolower(preg_replace("~^.+\.~", '', $name));
+        foreach (self::$_types as $type => $props) {
+            if ($props['ext'] == $ext) {
+                return $props + array('type' => $type);
+            }
+        }
+    }
+    
     protected function _load_image(){
         $this->image = call_user_func($this->info['create_func'], $this->source_path);
     }
@@ -393,20 +422,6 @@ class fx_thumb
     
     public function get_result_path() {
         $rel_path = fx::path()->to_http($this->source_path);
-        /*
-        $ds = '['.preg_quote('\/').']';
-        $rex = '~'.$ds.'floxim_files'.$ds.'content'.$ds.'(.+)$~';
-        preg_match(
-            $rex, 
-            $this->source_path, 
-            $folders
-        );
-        if (!$folders) {
-            $rex = "~".$ds."([^".preg_quote('\/')."]+?)$~";
-            preg_match($rex, $this->source_path, $folders);
-        }
-         * 
-         */
         
         $folder_name = array();
         foreach ($this->config as $key => $value) {
@@ -416,8 +431,6 @@ class fx_thumb
         }
         $folder_name = join('.', $folder_name);
 
-        //$thumb_dir = 'fx_thumb';
-        
         $rel_path = $folder_name.'/'.$rel_path;
         $full_path = fx::path('thumbs', $rel_path);
         if (!file_exists($full_path)) {
