@@ -35,7 +35,11 @@ class fx_field_multilink extends fx_field_baze {
             $essence_fields = $essence->get_form_fields();
             $this->_js_field['tpl'] = array();
             $this->_js_field['labels'] = array();
+            
             foreach ($essence_fields as $ef) {
+                if ($ef['name'] == $rel[2]) {
+                    continue;
+                }
                 $this->_js_field['tpl'] []= $ef;
                 $this->_js_field['labels'] []= $ef['label'];
             }
@@ -50,6 +54,10 @@ class fx_field_multilink extends fx_field_baze {
                     $linker_fields = $linker->get_form_fields();
                     $val_array = array('_index' => $linker['id']);
                     foreach ($linker_fields as $lf) {
+                        // skip the relation field
+                        if ($lf['name'] == $rel[2]) {
+                            continue;
+                        }
                         // form field has "name" prop instead of "keyword"
                         $val_array [$lf['name']]= $lf['value'];
                     }
@@ -222,19 +230,21 @@ class fx_field_multilink extends fx_field_baze {
     }
     
     protected function _before_save() {
-        $c_lf = $this['format']['linking_field'];
-        $format = array(
-            'render_type' => $this['format']['render_type'],
-            'linking_field' => $c_lf
-        );
-        $c_ldt = $this['format']['linking_field_'.$c_lf.'_datatype'];
-        $format['linking_datatype'] = $c_ldt;
-        $mm_field = $this['format']['linking_mm_field_'.$c_lf.'_'.$c_ldt];
-        if ($mm_field) {
-            $format['mm_field'] = $mm_field;
-            $format['mm_datatype'] = $this['format']['linking_mm_type_'.$c_lf.'_'.$c_ldt.'_'.$mm_field];
+        if ($this->is_modified('format')) {
+            $c_lf = $this['format']['linking_field'];
+            $format = array(
+                'render_type' => $this['format']['render_type'],
+                'linking_field' => $c_lf
+            );
+            $c_ldt = $this['format']['linking_field_'.$c_lf.'_datatype'];
+            $format['linking_datatype'] = $c_ldt;
+            $mm_field = $this['format']['linking_mm_field_'.$c_lf.'_'.$c_ldt];
+            if ($mm_field) {
+                $format['mm_field'] = $mm_field;
+                $format['mm_datatype'] = $this['format']['linking_mm_type_'.$c_lf.'_'.$c_ldt.'_'.$mm_field];
+            }
+            $this['format'] = $format;
         }
-        $this['format'] = $format;
         parent::_before_save();
     }
     
@@ -248,9 +258,11 @@ class fx_field_multilink extends fx_field_baze {
         $rel = $this->get_relation();
         $is_mm = $rel[0] == fx_data::MANY_MANY;
         if ($is_mm) {
-            return $this->_append_many_many($content);
+            $res = $this->_append_many_many($content);
+        } else {
+            $res = $this->_append_has_many($content);
         }
-        return $this->_append_has_many($content);
+        return $res;
     }
     
     /*
@@ -312,7 +324,6 @@ class fx_field_multilink extends fx_field_baze {
             if (!$linker_item) {
                 $linker_item = fx::data($linker_data_type)->create();
             }
-            fx::log('lit', $linker_item, $end_link_field_name, $linked_props);
             $linker_item->set_field_values(
                 array($end_link_field_name => $linked_props), 
                 array($end_link_field_name)
@@ -320,7 +331,6 @@ class fx_field_multilink extends fx_field_baze {
             $new_value[]= $linker_item[$linker_prop_name];
             $new_value->linker_map []= $linker_item;
         }
-        //fx::log($new_value);
         return $new_value;
     }
     
@@ -337,8 +347,18 @@ class fx_field_multilink extends fx_field_baze {
             $linked_item = null;
             if (is_numeric($item_id)) {
                 $linked_item = $linked_finder->where('id', $item_id)->one();
-            }
-            if (!is_numeric($item_id)) {
+            } else {
+                $is_empty = true;
+                foreach ($item_props as $item_prop_val) {
+                    if (!empty($item_prop_val)) {
+                        $is_empty = false;
+                        break;
+                    }
+                }
+                // if all props are empty, skip this row and do nothing
+                if ($is_empty) {
+                    continue;
+                }
                 $linked_item = $linked_finder->create();
             }
             $linked_item->set_field_values($item_props);

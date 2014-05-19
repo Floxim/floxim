@@ -371,6 +371,9 @@ class fx_content extends fx_essence {
                 fx::files()->rm($c_prop);
             }
         }
+        fx::data('content')->where('parent_id', $this['id'])->all()->apply(function ($n) {
+            $n->delete();
+        });
     }
     
     protected function _after_update() {

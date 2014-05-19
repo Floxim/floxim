@@ -249,20 +249,4 @@ class fx_controller_admin_field extends fx_controller_admin {
         }
         return (array('fields' => $fields)) ;
     }
-    
-    public function move_save ( $input ) {
-        $positions = $input['positions'];
-        if ( $positions ) {  
-            $priority = 0;
-            foreach ( $positions as $field_id ) {
-                $field = fx::data('field')->get_by_id($field_id);
-                if ( $field ) {
-                    $field->set('priority', $priority++ )->save();
-                }
-            }
-        }
-        return array('status' => 'ok');
-    }
 }
-
-?>

@@ -36,9 +36,8 @@ abstract class fx_essence implements ArrayAccess {
             foreach ($data as $k => $v) {
                 $this[$k] = $v;
             }
-            $this->_loaded = true;
-            //$this->data = $input['data'];
         }
+        $this->_loaded = true;
     }
     
     protected function _load_field_map() {
@@ -272,13 +271,7 @@ abstract class fx_essence implements ArrayAccess {
         if ($offset == 'id') {
             return null;
         }
-        /*
-        //if ($this->get_type() == 'field_datetime') {
-            fx::log('ogc', $this->get_type(), $offset); 
-            //die();
-        //}
-         * 
-         */
+        
         if (method_exists($this, '_get_'.$offset)) {
             return call_user_func(array($this, '_get_'.$offset));
         }
@@ -308,7 +301,7 @@ abstract class fx_essence implements ArrayAccess {
         if (!isset($this->data[$offset])) {
             return null;
         }
-        $this->modified_data[$offset] = clone $this->data[$offset];
+        //$this->modified_data[$offset] = clone $this->data[$offset];
         return $this->data[$offset];
     }
 
@@ -321,10 +314,7 @@ abstract class fx_essence implements ArrayAccess {
             $c_type = $this->get_type();
             $c_field = self::$_field_map[$c_type][$offset];
             if ($c_field && $c_field[0] == self::VIRTUAL_MULTILANG) {
-                //$multi_lang_fields = $this->get_finder()->get_multi_lang_fields();
-                //if (in_array($offset, $multi_lang_fields)) {
-                $offset = $offset.'_'.fx::config('ADMIN_LANG');
-                //}
+               $offset = $offset.'_'.fx::config('ADMIN_LANG');
             }
         }
         
@@ -338,12 +328,9 @@ abstract class fx_essence implements ArrayAccess {
             return;
         }
         
-        if (!is_object($value) || $offset_exists) {
-            if (!isset($this->modified_data[$offset]) && isset($this->data[$offset])) {
-                $this->modified_data[$offset] = $this->data[$offset];
-            }
-            $this->modified[] = $offset;
-        }
+        
+        $this->modified_data[$offset] = $this->data[$offset];
+        $this->modified[] = $offset;
         $this->data[$offset] = $value;
     }
 

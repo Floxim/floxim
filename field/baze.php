@@ -23,7 +23,7 @@ class fx_field_baze extends fx_field {
             'id' => $name, 
             'name' => $name, 
             'label' => $this['name'],
-            'type' => $this->get_type(false)
+            'type' => $this->get_type_keyword()
         );
         $this->_js_field['value'] = $this['default'];
         if ($content[$name]) {
