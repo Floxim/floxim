@@ -251,9 +251,12 @@ class fx_infoblock extends fx_essence {
 
 
     public function render() {
-        //return fx::controller('infoblock.render', array('infoblock' => $this))->process();
-        $output = $this->get_output();
-        $output = $this->_wrap_output($output);
+        
+        $output = '';
+        if (fx::is_admin() || (!$this->is_disabled() && !$this->is_hidden() )) {   
+            $output = $this->get_output();
+            $output = $this->_wrap_output($output);
+        }
         $output = $this->_add_infoblock_meta($output);
         if ( ($controller = $this->_get_ib_controller())) {
             $output = $controller->postprocess($output);
@@ -331,6 +334,7 @@ class fx_infoblock extends fx_essence {
             return false;
         }
         $meta = $this->_get_result_meta();
+        
         if ($meta['disabled']) {
             return false;
         }
@@ -376,10 +380,6 @@ class fx_infoblock extends fx_essence {
     }
     
     public function is_hidden() {
-        // hidden blocks exist only for admins
-        if (!fx::is_admin()) {
-            return false;
-        }
         $controller_meta = $this->_get_result_meta();
         return isset($controller_meta['hidden']) && $controller_meta['hidden'];
     }

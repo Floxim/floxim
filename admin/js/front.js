@@ -192,7 +192,7 @@ fx_front.prototype.handle_mouseover = function(e) {
                 $('.fx_hilight_hover').removeClass('fx_hilight_hover');
                 node.addClass('fx_hilight_hover');
                 $fx.front.outline_block(node);
-                $fx.front.make_node_panel(node);
+                //$fx.front.make_node_panel(node);
                 if (make_content_editable) {
                     $editable.addClass('fx_var_editable').attr('contenteditable', 'true');
                 }
