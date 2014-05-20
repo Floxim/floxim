@@ -39,7 +39,7 @@ class fx_config {
         'ADMIN_FOLDER' => '',
         'COMPONENT_FOLDER' => '',
         'WIDGET_FOLDER' => '',
-        'FX_VERSION' => '0.1.1.1',
+        'fx.version' => '0.1.1',
         'FLOXIM_SITE_PROTOCOL' => 'http',
         'FLOXIM_SITE_HOST' => 'floxim.org',
         'templates.ttl' => 0,

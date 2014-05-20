@@ -586,18 +586,8 @@ class fx {
         return $res;
     }
     
-    public static function version($type = null) {
-        $v = fx::config()->FX_VERSION;
-        preg_match("~(\d+\.\d+\.\d+)\.(\d+)~", $v, $v_parts);
-        if (is_null($type)) {
-            return $v_parts[1];
-        }
-        if ($type == 'build') {
-            return $v_parts[2];
-        }
-        if ($type == 'full') {
-            return $v;
-        }
+    public static function version() {
+        return fx::config('fx.version');
     }
     
     protected static $debugger = null;
