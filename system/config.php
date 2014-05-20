@@ -44,13 +44,13 @@ class fx_config {
         'FLOXIM_SITE_HOST' => 'floxim.org',
         'templates.ttl' => 0,
         'cache.gzip_bundles' => true,
-        'cache.meta' => true
+        'cache.meta' => true,
+        'date.timezone' => 'America/New_York'
     );
 
     public function __construct() {
         error_reporting(E_ALL & ~(E_NOTICE | E_STRICT));
-        date_default_timezone_set(date_default_timezone_get());
-
+        
         ini_set("session.auto_start", "0");
         ini_set("session.use_trans_sid", "0");
         ini_set("session.use_cookies", "1");
@@ -110,6 +110,7 @@ class fx_config {
             define('FX_JQUERY_PATH', $this->config['path.jquery']);
             define('FX_JQUERY_UI_PATH', $this->config['path.jquery-ui']);
         }
+        ini_set('date.timezone', $this->config['date.timezone']);
         $loaded = true;
         return $this;
     }
