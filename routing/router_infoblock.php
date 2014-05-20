@@ -4,9 +4,10 @@ class fx_router_infoblock extends fx_router {
         if (!preg_match("~^/\~ib/(\d+|fake(?:\-\d+)?)@(\d+)$~", $url, $ib_info)) {
             return null;
         }
-        if (isset($_POST['c_url'])) {
-            $_SERVER['REQUEST_URI'] = $_POST['c_url'];
-            $c_url = parse_url($_POST['c_url']);
+        $c_url = fx::input('post', 'c_url');
+        if ($c_url) {
+            $_SERVER['REQUEST_URI'] = $c_url;
+            $c_url = parse_url($c_url);
             if (isset($c_url['query'])) {
                 parse_str($c_url['query'], $_GET);
             }
@@ -32,9 +33,11 @@ class fx_router_infoblock extends fx_router {
         fx::http()->status('200');
         $infoblock_overs = null;
         if (fx::is_admin() && isset($_POST['override_infoblock'])) {
-            $infoblock_overs = $_POST['override_infoblock'];
+            $infoblock_overs = fx::input('post', 'override_infoblock');
+            fx::log('ini', $infoblock_overs, $_POST['override_infoblock']);
             if (is_string($infoblock_overs)){
                 parse_str($infoblock_overs, $infoblock_overs);
+                $infoblock_overs = fx::input()->prepare_superglobal($infoblock_overs);
             }
             fx::log('ovrs', $infoblock_overs);
             $infoblock->override($infoblock_overs);

@@ -3,7 +3,7 @@ class fx_system_input {
 
 
   public function __construct () {
-    $this->prepare_extract ();
+    $this->prepare_extract();
   }
 
 
@@ -45,41 +45,40 @@ class fx_system_input {
     // merge superglobals arrays
     foreach ($superglobals as $key => $super_array) {
       // set internal data from superglobal arrays
-      $this->$key = $this->prepare_superglobals($super_array);
+      $this->$key = self::prepare_superglobal($super_array);
     }
 
     return false;
   }
 
-  public function recursive_add_slashes ($input) {
+  public static function recursive_add_slashes ($input) {
     if ( !is_array($input) ) {
       return addslashes($input);
     }
     $output = array();
 
     foreach ($input as $k => $v) {
-       $output[$k] = $this->recursive_add_slashes($v);
+       $output[$k] = self::recursive_add_slashes($v);
     }
 
     return $output;
   }
 
 
-  public function prepare_superglobals ( $array ) {
-    if ( !get_magic_quotes_gpc() ) return $array;
-    return $this->recursive_stripcslashes($array);
+  public static function prepare_superglobal ( $array ) {
+      fx::log('psg', $array);
+    if ( !get_magic_quotes_gpc() ) {
+        fx::log('no mqg');
+        return $array;
+    }
+    return self::recursive_stripslashes($array);
   }
 
-  public function recursive_stripcslashes ($input) {
-    if ( !is_array($input) ) {
-      return stripcslashes($input);
-    }
+  public static function recursive_stripslashes ($input) {
     $output = array();
-
     foreach ($input as $k => $v) {
-       $output[$k] = $this->recursive_stripcslashes($v);
+        $output[$k] = is_array($v) ? self::recursive_stripslashes($v) : stripslashes($v);
     }
-
     return $output;
   }
 
