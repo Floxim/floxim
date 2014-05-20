@@ -713,10 +713,8 @@ fx_front.prototype.select_item = function(node) {
 
 fx_front.prototype.make_node_panel = function($node) {
     if (!$node || $node.length === 0) {
-        console.log('notanod');
         return;
     }
-    console.log('makng', $node);
     var $overlay = this.get_front_overlay();
     var $panel = $('<div class="fx_node_panel fx_overlay"></div>');
     $overlay.append($panel);
@@ -768,11 +766,12 @@ fx_front.prototype.recount_node_panel = function() {
     var top_fix = 0;
     var $top_fixed_nodes = $('#fx_admin_panel, .fx_top_fixed');
     var doc_scroll = $(document).scrollTop();
+    var screen_half = $('body').outerWidth() / 2;
     $top_fixed_nodes.each(function (index, item) {
         var $i = $(item);
         var i_top = $i.offset().top - doc_scroll;
         var i_bottom = i_top + $i.outerHeight();
-        if (i_bottom > top_fix) {
+        if (i_bottom > top_fix && $i.outerWidth() > screen_half) {
             top_fix = i_bottom;
         }
     });

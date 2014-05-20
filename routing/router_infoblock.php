@@ -36,6 +36,7 @@ class fx_router_infoblock extends fx_router {
             if (is_string($infoblock_overs)){
                 parse_str($infoblock_overs, $infoblock_overs);
             }
+            fx::log('ovrs', $infoblock_overs);
             $infoblock->override($infoblock_overs);
         }
         $infoblock->override_param('ajax_mode', true);

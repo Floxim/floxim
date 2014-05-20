@@ -435,7 +435,10 @@ class fx_infoblock extends fx_essence {
             );
         } else {
             $html_proc = new fx_template_html($html_result);
-            $html_result = $html_proc->add_meta($meta, true);
+            $html_result = $html_proc->add_meta(
+                $meta, 
+                mb_strlen($html_result) > 1000 // auto wrap long html blocks without parsing
+            );
         }
         return $html_result;
     }

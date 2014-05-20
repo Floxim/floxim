@@ -591,14 +591,22 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
                 $templates[] = array($template['full_id'], $template['name']);
             }
         }
-
-        $fields []= array(
-            'label' => fx::alang('Template','system'),
-            'name' => 'template',
-            'type' => 'select',
-            'values' => $templates,
-            'value' => $i2l['template']
-        );
+        
+        if (count($templates == 1)) {
+            $fields []= array(
+                'name' => 'template',
+                'type' => 'hidden',
+                'value' => $templates[0][0]
+            );
+        } else {
+            $fields []= array(
+                'label' => fx::alang('Template','system'),
+                'name' => 'template',
+                'type' => 'select',
+                'values' => $templates,
+                'value' => $i2l['template']
+            );
+        }
         if ($controller_name != 'layout' && (count($wrappers) > 1 || !isset($wrappers['']))) {
             $fields []= array(
                 'label' => fx::alang('Block wrapper','system'),
