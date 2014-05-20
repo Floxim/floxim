@@ -382,7 +382,18 @@ class fx {
         if ($input === false) {
             $input = new fx_system_input();
         }
-        return $input;
+        if (func_num_args() === 0) {
+            return $input;
+        }
+        $superglobal = strtolower(func_get_arg(0));
+        if (!in_array($superglobal, array('get', 'post', 'cookie','session'))) {
+            return $input;
+        }
+        $callback = array($input, 'fetch_'.$superglobal);
+        if (func_num_args() === 1) {
+            return call_user_func($callback);
+        }
+        return call_user_func($callback, func_get_arg(1));
     }
     
     /*
