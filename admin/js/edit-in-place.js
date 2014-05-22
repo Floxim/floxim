@@ -201,8 +201,7 @@ fx_edit_in_place.prototype.get_vars = function() {
         var text_val = this.is_wysiwyg ? node.redactor('get') : node.text();
         var html_val = this.is_wysiwyg ? node.redactor('get') : node.html();
         var saved_val = node.data('fx_saved_value');
-        console.log(saved_val, html_val, text_val);
-
+        
         if (text_val !== saved_val && html_val !== saved_val ) {
             vars.push({
                 'var':this.meta,

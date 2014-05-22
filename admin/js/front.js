@@ -178,6 +178,7 @@ fx_front.prototype.handle_mouseover = function(e) {
                                     && $editable.data('fx_var').type !== 'datetime'
                                     && $fx.front.mode === 'edit' 
                                     && !($editable.get(0).nodeName === 'A' && e.ctrlKey);
+        console.log('mke', make_content_editable);
         setTimeout(
             function() {
                 if ($fx.front.c_hover !== node.get(0)) {
