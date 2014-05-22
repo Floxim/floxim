@@ -329,13 +329,6 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
     
     public function layout_settings($input) {
         $c_page = fx::data('content_page', $input['page_id']);
-        /*$infoblock = fx::data('infoblock')->
-                get_for_page($input['page_id'])->
-                find_one(
-                    function ($item) {
-                        return $item->get_prop_inherited('controller') == 'layout';
-                    }
-                );*/
         $infoblock = $c_page->get_layout_infoblock();
         
         $c_page = fx::data('content_page', $input['page_id']);
@@ -592,7 +585,7 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
             }
         }
         
-        if (count($templates == 1)) {
+        if (count($templates) == 1) {
             $fields []= array(
                 'name' => 'template',
                 'type' => 'hidden',
