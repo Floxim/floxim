@@ -34,12 +34,10 @@ class fx_router_infoblock extends fx_router {
         $infoblock_overs = null;
         if (fx::is_admin() && isset($_POST['override_infoblock'])) {
             $infoblock_overs = fx::input('post', 'override_infoblock');
-            fx::log('ini', $infoblock_overs, $_POST['override_infoblock']);
             if (is_string($infoblock_overs)){
                 parse_str($infoblock_overs, $infoblock_overs);
                 $infoblock_overs = fx::input()->prepare_superglobal($infoblock_overs);
             }
-            fx::log('ovrs', $infoblock_overs);
             $infoblock->override($infoblock_overs);
         }
         $infoblock->override_param('ajax_mode', true);

@@ -351,17 +351,23 @@ class fx_system_page {
         return $buffer;
     }
     
-    protected $areas = array();
+    protected $areas = null;
     public function set_infoblocks($areas) {
         $this->areas = $areas;
     }
     protected $areas_cache = array();
     
     public function get_area_infoblocks($area_id) {
+        // do nothing if the areas are not loaded yet
+        if (is_null($this->areas)) {
+            return array();
+        }
+        // or give them from cache
         if (isset($this->areas_cache[$area_id])) {
             return $this->areas_cache[$area_id];
         }
         $area_blocks = isset($this->areas[$area_id]) ? $this->areas[$area_id] : array();
+        
         if (!$area_blocks || !(is_array($area_blocks) || $area_blocks instanceof ArrayAccess) ) {
             $area_blocks = array();
         }

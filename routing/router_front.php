@@ -9,7 +9,8 @@ class fx_router_front extends fx_router {
         fx::env('page', $page['id']);
         fx::http()->status('200');
         $layout_ib = $this->get_layout_infoblock($page);
-        return $layout_ib->render();
+        $res = $layout_ib->render();
+        return $res;
     }
     
     protected $_ib_cache = array();

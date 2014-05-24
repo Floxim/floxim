@@ -58,7 +58,7 @@ class fx_template_suitable {
             if (!$ib_visual['is_stub'] ) {
                 continue;
             }
-            //$old_visual = $ib['all_visual'][0];
+            fx::log('suiting', $ib);
             $old_area = $ib->get_prop_inherited('visual.area', $source_layout_id);
             if ($old_area && isset($area_map[$old_area])) {
                 $ib_visual['area'] = $area_map[$old_area];
@@ -85,17 +85,18 @@ class fx_template_suitable {
             }
             
             if (!$ib_visual['area']) {
-                //fx::debug($used_template_props);
                 $block_size = self::get_size( $used_template_props['size']);
-                //fx::debug($c_areas);
+                $c_area = null;
+                $c_area_count = 0;
                 foreach ($c_areas as $ca) {
                     $area_size = self::get_size($ca['size']);
-                    //fx::debug($block_size, $area_size);
-                    if (self::check_sizes($block_size, $area_size)) {
-                        $ib_visual['area'] = $ca['id'];
-                        break;
+                    $area_count = self::check_sizes($block_size, $area_size);
+                    if ($area_count > $c_area_count) {
+                        $c_area_count = $area_count;
+                        $c_area = $ca['id'];
                     }
                 }
+                $ib_visual['area'] = $c_area;
             }
             
             unset($ib_visual['is_stub']);
@@ -117,7 +118,6 @@ class fx_template_suitable {
             $c_variant = null;
             foreach ($template_variants as $tplv) {
                 if ($tplv['of'] == 'layout.show') {
-                    //$test_tpl_name = 'layout_'.$layout['keyword'].'.'.$tplv['id'];
                     $test_layout_tpl = fx::template($tplv['full_id']);
                     $tplv['real_areas'] = $test_layout_tpl->get_areas();
                     $map = $this->_map_areas($old_areas, $tplv['real_areas']);
@@ -138,14 +138,6 @@ class fx_template_suitable {
         if (!$source_layout_id || !$c_variant) {
             foreach ($template_variants as $tplv) {
                 if ($tplv['of'] == 'layout.show') {
-                    /*
-                    $layout_vis = $layout_ib->get_visual();
-                    $layout_vis['template'] = $tplv['full_id'];
-                    unset($layout_vis['is_stub']);
-                    $layout_vis->save();
-                    return;
-                     * 
-                     */
                     $c_variant = $tplv;
                     break;
                 }
@@ -264,12 +256,23 @@ class fx_template_suitable {
     
     public static function check_sizes($block, $area) {
         if ($area['width'] === 'narrow' && $block['width'] ==='wide') {
-            return false;
+            return 0;
         }
         if ($area['height'] === 'low' && $block['height'] === 'high') {
-            return false;
+            return 0;
         }
-        return true;
+        $n = 1;
+        if ($block['height'] !== 'any' && $area['height'] === $block['height']) {
+            $n++;
+        } elseif ($block['height'] === 'any' && $area['height'] === 'high') {
+            $n += 0.5;
+        }
+        if ($block['width'] !== 'any' && $area['width'] === $block['width']) {
+            $n++;
+        } elseif ($block['width'] === 'any' && $area['width'] === 'wide') {
+            $n++;
+        }
+        return $n;
     }
     
     protected function _get_size($block) {

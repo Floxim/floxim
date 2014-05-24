@@ -66,9 +66,7 @@ class fx_system_input {
 
 
   public static function prepare_superglobal ( $array ) {
-      fx::log('psg', $array);
     if ( !get_magic_quotes_gpc() ) {
-        fx::log('no mqg');
         return $array;
     }
     return self::recursive_stripslashes($array);
