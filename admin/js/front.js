@@ -34,42 +34,20 @@ window.fx_front = function () {
             case 115:
                 $fx.front.load($fx.front.mode === 'design' ? 'view' : 'design');
                 break;
-                /*
-                if ($fx.front.get_selected_item() && !e.shiftKey) {
-                    var $p = $fx.front.get_node_panel();
-                    var $edit = $('.fx_admin_button_edit', $p);
-                    if ($edit.length) {
-                        $edit.click();
-                        return false;
-                    }
-                    var $settings = $('.fx_admin_button_settings', $p);
-                    if ($settings.length) {
-                        $settings.click();
-                        return false;
-                    }
-                }
-                var mode_map = {
-                    view: 'edit',
-                    edit: 'design',
-                    design: 'view'
-                };
-                var target_mode = 
-                        !e.shiftKey 
-                        ? mode_map[$fx.front.mode]
-                        : mode_map[mode_map[$fx.front.mode]];
-                $fx.front.load(target_mode);
-                break;
-                */
             // +
             case 187:
                 if ($(e.target).closest('.fx_var_editable').length > 0) {
                     break;
                 }
                 var $panel = $fx.front.get_node_panel();
-                if (!$panel || $panel.length === 0) {
+                if (!$panel || $panel.length === 0 || !$panel.is(':visible')) {
                     break;
                 }
-                $('.fx_add_button', $panel).first().trigger('click');
+                var $add_button = $('.fx_add_button', $panel).first();
+                if ($add_button.length === 0) {
+                    break;
+                }
+                $add_button.trigger('click');
                 break;
             // Del
             case 46:
@@ -92,7 +70,6 @@ window.fx_front = function () {
     
     $('html').on('fx_select', function(e) {
         var n = $(e.target);
-        $fx.front.redraw_add_button(n);
         if ($fx.front.mode === 'edit') {
             if (n.is('.fx_essence')) {
                 $fx.front.select_content_essence(n);
@@ -104,6 +81,7 @@ window.fx_front = function () {
         if (n.is('.fx_infoblock')) {
             $fx.front.select_infoblock(n);
         }
+        $fx.front.redraw_add_button(n);
         return false;
     });
 };
@@ -178,7 +156,6 @@ fx_front.prototype.handle_mouseover = function(e) {
                                     && $editable.data('fx_var').type !== 'datetime'
                                     && $fx.front.mode === 'edit' 
                                     && !($editable.get(0).nodeName === 'A' && e.ctrlKey);
-        console.log('mke', make_content_editable);
         setTimeout(
             function() {
                 if ($fx.front.c_hover !== node.get(0)) {
@@ -359,14 +336,16 @@ fx_front.prototype.redraw_add_button = function(node) {
     }
     ib.data('content_adders', adders);
     
-    if (mode === 'design' && node.is('.fx_area')) {
-        var area_meta = $fx.front.get_area_meta(node);
+    var $c_area = node.closest('.fx_area');
+    
+    if (mode === 'design' && $c_area.length) {//node.is('.fx_area')) {
+        var area_meta = $fx.front.get_area_meta($c_area);
         if (area_meta) {
             buttons.push({
                 name:$fx.lang('Add block to')+' '+(area_meta.name || area_meta.id),
                 is_add:true,
                 callback: function() {
-                    $fx.front.add_infoblock_select_controller(node);
+                    $fx.front.add_infoblock_select_controller($c_area);
                 }
             });
         }
@@ -413,6 +392,7 @@ fx_front.prototype.add_infoblock_select_settings = function(data) {
     };
     var cancel_adding = function() {
         $('.fx_infoblock_fake').remove();
+        $fx.front.hilight();
     };
     $fx.front_panel.show_form(data, {
         view:'horizontal',
