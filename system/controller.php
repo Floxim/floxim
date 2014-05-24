@@ -10,6 +10,10 @@ class fx_controller {
     protected $input = array();
     protected $action = null;
     
+    public function get_action() {
+        return $this->action;
+    }
+    
     /**
      * Designer controllers. It is better to use fx::controller('controller.action', $params).
      * @param array $input = 'array ('controller options
@@ -83,12 +87,6 @@ class fx_controller {
             $cfg = $this->get_config();
             if (isset($cfg['actions'][$this->action]['force'])) {
                 $forced = $cfg['actions'][$this->action]['force'];
-                /*
-                foreach ($cfg['actions'][$this->action]['force'] as $param => $value) {
-                    $forced[$param] = $value;
-                }
-                 * 
-                 */
             }
             fx::files()->writefile($cache_file, "<?php return ".var_export($forced, true).";");
         } else {
@@ -97,12 +95,6 @@ class fx_controller {
         foreach ($forced as $param => $value) {
             $this->set_param($param, $value);
         }
-        /*
-        $end = microtime(true);
-        self::$cfg_time += $end - $start;
-        fx::log('go!', $cache_file, self::$cfg_time);
-         * 
-         */
     }
     
     protected $_action_prefix = '';
@@ -160,6 +152,7 @@ class fx_controller {
      */
     public function get_available_templates( $layout_name = null , $area_meta = null) {
         $area_size = fx_template_suitable::get_size($area_meta['size']);
+        $layout_defined = !is_null($layout_name);
         if (is_numeric($layout_name)) {
             $layout_names = array(fx::data('layout', $layout_name)->get('keyword'));
         } elseif (is_null($layout_name)) {
@@ -186,41 +179,71 @@ class fx_controller {
         foreach ($controller_variants as $controller_variant) {
             if (($controller_template = fx::template($controller_variant))) {
                 $template_variants = array_merge(
-                        $template_variants, 
-                        $controller_template->get_template_variants()
+                    $template_variants, 
+                    $controller_template->get_template_variants()
                 );
             }
         }
         // now - filtered
         $result = array();
+        
         foreach ($template_variants as $k => $tplv) {
             foreach (explode(",", $tplv['of']) as $tpl_of) {
+                
                 $of_parts = explode(".", $tpl_of);
                 if (count($of_parts) != 2) {
                     continue;
                 }
                 list($tpl_of_controller, $tpl_of_action) = $of_parts;
                 
-                if ( !in_array($tpl_of_controller, $controller_variants)) {
+                $controller_match_rate = array_keys($controller_variants, $tpl_of_controller);
+                if (!isset($controller_match_rate[0])) {
                     continue;
                 }
+                
+                // the first controller variant is the most precious
+                $tplv['controller_match_rate'] = $controller_match_rate[0]*-1;
                 if (strpos($this->action, $tpl_of_action) !== 0) {
                     continue;
                 }
+                
+                // if template action exactly matches current controller action
+                $tplv['action_match_rate'] = $this->action == $tpl_of_action ? 1 : 0;
+                
                 if ($tplv['suit'] && $tplv['suit'] == 'local') {
                     if ($tplv['area'] != $area_meta['id']) {
                         continue;
                     }
                 }
+                // if current layout is defined, we should rate layout templates greater than standard ones
+                $tplv['layout_match_rate'] = $layout_defined && preg_match("~^layout_~", $tplv['full_id']) ? 1 : 0;
+                
                 if ($area_size && isset($tplv['size'])) {
                     $size = fx_template_suitable::get_size($tplv['size']);
-                    if (!fx_template_suitable::check_sizes($size, $area_size)) {
+                    $size_rate = fx_template_suitable::check_sizes($size, $area_size);
+                    if (!$size_rate) {
                         continue;
                     }
+                    $tplv['size_rate'] = $size_rate;
                 }
                 $result []= $tplv;
             }
         }
+        usort($result, function($a, $b) {
+            $controller_diff = $b['controller_match_rate'] - $a['controller_match_rate'];
+            if ($controller_diff != 0) {
+                return $controller_diff;
+            }
+            $action_diff = $b['action_match_rate'] - $a['action_match_rate'];
+            if ($action_diff != 0) {
+                return $action_diff;
+            }
+            $layout_diff = $b['layout_match_rate'] - $a['layout_match_rate'];
+            if ($layout_diff != 0) {
+                return $layout_diff;
+            }
+            return 0;
+        });
         return $result;
     }
 
@@ -264,9 +287,12 @@ class fx_controller {
     }
     
     protected $_config_cache = null;
-    public function get_config() {
+    public function get_config($searched_action = null) {
+        if ($searched_action === true) {
+            $searched_action = $this->action;
+        }
         if (!is_null($this->_config_cache)) {
-            return $this->_config_cache;
+            return $searched_action ? $this->_config_cache['actions'][$searched_action] : $this->_config_cache;
         }
         $sources = $this->_get_config_sources();
         $actions = $this->_get_real_actions();
@@ -332,7 +358,7 @@ class fx_controller {
         }
         unset($actions['.']);
         $this->_config_cache = array('actions' => $actions);
-        return $this->_config_cache;
+        return $searched_action ? $actions[$searched_action] : $this->_config_cache;
     }
 
     public function get_controller_name($with_type = false){

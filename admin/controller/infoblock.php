@@ -160,26 +160,9 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
         return $layouts;
     } 
 
-    protected function _compare_templates ($input, $layout_infoblock) {
-        $visual = fx::data('infoblock_visual')->where('infoblock_id', $layout_infoblock['id'])->one();
-        return $visual['template'] == $input;
-    }
-
-    protected function _compare_scope ($input, $infoblock) {
-        $ib_scope = array(
-            'page_id' => $infoblock['page_id'],
-            'pages' => $infoblock['scope']['pages'],
-            'page_type' => $infoblock['scope']['page_type']
-        );
-        $input_scope = array();
-        list($input_scope['page_id'], $input_scope['pages'], $input_scope['page_type']) = explode("-", $input);
-        return $ib_scope == $input_scope;
-    }
     /**
-     * The choice of settings for the controller-action games
-     *
+     * The choice of settings for infoblock
      */
-
     
     public function select_settings($input) {
         // The current, editable) InfoBlock
@@ -510,6 +493,16 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
                 );
             }
         }
+        
+        if (!$infoblock['id']) {
+            $ctr = $infoblock->init_controller();
+            $cfg = $ctr->get_config(true);
+            if (isset($cfg['default_scope']) && is_callable($cfg['default_scope'])) {
+                $c_scope_code = call_user_func($cfg['default_scope']);
+            }
+            fx::log($ctr, $cfg, $ctr->get_action(), $c_scope_code);
+        }
+        
         $fields []= array(
             'type' => 'select',
             'label' => fx::alang('Scope'),
@@ -517,6 +510,8 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
             'values' => $vals,
             'value' => $c_scope_code
         );
+        
+        //fx::log('scopf', $infoblock, $fields);
         return $fields;
     }
     

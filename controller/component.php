@@ -756,15 +756,16 @@ class fx_controller_component extends fx_controller_frontoffice {
     }
     
     protected function _get_controller_variants() {
-        $vars = parent::_get_controller_variants();
+        //$vars = parent::_get_controller_variants();
+        $vars = array();
         $com = $this->get_component();
         $chain = $com->get_chain();
         $chain = array_reverse($chain);
-        //$chain = array_reverse($this->get_component()->get_chain());
         foreach ($chain as $chain_item) {
             $vars []= 'component_'.$chain_item['keyword'];
         }
-        return array_unique($vars);
+        $vars = array_unique($vars);
+        return $vars;
     }
     
     public function get_actions() {

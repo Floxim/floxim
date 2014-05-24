@@ -57,6 +57,9 @@ return array(
             'install' => function($ib, $ctr, $params) {
                 $ctr->bind_lost_content($ib, $params);
             },
+            'default_scope' => function() {
+                return fx::env('page_id').'-this-';
+            },
             'settings' => array(
                 'sorting' => array(
                     'values' => array( array('manual', fx::alang('Manual', 'controller_component') ) ) + $sort_fields

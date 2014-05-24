@@ -273,7 +273,10 @@ class fx_template {
         });
         $this->render(array('_idle' => true));
         fx::unlisten('render_area.get_areas');
-        fx::page()->clear_files();
+        // hm, since IB render res is cached, we can not just remove added files
+        // because they won't be added again
+        // may be we should switch off caching for idle mode
+        //fx::page()->clear_files();
         ob_get_clean();
         return $areas;
     }

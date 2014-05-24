@@ -160,6 +160,7 @@ class fx_template_compiler {
         if ($expession_parser === null) {
             require_once (dirname(__FILE__).'/template_expression_parser.php');
             $expression_parser = new fx_template_expression_parser();
+            $expression_parser->local_vars []= '_is_admin';
         }
         return $expression_parser->compile($expression_parser->parse($str));
     }
