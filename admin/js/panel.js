@@ -101,7 +101,6 @@
                 duration
             );
             height_delta = (height_delta > 0 ? '+=' : '-=')+ Math.abs(height_delta);
-            //$('.fx_top_fixed, .fx_outline_pane_fixed').animate(
             $('.fx_top_fixed').animate(
                 {'top': height_delta}, 
                 duration
@@ -118,6 +117,7 @@
             $body.stop(true,false);
             $('body').stop(true,false);
             $fx.front.get_front_overlay().stop(true,false);
+            $('.fx_top_fixed').stop(true,false);
             this.is_moving =  false;
         };
         this.load_form = function(form_options, params) {
