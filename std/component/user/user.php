@@ -17,7 +17,11 @@ class fx_controller_component_user extends fx_controller_component {
             if (!$user->login($vals['email'], $vals['password'])) {
                 $form->add_error('User not found or password is wrong', 'email');
             } else {
-                fx::http()->refresh();
+                if ($_SERVER['REQUEST_URI'] === '/floxim/') {
+                    fx::http()->redirect('/');
+                } else {
+                    fx::http()->refresh();
+                }
             }
         }
         

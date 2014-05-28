@@ -35,7 +35,7 @@
         {if $.errors} fx_form_row_error{/if}
         {if $required} fx_form_row_required{/if}">
     {apply label /}
-    {apply errors  /}
+    {apply errors /}
     {apply input_block /}
 </div>
 
@@ -43,7 +43,7 @@
     {apply input /}
 </div>
 
-<div fx:template="errors" fx:each="$.errors as $error" class="fx_form_error">
+<div fx:template="errors" fx:each="$errors as $error" class="fx_form_error">
     {$error}
 </div>
 
