@@ -394,6 +394,9 @@ class fx_infoblock extends fx_essence {
             $ib_info['visual_id'] = $vis['id'];
         }
         
+        $ib_info['controller'] = $this->get_prop_inherited('controller')
+                                    .'.'.$this->get_prop_inherited('action');
+        
         $meta = array(
             'data-fx_infoblock' => $ib_info,
             'class' => 'fx_infoblock fx_infoblock_'.$this['id']

@@ -37,7 +37,7 @@ class fx_controller_admin_content extends fx_controller_admin {
         $content_fields = fx::collection($content->get_form_fields());
         
         $is_backoffice = $input['mode'] == 'backoffice';
-        
+		
         if (!$is_backoffice){ 
             $tabbed = $content_fields->group('tab');
             foreach ($tabbed as $tab => $tab_fields) {

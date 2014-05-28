@@ -50,7 +50,6 @@ fx_form = {
         if ($fx.mode !== 'page') {
             $fx.buttons.draw_buttons(settings.buttons);
         }
-
         $.each(settings.fields, function(i, json) {
             var target = json.tab
                             ? $('#'+settings.form.id+'_'+json.tab, $form_node)
@@ -351,7 +350,6 @@ $fx.form = window.fx_form = window.$fx_form = fx_form;
         if ( ! (message instanceof Array) ) {
             message = [message];
         }
-        console.log('wrt er', message);
         return this.each(function(){
             var $this = $(this);
 
