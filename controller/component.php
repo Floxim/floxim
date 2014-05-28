@@ -543,8 +543,10 @@ class fx_controller_component extends fx_controller_frontoffice {
     public function do_list_filtered() {
         $this->set_param('skip_parent_filter', true);
         $this->set_param('skip_infoblock_filter', true);
+        
         $this->listen('query_ready', function($q, $ctr) {
-            $fields = $ctr->get_component()->all_fields();
+            $component = $ctr->get_component();
+            $fields = $component->all_fields();
             $conditions = fx::collection($ctr->get_param('conditions'));
             if (!$conditions->find_one('name', 'site_id')) {
                 $conditions[]= array(
@@ -553,8 +555,23 @@ class fx_controller_component extends fx_controller_frontoffice {
                     'value' => array(fx::env('site')->get('id'))
                 );
             }
-
+            $target_parent_id = null;
+            $target_infoblock_id = null;
             foreach ($conditions as $condition) {
+                if (
+                    $condition['name'] === 'parent_id' 
+                    && is_array($condition['value']) 
+                    && count($condition['value']) === 1
+                ) {
+                    $target_parent_id = current($condition['value']);
+                } elseif (
+                    $condition['name'] === 'infoblock_id' 
+                    && is_array($condition['value']) 
+                    && count($condition['value']) === 1    
+                ) {
+                    $target_infoblock_id = current($condition['value']);
+                }
+                
                 $field = $fields->find_one('keyword', $condition['name']);
                 $error = false;
                 switch ($condition['operator']) {
@@ -670,7 +687,17 @@ class fx_controller_component extends fx_controller_frontoffice {
                     );
                 }
             }
+            if ($target_parent_id && $target_infoblock_id) {
+                $adder_title = fx::alang('Add').' '.$component['item_name'];
+                $ctr->accept_content(array(
+                    'title' => $adder_title,
+                    'parent_id' => $target_parent_id,
+                    'type' => $component['keyword'],
+                    'infoblock_id' => $target_infoblock_id
+                ));
+            }
         });
+        
         $res = $this->do_list();
         return $res;
     }
