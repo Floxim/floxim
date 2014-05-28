@@ -21,7 +21,8 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
             $this->ui->hidden('fx_admin', true),
             $this->ui->hidden('area', serialize($input['area'])),
             $this->ui->hidden('page_id', $input['page_id']),
-            $this->ui->hidden('admin_mode', $input['admin_mode'])
+            $this->ui->hidden('admin_mode', $input['admin_mode']),
+            $this->ui->hidden('container_infoblock_id', $input['container_infoblock_id'])
         );
 	
         fx::env('page', $input['page_id']);
@@ -132,34 +133,6 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
         return $ctr['name'].' / '.$action_name;
     }
     
-    protected function _get_layouts ($page_id) {
-        $page = fx::data('content_page', $page_id);
-        if (!$page) {
-            return;
-        }
-        $ids []= 0; // root
-        $ids = $page->get_parent_ids();
-        //$ids []= $page['id'];
-        $layouts = array();
-        foreach ($ids as $id) {
-            $infoblocks = fx::data('infoblock')->get_for_page($id);
-            if (!$infoblocks) {
-                continue;
-            }
-            foreach ($infoblocks as $ib) {
-                if ($ib->get_prop_inherited('controller') == 'layout') {
-                    if ($ib['scope']['pages'] != 'this') {
-                        if ($ib['scope']['page_type'] && $ib['scope']['page_type'] != $page['type'])  {
-                            continue;
-                        }
-                        $layouts[] = $ib;
-                    }
-                }
-            }
-        }
-        return $layouts;
-    } 
-
     /**
      * The choice of settings for infoblock
      */
@@ -190,7 +163,8 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
                 'controller' => $controller,
                 'action' => $action,
                 'page_id' => $input['page_id'],
-                'site_id' => $site_id
+                'site_id' => $site_id,
+                'container_infoblock_id' => $input['container_infoblock_id']
             ));
             $last_visual = fx::data('infoblock_visual')->
                     where('area', $area_meta['id'])->
@@ -449,6 +423,10 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
         $page_com = fx::data('component', $c_page['type']);
         $c_type_name = $page_com['item_name'];
         
+        $container_infoblock = null;
+        if ($infoblock['container_infoblock_id']) {
+            $container_infoblock = fx::data('infoblock', $infoblock['container_infoblock_id']);
+        }
         
         $c_scope_code = $infoblock->get_scope_string();
         
@@ -494,17 +472,26 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
             }
         }
         
+        // can be set to "hidden" later
+        $scope_field_type = 'select';
+        
         if (!$infoblock['id']) {
-            $ctr = $infoblock->init_controller();
-            $cfg = $ctr->get_config(true);
-            if (isset($cfg['default_scope']) && is_callable($cfg['default_scope'])) {
-                $c_scope_code = call_user_func($cfg['default_scope']);
+            if ($container_infoblock) {
+                $c_scope_code = $container_infoblock->get_scope_string();
+                if ($container_infoblock['scope']['pages'] === 'this') {
+                    $scope_field_type = 'hidden';
+                }
+            } else {
+                $ctr = $infoblock->init_controller();
+                $cfg = $ctr->get_config(true);
+                if (isset($cfg['default_scope']) && is_callable($cfg['default_scope'])) {
+                    $c_scope_code = call_user_func($cfg['default_scope']);
+                }
             }
-            fx::log($ctr, $cfg, $ctr->get_action(), $c_scope_code);
         }
         
         $fields []= array(
-            'type' => 'select',
+            'type' => $scope_field_type,
             'label' => fx::alang('Scope'),
             'name' => 'complex_scope',
             'values' => $vals,

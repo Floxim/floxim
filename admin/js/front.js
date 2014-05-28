@@ -369,6 +369,7 @@ fx_front.prototype.get_page_id = function() {
 
 fx_front.prototype.add_infoblock_select_controller = function($node) {
     var $area_node = $node.closest('.fx_area');
+    var container_infoblock = $node.closest('.fx_infoblock').data('fx_infoblock');
     var area_meta = $fx.front.get_area_meta($area_node);
     
     $fx.front.select_item($area_node.get(0));
@@ -377,6 +378,7 @@ fx_front.prototype.add_infoblock_select_controller = function($node) {
         essence:'infoblock',
         action:'select_controller',
         page_id:$fx.front.get_page_id(),
+        container_infoblock_id: container_infoblock ? container_infoblock.id : null,
         area:area_meta,
         fx_admin:true
     }, {
@@ -387,6 +389,7 @@ fx_front.prototype.add_infoblock_select_controller = function($node) {
 
 fx_front.prototype.add_infoblock_select_settings = function(data) {
     var $area_node = $($fx.front.get_selected_item());
+    
     var infoblock_back = function () {
         $fx.front.add_infoblock_select_controller($area_node);
     };
@@ -461,7 +464,12 @@ fx_front.prototype.add_infoblock_select_settings = function(data) {
                 // if the closest infoblock is not layout,
                 // we will reload it with 'add_new' param
                 var $closest_ib = $area_node.closest('.fx_infoblock');
-                if ($closest_ib.length && $closest_ib[0].nodeName !== 'BODY') {
+                var $cib_data = $closest_ib.data('fx_infoblock');
+                if (
+                    $closest_ib.length 
+                    && $closest_ib[0].nodeName !== 'BODY'
+                    && $cib_data.controller.match(/^widget_blockset/)
+                ) {
                     $fx.front.reload_infoblock(
                         $closest_ib, 
                         function($new_ib_node) {
@@ -1260,9 +1268,16 @@ fx_front.prototype.start_areas_sortable = function() {
                 var item = ui.item;
                 ph.css({
                     'min-height':'30px',
-                    height:item.outerHeight()
-                    //'max-width':'300px'
+                    height:item.outerHeight(),
+                    overflow:'hidden'
                 });
+                console.log('animatng');
+                ph.animate({
+                    'height':'100px'
+                }, 1000);
+                item.css({overflow:'hidden'}).animate({
+                    'height':'100px'
+                }, 1000);
                 $c_selected = $($fx.front.get_selected_item());
                 $fx.front.outline_block_off($c_selected);
                 $fx.front.disable_hilight();
