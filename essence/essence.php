@@ -265,6 +265,10 @@ abstract class fx_essence implements ArrayAccess {
     /* Array access */
     public function offsetGet($offset) {
         
+        if (method_exists($this, '_get_'.$offset)) {
+            return call_user_func(array($this, '_get_'.$offset));
+        }
+        
         if (array_key_exists($offset, $this->data)) {
             return $this->data[$offset];
         }
@@ -272,9 +276,7 @@ abstract class fx_essence implements ArrayAccess {
             return null;
         }
         
-        if (method_exists($this, '_get_'.$offset)) {
-            return call_user_func(array($this, '_get_'.$offset));
-        }
+        
         
         $c_type = $this->get_type();
         $c_field = self::$_field_map[$c_type][$offset];
