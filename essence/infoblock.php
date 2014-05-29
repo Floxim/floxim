@@ -315,6 +315,9 @@ class fx_infoblock extends fx_essence {
     
     public function get_template() {
         $tpl_name = $this->get_prop_inherited('visual.template');
+        if (!$tpl_name) {
+            return false;
+        }
         $tpl = fx::template($tpl_name);
         return $tpl;
     }
@@ -339,6 +342,9 @@ class fx_infoblock extends fx_essence {
             return false;
         }
         $tpl = $this->get_template();
+        if (!$tpl) {
+            return '';
+        }
         $tpl_params = $this->get_prop_inherited('visual.template_visual');
         if (!is_array($tpl_params)) {
             $tpl_params = array();
