@@ -34,12 +34,19 @@ class fx_data {
         }
         $items = $this->all();
         $res = array('meta' => array(), 'results' => array());
-        foreach ($items as $i) {
-            $res['results'][]= array(
-                'name' => $i['name'],
-                'id' => $i['id']
-            );
+        
+        $props = array('name', 'id');
+        if (isset($this->_quicksearch_props) && is_array($this->_quicksearch_props)) {
+            $props = array_merge($props, $this->_quicksearch_props);
         }
+        foreach ($items as $i) {
+            $c_res = array();
+            foreach ($props as $prop) {
+                $c_res[$prop] = $i[$prop];
+            }
+            $res['results'][]= $c_res;
+        }
+        fx::log($res);
         return $res;
     }
 
@@ -475,14 +482,14 @@ class fx_data {
     }
     
     public function add_related($rel_name, $essences, $rel_finder = null) {
-        //echo fx_debug('adding rel', 'bt5', $rel_name, $essences, $rel_finder);
+        
         $relations = $this->relations();
         if (!isset($relations[$rel_name])) {
             return;
         }
         $rel = $relations[$rel_name];
         list($rel_type, $rel_datatype, $rel_field) = $rel;
-
+        
         if (!$rel_finder){
             $rel_finder = $this->_get_default_relation_finder($rel);
         }
