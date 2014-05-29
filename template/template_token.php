@@ -69,7 +69,7 @@ class fx_template_token {
         } else {
             $type = 'unknown';
         }
-        if ( ($name == 'if' || $name == 'elseif') && $type == 'open' && !preg_match('~test=~', $source)) {
+        if ( ($name == 'if' || $name == 'elseif') && $type != 'close' && !preg_match('~test=~', $source)) {
             $props['test'] = $source;
         } elseif ($name == 'call' && $type != 'close' && !preg_match('~id=~', $source)) {
             $source = trim($source);
@@ -119,6 +119,19 @@ class fx_template_token {
         return new fx_template_token($name, $type, $props);   
     }
     
+    
+    public function dump() {
+        $res = '{';
+        $res .= $this->type == 'close' ? '/' : '';
+        $res .= $this->name.' ';
+        foreach ($this->props as $k => $v) {
+            $res .= $k.'="'.$v.'" ';
+        }
+        $res .= $this->type == 'single' ? '/' : '';
+        $res .= '}';
+        return $res;
+    }
+    
     public function is_empty() {
         if ($this->name != 'code') {
             return false;
@@ -151,7 +164,7 @@ class fx_template_token {
         ),
         'call' => array(
             'type' => 'both',
-            'contains' => array('var', 'each', 'if')
+            'contains' => array('var', 'each', 'if', 'call')
         ),
         'templates'=> array(
             'type' => 'double',
@@ -178,11 +191,11 @@ class fx_template_token {
             'contains' => array('code', 'template', 'area', 'var', 'call', 'each', 'elseif', 'else')
         ),
         'else' => array(
-            'type' => 'double',
+            'type' => 'both',
             'contains' => array('code', 'template', 'area', 'var', 'call', 'each', 'elseif', 'else')
         ),
         'elseif' => array(
-            'type' => 'double',
+            'type' => 'both',
             'contains' => array('code', 'template', 'area', 'var', 'call', 'each', 'elseif', 'else')
         ),
         'separator' => array(

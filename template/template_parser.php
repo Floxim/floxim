@@ -66,8 +66,22 @@ class fx_template_parser {
         $stack = array();
         $root = $tokens[0];
         while ($token = array_shift($tokens)) {
+            
             if ($token->type == 'unknown') {
                 $this->solve_unclosed($token, $tokens);
+                /*
+                $res = $token->dump();
+                foreach ($tokens as $ct) {
+                    if ($ct->name != 'code') {
+                        $res .= "\n".$ct->dump();
+                    }
+                }
+                fx::log($res);
+                 * 
+                 */
+            }
+            if (preg_match("~^else~", $token->name) && $token->type == 'single') {
+                $token->type = 'open';
             }
             switch ($token->type) {
                 case 'open':
@@ -83,6 +97,9 @@ class fx_template_parser {
                         } while ($closed_token->name != 'if');
                     } else {
                         $closed_token = array_pop($stack);
+                        if ($closed_token && $token->name != $closed_token->name) {
+                            fx::log('Wrong template node nesting', $token->dump(), $closed_token->dump());
+                        }
                     }
                     
                     if ($token->name == 'if' || $token->name == 'elseif') {
