@@ -16,6 +16,8 @@ class fx_router_admin extends fx_router {
             return new fx_controller_admin();
         }
         
+        fx::env('ajax', true);
+        
         $posting = fx::input()->fetch_post('posting');
         if (!preg_match("~^module_~", $essence) || fx::input()->fetch_post('fx_admin')) {
             $essence = 'admin_'.$essence;

@@ -37,10 +37,21 @@ window.$fx = {
                     $('.fx_preloader').css('visibility', 'visible');
                 }
             });
-            $(document).ajaxComplete(function() {
+            $(document).ajaxComplete(function(e, jqXHR) {
                 ajax_counter--;
                 if (ajax_counter === 0) {
                     $('.fx_preloader').css('visibility', 'hidden');
+                }
+                var js_assets = jqXHR.getResponseHeader('fx_assets_js');
+                if (js_assets) {
+                    js_assets = $.parseJSON(js_assets);
+                    for (var i = 0; i < js_assets.length; i++) {
+                        $.ajax({
+                            url:js_assets[i],
+                            async:false,
+                            dataType: 'script'
+                        });
+                    }
                 }
             });
         });

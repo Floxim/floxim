@@ -38,6 +38,7 @@ class fx_router_ajax extends fx_router {
         } else {
             return null;
         }
+        fx::env('ajax', true);
         $action = explode(".", $action);
         $controller_name = $action[0];
         if (preg_match("~^widget_~", $controller_name) && !isset($action[1])) {

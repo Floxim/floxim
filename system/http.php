@@ -25,6 +25,9 @@ class fx_http {
     }
     
     public function header($name, $value = null) {
+        if (is_array($value) || is_object($value)) {
+            $value = json_encode($value);
+        }
         header($name.(!is_null($value) ? ": ".$value : ''));
     }
 }

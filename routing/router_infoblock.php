@@ -15,6 +15,7 @@ class fx_router_infoblock extends fx_router {
         $ib_id = $ib_info[1];
         $page_id = $ib_info[2];
         fx::env('page', $page_id);
+        fx::env('ajax', true);
         
         $page_infoblocks = fx::router('front')->get_page_infoblocks(
             $page_id, 

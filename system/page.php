@@ -4,8 +4,7 @@ class fx_system_page {
     // title, keywords, description
     protected $metatags = array();
     
-    protected $_macroconst = array();
-
+    
     /**
      * To install the meta-tag for the page
      * @param string title, keywords, description
@@ -248,28 +247,6 @@ class fx_system_page {
         return $this->_js_text;
     }
 
-    /**
-     * Creates or modifies the value of macroconstants
-     * You can insert macroconstants in any part of the page:
-     * <?=fx::page()->set_macroconst('foo')?>
-     * And change its value:
-     * fx::page()->set_macroconst('foo', 'bar')
-     */
-    public function set_macroconst($name, $value = '') {
-        if ( isset($this->_macroconst[$name]) ) {
-            $this->_macroconst[$name]['value'] = $value;
-            $hash  = $this->_macroconst[$name]['hash'];
-        }
-        else {
-            $hash = strtoupper(md5(rand().$name.time()));
-            $hash =  '%%FX_'.$hash.'%%';
-            $this->_macroconst[$name] = array('hash' => $hash, 'value' => $value);
-            
-        }
-        
-        return $hash;
-    }
-
     public function set_numbers($block_number = 1, $field_number = 1) {
         $this->block_number = intval($block_number);
         $this->field_number = intval($field_number);
@@ -277,6 +254,13 @@ class fx_system_page {
 
     public function set_after_body($txt) {
         $this->_after_body[] = $txt;
+    }
+    
+    /**
+     * Add assets (js & css) to ajax responce via http headers
+     */
+    public function add_assets_ajax() {
+        fx::http()->header('fx_assets_js', $this->_files_js);
     }
 
     public function post_process($buffer) {
@@ -337,19 +321,9 @@ class fx_system_page {
             $js .= '</script>'.PHP_EOL;
             $buffer = str_replace('</body>', $js.'</body>', $buffer);
         }
-        $buffer = $this->replace_macroconst($buffer);
-
         return $buffer;
     }
     
-    protected function replace_macroconst ( $buffer ) {
-        foreach ( $this->_macroconst  as $v ) {
-            $buffer = str_replace($v['hash'], $v['value'], $buffer);
-        }
-       
-        
-        return $buffer;
-    }
     
     protected $areas = null;
     public function set_infoblocks($areas) {
