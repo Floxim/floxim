@@ -16,10 +16,10 @@
 
             </tbody>
         </table>
-            <?if ( _c.without_add === undefined ) {?>
-                    <a class="fx_fieldset_add"><?=$fx.lang('Add')?></a>
-            <?}?>
-            <br style="clear:both;" />
+        <?if ( _c.without_add === undefined ) {?>
+            <a class="fx_fieldset_add" href="javascript:void();"><?=$fx.lang('Add')?></a>
+        <?}?>
+        <br style="clear:both;" />
     </div>
 </div>
 
@@ -116,6 +116,7 @@ $('.fx_fieldset_add', fs).click( function() {
     }
     var new_row = $t.jQuery('fieldset_row', inputs, {index:index, set_field: _c});
     $('.fx_fieldset_rows', fs).append(new_row);
+    new_row.find(':input:visible').first().focus();
 });
 if (!flag) {
     $('.fx_fieldset_add', fs).click();
@@ -129,7 +130,7 @@ if (!flag) {
         ?><td class="input_cell_<?=i?>"></td><?
     }?>
     <td>
-        <a class="fx_fieldset_remove"><?=$fx.lang('Delete')?></a>
+        <a class="fx_fieldset_remove" href="javascript:void();"><?=$fx.lang('Delete')?></a>
     </td>
 </tr>
 

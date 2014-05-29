@@ -6,10 +6,10 @@ window.fx_livesearch = function (node) {
     n.data('livesearch', this);
     var data_params = n.data('params');
     if (data_params) {
-            this.datatype = data_params.content_type;
-            this.conditions = data_params.conditions;
+        this.datatype = data_params.content_type;
+        this.conditions = data_params.conditions;
     } else {
-            this.datatype = n.data('content_type');
+        this.datatype = n.data('content_type');
     }
     this.inputNameTpl = n.data('prototype_name');
     
@@ -21,14 +21,14 @@ window.fx_livesearch = function (node) {
     var livesearch = this;
     
     this.getInputName = function(value) {
-            if (this.isMultiple) {
-                if (value && this.inpNames[value]) {
-                    return this.inpNames[value];
-                }
-                var name = this.inputNameTpl.replace(/prototype[0-9]?/, '');
-                return name;
+        if (this.isMultiple) {
+            if (value && this.inpNames[value]) {
+                return this.inpNames[value];
             }
-            return this.inputName;
+            var name = this.inputNameTpl.replace(/prototype[0-9]?/, '');
+            return name;
+        }
+        return this.inputName;
     };
     
     this.getUrl = function() {
@@ -53,131 +53,153 @@ window.fx_livesearch = function (node) {
     };
     
     this.getValues = function() {
-            var vals = [];
-            this.n.find('.livesearch_item input[type="hidden"]').each(function() {
-                var v = $(this).val();
-                if (v) {
-                        vals.push(v);
-                }
-            });
-            return vals;
+        var vals = [];
+        this.n.find('.livesearch_item input[type="hidden"]').each(function() {
+            var v = $(this).val();
+            if (v) {
+                vals.push(v);
+            }
+        });
+        return vals;
     };
     
     this.getValue = function() {
-            if (this.isMultiple) {
-                return null;
-            }
-            var vals = this.getValues();
-            if (vals.length > 0){
-                return vals[0];
-            }
+        if (this.isMultiple) {
             return null;
+        }
+        var vals = this.getValues();
+        if (vals.length > 0){
+            return vals[0];
+        }
+        return null;
     };
     
     this.Select = function(n) {
-            var id = n.data('id');
-            var name = n.data('name');
-            if (n.hasClass('add_item')){
-                return;
-            }
-            livesearch.addValue(id, name);
-            if (livesearch.isMultiple) {
-                livesearch.input.val('').focus().trigger('keyup');
-            }
+        var id = n.data('id');
+        var name = n.data('name');
+        var value = n.data('value');
+        if (n.hasClass('add_item')){
+            return;
+        }
+        livesearch.addValue(value);//(id, name);
+        if (livesearch.isMultiple) {
+            livesearch.input.val('').focus().trigger('keyup');
+        } else {
+            livesearch.focusNextInput();
+        }
     };
-        this.addSilent = false;
+    
+    this.focusNextInput = function() {
+        var next_inp_index = $(":visible:input").index(livesearch.Suggest.input.get(0))*1 + 1;
+        var next_inp = $(":visible:input:eq(" + next_inp_index + ")");
+        next_inp.focus();
+    };
+    
+    this.addSilent = false;
     
     this.loadValues = function(ids) {
-            if (!(ids instanceof Array) || ids.length === 0) {
-                return;
+        if (!(ids instanceof Array) || ids.length === 0) {
+            return;
+        }
+        var url = this.getUrl();
+        url.data.term = null;
+        url.data.ids = ids;
+        $.ajax({
+            url:url.url,
+            type:'post',
+            dataType:'json',
+            data:url.data,
+            success:function(res){
+                livesearch.addSilent = true;
+                res.results.sort(function(a, b) {
+                    if (ids.indexOf(a.id) < ids.indexOf(b.id) )
+                        return -1;
+                    if (ids.indexOf(a.id) > ids.indexOf(b.id) )
+                        return 1;
+                    return 0;  
+                });  
+                $.each(res.results, function(index, item) {
+                    livesearch.addValue(
+                        $.extend({}, item, {input_name:livesearch.inpNames[item.id]})
+                        //item.id, item.name, livesearch.inpNames[item.id]
+                    );
+                });
+                livesearch.addSilent = false;
+                livesearch.n.trigger('livesearch_value_loaded');
             }
-            var url = this.getUrl();
-            url.data.term = null;
-            url.data.ids = ids;
-            $.ajax({
-                url:url.url,
-                type:'post',
-                dataType:'json',
-                data:url.data,
-                success:function(res){
-                    livesearch.addSilent = true;
-                    res.results.sort(function(a, b) {
-                        if (ids.indexOf(a.id) < ids.indexOf(b.id) )
-                            return -1;
-                        if (ids.indexOf(a.id) > ids.indexOf(b.id) )
-                            return 1;
-                        return 0;  
-                    });  
-                    $.each(res.results, function(index, item) {
-                        livesearch.addValue(item.id, item.name, livesearch.inpNames[item.id]);
-                    });
-                    livesearch.addSilent = false;
-                    livesearch.n.trigger('livesearch_value_loaded');
-                }
-            });
+        });
     };
     
     this.addValues = function(values) {
-            $.each(values, function(index, val) {
-                this.addValue(val.id, val.name, val.input_name);
-            });
+        $.each(values, function(index, val) {
+            this.addValue(val); //val.id, val.name, val.input_name);
+        });
     };
     
     this.hasValue = function(val_id) {
-            var vals = this.getValues();
-            for (var i = 0; i < vals.length; i++) {
-                if (vals[i] === val_id) {
-                    return true;
-                }
+        var vals = this.getValues();
+        for (var i = 0; i < vals.length; i++) {
+            if (vals[i] === val_id) {
+                return true;
             }
-            return false;
+        }
+        return false;
     };
     
-    this.addValue = function(id, name, input_name) {
-            if ( (!id || id*1 === 0) && !name) {
-                return;
-            }
+    // old style:
+    //this.addValue = function(id, name, input_name) {
+    
+    // now adding all together
+    this.addValue = function(value) {
+        var     id = value.id,
+                name = value.name,
+                input_name = value.input_name;
+        
+        if ( (!id || id*1 === 0) && !name) {
+            return;
+        }
 
-            if (id && this.hasValue(id)) {
-                return;
-            }
-            if (!input_name) {
-                input_name = this.getInputName(id);
-            }
-            if (!this.isMultiple && this.getValues().length > 0) {
-                this.removeValue(this.getValueNode());
-                //return;
-            }
+        if (id && this.hasValue(id)) {
+            return;
+        }
+        if (!input_name) {
+            input_name = this.getInputName(id);
+        }
+        if (!this.isMultiple && this.getValues().length > 0) {
+            this.removeValue(this.getValueNode());
+            //return;
+        }
 
-            var res_value = id;
-            if (!id || (id*1 === 0) ) {
-                id = false;
-                input_name = input_name+'[title]';
-                res_value = name;
-            }
+        var res_value = id;
+        if (!id || (id*1 === 0) ) {
+            id = false;
+            input_name = input_name+'[title]';
+            res_value = name;
+        }
 
-            var node = $('<li class="livesearch_item'+ (!id ? ' livesearch_item_empty' : '')+'">'+
-                (this.isMultiple ? '<span class="killer">&times;</span>' : '')+
-                '<input type="hidden" name="'+input_name+'" value="'+res_value+'" />'+
-                '<span class="title">'+name+'</span>'+
-                '</li>');
-            this.inputContainer.before( node );
-            if (!this.isMultiple) {
-                this.disableAdd();
-            } else {
-                this.Suggest.url = this.getUrl();
-            }
-            if (!this.addSilent) {
-                var e = $.Event('livesearch_value_added');
-                e.id = id;
-                e.value_name = name;
-                e.value_node = node;
-                e.is_preset = !!this.inpNames[id];
-                this.n.trigger(e);
-                
-                $('input', node).trigger('change');
-            }
-            this.Suggest.hideBox();
+        var node = $('<li class="livesearch_item'+ (!id ? ' livesearch_item_empty' : '')+'">'+
+            (this.isMultiple ? '<span class="killer">&times;</span>' : '')+
+            '<input type="hidden" name="'+input_name+'" value="'+res_value+'" />'+
+            '<span class="title">'+name+'</span>'+
+            '</li>');
+        this.inputContainer.before( node );
+        if (!this.isMultiple) {
+            this.disableAdd();
+        } else {
+            this.Suggest.url = this.getUrl();
+        }
+        if (!this.addSilent) {
+            var e = $.Event('livesearch_value_added');
+            e.id = id;
+            e.value = value;
+            e.value_name = name;
+            e.value_node = node;
+            e.is_preset = !!this.inpNames[id];
+            this.n.trigger(e);
+
+            $('input', node).trigger('change');
+        }
+        this.Suggest.hideBox();
     };
     
     this.addDisabled = false;
@@ -235,118 +257,118 @@ window.fx_livesearch = function (node) {
     };
     
     this.Init = function() {
-            this.Suggest = new fx_suggest({
-                input:n.find('input[name="livesearch_input"]'),
-                url:this.getUrl(),
-                resultType:'json',
-                onSelect:this.Select,
-                offsetNode:n.find('.livesearch_items'),
-                minTermLength:0
-            });
-            var inputs = n.find('.preset_value');
-            //var ids = [];
-            if (!this.isMultiple) {
-                this.inputName = inputs.first().attr('name');
+        this.Suggest = new fx_suggest({
+            input:n.find('input[name="livesearch_input"]'),
+            url:this.getUrl(),
+            resultType:'json',
+            onSelect:this.Select,
+            offsetNode:n.find('.livesearch_items'),
+            minTermLength:0
+        });
+        var inputs = n.find('.preset_value');
+        if (!this.isMultiple) {
+            this.inputName = inputs.first().attr('name');
+        }
+        inputs.each(function() {
+            var id = $(this).val();
+            livesearch.inpNames[id] = this.name;
+            livesearch.addValue({id:id, name:$(this).data('name'), input_name:this.name});
+            $(this).remove();
+        });
+
+        this.n.on('click', '.killer', function() {
+            livesearch.removeValue($(this).closest('.livesearch_item'));
+        });
+        this.n.on('keydown', '.livesearch_input input', function(e) {
+            var v = $(this).val();
+            if (e.which === 8 && v === '') {
+                n.find('.killer').last().click();
+                livesearch.Suggest.hideBox();
             }
-            inputs.each(function() {
-                var id = $(this).val();
-                livesearch.inpNames[id] = this.name;
-                livesearch.addValue(id, $(this).data('name'), this.name);
-                $(this).remove();
-            });
-
-            this.n.on('click', '.killer', function() {
-                livesearch.removeValue($(this).closest('.livesearch_item'));
-            });
-            this.n.on('keydown', '.livesearch_input input', function(e) {
-                var v = $(this).val();
-                if (e.which === 8 && v === '') {
-                    n.find('.killer').last().click();
-                    livesearch.Suggest.hideBox();
-                }
-                if (e.which === 27 && !livesearch.isMultiple) {
-                    $(this).trigger('blur');
-                    return false;
-                }
-                if (e.which === 90 && e.ctrlKey && livesearch.lastRemovedValue) {
-                    livesearch.loadValues(livesearch.lastRemovedValue);
-                    livesearch.lastRemovedValue = null;
-                    livesearch.Suggest.hideBox();
-                }
-            });
-            this.n.on('keyup', '.livesearch_input input', function(e) {
-                var v = $(this).val();
-                if (v === $(this).data('last_counted_val')) {
-                    return;
-                }
-                $(this).data('last_counted_val', v);
-                if (v.length === 0) {
-                    $(this).css({width:'3px'});
-                    return;
-                }
-                var proto_html = '<span style="position:absolute; left: -1000px; top: -1000px; display:none;';
-                styles = ['font-size', 'font-style', 'font-weight', 'font-family', 'line-height', 'text-transform', 'letter-spacing'];
-                for (var i = 0 ; i < styles.length; i++) {
-                    proto_html += ' '+styles[i]+':'+$(this).css(styles[i])+';';
-                }
-                proto_html += '">'+$(this).val()+'</span>';
-                var proto = $(proto_html);
-                $('body').append(proto);
-                var width = proto.width()*1 + 15;
-                $(this).css({width:width+'px'});
-
-                proto.remove();
-            });
-
-            function edit_item(item_node) {
-                
+            if (e.which === 27 && !livesearch.isMultiple) {
+                $(this).trigger('blur');
+                return false;
             }
-
-            this.n.on('focus', '.livesearch_input input', function() {
-                if (livesearch.isMultiple) {
-                        return;
-                }
-                var item_node = livesearch.getValueNode();
-                if (!item_node) {
-                        return;
-                }
-                if (item_node.hasClass('livesearch_item_empty')) {
-                        var item_title = item_node.find('input[type="hidden"]').val();
-                        livesearch.input.val(item_title);
-                }
-                livesearch.hideValue();
-                $(this).select().trigger('keyup');
-            });
-
-            this.n.on('click', '.livesearch_items', function(e) {
-                livesearch.input.focus();
+            if (e.which === 90 && e.ctrlKey && livesearch.lastRemovedValue) {
+                livesearch.loadValues(livesearch.lastRemovedValue);
+                livesearch.lastRemovedValue = null;
+                livesearch.Suggest.hideBox();
+            }
+        });
+        this.n.on('keyup', '.livesearch_input input', function(e) {
+            var v = $(this).val();
+            if (v === $(this).data('last_counted_val')) {
                 return;
-            });
-
-            this.n.on('click', '.livesearch_item', function(e) {
-                    var item_node = $(this);
-                    if (e.ctrlKey) {
-                            edit_item(item_node);
-                            return false;
-                    }
-            });
-            if (this.isMultiple) {
-                    this.n.find('.livesearch_items').sortable({
-                            items:'.livesearch_item',
-                            stop:function () {
-                                n.trigger('change')
-                            }
-                    });
             }
+            $(this).data('last_counted_val', v);
+            if (v.length === 0) {
+                $(this).css({width:'3px'});
+                return;
+            }
+            var proto_html = '<span style="position:absolute; left: -1000px; top: -1000px; display:none;';
+            styles = ['font-size', 'font-style', 'font-weight', 'font-family', 'line-height', 'text-transform', 'letter-spacing'];
+            for (var i = 0 ; i < styles.length; i++) {
+                proto_html += ' '+styles[i]+':'+$(this).css(styles[i])+';';
+            }
+            proto_html += '">'+$(this).val()+'</span>';
+            var proto = $(proto_html);
+            $('body').append(proto);
+            var width = proto.width()*1 + 15;
+            $(this).css({width:width+'px'});
 
-            this.n.on('suggest_blur', '.livesearch_input input', function() {
-                var c_val = $(this).val();
-                if (c_val === '') {
-                    livesearch.showValue();
-                    return;
+            proto.remove();
+        });
+
+        function edit_item(item_node) {
+            // @todo
+        }
+
+        this.n.on('focus', '.livesearch_input input', function() {
+            if (livesearch.isMultiple) {
+                return;
+            }
+            var item_node = livesearch.getValueNode();
+            if (!item_node) {
+                return;
+            }
+            if (item_node.hasClass('livesearch_item_empty')) {
+                var item_title = item_node.find('input[type="hidden"]').val();
+                livesearch.input.val(item_title);
+            }
+            livesearch.hideValue();
+            $(this).select().trigger('keyup');
+        });
+
+        this.n.on('click', '.livesearch_items', function(e) {
+            livesearch.input.focus();
+            return;
+        });
+
+        this.n.on('click', '.livesearch_item', function(e) {
+            var item_node = $(this);
+            if (e.ctrlKey) {
+                edit_item(item_node);
+                return false;
+            }
+        });
+        if (this.isMultiple) {
+            this.n.find('.livesearch_items').sortable({
+                items:'.livesearch_item',
+                stop:function () {
+                    n.trigger('change');
                 }
-                livesearch.addValue(false, c_val);
             });
+        }
+
+        this.n.on('suggest_blur', '.livesearch_input input', function() {
+            var c_val = $(this).val();
+            if (c_val === '') {
+                livesearch.showValue();
+                return;
+            }
+            livesearch.addValue({id:false, name:c_val});
+            livesearch.focusNextInput();
+        });
     };
     
     this.Init();
@@ -512,18 +534,23 @@ window.fx_suggest = function(params) {
                 Suggest.hideBox(false);
             }
             fx_suggest.cache[url_cache_key] = res;
-        }
+        };
         
         $.ajax(request_params);
-    }
+    };
     
     this.renderResults = function(res) {
         var html = '';
         $.each(res.results, function(index, item) {
-            html += '<div class="search_item" data-id="'+item.id+'" data-name="'+item.name+'">'+item.name+'</div>';
+            html += '<div class="search_item" ';
+            for (var prop in item) {
+                html += 'data-'+prop+'="'+item[prop]+'" ';
+            }
+            html += "data-value='"+$.toJSON(item)+"' ";
+            html  += '>'+item.name+'</div>';
         });
         return html;
-    }
+    };
     
     this.showBox = function() {
         this.boxVisible = true;
