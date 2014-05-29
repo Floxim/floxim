@@ -230,7 +230,7 @@ class fx_field_multilink extends fx_field_baze {
     }
     
     protected function _before_save() {
-        if ($this->is_modified('format')) {
+        if ($this->is_modified('format') || !$this['id']) {
             $c_lf = $this['format']['linking_field'];
             $format = array(
                 'render_type' => $this['format']['render_type'],
