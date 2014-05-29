@@ -117,6 +117,7 @@ class fx_field extends fx_essence {
     }
 
     protected function _after_insert() {
+        $this->_drop_meta_cache();
         if (!$this['component_id']) {
             return;
         }
@@ -142,6 +143,7 @@ class fx_field extends fx_essence {
                 }
             }
         }
+        $this->_drop_meta_cache();
     }
 
     protected function _after_delete() {
@@ -150,6 +152,7 @@ class fx_field extends fx_essence {
                 fx::db()->query("ALTER TABLE `{{".$this->get_table()."}}` DROP COLUMN `".$this['keyword']."`");
             }
         }
+        $this->_drop_meta_cache();
     }
 
     /* -- for admin interface -- */
@@ -196,6 +199,10 @@ class fx_field extends fx_essence {
                 break;
         }
         return $val;
+    }
+    
+    protected function _drop_meta_cache() {
+        fx::files()->rm( fx::path('files', 'cache/meta_cache.php') );
     }
 
 }
