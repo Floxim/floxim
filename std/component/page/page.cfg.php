@@ -1,4 +1,8 @@
 <?php
+
+$record_templates = fx::controller('component_'.$component['keyword'].'.record')
+                        ->get_available_templates(fx::env('layout'));
+
 $page_config = array(
     'actions' => array(
         '*record' => array(
@@ -42,7 +46,7 @@ $page_config = array(
         ),
         '*list_infoblock' => array(
             'settings' => (
-                $is_new_infoblock ? array(
+                $is_new_infoblock && count($record_templates) > 0 ? array(
                     'create_record_ib' => array(
                         'type' => 'checkbox',
                         'label' => 'Create record infoblock'
