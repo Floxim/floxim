@@ -58,7 +58,6 @@ class fx_template_suitable {
             if (!$ib_visual['is_stub'] ) {
                 continue;
             }
-            fx::log('suiting', $ib);
             $old_area = $ib->get_prop_inherited('visual.area', $source_layout_id);
             if ($old_area && isset($area_map[$old_area])) {
                 $ib_visual['area'] = $area_map[$old_area];

@@ -474,7 +474,7 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
         
         // can be set to "hidden" later
         $scope_field_type = 'select';
-        
+        fx::log($infoblock);
         if (!$infoblock['id']) {
             if ($container_infoblock) {
                 $c_scope_code = $container_infoblock->get_scope_string();
@@ -484,6 +484,7 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
             } else {
                 $ctr = $infoblock->init_controller();
                 $cfg = $ctr->get_config(true);
+                fx::log('ctr cfg', $cfg);
                 if (isset($cfg['default_scope']) && is_callable($cfg['default_scope'])) {
                     $c_scope_code = call_user_func($cfg['default_scope']);
                 }

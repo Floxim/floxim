@@ -221,7 +221,7 @@ class fx_controller_admin_component extends fx_controller_admin {
     	$breadcrumb->add_item(self::_essence_types($essence_code), '#admin.'.$essence_code.'.all');
         $breadcrumb->add_item($component['name'], $submenu_first['url']);
         if (isset($submenu[$action])) {
-			$breadcrumb->add_item($submenu[$action]['title'], $submenu[$action]['url']);
+            $breadcrumb->add_item($submenu[$action]['title'], $submenu[$action]['url']);
         }
     }
 
@@ -250,6 +250,7 @@ class fx_controller_admin_component extends fx_controller_admin {
 
         try {
             $component->save();
+            $result['reload'] = '#admin.component.edit('.$component['id'].',settings)';
         } catch (Exception $e) {
             $result['status'] = 'error';
             $result['text'][] = $e->getMessage();

@@ -369,7 +369,7 @@ fx_front.prototype.get_page_id = function() {
 
 fx_front.prototype.add_infoblock_select_controller = function($node) {
     var $area_node = $node.closest('.fx_area');
-    var container_infoblock = $node.closest('.fx_infoblock').data('fx_infoblock');
+    var container_infoblock = $node.closest('.fx_infoblock').not('body').data('fx_infoblock');
     var area_meta = $fx.front.get_area_meta($area_node);
     
     $fx.front.select_item($area_node.get(0));

@@ -203,6 +203,7 @@ class fx {
             if (is_callable($method)) {
                 return call_user_func($method);
             }
+            return $env->get($args[0]);
     	}
     	if (count($args) == 2) {
             $method = array($env, 'set_'.$args[0]);

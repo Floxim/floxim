@@ -206,6 +206,9 @@ class fx_debug {
             return '';
         }
         $file = $this->_get_dir().'/log_'.$item_id.'.html';
+        if (!file_exists($file)) {
+            return '';
+        }
         $fh = fopen($file, 'r');
         if ($fh === false) {
             return '';

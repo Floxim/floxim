@@ -146,6 +146,7 @@ class fx_controller_admin_field extends fx_controller_admin {
         else {
             $result = array('status' => 'ok');
             $field->save();
+            $result['reload'] = '#admin.'.$input['to_essence'].'.edit('.$input['to_id'].',fields)';
         }
         
         
@@ -173,6 +174,7 @@ class fx_controller_admin_field extends fx_controller_admin {
         $params = array('keyword', 'name', 'format', 'type', 'not_null', 'searchable', 'default', 'type_of_edit', 'form_tab');
         $input['keyword'] = trim($input['keyword']);
         $input['name'] = trim($input['name']);
+        fx::log('saving f', $input);
         foreach ( $params as $v ) {
             $field->set( $v, $input[$v]);
         }
