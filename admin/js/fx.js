@@ -72,6 +72,10 @@ window.$fx = {
     },
         
     parse_hash: function() {
+        if (!window.location.pathname.match(/^\/floxim\//)) {
+            $fx.mode = 'page';
+            return;
+        }
         var hash_to_parse = $fx.settings.hash !== undefined ? $fx.settings.hash : window.location.hash.slice(1);
         
         if (hash_to_parse === '' && window.location.pathname === '/floxim/') {
@@ -221,33 +225,12 @@ window.$fx = {
         return regexp.exec(data);
     },
             
-    force_submit_form: function () {
-        $fx_dialog.submit();  
-    }, 
-        
     stop_add_mode: function () {
         $fx.buttons.show_panel();
         $fx.clear_additional_text();
         $('.fx_preview_placeholder').remove();
     },
               
-    click_extend_button: function (button_key, button) {
-        if (button.post) {
-            $fx.post(button.post, function(data) {
-                $('#fx_dialog_form *').remove();
-                $fx_dialog.main.dialog("option", "buttons", [] );
-                $fx_form.draw_fields(data, $('#fx_dialog_form'));
-            });
-            return;
-        }
-        if (button.act_as === 'save') {
-            $('form', $fx_dialog.main).append(
-                '<input type="hidden" name="fx_dialog_button" value="'+button_key+'" />'
-            );
-            $fx_dialog.click_save();
-        }
-    },
-    
     lang: function(str) {
         return this.dictionary && this.dictionary[str] ? this.dictionary[str] : str;
     },

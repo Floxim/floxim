@@ -125,8 +125,7 @@ fx_form = {
                 data = $.parseJSON( data );
             }
             catch(e) {
-                console.log(e);
-                status_block.show();
+                status_block.show().css({background:'#FFF'});
                 status_block.writeError(data);
                 return false;
             }
@@ -352,17 +351,21 @@ $fx.form = window.fx_form = window.$fx_form = fx_form;
         }
         return this.each(function(){
             var $this = $(this);
-
+            $this.show();
             var errorHtml = "<div class=\"ui-widget\">";
             errorHtml+= "<div class=\"ui-state-error ui-corner-all\" style=\"padding: 0 .7em;\">";
             errorHtml+= "<p>";
             errorHtml+= "<span class=\"ui-icon ui-icon-alert\" style=\"float:left; margin-right: .3em;\"></span>";
             errorHtml+= message.join('<br/>');
             errorHtml+= "</p>";
+            errorHtml += '<a class="fx_close">close</a>';
             errorHtml+= "</div>";
             errorHtml+= "</div>";
-
+            
             $this.html(errorHtml);
+            $('a.fx_close', this).click(function() {
+                $this.hide();
+            });
         });
     };
 

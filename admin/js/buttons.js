@@ -161,17 +161,6 @@ fx_buttons.prototype.handle = function ( button ) {
             window.location = button_action.url;
             return false;
         }
-        if (button_action.options) {
-            $fx.post(
-                button_action.options, 
-                function(json) {
-                    $fx_dialog.open_dialog(json, {onfinish:function() {
-                        $(window).hashchange();
-                    }});
-                }
-            );
-            return false;
-        }
     }
     if (button === 'delete' && confirm('Are you sure?')){
         var sel = $('.fx_admin_selected');
@@ -206,22 +195,7 @@ fx_buttons.prototype.show_pulldown = function ( button, data ) {
             item = $('<span>').addClass('fx_admin_pull_down_divider');
         }
         else {
-            if (!v.callback) {
-                v.callback = function() {
-                    $fx.post(
-                        $.extend({
-                            essence:$fx.admin.essence,
-                            action:button
-                        }, v.options), 
-                        function(json) {
-                            $fx_dialog.open_dialog(json, {onfinish:function() {
-                                $(window).hashchange();
-                            }});
-                        }
-                    );
-                }
-            }
-        	var link_name = v.name || '[NoName]';
+            var link_name = v.name || '[NoName]';
             item = $('<span/>').html(link_name).click(v.callback);
         }
         container.append(item);
@@ -230,8 +204,7 @@ fx_buttons.prototype.show_pulldown = function ( button, data ) {
     var pos = $('.fx_admin_button_'+button).offset();
     pos.top -= $(document).scrollTop();
     container.css('left', pos.left).css('top', pos.top+25).appendTo($('#fx_admin_control'));
-
-}
+};
 
 fx_buttons.prototype.hide_pulldown = function () {
 	$('.fx_admin_pull_down_menu').remove();
@@ -258,17 +231,11 @@ fx_buttons.prototype.form_button_click = function() {
 	if (data.func) {
 		fx_call_user_func(json.func);
 	}
-	if (data.dialog) {
-		$fx.post(data.dialog, function(res){
-			 $fx_dialog.open_dialog(res);
-		});
-		return false;
-	}
 	if (data.url) {
 		document.location.hash = $fx.mode + '.' + data.url.replace(/^#/, '');
 	}
 	return false;
-}
+};
 
 fx_buttons.prototype.update_available_buttons = function () {
     var btn, selected = $('.fx_admin_selected', '#fx_admin_content');
