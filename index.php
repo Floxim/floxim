@@ -10,7 +10,9 @@ register_shutdown_function(function() {
         for ($i = 0; $i < $ob_level; $i++) {
             $res .= ob_get_clean();
         }
-        echo fx::page()->post_process($res);
+        if (fx::config('dev.on')) {
+            echo fx::page()->post_process($res);
+        }
         fx::log('down', $res, debug_backtrace(), $_SERVER, $_POST); 
     }
 });
@@ -18,6 +20,10 @@ register_shutdown_function(function() {
 $result = fx::router()->route();
 
 if ( $result ) {
-    echo $result instanceof fx_controller ? $result->process() : $result;
+    $result = $result instanceof fx_controller ? $result->process() : $result;
+    if (fx::env('ajax')) {
+        fx::page()->add_assets_ajax();
+    }
+    echo $result;
     fx::env()->set('complete_ok', true);
 }
