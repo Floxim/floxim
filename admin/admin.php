@@ -163,10 +163,9 @@ class fx_controller_admin extends fx_controller {
             
             $recover_form = fx::controller('component_user.recover_form', array('email' => $_POST['email']))
                             ->render('component_user.recover_form');
-            
             $res = fx::template('helper_admin.authorize')->render(array(
-                    'auth_form' => $auth_form,
-                    'recover_form' => $recover_form
+                'auth_form' => $auth_form,
+                'recover_form' => $recover_form
             ));
         }
         return fx::page()->post_process($res);

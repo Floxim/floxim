@@ -53,31 +53,6 @@
     width:auto !important;
 }
 
-/*
-.fx_admin_form input.fx_input, 
-.fx_admin_form select.fx_input, 
-.fx_admin_form textarea.fx_input {
-    display: block;
-    margin: 7px 0 0;
-}
-
-
-.fx_admin_form input[type=text].fx_input, 
-.fx_admin_form select.fx_input,
-.fx_admin_form textarea.fx_input {
-    width: 50%;
-    box-sizing:border-box;
-    -moz-box-sizing:border-box;
-}
-
-.fx_admin_form input.fx_input, 
-.fx_admin_form textarea.fx_input,
-.fx_admin_form select.fx_input {
-    margin-bottom: 10px;
-    padding: .4em;
-}
-*/
-
 .date_field {
     //position: relative;
     .icon {
@@ -140,6 +115,18 @@
     .redactor_box {
         min-width:285px;
         max-width:600px;
+        ul, ul li {
+            list-style-type:disc;
+        }
+        ol, ol li {
+            list-style-type:decimal;
+        }
+        ul, ol {
+            margin-left:20px;
+        }
+        li {
+            margin-bottom:10px;
+        }
     }
 
     .redactor_editor {

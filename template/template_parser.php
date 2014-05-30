@@ -56,9 +56,6 @@ class fx_template_parser {
                     break;
             }
         }
-        echo "solving ".$token->name.
-                " | stack has ".count($stack). 
-                'items at the end of the method<br />';
     }
 
 
