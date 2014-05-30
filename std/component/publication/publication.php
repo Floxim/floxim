@@ -25,7 +25,9 @@ class fx_controller_component_publication extends fx_controller_component_page {
         } else {
             $infoblock = fx::data('infoblock', $infoblock_id);
         }
-        fx::log('pb', $infoblock);
+        if (!$infoblock) {
+            return;
+        }
         return fx::data(
             'content_page', 
             $infoblock->get('page_id')
