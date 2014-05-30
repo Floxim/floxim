@@ -35,12 +35,24 @@ class fx_controller_component_section extends fx_controller_component_page {
         $this->listen('items_ready', function($items, $ctr) {
             $extra_ibs =  $ctr->get_param('extra_infoblocks', array());
             if (is_array($extra_ibs) && count($extra_ibs) > 0) {
-                $extra_ibs = fx::data('infoblock', $extra_ibs);
-                foreach ($extra_ibs as $extra_ib) {
-                    $extra_res = $extra_ib->get_result();
-                    if (isset($extra_res['items'])) {
-                        $items->concat($extra_res['items']);
+                //$extra_ibs = fx::data('infoblock', $extra_ibs);
+                foreach ($extra_ibs as $extra_ib_id) {
+                    $extra_ib = fx::data('infoblock', $extra_ib_id);
+                    $extra_finder =  fx::data('content_page')
+                                    ->where('infoblock_id', $extra_ib_id);
+                    if ($extra_ib) {
+                        $sorting = $extra_ib['params']['sorting'];
+                        $dir = $extra_ib['params']['sorting_dir'];
+                        if (!$sorting || $sorting == 'manual') {
+                            $sorting = 'priority';
+                        }
+                        if (!$dir) {
+                            $dir = 'asc';
+                        }
+                        $extra_finder->order( $sorting, $dir);
                     }
+                    $extra_res = $extra_finder->all();
+                    $items->concat($extra_res);
                 }
             }
             fx::data('content_page')->make_tree($items, 'submenu');
