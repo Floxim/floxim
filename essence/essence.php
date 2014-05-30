@@ -371,6 +371,9 @@ abstract class fx_essence implements ArrayAccess {
         if ($field === null) {
             return count($this->modified) > 0;
         }
+        if (!$this['id']) {
+            return true;
+        }
         return is_array($this->modified) && in_array($field, $this->modified);
     }
     
