@@ -69,16 +69,6 @@ class fx_template_parser {
             
             if ($token->type == 'unknown') {
                 $this->solve_unclosed($token, $tokens);
-                /*
-                $res = $token->dump();
-                foreach ($tokens as $ct) {
-                    if ($ct->name != 'code') {
-                        $res .= "\n".$ct->dump();
-                    }
-                }
-                fx::log($res);
-                 * 
-                 */
             }
             if (preg_match("~^else~", $token->name) && $token->type == 'single') {
                 $token->type = 'open';

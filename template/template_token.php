@@ -121,6 +121,9 @@ class fx_template_token {
     
     
     public function dump() {
+        if ($this->name == 'code') {
+            return $this->get_prop('value');
+        }
         $res = '{';
         $res .= $this->type == 'close' ? '/' : '';
         $res .= $this->name.' ';

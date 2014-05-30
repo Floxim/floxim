@@ -90,10 +90,13 @@ class fx_template_compiler {
          * like this:
          * {call id="wrap"}{var id="content"}<div>Something</div>{/var}{/call}
          */
-        $has_content_param = count($token->get_children()) > 0;
+        $has_content_param = false;
         foreach ($call_children as $call_child) {
-            if ($call_child->name == 'var') {
-                $has_content_param = false;
+            if ($call_child->name == 'code' && $call_child->is_empty()) {
+                continue;
+            }
+            if ($call_child->name != 'var') {
+                $has_content_param = true;
                 break;
             }
         }
