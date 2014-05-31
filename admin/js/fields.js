@@ -105,4 +105,78 @@ window.$fx_fields = {
         return $t.jQuery('form_row', json);
     }
 };
+
+// file field
+
+var $html = $('html');
+$html.on('click', '.fx_image_field .remote_file_block a',  function() {
+    var $block = $(this).closest('.remote_file_block');
+    $block.addClass('active');
+    $block.find('input').focus();
+});
+
+$html.on('blur', '.fx_image_field .remote_file_block input', function() {
+    $(this).closest('.remote_file_block').removeClass('active');
+});
+
+function handle_upload(data, $block) {
+    var $res_inp = $('.real_value', $block);
+    $res_inp.val(data.path);
+    $('.preview img', $block).attr('src', data.path).show();
+    $('.killer', $block).show();
+    $('.file_input', $block).hide();
+    $res_inp.trigger('fx_change_file');
+}
+
+$html.on('change', '.fx_image_field input.file', function() {
+    var $field = $(this);
+    var $block = $field.closest('.fx_image_field');
+    var inp_id = $field.attr('id');
+    
+    $.ajaxFileUpload({
+        url:'/floxim/index.php',
+        secureuri:false,
+        fileElementId:inp_id,
+        dataType: 'json',
+        data: { essence:'file', fx_admin:1, action:'upload_save' },
+        success: function ( data ) {
+            handle_upload(data, $block);
+        }
+    });
+});
+
+$html.on('click', '.fx_image_field .uploader', function() {
+    $(this).closest('.fx_image_field').find('input.file').focus().click();
+});
+
+$html.on('click', '.fx_image_field .killer', function() {
+   var $field = $(this).closest('.fx_image_field'); 
+   $('.preview img', $field).hide();
+   $('.real_value', $field).val('');
+   $('.file_input', $field).show();
+   $(this).hide();
+});
+
+$html.on('paste', '.fx_image_field .remote_file_location', function() {
+    var $inp = $(this);
+    var $block = $inp.closest('.fx_image_field');
+    setTimeout(function() {
+        var val = $inp.val();
+        if (!val.match(/https?:\/\/.+/)) {
+            return;
+        }
+        $.ajax({
+            url:'/floxim/index.php',
+            type:'post',
+            data: { essence:'file', fx_admin:1, action:'upload_save' , file:val},
+            dataType: 'json',
+            success: function ( data ) {
+                handle_upload(data, $block);
+                $inp.val('').blur();
+            }
+        });
+    }, 50);
+});
+
+
 })($fxj);

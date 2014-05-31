@@ -720,9 +720,8 @@ fx_front.prototype.make_node_panel = function($node) {
         $fx.front.recount_node_panel();
     }, 10);
     $(window).on('scroll', function() {$fx.front.recount_node_panel();});
-    $panel.on('change keyup livesearch_value_loaded', function () {
-    //$panel.on('resize', function () {
-        $fx.front.recount_node_panel();
+    $panel.on('change keyup livesearch_value_loaded click', function () {
+        setTimeout(function() {$fx.front.recount_node_panel();}, 10);
     });
     
 };

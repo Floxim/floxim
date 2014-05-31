@@ -244,8 +244,31 @@
             margin-right:10px;
             float:left;
         }
-        .fx_admin_button_text {
+        .fx_admin_button_text, .remote_file_block {
             margin-right:10px;
+        }
+        .remote_file_block {
+            float:left;
+            font-size:12px;
+            input.fx_input {
+                width:80px;
+                display:none;
+            }
+            &.active {
+                a {
+                    display:none;
+                }
+                input.fx_input {
+                    display:inline;
+                }
+            }
+            a {
+                cursor:pointer;
+            }
+            a, span {
+                line-height:30px;
+                vertical-align:middle;
+            }
         }
     }
 }

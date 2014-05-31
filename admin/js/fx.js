@@ -42,6 +42,9 @@ window.$fx = {
                 if (ajax_counter === 0) {
                     $('.fx_preloader').css('visibility', 'hidden');
                 }
+                if (!jqXHR.getResponseHeader) {
+                    return;
+                }
                 var js_assets = jqXHR.getResponseHeader('fx_assets_js');
                 if (js_assets) {
                     js_assets = $.parseJSON(js_assets);

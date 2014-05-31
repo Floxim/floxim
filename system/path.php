@@ -58,6 +58,9 @@ class fx_path {
     }
     
     public function to_http($path) {
+        if (preg_match("~^https?://~", $path)){
+            return $path;
+        }
         $ds = "[".preg_quote('\/')."]";
         $path = preg_replace("~".$ds."~", DIRECTORY_SEPARATOR, $path);
         $path = preg_replace("~^".preg_quote($this->root)."~", '', $path);
@@ -94,8 +97,21 @@ class fx_path {
     }
     
     public function file_name($path){
-        $path = $this->to_abs($path);
-        preg_match("~[^".preg_quote(DIRECTORY_SEPARATOR)."]+$~", $path, $file_name);
-        return $file_name ? $file_name[0] : null;
+        $path = $this->to_http($path);
+        preg_match("~[^/]+$~", $path, $file_name);
+        if (!$file_name) {
+            return '';
+        }
+        $file_name = preg_replace("~\?.+$~", '', $file_name[0]);
+        return $file_name;
+    }
+    
+    public function file_extension($path) {
+        $file_name = $this->file_name($path);
+        if (!$file_name) {
+            return '';
+        }
+        preg_match("~\.([^\.]+)$~", $file_name, $ext);
+        return $ext ? $ext[0] : '';
     }
 }

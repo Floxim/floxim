@@ -249,6 +249,10 @@ class fx_system_files {
      */
 
     public function __construct($user = '', $password = '', $host = null, $port = 21, $ftp_path = '') {
+        
+        $this->allowed_extensions = explode(",", 'gif,jpg,png,ico,rar,zip,doc,pdf,txt,xls,jpe,jpeg,flv,swf,asf,ppt,mp3');
+	$this->image_extensions = explode(',', 'gif,jpg,jpe,jpeg,png,ico');
+        
         $this->ftp_user = $user;
         $this->ftp_password = $password;
         $this->ftp_port = $port;
@@ -791,6 +795,28 @@ class fx_system_files {
 
         return is_dir($local_filename);
     }
+    
+    public function is_filename_allowed($filename) {
+        $ext = fx::path()->file_extension($filename);
+        if (!$ext) {
+            return true;
+        }
+        return in_array($ext, $this->allowed_extensions);
+    }
+    
+    public function get_extension_by_mime($mime) {
+        $map = array(
+            'image/bmp' => 'bmp',
+            'image/gif' => 'gif',
+            'image/jpeg' => 'jpg',
+            'image/pjpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/tiff' => 'tiff'
+            // ... 
+        );
+        $mime = strtolower($mime);
+        return isset($map[$mime]) ? $map[$mime] : '';
+    }
 
     /**
      * Creates a temporary file (the file is automatically deleted in the destructor of the class)
@@ -835,44 +861,59 @@ class fx_system_files {
         return $filename;
     }
 
-    //--------------------------------------------------------------------
-
-    public function save_file($file, $dir) {
-        $dir = trim($dir, '/').'/';
-        $this->mkdir(fx::path('files', $dir));
-
-        // normal FILES
-        if (is_array($file) && !$file['link'] && !$file['source_id'] && !$file['path']) {
-            $type = 1;
-            $filename = $file['name'];
-            $filetype = $file['type'];
+    /**
+     * get remote file
+     * @todo: we should refactor this code to make it safer
+     * it's better to fetch and check headers before getting file contents 
+     */
+    public function save_remote_file($file, $dir = 'content') {
+        if (!preg_match("~^https?://~", $file)) {
+            return;
         }
-        else if ( is_array($file) && $file['real_name'] && $file['path']) {
-            $type = 4;
-            $filename = $file['real_name'];
-            $filetype = $file['type'];
-        } else if (($link = $file['link']) || ( is_string($file) && $link = $file)) {
-            $type = 3;
-            $filename = substr($link, strrpos($link, '/') + 1);
-            $filetype = 'Image';
+        $file_data = file_get_contents($file);
+        if (!$file_data) {
+            return;
         }
-
-        $put_file = $this->get_put_filename($dir, $filename);
-        
-        $full_path = fx::path('files', $dir.'/'.$put_file);
-        $http_path = fx::path()->to_http($full_path);
-        
-        if ($type == 1) {
-            $res= move_uploaded_file($file['tmp_name'], $full_path);
-            if (!$res) {
-            	die();
+        $file_name = fx::path()->file_name($file);
+        $extension = fx::path()->file_extension($file_name);
+        if (!$extension) {
+            foreach ($http_response_header as $header) {
+                if (preg_match("~^content-type: (.+)$~i", $header, $content_type)) {
+                    $mime = $content_type[1];
+                    $extension = $this->get_extension_by_mime($mime);
+                    $file_name .= '.'.$extension;
+                    break;
+                }
             }
-        } else if ( $type == 2 || $type == 3) {
-            $content = file_get_contents($link);
-            file_put_contents($full_path, $content);
-        } else {
-            fx::files()->copy($file['path'], $full_path);
         }
+        $put_file = $this->get_put_filename($dir, $file_name);
+        $full_path = fx::path('files', $dir.'/'.$put_file);
+        $this->writefile($full_path, $file_data);
+        return $full_path;
+    }
+
+    public function save_file($file, $dir = '') {
+        // normal $_FILES
+        if (is_array($file)) {
+            $filename = $file['name'];
+            $put_file = $this->get_put_filename($dir, $filename);
+            $full_path = fx::path('files', $dir.'/'.$put_file);
+            $this->mkdir(fx::path('files', $dir));
+            $res = move_uploaded_file($file['tmp_name'], $full_path);
+            if (!$res) {
+                return;
+            }
+        } 
+        // remote file
+        else if (is_string($file) ) {
+            $full_path = $this->save_remote_file($file, $dir);
+            if (!$full_path) {
+                return;
+            }
+            $filename = fx::path()->file_name($full_path);
+        }
+        
+        $http_path = fx::path()->to_http($full_path);
         
         return array(
             'path' => $http_path,
