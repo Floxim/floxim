@@ -289,6 +289,20 @@ class fx_system_page {
                 $r .= '<script type="text/javascript" src="'.$v.'" ></script>'.PHP_EOL;
             }
         }
+        if ($this->_all_js || $this->_all_css) {
+            $r .= "<script type='text/javascript'>\n";
+            if ($this->_all_js) {
+                $r .= "window.fx_assets_js = [\n";
+                $r .= "'".join("', \n'", $this->_all_js)."'\n";
+                $r .= "];\n";
+            }
+            if ($this->_all_css) {
+                $r .= "window.fx_assets_css = [\n";
+                $r .= "'".join("', \n'", $this->_all_css)."'\n";
+                $r .= "];\n";
+            }
+            $r .= '</script>';
+        }
         
         if (!preg_match("~<head(\s[^>]*?|)>~", $buffer)) {
             if (preg_match("~<html[^>]*?>~", $buffer)) {

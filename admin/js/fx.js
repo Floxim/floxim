@@ -46,14 +46,28 @@ window.$fx = {
                     return;
                 }
                 var js_assets = jqXHR.getResponseHeader('fx_assets_js');
+                
                 if (js_assets) {
+                    if (!window.fx_assets_js) {
+                        window.fx_assets_js = [];
+                    }
                     js_assets = $.parseJSON(js_assets);
                     for (var i = 0; i < js_assets.length; i++) {
-                        $.ajax({
-                            url:js_assets[i],
-                            async:false,
-                            dataType: 'script'
-                        });
+                        var asset = js_assets[i];
+                        var is_loaded = $.inArray(asset, window.fx_assets_js);
+                        if (is_loaded !== -1) {
+                            continue;
+                        }
+                        (function(asset) {
+                            $.ajax({
+                                url:asset,
+                                async:false,
+                                dataType: 'script',
+                                success: function() {
+                                    window.fx_assets_js.push(asset);
+                                }
+                            });
+                        })(asset);
                     }
                 }
             });
