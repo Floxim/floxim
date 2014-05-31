@@ -46,7 +46,6 @@ class fx_data {
             }
             $res['results'][]= $c_res;
         }
-        fx::log($res);
         return $res;
     }
 
@@ -92,7 +91,6 @@ class fx_data {
      * @param string $field
      */
     protected function _prepare_complex_field($field, $value = null, $type = null) {
-        fx::log('pcf', $field);
         list($rel, $field_name) = explode('.', $field, 2);
         if (!isset($this->with[$rel])) {
             $this->only_with($rel);

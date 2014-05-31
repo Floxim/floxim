@@ -184,7 +184,6 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
             $infoblock->add_params(array());
         }
         
-        //fx::log($infoblock['params'], $infoblock['id']);
         $controller = fx::controller(
                 $controller.'.'.$action, 
                 array('infoblock_id' => $infoblock['id']) + $infoblock['params']
@@ -474,7 +473,7 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
         
         // can be set to "hidden" later
         $scope_field_type = 'select';
-        fx::log($infoblock);
+        
         if (!$infoblock['id']) {
             if ($container_infoblock) {
                 $c_scope_code = $container_infoblock->get_scope_string();
@@ -484,7 +483,6 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
             } else {
                 $ctr = $infoblock->init_controller();
                 $cfg = $ctr->get_config(true);
-                fx::log('ctr cfg', $cfg);
                 if (isset($cfg['default_scope']) && is_callable($cfg['default_scope'])) {
                     $c_scope_code = call_user_func($cfg['default_scope']);
                 }
@@ -499,7 +497,6 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
             'value' => $c_scope_code
         );
         
-        //fx::log('scopf', $infoblock, $fields);
         return $fields;
     }
     
