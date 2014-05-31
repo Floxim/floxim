@@ -881,8 +881,13 @@ fx_front.prototype.hilight = function() {
                 i.addClass('fx_clearfix');
             }
             var hidden_placeholder = meta.hidden_placeholder;
-            if ( i.hasClass('fx_template_var') && $fx.front.node_is_empty(i) ) {
-                hidden_placeholder = i.data('fx_var').label;
+            if ($fx.front.node_is_empty(i) ) {
+                if ( i.hasClass('fx_template_var') ) {
+                    hidden_placeholder = i.data('fx_var').label;
+                } else if (i.hasClass('fx_infoblock') && !hidden_placeholder) {
+                    var ib_meta = i.data('fx_infoblock');
+                    hidden_placeholder = $fx.lang('Infoblock #'+ ib_meta.id + ' is empty');
+                }
             }
             var is_hidden = false;
             if (hidden_placeholder) {
