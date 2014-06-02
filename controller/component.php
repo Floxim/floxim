@@ -24,7 +24,7 @@ class fx_controller_component extends fx_controller_frontoffice {
             if (file_exists($com_file)) {
                 $sources[]= $com_file;
             }
-            $com_file = $com_dir.$com['keyword'].'/'.$com['keyword'].'.cfg.php';
+            $com_file = fx::path()->to_abs($com_dir.'/'.$com['keyword'].'/'.$com['keyword'].'.cfg.php');
             if (file_exists($com_file)) {
                 $sources[]= $com_file;
             }
