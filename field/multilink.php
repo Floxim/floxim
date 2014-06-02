@@ -163,7 +163,7 @@ class fx_field_multilink extends fx_field_baze {
         $fields[] = array(
             'id' => 'format[linking_field]',
             'name' => 'format[linking_field]',
-            'label' => 'Linking field',
+            'label' => fx::alang('Linking field'),
             'type' => 'select',
             'values' => $linking_field_values,
             'value' => $this['format']['linking_field']
@@ -174,7 +174,7 @@ class fx_field_multilink extends fx_field_baze {
                 'id' => $field_id,
                 'name' => $field_id,
                 'type' => 'select',
-                'label' => 'Linking datatype',
+                'label' => fx::alang('Linked datatype'),
                 'parent' => array('format[linking_field]' => $rel_field_id),
                 'values' => $linking_datatype,
                 'value' => $this['format']['linking_datatype']
