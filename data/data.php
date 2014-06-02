@@ -21,18 +21,26 @@ class fx_data {
     const HAS_MANY = 1;
     const HAS_ONE = 2;
     const MANY_MANY = 3;
+    
+    protected function _quicksearch_apply_terms($terms) {
+        foreach ($terms as $tp) {
+            $this->where('name', '%'.$tp.'%', 'LIKE');
+        }
+    }
 
     public function quicksearch($term = null) {
         if (!isset($term)) {
             return;
         }
-        $terms = explode(" ", $term);
-        if (count($terms)>0) {
-            foreach ($terms as $tp) {
-                $this->where('name', '%'.$tp.'%', 'LIKE');
-            }
+        $term = trim($term);
+        if (!empty($term)) {
+            $terms = explode(" ", $term);
+            $this->_quicksearch_apply_terms($terms);
         }
         $items = $this->all();
+        if (!$items) {
+            return;
+        }
         $res = array('meta' => array(), 'results' => array());
         
         $props = array('name', 'id');
@@ -40,6 +48,9 @@ class fx_data {
             $props = array_merge($props, $this->_quicksearch_props);
         }
         foreach ($items as $i) {
+            if (!$i['name']) {
+                continue;
+            }
             $c_res = array();
             foreach ($props as $prop) {
                 $c_res[$prop] = $i[$prop];
@@ -123,6 +134,9 @@ class fx_data {
             $field = $this->_prepare_complex_field($field, $value, $type);
         } elseif (preg_match("~^[a-z0-9_-]~", $field)) {
             $table = $this->get_col_table($field);
+            if (!$table) {
+                return array(false, 'FALSE', 'RAW');
+            }
             $field = '{{'.$table.'}}.'.$field;
         }
         return array($field, $value, $type);
@@ -130,7 +144,7 @@ class fx_data {
     
     public function where($field, $value, $type = '=') {
         $cond = $this->_prepare_condition($field, $value, $type);
-        $this->where []= $cond; //array($field, $value, $type);
+        $this->where []= $cond;
         return $this;
     }
     
@@ -390,7 +404,7 @@ class fx_data {
             return " (".join(" OR ", $parts).") ";
         }
         if (strtoupper($cond[2]) === 'RAW') {
-            return '`'.$cond[0].'` '.$cond[1];
+            return ($cond[0] ? '`'.$cond[0].'` ' : '').$cond[1];
         }
         list($field, $value, $type) = $cond;
         if ($field == 'id') {
@@ -576,9 +590,12 @@ class fx_data {
     
     public function get_col_table($col) {
         $tables = $this->get_tables();
+        /*
         if (count($tables) == 1) {
             return $tables[0];
         }
+         * 
+         */
         foreach ($tables as $t) {
             $cols = $this->_get_columns($t);
             if (in_array($col, $cols)) {

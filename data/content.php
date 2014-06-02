@@ -326,4 +326,36 @@ class fx_data_content extends fx_data {
         $content->set($props);
         return $content;
     }
+    
+    protected function _quicksearch_apply_terms($terms) {
+        $table = $this->get_col_table('name');
+        if ($table) {
+            parent::_quicksearch_apply_terms($terms);
+            return;
+        }
+        
+        $c_component = fx::data('component', $this->component_id);
+        $components = $c_component->get_all_variants();
+        $name_conds = array();
+        foreach ($components as $com) {
+            $name_field = $com->fields()->find_one('keyword', 'name');
+            if (!$name_field) {
+                continue;
+            }
+            $table = '{{'.$com->get_content_table().'}}';
+            $this->join($table, $table.'.id = {{content}}.id', 'left');
+            $cond = array(
+                array(),
+                false,
+                'OR'
+            );
+            foreach ($terms as $term) {
+                $cond[0][]= array(
+                    $table.'.name', '%'.$term.'%', 'like'
+                );
+            }
+            $name_conds []= $cond;
+        }
+        call_user_func_array(array($this, 'where_or'), $name_conds);
+    }
 }
