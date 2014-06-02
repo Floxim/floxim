@@ -758,6 +758,18 @@ class fx_system_files {
 
         return filesize($local_filename);
     }
+    
+    public static $format_sizes = array('B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB');
+	
+    public function readable_size($size, $round = 0) {
+        $sizes = self::$format_sizes;
+        $total = count($sizes);
+        for ($i=0; $size > 1024 && $i < $total; $i++) {
+            $size /= 1024;
+        }
+        $res = round($size,$round)." ".$sizes[$i];
+        return $res;
+    }
 
     public function file_exists($filename) {
         if ($filename[0] != '/') {
@@ -918,7 +930,8 @@ class fx_system_files {
         return array(
             'path' => $http_path,
             'filename' => $filename,
-            'fullpath' => $full_path
+            'fullpath' => $full_path,
+            'size' => $this->readable_size(filesize($full_path))
         );
     }
 

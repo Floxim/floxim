@@ -186,11 +186,6 @@ class fx_content extends fx_essence {
         if (!$ib) {
             return false;
         }
-        /*
-        if ($ib['params']['parent_type'] !== 'current_page_id') {
-            return;
-        }
-         */
         $parent_type = $ib['scope']['page_type'];
         if (!$parent_type) {
             $parent_type = 'page';

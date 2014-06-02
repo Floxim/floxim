@@ -1,8 +1,12 @@
-<!--[input ? _c.type == 'image']-->
+<!--[input ? (_c.type == 'image' || _c.type == 'file')]-->
 <div class="fx_image_field">
     <input type="hidden" <?=$t.field_id_name(_c)?> class="real_value" value="<?=_c.value?>" />
     <div class="preview">
-        <img <?=(_c.value ? ' src="'+_c.value+'"' : ' style="display:none;"')?> />
+        <? if (_c.type == 'image') {?>
+            <img <?=(_c.value ? ' src="'+_c.value+'"' : ' style="display:none;"')?> />
+        <? } else {?>
+            <span class="file_info"></span>
+        <?}?>
         <a class="uploader fx_admin_button fx_admin_button_text">
             <span>
                 <?= _c.value ? $fx.lang('Change') : $fx.lang('Upload') ?>

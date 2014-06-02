@@ -121,8 +121,15 @@ $html.on('blur', '.fx_image_field .remote_file_block input', function() {
 
 function handle_upload(data, $block) {
     var $res_inp = $('.real_value', $block);
+    var field_type = $block.data('field_type');
     $res_inp.val(data.path);
-    $('.preview img', $block).attr('src', data.path).show();
+    if (field_type === 'image') {
+        $('.preview img', $block).attr('src', data.path).show();
+    } else {
+        $('.file_info', $block)
+                .html('<a href="'+data.path+'">'+data.filename+'</a>')
+                .append('<br /><span class="file_size">'+data.size+'</span>');
+    }
     $('.killer', $block).show();
     $('.file_input', $block).hide();
     $res_inp.trigger('fx_change_file');
