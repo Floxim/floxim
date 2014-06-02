@@ -14,4 +14,10 @@ class fx_field_image extends fx_field_file {
         $this->_edit_jsdata['type'] = 'image';
         return $this->_edit_jsdata;
     }
+    
+    public function fake_value() {
+        static $num = 1;
+        $num = $num === 1 ? 2 : 1;
+        return '/floxim/admin/style/images/stub_'.$num.'.jpg';
+    }
 }

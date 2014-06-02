@@ -188,8 +188,11 @@ class fx_field extends fx_essence {
         $c_type = preg_replace("~\(.+?\)~", '', $this->get_sql_type());
         $val = '';
         switch ($c_type) {
-            case 'TEXT': case 'VARCHAR':
+            case 'VARCHAR':
                 $val = $this['name'];
+                break;
+            case 'TEXT':
+                $val = $this['name'].' '.str_repeat(mb_strtolower($this['name']).' ', rand(10, 15));
                 break;
             case 'INT': case 'TINYINT': case 'FLOAT':
                 $val = rand(0, 1000);
