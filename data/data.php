@@ -103,6 +103,9 @@ class fx_data {
      */
     protected function _prepare_complex_field($field, $value = null, $type = null) {
         list($rel, $field_name) = explode('.', $field, 2);
+        if (preg_match("~^\{\{.+\}\}$~", $rel)) {
+            return $field;
+        }
         if (!isset($this->with[$rel])) {
             $this->only_with($rel);
         } 
