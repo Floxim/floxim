@@ -43,6 +43,7 @@ class fx_config {
         'FLOXIM_SITE_PROTOCOL' => 'http',
         'FLOXIM_SITE_HOST' => 'floxim.org',
         'templates.ttl' => 0,
+        'templates.check_php_syntax' => 1,
         'cache.gzip_bundles' => true,
         'cache.meta' => true,
         'date.timezone' => 'America/New_York'

@@ -175,10 +175,9 @@ class fx_template_loader {
         return $tpl;
     }
     
-    public function run_eval($source) {
-        $php_e = preg_replace("~^<\?(php)?~", '', $source);
+    public function run_eval(&$source) {
         try {
-            return eval($php_e);
+            return eval(preg_replace("~^<\?(php)?~", '', $source));
         } catch (Exception $e) {
             // ignore
         }
@@ -191,6 +190,8 @@ class fx_template_loader {
         }
         $parser = new fx_template_parser();
         $tree = $parser->parse($source);
+        
+        unset($parser);
         $compiler = new fx_template_compiler();
         $res = $compiler->compile($tree);
         return $res;

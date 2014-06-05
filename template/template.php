@@ -37,9 +37,6 @@ class fx_template {
     
     public function push_context($data = array(), $meta = array()) {
         $this->context_stack []= $data;
-        if (!is_array($meta)) {
-            fx::debug(debug_backtrace());
-        }
         $meta = array_merge(array(
             'transparent' => false,
             'autopop' => false
@@ -69,19 +66,16 @@ class fx_template {
     }
     
     protected function print_var($val, $meta = null) {
+        //fx::log($val, $meta);
         $tf = null;
-        if ($meta && fx::is_admin() && isset($meta['var_type'])) {
-            if (isset($meta['template_is_wrapper']) && !$meta['template_is_wrapper']) {
+        if ($meta && isset($meta['var_type'])) {
+            /*if (isset($meta['template_is_wrapper']) && !$meta['template_is_wrapper']) {
                 unset($meta['template_is_wrapper']);
-            }
+            }*/
             $tf = new fx_template_field($val, $meta);
         }
         $res = $tf ? $tf : $val;
-        if ($res instanceof fx_collection) {
-            echo "Collection (".$res->count().")";
-        } else {
-            echo $res;
-        }
+        return (string) $res;
     }
     
     protected function get_var_meta($var_name = null, $source = null) {

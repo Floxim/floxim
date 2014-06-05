@@ -13,17 +13,18 @@ class fx_template_compiler {
     public function compile($tree) {
         $code = $this->_make_code($tree);
         $code = self::add_tabs($code);
-        $is_correct = self::is_php_syntax_correct($code);
-        if ($is_correct !== true) {
-            $error_line = $is_correct[1][1];
-            $lines = explode("\n", $code);
-            $lines[ $error_line - 1] = '[[bad '.$lines[$error_line - 1].']]';
-            $lined = join("\n", $lines);
-            $error = $is_correct[0].': '.$is_correct[1][0].' (line '.$error_line.')';
-            fx::debug('Syntax error', $error, $lined);
-            throw new Exception('Syntax error');
+        if (fx::config('templates.check_php_syntax')) {
+            $is_correct = self::is_php_syntax_correct($code);
+            if ($is_correct !== true) {
+                $error_line = $is_correct[1][1];
+                $lines = explode("\n", $code);
+                $lines[ $error_line - 1] = '[[bad '.$lines[$error_line - 1].']]';
+                $lined = join("\n", $lines);
+                $error = $is_correct[0].': '.$is_correct[1][0].' (line '.$error_line.')';
+                fx::debug('Syntax error', $error, $lined);
+                throw new Exception('Syntax error');
+            }
         }
-        
         return $code;
     }
     
@@ -207,6 +208,7 @@ class fx_template_compiler {
                     $mod_callback = $token_type == 'image' ? 'fx::image' : 'fx::date';
                     $mod_callback .= '(';
                 } else {
+                    $token->_need_type = true;
                     $mod_callback = 'call_user_func(';
                     $mod_callback .= '($var_type == "image" ? "fx::image" : ';
                     $mod_callback .= '($var_type == "datetime" ? "fx::date" : "fx::cb")), ';
@@ -245,10 +247,12 @@ class fx_template_compiler {
     }
     
     protected function _make_file_check($var) {
+        
         $code = $var . ' = trim('.$var.");\n";
         $code .= "\nif (".$var." && !preg_match('~^(https?://|/)~', ".$var.")) {\n";
         $code .= $var . '= $template_dir.'.$var.";\n";
         $code .= "}\n";
+        
         $code .= 'if (!file_exists(fx::path()->to_abs(preg_replace("~\?.+$~", "", '.$var.')))) {'."\n";
         $code .= $var . "= '';\n";
         $code .= "}\n";
@@ -261,7 +265,6 @@ class fx_template_compiler {
         // to create correct expression for get_var_meta()
         $ep = new fx_template_expression_parser();
         $expr_token = $ep->parse('$'.$token->get_prop('id'));
-        ///fx::debug($token->get_prop('id'));
         $expr = $ep->compile($expr_token);
         $var_token = $expr_token->last_child;
         
@@ -304,12 +307,19 @@ class fx_template_compiler {
         
         if ($modifiers || $has_default || $token->get_prop('inatt')) {
             $real_val_var = '$'.$var_chunk.'_real_val';
-            $display_val_var = '$'.$var_chunk.'_display_val';
+            
             $code .= $real_val_var . ' = '.$expr.";\n";
+            
             if ($token_is_file) {
                 $code .= $this->_make_file_check($real_val_var);
             }
-            $code .= $display_val_var . ' = '.$real_val_var.";\n";
+            
+            if ($modifiers || $has_default) {
+                $display_val_var = '$'.$var_chunk.'_display_val';
+                $code .= $display_val_var . ' = '.$real_val_var.";\n";
+            } else {
+                $display_val_var = $real_val_var;
+            }
             $expr = $display_val_var;
             $real_val_defined = true;
         }
@@ -348,7 +358,6 @@ class fx_template_compiler {
         
         // Expression to get var meta
         $var_meta_expr = '$this->get_var_meta(';
-        //fx::debug($var_token, $expr);
         // if var is smth like $item['parent']['url'], 
         // it should be get_var_meta('url', fx::dig( $this->v('item'), 'parent'))
         if ($var_token->last_child) {
@@ -364,19 +373,26 @@ class fx_template_compiler {
             $var_meta_expr .= '"'.$token->get_prop('id').'")';
         }
         
-        $var_meta_defined = true;
-        $code .= '$var_meta = '.$var_meta_expr.";\n";
-        $code .= '$var_type = $var_meta["type"]'.";\n";
-        $code .= $this->_apply_modifiers($display_val_var, $modifiers, $token);
-        $code .= '$this->print_var('."\n";
+        
+        if ($modifiers) {
+            
+            $modifiers_code = $this->_apply_modifiers($display_val_var, $modifiers, $token);
+            if ($token->_need_type) {
+                $code .= '$var_meta = '.$var_meta_expr.";\n";
+                $code .= '$var_type = $var_meta["type"]'.";\n";
+                $var_meta_defined = true;
+            }
+            $code .= $modifiers_code;
+        }
+        $code .= 'echo !$_is_admin ? '.$expr.' : $this->print_var('."\n";
         $code .= $expr;
         $code .= ", \n";
-        $code .= ' !$_is_admin ? null : ';
+        //$code .= ' !$_is_admin ? null : ';
         if ($token->get_prop('var_type') == 'visual') {
             $token_props = $token->get_all_props();
             $code .= " array(";
             
-            $tp_parts = array('"template_is_wrapper" => $this->is_wrapper() ? 1 : 0');
+            $tp_parts = array();
             
             foreach ($token_props as $tp => $tpval) {
                 $token_prop_entry = "'".$tp."' => ";
@@ -390,7 +406,8 @@ class fx_template_compiler {
                 $tp_parts[]= $token_prop_entry;
             }
             $code .= join(", ", $tp_parts);
-            $code .= ")";
+            $code .= ")\n";
+            $code .= " + \$_is_wrapper_meta"; 
         } else {
             $code .= $var_meta_defined ? '$var_meta' : $var_meta_expr;
         }
@@ -856,6 +873,9 @@ class fx_template_compiler {
         
         $code .= "\$template_dir = '".$template_dir."';\n";
         $code .= "\$_is_admin = \$this->is_admin();\n";
+        $code .= 'if ($_is_admin) {'."\n";
+        $code .= "\$_is_wrapper_meta = \$this->is_wrapper() ? array('template_is_wrapper' => 1) : array();\n";
+        $code .= "}\n";
         
         if (isset($tpl_props['_variants'])) {
             foreach ($tpl_props['_variants'] as &$v) {
@@ -1030,7 +1050,8 @@ class fx_template_compiler {
         // First of all, we need to know if braces are correctly balanced.
         // This is not trivial due to variable interpolation which
         // occurs in heredoc, backticked and double quoted strings
-        foreach (token_get_all('<?php '.$code) as $token) {
+        $all_tokens = token_get_all('<?php '.$code);
+        foreach ($all_tokens as $token) {
             if (is_array($token)) {
                 switch ($token[0])  {
                     case T_CURLY_OPEN:
@@ -1065,7 +1086,7 @@ class fx_template_compiler {
         // Display parse error messages and use output buffering to catch them
         $prev_ini_log_errors = @ini_set('log_errors', false);
         $prev_ini_display_errors = @ini_set('display_errors', true);
-        ob_start();
+        
 
         // If $braces is not zero, then we are sure that $code is broken.
         // We run it anyway in order to catch the error message and line number.
@@ -1076,7 +1097,9 @@ class fx_template_compiler {
         // $code could throw a "Cannot redeclare" fatal error.
 
         $braces || $code = "if(0){{$code}\n}";
-        if (false === eval($code)) {
+        $eval_res = eval($code);
+        ob_start();
+        if (false === $eval_res) {
             if ($braces) {
                 $braces = PHP_INT_MAX;
             } else {
@@ -1103,7 +1126,6 @@ class fx_template_compiler {
 
         @ini_set('display_errors', $prev_ini_display_errors);
         @ini_set('log_errors', $prev_ini_log_errors);
-
         return $result;
     }
 }

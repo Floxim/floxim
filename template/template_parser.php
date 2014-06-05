@@ -12,6 +12,7 @@ class fx_template_parser {
     public function parse($source) {
         $tokenizer = new fx_template_tokenizer();
         $tokens = $tokenizer->parse($source);
+        unset($tokenizer);
         $tree = $this->_make_tree($tokens);
         return $tree;
     }
