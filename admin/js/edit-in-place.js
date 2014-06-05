@@ -80,17 +80,24 @@ fx_edit_in_place.prototype.start = function(meta) {
 	var edit_in_place = this;
 	switch (meta.type) {
             case 'datetime':
-                var field = this.add_panel_field(
+                this.add_panel_field(
                     $.extend({}, meta, {
                         value: meta.real_value || this.node.text()
                     })
                 );
                 break;
             case 'image': case 'file': 
+                var field_meta = $.extend(
+                        {}, 
+                        meta, 
+                        {
+                            //value:'olo' //{path: meta.real_value || ''}
+                            real_value:{path: meta.real_value || ''}
+                        }
+                );
+                //console.log(meta, field_meta);
                 this.add_panel_field(
-                    $.extend({}, meta, {
-                        value:meta.real_value || ''
-                    })
+                    field_meta
                 ).on('fx_change_file', function() {
                     edit_in_place.save().stop();
                 });
@@ -148,6 +155,7 @@ fx_edit_in_place.prototype.start = function(meta) {
 };
 
 fx_edit_in_place.prototype.add_panel_field = function(meta) {
+    console.log(meta);
     if (meta.real_value) {
         meta.value = meta.real_value;
     }
@@ -227,12 +235,13 @@ fx_edit_in_place.prototype.get_vars = function() {
         }
         
         var value_changed = false;
-        if (new_value instanceof Array && old_value instanceof Array) {
+        if (pf_meta.type === 'image' || pf_meta.type === 'file') {
+            value_changed = new_value !== old_value.path;
+        } else if (new_value instanceof Array && old_value instanceof Array) {
             value_changed = new_value.join(',') !== old_value.join(',');
         } else {
             value_changed = new_value !== old_value;
         }
-        
         if (value_changed) {    
             vars.push({
                 'var': pf_meta,

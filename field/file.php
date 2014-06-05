@@ -8,7 +8,17 @@ class fx_field_file extends fx_field_baze {
         parent::get_js_field($content);
         $this->_js_field['type'] = 'file';
         $this->_js_field['field_id'] = $this['id'];
-
+        $val = $this->_js_field['value'];
+        $abs = fx::path()->to_abs($val);
+        if (fx::path()->exists($abs)) {
+            $this->_js_field['value'] = array(
+                'path' => $val,
+                'filename' => fx::path()->file_name($abs),
+                'size' => fx::files()->readable_size($abs)
+            );
+            //$this->_js_field['filename'] = fx::path()->file_name($abs);
+            //$this->_js_field['size'] = fx::files()->readable_size($abs);
+        }
         return $this->_js_field;
     }
 

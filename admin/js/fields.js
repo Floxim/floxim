@@ -127,8 +127,10 @@ function handle_upload(data, $block) {
         $('.preview img', $block).attr('src', data.path).show();
     } else {
         $('.file_info', $block)
-                .html('<a href="'+data.path+'">'+data.filename+'</a>')
-                .append('<br /><span class="file_size">'+data.size+'</span>');
+                .html(
+                    '<a href="'+data.path+'">'+data.filename+'</a>'+
+                    '<br /><span class="file_size">'+data.size+'</span>'
+                );
     }
     $('.killer', $block).show();
     $('.file_input', $block).hide();

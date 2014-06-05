@@ -762,6 +762,9 @@ class fx_system_files {
     public static $format_sizes = array('B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB');
 	
     public function readable_size($size, $round = 0) {
+        if (!is_numeric($size) && file_exists($size) && is_file($size))  {
+            $size = filesize($size);
+        }
         $sizes = self::$format_sizes;
         $total = count($sizes);
         for ($i=0; $size > 1024 && $i < $total; $i++) {
@@ -967,90 +970,6 @@ class fx_system_files {
         }
 
         return $res;
-    }
-
-    /**
-     *
-     * @param string $out_file - output file
-     * @param string $dir - the directory to be the root of the archive
-     * @return mixed 0 in case of success, or null on error
-     */
-    public function tgz_create($out_file, $dir) {
-        require_once fx::config()->INCLUDE_FOLDER.'tar.php';
-
-        if (!$out_file || !$dir) {
-            return null;
-        }
-
-        if ($out_file[0] != '/') {
-            $out_file = '/'.$out_file;
-        }
-        $local_out_file = $this->base_path.$out_file;
-
-        if ($dir[0] != '/') {
-            $dir = '/'.$dir;
-        }
-        $local_dir = $this->base_path.$dir;
-        @set_time_limit(0);
-
-        if ($this->tar_check()) {  // first, try using an external program tar
-            exec("cd '$local_dir'; tar  -zchf '$local_out_file' * 2>&1", $output, $err_code);
-            if (!$err_code && file_exists($local_out_file)) {
-                return 0;
-            }
-        }
-
-        // in case of failure themselves mudrym with tar-Ohm
-        if ($local_dir[strlen($local_dir) - 1] == '/') {  // hack for OS windows
-            $local_dir = substr($local_dir, 0, -1);
-        }
-
-        $tar_object = new Archive_Tar($local_out_file, "gz");
-        $tar_object->setErrorHandling(PEAR_ERROR_RETURN);
-        $res = $tar_object->createModify($local_dir, '', $local_dir);
-        return $res ? 0 : null;
-    }
-
-    /**
-     *
-     * @param string $tgz_file - file archive
-     * @param string $dir is the directory in which izveletiem data archive
-     * @return mixed 0 in case of success, or null on error
-     */
-    public function tgz_extract($tgz_file, $dir) {
-        require_once fx::config()->INCLUDE_FOLDER.'tar.php';
-
-        if (!$tgz_file || !$dir) {
-            return null;
-        }
-
-        if ($tgz_file[0] != '/') {
-            $tgz_file = '/'.$tgz_file;
-        }
-        $local_tgz_file = $this->base_path.$tgz_file;
-
-        if ($dir[0] != '/') {
-            $dir = '/'.$dir;
-        }
-        $local_dir = $this->base_path.$dir;
-
-        if (!is_dir($local_dir)) {  // if the directory does not exist, create it
-            $res = $this->mkdir($dir);
-        }
-
-        @set_time_limit(0);
-
-        if ($this->tar_check()) {  // first, try using an external program tar
-            exec("tar -zxf '$local_tgz_file' -C '$local_dir' 2>&1", $output, $err_code);
-            if (!$err_code || strpos($output[0], "time")) { // ignore "can't utime, permission denied"
-                return 0;
-            }
-        } else {
-            $tar_object = new Archive_Tar($local_tgz_file, "gz");
-            $tar_object->setErrorHandling(PEAR_ERROR_PRINT);
-            $res = $tar_object->extract($local_dir);
-            return $res ? 0 : null;
-        }
     }
 
     public function get_full_path($filename) {

@@ -237,43 +237,9 @@
         background:#FFF;
         /*height: 28px;*/
     }
-
-    .fx_image_field {
-        img {
-            height:50px;
-            margin-right:10px;
-            float:left;
-        }
-        .file_info {
-            margin-right:10px;
-            float:left;
-        }
-        .fx_admin_button_text, .remote_file_block {
-            margin-right:10px;
-        }
-        .remote_file_block {
-            float:left;
-            font-size:12px;
-            input.fx_input {
-                width:80px;
-                display:none;
-            }
-            &.active {
-                a {
-                    display:none;
-                }
-                input.fx_input {
-                    display:inline;
-                }
-            }
-            a {
-                cursor:pointer;
-            }
-            a, span {
-                line-height:30px;
-                vertical-align:middle;
-            }
-        }
+    .fx_image_field img {
+        max-height:50px;
+        max-width:100px;
     }
 }
 
@@ -361,10 +327,45 @@
     background: #FFF;
 }
 
-.fx_overlay .fx_image_field img {
-    max-height:100px;
-    max-width:150px;
+.fx_image_field {
+    img {
+        max-height:100px;
+        max-width:150px;
+        margin-right:10px;
+        float:left;
+    }
+    .file_info {
+        margin-right:10px;
+        float:left;
+    }
+    .fx_admin_button_text, .remote_file_block {
+        margin-right:10px;
+    }
+    .remote_file_block {
+        float:left;
+        font-size:12px;
+        input.fx_input {
+            width:80px !important;
+            display:none !important;
+        }
+        &.active {
+            a {
+                display:none;
+            }
+            input.fx_input {
+                display:inline !important;
+            }
+        }
+        a {
+            cursor:pointer;
+        }
+        a, span {
+            line-height:30px;
+            vertical-align:middle;
+        }
+    }
 }
+
 
 #fx_admin_fields .fx_image_field img {
     max-height:34px;

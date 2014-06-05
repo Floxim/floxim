@@ -1,15 +1,23 @@
 <!--[input ? (_c.type == 'image' || _c.type == 'file')]-->
-<div class="fx_image_field">
-    <input type="hidden" <?=$t.field_id_name(_c)?> class="real_value" value="<?=_c.value?>" />
+<?
+var c_value = _c.value.path;
+?>
+<div class="fx_image_field" data-field_type="<?=_c.type?>">
+    <input type="hidden" <?=$t.field_id_name(_c)?> class="real_value" value="<?=c_value?>" />
     <div class="preview">
         <? if (_c.type == 'image') {?>
-            <img <?=(_c.value ? ' src="'+_c.value+'"' : ' style="display:none;"')?> />
+            <img <?=(c_value ? ' src="'+c_value+'"' : ' style="display:none;"')?> />
         <? } else {?>
-            <span class="file_info"></span>
+            <span class="file_info">
+            <? if (c_value) {?>
+                <a href="<?=_c.value.path?>"><?=_c.value.filename?></a>
+                <br /><span class="file_size"><?=_c.value.size?></span>
+            <? } ?>
+            </span>
         <?}?>
         <a class="uploader fx_admin_button fx_admin_button_text">
             <span>
-                <?= _c.value ? $fx.lang('Change') : $fx.lang('Upload') ?>
+                <?= c_value ? $fx.lang('Change') : $fx.lang('Upload') ?>
             </span>
         </a>
         <span class="remote_file_block">
@@ -17,7 +25,7 @@
             <a class="paste_link"><?=$fx.lang('paste URL')?></a>
             <input class="remote_file_location fx_input" placeholder="<?=$fx.lang('paste URL')?>" />
         </span>
-        <a class="killer fx_admin_button fx_admin_button_text" style="display:<?=(_c.value ? 'block' : 'none')?>"><span>delete</span></a>
+        <a class="killer fx_admin_button fx_admin_button_text" style="display:<?=(c_value ? 'block' : 'none')?>"><span>delete</span></a>
     </div>
     <div class="file_input" style="display:<?=(_c.path ? 'none' : 'block')?>">
     	<input type="file" class="file" name="file" id="image_file_<?=_c.name.replace(/[^a-z0-9]+/g, '_')?>" />
