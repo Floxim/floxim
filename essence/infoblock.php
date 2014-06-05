@@ -451,4 +451,42 @@ class fx_infoblock extends fx_essence {
         }
         return $html_result;
     }
+
+	/**
+	 * Return all pages ID where presents this infoblock
+	 *
+	 * @return array
+	 */
+	public function get_pages() {
+		list($page_id, $scope_pages, $scope_page_type) = array(
+			$this['page_id'],
+			$this['scope']['pages'],
+			$this['scope']['page_type']
+		);
+
+		$result_pages=array();
+
+		if ($scope_pages=='this') {
+			/**
+			 * Only current page
+			 */
+			$result_pages[]=$page_id;
+		} elseif (in_array($scope_pages,array('descendants','children'))) {
+			/**
+			 * All descendants
+			 */
+            $finder=fx::data('content')->descendants_of($page_id);
+            if ($scope_page_type) {
+                $finder->where('type',$scope_page_type);
+            }
+            $result_pages=array_merge($result_pages,$finder->all()->get_values('id'));
+            /**
+             * With self page
+             */
+            if ($scope_pages=='descendants') {
+                $result_pages[]=$page_id;
+            }
+		}
+		return array_unique($result_pages);
+	}
 }
