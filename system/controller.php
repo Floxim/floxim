@@ -277,6 +277,20 @@ class fx_controller {
                 $settings[$param]['value'] = $val;
             }
         }
+        // Mega hack - add allow values for select parent page
+        if (isset($settings['conditions']['tpl'][0]['values']['parent_id'])) {
+            /**
+             * Get all infoblocks
+             */
+            $infoblocks=$this->_get_infoblocks_by_content_type();
+            /**
+             * Get all pages
+             */
+            $pages=$this->_get_pages_by_infoblocks($infoblocks);
+            $values=$pages->get_values(array('id','name'));
+
+            $settings['conditions']['tpl'][0]['values']['parent_id']['values']=$values;
+        }
         if (!isset($params['force'])) {
             return $settings;
         }
@@ -483,4 +497,44 @@ class fx_controller {
             }
         }
     }
+
+    /**
+     * Return all infoblocks for content type
+     * TODO: method get_content_infoblocks not use site_id filter
+     *
+     * @param string|null $content_type By default use current content type
+     *
+     * @return array
+     */
+    protected function _get_infoblocks_by_content_type($content_type=null) {
+        if (is_null($content_type)) {
+            $content_type=$this->get_content_type();
+        }
+        return fx::data('infoblock')->get_content_infoblocks($content_type);
+    }
+
+    protected function _get_pages_by_infoblocks($infoblocks) {
+        $infoblocks=$this->_get_infoblocks_by_content_type();
+        $pages_id=array();
+        foreach($infoblocks as $infoblock) {
+            if (isset($infoblock['params']['parent_type']) and $infoblock['params']['parent_type']=='current_page_id') {
+                // Retrieve all pages
+                $pages_id=array_merge($pages_id,$infoblock->get_pages());
+            } else {
+                // Retrieve self page
+                $pages_id[]=$infoblock['page_id'];
+            }
+        }
+        $pages_id=array_unique($pages_id);
+        if (!$pages_id) {
+            return array();
+        }
+        /**
+         * Retrieve pages object
+         * TODO: use content_page?
+         */
+        $pages=fx::data('content_page')->where('id',$pages_id,'in')->all();
+        return $pages;
+    }
+
 }

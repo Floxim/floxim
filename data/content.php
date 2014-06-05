@@ -358,4 +358,26 @@ class fx_data_content extends fx_data {
         }
         call_user_func_array(array($this, 'where_or'), $name_conds);
     }
+
+    /**
+     * Add filter to get subtree for one ore more parents
+     * @param mixed $parent_ids
+     * @param boolean $add_parents - include parents to subtree
+     * @return fx_data_content
+     */
+    public function descendants_of($parent_ids, $include_parents = false) {
+        if (is_numeric($parent_ids)) {
+            $parent_ids = array($parent_ids);
+        }
+        $parents = fx::data('content', $parent_ids);
+        $conds = array();
+        foreach ($parents as $p) {
+            $conds []= array('materialized_path', $p['materialized_path'].$p['id'].'.%', 'like');
+        }
+        if ($include_parents) {
+            $conds []= array('id', $parent_ids, 'IN');
+        }
+        $this->where($conds, null, 'OR');
+        return $this;
+    }
 }

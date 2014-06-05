@@ -6,44 +6,23 @@ class fx_data_content_page extends fx_data_content {
         $tree = $this->make_tree($data, $children_key);
         return $tree;
     }
-    
-    /**
-     * Add filter to get subtree for one ore more parents
-     * @param mixed $parent_ids
-     * @param boolean $add_parents - include parents to subtree
-     * @return fx_data_content_page 
-     */
-    public function descendants_of($parent_ids, $include_parents = false) {
-        if (is_numeric($parent_ids)) {
-            $parent_ids = array($parent_ids);
-        }
-        $parents = fx::data('content_page', $parent_ids);
-        $conds = array();
-        foreach ($parents as $p) {
-            $conds []= array('materialized_path', $p['materialized_path'].$p['id'].'.%', 'like');
-        }
-        if ($include_parents) {
-            $conds []= array('id', $parent_ids, 'IN');
-        }
-        $this->where($conds, null, 'OR');
-    }
-    
+
     public function get_by_url($url, $site_id = null) {
         $url_variants = array($url);
         if ($site_id === null){
             $site_id = fx::env('site')->get('id');
         }
         $url_with_no_params = preg_replace("~\?.+$~", '', $url);
-        
-        $url_variants []= 
-            preg_match("~/$~", $url_with_no_params) ? 
-            preg_replace("~/$~", '', $url_with_no_params) : 
+
+        $url_variants []=
+            preg_match("~/$~", $url_with_no_params) ?
+            preg_replace("~/$~", '', $url_with_no_params) :
             $url_with_no_params . '/';
-        
+
         if ($url_with_no_params != $url) {
             $url_variants []= $url_with_no_params;
         }
-        
+
         $page = fx::data('content_page')->
             where('url', $url_variants)->
             where('site_id', $site_id)->
