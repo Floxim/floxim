@@ -128,4 +128,21 @@ class fx_controller_component_section extends fx_controller_component_page {
         }
         return array('items' => $pages);
     }
+
+    /**
+     * Return allow parent pages for current component
+     *
+     * @return fx_collection
+     */
+    protected function _get_allow_parent_pages() {
+        /**
+         * Retrieve pages object
+         */
+        $pages=fx::data('content_section')->where('site_id',fx::env('site_id'))->all();
+        $additional_parent_ids=array_diff($pages->get_values('parent_id'),$pages->get_values('id'));
+        $additional_parent_ids=array_unique($additional_parent_ids);
+        $pages_add=fx::data('content')->where('id',$additional_parent_ids)->all();
+
+        return $pages_add->concat($pages);
+    }
 }

@@ -211,6 +211,12 @@ class fx_controller_component extends fx_controller_frontoffice {
             $ib_field_params['conditions']['id'] = array($cib_id, '!=');
         }
         $fields['conditions']['tpl'][0]['values']['infoblock_id'] = $ib_field_params;
+        // Add allow values for select parent page
+        if (isset($fields['conditions']['tpl'][0]['values']['parent_id'])) {
+            $pages=$this->_get_allow_parent_pages();
+            $values=$pages->get_values(array('id','name'));
+            $fields['conditions']['tpl'][0]['values']['parent_id']['values']=$values;
+        }
         return $fields;
     }  
     
@@ -804,5 +810,15 @@ class fx_controller_component extends fx_controller_frontoffice {
             }
         }
         return $actions;
+    }
+
+    /**
+     * Return allow parent pages for current component
+     * This method need override for controller specific component
+     *
+     * @return fx_collection
+     */
+    protected function _get_allow_parent_pages() {
+        return fx::collection();
     }
 }

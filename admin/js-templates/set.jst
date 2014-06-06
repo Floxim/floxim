@@ -372,7 +372,7 @@ function set_control (meta, selector) {
             $('.input_cell_1', html).html(select);
             //console.log('lsm', meta);
             if (meta.values && meta.values.length) {
-            	var select_values={};
+            	var select_values={ '' : '' };
             	$.each(meta.values,function(k,v){
             		select_values[v.id]=v.name
             	});
