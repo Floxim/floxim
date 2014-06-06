@@ -94,4 +94,34 @@ class fx_controller_component_publication extends fx_controller_component_page {
         $res = parent::do_list_infoblock();
         return $res;
     }
+
+    /**
+     * Return allow parent pages for current component
+     *
+     * @return fx_collection
+     */
+    protected function _get_allow_parent_pages() {
+        // TODO: method get_content_infoblocks not use site_id filter
+        $infoblocks=fx::data('infoblock')->get_content_infoblocks($this->get_content_type());
+
+        $pages_id=array();
+        foreach($infoblocks as $infoblock) {
+            if (isset($infoblock['params']['parent_type']) and $infoblock['params']['parent_type']=='current_page_id') {
+                // Retrieve all pages
+                $pages_id=array_merge($pages_id,$infoblock->get_pages());
+            } else {
+                // Retrieve self page
+                $pages_id[]=$infoblock['page_id'];
+            }
+        }
+        $pages_id=array_unique($pages_id);
+        if (!$pages_id) {
+            return fx::collection();
+        }
+        /**
+         * Retrieve pages object
+         */
+        $pages=fx::data('content_page')->where('id',$pages_id)->all();
+        return $pages;
+    }
 }
