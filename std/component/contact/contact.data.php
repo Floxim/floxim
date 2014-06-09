@@ -1,7 +1,7 @@
 <?
 class fx_data_content_contact extends fx_data_content {
 
-    public function quicksearch($term = null, $limit = null) {
+    public function livesearch($term = null, $limit = null) {
         if (!isset($term)) {
             return;
         }

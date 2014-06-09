@@ -22,20 +22,20 @@ class fx_data {
     const HAS_ONE = 2;
     const MANY_MANY = 3;
     
-    protected function _quicksearch_apply_terms($terms) {
+    protected function _livesearch_apply_terms($terms) {
         foreach ($terms as $tp) {
             $this->where('name', '%'.$tp.'%', 'LIKE');
         }
     }
 
-    public function quicksearch($term = null, $limit = null) {
+    public function livesearch($term = null, $limit = null) {
         if (!isset($term)) {
             return;
         }
         $term = trim($term);
         if (!empty($term)) {
             $terms = explode(" ", $term);
-            $this->_quicksearch_apply_terms($terms);
+            $this->_livesearch_apply_terms($terms);
         }
         if ($limit) {
             $this->limit($limit);
@@ -49,8 +49,8 @@ class fx_data {
         $res = array('meta' => array(), 'results' => array(), 'total'=>$count);
         
         $props = array('name', 'id');
-        if (isset($this->_quicksearch_props) && is_array($this->_quicksearch_props)) {
-            $props = array_merge($props, $this->_quicksearch_props);
+        if (isset($this->_livesearch_props) && is_array($this->_livesearch_props)) {
+            $props = array_merge($props, $this->_livesearch_props);
         }
         foreach ($items as $i) {
             if (!$i['name']) {
