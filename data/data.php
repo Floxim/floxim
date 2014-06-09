@@ -28,7 +28,7 @@ class fx_data {
         }
     }
 
-    public function quicksearch($term = null) {
+    public function quicksearch($term = null, $limit = null) {
         if (!isset($term)) {
             return;
         }
@@ -37,11 +37,16 @@ class fx_data {
             $terms = explode(" ", $term);
             $this->_quicksearch_apply_terms($terms);
         }
+        if ($limit) {
+            $this->limit($limit);
+        }
+        $this->calc_found_rows(true);
         $items = $this->all();
         if (!$items) {
             return;
         }
-        $res = array('meta' => array(), 'results' => array());
+        $count = $this->get_found_rows();
+        $res = array('meta' => array(), 'results' => array(), 'total'=>$count);
         
         $props = array('name', 'id');
         if (isset($this->_quicksearch_props) && is_array($this->_quicksearch_props)) {

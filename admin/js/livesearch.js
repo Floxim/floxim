@@ -7,9 +7,11 @@ window.fx_livesearch = function (node) {
     var data_params = n.data('params');
     if (data_params) {
         this.datatype = data_params.content_type;
+        this.limit = data_params.limit;
         this.conditions = data_params.conditions;
     } else {
         this.datatype = n.data('content_type');
+        this.limit = n.data('limit');
     }
     this.inputNameTpl = n.data('prototype_name');
     
@@ -38,6 +40,7 @@ window.fx_livesearch = function (node) {
                 essence:'content',
                 action:'livesearch',
                 content_type:this.datatype,
+				limit:this.limit,
                 term:'%s',
                 fx_admin:'true'
             }
