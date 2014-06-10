@@ -49,7 +49,7 @@ window.fx_livesearch = function (node) {
         }
         var vals = this.getValues();
         if (vals.length > 0) {
-            params.data.skip_ids = vals;
+            params.skip_ids = vals;
         }
         return params;
     };
@@ -384,7 +384,8 @@ window.fx_suggest = function(params) {
             url: null,
             data: {},
             count_show: 20,
-            limit: null
+            limit: null,
+            skip_ids: []
         }
     };
 
@@ -530,6 +531,10 @@ window.fx_suggest = function(params) {
 
         var resCache=this.getCacheData(this.requestParams,term);
         if (false!==resCache) {
+            // skip ids
+            resCache.results=this.skipByIds(resCache.results,this.requestParams.skip_ids);
+            // show limit
+            resCache.results=this.sliceShowLimit(resCache.results,this.requestParams.count_show);
             var resHtml = Suggest.renderResults(resCache);
             if (resHtml) {
                 Suggest.showBox();
@@ -546,6 +551,10 @@ window.fx_suggest = function(params) {
             if (term != Suggest.getTerm()) {
                 return;
             }
+            resCache=$.extend({},res); // copy for cache
+            // skip ids
+            res.results=$this.skipByIds(res.results,$this.requestParams.skip_ids);
+            // show limit
             res.results=$this.sliceShowLimit(res.results,$this.requestParams.count_show);
             var resHtml = Suggest.renderResults(res);
             if (resHtml) {
@@ -554,10 +563,29 @@ window.fx_suggest = function(params) {
             } else {
                 Suggest.hideBox(false);
             }
-            $this.setCacheData($this.requestParams,term,res);
+            $this.setCacheData($this.requestParams,term,resCache);
         };
         
         $.ajax(request_params);
+    };
+
+    this.skipByIds = function(results,ids) {
+        var resReturn=[];
+        var $in_array=function(needle, haystack){
+            for (key in haystack) {
+                if (haystack[key] == needle) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        $.each(results,function(k,item){
+            if (item.id && $in_array.call(this,item.id,ids)) {
+                return true;
+            }
+            resReturn.push(item);
+        });
+        return resReturn;
     };
 
     this.sliceShowLimit = function(results,count_show) {
@@ -565,7 +593,7 @@ window.fx_suggest = function(params) {
     };
 
     this.setCacheData = function(requestParams,term,res) {
-        var cache_key_data = $.param(requestParams),
+        var cache_key_data = $.param($.extend({},requestParams,{ skip_ids: []})), // clear skip ids
             cache_key_term = term.toLowerCase(),
             item={};
 
@@ -574,7 +602,7 @@ window.fx_suggest = function(params) {
     };
 
     this.getCacheData = function(requestParams,term) {
-        var cache_key_data = $.param(requestParams),
+        var cache_key_data = $.param($.extend({},requestParams,{ skip_ids: []})), // clear skip ids
             cache_key_term = term.toLowerCase(),
             $this=this,
             resReturn=null;
@@ -589,6 +617,7 @@ window.fx_suggest = function(params) {
                         if (res.meta.total<=requestParams.limit) {
                             // run search from json
                             resReturn=$this.searchFromJson(res.results,cache_key_term);
+                            resReturn.results=$this.skipByIds(resReturn.results,requestParams.skip_ids);
                             resReturn.results=$this.sliceShowLimit(resReturn.results,requestParams.count_show);
                             return false;
                         }
