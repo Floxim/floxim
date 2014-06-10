@@ -529,8 +529,8 @@ window.fx_suggest = function(params) {
         cache_key_data = url+$.param(data);
         request_params.data = data;
 
-        var resCache;
-        if (false!==(resCache=this.getCacheData(this.requestParams,term))) {
+        var resCache=this.getCacheData(this.requestParams,term);
+        if (false!==resCache) {
             var resHtml = Suggest.renderResults(resCache);
             if (resHtml) {
                 Suggest.showBox();
@@ -561,22 +561,55 @@ window.fx_suggest = function(params) {
     };
 
     this.setCacheData = function(requestParams,term,res) {
-        var cache_key_data = $.param(requestParams);
-        var cache_key_term = term;
+        var cache_key_data = $.param(requestParams),
+            cache_key_term = term.toLowerCase(),
+            item={};
 
-        var item={};
         item[cache_key_term]=res;
         fx_suggest.cache[cache_key_data]=$.extend({},fx_suggest.cache[cache_key_data] || {},item);
     };
 
     this.getCacheData = function(requestParams,term) {
-        var cache_key_data = $.param(requestParams);
-        var cache_key_term = term;
+        var cache_key_data = $.param(requestParams),
+            cache_key_term = term.toLowerCase(),
+            $this=this,
+            resReturn=null;
 
-        if (fx_suggest.cache[cache_key_data] && (typeof fx_suggest.cache[cache_key_data][cache_key_term] != 'undefined')) {
-            return fx_suggest.cache[cache_key_data][cache_key_term];
+        if (fx_suggest.cache[cache_key_data]) {
+            if (typeof fx_suggest.cache[cache_key_data][cache_key_term] != 'undefined') {
+                return fx_suggest.cache[cache_key_data][cache_key_term];
+            } else {
+                // search for first charters
+                $.each(fx_suggest.cache[cache_key_data],function(termCache,res){
+                    if (cache_key_term.indexOf(termCache)===0 && res.meta && res.meta.total && res.results) {
+                        if (res.meta.total<=requestParams.limit) {
+                            // run search from json
+                            resReturn=$this.searchFromJson(res.results,cache_key_term);
+                            return false;
+                        }
+                    }
+                });
+                if (resReturn) {
+                    return resReturn;
+                }
+            }
         }
         return false;
+    };
+
+    this.searchFromJson = function(jsonResults,term) {
+        var results=[];
+        $.each(jsonResults,function(k,item){
+            if (item.name && item.name.toLowerCase().indexOf(term)!=-1) {
+                results.push(item);
+            }
+        });
+        return {
+            meta: {
+                total: results.length
+            },
+            results: results
+        };
     };
     
     this.renderResults = function(res) {
