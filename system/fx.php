@@ -570,7 +570,20 @@ class fx {
         if ($files === false) {
             $files = new fx_system_files();
         }
-        return $files;
+        
+        if (func_num_args() == 0) {
+            return $files;
+        }
+        $args = func_get_args();
+        switch ($args[1]) {
+            case 'size':
+                $path = fx::path()->to_abs($args[0]);
+                return $files->readable_size($path);
+            case 'name':
+                return fx::path()->file_name($args[0]);
+            case 'type':
+                return trim(fx::path()->file_extension($args[0]), '.');
+        }
     }
     
     public static function util() {
