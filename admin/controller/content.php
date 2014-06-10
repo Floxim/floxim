@@ -178,7 +178,7 @@ class fx_controller_admin_content extends fx_controller_admin {
                 }
             }
         }
-        $res = $finder->livesearch($_POST['term'],isset($_POST['limit']) ? $_POST['limit'] : 20);
+        $res = $finder->livesearch($_POST['term'],(isset($_POST['limit']) && $_POST['limit']) ? $_POST['limit'] : 20);
         fx::env()->set('complete_ok', true);
         echo json_encode($res);
         die();

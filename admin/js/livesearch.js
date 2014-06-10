@@ -7,11 +7,11 @@ window.fx_livesearch = function (node) {
     var data_params = n.data('params');
     if (data_params) {
         this.datatype = data_params.content_type;
-        this.limit = data_params.limit;
+        this.count_show = data_params.count_show;
         this.conditions = data_params.conditions;
     } else {
         this.datatype = n.data('content_type');
-        this.limit = n.data('limit');
+        this.count_show = n.data('count_show');
     }
     this.inputNameTpl = n.data('prototype_name');
     
@@ -40,9 +40,9 @@ window.fx_livesearch = function (node) {
                 essence:'content',
                 action:'livesearch',
                 content_type:this.datatype,
-				limit:this.limit,
                 fx_admin:'true'
-            }
+            },
+			count_show:this.count_show
         };
         if (this.conditions) {
             params.data.conditions = this.conditions;
@@ -106,6 +106,7 @@ window.fx_livesearch = function (node) {
         var params = this.getSuggestParams();
 		params.data.ids = ids;
 		params.data.term = null;
+		params.data.limit = null;
         $.ajax({
             url:params.url,
             type:'post',
@@ -188,7 +189,7 @@ window.fx_livesearch = function (node) {
         if (!this.isMultiple) {
             this.disableAdd();
         } else {
-            this.Suggest.requestParams = this.getSuggestParams();
+            this.Suggest.setRequestParams(this.getSuggestParams());
         }
         if (!this.addSilent) {
             var e = $.Event('livesearch_value_added');
@@ -227,7 +228,7 @@ window.fx_livesearch = function (node) {
             this.lastRemovedValue = n.find('input').val();
             n.remove();
             this.enableAdd();
-            this.Suggest.requestParams = this.getSuggestParams();
+            this.Suggest.setRequestParams(this.getSuggestParams());
             this.n.trigger('change');
     };
     
@@ -377,8 +378,29 @@ window.fx_livesearch = function (node) {
 };
 
 window.fx_suggest = function(params) {
+    // default
+    this.defaults={
+        requestParams: {
+            url: null,
+            data: {},
+            count_show: 20,
+            limit: null
+        }
+    };
+
+    /**
+     * Set request params use default settings
+     *
+     * @param params
+     */
+    this.setRequestParams = function(params) {
+        this.requestParams = $.extend({}, this.defaults.requestParams, params);
+        // calc limit
+        this.requestParams.limit=this.requestParams.count_show*2;
+    };
+
     this.input = params.input;
-    this.requestParams = params.requestParams;
+    this.requestParams = this.setRequestParams(params.requestParams);
     this.onSelect = params.onSelect;
     this.minTermLength = typeof params.minTermLength == 'undefined' ? 1 : params.minTermLength;
     this.resultType = params.resultType || 'html';
@@ -452,7 +474,7 @@ window.fx_suggest = function(params) {
             Suggest.createBox();
         }, 50);
     };
-    
+
     this.getTerm = function() {
         return this.input.val().replace(/^\s|\s$/, '');
     };
@@ -490,19 +512,13 @@ window.fx_suggest = function(params) {
 			type: 'POST'
         };
         var url, cache_key_data;
-        if (typeof this.requestParams == 'string') {
-            url = this.requestParams;
-			cache_key_data = this.requestParams + term;
-            request_params.url = url;
-			request_params.data={ term: term };
-        } else {
-            url = this.requestParams.url;
-            request_params.url = url;
-            var data = this.requestParams.data;
-			data.term = term;
-            cache_key_data = url+$.param(data);
-            request_params.data = data;
-        }
+        url = this.requestParams.url;
+        request_params.url = url;
+        var data = this.requestParams.data;
+        data.term = term;
+        data.limit = this.requestParams.limit;
+        cache_key_data = url+$.param(data);
+        request_params.data = data;
         
         if (typeof fx_suggest.cache[cache_key_data] != 'undefined') {
             var res = fx_suggest.cache[cache_key_data];
