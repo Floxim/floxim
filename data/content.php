@@ -345,10 +345,10 @@ class fx_data_content extends fx_data {
         return $content;
     }
     
-    protected function _quicksearch_apply_terms($terms) {
+    protected function _livesearch_apply_terms($terms) {
         $table = $this->get_col_table('name');
         if ($table) {
-            parent::_quicksearch_apply_terms($terms);
+            parent::_livesearch_apply_terms($terms);
             return;
         }
         
