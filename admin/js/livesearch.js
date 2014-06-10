@@ -41,7 +41,6 @@ window.fx_livesearch = function (node) {
                 action:'livesearch',
                 content_type:this.datatype,
 				limit:this.limit,
-                term:'%s',
                 fx_admin:'true'
             }
         };
@@ -487,30 +486,26 @@ window.fx_suggest = function(params) {
     
     this.getResults = function(term) {
         var request_params = {
-            dataType:Suggest.resultType
+            dataType:Suggest.resultType,
+			type: 'POST'
         };
-        var url, url_cache_key;
+        var url, cache_key_data;
         if (typeof this.url == 'string') {
-            url = this.url.replace(/\%s/, encodeURIComponent(term));
-            url_cache_key = url;
+            url = this.url;
+			cache_key_data = this.url + term;
             request_params.url = url;
+			request_params.data={ term: term };
         } else {
             url = this.url.url;
-            url = url.replace(/\%s/, encodeURIComponent(term));
             request_params.url = url;
             var data = this.url.data;
-            if (typeof data != 'string') {
-                data = $.param(data);
-                data = data.replace(/\%25/, '%');
-            }
-            data = data.replace(/\%s/, encodeURIComponent(term));
-            url_cache_key = url+data;
-            request_params.type = 'POST';
+			data.term = term;
+            cache_key_data = url+$.param(data);
             request_params.data = data;
         }
         
-        if (typeof fx_suggest.cache[url_cache_key] != 'undefined') {
-            var res = fx_suggest.cache[url_cache_key];
+        if (typeof fx_suggest.cache[cache_key_data] != 'undefined') {
+            var res = fx_suggest.cache[cache_key_data];
             if (res) {
                 Suggest.showBox();
                 Suggest.box.html(res);
@@ -536,7 +531,7 @@ window.fx_suggest = function(params) {
             } else {
                 Suggest.hideBox(false);
             }
-            fx_suggest.cache[url_cache_key] = res;
+            fx_suggest.cache[cache_key_data] = res;
         };
         
         $.ajax(request_params);
