@@ -520,13 +520,12 @@ window.fx_suggest = function(params) {
             dataType:Suggest.resultType,
 			type: 'POST'
         };
-        var url, cache_key_data;
+        var url;
         url = this.requestParams.url;
         request_params.url = url;
         var data = $.extend({},this.requestParams.data);
         data.term = term;
         data.limit = this.requestParams.limit;
-        cache_key_data = url+$.param(data);
         request_params.data = data;
 
         var resCache=this.getCacheData(this.requestParams,term);
@@ -547,6 +546,7 @@ window.fx_suggest = function(params) {
             if (term != Suggest.getTerm()) {
                 return;
             }
+            res.results=$this.sliceShowLimit(res.results,$this.requestParams.count_show);
             var resHtml = Suggest.renderResults(res);
             if (resHtml) {
                 Suggest.showBox();
@@ -558,6 +558,10 @@ window.fx_suggest = function(params) {
         };
         
         $.ajax(request_params);
+    };
+
+    this.sliceShowLimit = function(results,count_show) {
+        return results.slice(0,count_show);
     };
 
     this.setCacheData = function(requestParams,term,res) {
@@ -585,6 +589,7 @@ window.fx_suggest = function(params) {
                         if (res.meta.total<=requestParams.limit) {
                             // run search from json
                             resReturn=$this.searchFromJson(res.results,cache_key_term);
+                            resReturn.results=$this.sliceShowLimit(resReturn.results,requestParams.count_show);
                             return false;
                         }
                     }
