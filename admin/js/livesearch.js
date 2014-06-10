@@ -407,6 +407,15 @@ window.fx_suggest = function(params) {
     this.offsetNode = params.offsetNode || this.input;
     this.boxVisible = false;
     if (!fx_suggest.cache) {
+        /**
+         * Structure cache: {
+         *  'cache_key_data': {
+         *      'term': res
+         *  }
+         * }
+         *
+         * @type {{}}
+         */
         fx_suggest.cache = {};
     }
     
@@ -514,15 +523,15 @@ window.fx_suggest = function(params) {
         var url, cache_key_data;
         url = this.requestParams.url;
         request_params.url = url;
-        var data = this.requestParams.data;
+        var data = $.extend({},this.requestParams.data);
         data.term = term;
         data.limit = this.requestParams.limit;
         cache_key_data = url+$.param(data);
         request_params.data = data;
 
-        if (typeof fx_suggest.cache[cache_key_data] != 'undefined') {
-            var res = fx_suggest.cache[cache_key_data];
-            var resHtml = Suggest.renderResults(res);
+        var resCache;
+        if (false!==(resCache=this.getCacheData(this.requestParams,term))) {
+            var resHtml = Suggest.renderResults(resCache);
             if (resHtml) {
                 Suggest.showBox();
                 Suggest.box.html(resHtml);
@@ -532,7 +541,7 @@ window.fx_suggest = function(params) {
             return;
         }
         
-        
+        var $this=this;
         request_params.success = function(res) {
             // query has changed while they were loading Majesty
             if (term != Suggest.getTerm()) {
@@ -545,10 +554,29 @@ window.fx_suggest = function(params) {
             } else {
                 Suggest.hideBox(false);
             }
-            fx_suggest.cache[cache_key_data] = res;
+            $this.setCacheData($this.requestParams,term,res);
         };
         
         $.ajax(request_params);
+    };
+
+    this.setCacheData = function(requestParams,term,res) {
+        var cache_key_data = $.param(requestParams);
+        var cache_key_term = term;
+
+        var item={};
+        item[cache_key_term]=res;
+        fx_suggest.cache[cache_key_data]=$.extend({},fx_suggest.cache[cache_key_data] || {},item);
+    };
+
+    this.getCacheData = function(requestParams,term) {
+        var cache_key_data = $.param(requestParams);
+        var cache_key_term = term;
+
+        if (fx_suggest.cache[cache_key_data] && (typeof fx_suggest.cache[cache_key_data][cache_key_term] != 'undefined')) {
+            return fx_suggest.cache[cache_key_data][cache_key_term];
+        }
+        return false;
     };
     
     this.renderResults = function(res) {
