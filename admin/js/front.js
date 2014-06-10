@@ -654,7 +654,8 @@ fx_front.prototype.select_item = function(node) {
     
     var scrolling = false;
     setTimeout(function() {
-        if (!scrolling) {
+        console.log($node, $node.attr('class'));
+        if (!scrolling && !$node.hasClass('fx_edit_in_place')) {
             $fx.front.scrollTo($node, true, function() {
                 scrolling = false;
             });
