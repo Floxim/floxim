@@ -519,12 +519,13 @@ window.fx_suggest = function(params) {
         data.limit = this.requestParams.limit;
         cache_key_data = url+$.param(data);
         request_params.data = data;
-        
+
         if (typeof fx_suggest.cache[cache_key_data] != 'undefined') {
             var res = fx_suggest.cache[cache_key_data];
-            if (res) {
+            var resHtml = Suggest.renderResults(res);
+            if (resHtml) {
                 Suggest.showBox();
-                Suggest.box.html(res);
+                Suggest.box.html(resHtml);
             } else {
                 Suggest.hideBox(false);
             }
@@ -537,13 +538,10 @@ window.fx_suggest = function(params) {
             if (term != Suggest.getTerm()) {
                 return;
             }
-            //Suggest.showBox();
-            if (Suggest.resultType != 'html') {
-                res = Suggest.renderResults(res);
-            }
-            if (res) {
+            var resHtml = Suggest.renderResults(res);
+            if (resHtml) {
                 Suggest.showBox();
-                Suggest.box.html(res);
+                Suggest.box.html(resHtml);
             } else {
                 Suggest.hideBox(false);
             }
@@ -554,6 +552,9 @@ window.fx_suggest = function(params) {
     };
     
     this.renderResults = function(res) {
+        if (res.results_html) {
+            return res.results_html;
+        }
         var html = '';
         $.each(res.results, function(index, item) {
             html += '<div class="search_item" ';

@@ -46,7 +46,7 @@ class fx_data {
             return;
         }
         $count = $this->get_found_rows();
-        $res = array('meta' => array(), 'results' => array(), 'total'=>$count);
+        $res = array('meta' => array('total'=>$count), 'results' => array());
         
         $props = array('name', 'id');
         if (isset($this->_livesearch_props) && is_array($this->_livesearch_props)) {
