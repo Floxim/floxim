@@ -7,11 +7,7 @@ $sort_fields = $this
             ->get_values(fx::is_admin() ? 'name' : 'id', 'keyword');
 
 $component = $this->get_component();
-
-$content_exists = fx::data('content_'.$component['keyword'])
-                            ->where('site_id', fx::env('site')->get('id'))
-                            ->one();
-
+$content_exists = fx::content($component['keyword'])->content_exists();
 $is_new_infoblock = !$this->get_param('infoblock_id');
 
 return array(
@@ -83,13 +79,20 @@ return array(
         '*list_filtered' => array(
             'name' => $component['name'].' '.fx::alang('by filter', 'controller_component'),
             'icon_extra' => 'fil',
-            'settings' => fx::is_admin() ? $this->_config_conditions() : array()
+            //'settings' => fx::is_admin() ? $this->_config_conditions() : array()
+            'settings' => array(
+                'conditions' => function($ctr) {
+                    return $ctr->get_conditions_field();
+                }
+            )
         ),
         '*list_selected' => array(
             'name' => $component['name'].' selected',
             'icon_extra' => 'sel',
             'settings' => array(
-                'selected' => $this->_get_selected_field(),
+                'selected' => function($ctr) {
+                    return $ctr->get_selected_field();
+                },
                 'parent_type' => array(
                     'label' => fx::alang('Bind items to','controller_component'),
                     'type' => 'select',

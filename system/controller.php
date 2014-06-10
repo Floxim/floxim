@@ -272,6 +272,12 @@ class fx_controller {
             return;
         }
         $settings = $params['settings'];
+        foreach ($settings as $prop => $value) {
+            if ($value instanceof Closure) {
+                $settings[$prop] = call_user_func($value, $this);
+            }
+        }
+        fx::log('closures solvd', $settings);
         if (isset($params['defaults']) && is_array($params['defaults'])) {
             foreach ($params['defaults'] as $param => $val) {
                 $settings[$param]['value'] = $val;
@@ -348,7 +354,7 @@ class fx_controller {
                     $action_props = array_replace_recursive($action_props, $block);
                     if (isset($action_props['settings'])) {
                         foreach ($action_props['settings'] as $s_key => $s) {
-                            if (!isset($s['name'])) {
+                            if (is_array($s) && !isset($s['name'])) {
                                 $action_props['settings'][$s_key]['name'] = $s_key;
                             }
                         }

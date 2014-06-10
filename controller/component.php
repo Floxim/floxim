@@ -103,7 +103,7 @@ class fx_controller_component extends fx_controller_frontoffice {
         return $res;
     }
     
-    protected function _get_selected_field() {
+    public function get_selected_field() {
         return array (
             'name' => 'selected', 
             'label' => fx::alang('Selected','controller_component'),
@@ -118,8 +118,8 @@ class fx_controller_component extends fx_controller_frontoffice {
         );
     }
 
-    protected function _config_conditions () {
-        $fields['conditions'] = array(
+    public function get_conditions_field() {
+        $res_field = array(
             'name' => 'conditions',
             'label' => fx::alang('Conditions','controller_component'),
             'type' => 'set', 
@@ -190,7 +190,14 @@ class fx_controller_component extends fx_controller_frontoffice {
                 $relation = $field->get_relation();
                 $res['content_type'] = $relation[0] == fx_data::MANY_MANY ? $relation[4] : $relation[1] ;
             }
-            $fields['conditions']['tpl'][0]['values'][$field['keyword']] = $res;
+            // Add allow values for select parent page
+            if ($field['keyword'] == 'parent_id') {
+                $pages = $this->_get_allow_parent_pages();
+                $values = $pages->get_values(array('id','name'));
+                fx::log($pages, $values);
+                $res['values'] = $values;
+            }
+            $res_field['tpl'][0]['values'][$field['keyword']] = $res;
         }
         $ib_field_params = array(
             'description' => 'Infoblock',
@@ -210,13 +217,9 @@ class fx_controller_component extends fx_controller_frontoffice {
         if ( ($cib_id = $this->get_param('infoblock_id'))) {
             $ib_field_params['conditions']['id'] = array($cib_id, '!=');
         }
+        $res_field['tpl'][0]['values']['infoblock_id'] = $ib_field_params;
+        return $res_field;
         $fields['conditions']['tpl'][0]['values']['infoblock_id'] = $ib_field_params;
-        // Add allow values for select parent page
-        if (isset($fields['conditions']['tpl'][0]['values']['parent_id'])) {
-            $pages=$this->_get_allow_parent_pages();
-            $values=$pages->get_values(array('id','name'));
-            $fields['conditions']['tpl'][0]['values']['parent_id']['values']=$values;
-        }
         return $fields;
     }  
     
@@ -532,7 +535,7 @@ class fx_controller_component extends fx_controller_frontoffice {
             $this->_meta['fields'] = array();
         }
         if (fx::is_admin()) {
-            $selected_field = $this->_get_selected_field();
+            $selected_field = $this->get_selected_field();
             $selected_field['var_type'] = 'ib_param';
             $this->_meta['fields'][]= $selected_field;
         }

@@ -110,6 +110,24 @@ class fx_data_content extends fx_data {
         $this->table = $component->get_content_table();
         return $this;
     }
+    
+    public function get_component() {
+        return fx::data('component', $this->component_id);
+    }
+    
+    public function content_exists() {
+        static $content_by_type = null;
+        if (is_null($content_by_type)) {
+            $res = fx::db()->get_results(
+                'select `type`, count(*) as cnt '
+                    . 'from {{content}} '
+                    . 'where site_id = "'.fx::env('site_id').'" '
+                    . 'group by `type`'
+            );
+            $content_by_type = fx::collection($res)->get_values('cnt', 'type');
+        }
+        return isset($content_by_type[$this->get_component()->get('keyword')]);
+    }
 
     public function create($data = array()) {
         $obj = parent::create($data);
