@@ -33,7 +33,7 @@ window.fx_livesearch = function (node) {
         return this.inputName;
     };
     
-    this.getUrl = function() {
+    this.getSuggestParams = function() {
         var params = {
             url: '/floxim/index.php',
             data:{
@@ -103,14 +103,14 @@ window.fx_livesearch = function (node) {
         if (!(ids instanceof Array) || ids.length === 0) {
             return;
         }
-        var url = this.getUrl();
-        url.data.term = null;
-        url.data.ids = ids;
+        var params = this.getSuggestParams();
+		params.data.ids = ids;
+		params.data.term = null;
         $.ajax({
-            url:url.url,
+            url:params.url,
             type:'post',
             dataType:'json',
-            data:url.data,
+            data:params.data,
             success:function(res){
                 livesearch.addSilent = true;
                 res.results.sort(function(a, b) {
@@ -188,7 +188,7 @@ window.fx_livesearch = function (node) {
         if (!this.isMultiple) {
             this.disableAdd();
         } else {
-            this.Suggest.url = this.getUrl();
+            this.Suggest.requestParams = this.getSuggestParams();
         }
         if (!this.addSilent) {
             var e = $.Event('livesearch_value_added');
@@ -227,7 +227,7 @@ window.fx_livesearch = function (node) {
             this.lastRemovedValue = n.find('input').val();
             n.remove();
             this.enableAdd();
-            this.Suggest.url = this.getUrl();
+            this.Suggest.requestParams = this.getSuggestParams();
             this.n.trigger('change');
     };
     
@@ -261,7 +261,7 @@ window.fx_livesearch = function (node) {
     this.Init = function() {
         this.Suggest = new fx_suggest({
             input:n.find('input[name="livesearch_input"]'),
-            url:this.getUrl(),
+			requestParams:this.getSuggestParams(),
             resultType:'json',
             onSelect:this.Select,
             offsetNode:n.find('.livesearch_items'),
@@ -378,7 +378,7 @@ window.fx_livesearch = function (node) {
 
 window.fx_suggest = function(params) {
     this.input = params.input;
-    this.url = params.url;
+    this.requestParams = params.requestParams;
     this.onSelect = params.onSelect;
     this.minTermLength = typeof params.minTermLength == 'undefined' ? 1 : params.minTermLength;
     this.resultType = params.resultType || 'html';
@@ -490,15 +490,15 @@ window.fx_suggest = function(params) {
 			type: 'POST'
         };
         var url, cache_key_data;
-        if (typeof this.url == 'string') {
-            url = this.url;
-			cache_key_data = this.url + term;
+        if (typeof this.requestParams == 'string') {
+            url = this.requestParams;
+			cache_key_data = this.requestParams + term;
             request_params.url = url;
 			request_params.data={ term: term };
         } else {
-            url = this.url.url;
+            url = this.requestParams.url;
             request_params.url = url;
-            var data = this.url.data;
+            var data = this.requestParams.data;
 			data.term = term;
             cache_key_data = url+$.param(data);
             request_params.data = data;
