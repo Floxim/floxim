@@ -9,9 +9,14 @@ window.fx_livesearch = function (node) {
         this.datatype = data_params.content_type;
         this.count_show = data_params.count_show;
         this.conditions = data_params.conditions;
+        this.preset_values = data_params.preset_values;
     } else {
         this.datatype = n.data('content_type');
         this.count_show = n.data('count_show');
+        this.preset_values = n.data('preset_values');
+    }
+    if (!this.preset_values) {
+        this.preset_values=[];
     }
     this.inputNameTpl = n.data('prototype_name');
     
@@ -266,7 +271,8 @@ window.fx_livesearch = function (node) {
             resultType:'json',
             onSelect:this.Select,
             offsetNode:n.find('.livesearch_items'),
-            minTermLength:0
+            minTermLength:0,
+            preset_values: this.preset_values
         });
         var inputs = n.find('.preset_value');
         if (!this.isMultiple) {
@@ -398,6 +404,7 @@ window.fx_suggest = function(params) {
         this.requestParams = $.extend({}, this.defaults.requestParams, params);
         // calc limit
         this.requestParams.limit=this.requestParams.count_show*2;
+        return this.requestParams;
     };
 
     this.input = params.input;
@@ -406,6 +413,7 @@ window.fx_suggest = function(params) {
     this.minTermLength = typeof params.minTermLength == 'undefined' ? 1 : params.minTermLength;
     this.resultType = params.resultType || 'html';
     this.offsetNode = params.offsetNode || this.input;
+    this.preset_values = params.preset_values || [];
     this.boxVisible = false;
     if (!fx_suggest.cache) {
         /**
@@ -440,6 +448,13 @@ window.fx_suggest = function(params) {
                         Suggest.Search(term);
                     }
                     break;
+            }
+        });
+        this.input.focus(function(){
+            var term = Suggest.getTerm();
+            if (term=='' && Suggest.preset_values.length) {
+                // open preset items
+                Suggest.getResults('');
             }
         });
         this.input.keydown( function(e) {
@@ -515,8 +530,31 @@ window.fx_suggest = function(params) {
             Suggest.getResults(term);
         }, 200);
     }
-    
+
+    this.processResults = function(res,requestParams) {
+        // skip ids
+        res.results=this.skipByIds(res.results,requestParams.skip_ids);
+        // show limit
+        res.results=this.sliceShowLimit(res.results,requestParams.count_show);
+        var resHtml = Suggest.renderResults(res);
+        if (resHtml) {
+            Suggest.showBox();
+            Suggest.box.html(resHtml);
+        } else {
+            Suggest.hideBox(false);
+        }
+    };
+
+    this.getResultsFromPreset = function(term) {
+        var res=this.searchFromJson(this.preset_values,term);
+        this.processResults(res,this.requestParams);
+    };
+
     this.getResults = function(term) {
+        if (this.preset_values && this.preset_values.length) {
+            return this.getResultsFromPreset(term);
+        }
+
         var request_params = {
             dataType:Suggest.resultType,
 			type: 'POST'
@@ -531,17 +569,7 @@ window.fx_suggest = function(params) {
 
         var resCache=this.getCacheData(this.requestParams,term);
         if (false!==resCache) {
-            // skip ids
-            resCache.results=this.skipByIds(resCache.results,this.requestParams.skip_ids);
-            // show limit
-            resCache.results=this.sliceShowLimit(resCache.results,this.requestParams.count_show);
-            var resHtml = Suggest.renderResults(resCache);
-            if (resHtml) {
-                Suggest.showBox();
-                Suggest.box.html(resHtml);
-            } else {
-                Suggest.hideBox(false);
-            }
+            this.processResults(resCache,this.requestParams);
             return;
         }
         
@@ -552,17 +580,7 @@ window.fx_suggest = function(params) {
                 return;
             }
             resCache=$.extend({},res); // copy for cache
-            // skip ids
-            res.results=$this.skipByIds(res.results,$this.requestParams.skip_ids);
-            // show limit
-            res.results=$this.sliceShowLimit(res.results,$this.requestParams.count_show);
-            var resHtml = Suggest.renderResults(res);
-            if (resHtml) {
-                Suggest.showBox();
-                Suggest.box.html(resHtml);
-            } else {
-                Suggest.hideBox(false);
-            }
+            $this.processResults(res,$this.requestParams);
             $this.setCacheData($this.requestParams,term,resCache);
         };
         

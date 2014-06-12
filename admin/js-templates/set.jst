@@ -371,43 +371,24 @@ function set_control (meta, selector) {
 
             $('.input_cell_1', html).html(select);
             //console.log('lsm', meta);
-            if (meta.values && meta.values.length) {
-            	var select_values={ '' : '' };
-            	$.each(meta.values,function(k,v){
-            		select_values[v.id]=v.name
-            	});
-				var select_html = $t.jQuery(
-                          'input', {
-                          	'type':'select',
-                            	'name': name+'value'+'][]',
-                                'values': select_values
-                           }
-                       );
-                $('.input_cell_2', html).html(select_html);
-                if (c_value) {
-                	select_html.find('option').each(function() {
-                		this.selected = ($.inArray(this.value,c_value)!=-1);
-                	});
-                }
-            } else {
-            	var livesearch_opts = {
-                                'type':'livesearch',
-                                'name': name+'value'+']',
-                                'is_multiple': true,
-                                'value':c_value,
-                                ajax_preload:true,
-                                //'name_postfix' : 'f_classifier_id',
-                                params: {
-                                    'content_type' : meta.content_type,
-                                    count_show : 20,
-                                    conditions:meta.conditions
-                                }
-                        };
-                var live_search = $t.jQuery(
-                     'input', livesearch_opts
-                );
-                $('.input_cell_2', html).html(live_search);
-            }
+            var livesearch_opts = {
+                                            'type':'livesearch',
+                                            'name': name+'value'+']',
+                                            'is_multiple': true,
+                                            'value':c_value,
+                                            ajax_preload:true,
+                                            //'name_postfix' : 'f_classifier_id',
+                                            params: {
+                                                'content_type' : meta.content_type,
+                                                count_show : 20,
+                                                preset_values : meta.values,
+                                                conditions:meta.conditions
+                                            }
+                                    };
+            var live_search = $t.jQuery(
+                                 'input', livesearch_opts
+            );
+            $('.input_cell_2', html).html(live_search);
 
         break;
         //default:
