@@ -194,7 +194,6 @@ class fx_controller_component extends fx_controller_frontoffice {
             if ($field['keyword'] == 'parent_id') {
                 $pages = $this->_get_allow_parent_pages();
                 $values = $pages->get_values(array('id','name'));
-                fx::log($pages, $values);
                 $res['values'] = $values;
             }
             $res_field['tpl'][0]['values'][$field['keyword']] = $res;

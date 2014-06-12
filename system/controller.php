@@ -277,7 +277,7 @@ class fx_controller {
                 $settings[$prop] = call_user_func($value, $this);
             }
         }
-        fx::log('closures solvd', $settings);
+        
         if (isset($params['defaults']) && is_array($params['defaults'])) {
             foreach ($params['defaults'] as $param => $val) {
                 $settings[$param]['value'] = $val;
