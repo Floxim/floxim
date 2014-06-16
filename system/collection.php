@@ -145,6 +145,14 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
             }
             return false;
         }
+        if ($compare_type == self::FILTER_EXISTS) {
+            foreach ($this->data as $item) {
+                if (isset($item[$field]) && $item[$field]) {
+                    return $item;
+                }
+            }
+            return false;
+        }
         if ($compare_type == self::FILTER_CALLBACK) {
             foreach ($this->data as $item) {
                 if (call_user_func($field, $item)) {
