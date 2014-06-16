@@ -111,6 +111,11 @@ class fx_template_html_token {
             if (isset($this->attributes) && isset($this->attributes_modified)) {
                 $tag_start .= '<'.$this->original_name;
                 foreach ($this->attributes as $att_name => $att_val) {
+                    // floxim injections are some sort of specially marked pseudo-atts
+                    if (preg_match("~^#inj\d~", $att_name)) {
+                        $tag_start .= ' '.$att_val;
+                        continue;
+                    }
                     $tag_start .= ' '.$att_name;
                     
                     if ($att_val === null) {

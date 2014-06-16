@@ -10,6 +10,7 @@ class fx_template_parser {
      * @return array token tree
      */
     public function parse($source) {
+        //fx::log($source);
         $tokenizer = new fx_template_tokenizer();
         $tokens = $tokenizer->parse($source);
         unset($tokenizer);

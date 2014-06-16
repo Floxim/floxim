@@ -1,4 +1,4 @@
-<?
+<?php
 class fx_template_html_tokenizer extends fx_template_fsm {
     const TEXT = 1;
     const TAG = 2;

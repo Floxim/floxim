@@ -15,7 +15,6 @@ class fx_template_html {
     public function add_meta($meta = array(), $skip_parsing = false) {
         // add immediately wrap
         if ($skip_parsing) {
-            fx::log('skip parsing', $meta, $this);
             return $this->add_meta_wrapper($meta);
         }
         $tree = $this->make_tree($this->tokenize());

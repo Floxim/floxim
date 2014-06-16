@@ -13,6 +13,7 @@ class fx_template_attr_parser extends fx_template_html_tokenizer {
         $this->parse($s);
     }
     
+    protected $_count_injections = 0;
     protected function _add_att() {
         if (!$this->c_att['name'] && !preg_match("~^<~", $this->stack)) {
             $this->c_att['name'] = $this->stack;
@@ -25,6 +26,11 @@ class fx_template_attr_parser extends fx_template_html_tokenizer {
                 if ($this->c_quote) {
                     $this->token->att_quotes[$att_name] = $this->c_quote;
                     //$att_val = str_replace("\\".$this->c_quote, $this->c_quote, $att_val);
+                }
+                if (preg_match("~\{.+~", $att_name) && !$att_val) {
+                    $this->_count_injections++;
+                    $att_val = $att_name;
+                    $att_name = '#inj'.$this->_count_injections;
                 }
                 $this->token->attributes[$att_name] = $att_val;
             }
