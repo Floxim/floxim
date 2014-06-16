@@ -7,7 +7,8 @@
 class fx_template_loader {
     protected $_source_files = array();
     protected $_template_name = null;
-    
+    protected $_target_hash = null;
+
     public function __construct() {
         
     }
@@ -101,9 +102,29 @@ class fx_template_loader {
         if (!$this->_target_file) {
             $this->_target_file = $this->_template_name.'.php';
         }
-        return $this->_target_dir.'/'.$this->_target_file;
+        /**
+         * Calc prefix hash by sources files
+         */
+        if (!$this->_target_hash) {
+            $this->recalc_target_hash();
+        }
+        $prefix='['.$this->_target_hash.']';
+        return $this->_target_dir.'/'.$prefix.$this->_target_file;
     }
 
+    public function recalc_target_hash() {
+        $this->_target_hash='';
+        $files=(array)$this->_source_files;
+        foreach($files as $sFile) {
+            $this->_target_hash.=filemtime($sFile);
+        }
+        $this->_target_hash=md5($this->_target_hash);
+    }
+
+    public function get_target_mask() {
+        $path=$this->get_target_path();
+        return preg_replace('#\[\w+\]#',"\[*\]",$path);
+    }
 
     /*
      * Automatically load the template by name
@@ -126,19 +147,6 @@ class fx_template_loader {
         if (!file_exists($target_path)) {
             return false;
         }
-        $target_time = filemtime($target_path);
-        // file is fresh enough
-        if ((time() - $target_time) < $ttl) {
-            return true;
-        }
-        // compare sources to compiled template
-        foreach ($this->_source_files as $source) {
-            if (filemtime($source) > $target_time) {
-                // some source updated
-                return false;
-            }
-        }
-        // all sources are older than compiled
         return true;
     }
     
@@ -199,10 +207,19 @@ class fx_template_loader {
     
     public function save($source) {
         try {
+            // Remove old file
+            $this->remove_old_files();
             fx::files()->writefile($this->get_target_path(), $source);
             return true;
         } catch (Exception $e) {
             return false;
+        }
+    }
+
+    protected function remove_old_files() {
+        $mask=$this->get_target_mask();
+        foreach(glob($mask) as $file) {
+            fx::files()->rm($file);
         }
     }
     
