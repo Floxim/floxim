@@ -108,7 +108,8 @@ class fx_template_loader {
         if (!$this->_target_hash) {
             $this->recalc_target_hash();
         }
-        $prefix='['.$this->_target_hash.']';
+        //$prefix='['.$this->_target_hash.']';
+        $prefix = $this->_target_hash.'__';
         return $this->_target_dir.'/'.$prefix.$this->_target_file;
     }
 
@@ -123,7 +124,7 @@ class fx_template_loader {
 
     public function get_target_mask() {
         $path=$this->get_target_path();
-        return preg_replace('#\[\w+\]#',"\[*\]",$path);
+        return str_replace($this->_target_hash, '*', $path);
     }
 
     /*
@@ -218,8 +219,11 @@ class fx_template_loader {
 
     protected function remove_old_files() {
         $mask=$this->get_target_mask();
-        foreach(glob($mask) as $file) {
-            fx::files()->rm($file);
+        $files = glob($mask);
+        if (count($files) > 0) {
+            foreach($files as $file) {
+                fx::files()->rm($file);
+            }
         }
     }
     
