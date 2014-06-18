@@ -49,27 +49,6 @@ if (_c.context === 'panel') {
         orig.show();
         popup.position();
         expander.parent().append(popup.$node);
-        
-        return;
-        var orig = $('.fx_fieldset', html);
-        var cloned = orig.clone(true);
-
-        $('select', orig).each(function(i) {
-            $('select', cloned).eq(i).val($(this).val());
-	});
-        
-        cloned.show();
-        var popup = new $fx.popup({
-            target:expander,
-            onfinish:function() {
-                $('.fx_fieldset', html).remove();
-                html.append(cloned);
-                cloned.hide();
-            }
-        });
-        
-        popup.$body.append(cloned);
-        popup.position();
     });
 }
 

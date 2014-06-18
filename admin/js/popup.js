@@ -5,13 +5,8 @@ $fx.popup = function(params) {
     this.$target = params.target ? $(params.target) : null;
     this.create = function() {
         this.$node = $('<div class="fx_overlay fx_popup" />');
+        this.$node.css('display', 'none');
         $('body').append(this.$node);
-        /*this.$node.css({
-            'z-index':'3010',
-            background:'#FFF',
-            overflow:'auto',
-            'box-shadow':'0px 0px 12px rgba(50, 50, 50, 0.77)'
-        });*/
         if (this.params.maxWidth) {
             this.$node.css('max-width', this.params.maxWidth +"px");
         }
@@ -23,34 +18,21 @@ $fx.popup = function(params) {
         this.$node.append(this.$footer);
         this.$arrow = $('<div class="fx_popup_arrow" />');
         this.$node.append(this.$arrow);
-        /*var cancel_button = $t.jQuery('input', {
-           'type':'button',
-           'is_submit':false,
-           'class':'cancel',
-           'name':'cancel',
-           'label':'cancel'
-        });
-        cancel_button.on('click', function() {popup.destroy();});
-        $('html').on('keyup.fx_popup', function(e) {
-            if (e.which === 27) {
+        if (typeof popup.params.ok_button === 'undefined' || popup.params.ok_button !== false) {
+            var ok_button = $t.jQuery('input', {
+               type:'button',
+               is_submit:true,
+               name:'apply',
+               label:'apply'
+            });
+            ok_button.on('click', function() {
+                if (popup.params.onfinish) {
+                    popup.params.onfinish(popup);
+                }
                 popup.destroy();
-            }
-        });
-        this.$footer.append(cancel_button);*/
-        var ok_button = $t.jQuery('input', {
-           type:'button',
-           is_submit:true,
-           name:'apply',
-           label:'apply'
-        });
-        ok_button.on('click', function() {
-            //this.$node.trigger()
-            if (popup.params.onfinish) {
-                popup.params.onfinish(popup);
-            }
-            popup.destroy();
-        });
-        this.$footer.append(ok_button);
+            });
+            this.$footer.append(ok_button);
+        }
         if (this.$target) {
             this.$target.data('popup', this);
         }
@@ -66,7 +48,7 @@ $fx.popup = function(params) {
         }
     };
     this.position = function() {
-        this.$node.css('left', 0);
+        this.$node.css('left', 0).css('display', 'block');
         if (this.$target) {
             var arrow = this.$node.find('.fx_popup_arrow');
             var to = this.$target.offset();
@@ -104,7 +86,10 @@ $fx.popup = function(params) {
             
         }
     };
+    this.hide = function() {
+        this.$node.hide();
+    };
     this.create();
-    this.position();
+    //this.position();
 };
 })($fxj);

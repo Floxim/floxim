@@ -191,9 +191,19 @@ if (_c.extendable) {
     name="<?=_c.name+(_c.multiple? '[]' : '')?>"
     class="fx_input<?=_c.inline ? ' inline' : ''?> <?=_c.extendable ? ' extendable' : ''?>"
     <?=_c.multiple ? ' multiple="multiple"' : ''?>>
-    <?for (var vk in _c.values) {
+    <?
+    console.log(_c.values);
+    if (_c.values instanceof Array) {
+        var tmp_values = {};
+        for (var vi = 0; vi < _c.values.length; vi++) {
+            tmp_values[_c.values[vi]] = _c.values[vi];
+        }
+        _c.values = tmp_values;
+        console.log(_c.values);
+    }
+    for (var vk in _c.values) {
         var val = _c.values[vk], opt_name = null;
-        if (typeof val == 'string') {
+        if (typeof val === 'string' || typeof val === 'number') {
             var opt_val = vk;
             var opt_name = val;
         } else if (val instanceof Array) {

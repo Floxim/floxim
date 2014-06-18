@@ -137,16 +137,6 @@
                 $fx.front_panel.is_visible = false;
             });
         };
-        /*
-        this.prepare_form_data = function(data) {
-            var is_horizontal = this.params.view === 'horizontal';
-            $.each(data.fields, function(key, field) {
-                if (is_horizontal) {
-                    field.context = 'panel';
-                }
-            });
-        };
-        */
     };
     
     $(function() {

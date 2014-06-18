@@ -109,7 +109,8 @@ class fx_controller_admin extends fx_controller {
             '/floxim/lib/js/jquery.cookie.js',
             '/floxim/lib/js/jquery.ba-resize.min.js',
             '/floxim/lib/js/jquery.scrollTo.js',
-            'floxim/admin/js/infoblock.js' // infoblock form overrides
+            '/floxim/admin/js/map.js',
+            '/floxim/admin/js/infoblock.js' // infoblock form overrides
         );
         $page = fx::page();
         

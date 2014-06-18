@@ -95,14 +95,13 @@ fx_edit_in_place.prototype.start = function(meta) {
                             real_value:{path: meta.real_value || ''}
                         }
                 );
-                //console.log(meta, field_meta);
                 this.add_panel_field(
                     field_meta
                 ).on('fx_change_file', function() {
                     edit_in_place.save().stop();
                 });
                 break;
-            case 'select': case 'livesearch': case 'bool': case 'color':
+            case 'select': case 'livesearch': case 'bool': case 'color': case 'map':
                 this.add_panel_field(meta);
                 break;
             case 'string': case 'html': case '': case 'text': case 'int': case 'float':
@@ -155,7 +154,6 @@ fx_edit_in_place.prototype.start = function(meta) {
 };
 
 fx_edit_in_place.prototype.add_panel_field = function(meta) {
-    console.log(meta);
     if (meta.real_value) {
         meta.value = meta.real_value;
     }

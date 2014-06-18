@@ -654,7 +654,6 @@ fx_front.prototype.select_item = function(node) {
     
     var scrolling = false;
     setTimeout(function() {
-        console.log($node, $node.attr('class'));
         if (!scrolling && !$node.hasClass('fx_edit_in_place')) {
             $fx.front.scrollTo($node, true, function() {
                 scrolling = false;
@@ -1276,7 +1275,6 @@ fx_front.prototype.start_areas_sortable = function() {
                     height:item.outerHeight(),
                     overflow:'hidden'
                 });
-                console.log('animatng');
                 ph.animate({
                     'height':'100px'
                 }, 1000);
@@ -1453,12 +1451,10 @@ fx_front.prototype.scrollTo = function($node, if_invisible, callback) {
         } else {
             var wh = $(window).height();
             if (st + wh < top_offset) {
-                //console.log('2')
                 move = true;
             } else {
                 var nh = $node.outerHeight();
                 if (st + wh < top_offset + nh) {
-                    //console.log('3')
                     move = true;
                 }
             }
