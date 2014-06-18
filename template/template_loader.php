@@ -220,7 +220,7 @@ class fx_template_loader {
     protected function remove_old_files() {
         $mask=$this->get_target_mask();
         $files = glob($mask);
-        if (count($files) > 0) {
+        if (is_array($files)) {
             foreach($files as $file) {
                 fx::files()->rm($file);
             }
