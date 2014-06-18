@@ -696,7 +696,7 @@ window.fx_suggest = function(params) {
         setTimeout (
             function () {
                 tmp_box.offset({
-                        top:tmp_box.offset().top+1,
+                        top:tmp_box.offset().top+1
                 });
             }
         , 1)
@@ -768,14 +768,13 @@ window.fx_suggest = function(params) {
         });
         
         this.input.blur(function(e) {
-            setTimeout(function() {
-                if(Suggest.skipBlur) {
-                    Suggest.skipBlur = false;
-                    return;
-                }
-                Suggest.triggerHide()
-                Suggest.hideBox();
-            },100);
+            // previous this use setTimeout on 100ms, but have bug with show BOX
+            if(Suggest.skipBlur) {
+                Suggest.skipBlur = false;
+                return;
+            }
+            Suggest.triggerHide();
+            Suggest.hideBox();
         });
         
         this.input.focus(function(){
