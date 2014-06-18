@@ -253,7 +253,7 @@ class fx_template_compiler {
         $code .= $var . '= $template_dir.'.$var.";\n";
         $code .= "}\n";
         
-        $code .= 'if (!file_exists(fx::path()->to_abs(preg_replace("~\?.+$~", "", '.$var.')))) {'."\n";
+        $code .= 'if (!preg_match("~^https?://~", '.$var.') && !file_exists(fx::path()->to_abs(preg_replace("~\?.+$~", "", '.$var.')))) {'."\n";
         $code .= $var . "= '';\n";
         $code .= "}\n";
         return $code;
