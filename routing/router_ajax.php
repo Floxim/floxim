@@ -53,13 +53,17 @@ class fx_router_ajax extends fx_router {
         $action = $controller_name.'.'.$action_name;
         
         $controller = fx::controller($action);
-        
+        if (!$template) {
+            $tpls = $controller->get_available_templates();
+            if (count($tpls) > 0) {
+                $template = $tpls[0]['full_id'];
+            }
+        }
         $res = $controller->process();
         if ($template) {
             $tpl = fx::template($template);
             if ($tpl) {
                 $res = $tpl->render($res);
-                //$res = fx::page()->post_process($res);
             }
         }
         return $res ? $res : true;

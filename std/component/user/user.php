@@ -14,14 +14,19 @@ class fx_controller_component_user extends fx_controller_component {
         
         if ($form->is_sent() && !$form->has_errors()) {
             $vals = $form->get_values();
-            if (!$user->login($vals['email'], $vals['password'])) {
+            if (!$user->login($vals['email'], $vals['password'], $vals['remember'])) {
                 $form->add_error('User not found or password is wrong', 'email');
             } else {
-                if ($_SERVER['REQUEST_URI'] === '/floxim/') {
-                    fx::http()->redirect('/');
-                } else {
-                    fx::http()->refresh();
+                $location = $_SERVER['REQUEST_URI'];
+                if ($location  === '/floxim/') {
+                    $location = '/';
                 }
+                // send admin to cross-auth page
+                if ($user->is_admin()) {
+                    fx::input()->set_cookie('fx_target_location', $location);
+                    fx::http()->redirect('/~ajax/user._crossite_auth_form');
+                }
+                fx::http()->redirect($location);
             }
         }
         
@@ -30,9 +35,46 @@ class fx_controller_component_user extends fx_controller_component {
         );
     }
     
+    /**
+     * Show form to authorize user on all sites
+     */
+    public function do__crossite_auth_form() {
+        if (!fx::user()->is_admin()) {
+            fx::http()->redirect('/');
+        }
+        $sites = fx::data('site')->all();
+        $hosts = array();
+        foreach ($sites as $site) {
+            foreach ($site->get_all_hosts() as $host) {
+                if ($host === fx::env('host')) {
+                    continue;
+                }
+                $hosts[]= $host;
+            }
+        }
+        fx::env('ajax', false);
+        $target_location = fx::input()->fetch_cookie('fx_target_location');
+        if (!$target_location) {
+            $target_location = '/';
+        }
+        return array(
+            'hosts' => $hosts,
+            'auth_url' => '/~ajax/user._crossite_auth',
+            'target_location' => $target_location,
+            'session_key' => fx::data('session')->load()->get('session_key')
+        );
+    }
+    
     public function do__crossite_auth() {
         if (isset($_POST['email']) && isset($_POST['password'])) {
             fx::user()->login($_POST['email'], $_POST['password']);
+        } elseif (isset($_POST['session_key'])) {
+            $session = fx::data('session')->get_by_key($_POST['session_key']);
+            if ($session) {
+                $session->set_cookie();
+                $user = fx::data('content_user', $session['user_id']);
+                return "Hello, ".$user['name'].'!<br /> '.fx::env('host').' is glad to see you!';
+            }
         }
     }
     
