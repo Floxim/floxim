@@ -117,6 +117,10 @@ class fx_system_input {
     }
 
   }
+  
+  public function set_cookie($name, $value, $expire = 0, $path = '/') {
+      setcookie($name, $value, $expire, $path);
+  }
 
   public function fetch_session ($item = "") {
 
