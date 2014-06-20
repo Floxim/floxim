@@ -730,7 +730,7 @@ class fx_data {
      * @param array $data data essence'and
      * @return string
      */
-    protected function get_class_name($data = array()) {
+    public function get_class_name($data = array()) {
         $classname = 'fx_'.str_replace('fx_data_', '', get_class($this));
         try {
             if (class_exists($classname)) {
