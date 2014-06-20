@@ -200,14 +200,7 @@ window.$fx = {
     post: function ( data, callback ) {
         data.fx_admin = true;
         if (!callback) {
-            callback = function(data) {
-                /*
-                if (data.location) {
-                    
-                }
-                console.log('data caught', data);
-                */
-            };
+            callback = function() {};
         }
         $.ajax({
             url: $fx.settings.action_link,
