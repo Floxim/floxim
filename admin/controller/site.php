@@ -47,15 +47,11 @@ class fx_controller_admin_site extends fx_controller_admin {
         $this->response->submenu->set_menu('site');
     }
 
-    public function add($input) {
-        $fields = array();
-
+    public function add() {
+        $fields = $this->_get_fields(fx::data('site')->create());
         $fields[] = $this->ui->hidden('action', 'add_save');
         $fields[] = $this->ui->hidden('essence', 'site');
-        $fields[] = $this->ui->input('name', fx::alang('Site name','system'));
-        $fields[] = $this->ui->input('domain', fx::alang('Domain','system'));
         
-        //$fields[] = $this->ui->hidden('posting');
         $this->response->add_fields($fields);
         $this->response->dialog->set_title( fx::alang('Create a new site','system') );
         $this->response->breadcrumb->add_item( 
@@ -69,32 +65,17 @@ class fx_controller_admin_site extends fx_controller_admin {
         $this->response->submenu->set_menu('site');
     }
 
-    public function import_save($input) {
-        $file = $input['importfile'];
-        if (!$file) {
-            $result = array('status' => 'error');
-            $result['text'][] = fx::alang('Error creating a temporary file','system');
-        }
-
-        $result = array('status' => 'ok');
-        try {
-            $imex = new fx_import(array('template_id' => intval($input['template_id'])));
-            $imex->import_by_file($file['tmp_name']);
-        } catch (Exception $e) {
-            $result = array('status' => 'error');
-            $result['text'][] = $e->getMessage();
-        }
-
-        return $result;
-    }
-
     public function add_save($input) {
-        $result = array(
-            'status' => 'ok',
-            'reload' => '#admin.site.all'
-        );
-
-        $site = fx::data('site')->create(array('name' => $input['name'], 'domain' => $input['domain']));
+        
+        $result = array();
+        $site = fx::data('site')->create(array(
+            'name' => $input['name'], 
+            'domain' => $input['domain'],
+            'layout_id' => $input['layout_id'],
+            'mirrors' => $input['mirrors'], 
+            'language' => $input['language'],
+            'checked' => 1
+        ));
 
         if (!$site->validate()) {
             $result['status'] = 'error';
@@ -102,14 +83,6 @@ class fx_controller_admin_site extends fx_controller_admin {
             return $result;
         }
 
-        $current_site = fx::data('site')->get_by_host_name();
-        $layout_id = $current_site['layout_id'];
-        if (!$layout_id) {
-            $layout_id = fx::data('layout')->one()->get('id');
-        }
-        
-        $site['layout_id'] = $layout_id;
-        $site['checked'] = 1;
         $site->save();
 
         $index_page = fx::data('content_page')->create(array(
@@ -137,6 +110,11 @@ class fx_controller_admin_site extends fx_controller_admin {
             )
         )->save();
         $site->save();
+        fx::input()->set_cookie('fx_target_location', '/floxim/#admin.site.all');
+        $result = array(
+            'status' => 'ok',
+            'reload' => '/~ajax/user._crossite_auth_form'
+        );
         return $result;
     }
 
@@ -217,14 +195,22 @@ class fx_controller_admin_site extends fx_controller_admin {
         }
         return $result;
     }
-
-    public function settings($input) {
-        $site_id = isset($input['id']) ? $input['id'] : isset($input['params'][0]) ? $input['params'][0] : null;
-        $site = fx::data('site', $site_id);
+    
+    /**
+     * Get fields for website create/edit form
+     * @param type fx_site $site
+     * @return array
+     */
+    protected function _get_fields($site) {
         $main_fields = array();
         $main_fields[] = $this->ui->input('name', fx::alang('Site name','system'), $site['name']);
         $main_fields[] = $this->ui->input('domain', fx::alang('Domain','system'), $site['domain']);
-        $main_fields[] = $this->ui->input('mirrors', fx::alang('Aliases','system'), $site['mirrors']);
+        $main_fields[] = array(
+            'name' => 'mirrors', 
+            'label' => fx::alang('Aliases','system'), 
+            'value' => $site['mirrors'],
+            'type' => 'text'
+        );
         
         $languages = fx::data('lang')->all()->get_values('lang_code', 'lang_code');
         $main_fields[] = array(
@@ -248,6 +234,14 @@ class fx_controller_admin_site extends fx_controller_admin {
             'value' => $site['layout_id'],
             'label' => fx::alang('Layout','system')
         );
+        return $main_fields;
+    }
+
+    public function settings($input) {
+        $site_id = isset($input['id']) ? $input['id'] : isset($input['params'][0]) ? $input['params'][0] : null;
+        $site = fx::data('site', $site_id);
+        
+        $main_fields = $this->_get_fields($site);
             
         $this->response->add_fields($main_fields);
 
@@ -290,6 +284,7 @@ class fx_controller_admin_site extends fx_controller_admin {
         return $result;
     }
     
+    /*
     public function design($input) {
       	$site_id = $input['params'][0];
         $site = fx::data('site')->get_by_id($site_id);
@@ -326,7 +321,6 @@ class fx_controller_admin_site extends fx_controller_admin {
     	$site['layout_id'] = $this->input['layout_id'];
         $site->save();
     }
-
     public function download($input) {
         $items = $input['params'];
         if ($items) {
@@ -365,5 +359,6 @@ class fx_controller_admin_site extends fx_controller_admin {
             $imex = new fx_import('template_id='.$template['id']);
             $result = $imex->import_by_content($content);
         }
-    }
+    } 
+    */
 }

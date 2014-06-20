@@ -15,38 +15,23 @@ class fx_data_site extends fx_data {
     }
 
     public function get_by_host_name($host = '') {
-        $replace = array('http:', 'https:', '/');
-
         if (!$host) {
             $host = fx::config()->HTTP_HOST;
         }
-        $host = str_replace($replace, '', $host);
-
-        $res = false;
-        $expected = false;
-        $first = false;
+        $host = preg_replace("~^https?://~i", '', $host);
+        $host = preg_replace("~/$~", '', $host);
+        
         $sites = $this->all();
+        if (count($sites) === 1) {
+            return $sites->first();
+        }
         // search for the domain and the mirrors
         foreach ($sites as $site) {
-            $domain = str_replace($replace, '', $site['domain']);
-            $mirrors = str_replace($replace, '', $site['mirrors']);
-            $all_domains = preg_quote($domain)."|".preg_replace("/\r\n/", "|", preg_quote($mirrors));
-
-            if (preg_match("/^(?:".$all_domains.")$/", $host)) {
-                $res = $site;
-                break;
-            }
-
-            if (!$first) {
-                $first = $site;
-            }
-
-            if ($site['checked'] && !$expected) {
-                $expected = $site;
+            if (in_array($host, $site->get_all_hosts())) {
+                return $site;
             }
         }
-
-        return $res ? $res : ( $expected ? $expected : $first);
+        return $sites->first();
     }
 
     public function create($data = array()) {

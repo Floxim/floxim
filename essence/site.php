@@ -28,6 +28,24 @@ class fx_site extends fx_essence {
             $infoblock->delete();
         }
     }
+    
+    /**
+     * Get all host names bound to the site
+     * @return array
+     */
+    public function get_all_hosts() {
+        $hosts = array();
+        $hosts[]= trim($this['domain']);
+        if (empty($this['mirrors'])) {
+            return $hosts;
+        }
+        $mirrors = preg_split("~\s~", $this['mirrors']);
+        foreach ($mirrors as $m) {
+            $m = trim($m);
+            if (!empty($m)) {
+                $hosts[]= trim($m);
+            }
+        }
+        return $hosts;
+    }
 }
-
-?>
