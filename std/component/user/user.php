@@ -14,6 +14,7 @@ class fx_controller_component_user extends fx_controller_component {
         
         if ($form->is_sent() && !$form->has_errors()) {
             $vals = $form->get_values();
+            fx::log('logging in', $vals);
             if (!$user->login($vals['email'], $vals['password'], $vals['remember'])) {
                 $form->add_error('User not found or password is wrong', 'email');
             } else {

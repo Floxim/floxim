@@ -7,11 +7,9 @@ class fx_config {
         'dev.on' => false,
         'DB_CHARSET' => 'utf8',
         'CHARSET' => 'utf-8',
-        
         'ADMIN_LANG' => 'en',
-        
-        'AUTHORIZE_BY' => 'email',
-        'AUTHTIME' => 86400,
+        'auth.login_field' => 'email',
+        'auth.remember_ttl' => 86400,
         'FILECHMOD' => 0644,
         'DIRCHMOD' => 0755,
         

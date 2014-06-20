@@ -3,9 +3,9 @@ class fx_content_user extends fx_content {
 
     static public function load() {
         $session = fx::data('session')->load();
-        
         $user = null;
         if ($session && $session['user_id']) {
+            $session->set_cookie();
             $user = fx::data('content_user', $session['user_id']);
         }
         

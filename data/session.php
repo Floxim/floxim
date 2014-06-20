@@ -15,16 +15,10 @@ class fx_data_session extends fx_data {
             ),
             $data
         );
+        $data['remember'] = $data['remember'] ? 1 : 0;
         $session = $this->create($data);
         $session->save();
         $session->set_cookie();
-        /*
-        $this->set_cookie(
-            $data['session_key'], 
-            $data['remember'] ? time() + fx::config('AUTHTIME') : 0
-        );
-         * 
-         */
         return $session;
     }
     
@@ -41,6 +35,7 @@ class fx_data_session extends fx_data {
     public function load() {
         static $session = null;
         if (is_null($session)) {
+            $this->drop_old_sessions();
             $session_key = fx::input()->fetch_cookie($this->cookie_name);
             if (!$session_key) {
                 return null;
@@ -51,6 +46,16 @@ class fx_data_session extends fx_data {
             }
         }
         return $session;
+    }
+    
+    public function drop_old_sessions() {
+        $ttl = (int) fx::config('auth.remember_ttl');
+        fx::db()->query(
+                'delete from {{session}} '
+                . 'where '
+                . 'user_id is not null '
+                . 'and last_activity_time + '. $ttl . ' < '.time()
+        );
     }
     
     public function get_by_key($session_key) {
