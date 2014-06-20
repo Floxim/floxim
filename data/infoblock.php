@@ -100,27 +100,11 @@ class fx_data_infoblock extends fx_data {
         return $infoblocks;
     }
 
-    protected function get_class_name($data = array()) {
-        $classname = $this->classname;
-        if (isset($data['type']) && $data['type']) {
-            $classname .= '_'.$data['type'];
-            if ($data['subtype']) {
-                $classname .= '_'.$data['subtype'];
-            }
-        }
-
-        return $classname;
-    }
-
     public function get_content_infoblocks($content_type = null) {
         if ($content_type) {
             $this->where('controller', 'component_'.$content_type);
         }
         $this->where('action', 'list_infoblock');
         return $this->all();
-    }
-
-    public function next_priority($keyword) {
-        return fx::db()->get_var("SELECT MAX(`priority`)+1 FROM `{{".$this->table."}}` WHERE `keyword` = '".fx::db()->escape($keyword)."' ");
     }
 }
