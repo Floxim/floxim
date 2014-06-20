@@ -17,14 +17,18 @@ class fx_data_session extends fx_data {
         );
         $session = $this->create($data);
         $session->save();
-        $this->_set_cookie(
+        $session->set_cookie();
+        /*
+        $this->set_cookie(
             $data['session_key'], 
             $data['remember'] ? time() + fx::config('AUTHTIME') : 0
         );
+         * 
+         */
         return $session;
     }
     
-    protected function _set_cookie($sid, $time) {
+    public function set_cookie($sid, $time) {
         setcookie(
             $this->cookie_name, 
             $sid, 
@@ -35,13 +39,16 @@ class fx_data_session extends fx_data {
     }
     
     public function load() {
-        $session_key = fx::input()->fetch_cookie($this->cookie_name);
-        if (!$session_key) {
-            return null;
-        }
-        $session = $this->get_by_key($session_key);
-        if ($session) {
-            $session->set('last_activity_time', time())->save();
+        static $session = null;
+        if (is_null($session)) {
+            $session_key = fx::input()->fetch_cookie($this->cookie_name);
+            if (!$session_key) {
+                return null;
+            }
+            $session = $this->get_by_key($session_key);
+            if ($session) {
+                $session->set('last_activity_time', time())->save();
+            }
         }
         return $session;
     }
@@ -49,7 +56,7 @@ class fx_data_session extends fx_data {
     public function get_by_key($session_key) {
         return $this
                 ->where('session_key', $session_key)
-                ->where('site_id', fx::env('site_id'))
+                ->where('site_id', array(fx::env('site_id'), 0))
                 ->one();
     }
     
@@ -58,7 +65,7 @@ class fx_data_session extends fx_data {
         if (!$session_key) {
             return;
         }
-        $this->_set_cookie(null, null);
+        $this->set_cookie(null, null);
         $session = $this->get_by_key($session_key);
         if (!$session) {
             return;
