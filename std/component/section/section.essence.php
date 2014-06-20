@@ -4,7 +4,7 @@ class fx_content_section extends fx_content_page {
         $f = parent::get_avail_parents_finder();
         $f->where_or( 
             array('infoblock_id', $this['infoblock_id']), 
-            array('level', 0)
+            array('parent_id', null, 'IS NULL')
         );
         return $f;
     }
