@@ -3,9 +3,9 @@ class fx_content_user extends fx_content {
 
     static public function load() {
         $session = fx::data('session')->load();
-        
         $user = null;
         if ($session && $session['user_id']) {
+            $session->set_cookie();
             $user = fx::data('content_user', $session['user_id']);
         }
         
@@ -48,7 +48,8 @@ class fx_content_user extends fx_content {
     public function create_session($remember = 0) {
         $session = fx::data('session')->start(array(
             'user_id' => $this['id'],
-            'site_id' => fx::env('site_id'),
+            // admins have one cross-site session
+            'site_id' => $this->is_admin() ? null : fx::env('site_id'),
             'remember' => $remember
         ));
         return $session;

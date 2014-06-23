@@ -110,7 +110,7 @@ fx_form = {
                 }
             }
         });
-        $form_node.submit($fx_form.submit_handler);
+        $form_node.on('submit.fx_submit', $fx_form.submit_handler);
     },
             
     submit_handler : function() {
@@ -123,9 +123,7 @@ fx_form = {
         $form.ajaxSubmit(function ( data ) {
             try {
                 data = $.parseJSON( data );
-            }
-            catch(e) {
-                status_block.show().css({background:'#FFF'});
+            } catch(e) {
                 status_block.writeError(data);
                 return false;
             }
@@ -136,7 +134,7 @@ fx_form = {
                 status_block.writeOk( data.text ? data.text : 'Ok');
                 $form.trigger('fx_form_ok');
             }
-            else {
+            else if (data.text) {
                 status_block.show();
                 status_block.writeError(data['text']);
                 for ( i in data.fields ) {
@@ -354,11 +352,11 @@ $fx.form = window.fx_form = window.$fx_form = fx_form;
             $this.show();
             var errorHtml = "<div class=\"ui-widget\">";
             errorHtml+= "<div class=\"ui-state-error ui-corner-all\" style=\"padding: 0 .7em;\">";
+            errorHtml += '<a class="fx_close">&times;</a>';
             errorHtml+= "<p>";
             errorHtml+= "<span class=\"ui-icon ui-icon-alert\" style=\"float:left; margin-right: .3em;\"></span>";
             errorHtml+= message.join('<br/>');
             errorHtml+= "</p>";
-            errorHtml += '<a class="fx_close">close</a>';
             errorHtml+= "</div>";
             errorHtml+= "</div>";
             

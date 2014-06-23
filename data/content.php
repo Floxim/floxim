@@ -167,7 +167,7 @@ class fx_data_content extends fx_data {
     
     protected static $content_classes = array();
     
-    protected function get_class_name($data = null) {
+    public function get_class_name($data = null) {
         if ($data && isset($data['type'])) {
             if (isset(fx_data_content::$content_classes[$data['type']])) {
                 return fx_data_content::$content_classes[$data['type']];

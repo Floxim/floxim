@@ -1,4 +1,11 @@
 <?php
+/**
+ * $items.first.name => fx::dig($this->v("items"), "first", "name")
+ * $items.first.name() => fx::dig($this->v("items"), "first")->name()
+ * $items.first().name => fx::dig($this->v("items")->first(), "name")
+ * $items.first().name() => $this->v("items")->first()->name()
+ * $item.%name => fx::dig('item','%name');
+ */
 require_once (dirname(__FILE__).'/template_fsm.php');
 class fx_template_expression_parser extends fx_template_fsm {
     
@@ -15,6 +22,17 @@ class fx_template_expression_parser extends fx_template_fsm {
     const T_ARR = 3;
     const T_ROOT = 0;
     
+    public function show_state() {
+        $vars = array(
+            1 => 'CODE',
+            2 => 'VAR_NAME',
+            3 => 'ARR_INDEX',
+            4 => 'STR',
+            5 => 'ESC'
+        );
+        return $vars[$this->state];
+    }
+    
     public function __construct() {
         $this->add_rule(self::CODE, '`', null, 'start_esc');
         $this->add_rule(self::ESC, '`', null, 'end_esc');
@@ -22,11 +40,11 @@ class fx_template_expression_parser extends fx_template_fsm {
         $this->add_rule(array(self::VAR_NAME, self::ARR_INDEX), array('[', '.'), null, 'start_arr');
         $this->add_rule(
             self::VAR_NAME, 
-            "~^[^a-z0-9_]~i",
+            "~^[^\%a-z0-9_]~i",
             null, 
             'end_var'
         );
-        $this->add_rule(self::ARR_INDEX, "~^[^a-z0-9_\.]~", null, 'end_var_dot');
+        $this->add_rule(self::ARR_INDEX, "~^[^a-z0-9\%_\.]~", null, 'end_var_dot');
         $this->add_rule(self::ARR_INDEX, ']', null, 'end_arr');
         $this->init_state = self::CODE;
     }
@@ -149,14 +167,14 @@ class fx_template_expression_parser extends fx_template_fsm {
                 if ($ch == '_') {
                     $this->curr_node->context_level_up();
                 } else {
-                    $this->curr_node->name []= $ch;
+                    $this->curr_node->append_name_chunk($ch);
                 }
                 break;
             case self::CODE: case self::ESC:
                 $this->read_code($ch);
                 break;
             case self::ARR_INDEX:
-                if ($this->curr_node->starter == '.' && preg_match("~^[a-z0-9_]+$~i", $ch)) {
+                if ($this->curr_node->starter == '.' && preg_match("~^[\%a-z0-9_]+$~i", $ch)) {
                     $ch = '"'.$ch.'"';
                 }
                 $this->read_code($ch);
@@ -174,11 +192,15 @@ class fx_template_expression_parser extends fx_template_fsm {
             }
         }
         $node = $this->curr_node;
-        $is_separator = in_array($ch, array(',', '(', ')', 'as')) || $this->state == self::ESC;
+        $is_separator = in_array($ch, array(',', '(', ')', 'as', '=')) || $this->state == self::ESC;
         if (
             !$is_separator && $node->last_child && !$node->last_child->is_separator 
             && $node->last_child->type == self::T_CODE
         ) {
+            if (preg_match('~\"$~', $node->last_child->data) && preg_match('~^\"~', $ch)) {
+                $node->last_child->data = preg_replace("~\"$~", '', $node->last_child->data);
+                $ch = preg_replace("~^\"~", '', $ch);
+            }
             $node->last_child->data .= $ch;
         } else {
             $code = self::node(self::T_CODE);
@@ -197,11 +219,14 @@ class fx_template_expression_parser extends fx_template_fsm {
         }
         if ($this->looking_for_var_name && count($this->stack) == 1) {
             $cdata = $node->last_child->data;
-            $rex = "~(\||[a-z0-9_-]+\s?=)$~";
-            if (preg_match($rex, $cdata)) {
-                $str = substr($this->string, 0, $this->position);
-                $str = preg_replace($rex, '', $str);
-                throw new fx_template_var_finder_exception($str);
+            
+            if (preg_match("~[\=\|]$~", $cdata)) {
+                $rex = "~(\||[a-z0-9_-]+\s?=)$~";
+                $str = mb_substr($this->string, 0, $this->position);
+                if (preg_match($rex, $str)) {
+                    $str = preg_replace($rex, '', $str);
+                    throw new fx_template_var_finder_exception($str);
+                }
             }
         }
     }
@@ -234,10 +259,14 @@ class fx_template_expression_parser extends fx_template_fsm {
             $value = null;
             $stack = '';
             foreach ($p as $item) {
-                if ($item->type == self::T_CODE && preg_match('~\s*as\s*~', $item->data)) {
-                    $value = $stack;
-                    $stack = '';
-                    continue;
+                if ($item->type == self::T_CODE) {
+                    $is_as = preg_match('~\s*as\s*~', $item->data);
+                    $is_eq = preg_match('~\s*=\s*~', $item->data);
+                    if ($is_as || $is_eq) {
+                        $value = $stack;
+                        $stack = '';
+                        continue;
+                    }
                 }
                 $stack .= $this->compile($item, true);
             }
@@ -246,8 +275,13 @@ class fx_template_expression_parser extends fx_template_fsm {
                 $value = $stack;
                 $stack = '$';
             }
-            $res[$this->_trim_esc($stack)] = $this->_trim_esc($value);
+            if ($is_eq) {
+                $res[$this->_trim_esc($value)] = $this->_trim_esc($stack);
+            } else {
+                $res[$this->_trim_esc($stack)] = $this->_trim_esc($value);
+            }
         }
+        //fx::debug($res);
         return $res;
     }
     
@@ -266,7 +300,6 @@ class fx_template_expression_parser extends fx_template_fsm {
             $res = $ex->getMessage();
         }
         $res = trim($res);
-        //fx::debug($str, $res);
         return $res;
     }
     
@@ -279,6 +312,7 @@ class fx_template_expression_parser extends fx_template_fsm {
     
     public function build($expr) {
         $tree = $this->parse($expr);
+        fx::debug($tree->dump(), $tree);
         $res = $this->compile($tree);
         return $res;
     }
@@ -333,6 +367,8 @@ class fx_template_expression_parser extends fx_template_fsm {
                         $var_name_parts []= $np;
                     }
                     $var_name = join(".", $var_name_parts);
+                    // simplify $this->v("%"."name") to $this->v("%name")
+                    $var_name = preg_replace('~\"\.\"~', '', $var_name);
                     if (empty($var_name)) {
                         $var_name = 'null';
                     }
@@ -375,10 +411,34 @@ class fx_template_expression_parser extends fx_template_fsm {
 class fx_template_expression_node {
     public $type;
     
-    protected $context_offset = null;
+    public $context_offset = null;
     
     public function __construct($type = fx_template_expression_parser::T_CODE) {
         $this->type = $type;
+    }
+    
+    public function dump() {
+        $types = array(
+            1 => 'T_CODE',
+            2 => 'T_VAR',
+            3 => 'T_ARR',
+            0 => 'T_ROOT'
+        );
+        $res = array(
+            'type' => $types[$this->type]
+        );
+        foreach (array('data', 'name') as $prop) {
+            if (isset($this->$prop)) {
+                $res[$prop] = $this->$prop;
+            }
+        }
+        if ($this->last_child) {
+            $res['children'] = array();
+            foreach ($this->children as $t) {
+                $res['children'] []= $t->dump();
+            }
+        }
+        return $res;
     }
     
     public function context_level_up($count = 1) {
@@ -413,6 +473,16 @@ class fx_template_expression_node {
             $this->last_child = end($this->children);
         }
         return $child;
+    }
+    
+    public function append_name_chunk($ch) {
+        $last_chunk = end($this->name);
+        if (is_string($last_chunk) && is_string($ch)) {
+            $this->name[count($this->name) - 1] .= $ch;
+        } else {
+            $this->name[]= $ch;
+        }
+        //$this->curr_node->name []= $ch;
     }
 }
 

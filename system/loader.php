@@ -45,7 +45,8 @@ class fx_loader {
         'filetable',
         'patch',
         'lang_string',
-        'lang'
+        'lang',
+        'session'
     );
     
     protected static $tpl_classes = array(

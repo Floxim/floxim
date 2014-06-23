@@ -8,7 +8,7 @@ class fx_data_content_user extends fx_data_content {
     }
     
     public function get_by_login($login) {
-        $this->where(fx::config()->AUTHORIZE_BY, $login);
+        $this->where(fx::config('auth.login_field'), $login);
         return $this->one();
     }
 }

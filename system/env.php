@@ -133,4 +133,31 @@ class fx_system_env {
     public function get_layout_id() {
         return $this->get_layout();
     }
+    
+    protected $current_template_stack = array();
+    
+    /**
+     * Add template object to global stack
+     * @param fx_template $template
+     */
+    public function add_current_template($template) {
+        $this->current_template_stack[]= $template;
+    }
+    
+    /**
+     * Remove the last running template from stack
+     */
+    public function pop_current_template() {
+        array_pop($this->current_template_stack);
+    }
+    
+    /**
+     * Get currently runnnig template
+     */
+    public function get_current_template() {
+        if (count($this->current_template_stack) === 0) {
+            return null;
+        }
+        return end($this->current_template_stack);
+    }
 }

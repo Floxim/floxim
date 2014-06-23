@@ -66,23 +66,105 @@ class fx_template {
     }
     
     protected function print_var($val, $meta = null) {
-        //fx::log($val, $meta);
         $tf = null;
         if ($meta && isset($meta['var_type'])) {
-            /*if (isset($meta['template_is_wrapper']) && !$meta['template_is_wrapper']) {
-                unset($meta['template_is_wrapper']);
-            }*/
             $tf = new fx_template_field($val, $meta);
         }
         $res = $tf ? $tf : $val;
         return (string) $res;
     }
     
+    public function get_help() {
+        ini_set('memory_limit', '1G');
+        ob_start();
+        ?>
+        <div class="fx_help">
+            <a class="fx_help_expander">?</a>
+            <div class="fx_help_data" style="display:none;">
+            <?php
+            $this->print_stack_help();
+            ?>
+            </div>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+    
+    public function print_stack_help() {
+        $context_stack = array_reverse($this->context_stack);
+        foreach ($context_stack as $level => $stack) {
+            echo $this->get_item_help($stack, 0, 'Level #'.$level);
+        }
+        if ($this->_parent && $this->_inherit_context){
+            echo "<hr />";
+            $this->_parent->print_stack_help();
+        }
+    }
+    
+    public function get_item_help($item, $level = 0, $title = '') {
+        if ($item instanceof fx_essence) {
+            $item = $item->get();
+        }
+        ob_start();
+        if ($level === 0) {
+            echo '<div class="fx_item_help_block">';
+            if ($title) {
+                //echo '<h2>'.$title.'</h2>';
+            }
+            ?>
+            <table>
+                <tr class="header">
+                    <td>Prop</td>
+                    <td class="value_cell">Value</td>
+                </tr>
+            <?php
+        }
+        foreach ($item as $prop => $value) {
+            $is_complex = is_object($value) || is_array($value);
+            ?>
+            <tr class="help_level_<?=$level?>" 
+                <?php if ($level > 0) { echo ' style="display:none;" ';}?>>
+                <td style="padding-left:<?=(2+10*$level)?>px !important;" class="prop_cell">
+                    <?php 
+                    if ($is_complex) {
+                        ?><a class="level_expander">
+                            <b><?=$prop?></b> 
+                            <span class="item_type"><?= is_array($value) ? 'Array' : get_class($value)?></span>
+                        </a>
+                        <?php
+                    } else {
+                        echo $prop;
+                    }
+                    ?>
+                </td>
+                <td class="value_cell">
+                    <?php
+                    if (!$is_complex) {
+                        echo htmlspecialchars($value);
+                    }
+                    ?>
+                </td>
+            </tr>
+            <?php
+            if ($is_complex) {
+                if (! ($value instanceof fx_template_loop)) {
+                    echo $this->get_item_help($value, $level+1);
+                }
+            }
+        }
+        if ($level === 0) {
+            ?></table>
+            </div>
+            <?php
+        }
+        return ob_get_clean();
+    }
+    
     protected function get_var_meta($var_name = null, $source = null) {
         if ($var_name === null) {
             return array();
         }
-        if ($source && $source instanceof fx_content) {
+        if ($source && $source instanceof fx_essence) {
             $meta = $source->get_field_meta($var_name);
             return is_array($meta) ? $meta : array();
         }

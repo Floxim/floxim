@@ -29,7 +29,7 @@ class fx_data_field extends fx_data {
         return $this->where('component_id', $component_id)->all();
     }
 
-    protected function get_class_name($data = array()) {
+    public function get_class_name($data = array()) {
         $class_name  = parent::get_class_name($data);
         if (isset($data['type'])) {
             $class_name .= '_'.fx_field::get_type_by_id($data['type']);
@@ -37,5 +37,3 @@ class fx_data_field extends fx_data {
         return $class_name;
     }
 }
-
-?>

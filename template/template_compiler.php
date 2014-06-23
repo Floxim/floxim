@@ -55,6 +55,13 @@ class fx_template_compiler {
         return $token->get_prop('value');
     }
     
+    protected function _token_help_to_code($token) {
+        $code = "<?php\n";
+        $code .= "echo \$this->get_help();\n";
+        $code .= "?>";
+        return $code;
+    }
+    
     protected function _token_call_to_code(fx_template_token $token) {
         $each = $token->get_prop('each');
         if ($each) {
@@ -289,9 +296,12 @@ class fx_template_compiler {
             }
             if (!$token_type) {
                 $token_type = 'string';
+            } else {
+                $token->set_prop('type', $token_type);
             }
-            $token->set_prop('type', $token_type);
-            $token->set_prop('linebreaks', $linebreaks);
+            if ($linebreaks) {
+                $token->set_prop('linebreaks', $linebreaks);
+            }
         }
         
         // e.g. "name" or "image_".$this->v('id')
@@ -356,22 +366,7 @@ class fx_template_compiler {
             $code .= "}\n";
         }
         
-        // Expression to get var meta
-        $var_meta_expr = '$this->get_var_meta(';
-        // if var is smth like $item['parent']['url'], 
-        // it should be get_var_meta('url', fx::dig( $this->v('item'), 'parent'))
-        if ($var_token->last_child) {
-            if ($var_token->last_child->type == fx_template_expression_parser::T_ARR) {
-                $last_index = $var_token->pop_child();
-                $tale = $ep->compile($last_index).', ';
-                $tale .= $ep->compile($var_token).')';
-                $var_meta_expr .= $tale;
-            } else {
-                $var_meta_expr .= ')';
-            }
-        } else {
-            $var_meta_expr .= '"'.$token->get_prop('id').'")';
-        }
+        $var_meta_expr = $this->_get_var_meta_expression($token, $var_token, $ep);
         
         
         if ($modifiers) {
@@ -387,39 +382,75 @@ class fx_template_compiler {
         $code .= 'echo !$_is_admin ? '.$expr.' : $this->print_var('."\n";
         $code .= $expr;
         $code .= ", \n";
-        //$code .= ' !$_is_admin ? null : ';
-        if ($token->get_prop('var_type') == 'visual') {
-            $token_props = $token->get_all_props();
-            $code .= " array(";
-            
-            $tp_parts = array();
-            
-            foreach ($token_props as $tp => $tpval) {
-                $token_prop_entry = "'".$tp."' => ";
-                if ($tp == 'id') {
-                    $token_prop_entry .= $var_id;
-                } elseif (preg_match("~^\`.+\`$~s", $tpval)) {
-                    $token_prop_entry .= trim($tpval, '`');
-                } else {
-                    $token_prop_entry .= "'".addslashes($tpval)."'";
-                }
-                $tp_parts[]= $token_prop_entry;
-            }
-            $code .= join(", ", $tp_parts);
-            $code .= ")\n";
-            $code .= " + \$_is_wrapper_meta"; 
-        } else {
-            $code .= $var_meta_defined ? '$var_meta' : $var_meta_expr;
+        $token_is_visual = $token->get_prop('var_type') === 'visual';
+        $meta_parts = array();
+        if (!$token_is_visual) {
+            //$code .= ($var_meta_defined ? '$var_meta' : $var_meta_expr) . ' + ';
+            $meta_parts []= $var_meta_defined ? '$var_meta' : $var_meta_expr;
         }
+        //if ($token->get_prop('var_type') == 'visual') {
+        $token_props = $token->get_all_props();
+        
+
+        $tp_parts = array();
+
+        foreach ($token_props as $tp => $tpval) {
+            if (!$token_is_visual && in_array($tp, array('id', 'var_type'))) {
+                continue;
+            }
+            $token_prop_entry = "'".$tp."' => ";
+            if ($tp == 'id') {
+                $token_prop_entry .= $var_id;
+            } elseif (preg_match("~^\`.+\`$~s", $tpval)) {
+                $token_prop_entry .= trim($tpval, '`');
+            } else {
+                $token_prop_entry .= "'".addslashes($tpval)."'";
+            }
+            $tp_parts[]= $token_prop_entry;
+        }
+        if (count($tp_parts) > 0) {
+            $meta_parts []= "array(".join(", ", $tp_parts).")";
+        }
+        $meta_parts []= '$_is_wrapper_meta';
+        //$code .= " + \$_is_wrapper_meta"; 
+        //} else {
+        
         if ($token->get_prop('editable') == 'false') {
-            $code .= ' + array("editable"=>false)';
+            //$code .= ' + array("editable"=>false)';
+            $meta_parts []= 'array("editable"=>false)';
         }
         if ($real_val_defined) {
-            $code .= ' + array("real_value" => '.$real_val_var.')';
+            //$code .= ' + array("real_value" => '.$real_val_var.')';
+            $meta_parts []= 'array("real_value" => '.$real_val_var.')';
         }
+        $code .= 'array_merge('.join(", ", $meta_parts).')';
         $code .= "\n);\n";
         $code .= "?>";
         return $code;
+    }
+    
+    protected function _get_var_meta_expression($token, $var_token, $ep) {
+        // Expression to get var meta
+        $var_meta_expr = '$this->get_var_meta(';
+        // if var is smth like $item['parent']['url'], 
+        // it should be get_var_meta('url', fx::dig( $this->v('item'), 'parent'))
+        if ($var_token->last_child) {
+            if ($var_token->last_child->type == fx_template_expression_parser::T_ARR) {
+                $last_index = $var_token->pop_child();
+                $tale = $ep->compile($last_index).', ';
+                $tale .= $ep->compile($var_token).')';
+                $var_meta_expr .= $tale;
+            } else {
+                $var_meta_expr .= ')';
+            }
+        } elseif ($var_token->context_offset !== null) {
+            $prop_name = array_pop($var_token->name);
+            $var_meta_expr .= '"'.$prop_name.'", '.$ep->compile($var_token);
+            $var_meta_expr .= ')';
+        } else {
+            $var_meta_expr .= '"'.$token->get_prop('id').'")';
+        }
+        return $var_meta_expr;
     }
     
     protected function varialize($var) {
@@ -871,6 +902,8 @@ class fx_template_compiler {
         $template_path = str_replace('\\', '/', $template_path);
         $template_dir = preg_replace("~/[^/]+$~", '', $template_path).'/';
         
+        $code .= "fx::env()->add_current_template(\$this);\n";
+        
         $code .= "\$template_dir = '".$template_dir."';\n";
         $code .= "\$_is_admin = \$this->is_admin();\n";
         $code .= 'if ($_is_admin) {'."\n";
@@ -909,7 +942,7 @@ class fx_template_compiler {
             $code .= "\t\$this->is_subroot = ".($is_subroot).";\n";
             $code .= $children_code;
         }
-        
+        $code .= "fx::env()->pop_current_template();\n";
         $code .= "\n}\n";
         return $code;
     }
