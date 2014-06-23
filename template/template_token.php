@@ -46,6 +46,10 @@ class fx_template_token {
             $props['default'] = 'true';
         }
         
+        if ($name == 'wtf') {
+            $name = 'help';
+        }
+        
         
         $type_info = self::get_token_info($name);
         //if (preg_match("~^[\\\$%]~", $name, $var_marker)) {

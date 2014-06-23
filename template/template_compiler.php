@@ -55,8 +55,14 @@ class fx_template_compiler {
         return $token->get_prop('value');
     }
     
+    protected function _token_help_to_code($token) {
+        $code = "<?php\n";
+        $code .= "echo \$this->get_help();\n";
+        $code .= "?>";
+        return $code;
+    }
+    
     protected function _token_call_to_code(fx_template_token $token) {
-        //fx::debug($token);
         $each = $token->get_prop('each');
         if ($each) {
             $each_token = fx_template_token::create('{each}');
