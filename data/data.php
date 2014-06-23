@@ -428,11 +428,6 @@ class fx_data {
         list($field, $value, $type) = $cond;
         if ($field == 'id') {
             $field = "`{{".$base_table."}}`.id";
-        } else {
-            // use conditions like "MD5(`field`)" as is
-            if (!preg_match("~[a-z0-9_-]\s*\(.*?\)~i", $field)) {
-                //$field = '`'.$field.'`';
-            }
         }
         if ($value instanceof fx_collection) {
             $value = $value->column(function($i) {
