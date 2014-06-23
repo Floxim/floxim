@@ -111,6 +111,10 @@ class fx_data {
         if (preg_match("~^\{\{.+\}\}$~", $rel)) {
             return $field;
         }
+        $relation = $this->get_relation($rel);
+        if (!$relation) {
+            return '`'.$rel.'`.`'.$field_name.'`';
+        }
         if (!isset($this->with[$rel])) {
             $this->only_with($rel);
         } 
@@ -122,7 +126,7 @@ class fx_data {
 
         $with_name = $c_with[0];
         $with_finder = $c_with[1];
-        $relation = $this->get_relation($rel);
+        
         if (func_num_args() == 3 && $relation[0] != fx_data::MANY_MANY) {
             //$with_finder->where($field_name, $value, $type);
         }
@@ -412,7 +416,14 @@ class fx_data {
             return " (".join(" OR ", $parts).") ";
         }
         if (strtoupper($cond[2]) === 'RAW') {
-            return ($cond[0] ? '`'.$cond[0].'` ' : '').$cond[1];
+            $field_name = $cond[0];
+            if (!$field_name) {
+                return $cond[1];
+            }
+            if (!preg_match("~^\`~", $field_name)) {
+                $field_name = '`'.(join("`.`", explode(".", $field_name))).'`';
+            }
+            return $field_name.' '.$cond[1];
         }
         list($field, $value, $type) = $cond;
         if ($field == 'id') {
