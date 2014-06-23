@@ -9,7 +9,7 @@ class fx_config {
         'CHARSET' => 'utf-8',
         'ADMIN_LANG' => 'en',
         'auth.login_field' => 'email',
-        'auth.remember_ttl' => 86400,
+        'auth.remember_ttl' => 604800, // 86400 * 7
         'FILECHMOD' => 0644,
         'DIRCHMOD' => 0755,
         

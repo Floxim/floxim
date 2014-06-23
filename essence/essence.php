@@ -262,8 +262,25 @@ abstract class fx_essence implements ArrayAccess {
         return false;
     }
 
+    protected static function _is_template_var($var) {
+        return mb_substr($var, 0, 1) === '%';
+    }
+    
     /* Array access */
     public function offsetGet($offset) {
+        
+        // handle template-content vars like $item['%description']
+        if (self::_is_template_var($offset)) {
+            $offset = mb_substr($offset, 1);
+            $template = fx::env('current_template');
+            if (!$template || !($template instanceof fx_template) ) {
+                return parent::offsetGet($offset);
+            }
+            $template_value = $template->v($offset."_".$this['id']);
+            if ($template_value){
+                return $template_value;
+            }
+        }
         
         if (method_exists($this, '_get_'.$offset)) {
             return call_user_func(array($this, '_get_'.$offset));
@@ -337,6 +354,9 @@ abstract class fx_essence implements ArrayAccess {
     }
 
     public function offsetExists($offset) {
+        if (self::_is_template_var($offset)) {
+            return true;
+        }
         if  (array_key_exists($offset, $this->data)) {
             return true;
         }
@@ -365,6 +385,26 @@ abstract class fx_essence implements ArrayAccess {
      */
     public function add_template_record_meta($html) {
         return $html;
+    }
+    
+    /**
+     * Get meta info for the field in template
+     * Here we handle only template vars, more complex implementation is in fx_content
+     * @param string $field_keyword
+     * @return array Meta info
+     */
+    public function get_field_meta($field_keyword) {
+        if (!self::_is_template_var($field_keyword)) {
+            return array();
+        }
+        $field_keyword = mb_substr($field_keyword, 1);
+        return array(
+            'var_type' => 'visual',
+            'id' => $field_keyword.'_'.$this['id'],
+            'name' => $field_keyword.'_'.$this['id'],
+            // we need some more sophisticated way to guess the var type =)
+            'type' => 'string'
+        );
     }
     
     public function is_modified($field = null) {

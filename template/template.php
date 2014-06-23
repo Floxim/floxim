@@ -82,7 +82,7 @@ class fx_template {
         if ($var_name === null) {
             return array();
         }
-        if ($source && $source instanceof fx_content) {
+        if ($source && $source instanceof fx_essence) {
             $meta = $source->get_field_meta($var_name);
             return is_array($meta) ? $meta : array();
         }

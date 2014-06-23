@@ -1,6 +1,6 @@
 <?php
 class fx_content extends fx_essence {
-
+    
     protected $component_id;
 
     public function __construct($input = array()) {
@@ -100,21 +100,35 @@ class fx_content extends fx_essence {
     
     public function get_field_meta($field_keyword) {
         $fields = $this->get_fields();
-        if (!isset($fields[$field_keyword])) {
-            return false;
+        $is_template_var = self::_is_template_var($field_keyword);
+        if ($is_template_var) {
+            $field_keyword = mb_substr($field_keyword, 1);
+            $cf = $fields[$field_keyword];
+            $field_meta = array(
+                'var_type' => 'visual',
+                'id' => $field_keyword.'_'.$this['id'],
+                'name' => $field_keyword.'_'.$this['id']
+            );
+        } else {
+            $cf = $fields[$field_keyword];
+            if (!$cf) {
+                return false;
+            }
+            $field_meta = array(
+                'var_type' => 'content', 
+                'content_id' => $this['id'],
+                'content_type_id' => $this->component_id,
+                'id' => $cf['id'],
+                'name' => $cf['keyword']
+            );
         }
-        $cf = $fields[$field_keyword];
-        $field_meta = array(
-            'var_type' => 'content', 
-            'content_id' => $this['id'],
-            'content_type_id' => $this->component_id,
-            'id' => $cf['id'],
-            'name' => $cf['keyword'],
-            'label' => $cf['name'],
-            'type' => $cf->type
-        );
-        if ($cf->type == 'text') {
-            $field_meta['html'] = isset($cf['format']['html']) ? $cf['format']['html'] : 0;
+        $field_meta['label'] = $cf && $cf['name'] ? $cf['name'] : $field_keyword;
+        if ($cf && $cf->type) {
+            if ($cf->type === 'text') {
+                $field_meta['type'] = isset($cf['format']['html']) ? 'html' : 'text';
+            } else {
+                $field_meta['type'] = $cf->type;
+            }
         }
         return $field_meta;
     }
