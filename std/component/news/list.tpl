@@ -14,5 +14,17 @@
         <div fx:if="$comments_counter" class="comments_counter">Comments: {$comments_counter}0{/$}</div>
     </div>
     {$pagination | component_content.pagination}
-    {*{apply component_content.pagination /}*}
+</div>
+
+<div fx:template="news_tiles" fx:of="news.list" fx:name="News tiles" class="news_tiles_list">
+    <div class="material_tiles">
+        <div class="material" fx:item>
+            <div class="title">
+                <a href="{$url}">{$name}</a>
+            </div>
+            <div class="date">{$publish_date | 'd.m.Y'}</div>
+            <div class="description">{$description}</div>
+            <div class="read_more"><a href="{$url}">{%read_more}Read more{/%}</a></div>
+        </div>
+     </div>
 </div>

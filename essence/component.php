@@ -78,6 +78,20 @@ class fx_component extends fx_essence {
         return $fields;
     }
 
+    public function get_field_by_keyword($keyword,$use_chain=false) {
+        if ($use_chain) {
+            $fields=$this->all_fields();
+        } else {
+            $fields=$this->fields();
+        }
+        foreach($fields as $field) {
+            if (strtolower($field['keyword'])==strtolower($keyword)) {
+                return $field;
+            }
+        }
+        return null;
+    }
+
     public function get_sortable_fields() {
         //$this->_load_fields();
 

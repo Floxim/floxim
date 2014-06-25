@@ -55,7 +55,7 @@ $fx.popup = function(params) {
             var is_fixed = false;
             var $cp = this.$target;
             do {
-                if ($cp.css('position') === 'fixed') {
+                if ($cp[0]!=document && $cp.css('position') === 'fixed') {
                     is_fixed = true;
                     break;
                 }

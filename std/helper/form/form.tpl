@@ -9,6 +9,11 @@
         FX_JQUERY_PATH as jquery
         form.js
     {/js}
+    {if $_.skin == 'default'}
+        {css}
+            form_default.less
+        {/css}
+    {/if}
     <input type="hidden" name="{$.get_id()}_sent" value="1" />
     {$_.content}
         {apply messages /}
@@ -43,7 +48,7 @@
     {apply input /}
 </div>
 
-<div fx:template="errors" fx:each="$errors as $error" class="fx_form_error">
+<div fx:template="errors" fx:each="$_.errors as $error" class="fx_form_error">
     {$error}
 </div>
 

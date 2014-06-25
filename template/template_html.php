@@ -300,12 +300,11 @@ class fx_template_html {
                     if ($closed_tag->name != $token->name) {
                         $start_offset = $closed_tag->offset[0] ;
                         $end_offset = $token->offset[0];
-                        //$before = substr($this->_string, 0, $start_offset);
-                        $start_line = substr_count($this->_string, "\n", 0, $start_offset) + 1;
-                        $end_line = substr_count($this->_string, "\n", 0, $end_offset) + 1;
+                        
+                        $start_line = mb_substr_count( mb_substr($this->_string, 0, $start_offset), "\n" ) + 1;
+                        $end_line = mb_substr_count( mb_substr($this->_string, 0, $end_offset), "\n" ) + 1;
                         $msg = "HTML parser error: ".
                                 "start tag ".$closed_tag->source.
-                                //$closed_tag->offset[0]."-".$closed_tag->offset[1].")".
                                 " (line ".$start_line.") ".
                                 "doesn't match end tag </".$token->name.'> (line '.$end_line.')';
                         

@@ -1194,6 +1194,23 @@ class fx_system_files {
             $path .= $row . $slash;
         }
     }
+
+    public function send_download_file($path,$name,$size=null) {
+        if (file_exists($path) and $file=fopen($path,"r")) {
+            header("Content-Type: application/octet-stream");
+            header("Content-Disposition: attachment; filename=".urlencode($name).";");
+            header("Content-Transfer-Encoding: binary");
+            if ($size) {
+                header("Content-Length: ".$size);
+            }
+            while (!feof($file)) {
+                $content=fread($file ,1024*100);
+                echo $content;
+            }
+            exit(0);
+        }
+        return false;
+    }
 }
 
 class fx_exception_files extends fx_exception {
