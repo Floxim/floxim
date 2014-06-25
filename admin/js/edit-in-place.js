@@ -78,6 +78,9 @@ fx_edit_in_place.prototype.handle_keydown = function(e) {
 
 fx_edit_in_place.prototype.start = function(meta) {
 	var edit_in_place = this;
+        if (!meta.type) {
+            meta.type = 'string';
+        }
 	switch (meta.type) {
             case 'datetime':
                 this.add_panel_field(
@@ -88,12 +91,9 @@ fx_edit_in_place.prototype.start = function(meta) {
                 break;
             case 'image': case 'file': 
                 var field_meta = $.extend(
-                        {}, 
-                        meta, 
-                        {
-                            //value:'olo' //{path: meta.real_value || ''}
-                            real_value:{path: meta.real_value || ''}
-                        }
+                    {}, 
+                    meta, 
+                    {real_value:{path: meta.real_value || ''}}
                 );
                 this.add_panel_field(
                     field_meta
@@ -108,43 +108,37 @@ fx_edit_in_place.prototype.start = function(meta) {
                 if (meta.is_att) {
                     this.add_panel_field(meta);
                 } else {
+                    var $n = this.node;
                     this.is_content_editable = true;
                     if (!$($fx.front.get_selected_item()).hasClass('fx_essence')) {
                         setTimeout(function() {
                             $fx.front.stop_essences_sortable();
                         }, 50);
                     }
-                    if (this.node.hasClass('fx_hidden_placeholded')) {
+                    if ($n.hasClass('fx_hidden_placeholded')) {
                         this.was_placeholded_by = this.node.html();
-                        this.node.removeClass('fx_hidden_placeholded');
-                        this.node.html('');
+                        $n.removeClass('fx_hidden_placeholded');
+                        $n.html('');
                     }
-                    this.node.addClass('fx_var_editable');
-                    this.node.data('fx_saved_value', this.node.html());
+                    $n.addClass('fx_var_editable');
+                    $n.data('fx_saved_value', $n.html());
                     if ( (meta.type === 'text' && meta.html && meta.html !== '0') || meta.type === 'html') {
                         this.is_wysiwyg = true;
                         this.make_wysiwyg();
                     }
                     
-                    var $n = this.node;
-                    setTimeout(function() {
-                        $n.attr('contenteditable', 'true').focus();
-                        if (edit_in_place.is_wysiwyg) {
-                            return;
-                        }
-                        $n.on('keydown.edit_in_place', function() {
-                            //$n.removeClass('fx_editable_empty');
-                        });
-                        $n.on(
-                            'keyup.edit_in_place click.edit_in_place change.edit_in_place', 
-                            function () {
-                                $n.toggleClass(
-                                    'fx_editable_empty', 
-                                    $n.text().length < 2
-                                );
-                            }
+                    var handle_node_size = function () {
+                        $n.toggleClass(
+                            'fx_editable_empty', 
+                            $n.text().length < 2
                         );
-                    }, 50);
+                    };
+                    handle_node_size();
+                    $n.attr('contenteditable', 'true').focus();
+                    $n.on(
+                        'keyup.edit_in_place click.edit_in_place change.edit_in_place', 
+                        handle_node_size
+                    );
                 }
                 break;
 	}
