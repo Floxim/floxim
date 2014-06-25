@@ -171,7 +171,7 @@ class fx_template_token {
         ),
         'call' => array(
             'type' => 'both',
-            'contains' => array('var', 'each', 'if', 'call')
+            'contains' => array('var', 'each', 'if', 'apply', 'call', 'with_each')
         ),
         'templates'=> array(
             'type' => 'double',
