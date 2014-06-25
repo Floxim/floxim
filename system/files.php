@@ -1207,6 +1207,7 @@ class fx_system_files {
                 $content=fread($file ,1024*100);
                 echo $content;
             }
+            fx::env('complete_ok', true);
             exit(0);
         }
         return false;
