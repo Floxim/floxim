@@ -10,6 +10,11 @@ $('html').on('click', '.fx_refresh_captcha', function() {
 
 $('html').on('submit', 'form.fx_form_ajax', function() {
     var $form = $(this);
+    var event_before = $.Event('fx_before_ajax_form_sent');
+    $form.trigger(event_before);
+    if (event_before.isDefaultPrevented()) {
+        return false;
+    }
     $.ajax({
         type:'post',
         url:$form.attr('action'),
