@@ -243,16 +243,20 @@ class fx {
                 $ctr_name = $c_parts[2];
                 if ($ctr_type === 'component') {
                     $component = fx::data('component', $ctr_name);
-                    foreach ($component->get_ancestors() as $parent_com) {
-                        try {
-                            $keyword = $parent_com['keyword'];
-                            $c_class = 'fx_controller_component'.($keyword == 'content' ? '' : '_'.$keyword);
-                            $controller_instance = new $c_class($input, $action);
-                            $controller_instance->set_content_type($ctr_name);
-                            return $controller_instance;
-                        } catch (Exception $ex) {
-                            
+                    if ($component) {
+                        foreach ($component->get_ancestors() as $parent_com) {
+                            try {
+                                $keyword = $parent_com['keyword'];
+                                $c_class = 'fx_controller_component'.($keyword == 'content' ? '' : '_'.$keyword);
+                                $controller_instance = new $c_class($input, $action);
+                                $controller_instance->set_content_type($ctr_name);
+                                return $controller_instance;
+                            } catch (Exception $ex) {
+                                
+                            }
                         }
+                    } else {
+                        fx::log("no com", $ctr_name, debug_backtrace());
                     }
                 }
                 $c_class = 'fx_controller_'.$ctr_type;
