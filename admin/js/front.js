@@ -883,7 +883,8 @@ fx_front.prototype.hilight = function() {
             var hidden_placeholder = meta.hidden_placeholder;
             if ($fx.front.node_is_empty(i) ) {
                 if ( i.hasClass('fx_template_var') ) {
-                    hidden_placeholder = i.data('fx_var').label;
+                    var var_meta = i.data('fx_var');
+                    hidden_placeholder = var_meta.label ? var_meta.label : var_meta.id; //i.data('fx_var').label;
                 } else if (i.hasClass('fx_infoblock') && !hidden_placeholder) {
                     var ib_meta = i.data('fx_infoblock');
                     hidden_placeholder = $fx.lang('Infoblock #'+ ib_meta.id + ' is empty');
@@ -1582,10 +1583,6 @@ fx_front.prototype.outline_block = function(n, style) {
             $fx.front.recount_node_panel();
         };
         n.off('.recount_outlines').on('resize.recount_outlines keydown.recount_outlines', recount_outlines);
-        //$(window).on('resize.recount_outlines', recount_outlines);
-        if (n.hasClass('fx_template_var') && $fx.front.node_is_empty(n) && !n.hasClass('fx_editable_empty')) {
-            return;
-        }
     }
     var o = n.offset();
     var overlay_offset = parseInt(this.get_front_overlay().css('top'));

@@ -255,9 +255,14 @@ class fx_template_expression_parser extends fx_template_fsm {
             $parts []= $stack;
         }
         $res = array();
+        // helper to trim & clean parts
+        $trim_esc = function($s) {
+            return str_replace('``', '', trim($s));
+        };
         foreach ($parts as $p) {
             $value = null;
             $stack = '';
+            $part_is_eq = false;
             foreach ($p as $item) {
                 if ($item->type == self::T_CODE) {
                     $is_as = preg_match('~\s*as\s*~', $item->data);
@@ -265,6 +270,7 @@ class fx_template_expression_parser extends fx_template_fsm {
                     if ($is_as || $is_eq) {
                         $value = $stack;
                         $stack = '';
+                        $part_is_eq = $is_eq;
                         continue;
                     }
                 }
@@ -275,20 +281,16 @@ class fx_template_expression_parser extends fx_template_fsm {
                 $value = $stack;
                 $stack = '$';
             }
-            if ($is_eq) {
-                $res[$this->_trim_esc($value)] = $this->_trim_esc($stack);
+            $value = $trim_esc($value);
+            $stack = $trim_esc($stack);
+            if ($part_is_eq) {
+                $res[$value] = $stack;
             } else {
-                $res[$this->_trim_esc($stack)] = $this->_trim_esc($value);
+                $res[$stack] = $value;
             }
         }
-        //fx::debug($res);
         return $res;
     }
-    
-    protected function _trim_esc($s) {
-        return str_replace('``', '', trim($s));
-    }
-
     
     protected $looking_for_var_name = false;
     public function find_var_name($str) {

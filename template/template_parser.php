@@ -101,7 +101,7 @@ class fx_template_parser {
                                 continue;
                             }
                             if (
-                                $next_token->type == 'open' && 
+                                $next_token->type != 'close' && 
                                 ($next_token->name == 'elseif' || $next_token->name == 'else')
                             ) {
                                 $next_token->stack_extra = true;
