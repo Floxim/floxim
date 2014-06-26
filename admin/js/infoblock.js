@@ -40,7 +40,7 @@ window.fx_controller_tree = function (html) {
             subs.not(selector).hide();
         });
         if (!has_filters) {
-            subs.filter('.hidden').hide();
+            subs.filter('.fx_group_hidden').hide();
             $filter_dropper.hide();
         } else {
             subs.filter('.group').hide();
