@@ -65,10 +65,7 @@ window.fx_front = function () {
     
     this.c_hover = null;
     
-    
-    //$('html').on('click.fx_click', function(e) {return $fx.front.handle_click(e);});
-    
-    $('html').on('fx_select', function(e) {
+   $('html').on('fx_select', function(e) {
         var n = $(e.target);
         if ($fx.front.mode === 'edit') {
             if (n.is('.fx_essence')) {
@@ -247,7 +244,6 @@ fx_front.prototype.handle_click = function(e) {
         return false;
     }
     $fx.front.select_item(closest_selectable);
-    
     return false;
 
 };
@@ -936,7 +932,7 @@ fx_front.prototype.is_jquery_overriden = function() {
     // it is slower, but we can be relatively sure 
     // that the event will not be prevented by client script (our listener is attached later)
     return window.jQuery !== window.$fxj;
-}
+};
 
 fx_front.prototype.load = function ( mode ) {
     this.mode = mode;
@@ -1032,7 +1028,7 @@ fx_front.prototype.select_content_essence = function($essence) {
        }
     });
     
-    $fx.front.start_essences_sortable($essence.parent());
+    //$fx.front.start_essences_sortable($essence.parent());
     var meta_extra = $essence.data('fx_essence_meta');
     if (meta_extra && meta_extra.accept_content) {
         $.each(meta_extra.accept_content, function () {
@@ -1486,34 +1482,6 @@ fx_front.prototype.move_down_body = function () {
 
 fx_front.prototype.get_node_panel = function() {
     return $($($fx.front.get_selected_item()).data('fx_node_panel'));
-};
-
-fx_front.prototype.add_panel_field = function(field) {
-    var $field_container = $fx.front.get_node_panel(); // $('#fx_admin_fields')
-    $field_container.show();
-    var field_node = $fx_form.draw_field(field, $field_container);
-    field_node.css({'outline-style': 'solid','outline-color':'#FFF'});
-    field_node.find(':input').css({'background':'transparent'});
-    field_node.animate(
-        {
-            'background-color':'#FF0', 
-            'outline-width':'6px',
-            'outline-color':'#FF0'
-        },
-        300,
-        null,
-        function() {
-            field_node.animate(
-                {
-                    'background-color':'#FFF', 
-                    'outline-width':'0px',
-                    'outline-color':'#FFF'
-                },
-                300
-            );
-        }
-    );
-    return field_node;
 };
 
 fx_front.prototype.add_panel_button = function(button, callback) {

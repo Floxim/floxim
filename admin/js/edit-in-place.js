@@ -81,6 +81,7 @@ fx_edit_in_place.prototype.start = function(meta) {
         if (!meta.type) {
             meta.type = 'string';
         }
+        this.node.trigger('fx_before_editing');
 	switch (meta.type) {
             case 'datetime':
                 this.add_panel_field(
@@ -158,10 +159,35 @@ fx_edit_in_place.prototype.add_panel_field = function(meta) {
     if (!meta.type) {
         meta.type = 'string';
     }
-    var field = $fx.front.add_panel_field(meta);
-    field.data('meta', meta);
-    this.panel_fields.push(field);
-    return field;
+    //var field = $fx.front.add_panel_field(meta);
+    
+    var $field_container = $fx.front.get_node_panel();
+    $field_container.show();
+    var field_node = $fx_form.draw_field(meta, $field_container);
+    field_node.css({'outline-style': 'solid','outline-color':'#FFF'});
+    field_node.find(':input').css({'background':'transparent'});
+    field_node.animate(
+        {
+            'background-color':'#FF0', 
+            'outline-width':'6px',
+            'outline-color':'#FF0'
+        },
+        300,
+        null,
+        function() {
+            field_node.animate(
+                {
+                    'background-color':'#FFF', 
+                    'outline-width':'0px',
+                    'outline-color':'#FFF'
+                },
+                300
+            );
+        }
+    );
+    field_node.data('meta', meta);
+    this.panel_fields.push(field_node);
+    return field_node;
 };
 
 fx_edit_in_place.prototype.stop = function() {
@@ -195,17 +221,18 @@ fx_edit_in_place.prototype.get_vars = function() {
     // edit the text node
     var is_content_editable = this.is_content_editable;
     if (is_content_editable) {
-        if (this.is_wysiwyg && this.source_area.is(':visible')) {
-            this.node.redactor('toggle');
+        if (this.is_wysiwyg) {
+            if (this.source_area.is(':visible')) {
+                this.node.redactor('toggle');
+            }
+            $('.fx_internal_block', this.node).trigger('fx_stop_editing');
         }
-        var text_val = this.is_wysiwyg ? node.redactor('get') : node.text();
-        var html_val = this.is_wysiwyg ? node.redactor('get') : node.html();
-        var saved_val = node.data('fx_saved_value');
-        
-        if (text_val !== saved_val && html_val !== saved_val ) {
+        var new_val = $.trim(this.is_wysiwyg ? node.redactor('get') : node.text());
+        var saved_val = $.trim(node.data('fx_saved_value'));
+        if (new_val !== saved_val) {
             vars.push({
                 'var':this.meta,
-                value:this.is_wysiwyg ? html_val : text_val
+                'value':new_val
             });
         }
     }
@@ -259,10 +286,10 @@ fx_edit_in_place.prototype.save = function() {
         }
     });
     
-    //var vars = this.get_vars();
-    
     // nothing has changed
     if (vars.length === 0) {
+        this.stop();
+        this.restore();
         return this;
     }
     var node = this.node;
@@ -289,8 +316,9 @@ fx_edit_in_place.prototype.restore = function() {
     }
     var saved = this.node.data('fx_saved_value');
     this.node.html(saved);
+    this.node.trigger('fx_editable_restored');
     return this;
-}
+};
 
 fx_edit_in_place.prototype.make_wysiwyg = function () {
     var sel = window.getSelection(),
@@ -319,30 +347,67 @@ fx_edit_in_place.prototype.make_wysiwyg = function () {
     if (this.meta.linebreaks !== undefined) {
         linebreaks = this.meta.linebreaks;
     }
+    $fx_fields.make_redactor($node, {
+        linebreaks:linebreaks,
+        toolbarExternal: '.editor_panel',
+        initCallback: function() {
+            var $range_node = $node.parent().find('.fx_click_range_marker');
+            if ($range_node.length) {
+                var range_text = $range_node[0].childNodes[range_text_position];
+                if (!range_text && $range_node[0].childNodes.length > 0) {
+                    range_text = $range_node[0].childNodes[0];
+                    click_range_offset = 0;
+                }
+                if (range_text && range_text.nodeType === 3) {
+                    var selection = window.getSelection(),
+                        range = document.createRange();
+                    if (click_range_offset > range_text.length) {
+                        click_range_offset = range_text.length;
+                    }
+                    range.setStart(range_text, click_range_offset);
+                    range.collapse(true);
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                }
+                $range_node.removeClass('fx_click_range_marker');
+            }
+            this.sync();
+        }
+    });
+    /*
     $node.redactor({
         linebreaks:linebreaks,
         toolbarExternal: '.editor_panel',
         imageUpload : '/floxim/admin/controller/redactor-upload.php',
-        buttons: ['formatting', '|', 'bold', 'italic', 'deleted', '|',
-                'unorderedlist', 'orderedlist', '|',
-                'image', 'video', 'file', 'table', 'link', '|', 'alignment', '|', 'horizontalrule'],
-        plugins: ['fontcolor'],
+        buttons: ['formatting',  'bold', 'italic', 'deleted',
+                'unorderedlist', 'orderedlist',
+                'image', 'video', 'file', 'table', 'link', 'alignment', 'horizontalrule'],
+        plugins: ['fontcolor','codemirror'],
         initCallback: function() {
-            var selection = window.getSelection(),
-                range = document.createRange(),
-                $range_node = $node.parent().find('.fx_click_range_marker');
+            var $range_node = $node.parent().find('.fx_click_range_marker');
             if ($range_node.length) {
-                range.setStart($range_node[0].childNodes[range_text_position], click_range_offset);
+                var range_text = $range_node[0].childNodes[range_text_position];
+                if (!range_text && $range_node[0].childNodes.length > 0) {
+                    range_text = $range_node[0].childNodes[0];
+                    click_range_offset = 0;
+                }
+                if (range_text && range_text.nodeType === 3) {
+                    var selection = window.getSelection(),
+                        range = document.createRange();
+                    if (click_range_offset > range_text.length) {
+                        click_range_offset = range_text.length;
+                    }
+                    range.setStart(range_text, click_range_offset);
+                    range.collapse(true);
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                }
                 $range_node.removeClass('fx_click_range_marker');
-                range.collapse(true);
-                selection.removeAllRanges();
-                selection.addRange(range);
             }
             this.sync();
-            $node.data('fx_saved_value', this.get());
         }
     });
-
+    */
     this.source_area = $('textarea[name="'+ $node.attr('id')+'"]');
     this.source_area.addClass('fx_overlay');
     this.source_area.css({

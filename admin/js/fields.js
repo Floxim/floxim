@@ -108,6 +108,22 @@ window.$fx_fields = {
         var $field = $t.jQuery('form_row', json);
         new fx_google_map_field($field);
         return $field;
+    },
+    make_codemirror: function(textarea, options) {
+        
+    },
+    make_redactor: function($node, options) {
+        options = $.extend({
+            imageUpload : '/floxim/admin/controller/redactor-upload.php',
+            buttons: ['formatting',  'bold', 'italic', 'deleted',
+                    'unorderedlist', 'orderedlist',
+                    'image', 'video', 'file', 'table', 'link', 'alignment', 'horizontalrule'],
+            plugins: ['fontcolor'],
+        }, options);
+        var e = $.Event('fx_create_redactor');
+        e.redactor_options = options;
+        $node.trigger(e);
+        $node.redactor(options);
     }
 };
 

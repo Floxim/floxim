@@ -8,8 +8,6 @@ class fx_controller_component_page extends fx_controller_component {
         $q_next = clone $q;
         $q_prev = clone $q;
         
-        
-        
         if ($this->get_param('sorting') === 'auto') {
             $item_ib_params = fx::data('infoblock', $item['infoblock_id'])->get('params');
             $ib_sorting = $item_ib_params['sorting'];
@@ -43,9 +41,6 @@ class fx_controller_component_page extends fx_controller_component {
         
         $next = $q_next->all();
         
-        
-        //fx::log($item, $q_next, $q_prev);
-        
         return array(
             'prev' => $prev,
             'current' => $item,
@@ -53,11 +48,3 @@ class fx_controller_component_page extends fx_controller_component {
         );
     }
 }
-/*
-1
-2
-+3
-4
-5
- * 
- */

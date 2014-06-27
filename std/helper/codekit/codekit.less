@@ -1,0 +1,28 @@
+.re-codekit:before {
+    content:'</>';
+    font-size: 10px;
+    position: relative;
+    top: -3px;
+    left: -5px;
+    font-weight: bold;
+}
+
+pre.fx_codekit {
+    border:1px solid #CCC;
+    border-radius:3px;
+    padding:5px;
+    .CodeMirror {
+        height:auto;
+    }
+}
+
+.fx_codekit_spacer {
+    height:0px;
+    line-height:0px;
+    position:absolute;
+    &.fx_codekit_spacer_focused {
+        height:auto;
+        position:static;
+        line-height:inherit;
+    }
+}

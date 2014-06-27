@@ -95,9 +95,9 @@ if (_o.hide_in_panel) {
 }
 
 if (_c.context !== 'panel') {
-    $('textarea.fx_wysiwyg', html).redactor({
-        imageUpload : '/floxim/admin/controller/redactor-upload.php'
-    });
+    setTimeout(function() {
+        $fx_fields.make_redactor($('textarea.fx_wysiwyg', html), {});
+    },50);
 } else {
     var expander = $('.fx_panel_text_expander', html);
     expander.click(function() {
@@ -126,22 +126,14 @@ if (_c.context !== 'panel') {
 html.find('textarea.fx_code').each( function(){
     var code_type = this.className.match(/fx_code_([^\s]+)/)[1];
     var $textarea = $(this);
-    if (!window.CodeMirror) {
-        var codemirror_path = '/floxim/lib/codemirror/';
-        $.ajax({
-            url:codemirror_path+'codemirror.all.php',
-            dataType:'script',
-            async:false
-        });
-        $(document.head).append('<link type="text/css" rel="stylesheet" href="'+codemirror_path+'lib/codemirror.css" />');
-    }
+    
     var config_map = {
         html:'htmlmixed',
         php:'php',
         css:'css'
     };
 
-    code_type = config_map[code_type] || 'htmlmixed';
+    code_type = config_map[code_type] || 'php';
 
     var config = {
         mode:code_type,

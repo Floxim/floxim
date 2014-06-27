@@ -105,6 +105,7 @@ class fx_controller_admin extends fx_controller {
             '/floxim/admin/js/nav.js',
             '/floxim/lib/editors/redactor/redactor.js',
             '/floxim/lib/editors/redactor/fontcolor.js',
+            '/floxim/lib/codemirror/codemirror.all.js',
             '/floxim/lib/js/jquery.form.js',
             '/floxim/lib/js/jquery.cookie.js',
             '/floxim/lib/js/jquery.ba-resize.min.js',
@@ -118,32 +119,16 @@ class fx_controller_admin extends fx_controller {
         
         $page->add_js_bundle($js_files, array('name' => 'fx_admin'));
         
-        /*
-        $update_checker_url = fx::config()->FLOXIM_SITE_PROTOCOL.'://'.
-                  fx::config()->FLOXIM_SITE_HOST.
-                  '/getfloxim/check_updates.js?v='.
-                  fx::config()->FX_VERSION;
-        
-        $page->add_js_text("
-           (function(){
-            var fxupdate = document.createElement('script');
-               fxupdate.type = 'text/javascript';
-               fxupdate.async = true;
-               fxupdate.src = '".$update_checker_url."';
-            (document.getElementsByTagName('head')[0]||document.getElementsByTagName('body')[0]).appendChild(fxupdate);
-          })(); 
-        ");
-         * 
-         */
         $page->add_css_bundle(array(
             '/floxim/lib/editors/redactor/redactor.css',
         ));
+        
         $page->add_css_bundle(array(
-            //'/floxim/admin/style/jqueryui.less',
             '/floxim/admin/style/main.less',
             '/floxim/admin/style/forms.less',
             '/floxim/admin/style/front.less',
             '/floxim/admin/style/debug.less',
+            '/floxim/lib/codemirror/codemirror.css'
         ), array('name' => 'admin_less'));
     }
     
