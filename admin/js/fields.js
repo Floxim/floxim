@@ -116,12 +116,19 @@ window.$fx_fields = {
         options = $.extend({
             imageUpload : '/floxim/admin/controller/redactor-upload.php',
             buttons: ['formatting',  'bold', 'italic', 'deleted',
-                    'unorderedlist', 'orderedlist',
+                    'unorderedlist', 'orderedlist', 'outdent', 'indent',
                     'image', 'video', 'file', 'table', 'link', 'alignment', 'horizontalrule'],
             plugins: ['fontcolor'],
         }, options);
+        if (options.extra_buttons) {
+            for(var i = 0; i < options.extra_buttons.length; i++) {
+                options.buttons.push(options.extra_buttons[i]);
+            }
+            delete options.extra_buttons;
+        }
         var e = $.Event('fx_create_redactor');
         e.redactor_options = options;
+        
         $node.trigger(e);
         $node.redactor(options);
     }

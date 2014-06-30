@@ -96,7 +96,7 @@ if (_o.hide_in_panel) {
 
 if (_c.context !== 'panel') {
     setTimeout(function() {
-        $fx_fields.make_redactor($('textarea.fx_wysiwyg', html), {});
+        $fx_fields.make_redactor($('textarea.fx_wysiwyg', html), {extra_buttons:['html']});
     },50);
 } else {
     var expander = $('.fx_panel_text_expander', html);
