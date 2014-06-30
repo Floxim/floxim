@@ -163,7 +163,7 @@ class fx_template_token {
         ),
         'area' => array(
             'type' => 'both',
-            'contains' => array('code', 'template', 'var', 'area', 'each', 'with_each')
+            'contains' => array('code', 'template', 'var', 'area', 'each', 'with_each', 'if', 'elseif', 'else')
         ),
         'var' => array(
             'type' => 'both',
