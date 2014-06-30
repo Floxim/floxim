@@ -9,22 +9,39 @@ if (!window.RedactorPlugins) {
 window.RedactorPlugins.codekit = {
     init: function() {
         var _redactor = this;
-        this.buttonAdd('codekit', 'Embed Code', $.proxy(function() {
+        var button_action = $.proxy(function() {
+            var selection = this.getSelectionHtml();
+            if (selection) {
+                if (selection.match(/<code/i)) {
+                    this.inlineRemoveFormat('code');
+                } else {
+                    this.inlineFormat('code');
+                }
+                return;
+            }
             var $node = $(
                 '<pre class="fx_codekit fx_internal_block" contenteditable="false"></pre>'
             );
             this.insertNode($node);
             this.createCodemirror($node, true);
-        }, this));
+        }, this);
+        
+        this.buttonAdd('codekit', 'Embed Code', button_action);
         
         $('.fx_codekit', this.getEditor()).each(function () {
             _redactor.createCodemirror($(this), false);
+        });
+        this.getEditor().on('keyup', function(e) {
+            if (e.which === 186 && e.ctrlKey) {
+                button_action();
+                return false;
+            }
         });
     },
     createCodemirror: function($node, set_focus) {
         var _redactor = this;
         // do not let keydown event bubble up to redactor
-        $node.on('keydown', function(e) {
+        $node.on('keydown paste', function(e) {
             e.stopPropagation();
             _redactor.sync();
             return;
