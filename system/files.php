@@ -1197,6 +1197,9 @@ class fx_system_files {
 
     public function send_download_file($path,$name,$size=null) {
         if (file_exists($path) and $file=fopen($path,"r")) {
+            for ($i = 0; $i < ob_get_level(); $i++) {
+                ob_end_clean();
+            }
             header("Content-Type: application/octet-stream");
             header("Content-Disposition: attachment; filename=".urlencode($name).";");
             header("Content-Transfer-Encoding: binary");
