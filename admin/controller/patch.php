@@ -67,8 +67,16 @@ class fx_controller_admin_patch extends fx_controller_admin {
                     sprintf(fx::alang('Installing patch %s...', 'system'), $patch['to']).
                 '</p>'
         ));
-        
-        $res = $patch->install();
+
+        $res=false;
+        try {
+            $res = $patch->install();
+        } catch (Exception $e) {
+            $this->response->add_field(array(
+                                           'type' => 'label',
+                                           'value' => '<p style="color:#F00;">'.$e->getMessage().'</p>'
+                                       ));
+        }
         
         if (!$res) {
             $this->response->add_field(array(
