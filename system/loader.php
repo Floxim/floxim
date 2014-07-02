@@ -79,7 +79,8 @@ class fx_loader {
         'thumb',
         'db',
         'controller',
-        'migration'
+        'migration',
+        'migration_manager'
     );
     
     public static function get_class_file($classname) {

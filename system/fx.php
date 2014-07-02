@@ -535,6 +535,18 @@ class fx {
         }
         return self::$http;
     }
+
+    protected static $migration_manager = null;
+    /**
+     * http helper
+     * @return fx_http
+     */
+    public static function migrations($params=array()) {
+        if (!self::$migration_manager) {
+            self::$migration_manager = new fx_migration_manager($params);
+        }
+        return self::$migration_manager;
+    }
     
     /**
      * Get current user or new empty essence (with no id) if not logged in
