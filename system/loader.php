@@ -44,6 +44,7 @@ class fx_loader {
         'widget',
         'filetable',
         'patch',
+        'patch_migration',
         'lang_string',
         'lang',
         'session'
@@ -77,7 +78,8 @@ class fx_loader {
         'cache', 
         'thumb',
         'db',
-        'controller'
+        'controller',
+        'migration'
     );
     
     public static function get_class_file($classname) {

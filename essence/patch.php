@@ -73,8 +73,8 @@ class fx_patch extends fx_essence {
             }
         }
         foreach($migration_objects as $migration) {
-            if (method_exists($migration,'run')) {
-                call_user_func(array($migration,'run'));
+            if (method_exists($migration,'exec_up')) {
+                call_user_func(array($migration,'exec_up'));
             }
         }
         /**
