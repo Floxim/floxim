@@ -538,8 +538,10 @@ class fx {
 
     protected static $migration_manager = null;
     /**
-     * http helper
-     * @return fx_http
+     * migration manager
+     * @param array $params
+     *
+     * @return fx_migration_manager
      */
     public static function migrations($params=array()) {
         if (!self::$migration_manager) {
