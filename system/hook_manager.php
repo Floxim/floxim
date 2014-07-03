@@ -74,4 +74,20 @@ class fx_hook_manager {
         ';
         return $code;
     }
+
+    /**
+     * Generate code for delete component
+     *
+     * @param $params
+     *
+     * @return string
+     */
+    protected function create_after_for_component_delete($params) {
+        $component=$params['component'];
+        $code='
+            $component=fx::data("component")->where("keyword","'.$component['keyword'].'");
+            $component->delete();
+        ';
+        return $code;
+    }
 }

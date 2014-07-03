@@ -563,4 +563,29 @@ class fx_controller_admin_component extends fx_controller_admin {
         $res = $ctr->process();
         return $res;
     }
+
+    public function delete_save($input) {
+
+        $es = $this->essence_type;
+        $result = array('status' => 'ok');
+
+        $ids = $input['id'];
+        if (!is_array($ids)) {
+            $ids = array($ids);
+        }
+
+        foreach ($ids as $id) {
+            try {
+                $component=fx::data($es, $id);
+                $component->delete();
+                if ($component['vendor']=='std') {
+                    fx::hooks()->create(null,'component_delete',array('component'=>$component));
+                }
+            } catch (Exception $e) {
+                $result['status'] = 'error';
+                $result['text'][] = $e->getMessage();
+            }
+        }
+        return $result;
+    }
 }
