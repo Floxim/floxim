@@ -34,7 +34,7 @@ class fx_hook_manager {
 
         }";
 
-        $dir=fx::path('root', '/update/hook');
+        $dir=fx::path('floxim', '/update/hook');
         try {
             if (file_exists($dir)) {
                 fx::files()->mkdir($dir);
