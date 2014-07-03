@@ -239,24 +239,18 @@ class fx_controller_admin_component extends fx_controller_admin {
         $data['parent_id'] = $input['parent_id'];
         $data['item_name'] = $input['item_name'];
         
-        
-
-        $component = fx::data('component')->create($data);
-        if (!$component->validate()) {
+        $res_create=fx::data('component')->create_full($data);
+        if (!$res_create['validate_result']) {
             $result['status'] = 'error';
-            $result['errors'] = $component->get_validate_errors();
+            $result['errors'] = $res_create['validate_errors'];
             return $result;
         }
-
-        try {
-            $component->save();
+        if ($res_create['status']=='successful') {
+            $component=$res_create['component'];
             $result['reload'] = '#admin.component.edit('.$component['id'].',settings)';
-        } catch (Exception $e) {
+        } else {
             $result['status'] = 'error';
-            $result['text'][] = $e->getMessage();
-            if ($component['id']) {
-                $component->delete();
-            }
+            $result['text'][] = $res_create['error'];
         }
 
         return $result;

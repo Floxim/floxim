@@ -91,4 +91,39 @@ class fx_data_component extends fx_data {
         $items = $this->all();
         return $items->make_tree('parent_id', 'children');
     }
+
+    public function create_full($data) {
+        $result=array(
+            'status'=>'successful',
+            'validate_result'=>true,
+            'validate_errors'=>array(),
+            'error'=>null,
+            'component'=>null
+        );
+        $component = $this->create($data);
+
+        if (!$component->validate()) {
+            $result['status'] = 'error';
+            $result['validate_result'] = false;
+            $result['validate_errors'] = $component->get_validate_errors();
+            return $result;
+        }
+
+        try {
+            $component->save();
+            $result['component']=$component;
+            $component->create_content_table();
+            $component->scaffold();
+            // run creating hook
+            // ....
+            return $result;
+        } catch (Exception $e) {
+            $result['status'] = 'error';
+            $result['error'] = $e->getMessage();
+            if ($component['id']) {
+                $component->delete();
+            }
+        }
+        return $result;
+    }
 }
