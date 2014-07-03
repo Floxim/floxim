@@ -549,6 +549,19 @@ class fx {
         }
         return self::$migration_manager;
     }
+
+    protected static $hook_manager = null;
+    /**
+     * hook manager
+     *
+     * @return fx_hook_manager
+     */
+    public static function hooks() {
+        if (!self::$hook_manager) {
+            self::$hook_manager = new fx_hook_manager();
+        }
+        return self::$hook_manager;
+    }
     
     /**
      * Get current user or new empty essence (with no id) if not logged in

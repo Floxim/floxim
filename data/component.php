@@ -115,7 +115,9 @@ class fx_data_component extends fx_data {
             $component->create_content_table();
             $component->scaffold();
             // run creating hook
-            // ....
+            if ($data['vendor']=='std') {
+                fx::hooks()->create(null,'component_create',array('data'=>$data));
+            }
             return $result;
         } catch (Exception $e) {
             $result['status'] = 'error';

@@ -80,7 +80,8 @@ class fx_loader {
         'db',
         'controller',
         'migration',
-        'migration_manager'
+        'migration_manager',
+        'hook_manager',
     );
     
     public static function get_class_file($classname) {
