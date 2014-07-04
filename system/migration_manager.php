@@ -30,7 +30,7 @@ class fx_migration_manager {
 
         }";
 
-        $dir=fx::path('root', '/update/migration');
+        $dir=fx::path('floxim', '/update/migration');
         try {
             if (file_exists($dir)) {
                 fx::files()->mkdir($dir);

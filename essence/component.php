@@ -115,10 +115,9 @@ class fx_component extends fx_essence {
 
     protected function _after_insert() {
         $this->create_content_table();
-        $this->scaffold();
     }
     
-    protected function create_content_table() {
+    public function create_content_table() {
         $sql = "DROP TABLE IF  EXISTS `{{content_".$this['keyword']."}}`;
             CREATE TABLE IF NOT EXISTS `{{content_".$this['keyword']."}}` (
             `id` int(11) NOT NULL,

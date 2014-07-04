@@ -134,11 +134,11 @@ class fx_controller_admin_field extends fx_controller_admin {
         foreach ( $params as $v ) {
             $data[$v] = $input[$v];
         }
-        
+        $data['checked'] = 1;
+        $data[ $input['to_essence'].'_id'] = $input['to_id'];
+        $data['priority'] = fx::data('field')->next_priority();
+
         $field = fx::data('field')->create($data);
-        $field['checked'] = 1;
-        $field[ $input['to_essence'].'_id'] = $input['to_id'];
-        $field['priority'] = fx::data('field')->next_priority();
         if (!$field->validate()) {
             $result['status'] = 'error';
             $result['errors'] = $field->get_validate_errors();
@@ -146,6 +146,10 @@ class fx_controller_admin_field extends fx_controller_admin {
         else {
             $result = array('status' => 'ok');
             $field->save();
+            // run creating hook
+            if ($input['to_essence']=='component') {
+                fx::hooks()->create(null,'field_create',array('data'=>$data));
+            }
             $result['reload'] = '#admin.'.$input['to_essence'].'.edit('.$input['to_id'].',fields)';
         }
         
@@ -186,6 +190,7 @@ class fx_controller_admin_field extends fx_controller_admin {
         else {
             $result = array('status' => 'ok');
             $field->save();
+            fx::hooks()->create(null,'field_update',array('field'=>$field));
         }
         
         return $result;
@@ -250,5 +255,28 @@ class fx_controller_admin_field extends fx_controller_admin {
             }
         }
         return (array('fields' => $fields)) ;
+    }
+
+    public function delete_save($input) {
+
+        $es = $this->essence_type;
+        $result = array('status' => 'ok');
+
+        $ids = $input['id'];
+        if (!is_array($ids)) {
+            $ids = array($ids);
+        }
+
+        foreach ($ids as $id) {
+            try {
+                $field=fx::data($es, $id);
+                $field->delete();
+                fx::hooks()->create(null,'field_delete',array('field'=>$field));
+            } catch (Exception $e) {
+                $result['status'] = 'error';
+                $result['text'][] = $e->getMessage();
+            }
+        }
+        return $result;
     }
 }
