@@ -112,7 +112,6 @@ class fx_data_component extends fx_data {
         try {
             $component->save();
             $result['component']=$component;
-            $component->create_content_table();
             $component->scaffold();
             // run creating hook
             if ($data['vendor']=='std') {

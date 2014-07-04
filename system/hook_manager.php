@@ -70,7 +70,6 @@ class fx_hook_manager {
         $code.='
         $component=fx::data("component")->create($data);
         $component->save();
-        $component->create_content_table();
         ';
         return $code;
     }
