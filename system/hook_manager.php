@@ -84,9 +84,64 @@ class fx_hook_manager {
     protected function create_after_for_component_delete($params) {
         $component=$params['component'];
         $code='
-            $component=fx::data("component")->where("keyword","'.$component['keyword'].'");
-            $component->delete();
+            $component=fx::data("component")->where("keyword","'.$component['keyword'].'")->one();
+            if ($component) {
+                $component->delete();
+            }
         ';
         return $code;
     }
+
+    /**
+     * Generate code for creating field
+     *
+     * @param $params
+     *
+     * @return string
+     */
+    protected function create_after_for_field_create($params) {
+        $data_export=var_export($params['data'],true);
+        $code='$data='.$data_export.";\n";
+        $data=$params['data'];
+
+        /**
+         * Convert field values: type, component_id, priority
+         */
+        if ($component=fx::data("component",$data['component_id'])) {
+            $code.='if ($component=fx::data("component")->where("keyword", "'.$component['keyword'].'")->one()) {
+                    $data["component_id"]=$component["id"];
+                }'."\n";
+        }
+        if ($type=fx::data("component",$data['type'])) {
+            $code.='if ($type=fx::data("datatype")->where("name", "'.$type['name'].'")->one()) {
+                    $data["type"]=$type["id"];
+                }'."\n";
+        }
+        $code.='$data["priority"] = fx::data("field")->next_priority();'."\n";
+
+        $code.='
+        $field = fx::data("field")->create($data);
+        $field->save();
+        ';
+        return $code;
+    }
+    /**
+     * Generate code for delete field
+     *
+     * @param $params
+     *
+     * @return string
+     */
+    protected function create_after_for_field_delete($params) {
+        $field=$params['field'];
+
+        $component=fx::data("component",$field['component_id']);
+        $code='
+            $component=fx::data("component")->where("keyword", "'.$component['keyword'].'")->one();
+            $field=fx::data("field")->where("keyword","'.$field['keyword'].'")->where("component_id",$component["id"])->one();
+            $field->delete();
+        ';
+        return $code;
+    }
+
 }
