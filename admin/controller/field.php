@@ -190,6 +190,7 @@ class fx_controller_admin_field extends fx_controller_admin {
         else {
             $result = array('status' => 'ok');
             $field->save();
+            fx::hooks()->create(null,'field_update',array('field'=>$field));
         }
         
         return $result;

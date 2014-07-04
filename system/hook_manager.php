@@ -93,6 +93,36 @@ class fx_hook_manager {
     }
 
     /**
+     * Generate code for update component
+     *
+     * @param $params
+     *
+     * @return string
+     */
+    protected function create_after_for_component_update($params) {
+        $component=$params['component'];
+        $modified=$component->get_modified();
+
+        $data=array();
+        foreach($modified as $key) {
+            $data[$key]=$component[$key];
+        }
+        unset($data['fields']); // hard fix
+
+        $code='$data='.var_export($data,true).";\n";
+        $code.='
+            $component=fx::data("component")->where("keyword","'.$component['keyword'].'")->one();
+            if ($component) {
+                foreach($data as $k=>$v) {
+                    $component[$k]=$v;
+                }
+                $component->save();
+            }
+        ';
+        return $code;
+    }
+
+    /**
      * Generate code for creating field
      *
      * @param $params
@@ -140,6 +170,39 @@ class fx_hook_manager {
             $component=fx::data("component")->where("keyword", "'.$component['keyword'].'")->one();
             $field=fx::data("field")->where("keyword","'.$field['keyword'].'")->where("component_id",$component["id"])->one();
             $field->delete();
+        ';
+        return $code;
+    }
+    /**
+     * Generate code for update field
+     *
+     * @param $params
+     *
+     * @return string
+     */
+    protected function create_after_for_field_update($params) {
+        $field=$params['field'];
+        $modified=$field->get_modified();
+
+        $data=array();
+        foreach($modified as $key) {
+            $data[$key]=$field[$key];
+        }
+
+        $keyword=in_array('keyword',$modified) ? $field->get_old('keyword') : $field['keyword'];
+        $code='$data='.var_export($data,true).";\n";
+
+        $component=fx::data("component",$field['component_id']);
+        $code.='
+            $component=fx::data("component")->where("keyword", "'.$component['keyword'].'")->one();
+            $field=fx::data("field")->where("keyword","'.$keyword.'")->where("component_id",$component["id"])->one();
+
+            if ($field) {
+                foreach($data as $k=>$v) {
+                    $field[$k]=$v;
+                }
+                $field->save();
+            }
         ';
         return $code;
     }

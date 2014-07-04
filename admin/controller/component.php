@@ -267,6 +267,9 @@ class fx_controller_admin_component extends fx_controller_admin {
         $component['description'] = $input['description'];
         $component['item_name'] = $input['item_name'];
         $component->save();
+        if ($component['vendor']=='std') {
+            fx::hooks()->create(null,'component_update',array('component'=>$component));
+        }
         return array('status' => 'ok');
     }
 
