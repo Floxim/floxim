@@ -11,17 +11,28 @@ window.RedactorPlugins.codekit = {
         var _redactor = this;
         var button_action = $.proxy(function() {
             var selection = this.getSelectionHtml();
-            if (selection) {
-                if (selection.match(/<code/i)) {
-                    this.inlineRemoveFormat('code');
-                } else {
-                    this.inlineFormat('code');
+            var c_parent = this.getParent();
+            
+            if (c_parent) {
+                var c_text = this.getCurrent();
+                var offset = this.getCaretOffset(c_parent)
+                if (c_parent.nodeName === 'CODE') {
+                    if (selection || offset < c_text.length) {
+                        this.inlineRemoveFormatReplace(c_parent);
+                    } else {
+                        var temp_node = $('<span>\u200B</span>');
+                        $(c_parent).after(temp_node);
+                        this.setCaret(temp_node, 1);
+                    }
+                    return;
                 }
+            }
+            
+            if (selection) {
+                this.inlineFormat('code');
                 return;
             }
-            var $node = $(
-                '<pre class="fx_codekit fx_internal_block" contenteditable="false"></pre>'
-            );
+            var $node = $('<pre class="fx_codekit fx_internal_block"></pre>');
             this.insertNode($node);
             this.createCodemirror($node, true);
         }, this);
@@ -36,9 +47,13 @@ window.RedactorPlugins.codekit = {
                 button_action();
                 return false;
             }
+        }).one('fx_stop_editing', function() {
+            _redactor.cmStopEditing();
         });
+        
     },
     createCodemirror: function($node, set_focus) {
+        $node.attr('contenteditable', 'false');
         var _redactor = this;
         // do not let keydown event bubble up to redactor
         $node.on('keydown paste', function(e) {
@@ -115,22 +130,7 @@ window.RedactorPlugins.codekit = {
         };
         
         var cCodeMirror = CodeMirror.fromTextArea($textarea[0], config);
-        $node.on('fx_stop_editing', function() {
-            cCodeMirror.save();
-            var source = $textarea.val();
-            source = _redactor.cmEscapeHtml(source);
-            $node.before('<pre class="fx_codekit fx_internal_block" contenteditable="false">'+source+'</pre>');
-            $node.remove();
-            $('.fx_codekit_spacer', _redactor.getEditor()).each(function() {
-                var $sp = $(this);
-                if (!$.trim($sp.text())) {
-                    $sp.remove();
-                } else {
-                    $sp.removeClass('fx_codekit_spacer').removeClass('fx_codekit_spacer_focused');
-                }
-            });
-            _redactor.sync();
-        });
+        $node.data('codeMirror', cCodeMirror);
         cCodeMirror.refresh();
     },
     cmEscapeHtml: function(text) {
@@ -140,6 +140,29 @@ window.RedactorPlugins.codekit = {
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#039;");
+    },
+    cmStopEditing:function() {
+        var _redactor = this;
+        var editor_node = _redactor.getEditor();
+        $('.fx_codekit', editor_node).each(function() {
+            var $node = $(this),
+                cCodeMirror = $node.data('codeMirror');
+
+            cCodeMirror.save();
+            var source = $('textarea',$node).val();
+            source = _redactor.cmEscapeHtml(source);
+            $node.before('<pre class="fx_codekit fx_internal_block">'+source+'</pre>');
+            $node.remove();
+        });
+        $('.fx_codekit_spacer', editor_node).each(function() {
+            var $sp = $(this);
+            if (!$.trim($sp.text())) {
+                $sp.remove();
+            } else {
+                $sp.removeClass('fx_codekit_spacer').removeClass('fx_codekit_spacer_focused');
+            }
+        });
+        _redactor.sync();
     }
 };
 

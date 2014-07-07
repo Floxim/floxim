@@ -52,7 +52,7 @@ class fx_system_env {
 
     public function set_page ( $page ) {
         if (is_numeric($page)) {
-          $page = fx::data('content_page', $page);
+            $page = fx::data('content_page', $page);
         }
         $this->current['page'] = $page;
     }

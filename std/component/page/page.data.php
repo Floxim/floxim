@@ -1,6 +1,14 @@
 <?php
 class fx_data_content_page extends fx_data_content {
     
+    
+    public function get_by_id($id) {
+        if (!is_numeric($id)) {
+            return $this->get_by_url($id);
+        }
+        return parent::get_by_id($id);
+    }
+    
     public function get_tree($children_key = 'children') {
         $data = $this->all();
         $tree = $this->make_tree($data, $children_key);

@@ -2,14 +2,18 @@
 class fx_router_front extends fx_router {
 
     public function route($url = null, $context = null) {
+        
         $page = fx::data('content_page')->get_by_url(urldecode($url), $context['site_id']);
+        
         if (!$page) {
             return null;
         }
-        fx::env('page', $page['id']);
+        fx::env('page', $page);
         fx::http()->status('200');
         $layout_ib = $this->get_layout_infoblock($page);
+        
         $res = $layout_ib->render();
+        
         return $res;
     }
     
@@ -23,8 +27,10 @@ class fx_router_front extends fx_router {
         if (isset($this->_ib_cache[$cache_key])) {
             return $this->_ib_cache[$cache_key];
         }
+        
+        $c_page = $page_id === fx::env('page_id') ? fx::env('page') : fx::data('content_page', $page_id);
 
-        $infoblocks = fx::data('content_page', $page_id)
+        $infoblocks = $c_page
                         ->get_page_infoblocks()
                         ->find(function($ib) {
                             return !$ib->is_layout();

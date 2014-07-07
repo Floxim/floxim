@@ -96,7 +96,7 @@ fx_front.prototype.handle_link_keydown = function(e) {
     var KEY_HOME = 36;
 
     if (e.which !== KEY_PGDN && e.which !== KEY_PGUP && e.which !== KEY_END && e.which !== KEY_DOWN && e.which !== KEY_RIGHT && e.which !== KEY_HOME) {
-            return;
+        return;
     }
     var right_out = sel.anchorNode.length - sel.anchorOffset === 1
                                             && !sel.anchorNode.nextSibling
@@ -200,7 +200,7 @@ fx_front.prototype.handle_click = function(e) {
         return;
     }
     var target = $(e.target);
-    if (target.closest('.fx_overlay, #redactor_modal').length > 0) {
+    if (target.closest('.fx_overlay, .redactor_dropdown, #redactor_modal').length > 0) {
         return;
     }
     var closest_selectable = null;
@@ -680,6 +680,9 @@ fx_front.prototype.select_item = function(node) {
         if (! (e.ctrlKey && (e.which === 38 || e.which === 40)) && e.which !== 9) {
             return;
         }
+        if ($node.hasClass('fx_var_editable') && e.target !== $node[0]) {
+            return;
+        }
         
         var $selectable = $('.fx_hilight');
         var c_index = $selectable.index(node);
@@ -732,7 +735,7 @@ fx_front.prototype.recount_node_panel = function() {
         return;
     }
     $p.css({
-        width:'1000px',
+        width:'2000px',
         visibility:'hidden'
     });
     var po = $p.offset();
@@ -808,7 +811,9 @@ fx_front.prototype.get_selected_item = function() {
 fx_front.prototype.deselect_item = function() {
     var selected_item = this.get_selected_item();
     if (selected_item) {
-        $node = $(selected_item);
+        var $node = $(selected_item);
+        $node.off('.recount_outlines');
+        
         $node.off('.fx_catch_mouseout');
         $fx.front.enable_hilight();
         $node.
@@ -816,6 +821,7 @@ fx_front.prototype.deselect_item = function() {
                 removeClass('fx_hilight_hover').
                 trigger('fx_deselect').
                 unbind('remove.deselect_removed');
+        
         $fx.front.outline_block_off($node);
         var $panel = $node.data('fx_node_panel');
         if ($panel) {
@@ -1028,7 +1034,31 @@ fx_front.prototype.select_content_essence = function($essence) {
        }
     });
     
-    //$fx.front.start_essences_sortable($essence.parent());
+    if (
+        $fx.front.get_sortable_essences(
+            $essence.parent()
+        )
+    ) {
+        $fx.front.add_panel_button('move', function() {
+            var $b = $(this);
+            if ($b.hasClass('fx_admin_button_move_active')) {
+                $b.removeClass('fx_admin_button_move_active');
+                $fx.front.stop_essences_sortable($essence.parent());
+                $fx.front.deselect_item();
+                $fx.front.select_item($essence);
+            } else {
+                $b.addClass('fx_admin_button_move_active');
+                var eip = $essence.data('edit_in_place');
+                if (eip) {
+                    eip.stop();
+                    eip.restore();
+                }
+                $fx.front.start_essences_sortable($essence.parent());
+            }
+        });
+    }
+    
+    //
     var meta_extra = $essence.data('fx_essence_meta');
     if (meta_extra && meta_extra.accept_content) {
         $.each(meta_extra.accept_content, function () {
@@ -1143,12 +1173,17 @@ fx_front.prototype.set_mode_view = function () {
     
 };
 
-fx_front.prototype.start_essences_sortable = function($cp) {
+fx_front.prototype.get_sortable_essences = function($cp) {
     var sortable_items_selector = ' > .fx_essence.fx_sortable.fx_hilight';
     var $essences = $(sortable_items_selector, $cp);
     if ($essences.length < 2 || $cp.hasClass('fx_not_sortable')) {
-        return;
+        return false;
     }
+    return $essences;
+}
+
+fx_front.prototype.start_essences_sortable = function($cp) {
+    var $essences = $fx.front.get_sortable_essences($cp);
     var placeholder_class = "fx_essence_placeholder";
     if ($essences.first().css('display') === 'inline') {
         placeholder_class += ' fx_essence_placeholder_inline';
@@ -1176,7 +1211,7 @@ fx_front.prototype.start_essences_sortable = function($cp) {
     
     var sort_params = {
         axis:axis,
-        items:sortable_items_selector,
+        items:$essences,
         placeholder: placeholder_class,
         forcePlaceholderSize : true,
         distance:10,
@@ -1781,9 +1816,7 @@ $('html').on('click', '.fx_help .fx_help_expander', function() {
    if (!$help.is(':visible')) {
        $help.show();
        var z_index = ($help.css('z-index')+1);//+' !important';
-       console.log(z_index);
        $exp.css({'z-index': z_index});
-       console.log($exp);
    } else {
        $help.hide();
        $exp.css('z-index', null);

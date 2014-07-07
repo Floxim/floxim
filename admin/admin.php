@@ -105,7 +105,7 @@ class fx_controller_admin extends fx_controller {
             '/floxim/admin/js/nav.js',
             '/floxim/lib/editors/redactor/redactor.js',
             '/floxim/lib/editors/redactor/fontcolor.js',
-            '/floxim/lib/codemirror/codemirror.all.js',
+            '/floxim/lib/codemirror/codemirror.all.min.js',
             '/floxim/lib/js/jquery.form.js',
             '/floxim/lib/js/jquery.cookie.js',
             '/floxim/lib/js/jquery.ba-resize.min.js',

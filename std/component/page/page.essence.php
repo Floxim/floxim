@@ -1,6 +1,7 @@
 <?php
 class fx_content_page extends fx_content {
     protected $parent_ids = null;
+    protected $path = null;
     /**
      * Get the id of the page-parents
      * @return array
@@ -9,6 +10,14 @@ class fx_content_page extends fx_content {
         if (!is_null($this->parent_ids)) {
             return $this->parent_ids;
         }
+        
+        $path = $this['materialized_path'];
+        if (!empty($path)) {
+            $path = explode(".", trim($path, '.'));
+            $this->parent_ids = $path;
+            return $this->parent_ids;
+        }
+        
         $c_pid = $this->get('parent_id');
         // if page has null parent, hold it as if it was nested to index
         if ($c_pid === null && ($site = fx::env('site')) && ($index_id = $site['index_page_id'])) {
@@ -20,14 +29,18 @@ class fx_content_page extends fx_content {
             $c_pid = fx::data('content_page', $ids[0])->get('parent_id');
         }
         $this->parent_ids = $ids;
+        fx::log('gpi', $this, $ids);
         return $ids;
     }
     
     public function get_path() {
+        if ($this->path) {
+            return $this->path;
+        }
         $path_ids = $this->get_parent_ids();
         $path_ids []= $this['id'];
-        $path = fx::data('content_page')->where('id', $path_ids)->all();
-        return $path;
+        $this->path = fx::data('content_page')->where('id', $path_ids)->all();
+        return $this->path;
     }
     
     protected $_active;
@@ -99,9 +112,43 @@ class fx_content_page extends fx_content {
     
     protected function _after_delete() {
         parent::_after_delete();
-        fx::data('infoblock')->where('page_id', $this['id'])->all()->apply(function($n) {
-            $n->delete();
-        });
+        if (!$this->_skip_cascade_delete_children) {
+            $nested_ibs = $this->get_nested_infoblocks(true);
+            foreach ($nested_ibs as $ib) {
+                $ib->delete();
+            }
+            /*
+            fx::data('infoblock')->where('page_id', $this['id'])->all()->apply(function($n) {
+                $n->delete();
+            });
+             * 
+             */
+        }
+    }
+    
+    public function delete_children() {
+        $nested_ibs = $this->get_nested_infoblocks(false);
+        foreach ($nested_ibs as $ib) {
+            $ib->delete();
+        }
+        parent::delete_children();
+    }
+    
+    /**
+     * Get list of infoblocks bound to this page or one of it's descendants
+     * @param bool $with_own include page's own infoblocks
+     * @return fx_collection Found infoblocks
+     */
+    public function get_nested_infoblocks($with_own = true) {
+        $q = fx::data('content_page')->descendants_of($this, $with_own);
+        $q->join('{{infoblock}}', '{{infoblock}}.page_id = {{content}}.id');
+        $q->select('{{infoblock}}.id');
+        $ids = $q->get_data()->get_values('id');
+        if (count($ids) === 0) {
+            return fx::collection();
+        }
+        $infoblocks = fx::data('infoblock', $ids);
+        return $infoblocks;
     }
     
     public function _get_external_host() {

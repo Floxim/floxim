@@ -239,24 +239,18 @@ class fx_controller_admin_component extends fx_controller_admin {
         $data['parent_id'] = $input['parent_id'];
         $data['item_name'] = $input['item_name'];
         
-        
-
-        $component = fx::data('component')->create($data);
-        if (!$component->validate()) {
+        $res_create=fx::data('component')->create_full($data);
+        if (!$res_create['validate_result']) {
             $result['status'] = 'error';
-            $result['errors'] = $component->get_validate_errors();
+            $result['errors'] = $res_create['validate_errors'];
             return $result;
         }
-
-        try {
-            $component->save();
+        if ($res_create['status']=='successful') {
+            $component=$res_create['component'];
             $result['reload'] = '#admin.component.edit('.$component['id'].',settings)';
-        } catch (Exception $e) {
+        } else {
             $result['status'] = 'error';
-            $result['text'][] = $e->getMessage();
-            if ($component['id']) {
-                $component->delete();
-            }
+            $result['text'][] = $res_create['error'];
         }
 
         return $result;
@@ -273,6 +267,9 @@ class fx_controller_admin_component extends fx_controller_admin {
         $component['description'] = $input['description'];
         $component['item_name'] = $input['item_name'];
         $component->save();
+        if ($component['vendor']=='std') {
+            fx::hooks()->create(null,'component_update',array('component'=>$component));
+        }
         return array('status' => 'ok');
     }
 
@@ -568,5 +565,30 @@ class fx_controller_admin_component extends fx_controller_admin {
         );
         $res = $ctr->process();
         return $res;
+    }
+
+    public function delete_save($input) {
+
+        $es = $this->essence_type;
+        $result = array('status' => 'ok');
+
+        $ids = $input['id'];
+        if (!is_array($ids)) {
+            $ids = array($ids);
+        }
+
+        foreach ($ids as $id) {
+            try {
+                $component=fx::data($es, $id);
+                $component->delete();
+                if ($component['vendor']=='std') {
+                    fx::hooks()->create(null,'component_delete',array('component'=>$component));
+                }
+            } catch (Exception $e) {
+                $result['status'] = 'error';
+                $result['text'][] = $e->getMessage();
+            }
+        }
+        return $result;
     }
 }

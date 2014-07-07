@@ -81,7 +81,6 @@ class fx {
             isset(self::$data_cache[$datatype]) &&  
             isset(self::$data_cache[$datatype][$id])
         ) {
-            //fx::log('cached', $datatype, $id);
                 return self::$data_cache[$datatype][$id];
         }
         
@@ -143,9 +142,6 @@ class fx {
         }
 		
         if ($component) {
-            if ($datatype === 'content_content') {
-                fx::debug(debug_backtrace());
-            }
             $data_finder->set_component($component['id']);
         }
 		
@@ -305,8 +301,10 @@ class fx {
         } else {
             $action = null;
         }
-
         $class_name = 'fx_template_'.$template;
+        if (!class_exists($class_name)) {
+            $class_name = 'fx_template';
+        }
         return new $class_name($action, $data);
     }
     
@@ -535,6 +533,33 @@ class fx {
         }
         return self::$http;
     }
+
+    protected static $migration_manager = null;
+    /**
+     * migration manager
+     * @param array $params
+     *
+     * @return fx_migration_manager
+     */
+    public static function migrations($params=array()) {
+        if (!self::$migration_manager) {
+            self::$migration_manager = new fx_migration_manager($params);
+        }
+        return self::$migration_manager;
+    }
+
+    protected static $hook_manager = null;
+    /**
+     * hook manager
+     *
+     * @return fx_hook_manager
+     */
+    public static function hooks() {
+        if (!self::$hook_manager) {
+            self::$hook_manager = new fx_hook_manager();
+        }
+        return self::$hook_manager;
+    }
     
     /**
      * Get current user or new empty essence (with no id) if not logged in
@@ -640,6 +665,9 @@ class fx {
     protected static $debugger = null;
     
     public static function debug($what = null) {
+        if (!fx::config('dev.on')) {
+            return;
+        }
         if (is_null(self::$debugger)) {
             self::$debugger = new fx_debug();
         }
@@ -683,8 +711,8 @@ class fx {
     
     /**
      * Get mailer service
-     * @param type $params
-     * @param type $data
+     * @param array $params 
+     * @param array $data
      * @return \fx_system_mail
      */
     public static function mail($params = null, $data = null) {

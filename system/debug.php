@@ -62,8 +62,37 @@ class fx_debug {
     }
     
     /**
-     * Drop first (oldest) log file
-     * used when there are too much files (more than $this->max_log_files)
+     * Get short backtrace output.
+     * Useful together with logger, e.g. fx::log($some_data, fx_debug::backtrace(6));
+     * @param int|bool $level how many trace levels to display or FALSE to show all
+     * @return string Trace, each level separated by newline
+     */
+    public static function backtrace($level = 3) {
+        $trace = debug_backtrace();
+        if ($level !== false) {
+            $trace = array_slice($trace, 0, $level);
+        }
+        $res = array();
+        foreach ($trace as $l) {
+            $str = '';
+            if ($l['file']) {
+                $file = fx::path()->to_http($l['file']);
+                $str .= $file.'@'.$l['line'];
+            }
+            if ($l['class']) {
+                $str .= ' '.$l['class'].$l['type'];
+            }
+            if ($l['function']) {
+                $str .= $l['function'];
+            }
+            $res []= $str;
+        }
+        return join("\n", $res);
+    }
+    
+    /**
+     * Drop the first (oldest) log file
+     * Used when there are too much files (more than $this->max_log_files)
      */
     protected function _drop_first() {
         $index_file = $this->_get_index_file_name();

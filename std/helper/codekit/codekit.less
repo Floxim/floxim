@@ -13,8 +13,17 @@ pre.fx_codekit {
     padding:5px;
     font-size:12px;
     overflow-x: auto;
+    background:#f8f8f8;
     .CodeMirror {
         height:auto;
+        line-height:inherit;
+        background:inherit;
+        pre {
+            padding:0;
+        }
+    }
+    .CodeMirror-lines  {
+        padding:0;
     }
 }
 

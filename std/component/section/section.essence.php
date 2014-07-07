@@ -2,9 +2,10 @@
 class fx_content_section extends fx_content_page {
     public function get_avail_parents_finder() {
         $f = parent::get_avail_parents_finder();
+        $our_infoblock = fx::data('infoblock', $this['infoblock_id']);
         $f->where_or( 
             array('infoblock_id', $this['infoblock_id']), 
-            array('parent_id', null, 'IS NULL')
+            array('id', $our_infoblock['page_id'])
         );
         return $f;
     }

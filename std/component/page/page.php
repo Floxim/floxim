@@ -34,6 +34,7 @@ class fx_controller_component_page extends fx_controller_component {
         
         $q_prev->order($sort_field, $dir == 'asc' ? 'desc' : 'asc')
                 ->where($where_prev, null, 'or');
+        
         $prev = $q_prev->all();
         
         $q_next->order($sort_field, $dir)

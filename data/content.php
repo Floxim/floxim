@@ -67,27 +67,30 @@ class fx_data_content extends fx_data {
                 $q .= " INNER JOIN `{{".$mt.'}}` ON `{{'.$mt.'}}`.id = `{{'.$base_missed_table."}}`.id\n";
             }
             $q .= "WHERE `{{".$base_missed_table."}}`.id IN (".join(", ", $ids).")";
-            $extensions = fx::db()->get_results($q);
-            foreach ($extensions as $ext) {
-                foreach ($data as $data_index => $data_item) {
-                    if ($data_item['id'] == $ext['id']) {
-                        foreach ($ext as $ext_k => $ext_v) {
-                            $data_item[$ext_k] = $ext_v;
-                        }
-                        $data[$data_index] = $data_item;
-                    }
+            $extensions = fx::db()->get_indexed_results($q);
+            
+            foreach ($data as $data_index => $data_item) {
+                $extension = $extensions[$data_item['id']];
+                if ($extension) {
+                    $data[$data_index] = array_merge($data_item, $extension);
                 }
             }
         }
         return $data;
     }
     
+    protected static $_com_tables_cache = array();
+    
     public function get_tables() {
+        if (isset(self::$_com_tables_cache[$this->component_id])) {
+            return self::$_com_tables_cache[$this->component_id];
+        }
         $chain = fx::data('component', $this->component_id)->get_chain();
         $tables = array();
         foreach ($chain as $comp) {
             $tables []= $comp->get_content_table();
         }
+        self::$_com_tables_cache[$this->component_id] = $tables;
         return $tables;
     }
     
@@ -152,9 +155,6 @@ class fx_data_content extends fx_data {
                     $obj[$f['keyword']] = $f['default'];
                 }
             }
-        }
-        if (!isset($obj['priority'])) {
-            $obj['priority'] = $this->next_priority();
         }
         return $obj;
     }
@@ -224,7 +224,7 @@ class fx_data_content extends fx_data {
 
         $update = $this->_set_statement($data);
         foreach ($update as $table => $props) {
-            $q = 'UPDATE `{{'.$table.'}}` SET '.join(', ', $props);
+            $q = 'UPDATE `{{'.$table.'}}` SET '.$this->_compile_set_statement($props); //join(', ', $props);
             if ($wh) {
                 $q .= " WHERE ".join(' AND ', $wh);
             }
@@ -239,11 +239,33 @@ class fx_data_content extends fx_data {
         if ($cond_field != 'id' || !is_numeric($cond_val)) {
             throw new Exception("Content can be killed only by id!");
         }
-        $where = " WHERE `id` = '".fx::db()->escape($cond_val)."'";
-        foreach ($this->get_tables() as $table) {
-            $q = "DELETE FROM `{{".$table."}}` ".$where;
-            fx::db()->query($q);
+        $tables = $this->get_tables();
+        
+        $q = 'DELETE {{'.join("}}, {{", $tables).'}} ';
+        $q .= 'FROM {{'.join("}} INNER JOIN {{", $tables).'}} ';
+        $q .= ' WHERE ';
+        $base_table = array_shift($tables);
+        foreach ($tables as $t) {
+            $q .= ' {{'.$t.'}}.id = {{'.$base_table.'}}.id AND ';
         }
+        $q .= ' {{'.$base_table.'}}.id = "'.fx::db()->escape($cond_val).'"';
+        fx::db()->query($q);
+    }
+    
+    /**
+     * Generate SET statement from field-value array
+     * @param array $props Array with field names as keys and data as values (both quoted)
+     * e.g. array('`id`' => "1", '`name`' => "'My super name'")
+     * @return string 
+     * joined pairs (with no SET keyword)
+     * e.g. "`id` = 1, `name` = 'My super name'"
+     */
+    protected function  _compile_set_statement($props) {
+        $res = array();
+        foreach ($props as $p => $v){
+            $res []= $p.' = '.$v;
+        }
+        return join(", ", $res);
     }
     
     public function insert($data) {
@@ -253,26 +275,37 @@ class fx_data_content extends fx_data {
         $set = $this->_set_statement($data);
         
         $tables = $this->get_tables();
-        $root_set = $set['content'];
-        $q = "INSERT INTO `{{content}}` SET ".join(", ", $root_set);
+        
+        $base_table = array_shift($tables);
+        $root_set = $set[$base_table];
+        $q = "INSERT INTO `{{".$base_table."}}` ";
+        if (!isset($data['priority'])) {
+            $q .= ' ( `priority`, '.join(", ", array_keys($root_set)).') ';
+            $q .= ' SELECT MAX(`priority`)+1, ';
+            $q .= join(", ", $root_set);
+            $q .= ' FROM {{'.$base_table.'}}';
+        } else {
+            $q .= "SET ".$this->_compile_set_statement($root_set);
+        }
+        
         $tables_inserted = array();
         
         $q_done = fx::db()->query($q);
         $id = fx::db()->insert_id();
         if ($q_done) {
             // remember, whatever table has inserted
-            $tables_inserted []= 'content';
+            $tables_inserted []= $base_table;
         } else {
             return false;
         }
         
         foreach ($tables as $table) {
-            if ($table == 'content') {
-                continue;
-            }
+            
             $table_set = isset($set[$table]) ? $set[$table] : array();
-            $table_set[]= "`id` = '".$id."'";
-            $q = "INSERT INTO `{{".$table."}}` SET ".join(", ", $table_set);
+            
+            $table_set['`id`'] = "'".$id."'";
+            $q = "INSERT INTO `{{".$table."}}` SET ".$this->_compile_set_statement($table_set); 
+            
             $q_done = fx::db()->query($q);
             if ($q_done) {
                 // remember, whatever table has inserted
@@ -290,7 +323,6 @@ class fx_data_content extends fx_data {
     }
     
     protected function _set_statement($data) {
-
         $res = array();
         $chain = fx::data('component', $this->component_id)->get_chain();
         foreach ($chain as $level_component) {
@@ -317,12 +349,13 @@ class fx_data_content extends fx_data {
                 }
                 
                 $field = $fields->find_one('keyword', $field_keyword);
+                // put only if the sql type of the field is not false (e.g. multilink)
                 if ($field && !$field->get_sql_type()) {
                     continue;
                 }
-                // put only if the sql type of the field is not false (e.g. multilink)
+                
                 if (isset($data[$field_keyword]) ) {
-                    $table_res[]= "`".fx::db()->escape($field_keyword)."` = '".fx::db()->escape($data[$field_keyword])."' ";
+                    $table_res['`'.fx::db()->escape($field_keyword).'`'] = "'".fx::db()->escape($data[$field_keyword])."'";
                 }
             }
             if (count($table_res) > 0) {
@@ -330,12 +363,6 @@ class fx_data_content extends fx_data {
             }
         }
         return $res;
-    }
-    
-    
-    public function _ss($data, $table = null) {
-        $ss = $this->_set_statement($data);
-        return $ss;//[$table];
     }
     
     public function fake($props = array()) {
@@ -384,10 +411,15 @@ class fx_data_content extends fx_data {
      * @return fx_data_content
      */
     public function descendants_of($parent_ids, $include_parents = false) {
-        if (is_numeric($parent_ids)) {
-            $parent_ids = array($parent_ids);
+        if ($parent_ids instanceof fx_content) {
+            $parents = array($parent_ids);
+            $parent_ids = array($parent_ids['id']);
+        } else {
+            if (is_numeric($parent_ids)) {
+                $parent_ids = array($parent_ids);
+            }
+            $parents = fx::data('content', $parent_ids);
         }
-        $parents = fx::data('content', $parent_ids);
         $conds = array();
         foreach ($parents as $p) {
             $conds []= array('materialized_path', $p['materialized_path'].$p['id'].'.%', 'like');

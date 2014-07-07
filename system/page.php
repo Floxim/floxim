@@ -76,7 +76,6 @@ class fx_system_page {
     }
     
     public function clear_files() {
-        //fx::log('clerng', $this->_files_css, $this->files_js, _all_js);
         $this->_files_css = array();
         $this->_files_js = array();
         $this->_all_js = array();

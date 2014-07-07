@@ -31,10 +31,6 @@ function fx_edit_in_place( node ) {
     
     var eip = this;
     
-    $('html').on('keydown.edit_in_place', function(e) {
-       eip.handle_keydown(e);
-    });
-    
     // need to edit the contents of the site
     if (this.node.data('fx_var')) {
         this.meta = node.data('fx_var');
@@ -66,12 +62,13 @@ fx_edit_in_place.prototype.handle_keydown = function(e) {
         this.stop();
         this.restore();
         $fx.front.deselect_item();
+        e.stopImmediatePropagation();
         return false;
     }
     if (e.which === 13 && (!this.is_wysiwyg || e.ctrlKey)) {
         this.save().stop();
-        e.which = 666;
         $(this.node).closest('a').blur();
+        e.stopImmediatePropagation();
         return false;
     }
 };
@@ -111,6 +108,9 @@ fx_edit_in_place.prototype.start = function(meta) {
                 } else {
                     var $n = this.node;
                     this.is_content_editable = true;
+                    $n.on('keydown.edit_in_place', function(e) {
+                        edit_in_place.handle_keydown(e);
+                    });
                     if (!$($fx.front.get_selected_item()).hasClass('fx_essence')) {
                         setTimeout(function() {
                             $fx.front.stop_essences_sortable();
@@ -122,10 +122,13 @@ fx_edit_in_place.prototype.start = function(meta) {
                         $n.html('');
                     }
                     $n.addClass('fx_var_editable');
-                    $n.data('fx_saved_value', $n.html());
+                    
                     if ( (meta.type === 'text' && meta.html && meta.html !== '0') || meta.type === 'html') {
+                        $n.data('fx_saved_value', $n.html());
                         this.is_wysiwyg = true;
                         this.make_wysiwyg();
+                    } else {
+                        $n.data('fx_saved_value', $n.text());
                     }
                     
                     var handle_node_size = function () {
@@ -215,6 +218,22 @@ fx_edit_in_place.prototype.stop = function() {
     return this;
 };
 
+/**
+ * Clear extra \n after block level tags inserted by Redactor 
+ * see method cleanParagraphy() in Redactor's source code
+ */
+fx_edit_in_place.prototype.clear_redactor_val = function (v) {
+    // pre removed
+    var r_blocks = '(comment|html|body|head|title|meta|style|script|link|iframe|table|thead|tfoot|caption|col|colgroup|tbody|tr|td|th|div|dl|dd|dt|ul|ol|li|select|option|form|map|area|blockquote|address|math|style|p|h[1-6]|hr|fieldset|legend|section|article|aside|hgroup|header|footer|nav|figure|figcaption|details|menu|summary)';
+    var rex = new RegExp('[\\s\\t\\n\\r]*(</?'+r_blocks+'[^>]*?>)[\\s\\t\\n\\r]*', 'ig');
+    v = v.replace(rex, '$1');
+    var $temp = $('<div contenteditable="true"></div>');
+    $temp.html(v);
+    v = $temp.html();
+    $temp.remove();
+    return v;
+};
+
 fx_edit_in_place.prototype.get_vars = function() {
     var node = this.node;
     var vars = [];
@@ -227,9 +246,29 @@ fx_edit_in_place.prototype.get_vars = function() {
             }
             $('.fx_internal_block', this.node).trigger('fx_stop_editing');
         }
-        var new_val = $.trim(this.is_wysiwyg ? node.redactor('get') : node.text());
         var saved_val = $.trim(node.data('fx_saved_value'));
-        if (new_val !== saved_val) {
+        var is_changed = false;
+        if (this.is_wysiwyg) {
+            var new_val = $.trim(node.redactor('get'));
+            var clear_new = this.clear_redactor_val(new_val);
+            var clear_old = this.clear_redactor_val(saved_val);
+            
+            is_changed = clear_new !== clear_old;
+            if (is_changed) {
+                for (var li = 0; li < clear_new.length; li++) {
+                    if (clear_new[li] !== clear_old[li]) {
+                        console.log(li+' new: '+clear_new.slice(li-20, li+35));
+                        console.log(li+' old: '+clear_old.slice(li-20, li+35));
+                        break;
+                    }
+                }
+            }
+        } else {
+            var new_val = $.trim(node.text());
+            is_changed = new_val !== saved_val;
+        }
+        
+        if (is_changed) {
             vars.push({
                 'var':this.meta,
                 'value':new_val
@@ -290,6 +329,8 @@ fx_edit_in_place.prototype.save = function() {
     if (vars.length === 0) {
         this.stop();
         this.restore();
+        $fx.front.deselect_item();
+        //$fx.front.select_item(this.node);
         return this;
     }
     var node = this.node;
@@ -374,40 +415,6 @@ fx_edit_in_place.prototype.make_wysiwyg = function () {
             this.sync();
         }
     });
-    /*
-    $node.redactor({
-        linebreaks:linebreaks,
-        toolbarExternal: '.editor_panel',
-        imageUpload : '/floxim/admin/controller/redactor-upload.php',
-        buttons: ['formatting',  'bold', 'italic', 'deleted',
-                'unorderedlist', 'orderedlist',
-                'image', 'video', 'file', 'table', 'link', 'alignment', 'horizontalrule'],
-        plugins: ['fontcolor','codemirror'],
-        initCallback: function() {
-            var $range_node = $node.parent().find('.fx_click_range_marker');
-            if ($range_node.length) {
-                var range_text = $range_node[0].childNodes[range_text_position];
-                if (!range_text && $range_node[0].childNodes.length > 0) {
-                    range_text = $range_node[0].childNodes[0];
-                    click_range_offset = 0;
-                }
-                if (range_text && range_text.nodeType === 3) {
-                    var selection = window.getSelection(),
-                        range = document.createRange();
-                    if (click_range_offset > range_text.length) {
-                        click_range_offset = range_text.length;
-                    }
-                    range.setStart(range_text, click_range_offset);
-                    range.collapse(true);
-                    selection.removeAllRanges();
-                    selection.addRange(range);
-                }
-                $range_node.removeClass('fx_click_range_marker');
-            }
-            this.sync();
-        }
-    });
-    */
     this.source_area = $('textarea[name="'+ $node.attr('id')+'"]');
     this.source_area.addClass('fx_overlay');
     this.source_area.css({
