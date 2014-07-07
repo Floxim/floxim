@@ -130,7 +130,7 @@ class fx_data {
         if (func_num_args() == 3 && $relation[0] != fx_data::MANY_MANY) {
             //$with_finder->where($field_name, $value, $type);
         }
-        $table = $with_finder->get_col_table($field_name);
+        $table = $with_finder->get_col_table($field_name, false);
         $field = $with_name.'__'.$table.'.'.$field_name;
         return $field;
     }
@@ -145,10 +145,13 @@ class fx_data {
         if (strstr($field, '.')) {
             $field = $this->_prepare_complex_field($field, $value, $type);
         } elseif (preg_match("~^[a-z0-9_-]~", $field)) {
-            $table = $this->get_col_table($field);
+            $table = $this->get_col_table($field, false);
+            /*
             if (!$table) {
                 return array(false, 'FALSE', 'RAW');
             }
+             * 
+             */
             $field = '{{'.$table.'}}.'.$field;
         }
         return array($field, $value, $type);
@@ -333,7 +336,7 @@ class fx_data {
                 $joined_table = array_shift($finder_tables);
                 $joined_alias = $rel_name.'__'.$joined_table;
                 // table of current finder containing the page, link
-                $our_table = $this->get_col_table($link_col);
+                $our_table = $this->get_col_table($link_col, false);
                 $this->join(
                     array($joined_table, $joined_alias),
                     $joined_alias.'.id = {{'.$our_table.'}}.'.$link_col
@@ -347,7 +350,7 @@ class fx_data {
                 }
                 break;
             case fx_data::HAS_MANY:
-                $their_table = $finder->get_col_table($link_col);
+                $their_table = $finder->get_col_table($link_col, false);
                 $joined_alias = $rel_name.'__'.$their_table;
                 $their_table_key = array_keys($finder_tables, $their_table);
                 unset($finder_tables[$their_table_key[0]]);
@@ -365,7 +368,7 @@ class fx_data {
                 }
                 break;
             case fx_data::MANY_MANY:
-                $linker_table = $finder->get_col_table($link_col);
+                $linker_table = $finder->get_col_table($link_col, false);
                 $joined_alias = $rel_name.'_linker__'.$linker_table;
                 $linker_table_key = array_keys($finder_tables, $linker_table);
                 unset($finder_tables[$linker_table_key[0]]);
@@ -381,7 +384,7 @@ class fx_data {
                         $alias.'.id = '.$joined_alias.'.id'
                     );
                 }
-                $link_table_alias = $rel_name.'_linker__'.$finder->get_col_table($rel[5]);
+                $link_table_alias = $rel_name.'_linker__'.$finder->get_col_table($rel[5], false);
                 
                 $end_finder = fx::data($rel[4]);
                 $end_tables = $end_finder->get_tables();
@@ -412,6 +415,9 @@ class fx_data {
                     $sub_cond[2] = '=';
                 }
                 $parts []= $this->_make_cond($sub_cond, $base_table);
+            }
+            if (count($parts) == 0) {
+                return ' FALSE';
             }
             return " (".join(" OR ", $parts).") ";
         }
@@ -495,11 +501,15 @@ class fx_data {
      * from the collection of the flat data collects essence
      */
     protected function _get_essences() {
+        //fx::config('dev.on', fx::env('console'));
         $data = $this->get_data();
+        //fx::debug('start filless', $data);
         foreach ($data as $dk => $dv) {
             $data[$dk] = $this->essence($dv);
         }
+        //fx::debug('start adrels');
         $this->_add_relations($data);
+        //fx::debug('ready');
         return $data;
     }
     
@@ -582,10 +592,6 @@ class fx_data {
     }
     
 
-    /**
-     * @todo NEXT to understand that you can kill
-     */
-///////////////////////////
     
     static public function optional($table) {
         return new self($table);
@@ -602,17 +608,22 @@ class fx_data {
         return array($this->table);
     }
     
-    public function get_col_table($col) {
+    /**
+     * Get name of the table wich contains specified $column
+     * @param string $column Column name
+     * @param bool $validate Check if the column really exists (for one-table models)
+     * @return string Table name
+     */
+    public function get_col_table($column, $validate = true) {
         $tables = $this->get_tables();
-        /*
-        if (count($tables) == 1) {
+        
+        if (count($tables) == 1 && !$validate) {
             return $tables[0];
         }
-         * 
-         */
+        
         foreach ($tables as $t) {
             $cols = $this->_get_columns($t);
-            if (in_array($col, $cols)) {
+            if (in_array($column, $cols)) {
                 return $t;
             }
         }

@@ -332,8 +332,26 @@ abstract class fx_essence implements ArrayAccess {
         if (!$offset_exists) {
             $c_type = $this->get_type();
             $c_field = self::$_field_map[$c_type][$offset];
-            if ($c_field && $c_field[0] == self::VIRTUAL_MULTILANG) {
-               $offset = $offset.'_'.fx::config('ADMIN_LANG');
+            if ($c_field) {
+                switch ($c_field[0]) {
+                    case self::VIRTUAL_MULTILANG:
+                        $offset = $offset.'_'.fx::config('ADMIN_LANG');
+                        break;
+                    case self::VIRTUAL_RELATION:
+                        /**
+                         * I.e. when the whole parent is set instead of parent_id:
+                         * $item['parent'] = $parent_obj;
+                         * we add parent_id right now
+                         */
+                        if ($c_field[1][0] === fx_data::BELONGS_TO && $value instanceof fx_essence) {
+                            $c_rel_field = $c_field[1][2];
+                            $value_id = $value['id'];
+                            if ($c_rel_field && $value_id) {
+                                $this[$c_rel_field] = $value_id;
+                            }
+                        }
+                        break;
+                }
             }
         }
         

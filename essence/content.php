@@ -254,12 +254,6 @@ class fx_content extends fx_essence {
     }
     
     protected function _before_save() {
-        if ($this->is_modified('parent_id')) {
-            $new_parent = fx::data('content', $this['parent_id']);
-            $this['level'] = $new_parent['level']+1;
-            //$this['materialized_path'] = trim($new_parent['materialized_path'].'.'.$new_parent['id'], '.');
-            $this['materialized_path'] = $new_parent['materialized_path'].$new_parent['id'].'.';
-        }
         
         $component = fx::data('component', $this->component_id);
         $link_fields = $component->fields()->find('type', fx_field::FIELD_LINK);
@@ -267,7 +261,7 @@ class fx_content extends fx_essence {
             // save the cases of type $tagpost['tag'] -> $tagpost['most part']
             $lf_prop = $lf['format']['prop_name'];
             if (
-                    isset($this[$lf_prop]) && 
+                    isset($this->data[$lf_prop]) && 
                     $this[$lf_prop] instanceof fx_content && 
                     empty($this[$lf['keyword']])
                 ) {
@@ -287,6 +281,12 @@ class fx_content extends fx_essence {
                     }
                 }
             }
+        }
+        
+        if ($this->is_modified('parent_id') || ($this['parent_id'] && !$this['materialized_path'])) {
+            $new_parent = $this['parent'];
+            $this['level'] = $new_parent['level']+1;
+            $this['materialized_path'] = $new_parent['materialized_path'].$new_parent['id'].'.';
         }
         parent::_before_save();
     }
@@ -380,9 +380,18 @@ class fx_content extends fx_essence {
                 fx::files()->rm($c_prop);
             }
         }
-        fx::data('content')->where('parent_id', $this['id'])->all()->apply(function ($n) {
-            $n->delete();
-        });
+        
+        if (!$this->_skip_cascade_delete_children) {
+            $this->delete_children();
+        }
+    }
+    
+    public function delete_children() {
+        $descendants = fx::data('content')->descendants_of($this);
+        foreach ($descendants->all() as $d) {
+            $d->_skip_cascade_delete_children = true;
+            $d->delete();
+        }
     }
     
     protected function _after_update() {
@@ -391,15 +400,14 @@ class fx_content extends fx_essence {
         $image_fields = $this->get_fields()->
                         find('keyword', $this->modified)->
                         find('type', fx_field::FIELD_IMAGE);
+        
         foreach ($image_fields as $img_field) {
             $old_value = $this->modified_data[$img_field['keyword']];
             if (fx::path()->is_file($old_value)) {
                 fx::files()->rm($old_value);
             }
         }
-    }
-    
-    public function _after_save() {
+        
         /*
          * Update level and mat.path for children if item moved somewhere
          */
@@ -421,7 +429,7 @@ class fx_content extends fx_essence {
             }
         }
     }
-    
+
     public function fake() {
         $fields = $this->get_fields();
         foreach ($fields as $f) {

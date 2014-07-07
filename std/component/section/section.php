@@ -118,13 +118,11 @@ class fx_controller_component_section extends fx_controller_component_page {
             $page_id = fx::env('page_id');
         }
         $essence_page = fx::data('content_page',$page_id);
-        $parents = $essence_page->get_parent_ids();
         $essence_page['active'] = true;
         if ($this->get_param('header_only')) {
             $pages = new fx_collection(array($essence_page));
         } else {
-            $pages = fx::data('content_page', $parents);
-            $pages[]= $essence_page;
+            $pages = $essence_page->get_path();
         }
         return array('items' => $pages);
     }
