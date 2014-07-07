@@ -100,7 +100,7 @@ class fx_loader {
             return false;
         }
         
-        $classname = str_replace('fx_', '', $classname);
+        $classname = preg_replace('~^fx_~', '', $classname);
         
 
         if ($classname == 'template') {
