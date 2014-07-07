@@ -88,7 +88,7 @@ class fx_thumb
             $w = $h * $ratio;
         }
         // not asked anything
-            elseif (!$h && !$w) {
+        elseif (!$h && !$w) {
             $h = $source['height'];
             $w = $source['width'];
         }
@@ -101,11 +101,13 @@ class fx_thumb
         if ($mih === false) {
             $mih = 0;
         }
-        if (!$maw) {
+        if (!$maw && !$mah) {
             $maw = $w;
-        }
-        if (!$mah) {
             $mah = $h;
+        } elseif (!$mah && $maw) {
+            $mah = $maw * 1 / $ratio;
+        } elseif (!$maw && $mah) {
+            $maw = $mah * $ratio;
         }
         /*
         echo '<table>';
@@ -133,6 +135,9 @@ class fx_thumb
         #10	(w > max-width) and (h < min-height)	 max-width	 min-height
         
         */
+        
+        
+        fx::log($params, $h.'*'. $w, $mih.'-'.$mah.' * '.$miw.'-'.$maw);
         
         // is wider than it should
         if ($w > $maw) {
@@ -203,10 +208,12 @@ class fx_thumb
             $h = $mih;
         }
         
-        return array(
+        $res = array(
             'width' => round($w),
             'height' => round($h)
         );
+        fx::log($res);
+        return $res;
     }
     
     public function resize($params = null) {
