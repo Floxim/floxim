@@ -2,6 +2,7 @@
 class fx_controller_layout extends fx_controller {
     
     public function show() {
+        
         $page_id = $this->get_param('page_id', fx::env('page_id'));
         $layout_id = $this->get_param('layout_id', fx::env('layout'));
         
