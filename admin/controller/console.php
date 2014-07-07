@@ -30,6 +30,7 @@ class fx_controller_admin_console extends fx_controller_admin {
             ob_start();
             $code = $input['console_text'];
             $code = preg_replace("~^<\?(?:php)?~", '', $code);
+            fx::env('console', true);
             eval($code);
             $res = ob_get_clean();
             return array(
