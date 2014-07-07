@@ -24,9 +24,10 @@ class fx_db extends PDO {
     }
 
     public function escape($str) {
-        $str = $this->quote($str);
-        // hack!
-        $str = trim($str, "'");
+        return addslashes($str);
+        //$str = $this->quote($str);
+        // hack! what for???
+        // $str = trim($str, "'");
         return $str;
     }
 
@@ -63,8 +64,9 @@ class fx_db extends PDO {
             echo "</div>\n";
             fx::log($statement, debug_backtrace());
         }
-        
-        return $this->last_result;
+        if (!fx::config('dev.log_sql')) {
+            return $this->last_result;
+        }
         $end_time = microtime(true);
         $q_time = $end_time - $start_time;
         self::$q_time += $q_time;
@@ -72,7 +74,8 @@ class fx_db extends PDO {
                 '#'.self::$q_count, 
                 'q_time: '.$q_time, 
                 'q_total: '.self::$q_time,
-                $statement
+                $statement//,
+                //fx_debug::backtrace(false)
         );
         return $this->last_result;
     }
@@ -101,6 +104,16 @@ class fx_db extends PDO {
             if (($result = $this->query($query))) {
                 $res = $result->fetchAll($result_type);
                 $this->last_result_array = $res; // ??? $result->fetchAll($result_type);
+            }
+        }
+        return $res;
+    }
+    
+    public function get_indexed_results($query, $index = 'id') {
+        $res = array();
+        if ( ($result = $this->query($query))) {
+            while ( ($row = $result->fetch(PDO::FETCH_ASSOC))) {
+                $res[ $row[$index] ] = $row;
             }
         }
         return $res;
