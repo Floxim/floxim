@@ -115,6 +115,7 @@ window.$fx_fields = {
     make_redactor: function($node, options) {
         options = $.extend({
             imageUpload : '/floxim/admin/controller/redactor-upload.php',
+            tidyHtml:false,
             buttons: ['formatting',  'bold', 'italic', 'deleted',
                     'unorderedlist', 'orderedlist', 'outdent', 'indent',
                     'image', 'video', 'file', 'table', 'link', 'alignment', 'horizontalrule'],
@@ -128,7 +129,6 @@ window.$fx_fields = {
         }
         var e = $.Event('fx_create_redactor');
         e.redactor_options = options;
-        
         $node.trigger(e);
         $node.redactor(options);
     }
