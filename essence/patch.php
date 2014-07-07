@@ -54,6 +54,12 @@ class fx_patch extends fx_essence {
             }
         }
         /**
+         * Remove files
+         */
+        if (isset($info_file['files']['del'])) {
+            $this->_remove_files($info_file['files']['del']);
+        }
+        /**
          * Copy files
          */
         if (file_exists($dir)) {
@@ -96,7 +102,14 @@ class fx_patch extends fx_essence {
         }
         return true;
     }
-    
+
+    protected function _remove_files($files) {
+        foreach($files as $file) {
+            $path=fx::path('root').$file;
+            fx::files()->rm($path);
+        }
+    }
+
     protected function _update_files($dir, $base) {
         $items = glob($dir."/*");
         if (!$items) {
