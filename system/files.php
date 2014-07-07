@@ -881,7 +881,7 @@ class fx_system_files {
      * @todo: we should refactor this code to make it safer
      * it's better to fetch and check headers before getting file contents 
      */
-    public function save_remote_file($file, $dir = 'content') {
+    public function save_remote_file($file, $dir = 'content', $name=null) {
         if (!preg_match("~^https?://~", $file)) {
             return;
         }
@@ -889,7 +889,7 @@ class fx_system_files {
         if (!$file_data) {
             return;
         }
-        $file_name = fx::path()->file_name($file);
+        $file_name = $name ? $name : fx::path()->file_name($file);
         $extension = fx::path()->file_extension($file_name);
         if (!$extension) {
             foreach ($http_response_header as $header) {
@@ -907,7 +907,7 @@ class fx_system_files {
         return $full_path;
     }
 
-    public function save_file($file, $dir = '') {
+    public function save_file($file, $dir = '', $name=null) {
         // normal $_FILES
         if (is_array($file)) {
             $filename = $file['name'];
@@ -921,7 +921,7 @@ class fx_system_files {
         } 
         // remote file
         else if (is_string($file) ) {
-            $full_path = $this->save_remote_file($file, $dir);
+            $full_path = $this->save_remote_file($file, $dir, $name);
             if (!$full_path) {
                 return;
             }
@@ -1197,6 +1197,9 @@ class fx_system_files {
 
     public function send_download_file($path,$name,$size=null) {
         if (file_exists($path) and $file=fopen($path,"r")) {
+            for ($i = 0; $i < ob_get_level(); $i++) {
+                ob_end_clean();
+            }
             header("Content-Type: application/octet-stream");
             header("Content-Disposition: attachment; filename=".urlencode($name).";");
             header("Content-Transfer-Encoding: binary");

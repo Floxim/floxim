@@ -441,6 +441,10 @@ abstract class fx_essence implements ArrayAccess {
         }
         return $this->modified_data[$field];
     }
+
+    public function get_modified() {
+        return $this->modified;
+    }
 }
 
 class fx_essence_validation_exception extends Exception {
