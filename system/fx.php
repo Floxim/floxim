@@ -681,7 +681,7 @@ class fx {
     protected static $debugger = null;
     
     public static function debug($what = null) {
-        if (!fx::config('dev.on')) {
+        if (!fx::config('dev.on') && func_num_args() > 0) {
             return;
         }
         if (is_null(self::$debugger)) {

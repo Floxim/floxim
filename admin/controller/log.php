@@ -2,14 +2,11 @@
 class fx_controller_admin_log extends fx_controller_admin {
     
     public function process() {
-        //if ($this->action == 'all') {
-            fx::debug()->disable();
-        //}
+        fx::debug()->disable();
         return parent::process();
     }
     
     public function all() {
-        
         $field = array('type' => 'list', 'filter' => true);
         $field['labels'] = array(
             'date' => fx::alang('Date', 'system'),
