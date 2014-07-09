@@ -135,12 +135,21 @@ class fx_component extends fx_essence {
         $this->delete_fields();
         $this->delete_infoblocks();
         $this->delete_content_table();
+        $this->delete_files();
     }
 
     protected function delete_fields() {
         foreach ($this->fields() as $field) {
             $field->delete();
         }
+    }
+
+    protected function delete_files() {
+        $base_path = fx::path(
+                ($this['vendor'] === 'std') ? 'std' : 'root',
+                'component/'.$this['keyword'].'/'
+            ).'/';
+        fx::files()->rm($base_path);
     }
 
     protected function delete_content_table() {

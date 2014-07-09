@@ -503,10 +503,8 @@ class fx_system_files {
 
         if (is_dir($local_filename)) {
 
-            if ($filename[strlen($filename) - 1] != '/') {
-                $filename .= '/';
-                $local_filename .= '/';
-            }
+            $filename=rtrim($filename,'/').'/';
+            $local_filename=rtrim($local_filename,'/').'/';
 
             $handle = opendir($local_filename);
             if ($handle) {

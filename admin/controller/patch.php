@@ -84,9 +84,17 @@ class fx_controller_admin_patch extends fx_controller_admin {
                 'value' => '<p style="color:#F00;">Install failed!</p>'
             ));
         } else {
+            // retrieve changes
+            $changes='<ul>';
+            $logs=fx::changelog($patch['to']);
+            foreach($logs as $log) {
+                $changes.="<li>{$log['message']}</li>";
+            }
+            $changes.='</ul>';
+
             $this->response->add_field(array(
                 'type' => 'label',
-                'value' => '<p>Patch installed sucessfully!</p>'
+                'value' => '<p>Patch installed sucessfully!</p>'.$changes
             ));
         }
         $this->response->add_field(array(
