@@ -105,7 +105,7 @@ class fx_patch extends fx_essence {
 
     protected function _remove_files($files) {
         foreach($files as $file) {
-            $path=fx::path('root').$file;
+            $path=fx::config('ROOT_FOLDER').$file;
             fx::files()->rm($path);
         }
     }
@@ -117,7 +117,7 @@ class fx_patch extends fx_essence {
         }
         
         foreach ($items as $item) {
-            $item_target = fx::path('root').str_replace($base, '', $item);
+            $item_target = fx::config('ROOT_FOLDER').str_replace($base, '', $item);
             if (is_dir($item)) {
                 $item_info=pathinfo($item);
                 // skip specific dirs
