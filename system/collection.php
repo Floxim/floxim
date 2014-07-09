@@ -45,6 +45,19 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
         return end($this->data);
     }
     
+    /**
+     * Set internal array pointer to the specified key
+     * @param string $key
+     * @return fx_collection Returns collection itself
+     */
+    public function set_position($key) {
+        reset($this->data);
+        while ( key($this->data) != $key) {
+            next($this->data);
+        }
+        return $this;
+    }
+    
     /*
      * Creates a new collection with the results
      * $collection->find('price', '10', '>')
@@ -64,6 +77,7 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
         } elseif ($compare_type == '!=') {
             $compare_type = self::FILTER_NEQ;
         }
+        $initial_key = key($this->data);
         $res = array();
         if ($compare_type == self::FILTER_EQ) {
             foreach ($this->data as $item) {
@@ -71,6 +85,7 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
                     $res []= $item;
                 }
             }
+            $this->set_position($initial_key);
             return new fx_collection($res);
         }
         if ($compare_type == self::FILTER_NEQ) {
@@ -79,6 +94,7 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
                     $res []= $item;
                 }
             }
+            $this->set_position($initial_key);
             return new fx_collection($res);
         }
         if ($compare_type == self::FILTER_IN) {
@@ -87,6 +103,7 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
                     $res []= $item;
                 }
             }
+            $this->set_position($initial_key);
             return new fx_collection($res);
         }
         if ($compare_type == self::FILTER_EXISTS) {
@@ -95,6 +112,7 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
                     $res []= $item;
                 }
             }
+            $this->set_position($initial_key);
             return new fx_collection($res);
         }
         if ($compare_type == self::FILTER_CALLBACK) {
@@ -103,8 +121,10 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
                     $res []= $item;
                 }
             }
+            $this->set_position($initial_key);
             return new fx_collection($res);
         }
+        $this->set_position($initial_key);
         return new fx_collection($res);
     }
     
@@ -121,46 +141,58 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
                 $compare_type = self::FILTER_EQ;
             }
         }
+        $initial_key = key($this->data);
         if ($compare_type == self::FILTER_EQ) {
             foreach ($this->data as $item) {
                 if ($item[$field] == $prop) {
+                    $this->set_position($initial_key);
                     return $item;
                 }
             }
+            $this->set_position($initial_key);
             return false;
         }
         if ($compare_type == self::FILTER_NEQ) {
             foreach ($this->data as $item) {
                 if ($item[$field] != $prop) {
+                    $this->set_position($initial_key);
                     return $item;
                 }
             }
+            $this->set_position($initial_key);
             return false;
         }
         if ($compare_type == self::FILTER_IN) {
             foreach ($this->data as $item) {
                 if (in_array($item[$field], $prop)) {
+                    $this->set_position($initial_key);
                     return $item;
                 }
             }
+            $this->set_position($initial_key);
             return false;
         }
         if ($compare_type == self::FILTER_EXISTS) {
             foreach ($this->data as $item) {
                 if (isset($item[$field]) && $item[$field]) {
+                    $this->set_position($initial_key);
                     return $item;
                 }
             }
+            $this->set_position($initial_key);
             return false;
         }
         if ($compare_type == self::FILTER_CALLBACK) {
             foreach ($this->data as $item) {
                 if (call_user_func($field, $item)) {
+                    $this->set_position($initial_key);
                     return $item;
                 }
             }
+            $this->set_position($initial_key);
             return false;
         }
+        $this->set_position($initial_key);
         return false;
     }
     
@@ -169,13 +201,6 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
     const FILTER_CALLBACK = 3;
     const FILTER_IN = 4;
     const FILTER_NEQ = 5;
-
-    /*
-     * Filters the current collection by condition (removes not matching records)
-     */
-    public function filter() {
-        return $this;
-    }
     
     public function unique($field = null) {
         $res = array();
@@ -217,8 +242,16 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
         return $this->slice($offset, 1)->first();
     }
     
+    /**
+     * Get new collection groupped by $groupper argument
+     * If the $grupper
+     * @param int|string|callable $groupper 
+     * @param bool $force_property Force to handle $groupper as property name
+     * @return \fx_collection
+     */
     public function group($groupper, $force_property = false) {
         $res = new fx_collection();
+        $initial_key = key($this->data);
         if (!$force_property) {
             if (is_numeric($groupper)) {
                 $c = 0;
@@ -233,6 +266,7 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
                     $res[$r] []= $item;
                     $c++;
                 }
+                $this->set_position($initial_key);
                 return $res;
             }
             if (is_callable($groupper)) {
@@ -243,6 +277,7 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
                     }
                     $res[$key] []= $item;
                 }
+                $this->set_position($initial_key);
                 return $res;
             }
         }
@@ -294,22 +329,34 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
                     }
                 }
                 
-                if (!isset($res[$key])) {
-                    $res[$key] = new fx_collection();
+                if ($key instanceof fx_essence) {
+                    $key_index = $key['id'];
+                } else {
+                    $key_index = $key;
                 }
-                $res[$key] []= $item;
+                if (!isset($res[$key_index])) {
+                    $group_collection = new fx_collection();
+                    $group_collection->is_sortable = $this->is_sortable;
+                    $group_collection->group_key = $key;
+                    $res[$key_index] = $group_collection;
+                }
+                $res[$key_index] []= $item;
             }
+            $this->set_position($initial_key);
             return $res;
         }
+        $this->set_position($initial_key);
     }
     
     /*
      * To apply a function to all elements
      */
     public function apply($callback) {
+        $initial_key = key($this->data);
         foreach ($this->data as &$di) {
             call_user_func_array($callback, array(&$di));
         }
+        $this->set_position($initial_key);
         return $this;
     }
     
