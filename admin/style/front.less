@@ -148,9 +148,6 @@
     display:none;
 }
 
-.fx_node_panel .editor_panel {
-    //width:435px;
-}
 .fx_node_panel .redactor_toolbar {
     background:none;
     li {
@@ -208,6 +205,12 @@
 
 .fx_node_panel .field {
     margin-left:3px;
+    padding:0 7px;
+    border-left:1px solid #CCC;
+    min-height:31px;
+    &:first-child {
+        border-left:none;
+    }
 }
 
 .fx_node_panel .field label {
@@ -215,7 +218,8 @@
 }
 
 .fx_node_panel .field_checkbox {
-    padding:5px 3px;
+    padding-top:5px;
+    box-sizing:border-box;
 }
 
 
