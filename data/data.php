@@ -106,7 +106,7 @@ class fx_data {
      * For relational fields: join related item and prepare real field name
      * @param string $field
      */
-    protected function _prepare_complex_field($field, $value = null, $type = null) {
+    protected function _prepare_complex_field($field, $operator = 'where') {
         list($rel, $field_name) = explode('.', $field, 2);
         if (preg_match("~^\{\{.+\}\}$~", $rel)) {
             return $field;
@@ -115,21 +115,13 @@ class fx_data {
         if (!$relation) {
             return '`'.$rel.'`.`'.$field_name.'`';
         }
-        if (!isset($this->with[$rel])) {
-            $this->only_with($rel);
-        } 
+        $with_type = $operator == 'where' ? 'inner' : 'left';
+        $this->with($rel, null, $with_type);
         $c_with = $this->with[$rel];
-        if (!$c_with[2]) {
-            $this->with[$rel][2] = true;
-            $this->_join_with($c_with);
-        }
-
         $with_name = $c_with[0];
         $with_finder = $c_with[1];
         
-        if (func_num_args() == 3 && $relation[0] != fx_data::MANY_MANY) {
-            //$with_finder->where($field_name, $value, $type);
-        }
+        
         $table = $with_finder->get_col_table($field_name, false);
         $field = $with_name.'__'.$table.'.'.$field_name;
         return $field;
@@ -143,7 +135,7 @@ class fx_data {
             return array($field, $value, $type);
         }
         if (strstr($field, '.')) {
-            $field = $this->_prepare_complex_field($field, $value, $type);
+            $field = $this->_prepare_complex_field($field, 'where');
         } elseif (preg_match("~^[a-z0-9_-]~", $field)) {
             $table = $this->get_col_table($field, false);
             /*
@@ -190,9 +182,10 @@ class fx_data {
             $direction = 'ASC';
         }
         if (strstr($field, '.')) {
-            $this->order []= $this->_prepare_complex_field($field).' '.$direction;
+            $this->order []= $this->_prepare_complex_field($field, 'order').' '.$direction;
         } else {
-            $this->order []= "`".$field."` ".$direction;
+            $table = $this->get_col_table($field);
+            $this->order []= "{{".$table."}}.`".$field."` ".$direction;
         }
         return $this;
     }
@@ -208,8 +201,8 @@ class fx_data {
         }
         $with = array($relation, $finder, $only);
         $this->with [$relation]= $with;
-        if ($only) {
-            $this->_join_with($with);
+        if ($only !== false) {
+            $this->_join_with($with, $only);
         }
         return $this;
     }
@@ -312,7 +305,7 @@ class fx_data {
         if (is_array($table)) {
             $table = '{{'.$table[0].'}} as '.$table[1];
         }
-        $this->joins[]= array(
+        $this->joins[$table]= array(
             'table' => $table, 
             'on' => $on, 
             'type' => strtoupper($type)
@@ -321,7 +314,7 @@ class fx_data {
     }
     
     // inner join fx_content as user__fx_content on fx_content.user_id = user__fx_content.id
-    protected function _join_with($with) {
+    protected function _join_with($with, $join_type = 'inner') {
         $rel_name = $with[0]; 
         $finder = $with[1];
         $rel = $this->get_relation($rel_name);
@@ -332,20 +325,21 @@ class fx_data {
         
         switch ($rel[0]) {
             case fx_data::BELONGS_TO:
-                //fx::debug('bel to', $rel);
                 $joined_table = array_shift($finder_tables);
                 $joined_alias = $rel_name.'__'.$joined_table;
                 // table of current finder containing the page, link
                 $our_table = $this->get_col_table($link_col, false);
                 $this->join(
                     array($joined_table, $joined_alias),
-                    $joined_alias.'.id = {{'.$our_table.'}}.'.$link_col
+                    $joined_alias.'.id = {{'.$our_table.'}}.'.$link_col,
+                    $join_type
                 );
                 foreach ($finder_tables as $t) {
                     $alias = $rel_name.'__'.$t;
                     $this->join(
                         array($t, $alias),
-                        $alias.'.id = '.$joined_alias.'.id'
+                        $alias.'.id = '.$joined_alias.'.id',
+                        $join_type
                     );
                 }
                 break;
@@ -356,14 +350,16 @@ class fx_data {
                 unset($finder_tables[$their_table_key[0]]);
                 $this->join(
                     array($their_table, $joined_alias),
-                    $joined_alias.'.'.$link_col.' = {{'.$this->table.'}}.id'
+                    $joined_alias.'.'.$link_col.' = {{'.$this->table.'}}.id',
+                    $join_type
                 );
                 $this->group('{{'.$this->table.'}}.id');
                 foreach ($finder_tables as $t) {
                     $alias = $rel_name.'__'.$t;
                     $this->join(
                         array($t, $alias),
-                        $alias.'.id = '.$joined_alias.'.id'
+                        $alias.'.id = '.$joined_alias.'.id',
+                        $join_type
                     );
                 }
                 break;
@@ -374,14 +370,16 @@ class fx_data {
                 unset($finder_tables[$linker_table_key[0]]);
                 $this->join(
                     array($linker_table, $joined_alias),
-                    $joined_alias.'.'.$link_col.' = {{'.$this->table.'}}.id'
+                    $joined_alias.'.'.$link_col.' = {{'.$this->table.'}}.id',
+                    $join_type
                 );
                 $this->group('{{'.$this->table.'}}.id');
                 foreach ($finder_tables as $t) {
                     $alias = $rel_name.'_linker__'.$t;
                     $this->join(
                         array($t, $alias),
-                        $alias.'.id = '.$joined_alias.'.id'
+                        $alias.'.id = '.$joined_alias.'.id',
+                        $join_type
                     );
                 }
                 $link_table_alias = $rel_name.'_linker__'.$finder->get_col_table($rel[5], false);
@@ -392,17 +390,17 @@ class fx_data {
                 $first_end_alias = $rel_name.'__'.$first_end_table;
                 $this->join(
                     array($first_end_table, $first_end_alias),
-                    $first_end_alias.'.id = '.$link_table_alias.'.'.$rel[5]
+                    $first_end_alias.'.id = '.$link_table_alias.'.'.$rel[5],
+                    $join_type
                 );
                 foreach ($end_tables as $et) {
                     $et_alias = $rel_name.'__'.$et;
                     $this->join(
                         array($et, $et_alias),
-                        $et_alias.'.id = '.$first_end_alias.'.id'
+                        $et_alias.'.id = '.$first_end_alias.'.id',
+                        $join_type
                     );
                 }
-                //fx::debug($link_table);
-                //fx::debug($rel);
                 break;
         }
     }
@@ -487,11 +485,12 @@ class fx_data {
         }
         $collection = new fx_collection($objs);
         if (is_array($this->order)) {
-            $sorting = strtolower(trim(join("", $this->order)));
-            $sorting = str_replace("asc", '', $sorting);
-            $sorting = str_replace("`", '', $sorting);
-            $sorting = trim($sorting);
-            $collection->is_sortable = $sorting == 'priority';
+            foreach ($this->order as $sorting) {
+                if (preg_match("~priority~", $sorting)) {
+                    $collection->is_sortable = true;
+                    break;
+                }
+            }
         }
         return $collection;
     }
