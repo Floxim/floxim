@@ -35,12 +35,18 @@ class fx_router_front extends fx_router {
                         ->find(function($ib) {
                             return !$ib->is_layout();
                         });
-        $areas = fx::collection();//array();
+        $areas = fx::collection();
         $visual = fx::data('infoblock_visual')->
                 where('infoblock_id', $infoblocks->get_values('id'))->
                 where('layout_id', $layout_id)->
                 all();
+        
+        
         foreach ($infoblocks as $ib) {
+            if (!$ib->is_available_for_user()) {
+                continue;
+            }
+            
             if (($c_visual = $visual->find_one('infoblock_id', $ib['id']))) {
                 $ib->set_visual($c_visual);
             } elseif ($ib->get_visual()->get('is_stub')) {
@@ -53,7 +59,10 @@ class fx_router_front extends fx_router {
             } else {
                 $c_area = 'unknown';
             }
-            fx::dig_set($areas, $c_area.'.', $ib);
+            if (!isset($areas[$c_area])) {
+                $areas[$c_area] = fx::collection();
+            }
+            $areas[$c_area][]= $ib;
         }
         $this->_ib_cache[$cache_key] = $areas;
         return $areas;

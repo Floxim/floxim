@@ -31,8 +31,8 @@ class fx_data_infoblock extends fx_data {
         }
     }
     
-    public function get_for_page($page_id, $drop_doubles = true) {
-        $page = fx::data('content_page', $page_id);
+    public function get_for_page($page_id) {
+        $page = $page_id instanceof fx_essence ? $page_id : fx::data('content_page', $page_id);
         if (!$page) {
             return;
         }
@@ -42,26 +42,13 @@ class fx_data_infoblock extends fx_data {
         $infoblocks = $this->
             where('page_id', $ids)->
             where('site_id', $page['site_id'])->
-            where('checked', 1)->
             all();
         foreach ($infoblocks as $ib) {
             if (!$ib->is_available_on_page($page)) {
                 $infoblocks->remove($ib);
             }
         }
-        if (false && $drop_doubles) {
-            $inherited_infoblocks = $infoblocks->find(
-                    'id', 
-                    $infoblocks->find('parent_infoblock_id', 0, '!=')->get_values('parent_infoblock_id'),
-                    fx_collection::FILTER_IN
-            );
-            foreach ($inherited_infoblocks as $inherited) {
-                $infoblocks->remove($inherited);
-            }
-        }
-        if ($drop_doubles) {
-            //$infoblocks = fx::collection($this->sort_infoblocks($infoblocks)->first());
-        }
+        
         return $infoblocks;
     }
     

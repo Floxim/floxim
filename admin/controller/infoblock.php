@@ -238,6 +238,7 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
             }
             
             $infoblock->set_scope_string($input['scope']['complex_scope']);
+            $infoblock->dig_set('scope.visibility', $input['scope']['visibility']);
             
             $i2l['wrapper'] = fx::dig($input, 'visual.wrapper');
             $i2l['template'] = fx::dig($input, 'visual.template');
@@ -283,12 +284,83 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
     	return $result;
     }
     
+    public function list_for_page($input) {
+        $fields = array();
+        if (!$input['page_id']) {
+            return;
+        }
+        $c_page = fx::content('page', $input['page_id']);
+        fx::env('page', $c_page);
+        
+        $infoblocks = $c_page->get_page_infoblocks();
+        
+        if ($input['data_sent']) {
+            foreach ($infoblocks as $ib) {
+                if (isset($input['area'][$ib['id']])) {
+                    $vis = $ib->get_visual();
+                    $vis['area'] = $input['area'][$ib['id']];
+                    $vis->save();
+                }
+                if (isset($input['visibility'][$ib['id']])) {
+                    $ib->dig_set('scope.visibility', $input['visibility'][$ib['id']]);
+                    $ib->save();
+                }
+            }
+            return;
+        }
+        
+        $list = array(
+            'type' => 'list',
+            'essence' => 'infoblock',
+            'values' => array(),
+            'labels' => array(
+                'name' => fx::alang('Name','system'),
+                'type' => fx::alang('Type','system'),
+                'visibility' => fx::alang('Visibility', 'system'),
+                'area' => fx::alang('Area','system'),
+            )
+        );
+        
+        foreach ($infoblocks as $ib) {
+            if ($ib->is_layout()) {
+                continue;
+            }
+            $vis = $ib->get_visual();
+            $list['values'] []= array(
+                'id' => $ib['id'],
+                'name' => $ib['name'],
+                'type' => preg_replace("~^component_~", '', $ib['controller']).'.'.$ib['action'],
+                'visibility' => array(
+                    'field' => array(
+                        'name' => 'visibility['.$ib['id'].']',
+                        'type' => 'select',
+                        'values' => $this->_get_scope_visibility_options(),
+                        'value' => $ib['scope']['visibility']
+                    )
+                ),
+                'area' => $vis['area']
+            );
+        }
+        $fields['list'] = $list;
+        $fields[]= $this->ui->hidden('essence', 'infoblock');
+        $fields[]= $this->ui->hidden('action', 'list_for_page');
+        $fields[]= $this->ui->hidden('page_id', $c_page['id']);
+        $fields[]= $this->ui->hidden('data_sent', 1);
+        fx::log($input);
+        $res = array(
+            'fields' => $fields,
+            'id' => 'page_infoblocks'
+        );
+        return $res;
+    }
+    
     public function layout_settings($input) {
         $c_page = fx::data('content_page', $input['page_id']);
         $infoblock = $c_page->get_layout_infoblock();
         
         $c_page = fx::data('content_page', $input['page_id']);
         $scope_fields = $this->_get_scope_fields($infoblock, $c_page);
+        unset($scope_fields['visibility']);
         $this->response->add_fields($scope_fields, false, 'scope');
         
         $format_fields = $this->_get_format_fields($infoblock);
@@ -496,8 +568,23 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
             'values' => $vals,
             'value' => $c_scope_code
         );
-        
+        $fields ['visibility']= array(
+            'type' => 'select',
+            'label' => 'Visibility',
+            'name' => 'visibility',
+            'values' => $this->_get_scope_visibility_options(),
+            'value' => $infoblock['scope']['visibility']
+        );
         return $fields;
+    }
+    
+    protected function _get_scope_visibility_options() {
+        return array(
+            'all' => 'Everybody',
+            'admin' => 'Admins',
+            'guests' => 'Guests',
+            'nobody' => 'Nobody'
+        );
     }
     
     /*

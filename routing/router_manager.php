@@ -60,7 +60,7 @@ class fx_router_manager {
         }
         foreach ($this->routers as $r) {
             $result = $r['router']->route($url, $context);
-            if ($result) {
+            if ($result !== null && $result !== false) {
                 return $result;
             }
         }

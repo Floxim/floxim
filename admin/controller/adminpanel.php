@@ -12,14 +12,6 @@ class fx_controller_admin_adminpanel extends fx_controller_admin {
 
     public static function get_more_menu() {
         $more_menu = array();
-        $more_menu[] = array(
-            'name' => fx::alang('Layout settings','system'),
-            'button' => array(
-                'essence' => 'infoblock',
-                'action' => 'layout_settings',
-                'page_id' => fx::env('page_id')
-            )
-        );
         $c_page = fx::env('page');
         $more_menu[] = array(
             'name' => fx::alang('Edit current page', 'system'),
@@ -28,6 +20,23 @@ class fx_controller_admin_adminpanel extends fx_controller_admin {
                 'action' => 'add_edit',
                 'content_type' => $c_page['type'],
                 'content_id' => $c_page['id']
+            )
+        );
+        
+        $more_menu[] = array(
+            'name' => fx::alang('Layout settings','system'),
+            'button' => array(
+                'essence' => 'infoblock',
+                'action' => 'layout_settings',
+                'page_id' => fx::env('page_id')
+            )
+        );
+        $more_menu[]= array(
+            'name' => fx::alang('Page infoblocks', 'system'),
+            'button' => array(
+                'essence' => 'infoblock',
+                'action' => 'list_for_page',
+                'page_id' => fx::env('page_id')
             )
         );
         return $more_menu;

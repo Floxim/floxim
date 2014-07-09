@@ -125,6 +125,31 @@ class fx_infoblock extends fx_essence {
         return $this;
     }
     
+    /**
+     * Check if infoblock's scope.visibility allows the current user to see this block
+     * @return bool Is the block available
+     */
+    public function is_available_for_user() {
+        $c_user = fx::user();
+        $ib_visibility = $this['scope']['visibility'];
+        if (!$ib_visibility || $ib_visibility === 'all') {
+            return true;
+        }
+        if ($ib_visibility === 'nobody') {
+            return false;
+        }
+        if ($ib_visibility === 'admin' && !$c_user->is_admin()) {
+            return false;
+        }
+        if ($ib_visibility === 'user' && $c_user->is_guest()) {
+            return false;
+        }
+        if ($ib_visibility === 'guest' && !$c_user->is_guest()) {
+            return false;
+        }
+        return true;
+    }
+    
     public function is_available_on_page($page) {
         if ($this['site_id'] != $page['site_id']) {
             return;
@@ -251,8 +276,10 @@ class fx_infoblock extends fx_essence {
 
 
     public function render() {
-        
         $output = '';
+        if (!$this->is_available_for_user()) {
+            return $output;
+        }
         if (fx::is_admin() || (!$this->is_disabled() && !$this->is_hidden() )) {   
             $output = $this->get_output();
             $output = $this->_wrap_output($output);
