@@ -11,6 +11,14 @@ window.$fx = {
         $fx.panel = $('#fx_admin_panel');
        
         $(function () {
+            var ajax_counter = 0;
+            $(document).ajaxSend(function() {
+                ajax_counter++;
+                if (ajax_counter > 0) {
+                    $('.fx_preloader').css('visibility', 'visible');
+                }
+            });
+            
             $fx.admin = false;
             $fx.buttons = new fx_buttons($fx.settings.buttons.source);
             
@@ -30,13 +38,6 @@ window.$fx = {
             }
             
             $('html').on('click', '.fx_button', $fx.buttons.form_button_click);
-            var ajax_counter = 0;
-            $(document).ajaxSend(function() {
-                ajax_counter++;
-                if (ajax_counter === 1) {
-                    $('.fx_preloader').css('visibility', 'visible');
-                }
-            });
             $(document).ajaxComplete(function(e, jqXHR) {
                 ajax_counter--;
                 if (ajax_counter === 0) {
@@ -68,6 +69,15 @@ window.$fx = {
                                 }
                             });
                         })(asset);
+                    }
+                }
+                
+                var css_assets = jqXHR.getResponseHeader('fx_assets_css');
+                if (css_assets) {
+                    css_assets = $.parseJSON(css_assets);
+                    for (var i = 0; i < css_assets.length; i++) {
+                        var asset = css_assets[i];
+                        $('head').append('<link type="text/css" rel="stylesheet" href="'+asset+'" />');
                     }
                 }
             });

@@ -4,28 +4,31 @@ var c_value = _c.value.path;
 ?>
 <div class="fx_image_field" data-field_type="<?=_c.type?>">
     <input type="hidden" <?=$t.field_id_name(_c)?> class="real_value" value="<?=c_value?>" />
-    <div class="preview">
+    <div class="fx_preview 
+                <?= c_value ? 'fx_preview_filled' : ''?> 
+                fx_preview_<?=_c.type?>">
         <? if (_c.type == 'image') {?>
             <img <?=(c_value ? ' src="'+c_value+'"' : ' style="display:none;"')?> />
         <? } else {?>
-            <span class="file_info">
+            <span class="fx_file_info">
             <? if (c_value) {?>
                 <a href="<?=_c.value.path?>"><?=_c.value.filename?></a>
-                <br /><span class="file_size"><?=_c.value.size?></span>
+                <br /><span class="fx_file_size"><?=_c.value.size?></span>
             <? } ?>
             </span>
         <?}?>
-        <a class="uploader fx_admin_button fx_admin_button_text">
-            <span>
-                <?= c_value ? $fx.lang('Change') : $fx.lang('Upload') ?>
+        <span class="fx_file_controls">
+            <a class="fx_file_uploader" title="<?= c_value ? $fx.lang('Change') : $fx.lang('Upload') ?>">
+            </a>
+            <span class="fx_remote_file_block">
+                <a class="fx_paste_link" title="<?=$fx.lang('paste URL')?>"></a>
+                <input class="remote_file_location fx_input" placeholder="<?=$fx.lang('paste URL')?>" />
             </span>
-        </a>
-        <span class="remote_file_block">
-            <span><?= $fx.lang('or') ?></span>
-            <a class="paste_link"><?=$fx.lang('paste URL')?></a>
-            <input class="remote_file_location fx_input" placeholder="<?=$fx.lang('paste URL')?>" />
+            <a class="fx_file_killer" 
+               style="display:<?=(c_value ? 'block' : 'none')?>" 
+               title="<?=$fx.lang('Delete')?>">
+            </a>
         </span>
-        <a class="killer fx_admin_button fx_admin_button_text" style="display:<?=(c_value ? 'block' : 'none')?>"><span>delete</span></a>
     </div>
     <div class="file_input" style="display:<?=(_c.path ? 'none' : 'block')?>">
     	<input type="file" class="file" name="file" id="image_file_<?=_c.name.replace(/[^a-z0-9]+/g, '_')?>" />

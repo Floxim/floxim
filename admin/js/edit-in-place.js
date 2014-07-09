@@ -129,12 +129,17 @@ fx_edit_in_place.prototype.start = function(meta) {
                         this.make_wysiwyg();
                     } else {
                         $n.data('fx_saved_value', $n.text());
+                        
+                        // do not allow paste html into non-html fields
+                        $n.on('keyup.edit_in_place paste.edit_in_place', function() {
+                            $n.html($n.text());
+                        });
                     }
                     
                     var handle_node_size = function () {
                         $n.toggleClass(
                             'fx_editable_empty', 
-                            $n.text().length < 2
+                            $n.text().length === 0
                         );
                     };
                     handle_node_size();
@@ -146,7 +151,7 @@ fx_edit_in_place.prototype.start = function(meta) {
                 }
                 break;
 	}
-        $('html').one('fx_deselect.edit_in_place', function() {
+        $('html').one('fx_deselect.edit_in_place', function(e) {
             edit_in_place.save().stop();
 	});
 };
@@ -278,6 +283,10 @@ fx_edit_in_place.prototype.get_vars = function() {
     for (var i = 0; i < this.panel_fields.length; i++) {
         var pf = this.panel_fields[i];
         var pf_meta= pf.data('meta');
+        if (!pf_meta) {
+            console.log('no meta', this.panel_fields[i]);
+            continue;
+        }
         var old_value = pf_meta.value;
         if (pf_meta.type === 'bool') {
             var c_input = $('input[name="'+pf_meta['name']+'"][type="checkbox"]', pf);
@@ -329,7 +338,7 @@ fx_edit_in_place.prototype.save = function() {
     if (vars.length === 0) {
         this.stop();
         this.restore();
-        $fx.front.deselect_item();
+        //$fx.front.deselect_item();
         //$fx.front.select_item(this.node);
         return this;
     }

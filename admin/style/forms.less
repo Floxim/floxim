@@ -215,7 +215,7 @@
         }
         .input_container {
             margin-bottom:10px;
-            overflow:auto;
+            //overflow:auto;
         }
         .field_last .input_container {
             margin-bottom:0;
@@ -228,6 +228,9 @@
         }
         .fx_input {
             width:100%;
+            &.fx_input_floatfield {
+                max-width:150px;
+            }
         }
     }
 
@@ -238,8 +241,11 @@
         /*height: 28px;*/
     }
     .fx_image_field img {
-        max-height:50px;
+        max-height:70px;
         max-width:100px;
+    }
+    .field_set .fx_image_field img {
+        max-height:55px;
     }
 }
 
@@ -332,16 +338,61 @@
         max-height:100px;
         max-width:150px;
         margin-right:10px;
-        float:left;
+        //float:left;
     }
-    .file_info {
+    .fx_file_info {
         margin-right:10px;
         float:left;
     }
     .fx_admin_button_text, .remote_file_block {
         margin-right:10px;
     }
-    .remote_file_block {
+    .fx_preview {
+        position:relative;
+        min-height:24px;
+        max-width:120px;
+        &.fx_preview_filled.fx_preview_image {
+            .fx_file_controls {
+                background:#FFF;
+                visibility:hidden;
+            }
+            &:hover .fx_file_controls, &.fx_preview_active .fx_file_controls {
+                visibility:visible;
+            }
+        }
+    }
+    .fx_file_controls {
+        position:absolute;
+        top:0;
+        left:0;
+        padding:2px 0;
+        min-width:83px;
+        a {
+            cursor:pointer;
+            display:block;
+            width:24px;
+            height:24px;
+            float:left;
+            background:url('images/images.png') no-repeat -370px -2px;
+            margin-right:5px;
+            &.fx_paste_link {
+                background-position:-405px -2px;
+            }
+            &.fx_file_killer {
+                background-position:-441px -2px;
+                margin-right:0;
+            }
+        }
+        input.remote_file_location {
+            position:absolute;
+            top:0;
+            left:0;
+            background:#FFF !important;
+        }
+    }
+
+
+    .fx_remote_file_block {
         float:left;
         font-size:12px;
         input.fx_input {
@@ -350,10 +401,12 @@
         }
         &.active {
             a {
-                display:none;
+                //display:none;
             }
             input.fx_input {
                 display:inline !important;
+                width: 100% !important;
+                box-sizing: border-box;
             }
         }
         a {
@@ -366,16 +419,17 @@
     }
 }
 
+.fx_node_panel .fx_image_field .fx_preview .fx_file_controls,
+.fx_image_field .fx_preview.fx_preview_file .fx_file_controls {
+    position:static;
+    visibility:visible !important;
+}
+
 
 #fx_admin_fields .fx_image_field img {
     max-height:34px;
     float: left;
     margin-right: 10px;
-}
-
-#fx_admin_fields .fx_image_field .preview .fx_admin_button_text {
-    margin-right:10px;
-    margin-top:6px;
 }
 
 .fx_overlay .fx_image_field .file_input {
@@ -433,20 +487,34 @@
     display: inline;
 }
 
-.fx_admin_form .fx_fieldset .fx_fieldset_label label {
-    font-size:12px;
+.fx_admin_form .fx_fieldset {
+    .fx_fieldset_label label {
+        font-size:12px;
+    }
+    .fx_fieldset_add {
+        margin:5px 0; 
+        display: inline-block;
+    } 
+    input[type="text"], select, textarea {
+        width:auto;
+        margin:0;
+    }
+
+    a.fx_fieldset_remove {
+        color:#F00;
+        font-weight:bold;
+        text-decoration:none;
+        position:relative;
+        top:6px;
+    }
 }
 
-.fx_admin_form .fx_fieldset_add {
-    margin:5px 0; 
-    display: inline-block;
-} 
-
-.fx_admin_form .fx_fieldset input[type="text"], 
-.fx_admin_form .fx_fieldset select,
-.fx_admin_form .fx_fieldset textarea {
-    width:auto;
-    margin:0;
+.fx_admin_form .field_set .form_label label {
+    text-align: center;
+    display: block !important;
+    border-bottom: 1px solid #CCC;
+    padding-bottom: 5px;
+    padding-top: 10px;
 }
 
 .fx_overlay .CodeMirror {

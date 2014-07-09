@@ -52,7 +52,7 @@ name="<?=_c.name?>" id="<?=_c.name?>"
 	<input 
 		type="<?=_c.password ? 'password' : 'text'?>" 
                 <?= _c.disabled ? ' disabled="disabled"' : ''?>
-        class="fx_input" 
+        class="fx_input fx_input_<?=_c.type?>" 
 		<?=$t.field_id_name(_c)?> 
 		value="<?=$t.clear(_c.value || '')?>" />
 
@@ -152,7 +152,6 @@ html.find('textarea.fx_code').each( function(){
             var fix_cm_size = function() {
                 setTimeout( function() {
                     var max_height = $container.outerHeight() - 150;
-                    console.log('resizing', max_height);
                     $(cCodeMirror.getScrollerElement()).css('max-height', max_height);
                     cCodeMirror.refresh();
                 }, 50);
@@ -184,14 +183,12 @@ if (_c.extendable) {
     class="fx_input<?=_c.inline ? ' inline' : ''?> <?=_c.extendable ? ' extendable' : ''?>"
     <?=_c.multiple ? ' multiple="multiple"' : ''?>>
     <?
-    console.log(_c.values);
     if (_c.values instanceof Array) {
         var tmp_values = {};
         for (var vi = 0; vi < _c.values.length; vi++) {
             tmp_values[_c.values[vi]] = _c.values[vi];
         }
         _c.values = tmp_values;
-        console.log(_c.values);
     }
     for (var vk in _c.values) {
         var val = _c.values[vk], opt_name = null;

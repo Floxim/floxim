@@ -4,6 +4,7 @@
         <table id="fx_fieldset_<?=_c.name?>">
             <thead>
                 <tr class="fx_fieldset_label">
+                <td></td>
                 <?for(var i = 0; i < _c.labels.length; i++) {
                     if (typeof _c.labels[i] != 'string') {
                         continue;
@@ -24,6 +25,8 @@
 </div>
 
 <!--jquery-->
+
+$('tbody.fx_fieldset_rows', html).sortable();
 
 var fs = $('.fx_fieldset', html);
 
@@ -105,12 +108,12 @@ if (!flag) {
 }
 <!--[fieldset_row ? _o.set_field.is_cond_set === undefined]-->
 <tr class="fx_fieldset_row row_<?=_o.index?>">
+    <td>
+        <a class="fx_fieldset_remove" href="javascript:void();" title="<?=$fx.lang('Delete')?>">&times;</a>
+    </td>
     <?for (var i = 0; i< _c.length; i++) {
         ?><td class="input_cell_<?=i?>"></td><?
     }?>
-    <td>
-        <a class="fx_fieldset_remove" href="javascript:void();"><?=$fx.lang('Delete')?></a>
-    </td>
 </tr>
 
 <!--jquery-->

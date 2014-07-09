@@ -12,6 +12,7 @@ fx_form = {
         if (options) {
             $.extend(true, settings, options);
         }
+        $('html').trigger('fx_before_adm_form_created', settings);
         var $form = $(
                 '<form '+
                     'class="fx_admin_form" '+

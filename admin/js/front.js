@@ -496,7 +496,7 @@ fx_front.prototype.add_infoblock_select_settings = function(data) {
                 }
                 is_waiting = true;
                 
-                $c_ib_node = $form.data('ib_node');
+                var $c_ib_node = $form.data('ib_node');
                 
                 ib_loader = $fx.front.reload_infoblock(
                     $c_ib_node, 
@@ -710,6 +710,7 @@ fx_front.prototype.make_node_panel = function($node) {
     var o = $node.offset();
     $panel.css({
         position:'absolute',
+        visibility:'hidden',
         left:o.left - 4 + 'px',
         top: o.top - $panel.outerHeight() - 4 + 'px',
         'z-index': $node.data('fx_z_index') || (this.get_panel_z_index() + 1)
@@ -1070,12 +1071,14 @@ fx_front.prototype.select_content_essence = function($essence) {
         });
     }
     
+    var $bound_to_edit = $([]);
     $('.fx_var_bound_to_essence', $essence).each(function() {
         var $bound = $(this);
         if ($bound.closest('.fx_essence')[0] === essence) {
-            $bound.edit_in_place();
+            $bound_to_edit = $bound_to_edit.add($bound);
         }
     });
+    $bound_to_edit.edit_in_place();
     $('html').one('fx_deselect', function(e) {
         $fx.front.stop_essences_sortable();
     });
@@ -1111,7 +1114,7 @@ fx_front.prototype.select_infoblock = function(n) {
         }, {
             view:'horizontal',
             onfinish:function() {
-                $fx.front.reload_infoblock(ib_node);
+                $fx.front.reload_infoblock($('.fx_infoblock_'+ib.id));
             },
             onready:function($form) {
                 $form.data('ib_node', ib_node);
@@ -1417,7 +1420,8 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
                var $new_infoblock_node = $('body');
            } else {
                var $new_infoblock_node = $( $.trim(res) );
-               $infoblock_node.hide().before($new_infoblock_node);
+               $infoblock_node.hide();
+               $infoblock_node.before($new_infoblock_node);
                $infoblock_node.remove();
            }
            
@@ -1788,6 +1792,40 @@ fx_front.prototype.enable_node_panel = function() {
     }
 };
 
+fx_front.prototype.prepare_page_infoblock_form = function(settings) {
+    if (settings.id !== 'page_infoblocks') {
+        return;
+    }
+    var $areas = $('.fx_area');
+    var areas = {};
+    $areas.each(function(){
+        var area_meta = $(this).data('fx_area');
+        areas[area_meta.id] = area_meta.name || area_meta.id;
+    });
+    $.each(settings.fields[0].values, function() {
+        var c_values = areas;
+        if (!areas[this.area]) {
+            var empty_area = {};
+            empty_area[this.area] = '(!!!) '+this.area;
+            c_values = $.extend({}, areas, empty_area);
+        }
+        this.area = {
+            field : {
+                name:'area['+this.id+']',
+                type:'select',
+                values: c_values,
+                value : this.area
+            }
+        };
+    });
+};
+
+$('html').on('fx_before_adm_form_created', function(e, settings) {
+    if ($fx.front) {
+        $fx.front.prepare_page_infoblock_form(settings);
+    }
+});
+
 $('html').on('click', '.fx_item_help_block .level_expander', function() {
     var $c_row = $(this).closest('tr');
     var c_level = $c_row.attr('class').match(/help_level_(\d+)/)[1]*1;
@@ -1822,5 +1860,7 @@ $('html').on('click', '.fx_help .fx_help_expander', function() {
        $exp.css('z-index', null);
    }
 });
+
+
     
 })($fxj);

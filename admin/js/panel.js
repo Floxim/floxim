@@ -134,6 +134,7 @@
                 $footer.hide();
                 $fx.front.enable_select();
                 $fx.front.enable_node_panel();
+                $fx.front.enable_hilight();
                 $fx.front_panel.is_visible = false;
             });
         };

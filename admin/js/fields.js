@@ -84,21 +84,7 @@ window.$fx_fields = {
     },
 
     floatfield: function (json ) {
-        var label = $('<label />'); 
-        var field = $('<input  name="'+json.name+'"  />').val( json.value !== undefined ? json.value : '' );
-
-        if (json.label) {
-            $(label).append(json.label);
-        } 
-        label.append(field);
-
-        field.keypress(function(e) {
-            if (!(e.which==8 || e.which==44 ||e.which==45 ||e.which==46 ||(e.which>47 && e.which<58))) {
-                return false;
-            }
-        });
-
-        return label;
+        return $t.jQuery('form_row', json);
     },
 
     colorbasic: function (json) {
@@ -137,14 +123,21 @@ window.$fx_fields = {
 // file field
 
 var $html = $('html');
-$html.on('click', '.fx_image_field .remote_file_block a',  function() {
-    var $block = $(this).closest('.remote_file_block');
+$html.on('click', '.fx_image_field .fx_remote_file_block a',  function() {
+    var $block = $(this).closest('.fx_remote_file_block');
     $block.addClass('active');
-    $block.find('input').focus();
+    $block.closest('.fx_preview').addClass('fx_preview_active');
+    $block.find('input').focus().off('keydown.fx_blur').on('keydown.fx_blur', function(e) {
+        if (e.which === 27) {
+            $(this).blur();
+            return false;
+        }
+    });
 });
 
-$html.on('blur', '.fx_image_field .remote_file_block input', function() {
-    $(this).closest('.remote_file_block').removeClass('active');
+$html.on('blur', '.fx_image_field .fx_remote_file_block input', function() {
+    $(this).closest('.fx_remote_file_block').removeClass('active');
+    $(this).closest('.fx_preview').removeClass('fx_preview_active');
 });
 
 function handle_upload(data, $block) {
@@ -152,16 +145,17 @@ function handle_upload(data, $block) {
     var field_type = $block.data('field_type');
     $res_inp.val(data.path);
     if (field_type === 'image') {
-        $('.preview img', $block).attr('src', data.path).show();
+        $('.fx_preview img', $block).attr('src', data.path).show();
     } else {
-        $('.file_info', $block)
+        $('.fx_file_info', $block)
                 .html(
                     '<a href="'+data.path+'">'+data.filename+'</a>'+
                     '<br /><span class="file_size">'+data.size+'</span>'
                 );
     }
-    $('.killer', $block).show();
-    $('.file_input', $block).hide();
+    $('.fx_file_killer', $block).show();
+    $('.fx_file_input', $block).hide();
+    $('.fx_preview', $block).addClass('fx_preview_filled');
     $res_inp.trigger('fx_change_file');
 }
 
@@ -182,15 +176,16 @@ $html.on('change', '.fx_image_field input.file', function() {
     });
 });
 
-$html.on('click', '.fx_image_field .uploader', function() {
+$html.on('click', '.fx_image_field .fx_file_uploader', function() {
     $(this).closest('.fx_image_field').find('input.file').focus().click();
 });
 
-$html.on('click', '.fx_image_field .killer', function() {
+$html.on('click', '.fx_image_field .fx_file_killer', function() {
    var $field = $(this).closest('.fx_image_field'); 
-   $('.preview img', $field).hide();
-   $('.real_value', $field).val('');
-   $('.file_input', $field).show();
+   $('.fx_preview img', $field).hide();
+   $('.real_value', $field).val('').trigger('fx_change_file');
+   $('.fx_file_input', $field).show();
+   $('.fx_preview', $field).removeClass('fx_preview_filled');
    $(this).hide();
 });
 

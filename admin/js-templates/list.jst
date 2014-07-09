@@ -282,3 +282,6 @@ var url = _c.url == null ? null : (/^#/.test(_c.url) ? _c.url : '#' + $fx.mode +
 
 <!--[list_field_cell ? _o && _o.label && _o.label.editable]-->
 <span data-field="<?=_o.field?>" class="fx_list_field_editable" contenteditable="true"><?=_c ? _c : '...' ?></span>
+
+<!--[list_field_cell ? _c.field !== undefined]-->
+<span class="list_input"><?=$t.input(_c.field)?></span>
