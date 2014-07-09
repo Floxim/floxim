@@ -105,7 +105,7 @@ window.$fx_fields = {
             buttons: ['formatting',  'bold', 'italic', 'deleted',
                     'unorderedlist', 'orderedlist', 'outdent', 'indent',
                     'image', 'video', 'file', 'table', 'link', 'alignment', 'horizontalrule'],
-            plugins: ['fontcolor'],
+            plugins: ['fontcolor']
         }, options);
         if (options.extra_buttons) {
             for(var i = 0; i < options.extra_buttons.length; i++) {

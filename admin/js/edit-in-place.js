@@ -395,7 +395,7 @@ fx_edit_in_place.prototype.make_wysiwyg = function () {
     $panel.append('<div class="editor_panel" />').show();
     var linebreaks = this.meta.var_type === 'visual';
     if (this.meta.linebreaks !== undefined) {
-        linebreaks = this.meta.linebreaks;
+        linebreaks = !!this.meta.linebreaks;
     }
     $fx_fields.make_redactor($node, {
         linebreaks:linebreaks,

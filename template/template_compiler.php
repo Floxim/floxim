@@ -299,7 +299,7 @@ class fx_template_compiler {
             } else {
                 $token->set_prop('type', $token_type);
             }
-            if ($linebreaks) {
+            if ($linebreaks || $token->get_prop('var_type') === 'visual') {
                 $token->set_prop('linebreaks', $linebreaks);
             }
         }
