@@ -661,6 +661,22 @@ class fx {
     public static function version() {
         return fx::config('fx.version');
     }
+
+    public static function changelog($version=null) {
+        $file = fx::config('ROOT_FOLDER').'changelog.json';
+        if (file_exists($file)) {
+            if ($changelog = @json_decode(file_get_contents($file),true)) {
+                if (is_null($version)) {
+                    return $changelog;
+                } else {
+                    if (isset($changelog[$version])) {
+                        return $changelog[$version];
+                    }
+                }
+            }
+        }
+        return null;
+    }
     
     protected static $debugger = null;
     
