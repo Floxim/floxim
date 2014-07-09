@@ -131,8 +131,15 @@ fx_edit_in_place.prototype.start = function(meta) {
                         $n.data('fx_saved_value', $n.text());
                         
                         // do not allow paste html into non-html fields
-                        $n.on('keyup.edit_in_place paste.edit_in_place', function() {
-                            $n.html($n.text());
+                        // this way seems to be ugly
+                        // @todo onkeydown solution or clear node contents after real paste
+                        $n.on('paste.edit_in_place', function(e) {
+                            e.preventDefault();
+                            document.execCommand(
+                                'inserttext', 
+                                false,
+                                prompt('Paste your text here:')
+                            );
                         });
                     }
                     
