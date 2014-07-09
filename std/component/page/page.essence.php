@@ -29,7 +29,6 @@ class fx_content_page extends fx_content {
             $c_pid = fx::data('content_page', $ids[0])->get('parent_id');
         }
         $this->parent_ids = $ids;
-        fx::log('gpi', $this, $ids);
         return $ids;
     }
     
