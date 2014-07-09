@@ -28,6 +28,15 @@ class fx_http {
         if (is_array($value) || is_object($value)) {
             $value = json_encode($value);
         }
-        header($name.(!is_null($value) ? ": ".$value : ''));
+        
+        if (!$value) {
+            // send header only if the first arg contains full header text, e.g.
+            // My-Header: something
+            if (!preg_match("~\:[^\s+]~", $name)) {
+                return;
+            }
+            header($name);
+        }
+        header($name. ": ".$value);
     }
 }
