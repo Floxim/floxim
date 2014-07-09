@@ -76,7 +76,7 @@ class fx_content_user extends fx_content {
     }
     
     public function get_auth_form() {
-        $form = new fx_form();
+        $form = new fx_form(array('id' => 'auth_form'));
         $form->add_fields(array(
             'email' => array(
                 'label' => 'E-mail',
