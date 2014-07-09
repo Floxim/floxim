@@ -164,7 +164,7 @@ class fx_content_page extends fx_content {
     public function get_page_infoblocks() {
         // cache page ibs
         if (!isset($this->data['page_infoblocks'])) {
-            $this->data['page_infoblocks'] = fx::data('infoblock')->get_for_page($this['id']);
+            $this->data['page_infoblocks'] = fx::data('infoblock')->get_for_page($this);
         }
         return $this->data['page_infoblocks'];
     }

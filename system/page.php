@@ -260,6 +260,7 @@ class fx_system_page {
      */
     public function add_assets_ajax() {
         fx::http()->header('fx_assets_js', $this->_files_js);
+        fx::http()->header('fx_assets_css', $this->_files_css);
     }
 
     public function post_process($buffer) {

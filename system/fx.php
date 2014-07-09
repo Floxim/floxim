@@ -374,7 +374,7 @@ class fx {
                     $arr[$pp] = $var_value;
                     return;
                 }
-                $arr[$pp]= fx::collection(); //array();
+                $arr[$pp]= array(); //fx::collection();
             }
             $arr =&  $arr[$pp];
         }
