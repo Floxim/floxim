@@ -159,6 +159,21 @@ abstract class fx_essence implements ArrayAccess {
         $this->offsetSet($item, $value);
         return $this;
     }
+    
+    public function dig_set($path, $value) {
+        $parts = explode(".", $path, 2);
+        if (count($parts) == 1)  {
+            $this->offsetSet($path, $value);
+            return $this;
+        }
+        $c_value = $this[$parts[0]];
+        if (!is_array($c_value)) {
+            $c_value = array();
+        }
+        fx::dig_set($c_value, $parts[1], $value);
+        $this->offsetSet($parts[0], $c_value);
+        return $this;
+    }
 
     public function get_id() {
         return $this->data[$this->_get_pk()];

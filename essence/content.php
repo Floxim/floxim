@@ -161,7 +161,7 @@ class fx_content extends fx_essence {
         return $form_fields;
     }
     
-    public function get_form_field_parent_id($field) {
+    public function get_form_field_parent_id($field = null) {
         if (!$this['id']) {
             return;
         }
@@ -185,11 +185,13 @@ class fx_content extends fx_essence {
             }
         };
         $get_values($parents);
-        $jsf = $field->get_js_field($this);
+        if (count($values) === 1) {
+            return;
+        }
+        $jsf = $field ? $field->get_js_field($this) : array();
         $jsf['values'] = $values;
         $jsf['tab'] = 1;
-        return $jsf;
-        //fx::log($parents);
+        return $jsf;;
     }
     
     /**
@@ -200,6 +202,7 @@ class fx_content extends fx_essence {
         if (!$ib) {
             return false;
         }
+        
         $parent_type = $ib['scope']['page_type'];
         if (!$parent_type) {
             $parent_type = 'page';
@@ -209,7 +212,11 @@ class fx_content extends fx_essence {
             $root_id = fx::data('site', $ib['site_id'])->get('index_page_id');
         }
         $finder = fx::content($parent_type);
-        $finder->descendants_of($root_id, $ib['scope']['pages'] != 'children');
+        if ($ib['scope']['pages'] === 'this') {
+            $finder->where('id', $ib['page_id']);
+        } else {
+            $finder->descendants_of($root_id, $ib['scope']['pages'] != 'children');
+        }
         return $finder;
     }
     
@@ -308,8 +315,11 @@ class fx_content extends fx_essence {
                     $old_data = isset($this->modified_data[$link_field['keyword']]) ? 
                         $this->modified_data[$link_field['keyword']] :
                         new fx_collection();
+                    $c_priority = 0;
                     foreach ($val as $linked_item) {
+                        $c_priority++;
                         $linked_item[$related_field_keyword] = $this['id'];
+                        $linked_item['priority'] = $c_priority;
                         $linked_item->save();
                     }
                     $old_data->find_remove('id', $val->get_values('id'));
