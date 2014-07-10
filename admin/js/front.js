@@ -167,7 +167,6 @@ fx_front.prototype.handle_mouseover = function(e) {
                 $('.fx_hilight_hover').removeClass('fx_hilight_hover');
                 node.addClass('fx_hilight_hover');
                 $fx.front.outline_block(node);
-                //$fx.front.make_node_panel(node);
                 if (make_content_editable) {
                     $editable.addClass('fx_var_editable').attr('contenteditable', 'true');
                 }
@@ -628,6 +627,10 @@ fx_front.prototype.select_item = function(node) {
     this.selected_item = node;
     var $node = $(node);
     node = $node[0];
+    
+    $fx.front.outline_block_off($node);
+    $fx.front.outline_block($node, 'selected');
+    
     if (!this.node_panel_disabled) {
         this.make_node_panel($node);
     }
@@ -645,8 +648,7 @@ fx_front.prototype.select_item = function(node) {
     }
     
     $node.addClass('fx_selected').trigger('fx_select');
-    $fx.front.outline_block_off($node);
-    $fx.front.outline_block($node, 'selected');
+    
     
     var scrolling = false;
     setTimeout(function() {
@@ -715,7 +717,6 @@ fx_front.prototype.make_node_panel = function($node) {
         top: o.top - $panel.outerHeight() - 4 + 'px',
         'z-index': $node.data('fx_z_index') || (this.get_panel_z_index() + 1)
     });
-    
     setTimeout(function() {
         $fx.front.recount_node_panel();
     }, 10);
@@ -1217,17 +1218,36 @@ fx_front.prototype.start_essences_sortable = function($cp) {
         items:$essences,
         placeholder: placeholder_class,
         forcePlaceholderSize : true,
-        distance:10,
+        distance:3,
+        helper:'clone',
         start:function(e, ui) {
+            // dummy block with black border
             var ph = ui.placeholder;
+            
+            // original dragged item
+            // it is hidden by this moment
             var item = ui.item;
+            
+            // item's clone wich is being dragged
+            var helper = ui.helper;
+            
+            // we are to set helper's offset same as the original item had before jqueryui hide it
+            // so we show the item, copy its offset and hide again
+            item.show();
+            helper.offset(item.offset());
+            item.hide();
+            
+            // then put the item to the end
+            // to preserve real number of items for :nth-child selector
+            item.parent().append(item);
+            
             ph.css({
-                width:item.width()+'px',
-                height:item.height()+'px',
+                width:helper.outerWidth()+'px',
+                height:helper.outerHeight()+'px',
                 'box-sizing':'border-box'
             });
             ph.attr('class', ph.attr('class')+ ' '+item.attr('class'));
-            $c_selected = $($fx.front.get_selected_item());
+            var $c_selected = $($fx.front.get_selected_item());
             $fx.front.outline_block_off($c_selected);
             $fx.front.disable_hilight();
             $fx.front.get_node_panel().hide();
