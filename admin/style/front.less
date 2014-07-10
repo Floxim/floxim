@@ -1,3 +1,23 @@
+.fx_chess_background(@dark: rgba(0,0,0,0.3); @light: #FFF; @size: 6px; @transparent: rgba(0,0,0,0);) {
+  background: -webkit-linear-gradient(45deg, @dark 25%, @transparent 25%, @transparent 75%, @dark 75%, @dark 0), -webkit-linear-gradient(45deg, @dark 25%, @transparent 25%, @transparent 75%, @dark 75%, @dark 0), @light;
+  background: -moz-linear-gradient(45deg, @dark 25%, @transparent 25%, @transparent 75%, @dark 75%, @dark 0), -moz-linear-gradient(45deg, @dark 25%, @transparent 25%, @transparent 75%, @dark 75%, @dark 0), @light;
+  background: linear-gradient(45deg, @dark 25%, @transparent 25%, @transparent 75%, @dark 75%, @dark 0), linear-gradient(45deg, @dark 25%, @transparent 25%, @transparent 75%, @dark 75%, @dark 0), @light;
+  background-position: 0 0, @size @size;
+  -webkit-background-origin: padding-box;
+  background-origin: padding-box;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  -webkit-background-size: @size*2 @size*2;
+  background-size: @size*2 @size*2;
+}
+/*
+.featured-list-item {
+    .fx_chess_background();
+    img {opacity:0;}
+}
+*/
+
+
 .fx_infoblock_placeholder {
     min-height: 5px;
     min-width: 50px;
@@ -8,7 +28,7 @@
 .fx_essence_placeholder {
     min-height: 5px;
     min-width: 5px;
-    background: #FFF;
+    .fx_chess_background();
     border:3px solid #000;
     outline:3px solid #FF0 !important;
 }
