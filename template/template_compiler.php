@@ -21,7 +21,7 @@ class fx_template_compiler {
                 $lines[ $error_line - 1] = '[[bad '.$lines[$error_line - 1].']]';
                 $lined = join("\n", $lines);
                 $error = $is_correct[0].': '.$is_correct[1][0].' (line '.$error_line.')';
-                fx::debug('Syntax error', $error, $lined);
+                fx::debug($error, $lined);
                 throw new Exception('Syntax error');
             }
         }
@@ -784,6 +784,9 @@ class fx_template_compiler {
         $cond = $token->get_prop('test');
         $cond = trim($cond);
         $cond = self::parse_expression($cond);
+        if (empty($cond)) {
+            $cond = 'false';
+        }
         $code .= 'if ('.$cond.") {\n";
         $code .= $this->_children_to_code($token)."\n";
         $code .= "} ";
@@ -1130,8 +1133,10 @@ class fx_template_compiler {
         // $code could throw a "Cannot redeclare" fatal error.
 
         $braces || $code = "if(0){{$code}\n}";
-        $eval_res = eval($code);
+        
         ob_start();
+        $eval_res = eval($code);
+        
         if (false === $eval_res) {
             if ($braces) {
                 $braces = PHP_INT_MAX;
@@ -1141,17 +1146,17 @@ class fx_template_compiler {
                 $braces = substr_count($code, "\n");
             }
 
-            $code = ob_get_clean();
-            $code = strip_tags($code);
-
+            $buffer_output = ob_get_clean();
+            $buffer_output = strip_tags($buffer_output);
+            
             // Get the error message and line number
-            if (preg_match("'syntax error, (.+) in .+ on line (\d+)$'s", $code, $code)) {
-                $code[2] = (int) $code[2];
-                $code = $code[2] <= $braces
-                    ? array($code[1], $code[2])
-                    : array('unexpected $end' . substr($code[1], 14), $braces);
+            if (preg_match("'syntax error, (.+) in .+ on line (\d+)$'s", $buffer_output, $error_data)) {
+                $error_data[2] = (int) $error_data[2];
+                $error_data = $error_data[2] <= $braces
+                    ? array_slice($error_data,1)
+                    : array('unexpected $end' . substr($error_data[1], 14), $braces);
             }
-            $result = array('syntax error', $code);
+            $result = array('syntax error', $error_data);
         } else {
             ob_end_clean();
             $result = true;

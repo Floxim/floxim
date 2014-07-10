@@ -223,7 +223,8 @@ class fx_template_html {
                     '{/item}'
                 );
             }
-            if ( ($if_test = $n->get_attribute('fx:if'))) {
+            if ( $n->has_attribute('fx:if')) {
+                $if_test = $n->get_attribute('fx:if');
                 $n->remove_attribute('fx:if');
                 $n->wrap(
                     '{if test="'.$if_test.'"}',
