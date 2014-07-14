@@ -691,7 +691,7 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
         
         $ib = fx::data('infoblock', $input['infoblock']['id']);
         // for InfoBlock-layouts always save the parameters in the root InfoBlock
-        if ($ib->get_prop_inherited('controller') == 'layout') {
+        if ($ib->is_layout()) {
             $root_ib = $ib->get_root_infoblock();
             $ib_visual = $root_ib->get_visual();
         } elseif ( ($visual_id = fx::dig($input, 'infoblock.visual_id')) ) {
@@ -699,11 +699,103 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
         } else {
             $ib_visual = $ib->get_visual();
         }
-
-
-        $contents = array();
-
-
+        
+        // group vars by type to process content vars first
+        // because we need content id for 'content-visual' vars on adding a new essence
+        $vars = fx::collection($input['vars'])->apply(function($v) {
+            if ($v['var']['type'] == 'livesearch' && !$v['value']) {
+                $v['value'] = array();
+            }
+        })->group(function($v) {
+            return $v['var']['var_type'];
+        });
+        
+        fx::log($vars, $input);
+        
+        //$vars = array_merge(array('content' => array(), 'visual' => array(), 'ib_param' => array()), $vars);
+        
+        
+        $contents = fx::collection();
+        
+        if (isset($input['new_essence_props'])) {
+            $new_props = $input['new_essence_props'];
+            $contents['new'] = fx::content($new_props['type'])->create($new_props);
+        }
+        
+        if (isset($vars['content'])) {
+            $content_groups = $vars['content']->group(function($v) {
+                $vid = $v['var']['content_id'];
+                if (!$vid) {
+                    $vid = 'new';
+                }
+                return $vid;
+            });
+            foreach ($content_groups as $content_id => $content_vars) {
+                if ($content_id !== 'new') {
+                    $fv = $content_vars->first();
+                    $c_content = fx::content($fv['content_type_id'], $content_id);
+                    if (!$c_content) {
+                        continue;
+                    }
+                    $contents[$content_id] = $c_content;
+                }
+                $vals = array();
+                foreach ($content_vars as $var)  {
+                    $vals[$var['var']['name']] = $var['value'];
+                }
+                $contents[$content_id]->set_field_values($vals, array_keys($vals));
+            }
+        }
+        
+        $new_id = false;
+        foreach ($contents as $cid => $c) {
+            $c->save();
+            if ($cid == 'new') {
+                $new_id = $c['id'];
+            }
+        }
+        
+        if (isset($vars['visual'])) {
+            foreach ($vars['visual'] as $c_var) {
+                $var = $c_var['var'];
+                $value = $c_var['value'];
+                $var['id'] = preg_replace("~\#new_id\#$~", $new_id, $var['id']);
+                $visual_set = $var['template_is_wrapper'] ? 'wrapper_visual' : 'template_visual';
+                if ($value == 'null') {
+                    $value = null;
+                }
+                $c_visual = $ib_visual[$visual_set];
+                if (!is_array($c_visual)) {
+                    $c_visual = array();
+                }
+                if ($value == 'null') {
+                    unset($c_visual[$var['id']]);
+                } else {
+                    $c_visual[$var['id']] = $value;
+                }
+                $ib_visual[$visual_set] = $c_visual;
+            }
+            $ib_visual->save();
+        }
+        if (isset($vars['ib_param'])) {
+            $modified_params = array();
+            foreach ($vars['ib_param'] as $c_var) {
+                $var = $c_var['var'];
+                $value = $c_var['value'];
+                fx::log('ibp', $var, $value);
+                if (!isset($var['stored']) || ($var['stored'] && $var['stored'] != 'false')) {
+                    $ib->dig_set('params.'.$var['name'], $value);      
+                }
+                $modified_params[$var['name']] = $value;
+            }
+            if (count($modified_params) > 0) {
+                $controller = $ib->init_controller();
+                $ib->save();
+                $controller->handle_infoblock('save', $ib, array('params' => $modified_params));
+            }
+        }
+        return;
+        
         foreach ($input['vars'] as $c_var) {
             $var = $c_var['var'];
             $value = $c_var['value'];
@@ -717,11 +809,12 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
                     $c_visual = array();
                 }
                 if ($value == 'null') {
-                    unset($c_visual[$var[$id]]);
+                    unset($c_visual[$var['id']]);
                 } else {
                     $c_visual[$var['id']] = $value;
                 }
-                $ib_visual->set($visual_set, $c_visual)->save();
+                //$ib_visual->set($visual_set, $c_visual)->save();
+                //$ib_visual->dig_set($visual_set)
             } elseif ($var['var_type'] == 'content') {
 
                 if (!isset($contents[$var['content_id']])) {
@@ -743,14 +836,21 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
                 $controller->handle_infoblock('save', $ib, array('params' => array($var['name'] => $value)));
             }
         }
-
+        fx::log($contents, count($contents), $input);
         foreach ($contents as $content_id => $content_info) {
-            $content = fx::data(
-                'content_'.fx::data('component', $content_info['content_type_id'])->get('keyword'), 
-                $content_id
+            fx::log($content_id, $content_info);
+            $finder = fx::data(
+                'content_'.fx::data('component', $content_info['content_type_id'])->get('keyword')
             );
+            if ($content_id) {
+                $content = $finder->get_by_id($content_id);
+            } else {
+                $content = $finder->create( isset($input['new_essence_props']) ? $input['new_essence_props'] : array());
+            }
             if ($content) {
                 $content->set_field_values($content_info['values'], array_keys($content_info['values']));
+                fx::log('saving', $content);
+                return;
                 $content->save();
             }
         }
