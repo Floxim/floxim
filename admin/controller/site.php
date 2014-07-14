@@ -117,22 +117,6 @@ class fx_controller_admin_site extends fx_controller_admin {
         );
         return $result;
     }
-
-    public function map($input) {
-        $site = fx::data('site')->get_by_id($input['params'][0]);
-        if (!$site) {
-            $this->response->set_status_error( fx::alang('Site not found','system') );
-            return;
-        }
-        $fields = array();
-        $fields[] = $this->ui->tree($this->_get_site_tree($site));
-
-        $this->response->add_fields($fields);
-        $this->response->add_buttons("add,edit,settings,delete");
-        $this->response->add_button_options('add', 'site_id='.$site['id']);
-        $this->response->set_essence('content');
-        $this->_set_layout('map', $site);
-    }
     
     protected function _set_layout($section, $site) {
     	$titles = array(
@@ -144,56 +128,6 @@ class fx_controller_admin_site extends fx_controller_admin {
         $this->response->breadcrumb->add_item($site['name'], '#admin.site.settings('.$site['id'].')');
         $this->response->breadcrumb->add_item($titles[$section]);
         $this->response->submenu->set_menu('site-'.$site['id'])->set_subactive('site'.$section.'-'.$site['id']);
-    }
-
-    protected function _get_site_tree($site) {
-        $content = fx::data('content')->where('site_id', $site['id'])->all();
-        $tree = fx::data('content_page')->make_tree($content);
-        $res = $this->_get_tree_branch($tree);
-        return $res[0]['children'];
-    }
-    
-    protected function _get_tree_branch($level_collection) {
-        $result = array();
-        $content_blocks = $level_collection->group('infoblock_id');
-        $infoblocks = fx::data('infoblock', $content_blocks->keys());
-        foreach ($content_blocks as $ib_id => $items) {
-            $infoblock = $infoblocks->find_one('id', $ib_id);
-            if (!$infoblock) {
-                fx::log('no ib', $ib_id, $infoblocks);
-                $ib_name = '<span style="color:#F00;">ib #'.$ib_id.'</span>';
-            } else {
-                $ib_name = $infoblock['name'] ? $infoblock['name'] : 'ib #'.$ib_id;
-            }
-            $type_result = array();
-            foreach ($items as $item) {
-                $name = isset($item['name']) ? $item['name'] : $item['type'].' #'.$item['id'];
-                $item_res = array(
-                    'data' => $name,
-                    'metadata' => array(
-                        'id' => $item['id'],
-                        'essence' => 'content'
-                    )
-                );
-                if ($item['children']) {
-                    $item_res['children'] = $this->_get_tree_branch($item['children']);
-                }
-                $type_result []= $item_res;
-            }
-            $result []= array(
-                'data' => $ib_name,
-                'metadata' => array(
-                    'id' => $ib_id,
-                    'is_groupper' => 1,
-                    'essence' => 'infoblock'
-                ),
-                'children' => $type_result
-            );
-        }
-        if (count($result) == 1) {
-            $result = $result[0]['children'];
-        }
-        return $result;
     }
     
     /**
