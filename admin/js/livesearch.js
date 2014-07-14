@@ -119,6 +119,7 @@ window.fx_livesearch = function (node) {
             data:params.data,
             success:function(res){
                 livesearch.addSilent = true;
+                livesearch.n.css('visibility', 'hidden');
                 res.results.sort(function(a, b) {
                     if (ids.indexOf(a.id) < ids.indexOf(b.id) )
                         return -1;
@@ -134,6 +135,7 @@ window.fx_livesearch = function (node) {
                 });
                 livesearch.addSilent = false;
                 livesearch.n.trigger('livesearch_value_loaded');
+                livesearch.n.css('visibility', '');
             }
         });
     };
