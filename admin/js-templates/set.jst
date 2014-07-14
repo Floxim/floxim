@@ -123,9 +123,11 @@ for (var i = 0; i< _c.length; i++) {
 
 <!--[fieldset_row ? _o.set_field.is_cond_set === true]-->
 <tr class="fx_fieldset_row row_<?=_o.index?>">
+    <td>
+        <a class="fx_fieldset_remove" href="javascript:void();" title="<?=$fx.lang('Delete')?>">&times;</a>
+    </td>
     <td class="input_cell_0">
         <?
-
             if (typeof _o.index === 'number') {
                 var name = 'new_'+_o.index;
             } else {
@@ -137,9 +139,6 @@ for (var i = 0; i< _c.length; i++) {
     </td>
     <td class="input_cell_1"></td>
     <td class="input_cell_2"></td>
-    <td>
-        <a class="fx_fieldset_remove"><?=$fx.lang('Delete')?></a>
-    </td>
 </tr>
 
 <!--jquery-->
