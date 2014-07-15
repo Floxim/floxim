@@ -260,6 +260,14 @@ class fx_template_html {
                 $n->remove_attribute('fx:else');
                 $n->wrap('{else}', '{/else}');
             }
+            if ($n->has_attribute('fx:add')) {
+                $add_mode = $n->get_attribute('fx:add');
+                $n->remove_attribute('fx:add');
+                $n->wrap(
+                    '<?php $this->push_mode("add", "'.$add_mode.'"); ?>',
+                    '<?php $this->pop_mode("add"); ?>'
+                );
+            }
             if ( $n->has_attribute('fx:omit')) {
                 $omit = $n->get_attribute('fx:omit');
                 if (empty($omit) || $omit == 'true') {

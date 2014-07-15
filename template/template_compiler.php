@@ -350,12 +350,25 @@ class fx_template_compiler {
                         $def_child->set_prop('type', $token_type);
                     }
                 }
-                $code .= "\tob_start();\n";
-                $code .= '$'.$var_chunk.'_was_admin = $_is_admin;'."\n";
-                $code .= '$_is_admin = false;'."\n";
-                $code .= "\t".$this->_children_to_code($token);
-                $code .= '$_is_admin = $'.$var_chunk.'_was_admin;'."\n";
-                $default = "ob_get_clean()";
+                $has_complex_tokens = false;
+                $default_parts = array();
+                foreach ($token_def_children as $def_child) {
+                    if ($def_child->name != 'code') {
+                        $has_complex_tokens = true;
+                        break;
+                    }
+                    $default_parts []= '"'.addslashes($def_child->get_prop('value')).'"';
+                }
+                if ($has_complex_tokens) {
+                    $code .= "\tob_start();\n";
+                    $code .= '$'.$var_chunk.'_was_admin = $_is_admin;'."\n";
+                    $code .= '$_is_admin = false;'."\n";
+                    $code .= "\t".$this->_children_to_code($token);
+                    $code .= '$_is_admin = $'.$var_chunk.'_was_admin;'."\n";
+                    $default = "ob_get_clean()";
+                } else {
+                    $default = join(".", $default_parts);
+                }
             }
             if ($real_val_defined) {
                 $code .= "\n".$display_val_var.' = '.$default.";\n";
@@ -384,48 +397,50 @@ class fx_template_compiler {
             }
             $code .= $modifiers_code;
         }
-        $code .= 'echo !$_is_admin ? '.$expr.' : $this->print_var('."\n";
-        $code .= $expr;
-        $code .= ", \n";
-        $token_is_visual = $token->get_prop('var_type') === 'visual';
-        $meta_parts = array();
-        if (!$token_is_visual) {
-            //$code .= ($var_meta_defined ? '$var_meta' : $var_meta_expr) . ' + ';
-            $meta_parts []= $var_meta_defined ? '$var_meta' : $var_meta_expr;
-        }
-        //if ($token->get_prop('var_type') == 'visual') {
-        $token_props = $token->get_all_props();
-        
-
-        $tp_parts = array();
-
-        foreach ($token_props as $tp => $tpval) {
-            if (!$token_is_visual && in_array($tp, array('id', 'var_type'))) {
-                continue;
-            }
-            $token_prop_entry = "'".$tp."' => ";
-            if ($tp == 'id') {
-                $token_prop_entry .= $var_id;
-            } elseif (preg_match("~^\`.+\`$~s", $tpval)) {
-                $token_prop_entry .= trim($tpval, '`');
-            } else {
-                $token_prop_entry .= "'".addslashes($tpval)."'";
-            }
-            $tp_parts[]= $token_prop_entry;
-        }
-        if (count($tp_parts) > 0) {
-            $meta_parts []= "array(".join(", ", $tp_parts).")";
-        }
-        $meta_parts []= '$_is_wrapper_meta';
-        
         if ($token->get_prop('editable') == 'false') {
-            $meta_parts []= 'array("editable"=>false)';
+            $code .= 'echo  '.$expr.";\n";
+        } else {
+            $code .= 'echo !$_is_admin ? '.$expr.' : $this->print_var('."\n";
+            $code .= $expr;
+            $code .= ", \n";
+            $token_is_visual = $token->get_prop('var_type') === 'visual';
+            $meta_parts = array();
+            if (!$token_is_visual) {
+                $meta_parts []= $var_meta_defined ? '$var_meta' : $var_meta_expr;
+            }
+            $token_props = $token->get_all_props();
+
+
+            $tp_parts = array();
+
+            foreach ($token_props as $tp => $tpval) {
+                if (!$token_is_visual && in_array($tp, array('id', 'var_type'))) {
+                    continue;
+                }
+                $token_prop_entry = "'".$tp."' => ";
+                if ($tp == 'id') {
+                    $token_prop_entry .= $var_id;
+                } elseif (preg_match("~^\`.+\`$~s", $tpval)) {
+                    $token_prop_entry .= trim($tpval, '`');
+                } else {
+                    $token_prop_entry .= "'".addslashes($tpval)."'";
+                }
+                $tp_parts[]= $token_prop_entry;
+            }
+            if (count($tp_parts) > 0) {
+                $meta_parts []= "array(".join(", ", $tp_parts).")";
+            }
+            $meta_parts []= '$_is_wrapper_meta';
+
+            if ($token->get_prop('editable') == 'false') {
+                $meta_parts []= 'array("editable"=>false)';
+            }
+            if ($real_val_defined) {
+                $meta_parts []= 'array("real_value" => '.$real_val_var.')';
+            }
+            $code .= 'array_merge('.join(", ", $meta_parts).')';
+            $code .= "\n);\n";
         }
-        if ($real_val_defined) {
-            $meta_parts []= 'array("real_value" => '.$real_val_var.')';
-        }
-        $code .= 'array_merge('.join(", ", $meta_parts).')';
-        $code .= "\n);\n";
         $code .= "?>";
         return $code;
     }
@@ -469,7 +484,8 @@ class fx_template_compiler {
         $each_token = new fx_template_token('each', 'double', array(
             'select' => '`'.$arr_id.'`',
             'as' => $token->get_prop('as'),
-            'key' => $token->get_prop('key')
+            'key' => $token->get_prop('key'),
+            'check_traversable' => 'false'
         ));
         
         
@@ -638,7 +654,18 @@ class fx_template_compiler {
         }
         
         $separator = $this->_find_separator($token);
-        $code .= "if (is_array(".$arr_id.") || ".$arr_id." instanceof Traversable) {\n";
+        $check_traversable = $token->get_prop('check_traversable') !== 'false';
+        if ($check_traversable) {
+            $code .= "if (is_array(".$arr_id.") || ".$arr_id." instanceof Traversable) {\n";
+        }
+        // add-in-place settings
+        
+        $code .= 'if ('.$arr_id.' instanceof fx_collection && isset('.$arr_id.'->finder)';
+        $code .= ' && $this->get_mode("add") ';
+        $code .= ' && '.$arr_id.'->finder instanceof fx_data_content) {'."\n";
+        $code .= $arr_id.'->finder->create_adder_placeholder('.$arr_id.');'."\n";
+        $code .= "}\n";
+        
         $loop_id = '$'.$item_alias.'_loop';
         $code .=  $loop_id.' = new fx_template_loop('.$arr_id.', '.$loop_key.', '.$loop_alias.");\n";
         //$code .= '$this->context_stack[]= '.$loop_id.";\n";
@@ -656,7 +683,9 @@ class fx_template_compiler {
         $code .= "}\n"; // close foreach
         //$code .= 'array_pop($this->context_stack);'."\n"; // pop loop object
         $code .= "\$this->pop_context();\n";
-        $code .= "}\n";  // close if
+        if ($check_traversable) {
+            $code .= "}\n";  // close if
+        }
         $code .= "\n?>";
         return $code;
     }

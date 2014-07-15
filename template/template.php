@@ -52,6 +52,30 @@ class fx_template {
             array_pop($this->context_stack_meta);
         }
     }
+    
+    protected $mode_stack = array();
+    
+    public function push_mode($mode, $value) {
+        if (!isset($this->mode_stack[$mode])) {
+            $this->mode_stack[$mode] = array();
+        }
+        $this->mode_stack[$mode] []= $value;
+    }
+    
+    public function pop_mode($mode) {
+        if (isset($this->mode_stack[$mode])) {
+            array_pop($this->mode_stack[$mode]);
+        }
+    }
+    
+    public function get_mode($mode) {
+        if (isset($this->mode_stack[$mode])) {
+            return end($this->mode_stack[$mode]);
+        }
+        if ($this->_parent) {
+            return $this->_parent->get_mode($mode);
+        }
+    }
 
     public function set_var($var, $val) {
         $stack_count = count($this->context_stack);

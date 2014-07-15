@@ -11,9 +11,6 @@ class fx_template_loop implements ArrayAccess {
             $alias = 'item';
         }
         $this->_is_collection = $items instanceof fx_collection;
-        if ($this->_is_collection && $items->finder instanceof fx_data_content && fx::is_admin()) {
-            $items->finder->create_adder_placeholder($items);
-        }
         
         $this->loop = $this;
         $this->looped = $items;
