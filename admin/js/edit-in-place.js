@@ -168,13 +168,13 @@ fx_edit_in_place.prototype.add_panel_field = function(meta) {
         meta.value = meta.real_value;
     }
     meta = $.extend({}, meta);
+    
     if (meta.var_type === 'visual') {
         meta.name = meta.id;
     }
     if (!meta.type) {
         meta.type = 'string';
     }
-    //var field = $fx.front.add_panel_field(meta);
     
     var $field_container = $fx.front.get_node_panel();
     $field_container.show();
@@ -316,7 +316,11 @@ fx_edit_in_place.prototype.get_vars = function() {
         } else if (new_value instanceof Array && old_value instanceof Array) {
             value_changed = new_value.join(',') !== old_value.join(',');
         } else {
-            value_changed = new_value !== old_value;
+            if (old_value === undefined && new_value === '') {
+                value_changed = false;
+            } else {
+                value_changed = new_value !== old_value;
+            }
         }
         if (value_changed) {    
             vars.push({
