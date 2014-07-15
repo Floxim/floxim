@@ -104,10 +104,14 @@ class fx_content extends fx_essence {
         if ($is_template_var) {
             $field_keyword = mb_substr($field_keyword, 1);
             $cf = $fields[$field_keyword];
+            $v_id = $this['id'];
+            if (!$v_id) {
+                $v_id = '#new_id#';
+            }
             $field_meta = array(
                 'var_type' => 'visual',
-                'id' => $field_keyword.'_'.$this['id'],
-                'name' => $field_keyword.'_'.$this['id']
+                'id' => $field_keyword.'_'.$v_id,
+                'name' => $field_keyword.'_'.$v_id
             );
         } else {
             $cf = $fields[$field_keyword];
@@ -239,8 +243,12 @@ class fx_content extends fx_essence {
             'data-fx_essence' => $essence_meta, 
             'class' => 'fx_essence'. ($collection->is_sortable ? ' fx_sortable' : '')
         );
+        
+        if ($this->is_adder_placeholder()) {
+            $essence_atts['class'] .= ' fx_essence_adder_placeholder';
+        }
         if (isset($this['_meta'])) {
-            $essence_atts ['data-fx_essence_meta'] = $this['_meta'];
+            $essence_atts['data-fx_essence_meta'] = $this['_meta'];
         }
         
         if ($is_subroot) {
@@ -445,5 +453,18 @@ class fx_content extends fx_essence {
         foreach ($fields as $f) {
             $this[$f['keyword']] = $f->fake_value();
         }
+    }
+    
+    /**
+     * Check if the essence is adder placeholder or set this property to $switch_to value
+     * @param bool $switch_to set true or false
+     * @return bool
+     */
+    public function is_adder_placeholder($switch_to = null) {
+        if (func_num_args() == 1) {
+            $this->_is_adder_placeholder = $switch_to;
+        }
+        return isset($this->_is_adder_placeholder) && $this->_is_adder_placeholder;
+        
     }
 }
