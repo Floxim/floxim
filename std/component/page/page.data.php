@@ -38,11 +38,13 @@ class fx_data_content_page extends fx_data_content {
         return $page;
     }
     
-    public function make_tree($data, $children_key = 'children') {
-        
+    public function make_tree($data, $children_key = 'children', $extra_root_ids = array()) {
         $index_by_parent = array();
         
         foreach ($data as $item) {
+            if (in_array($item['id'], $extra_root_ids)) {
+                continue;
+            }
             $pid = $item['parent_id'];
             if (!isset($index_by_parent[$pid])) {
                 $index_by_parent[$pid] = fx::collection();
@@ -50,6 +52,7 @@ class fx_data_content_page extends fx_data_content {
             }
             $index_by_parent[$pid] []= $item;
         }
+        
         foreach ($data as $item) {
             if (isset($index_by_parent[$item['id']])) {
                 $item[$children_key] = $index_by_parent[$item['id']];
