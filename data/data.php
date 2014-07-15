@@ -533,12 +533,12 @@ class fx_data {
         switch ($rel_type) {
             case self::BELONGS_TO:
                 $rel_items = $rel_finder->where('id', $essences->get_values($rel_field))->all();
-                $essences->attache($rel_items, $rel_field, $rel_name);
+                $essences->attach($rel_items, $rel_field, $rel_name);
                 break;
             case self::HAS_MANY:
                 //echo fx_debug('has manu', $rel_finder);
                 $rel_items = $rel_finder->where($rel_field, $essences->get_values('id'))->all();
-                $essences->attache_many($rel_items, $rel_field, $rel_name);
+                $essences->attach_many($rel_items, $rel_field, $rel_name);
                 break;
             case self::HAS_ONE:
                 break;
@@ -564,7 +564,7 @@ class fx_data {
                     $rel_finder->where($end_rel_field, 0, '!=');
                 }
                 $rel_items = $rel_finder->all()->find($end_rel, null, '!=');
-                $essences->attache_many($rel_items, $rel_field, $rel_name, 'id', $end_rel);
+                $essences->attach_many($rel_items, $rel_field, $rel_name, 'id', $end_rel);
                 break;
         }
     }

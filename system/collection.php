@@ -445,12 +445,12 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
      * $users = fx::data("user")->all();
      * $posts = fx::data("post")->all();
      * $user['posts'] = fx_collection(1,2,3);
-     * $users->attache_many($posts, 'author_id', 'posts');
+     * $users->attach_many($posts, 'author_id', 'posts');
      * 
      * $post['author'] = $user;
-     * $posts->attache($users, 'this.creator_id=author.user_id')
+     * $posts->attach($users, 'this.creator_id=author.user_id')
      */
-    public function attache(fx_collection $what, $cond_field, $res_field = null, $check_field = 'id') {
+    public function attach(fx_collection $what, $cond_field, $res_field = null, $check_field = 'id') {
         if ($res_field === null) {
             $res_field = preg_replace("~_id$~", '', $cond_field);
         }
@@ -466,7 +466,7 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
         return $this;
     }
     
-    public function attache_many(
+    public function attach_many(
             fx_collection $what, 
             $cond_field, 
             $res_field, 
