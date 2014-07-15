@@ -226,7 +226,7 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
      * $c->sort(function($a,$b) {})
      */
     public function sort($sorter) {
-        uasort($this->data, $sorter);
+        @ uasort($this->data, $sorter);
         return $this;
     }
     

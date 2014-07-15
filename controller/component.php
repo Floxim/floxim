@@ -358,18 +358,18 @@ class fx_controller_component extends fx_controller_frontoffice {
             return array('items' => $this->_get_fake_items(3));
         }
         $this->listen('query_ready', function($q, $ctr) {
-            if ( ($parent_id = $ctr->get_param('parent_id')) && !($ctr->get_param('skip_parent_filter')) ) {
+            $parent_id = $ctr->get_param('parent_id');
+            if ( $parent_id && !$ctr->get_param('skip_parent_filter')) {
                 $q->where('parent_id', $parent_id);
             }
-            if ( ( $infoblock_id = $ctr->get_param('infoblock_id')) && !($ctr->get_param('skip_infoblock_filter')) ) {
+            $infoblock_id = $ctr->get_param('infoblock_id');
+            if ( $infoblock_id && !$ctr->get_param('skip_infoblock_filter')) {
                 $q->where('infoblock_id', $infoblock_id);
             }
         });
         $res = $this->do_list();
-        if (!$this->get_param('is_fake') && fx::is_admin()) {
+        if (fx::is_admin()) {
             $infoblock = fx::data('infoblock', $this->get_param('infoblock_id'));
-            $real_ib_name = $infoblock->get_prop_inherited('name');
-            $ib_name = $real_ib_name ? $real_ib_name : $infoblock['id'];
             $component = $this->get_component();
             $adder_title = fx::alang('Add').' '.$component['item_name'];//.' &rarr; '.$ib_name;
             
@@ -381,7 +381,7 @@ class fx_controller_component extends fx_controller_frontoffice {
             ));
             
             if (count($res['items']) == 0) {
-                $this->_meta['hidden_placeholder'] = 'Infoblock "'.$ib_name.'" is empty. '.
+                $this->_meta['hidden_placeholder'] = 'Infoblock "'.$infoblock['name'].'" is empty. '.
                                                 'You can add '.$component['item_name'].' here';
             }
         }
@@ -508,6 +508,11 @@ class fx_controller_component extends fx_controller_frontoffice {
             $this->listen('items_ready', function($c, $ctr) use ($linkers) {
                 if ($ctr->get_param('sorting') === 'manual') {
                     $c->sort(function($a, $b) use ($linkers) {
+                        $a_l = $linkers->find_one('linked_id', $a['id']);
+                        $b_l = $linkers->find_one('linked_id', $b['id']);
+                        if (!$a_l || !$b_l) {
+                            return 0;
+                        }
                         $a_priority = $linkers->find_one('linked_id', $a['id'])->get('priority');
                         $b_priority = $linkers->find_one('linked_id', $b['id'])->get('priority');
                         return $a_priority - $b_priority;
@@ -549,9 +554,6 @@ class fx_controller_component extends fx_controller_frontoffice {
     }
     
     public function do_list_filtered() {
-        $this->set_param('skip_parent_filter', true);
-        $this->set_param('skip_infoblock_filter', true);
-        
         $this->listen('query_ready', function($q, $ctr) {
             $component = $ctr->get_component();
             $fields = $component->all_fields();

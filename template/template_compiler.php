@@ -253,15 +253,20 @@ class fx_template_compiler {
         return $code;
     }
     
-    protected function _make_file_check($var) {
+    protected function _make_file_check($var, $use_stub = false) {
         
         $code = $var . ' = trim('.$var.");\n";
         $code .= "\nif (".$var." && !preg_match('~^(https?://|/)~', ".$var.")) {\n";
         $code .= $var . '= $template_dir.'.$var.";\n";
         $code .= "}\n";
         
-        $code .= 'if (!preg_match("~^https?://~", '.$var.') && !file_exists(fx::path()->to_abs(preg_replace("~\?.+$~", "", '.$var.')))) {'."\n";
-        $code .= $var . "= '';\n";
+        $code .= 'if (!'.$var.' || ( !preg_match("~^https?://~", '.$var.') && !file_exists(fx::path()->to_abs(preg_replace("~\?.+$~", "", '.$var.'))) )) {'."\n";
+        if ($use_stub) {
+            $stub_image = fx::path()->http('floxim', '/admin/style/images/no.png');
+            $code .= $var . "= \$_is_admin ? '".$stub_image."' : '';\n";
+        } else {
+            $code .= $var . "= '';\n";
+        }
         $code .= "}\n";
         return $code;
     }
@@ -321,7 +326,7 @@ class fx_template_compiler {
             $code .= $real_val_var . ' = '.$expr.";\n";
             
             if ($token_is_file) {
-                $code .= $this->_make_file_check($real_val_var);
+                $code .= $this->_make_file_check($real_val_var, !$has_default);
             }
             
             if ($modifiers || $has_default) {
@@ -355,7 +360,7 @@ class fx_template_compiler {
             if ($real_val_defined) {
                 $code .= "\n".$display_val_var.' = '.$default.";\n";
                 if ($token_is_file) {
-                    $code .= $this->_make_file_check($display_val_var);
+                    $code .= $this->_make_file_check($display_val_var, true);
                 }
                 if ($token->get_prop('var_type') == 'visual') {
                     $code .= "\n".'$this->set_var('.$var_id.',  '.$display_val_var.");\n";
@@ -412,15 +417,11 @@ class fx_template_compiler {
             $meta_parts []= "array(".join(", ", $tp_parts).")";
         }
         $meta_parts []= '$_is_wrapper_meta';
-        //$code .= " + \$_is_wrapper_meta"; 
-        //} else {
         
         if ($token->get_prop('editable') == 'false') {
-            //$code .= ' + array("editable"=>false)';
             $meta_parts []= 'array("editable"=>false)';
         }
         if ($real_val_defined) {
-            //$code .= ' + array("real_value" => '.$real_val_var.')';
             $meta_parts []= 'array("real_value" => '.$real_val_var.')';
         }
         $code .= 'array_merge('.join(", ", $meta_parts).')';

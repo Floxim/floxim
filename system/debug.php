@@ -18,11 +18,8 @@ class fx_debug {
     }
     
     public function disable() {
-        return;
         $this->disabled = true;
         if (!is_null($this->file)) {
-            echo "DROP ".$this->file;
-            return;
             fclose($this->file);
             fx::files()->rm($this->_get_file_name());
             $this->file = null;
@@ -260,7 +257,6 @@ class fx_debug {
         $this->_print_entry(unserialize($entry));
         fclose($fh);
         $res = ob_get_clean();
-        fx::log('shown', strlen($res), $item_id);
         return $res;
     }
 

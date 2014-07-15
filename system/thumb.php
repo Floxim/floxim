@@ -421,10 +421,13 @@ class fx_thumb
 
 
     public function process($full_path = false) {
+        // buffer errors
+        ob_start();
         $this->_load_image();
         $this->resize();
         $this->save($full_path);
         $this->image = null;
+        ob_end_clean();
     }
     
     public function get_result_path() {
