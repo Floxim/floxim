@@ -65,6 +65,7 @@ window.fx_front = function () {
     
     this.c_hover = null;
     
+    /*
    $('html').on('fx_select', function(e) {
         var n = $(e.target);
         if ($fx.front.mode === 'edit') {
@@ -81,6 +82,7 @@ window.fx_front = function () {
         $fx.front.redraw_add_button(n);
         return false;
     });
+    */
 };
 
 // this code should fix firefox problem with loosing focus on contenteditable links ("a" tag)
@@ -278,17 +280,61 @@ fx_front.prototype.get_area_meta = function($area_node) {
     return meta;
 };
 
-fx_front.prototype.get_adder_closure = function(c_cnt) {
+fx_front.prototype.get_adder_closure = function(meta, $node) {
     var ib = $($fx.front.get_selected_item()).closest('.fx_infoblock');
+    if ($node && $node.length){
+        function switch_placeholder($placeholder, on) {
+            $placeholder.toggleClass('fx_essence_adder_placeholder_active', on)
+        }
+        var $placeholders = $('.fx_essence_adder_placeholder', $node);
+        for (var i = 0; i < $placeholders.length; i++) {
+            var $placeholder = $placeholders.eq(i);
+            var essence_meta = $placeholder.data('fx_essence_meta');
+            if (!essence_meta) {
+                break;
+            }
+            var placeholder_meta = essence_meta.placeholder;
+            if (
+                placeholder_meta.parent_id === meta.parent_id && 
+                placeholder_meta.infoblock_id === meta.infoblock_id
+            ) {
+                return function() {
+                    switch_placeholder($placeholder, true);
+                    var $placeholder_focus = $('.fx_template_var, .fx_template_var_in_att', $placeholder).first();
+                    if ($placeholder_focus.length === 0) {
+                        $placeholder_focus = $placeholder;
+                    }
+                    $fx.front.select_item($placeholder_focus);
+                    $fx.front.scrollTo($placeholder);
+                    $placeholder.on('fx_deselect', function() {
+                        setTimeout(function() {
+                            var $c_selected_placeholder = 
+                                    $($fx.front.get_selected_item())
+                                        .closest('.fx_essence_adder_placeholder');
+                            if (
+                                $c_selected_placeholder.length 
+                                && $c_selected_placeholder[0] === $placeholder[0]
+                            ) {
+                                return;
+                            }
+                            
+                            switch_placeholder($placeholder, false);
+                        }, 50);
+                    });
+                };
+            }
+        }
+        
+    }
     return function() {
         $fx.front.select_item(ib.get(0));
 
         $fx.front_panel.load_form({
            essence:'content',
            action:'add_edit',
-           content_type:c_cnt.type,
-           infoblock_id:c_cnt.infoblock_id,
-           parent_id:c_cnt.parent_id
+           content_type:meta.type,
+           infoblock_id:meta.infoblock_id,
+           parent_id:meta.parent_id
         }, 
             {
             view:'cols',
@@ -303,7 +349,6 @@ fx_front.prototype.get_adder_closure = function(c_cnt) {
 };
 
 fx_front.prototype.redraw_add_button = function(node) {
-    $fx.buttons.unbind('add');
     var mode = $fx.front.mode;
     var buttons = [];
     if (!node) {
@@ -312,13 +357,13 @@ fx_front.prototype.redraw_add_button = function(node) {
     if (!node.is('.fx_infoblock, .fx_area')) {
         return;
     }
-    var ib = node.closest('.fx_infoblock');
+    var $ib_node = node.closest('.fx_infoblock');
     var adders = [];
-    var cm = ib.data('fx_controller_meta');
+    var cm = $ib_node.data('fx_controller_meta');
     if (cm && cm.accept_content) {
         for (var i = 0; i < cm.accept_content.length; i++) {
             var c_cnt = cm.accept_content[i];
-            var cb_closure = $fx.front.get_adder_closure(c_cnt);
+            var cb_closure = $fx.front.get_adder_closure(c_cnt, $ib_node);
             adders.push(cb_closure);
             if (mode === 'edit') {
                 buttons.push({
@@ -329,7 +374,7 @@ fx_front.prototype.redraw_add_button = function(node) {
             }
         }
     }
-    ib.data('content_adders', adders);
+    $ib_node.data('content_adders', adders);
     
     var $c_area = node.closest('.fx_area');
     
@@ -557,9 +602,6 @@ fx_front.prototype.is_selectable = function(node) {
 };
 
 fx_front.prototype.is_var_bound_to_essence = function($node) {
-    if (!$node.is(':visible')) {
-        return false;
-    }
     if ($node.hasClass('fx_var_bound_to_essence')) {
         return true;
     }
@@ -574,6 +616,10 @@ fx_front.prototype.is_var_bound_to_essence = function($node) {
         return true;
     }
     
+    if (!$node.is(':visible')) {
+        return false;
+    }
+    
     var distance = 35;
     var eo = $essence.offset();
     var no = $node.offset();
@@ -584,10 +630,12 @@ fx_front.prototype.is_var_bound_to_essence = function($node) {
     if (Math.abs(eo.left - no.left) > distance) {
         return false;
     }
-    if (Math.abs($node.outerWidth() - $essence.outerWidth()) > distance) {
+    
+    // No Math.abs() here because if field is larger than container, we assume them to be bound
+    if ( $essence.outerWidth() - $node.outerWidth() > distance) {
         return false;
     }
-    if (Math.abs($node.outerHeight() - $essence.outerHeight()) > distance) {
+    if ( $essence.outerHeight() - $node.outerHeight()  > distance) {
         return false;
     }
     $node.addClass('fx_var_bound_to_essence');
@@ -649,6 +697,18 @@ fx_front.prototype.select_item = function(node) {
     
     $node.addClass('fx_selected').trigger('fx_select');
     
+    if ($fx.front.mode === 'edit') {
+        if ($node.is('.fx_essence')) {
+            $fx.front.select_content_essence($node);
+        }
+        if ($node.is('.fx_template_var, .fx_template_var_in_att')) {
+            $node.edit_in_place();
+        }
+    }
+    if ($node.is('.fx_infoblock')) {
+        $fx.front.select_infoblock($node);
+    }
+    $fx.front.redraw_add_button($node);
     
     var scrolling = false;
     setTimeout(function() {
@@ -720,9 +780,13 @@ fx_front.prototype.make_node_panel = function($node) {
     setTimeout(function() {
         $fx.front.recount_node_panel();
     }, 10);
-    $(window).on('scroll', function() {$fx.front.recount_node_panel();});
+    /*
+    $(window).on('scroll', function() {
+        $fx.front.recount_node_panel();
+    });
+    */
     $panel.on('change keyup livesearch_value_loaded click', function () {
-        setTimeout(function() {$fx.front.recount_node_panel();}, 10);
+        $fx.front.recount_node_panel();
     });
     
 };
@@ -764,7 +828,7 @@ fx_front.prototype.recount_node_panel = function() {
             top_fix = i_bottom;
         }
     });
-    
+    $p.css('width', '100px');
     var $node = $($fx.front.get_selected_item());
     var no = $node.offset();
     css.left = no.left - 4;
@@ -863,7 +927,24 @@ fx_front.prototype.hilight = function() {
     $('.fx_hilight_hover').removeClass('fx_hilight_hover');
     items.filter('.fx_hidden_placeholded').removeClass('fx_hidden_placeholded').html('');
     
-    if ($fx.front.mode === 'view') {
+    
+    var is_view_mode = $fx.front.mode === 'view';
+    
+    var noimg = '/floxim/admin/style/images/no.png';
+    items.filter('img').each(function() {
+        var $img = $(this);
+        var src = $img.attr('src');
+        if (src.slice(src.length - noimg.length) === noimg) {
+            if (is_view_mode) {
+                $img.hide($img.hasClass('fx_image_placeholded') ? 200 : 0);
+            } else {
+                $img.show(200);
+            }
+            $img.addClass('fx_image_placeholded');
+        }
+    });
+    
+    if (is_view_mode) {
         $('.fx_infoblock_hidden').hide();
         return;
     }
@@ -911,6 +992,7 @@ fx_front.prototype.hilight = function() {
                 }
             }
             
+            
             if (is_hidden){
                 if (i.hasClass('fx_area')) {
                     var a_meta = i.data('fx_area');
@@ -943,6 +1025,9 @@ fx_front.prototype.is_jquery_overriden = function() {
 };
 
 fx_front.prototype.load = function ( mode ) {
+    
+    $('body').removeClass('fx_mode_'+this.mode).addClass('fx_mode_'+mode);
+    
     this.mode = mode;
     $.cookie('fx_front_mode', mode, {path:'/'});
     
@@ -1199,7 +1284,11 @@ fx_front.prototype.start_essences_sortable = function($cp) {
     var c_x = null;
     var c_y = null;
     $essences.each(function()  {
-        var o  = $(this).offset();
+        var $essence = $(this);
+        if (!$essence.is(':visible')) {
+            return;
+        }
+        var o  = $essence.offset();
         if (c_x === null){
             c_x = o.left;
         } else if (o.left !== c_x) {
@@ -1385,10 +1474,13 @@ fx_front.prototype.set_mode_design = function() {
     });
 };
 
+fx_front.prototype.disabled_infoblock_opacity = 0.8;
+
 fx_front.prototype.disable_infoblock = function(infoblock_node) {
-    $(infoblock_node).css({opacity:'0.3'}).on('click.fx_fake_click', function() {
+    // .css({opacity:'0.3'}).
+    $(infoblock_node).on('click.fx_fake_click', function() {
         return false;
-    });
+    }).animate({opacity:$fx.front.disabled_infoblock_opacity}, 250);
 };
 
 fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_data) {
@@ -1418,7 +1510,7 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
        url:'/~ib/'+meta.id+'@'+page_id,
        success:function(res) {
            $fx.front.c_hover = null;
-           $infoblock_node.off('click.fx_fake_click').css({opacity:''});
+           $infoblock_node.off('click.fx_fake_click');//.css({opacity:''});
            
            $fx.front.outline_all_off();
            $fx.front.deselect_item();
@@ -1447,6 +1539,7 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
            
            $fx.front.hilight();
            $new_infoblock_node.trigger('fx_infoblock_loaded');
+           $new_infoblock_node.css('opacity', $fx.front.disabled_infoblock_opacity).animate({opacity: 1},250);
            $('body').removeClass('fx_stop_outline');
            if (selected_selector) {
                var sel_target = ib_parent.find(selected_selector);

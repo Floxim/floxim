@@ -267,9 +267,10 @@
 	display:inline-block;
 }
 
+
 img.fx_hilight {
-    min-width: 5px;
-    min-height: 5px;
+    //min-width: 5px;
+    //min-height: 5px;
 }
 
 .fx_selected, .fx_selected:focus {
@@ -300,8 +301,8 @@ img.fx_hilight {
 
 
 .fx_hidden_placeholded {
-    background: #FFFF5C;
-    color:#000;
+    background: #FFFF5C !important;
+    color:#000 !important;
     &.fx_template_var {
         outline: 1px dotted #000;
     }
@@ -410,4 +411,12 @@ img.fx_hilight {
         vertical-align:middle;
         font-size:12px;
     }
+}
+
+.fx_image_placeholded_hidden {
+    display:none;
+}
+
+.fx_essence_adder_placeholder:not(.fx_essence_adder_placeholder_active) {
+    display:none !important;
 }

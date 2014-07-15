@@ -181,25 +181,27 @@ fx_edit_in_place.prototype.add_panel_field = function(meta) {
     var field_node = $fx_form.draw_field(meta, $field_container);
     field_node.css({'outline-style': 'solid','outline-color':'#FFF'});
     field_node.find(':input').css({'background':'transparent'});
-    field_node.animate(
-        {
-            'background-color':'#FF0', 
-            'outline-width':'6px',
-            'outline-color':'#FF0'
-        },
-        300,
-        null,
-        function() {
-            field_node.animate(
-                {
-                    'background-color':'#FFF', 
-                    'outline-width':'0px',
-                    'outline-color':'#FFF'
-                },
-                300
-            );
-        }
-    );
+    if (meta.type !== 'livesearch') {
+        field_node.animate(
+            {
+                'background-color':'#FF0', 
+                'outline-width':'6px',
+                'outline-color':'#FF0'
+            },
+            300,
+            null,
+            function() {
+                field_node.animate(
+                    {
+                        'background-color':'#FFF', 
+                        'outline-width':'0px',
+                        'outline-color':'#FFF'
+                    },
+                    300
+                );
+            }
+        );
+    }
     field_node.data('meta', meta);
     this.panel_fields.push(field_node);
     return field_node;
@@ -345,21 +347,32 @@ fx_edit_in_place.prototype.save = function() {
     if (vars.length === 0) {
         this.stop();
         this.restore();
-        //$fx.front.deselect_item();
-        //$fx.front.select_item(this.node);
         return this;
     }
+    var new_essence_props = null;
+    var $adder_placeholder = $(this.node).closest('.fx_essence_adder_placeholder');
+    if ($adder_placeholder.length > 0) {
+        var essence_meta = $adder_placeholder.data('fx_essence_meta');
+        new_essence_props = essence_meta ? essence_meta.placeholder : null;
+    }
+    
+    var post_data = {
+        essence:'infoblock',
+        action:'save_var',
+        infoblock:this.ib_meta,
+        vars: vars,
+        fx_admin:true,
+        page_id:$fx.front.get_page_id()
+    };
+    if (new_essence_props) {
+        post_data.new_essence_props = new_essence_props;
+    }
+    
     var node = this.node;
     $fx.front.disable_infoblock(node.closest('.fx_infoblock'));
+    
     $fx.post(
-        {
-            essence:'infoblock',
-            action:'save_var',
-            infoblock:this.ib_meta,
-            vars: vars,
-            fx_admin:true,
-            page_id:$fx.front.get_page_id()
-        }, 
+        post_data, 
         function() {
             $fx.front.reload_infoblock(node.closest('.fx_infoblock').get(0));
 	}
