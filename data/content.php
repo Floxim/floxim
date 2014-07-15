@@ -132,6 +132,11 @@ class fx_data_content extends fx_data {
         return isset($content_by_type[$this->get_component()->get('keyword')]);
     }
 
+    /**
+     * Create new content essence
+     * @param array $data Initial params
+     * @return fx_content New content essence (not saved yet, without ID)
+     */
     public function create($data = array()) {
         $obj = parent::create($data);
         
@@ -372,6 +377,29 @@ class fx_data_content extends fx_data {
         return $content;
     }
     
+    public function create_adder_placeholder($collection = null) {
+        $params = array();
+        foreach ($this->where as $cond) {
+            // original field
+            $field = $cond[3]; 
+            // collection was found by id, adder is impossible
+            if ($field === 'id') {
+                return;
+            }
+            if (!preg_match("~\.~", $field) && $cond[2] == '=') {
+                $params[$field] = $cond[1];
+            }
+        }
+        $placeholder = $this->create($params);
+        $placeholder->dig_set('_meta.placeholder', $params + array('type' => $placeholder['type']));
+        $placeholder->is_adder_placeholder(true);
+        // guess item's position here
+        if ($collection) {
+            $collection[]= $placeholder;
+        }
+        return $placeholder;
+    }
+    
     protected function _livesearch_apply_terms($terms) {
         $table = $this->get_col_table('name');
         if ($table) {
@@ -411,10 +439,19 @@ class fx_data_content extends fx_data {
      * @return fx_data_content
      */
     public function descendants_of($parent_ids, $include_parents = false) {
+        if ($parent_ids instanceof fx_collection) {
+            $non_content = $parent_ids->find(function($i) {
+                return !($i instanceof fx_content);
+            });
+            if (count($non_content) == 0) {
+                $parents = $parent_ids;
+                $parent_ids = $parents->get_values('id');
+            }
+        }
         if ($parent_ids instanceof fx_content) {
             $parents = array($parent_ids);
             $parent_ids = array($parent_ids['id']);
-        } else {
+        } elseif (!isset($parents)) {
             if (is_numeric($parent_ids)) {
                 $parent_ids = array($parent_ids);
             }

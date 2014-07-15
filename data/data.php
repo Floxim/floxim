@@ -134,19 +134,18 @@ class fx_data {
             }
             return array($field, $value, $type);
         }
+        $original_field = $field;
         if (strstr($field, '.')) {
             $field = $this->_prepare_complex_field($field, 'where');
         } elseif (preg_match("~^[a-z0-9_-]~", $field)) {
             $table = $this->get_col_table($field, false);
-            /*
-            if (!$table) {
-                return array(false, 'FALSE', 'RAW');
-            }
-             * 
-             */
             $field = '{{'.$table.'}}.'.$field;
         }
-        return array($field, $value, $type);
+        if (is_array($value) && count($value) == 1 && ($type == '=' || $type == 'IN')) {
+            $value = current($value);
+            $type = '=';
+        }
+        return array($field, $value, $type, $original_field);
     }
     
     public function where($field, $value, $type = '=') {
@@ -484,6 +483,7 @@ class fx_data {
             $objs[] = $v;
         }
         $collection = new fx_collection($objs);
+        $collection->finder = $this;
         if (is_array($this->order)) {
             foreach ($this->order as $sorting) {
                 if (preg_match("~priority~", $sorting)) {

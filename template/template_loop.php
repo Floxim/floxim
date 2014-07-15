@@ -10,6 +10,11 @@ class fx_template_loop implements ArrayAccess {
         if (is_null($alias)) {
             $alias = 'item';
         }
+        $this->_is_collection = $items instanceof fx_collection;
+        if ($this->_is_collection && $items->finder instanceof fx_data_content && fx::is_admin()) {
+            $items->finder->create_adder_placeholder($items);
+        }
+        
         $this->loop = $this;
         $this->looped = $items;
         $this->total = count($items);
@@ -17,7 +22,6 @@ class fx_template_loop implements ArrayAccess {
         $this->current_key = $key;
         $this->current_alias = $alias;
         $this->current = null;
-        $this->_is_collection = $items instanceof fx_collection;
     }
     
     public function _move() {
