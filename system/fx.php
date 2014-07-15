@@ -161,7 +161,10 @@ class fx {
     
     public static function content($type = null, $id = null) {
         if (is_numeric($type)) {
-            return fx::data('content', $type);
+            if (func_num_args() === 1) {
+                return fx::data('content', $type);
+            }
+            $type = fx::data('component', $type)->get('keyword');
         }
         $type = 'content'. (!$type ? '' : '_'.$type);
         $args = func_get_args();
