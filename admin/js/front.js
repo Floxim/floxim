@@ -300,9 +300,14 @@ fx_front.prototype.get_adder_closure = function(meta, $node) {
             ) {
                 return function() {
                     switch_placeholder($placeholder, true);
-                    var $placeholder_focus = $('.fx_template_var, .fx_template_var_in_att', $placeholder).first();
-                    if ($placeholder_focus.length === 0) {
+                    var $placeholder_fields = $('.fx_template_var, .fx_template_var_in_att', $placeholder),
                         $placeholder_focus = $placeholder;
+                    for (var i = 0; i < $placeholder_fields.length; i++) {
+                        var $c_field = $placeholder_fields.eq(i);
+                        if ($fx.front.is_selectable($c_field)) {
+                            $placeholder_focus = $c_field;
+                            break;
+                        }
                     }
                     $fx.front.select_item($placeholder_focus);
                     $fx.front.scrollTo($placeholder);
