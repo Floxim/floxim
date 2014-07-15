@@ -95,6 +95,7 @@ class fx_controller_admin extends fx_controller {
             '/floxim/admin/js/front.js',
             '/floxim/admin/js/buttons.js',                                     
             '/floxim/admin/js/form.js',
+            '/floxim/admin/js/patch.js',
             '/floxim/admin/js/debug.js',
             '/floxim/admin/js/livesearch.js',
             '/floxim/admin/js/fields.js',

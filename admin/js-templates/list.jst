@@ -49,6 +49,7 @@ if (_c.values) {
                     <?=value.unchecked ? 'fx_admin_unchecked' : ''?> 
                     <?=i == 0 ? ' fx_list_row_first' : ''?>" 
             <?=$t.data_attr(value)?>
+            <?=value.row_id ? ' id="'+value.row_id+'" ' : ''?>
         >
             <?
             print($t.list_field_row(value, {labels:_c.labels}));

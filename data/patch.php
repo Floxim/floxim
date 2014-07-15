@@ -29,4 +29,8 @@ class fx_data_patch extends fx_data {
         }
         return true;
     }
+
+    public function get_ready_for_install() {
+        return $this->where('status','ready')->one();
+    }
 }
