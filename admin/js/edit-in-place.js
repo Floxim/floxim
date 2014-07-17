@@ -179,9 +179,9 @@ fx_edit_in_place.prototype.add_panel_field = function(meta) {
     var $field_container = $fx.front.get_node_panel();
     $field_container.show();
     var field_node = $fx_form.draw_field(meta, $field_container);
-    field_node.css({'outline-style': 'solid','outline-color':'#FFF'});
-    field_node.find(':input').css({'background':'transparent'});
     if (meta.type !== 'livesearch') {
+        field_node.css({'outline-style': 'solid','outline-color':'#FFF'});
+        field_node.find(':input').css({'background':'transparent'});
         field_node.animate(
             {
                 'background-color':'#FF0', 
