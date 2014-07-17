@@ -103,8 +103,8 @@ class fx_controller_component extends fx_controller_frontoffice {
         return $res;
     }
     
-    public function get_selected_field() {
-        return array (
+    public function get_selected_field($with_values = true) {
+        $field = array (
             'name' => 'selected', 
             'label' => fx::alang('Selected','controller_component'),
             'type' => 'livesearch',
@@ -113,9 +113,12 @@ class fx_controller_component extends fx_controller_frontoffice {
             'params' => array(
                 'content_type' => 'content_'.$this->_content_type
             ),
-            'value'=> $this->_get_selected_values()->get_data(),
             'stored' => false
         );
+        if ($with_values) {
+            $field['value'] =  $this->_get_selected_values()->get_data();
+        }
+        return $field;
     }
 
     public function get_conditions_field() {
@@ -218,8 +221,6 @@ class fx_controller_component extends fx_controller_frontoffice {
         }
         $res_field['tpl'][0]['values']['infoblock_id'] = $ib_field_params;
         return $res_field;
-        $fields['conditions']['tpl'][0]['values']['infoblock_id'] = $ib_field_params;
-        return $fields;
     }  
     
     public function get_target_config_fields() {
@@ -486,15 +487,15 @@ class fx_controller_component extends fx_controller_frontoffice {
     }
     
     public function do_list_selected() {
-        
+        $is_overriden = $this->get_param('is_overriden');
+        $linkers = null;
         // preview
-        if ( $this->get_param('is_overriden') ) {
+        if ( $is_overriden) {
             $content_ids = array();
             $selected_val  = $this->get_param('selected');
             if (is_array($selected_val)) {
                 $content_ids = $selected_val;
             }
-            $linkers = null;
         } else {
             // normal
             $linkers = $this->_get_selected_linkers();
@@ -538,12 +539,27 @@ class fx_controller_component extends fx_controller_frontoffice {
         if (!isset($this->_meta['fields'])) {
             $this->_meta['fields'] = array();
         }
-        if (fx::is_admin()) {
-            $selected_field = $this->get_selected_field();
+        
+        $res = $this->do_list();
+        
+        // if we are admin and not viewing the block in preview mode,
+        // let's add livesearch field loaded with the selected values
+        if (!$is_overriden && fx::is_admin()) {
+            $selected_field = $this->get_selected_field(false);
+            $selected_field['value'] = array();
+            // filter result by selected content ids, 
+            // because some items can be added from inherited controllers (e.g. menu with subsections)
+            $selected_items = $res['items']->find('id', $content_ids);
+            foreach ($selected_items as $selected_item) {
+                $selected_field['value'][]= array(
+                    'name' => $selected_item['name'], 
+                    'id' => $selected_item['id']
+                );
+            }
             $selected_field['var_type'] = 'ib_param';
+            unset($selected_field['ajax_preload']);
             $this->_meta['fields'][]= $selected_field;
         }
-        $res =  $this->do_list();
         if (count($res['items']) === 0 && fx::is_admin()) {
             $component = $this->get_component();
             $ib = fx::data('infoblock', $this->get_param('infoblock_id'));
