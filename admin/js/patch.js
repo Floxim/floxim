@@ -14,10 +14,11 @@
                             fx_patch.install_chain();
                         } else {
                             alert('Error install: '+res.error);
+                            $fx.reload('#admin.patch.all(1)');
                         }
                     });
                 } else {
-                    $fx.reload('#admin.patch.all');
+                    $fx.reload('#admin.patch.all(1)');
                 }
             });
         },

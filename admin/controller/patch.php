@@ -1,14 +1,20 @@
 <?php
 class fx_controller_admin_patch extends fx_controller_admin {
     
-    public function all() {
-        if (!fx::data('patch')->check_updates()) {
-            $this->response->add_field(array(
-                'type' => 'label',
-                'value' => '<p style="color:#F00;">'.
-                    fx::alang('Update check failed','system').
-                '</p>'
-            ));
+    public function all($input) {
+        if (isset($input['params'][0])) {
+
+        }
+        $bSkipCheckUpdates=isset($input['params'][0]) ? $input['params'][0] : false;
+        if (!$bSkipCheckUpdates) {
+            if (!fx::data('patch')->check_updates()) {
+                $this->response->add_field(array(
+                    'type' => 'label',
+                    'value' => '<p style="color:#F00;">'.
+                        fx::alang('Update check failed','system').
+                    '</p>'
+                ));
+            }
         }
         
         $this->response->add_field(array(
