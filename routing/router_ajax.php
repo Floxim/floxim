@@ -5,20 +5,24 @@ class fx_router_ajax extends fx_router {
         if (!preg_match("~^/\~ajax/([a-z0-9_\.\:-]+)?~", $url, $action_info)) {
             return null;
         }
-        if (isset($_POST['_ajax_base_url'])) {
-            $_SERVER['REQUEST_URI'] = $_POST['_ajax_base_url'];
-            $c_url = parse_url($_POST['c_url']);
+        
+        $c_url = fx::input()->fetch_get_post('_ajax_base_url');
+        if ($c_url) {
+            $_SERVER['REQUEST_URI'] = $c_url;
+            
+            $page = fx::data('content_page')->get_by_url($c_url, $context['site_id']);
+            fx::env('page', $page);
+            
+            $c_url = parse_url($c_url);
             if (isset($c_url['query'])) {
                 parse_str($c_url['query'], $_GET);
             }
-            $page = fx::data('content_page')->get_by_url($_POST['_ajax_base_url'], $context['site_id']);
-            fx::env('page', $page);
         }
-        if (isset($_POST['_ajax_infoblock_id']) && is_numeric($_POST['_ajax_infoblock_id'])) {
-            $infoblock = fx::data('infoblock', $_POST['_ajax_infoblock_id']);
+        $c_infoblock_id = fx::input()->fetch_get_post('_ajax_infoblock_id');
+        if ($c_infoblock_id) {
+            $infoblock = fx::data('infoblock', $c_infoblock_id);
             if ($infoblock) {
                 $res = $infoblock->render();
-                //$res = fx::page()->post_process($res);
                 return $res;
             }
         }
