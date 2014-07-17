@@ -140,6 +140,19 @@ window.fx_livesearch = function (node) {
         });
     };
     
+    
+    // recount axis prop for sortable
+    // if there is only one row, use "x", otherwise - "false"
+    this.updateSortableAxis = function() {
+        var $container = $('.livesearch_items', this.n);
+        var $items = $container.children('.livesearch_item');
+        var axis = false;
+        if ($items.first().offset().top === $items.last().offset().top) {
+            axis = 'x';
+        }
+        $container.sortable('option', 'axis', axis);
+    };
+    
     this.addValues = function(values) {
         $.each(values, function(index, val) {
             this.addValue(val); //val.id, val.name, val.input_name);
@@ -193,6 +206,7 @@ window.fx_livesearch = function (node) {
             '<span class="title">'+name+'</span>'+
             '</li>');
         this.inputContainer.before( node );
+        this.updateSortableAxis();
         if (!this.isMultiple) {
             this.disableAdd();
         } else {
@@ -232,11 +246,12 @@ window.fx_livesearch = function (node) {
     this.lastRemovedValue = null;
     
     this.removeValue = function(n) {
-            this.lastRemovedValue = n.find('input').val();
-            n.remove();
-            this.enableAdd();
-            this.Suggest.setRequestParams(this.getSuggestParams());
-            this.n.trigger('change');
+        this.lastRemovedValue = n.find('input').val();
+        n.remove();
+        this.enableAdd();
+        this.Suggest.setRequestParams(this.getSuggestParams());
+        this.n.trigger('change');
+        this.updateSortableAxis();
     };
     
     this.getValueNode = function() {
@@ -269,7 +284,7 @@ window.fx_livesearch = function (node) {
     this.Init = function() {
         this.Suggest = new fx_suggest({
             input:n.find('input[name="livesearch_input"]'),
-			requestParams:this.getSuggestParams(),
+            requestParams:this.getSuggestParams(),
             resultType:'json',
             onSelect:this.Select,
             offsetNode:n.find('.livesearch_items'),
@@ -280,6 +295,23 @@ window.fx_livesearch = function (node) {
         if (!this.isMultiple) {
             this.inputName = inputs.first().attr('name');
         }
+        
+        if (this.isMultiple) {
+            /* 
+            * tolerance may be 'pointer' or 'intersect' (default), 
+            * still don't which is better
+            */
+            this.n.find('.livesearch_items').sortable({
+                items:'.livesearch_item',
+                axis:'x',
+                //tolerance:'pointer', 
+                containment:'parent',
+                stop:function () {
+                    n.trigger('change');
+                }
+            });
+        }
+        
         inputs.each(function() {
             var id = $(this).val();
             livesearch.inpNames[id] = this.name;
@@ -362,14 +394,6 @@ window.fx_livesearch = function (node) {
                 return false;
             }
         });
-        if (this.isMultiple) {
-            this.n.find('.livesearch_items').sortable({
-                items:'.livesearch_item',
-                stop:function () {
-                    n.trigger('change');
-                }
-            });
-        }
 
         this.n.on('suggest_blur', '.livesearch_input input', function() {
             var c_val = $(this).val();
