@@ -108,9 +108,11 @@ fx_edit_in_place.prototype.start = function(meta) {
                 } else {
                     var $n = this.node;
                     this.is_content_editable = true;
+                    /*
                     $n.on('keydown.edit_in_place', function(e) {
                         edit_in_place.handle_keydown(e);
                     });
+                    */
                     if (!$($fx.front.get_selected_item()).hasClass('fx_essence')) {
                         setTimeout(function() {
                             $fx.front.stop_essences_sortable();
@@ -160,7 +162,9 @@ fx_edit_in_place.prototype.start = function(meta) {
 	}
         $('html').one('fx_deselect.edit_in_place', function(e) {
             edit_in_place.save().stop();
-	});
+	}).on('keydown.edit_in_place', function(e) {
+            edit_in_place.handle_keydown(e);
+        });
 };
 
 fx_edit_in_place.prototype.add_panel_field = function(meta) {
@@ -268,6 +272,7 @@ fx_edit_in_place.prototype.get_vars = function() {
             var clear_old = this.clear_redactor_val(saved_val);
             
             is_changed = clear_new !== clear_old;
+            /*
             if (is_changed) {
                 for (var li = 0; li < clear_new.length; li++) {
                     if (clear_new[li] !== clear_old[li]) {
@@ -277,6 +282,7 @@ fx_edit_in_place.prototype.get_vars = function() {
                     }
                 }
             }
+            */
         } else {
             var new_val = $.trim(node.text());
             is_changed = new_val !== saved_val;
@@ -306,6 +312,22 @@ fx_edit_in_place.prototype.get_vars = function() {
         } else if (pf_meta.type === 'livesearch') {
             var livesearch = $('.livesearch', pf).data('livesearch');
             var new_value = livesearch.getValues();
+            // if the loaded value contained full objects (with name and id) 
+            // let's convert it to the same format as new value has - plain array of ids
+            // we copy old value
+            if (old_value instanceof Array) {
+                var old_copy = [];
+                for (var old_index = 0; old_index < old_value.length; old_index++) {
+                    var old_item = old_value[old_index];
+                    if (typeof old_item === 'object') {
+                        old_copy[old_index] = old_item.id;
+                    } else {
+                        old_copy[old_index] = old_item;
+                    }
+                }
+                old_value = old_copy;
+            }
+                
         } else {
             var new_value = $(':input[name="'+pf_meta['name']+'"]', pf).val();
         }

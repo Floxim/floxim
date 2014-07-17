@@ -1381,7 +1381,7 @@ fx_front.prototype.start_essences_sortable = function($cp) {
         }
     };
     $cp.sortable(sort_params);
-}
+};
 
 fx_front.prototype.stop_essences_sortable = function(container) {
     if (!container) {
