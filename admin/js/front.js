@@ -806,9 +806,11 @@ fx_front.prototype.recount_node_panel = function() {
         return;
     }
     $p.css({
-        width:'2000px',
+        width: $(window).width() - 10,
+        left:0,
         visibility:'hidden'
     });
+    
     var po = $p.offset();
     var p_left = po.left;
     var $lpi = $p_items.last();
@@ -967,8 +969,15 @@ fx_front.prototype.hilight = function() {
         
         if (is_selectable || i.hasClass('fx_var_bound_to_essence')) {
             i.addClass('fx_hilight');
+            // we add .fx_clearfix class to the nodes which are not floated but have floated children
+            // so forcing them to have real size
             if (!i.css('float').match(/left|right/) && !i.css('display').match(/^inline/)) {
-                i.addClass('fx_clearfix');
+                i.children().each(function() {
+                    if ($(this).css('float').match(/left|right/)) {
+                        i.addClass('fx_clearfix');
+                        return false;
+                    }
+                });
             }
             var hidden_placeholder = meta.hidden_placeholder;
             if ($fx.front.node_is_empty(i) ) {
