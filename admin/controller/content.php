@@ -26,6 +26,22 @@ class fx_controller_admin_content extends fx_controller_admin {
             $this->ui->hidden('data_sent', true),
             $this->ui->hidden('fx_admin', true)
         );
+        
+        $move_meta = null;
+        $move_variants = array('__move_before', '__move_after');
+        foreach ($move_variants as $rel_prop) {
+            if (isset($input[$rel_prop])) {
+                $rel_item = fx::content($input[$rel_prop]);
+                if ($rel_item) {
+                    $fields []= $this->ui->hidden($rel_prop, $input[$rel_prop]);
+                    $move_meta = array(
+                        'item' => $rel_item,
+                        'type' => preg_replace("~^__move_~", '', $rel_prop)
+                    );
+                }
+                break;
+            }
+        }
 
         if (isset($input['content_id'])) {
             $fields []= $this->ui->hidden('content_id', $input['content_id']);
@@ -60,6 +76,11 @@ class fx_controller_admin_content extends fx_controller_admin {
         if ($input['data_sent']) {
             $res['is_new'] = !$content['id'];
             $content->set_field_values($input['content']);
+            foreach ($move_variants as $rel_prop) {
+                if (isset($input[$rel_prop])) {
+                    $content[$rel_prop] = $input[$rel_prop];
+                }
+            }
             $content->save();
             $res['saved_id'] = $content['id'];
             if ($is_backoffice) {
@@ -73,6 +94,11 @@ class fx_controller_admin_content extends fx_controller_admin {
                     ' <span title="#'.$input['content_id'].'">'.$com_item_name.'</span>';
         } else {
             $res['header'] = fx::alang('Adding new ', 'system'). ' '.$com_item_name;
+            if ($move_meta) {
+                $res['header'] .= ' <span class="fx_header_notice">'.
+                                $move_meta['type'].' '.$move_meta['item']['name'].
+                                '</span>';
+            }
         }
         $res['view'] = 'cols';
         $this->response->add_form_button('save');

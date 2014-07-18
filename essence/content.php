@@ -303,8 +303,67 @@ class fx_content extends fx_essence {
             $this['level'] = $new_parent['level']+1;
             $this['materialized_path'] = $new_parent['materialized_path'].$new_parent['id'].'.';
         }
+        $this->_handle_move();
         parent::_before_save();
     }
+    
+    public function _handle_move() {
+        $rel_item_id = null;
+        if (isset($this['__move_before'])) {
+            $rel_item_id = $this['__move_before'];
+            $rel_dir = 'before';
+        } elseif (isset($this['__move_after'])) {
+            $rel_item_id = $this['__move_after'];
+            $rel_dir = 'after';
+        }
+        if (!$rel_item_id) {
+            return;
+        }
+        $rel_item = fx::content($rel_item_id);
+        if (!$rel_item) {
+            return;
+        }
+        $rel_priority = fx::db()->get_var(array(
+            'select priority from {{content}} where id = %d',
+            $rel_item_id
+        ));
+        //fx::debug($rel_priority, $rel_item_id);
+        if ($rel_priority === false) {
+            return;
+        }
+        // 1 2 3 |4| 5 6 7 (8) 9 10
+        $old_priority = $this['priority'];
+        $this['priority'] = $rel_dir == 'before' ? $rel_priority : $rel_priority + 1;
+        /*
+        fx::debug(
+            'n:'.$this['priority'], 'o:'.$old_priority, 
+            $this['name'], 
+            $rel_dir, fx::content($rel_item_id)->get('name')
+        );
+         * 
+         */
+        $q = 'update {{content}} '.
+             'set priority = priority + 1 '.
+             'where parent_id = %d '.
+             'and infoblock_id = %d '.
+             'and priority >= %d '.
+             'and id != %d';
+       $q_params = array(
+            $this['parent_id'],
+            $this['infoblock_id'],
+            $this['priority'],
+            $this['id']
+       );
+       if ($old_priority !== null) {
+           $q .= ' and priority < %d';
+           $q_params []= $old_priority;
+       }
+       array_unshift($q_params, $q);
+       fx::db()->query($q_params);
+       //fx::debug(fx::db()->prepare_query($q_params));
+       // fx::log('prior q', $q);
+    }
+    
     /*
      * Store multiple links, linked to the entity
      */
