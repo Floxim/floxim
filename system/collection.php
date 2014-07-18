@@ -1,7 +1,29 @@
 <?php
 class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
     
+    /**
+     * The data array itself
+     * @type array
+     */
     protected $data = array();
+    
+    /**
+     * Array of filteres applied to the collection
+     * @type array
+     */
+    public $filtered_by = array();
+    
+    /**
+     * Array of sorters apply to the collection
+     * @type array
+     */
+    public $sorted_by = array();
+    
+    /**
+     * Link to the finder (fx_data_*) instance which created this collection
+     * @type fx_data
+     */
+    public $finder = null;
     
     public function __construct($data = array()) {
         if (is_array($data)){
@@ -466,6 +488,19 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
         return $this;
     }
     
+    
+    /**
+     * For each $item of the current collection find corresponging $other from $what collection, 
+     * which have $cond_field equal to $item[$check_field] 
+     * and append them to $item[$res_field] as a new collection.
+     * If $extract_field argument is specified, $other[$extract_field] is used instead if $other
+     * @param fx_collection $what
+     * @param string $cond_field
+     * @param string $res_field
+     * @param string $check_field
+     * @param string $extract_field
+     * @return \fx_collection
+     */
     public function attach_many(
             fx_collection $what, 
             $cond_field, 
@@ -476,13 +511,16 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
         // this = [user1, user2]
         // cond_field = 'author'
         // res_field = 'posts'
+        
+        
         $res_index = array();
-        $col_sortable = $what->is_sortable;
         foreach ($what as $what_item) {
             $index_key = $what_item[$cond_field];
             if (!isset($res_index[$index_key])) {
-                $res_index[$index_key] = new fx_collection();
-                $res_index[$index_key]->is_sortable = $col_sortable;
+                $new_collection = new fx_collection();
+                $new_collection->finder = $what->finder;
+                $new_collection->is_sortable = $what->is_sortable;
+                $res_index[$index_key] = $new_collection;
                 if ($extract_field) {
                     $res_index[$index_key]->linker_map = new fx_collection();
                 }
