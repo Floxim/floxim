@@ -229,7 +229,7 @@ fx_buttons.prototype.form_button_click = function() {
 		return false;
 	}
 	if (data.func) {
-		fx_call_user_func(json.func);
+		fx_call_user_func(data.func,data);
 	}
 	if (data.url) {
 		document.location.hash = $fx.mode + '.' + data.url.replace(/^#/, '');
