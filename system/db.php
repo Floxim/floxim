@@ -39,7 +39,12 @@ class fx_db extends PDO {
     protected static $q_count = 0;
     
     public function prepare_query($statement) {
-        return trim($this->replace_prefix($statement));
+        if (is_array($statement)) {
+            $query = call_user_func_array('sprintf', $statement);
+        } else {
+            $query = $statement;
+        }
+        return trim($this->replace_prefix($query));
     }
     
     public function query($statement) {
@@ -146,15 +151,16 @@ class fx_db extends PDO {
         
         if (!$query) {
             $res = $this->last_result_array;
-        } else {
-            if (($result = $this->query($query))) {
-                $res = $result->fetch(PDO::FETCH_NUM);
-                $res = $res[0];
-
-                $this->last_result_array = $result->fetchAll(PDO::FETCH_ASSOC);
+        } elseif (($result = $this->query($query))) {
+            $res = $result->fetch(PDO::FETCH_NUM);
+            if (!is_array($res)) {
+                return false;
             }
+            $res = $res[0];
+            $this->last_result_array = $result->fetchAll(PDO::FETCH_ASSOC);
+        } else {
+            return false;
         }
-
         return $res;
     }
 
