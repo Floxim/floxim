@@ -66,4 +66,9 @@ class fx_data_content_page extends fx_data_content {
         }
         return $data;
     }
+    
+    public function named($name) {
+        $this->where('name', '%'.$name.'%', 'like');
+        return $this;
+    }
 }
