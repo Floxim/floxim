@@ -63,30 +63,33 @@
 }
 
 
-.fx_outline_pane {
-    position:absolute;
-    background-color:#555;
-}
-
 .fx_stop_outline .fx_outline_pane {
     display:none;
 }
 
+@pane_color_hover_light:#EEE;
+@pane_color_hover_dark:#000;
+
+.fx_outline_pane {
+    position:absolute;
+    background-color:@pane_color_hover_dark;
+}
+
 .fx_outline_pane_top, .fx_outline_pane_bottom {
-    background-image: -webkit-linear-gradient(left, transparent 50%, #DDD 50%);
-    background-image: -moz-linear-gradient(left, transparent 50%, #DDD 50%);
-    background-image: -ms-linear-gradient(left, transparent 50%, #DDD 50%);
-    background-image: -o-linear-gradient(left, transparent 50%, #DDD 50%);
-    background-image: linear-gradient(left, transparent 50%, #DDD 50%);
+    background-image: -webkit-linear-gradient(left, transparent 50%, @pane_color_hover_light 50%);
+    background-image: -moz-linear-gradient(left, transparent 50%, @pane_color_hover_light 50%);
+    background-image: -ms-linear-gradient(left, transparent 50%, @pane_color_hover_light 50%);
+    background-image: -o-linear-gradient(left, transparent 50%, @pane_color_hover_light 50%);
+    background-image: linear-gradient(left, transparent 50%, @pane_color_hover_light 50%);
     background-size: 9px 3px;
 }
 
 .fx_outline_pane_left, .fx_outline_pane_right {
-    background-image: -webkit-linear-gradient(transparent 50%, #DDD 50%);
-    background-image: -moz-linear-gradient(transparent 50%, #DDD 50%);
-    background-image: -ms-linear-gradient(transparent 50%, #DDD 50%);
-    background-image: -o-linear-gradient(transparent 50%, #DDD 50%);
-    background-image: linear-gradient(transparent 50%, #DDD 50%);
+    background-image: -webkit-linear-gradient(transparent 50%, @pane_color_hover_light 50%);
+    background-image: -moz-linear-gradient(transparent 50%, @pane_color_hover_light 50%);
+    background-image: -ms-linear-gradient(transparent 50%, @pane_color_hover_light 50%);
+    background-image: -o-linear-gradient(transparent 50%, @pane_color_hover_light 50%);
+    background-image: linear-gradient(transparent 50%, @pane_color_hover_light 50%);
     background-size: 3px 9px;
 }
 
@@ -113,36 +116,38 @@
 }
 
 .fx_outline_pane_top {
-    -webkit-box-shadow: 0px -3px 6px rgba(50, 50, 50, 0.6);
-    -moz-box-shadow: 0px -3px 6px rgba(50, 50, 50, 0.6);
-    -ms-box-shadow: 0px -3px 6px rgba(50, 50, 50, 0.6);
-    -o-box-shadow: 0px -3px 6px rgba(50, 50, 50, 0.6);
     box-shadow: 0px -3px 6px rgba(50, 50, 50, 0.6);
 }
 
 .fx_outline_pane_right {
-    -webkit-box-shadow: 3px 0px 6px rgba(50, 50, 50, 0.6);
-    -moz-box-shadow: 0px -3px 6px rgba(50, 50, 50, 0.6);
-    -ms-box-shadow: 0px -3px 6px rgba(50, 50, 50, 0.6);
-    -o-box-shadow: 0px -3px 6px rgba(50, 50, 50, 0.6);
-    box-shadow: 0px -3px 6px rgba(50, 50, 50, 0.6);
+    box-shadow: 3px 0px 6px rgba(50, 50, 50, 0.6);
 }
 
 .fx_outline_pane_bottom {
-    -webkit-box-shadow: 0px 3px 6px rgba(50, 50, 50, 0.6);
-    -moz-box-shadow: 0px 3px 6px rgba(50, 50, 50, 0.6);
-    -ms-box-shadow: 0px 3px 6px rgba(50, 50, 50, 0.6);
-    -o-box-shadow: 0px 3px 6px rgba(50, 50, 50, 0.6);
     box-shadow: 0px 3px 6px rgba(50, 50, 50, 0.6);
 }
 
 .fx_outline_pane_left {
-    -webkit-box-shadow: -3px 0px 6px rgba(50, 50, 50, 0.6);
-    -moz-box-shadow: -3px 0px 6px rgba(50, 50, 50, 0.6);
-    -ms-box-shadow: -3px 0px 6px rgba(50, 50, 50, 0.6);
-    -o-box-shadow: -3px 0px 6px rgba(50, 50, 50, 0.6);
     box-shadow: -3px 0px 6px rgba(50, 50, 50, 0.6);
 }
+
+// HOVER PANES SHADOW:
+.fx_outline_pane_top.fx_outline_style_hover {
+    box-shadow: 0px -2px 6px rgba(50, 50, 50, 0.35);
+}
+
+.fx_outline_pane_right.fx_outline_style_hover {
+    box-shadow: 0px -2px 6px rgba(50, 50, 50, 0.35);
+}
+
+.fx_outline_pane_bottom.fx_outline_style_hover {
+    box-shadow: 0px 2px 6px rgba(50, 50, 50, 0.35);
+}
+
+.fx_outline_pane_left.fx_outline_style_hover {
+    box-shadow: -2px 0px 6px rgba(50, 50, 50, 0.35);
+}
+// ENDOF HOVER PANES SHADOW;
 
 .fx_panel_text_expander {
     cursor:pointer;
@@ -220,6 +225,10 @@
 .fx_front_overlay .fx_admin_button {
     margin-top:3px;
     margin-left:3px;
+}
+
+.fx_node_panel .fx_admin_button_text {
+    margin-right:6px;
 }
 
 .fx_node_panel_fixed {
