@@ -478,7 +478,7 @@ window.fx_suggest = function(params) {
         });
         this.input.focus(function(){
             var term = Suggest.getTerm();
-            if (term=='' && Suggest.preset_values.length) {
+            if (term === '' && Suggest.preset_values.length) {
                 // open preset items
                 Suggest.getResults('');
             }

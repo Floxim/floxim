@@ -20,8 +20,8 @@ class fx_controller_component_section extends fx_controller_component_page {
             $this->on_items_ready(function($items, $ctr) {
                 foreach ($items as $item) {
                     $ctr->accept_content(array(
-                        'title' => fx::alang('Add subsection to','component_section')
-                                    . ' &quot;' . $item['name'].'&quot;',
+                        'title' => fx::alang('Add subsection','component_section'),
+                                    //. ' &quot;' . $item['name'].'&quot;',
                         'parent_id' => $item['id']
                     ), $item);
                 }

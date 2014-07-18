@@ -262,6 +262,7 @@ class fx_template_html {
             }
             if ($n->has_attribute('fx:add')) {
                 $add_mode = $n->get_attribute('fx:add');
+
                 $n->remove_attribute('fx:add');
                 $n->wrap(
                     '<?php $this->push_mode("add", "'.$add_mode.'"); ?>',

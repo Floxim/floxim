@@ -392,6 +392,7 @@ class fx_data_content extends fx_data {
         }
         $placeholder = $this->create($params);
         $placeholder->dig_set('_meta.placeholder', $params + array('type' => $placeholder['type']));
+        $placeholder->dig_set('_meta.placeholder_name', fx::data('component', $placeholder['type'])->get('item_name'));
         $placeholder->is_adder_placeholder(true);
         // guess item's position here
         if ($collection) {

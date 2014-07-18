@@ -660,7 +660,7 @@ class fx_template_compiler {
         }
         // add-in-place settings
         
-        $code .= 'if ('.$arr_id.' instanceof fx_collection && isset('.$arr_id.'->finder)';
+        $code .= 'if ($_is_admin && '.$arr_id.' instanceof fx_collection && isset('.$arr_id.'->finder)';
         $code .= ' && $this->get_mode("add") ';
         $code .= ' && '.$arr_id.'->finder instanceof fx_data_content) {'."\n";
         $code .= $arr_id.'->finder->create_adder_placeholder('.$arr_id.');'."\n";
