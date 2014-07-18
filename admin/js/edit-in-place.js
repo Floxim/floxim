@@ -23,7 +23,7 @@ function fx_edit_in_place( node ) {
     
     node.data('edit_in_place', this);
     node.addClass('fx_edit_in_place');
-    
+        
     this.panel_fields = [];
     this.is_content_editable = false;
     
@@ -59,10 +59,14 @@ fx_edit_in_place.prototype.handle_keydown = function(e) {
         if (e.isDefaultPrevented && e.isDefaultPrevented()) {
             return;
         }
+        if ($('#redactor_modal:visible').length) {
+            e.stopImmediatePropagation();
+            return false;
+        }
         this.stop();
         this.restore();
         $fx.front.deselect_item();
-        e.stopImmediatePropagation();
+        //e.stopImmediatePropagation();
         return false;
     }
     if (e.which === 13 && (!this.is_wysiwyg || e.ctrlKey)) {
@@ -297,9 +301,9 @@ fx_edit_in_place.prototype.get_vars = function() {
     }
     for (var i = 0; i < this.panel_fields.length; i++) {
         var pf = this.panel_fields[i];
-        var pf_meta= pf.data('meta');
+        var pf_meta = pf.data('meta');
         if (!pf_meta) {
-            console.log('no meta', this.panel_fields[i]);
+            console.log('no meta', this.panel_fields[i], this);
             continue;
         }
         var old_value = pf_meta.value;
