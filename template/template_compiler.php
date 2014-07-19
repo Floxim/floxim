@@ -22,6 +22,7 @@ class fx_template_compiler {
                 $lined = join("\n", $lines);
                 $error = $is_correct[0].': '.$is_correct[1][0].' (line '.$error_line.')';
                 fx::debug($error, $lined);
+                fx::log($error, $lined);
                 throw new Exception('Syntax error');
             }
         }
@@ -357,7 +358,12 @@ class fx_template_compiler {
                         $has_complex_tokens = true;
                         break;
                     }
-                    $default_parts []= '"'.addslashes($def_child->get_prop('value')).'"';
+                    $def_child_code = $def_child->get_prop('value');
+                    if (preg_match("~<\?(php|=)~", $def_child_code)) {
+                        $has_complex_tokens = true;
+                        break;
+                    }
+                    $default_parts []= '"'.addslashes($def_child_code).'"';
                 }
                 if ($has_complex_tokens) {
                     $code .= "\tob_start();\n";
