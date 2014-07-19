@@ -322,9 +322,10 @@ fx_front.prototype.get_adder_closure = function(meta, $infoblock_node, $current_
            parent_id:meta.parent_id
         };
         
-        if ($current_node && $current_node.length) {
+        var essence_meta = $current_node && $current_node.data('fx_essence');
+        if (essence_meta) {
             var $button = $(e.target);
-            var curr_node_id = $current_node.data('fx_essence')[0];
+            var curr_node_id = essence_meta[0];
             if ($button.hasClass('fx_before')) {
                 form_data.__move_before = curr_node_id;
             } else if ($button.hasClass('fx_after')) {
