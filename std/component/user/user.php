@@ -58,6 +58,10 @@ class fx_controller_component_user extends fx_controller_component {
         if (!$target_location) {
             $target_location = '/';
         }
+        fx::log('chosts', $hosts);
+        if (count($hosts) === 0) {
+            fx::http()->redirect($target_location);
+        }
         return array(
             'hosts' => $hosts,
             'auth_url' => '/~ajax/user._crossite_auth',
