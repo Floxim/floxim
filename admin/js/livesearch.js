@@ -144,6 +144,9 @@ window.fx_livesearch = function (node) {
     // recount axis prop for sortable
     // if there is only one row, use "x", otherwise - "false"
     this.updateSortableAxis = function() {
+        if (!this.isMultiple) {
+            return;
+        }
         var $container = $('.livesearch_items', this.n);
         var $items = $container.children('.livesearch_item');
         var axis = false;
