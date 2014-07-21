@@ -339,7 +339,7 @@ img.fx_hilight {
 }
 
 .fx_editable_empty:after, .fx_var_editable:empty:after {
-    content:attr(placeholder);
+    content:attr(fx_placeholder);
     height:auto !important;
     visibility:visible;
     display:inline !important;
@@ -445,16 +445,4 @@ img.fx_hilight {
 
 .fx_essence_adder_placeholder:not(.fx_essence_adder_placeholder_active) {
     display:none !important;
-}
-
-.f___x_field_placeholder {
-    text-decoration:none !important;
-    color:#999 !important;
-    font-style:italic !important;
-    cursor:text !important;
-    opacity:0.5 !important;
-}
-
-.fx_field_placeholded {
-    text-decoration:none !important;
 }

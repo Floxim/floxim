@@ -134,7 +134,7 @@ fx_edit_in_place.prototype.start = function(meta) {
                     "</style>").appendTo( $('head') );
                     
                     $n.addClass('fx_var_editable');
-                    $n.attr('placeholder', meta.label || meta.name || meta.id);
+                    $n.attr('fx_placeholder', meta.label || meta.name || meta.id);
                     
                     if ( (meta.type === 'text' && meta.html && meta.html !== '0') || meta.type === 'html') {
                         $n.data('fx_saved_value', $n.html());
@@ -159,22 +159,31 @@ fx_edit_in_place.prototype.start = function(meta) {
                     $placeholder.data('text', $placeholder.text()).hide();
                     $n.append($placeholder);*/
                     var handle_node_size = function () {
-                        var is_empty = $n.text().length === 0;
+                        var text = $.trim($n.text());
+                        var is_empty = text.length === 0;
                         if (is_empty && !edit_in_place.is_wysiwyg) {
-                            $n.html('');
+                            $n.html('&#8203;');
                         }
                         $n.toggleClass(
                             'fx_editable_empty', 
                             is_empty
                         );
-                        $n.focus();
-                    };
-                    handle_node_size();
+                        console.log('hns', text);
+                        if (is_empty && !edit_in_place.is_wysiwyg) {
+                            setTimeout(
+                                function() {$n.focus();},
+                                1
+                            );
+                        }
+                    }; 
                     $n.attr('contenteditable', 'true').focus();
-                    $n.on(
-                        'keyup.edit_in_place keydown.edit_in_place click.edit_in_place change.edit_in_place', 
-                        function () {setTimeout(handle_node_size,1);}
-                    );
+                    if (!this.is_wysiwyg) {
+                        handle_node_size();
+                        $n.on(
+                            'keyup.edit_in_place keydown.edit_in_place click.edit_in_place change.edit_in_place', 
+                            function () {setTimeout(handle_node_size,1);}
+                        );
+                    }
                 }
                 break;
 	}
@@ -304,6 +313,10 @@ fx_edit_in_place.prototype.get_vars = function() {
             */
         } else {
             var new_val = $.trim(node.text());
+            // put empty val instead of zero-width space
+            if (!new_val) {
+                node.html(new_val);
+            }
             is_changed = new_val !== saved_val;
         }
         
@@ -464,8 +477,16 @@ fx_edit_in_place.prototype.make_wysiwyg = function () {
     }
     $fx_fields.make_redactor($node, {
         linebreaks:linebreaks,
+        placeholder:false,
         toolbarExternal: '.editor_panel',
         initCallback: function() {
+            
+            
+            var $box = $node.closest('.redactor_box');
+            $box.after($node);
+            $('body').append($box);
+            $node.data('redactor_box', $box);
+            
             var $range_node = $node.parent().find('.fx_click_range_marker');
             if ($range_node.length) {
                 var range_text = $range_node[0].childNodes[range_text_position];
@@ -499,6 +520,7 @@ fx_edit_in_place.prototype.make_wysiwyg = function () {
 };
 
 fx_edit_in_place.prototype.destroy_wysiwyg = function() {
+    this.node.before(this.node.data('redactor_box'));
     this.node.redactor('destroy');
     $('#fx_admin_control .editor_panel').remove();
     this.node.get(0).normalize();

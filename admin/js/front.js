@@ -261,7 +261,6 @@ fx_front.prototype.get_placeholder_adder_closure = function ($placeholder) {
         var $placeholder_fields = $('.fx_template_var, .fx_template_var_in_att', $placeholder),
             $placeholder_focus = $placeholder,
             field_found = false;
-        
         for (var i = 0; i < $placeholder_fields.length; i++) {
             var $c_field = $placeholder_fields.eq(i);
             if ($fx.front.is_selectable($c_field)) {
@@ -277,7 +276,6 @@ fx_front.prototype.get_placeholder_adder_closure = function ($placeholder) {
                     $placeholder_focus = $c_field;
                     field_found = true;
                 }
-                break;
             }
         }
         $fx.front.select_item($placeholder_focus);
