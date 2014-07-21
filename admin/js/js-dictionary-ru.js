@@ -14,6 +14,8 @@
         'Add' : 'Добавить',
         'Delete' : 'Удалить',
         'Area %s is empty, you can add some blocks here.' : 'Область "%s" пуста, сюда можно добавить блоки.',
-        'Add block to' : 'Добавить блок в'
+        'Add block to' : 'Добавить блок в',
+        'Before': 'Перед',
+        'After' : 'После'
     };
 })($fx);

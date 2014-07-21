@@ -95,12 +95,14 @@ fx_front.prototype.handle_mouseover = function(e) {
             }
         }
         $fx.front.outline_block_off($($fx.front.c_hover),100);
-        var $editable = $(e.target).closest('.fx_template_var');
-        $target = $(e.target);
-        var make_content_editable = $editable.length > 0 
-                                    && $editable.data('fx_var').type !== 'datetime'
+        var $editable = $(e.target).closest('.fx_template_var'),
+            field_type = ($editable.data('fx_var') || {}).type,
+            make_content_editable = $editable.length > 0 
+                                    && field_type !== 'datetime' && field_type !== 'file' && field_type !== 'image'
                                     && $fx.front.mode === 'edit' 
                                     && !($editable.get(0).nodeName === 'A' && e.ctrlKey);
+        var is_hover_parent = $fx.front.last_hover_node 
+                                && $.contains(this, $fx.front.last_hover_node);
         $fx.front.c_hover = this;
         setTimeout(
             function() {
@@ -113,15 +115,17 @@ fx_front.prototype.handle_mouseover = function(e) {
                 if ($fx.front.hilight_disabled) {
                     return false;
                 }
-                $fx.front.has_hover_node = true;
-                $('.fx_hilight_hover').removeClass('fx_hilight_hover');
-                node.addClass('fx_hilight_hover');
-                $fx.front.outline_block(node, 'hover', 250);
-                if (make_content_editable) {
-                    $editable.addClass('fx_var_editable').attr('contenteditable', 'true');
+                $fx.front.last_hover_node = node[0];
+                if (!node.hasClass('fx_hilight_hover')) {
+                    $('.fx_hilight_hover').removeClass('fx_hilight_hover');
+                    node.addClass('fx_hilight_hover');
+                    $fx.front.outline_block(node, 'hover', 400);
+                    if (make_content_editable) {
+                        $editable.addClass('fx_var_editable').attr('contenteditable', 'true');
+                    }
                 }
             }, 
-            $fx.front.has_hover_node ? 10 : 10
+            is_hover_parent ? 400 : 30
         );
         node.one('mouseout', function() {
             $fx.front.c_hover = null;
@@ -130,14 +134,13 @@ fx_front.prototype.handle_mouseover = function(e) {
             }
             setTimeout(
                 function() {
-                    if ($fx.front.c_hover !== node.get(0)) {
-                        $fx.front.has_hover_node = false;
+                    if ($fx.front.c_hover !== node[0]) {
                         node.removeClass('fx_hilight_hover');
-                        $fx.front.outline_block_off(node, 250);
+                        $fx.front.outline_block_off(node, 100);
                         $editable.removeClass('fx_var_editable').attr('contenteditable', null);
                     }
                 },
-                10
+                100
             );
         });
         e.fx_hilight_done = true;
@@ -228,10 +231,11 @@ fx_front.prototype.get_area_meta = function($area_node) {
     return meta;
 };
 
-fx_front.prototype.get_placeholder_adder_closure = function ($placeholder, $current_node) {
+fx_front.prototype.get_placeholder_adder_closure = function ($placeholder) {
     // store node right before placeholder to place placeholder back on cancel
-    var $placeholder_pre = $placeholder.prev().first();
-    var placeholder_meta = $placeholder.data('fx_essence_meta');
+    var $placeholder_pre = $placeholder.prev().first(),
+        placeholder_meta = $placeholder.data('fx_essence_meta'),
+        $current_node = $($fx.front.get_selected_item());
     function switch_placeholder($placeholder, on) {
         $placeholder.toggleClass('fx_essence_adder_placeholder_active', on);
         // put placeholder back to it's place
@@ -244,7 +248,6 @@ fx_front.prototype.get_placeholder_adder_closure = function ($placeholder, $curr
     return function(event) {
         var $button = $(event.target);
         if ($current_node) {
-            
             if ($button.hasClass('fx_before')) {
                 $current_node.before($placeholder);
                 placeholder_meta.placeholder.__move_before = $current_node.data('fx_essence')[0];
@@ -256,11 +259,24 @@ fx_front.prototype.get_placeholder_adder_closure = function ($placeholder, $curr
         
         switch_placeholder($placeholder, true);
         var $placeholder_fields = $('.fx_template_var, .fx_template_var_in_att', $placeholder),
-            $placeholder_focus = $placeholder;
+            $placeholder_focus = $placeholder,
+            field_found = false;
+        
         for (var i = 0; i < $placeholder_fields.length; i++) {
             var $c_field = $placeholder_fields.eq(i);
             if ($fx.front.is_selectable($c_field)) {
-                $placeholder_focus = $c_field;
+                if (!$c_field.is(":visible")) {
+                    continue;
+                }
+                // found name field
+                if ( ($c_field.data('fx_var') || {}).name === 'name') {
+                    $placeholder_focus = $c_field;
+                    break;
+                }
+                if (!field_found){
+                    $placeholder_focus = $c_field;
+                    field_found = true;
+                }
                 break;
             }
         }
@@ -284,36 +300,11 @@ fx_front.prototype.get_placeholder_adder_closure = function ($placeholder, $curr
     };
 };
 
-/**
- * 
- * @param object meta Content type, parent and so on
- * @param jQuery $infoblock_node Closest infoblock
- * @param jQuery $current_node Currently selected item
- * @returns function Closure to handle button click
- */
-fx_front.prototype.get_adder_closure = function(meta, $infoblock_node, $current_node) {
-    var ib = $($fx.front.get_selected_item()).closest('.fx_infoblock');
-    if ($infoblock_node && $infoblock_node.length) {
-        var $placeholders = $('.fx_essence_adder_placeholder', $infoblock_node);
-        for (var i = 0; i < $placeholders.length; i++) {
-            var $placeholder = $placeholders.eq(i);
-            var essence_meta = $placeholder.data('fx_essence_meta');
-            if (!essence_meta) {
-                break;
-            }
-            var placeholder_meta = essence_meta.placeholder;
-            if (
-                placeholder_meta.parent_id === meta.parent_id && 
-                placeholder_meta.infoblock_id === meta.infoblock_id
-            ) {
-                return $fx.front.get_placeholder_adder_closure($placeholder, $current_node);
-            }
-        }
-        
-    }
+//fx_front.prototype.get_adder_closure = function(meta, $infoblock_node, $current_node) {
+
+// generate function to open "add smth" form in panel
+fx_front.prototype.get_panel_adder_closure = function(meta) {
     return function(e) {
-        //$fx.front.select_item(ib.get(0));
-        
         var form_data = {
            essence:'content',
            action:'add_edit',
@@ -321,7 +312,8 @@ fx_front.prototype.get_adder_closure = function(meta, $infoblock_node, $current_
            infoblock_id:meta.infoblock_id,
            parent_id:meta.parent_id
         };
-        
+        var $current_node = $($fx.front.get_selected_item());
+        var $ib_node = $current_node.closest('.fx_infoblock');
         var essence_meta = $current_node && $current_node.data('fx_essence');
         if (essence_meta) {
             var $button = $(e.target);
@@ -337,93 +329,105 @@ fx_front.prototype.get_adder_closure = function(meta, $infoblock_node, $current_
             {
             view:'cols',
             onfinish:function() {
-                $fx.front.reload_infoblock(ib);
-            },
-            oncancel:function() {
-
+                $fx.front.reload_infoblock($ib_node);
             }
         });
     };
 };
 
-fx_front.prototype.redraw_add_button = function($node) {
-    var mode = $fx.front.mode;
-    var buttons = [];
-    if (!$node) {
-        return;
-    }
-    if (!$node.is('.fx_infoblock, .fx_area, .fx_essence')) {
-        return;
-    }
-    var $ib_node = $node.closest('.fx_infoblock');
-    var adders = [];
-    var controller_meta = $ib_node.data('fx_controller_meta');
-    if (controller_meta && controller_meta.accept_content && !$node.is('.fx_essence_adder_placeholder')) {
-        // let's check that there's no other essence 
-        // between this one and the infoblock node
-        var is_top_essence = true;
-        var $top_essence = null;
-        $node.parents('.fx_essence, .fx_infoblock').each(function() {
-            var $this = $(this);
-            if ($this.is('.fx_essence')) {
-                is_top_essence = false;
-                $top_essence = $this;
-                return false;
-            }
-            if ($this.is('.fx_infoblock')) {
-                return false;
-            }
-        });
-        
-        var get_essence_adder = function(meta) {
-            var cb_closure = $fx.front.get_adder_closure(meta, $ib_node, $node);
-            adders.push(cb_closure);
-            if (mode === 'edit') {
-                var position_buttons = '';
-                if ($node.is('.fx_essence') && $node.is('.fx_sortable')) {
-                    position_buttons =  ' <a class="fx_button_extra fx_before" title="Before">&#9668;</a>';
-                    position_buttons += ' <a class="fx_button_extra fx_after" title="After">&#9658;</a>';
-                }
-                return {
-                    is_add:true,
-                    name:meta.title + position_buttons,
-                    callback:cb_closure
-                };
-            }
-        };
-        
-        if (is_top_essence) {
-           for (var i = 0; i < controller_meta.accept_content.length; i++) {
-                var c_meta = controller_meta.accept_content[i];
-                buttons.push(get_essence_adder(c_meta));
-           }
-        } else {
-            var $placeholder = $('.fx_essence_adder_placeholder', $top_essence);
-            if ($placeholder.length) {
-                var placeholder_meta = $placeholder.data('fx_essence_meta');
-                var c_meta = {
-                    type: placeholder_meta.placeholder.type,
-                    parent_id: placeholder_meta.placeholder.parent_id,
-                    infoblock_id: placeholder_meta.placeholder.infoblock_id,
-                    title: ' + ' + placeholder_meta.placeholder_name
-                };
-                buttons.push(get_essence_adder(c_meta));
-            }
+fx_front.prototype.is_top_essence = function($node) {
+    // let's check that there's no other essence 
+    // between this one and the infoblock node   
+    var is_top_essence = $node.is('.fx_essence');
+    $node.parents('.fx_essence, .fx_infoblock').each(function() {
+        var $this = $(this);
+        if ($this.is('.fx_essence')) {
+            is_top_essence = false;
+            return false;
         }
+        if ($this.is('.fx_infoblock')) {
+            return false;
+        }
+    });
+    return is_top_essence;
+};
+
+fx_front.prototype.find_placeholder_by_meta = function(meta, $placeholders) {
+    var meta_sign = function(meta) {
+        meta = meta || {};
+        return [ meta.type, meta.infoblock_id, meta.parent_id ].join ('-');
+    };
+    var needle_sign = meta_sign(meta);
+    var $found_placeholder = false;
+    $placeholders.each(function (){ 
+        var c_sign = meta_sign ( 
+            ($(this).data('fx_essence_meta') || {}).placeholder
+        );
+        if (c_sign === needle_sign) {
+            $found_placeholder = $(this);
+            return false;
+        }
+    });
+    return $found_placeholder;
+};
+
+fx_front.prototype.redraw_add_button = function($node) {
+    if (!$node || $node.is('.fx_essence_adder_placeholder') || !$node.is('.fx_infoblock, .fx_area, .fx_essence')) {
+        return;
     }
-    $ib_node.data('content_adders', adders);
+    var get_neighbour_buttons = function() {
+        if (!$node.is('.fx_essence') || !$node.is('.fx_sortable')) {
+            return '';
+        }
+        var res = ' <a class="fx_button_extra fx_before" title="'+$fx.lang('Before')+'">&#9668;</a>';
+        res += ' <a class="fx_button_extra fx_after" title="'+$fx.lang('After')+'">&#9658;</a>';
+        return res;
+    };
+    var mode = $fx.front.mode,
+        buttons = [],
+        $ib_node = $node.closest('.fx_infoblock'),
+        ib_accept = ($ib_node.data('fx_controller_meta') || {}).accept_content;
     
     if ($node.is('.fx_essence')) {
-        var meta_extra = $node.data('fx_essence_meta');
-        if (meta_extra && meta_extra.accept_content) {
-            $.each(meta_extra.accept_content, function () {
-                $fx.front.add_panel_button({
-                    name: this.title,
-                    is_add:true,
-                    callback: $fx.front.get_adder_closure(meta_extra.accept_content[0])
-                });
+        var is_top_essence = $fx.front.is_top_essence($node),
+            $placeholder = $('>.fx_essence_adder_placeholder', $node.parent());
+        if ($placeholder.length) {
+            var placeholder_meta = $placeholder.data('fx_essence_meta') || {},
+                placeholder_name = placeholder_meta.placeholder_name;
+            buttons.push({
+                name:  $fx.lang('Add') + ' ' + placeholder_name + get_neighbour_buttons(),
+                callback: $fx.front.get_placeholder_adder_closure($placeholder)
             });
         }
+        for (var i = 0; is_top_essence && ib_accept && i < ib_accept.length; i++) {
+            var c_meta = ib_accept[i];
+            if ($fx.front.find_placeholder_by_meta(c_meta, $placeholder)) {
+                continue;
+            }
+            buttons.push({
+                name:c_meta.title + get_neighbour_buttons(),
+                callback: $fx.front.get_panel_adder_closure(c_meta)
+            });
+        };
+
+        
+        var extra_accept = ($node.data('fx_essence_meta') || {}).accept_content || [];
+        $.each(extra_accept, function () {
+            buttons.push({
+                name: this.title,
+                callback: $fx.front.get_panel_adder_closure(this[0])
+            });
+        });
+    } else if (ib_accept) {
+        $.each(ib_accept, function () {
+            var $placeholder  = $fx.front.find_placeholder_by_meta(this, $node.find('.fx_essence_adder_placeholder'));
+            buttons.push({
+                name: this.title,
+                callback: $placeholder ? 
+                                $fx.front.get_placeholder_adder_closure($placeholder) :
+                                $fx.front.get_panel_adder_closure(this)
+            });
+        });
     }
     
     var $c_area = $node.closest('.fx_area');
@@ -433,7 +437,6 @@ fx_front.prototype.redraw_add_button = function($node) {
         if (area_meta) {
             buttons.push({
                 name:$fx.lang('Add block to')+' '+(area_meta.name || area_meta.id),
-                is_add:true,
                 callback: function() {
                     $fx.front.add_infoblock_select_controller($c_area);
                 }
@@ -441,6 +444,7 @@ fx_front.prototype.redraw_add_button = function($node) {
         }
     }
     for (var i = 0; i < buttons.length; i++) {
+        buttons[i].is_add = true;
         $fx.front.add_panel_button(buttons[i]);
     }
 };
@@ -796,7 +800,6 @@ fx_front.prototype.select_item = function(node) {
             return;
         }
         if ($(e.target).is(':input')) {
-            console.log('on inp');
             return;
         }
         
@@ -1743,14 +1746,10 @@ fx_front.prototype.outline_block = function(n, style, speed) {
     if (n.hasClass('fx_hilight_outline')) {
         return;
     }
-    // already hilighted 
-    if (n.data('fx_outline_panes') && n.data('fx_outline_style') === style) {
-        return;
-    }
+    var panes = n.data('fx_outline_panes') || {};
     
     if (style === 'selected') {
         var recount_outlines = function() {
-            $fx.front.outline_block_off(n);
             $fx.front.outline_block(n, 'selected');
             $fx.front.recount_node_panel();
         };
@@ -1815,101 +1814,50 @@ fx_front.prototype.outline_block = function(n, style, speed) {
         $.each(box, function(i, v) {
             css[i] = Math.round(v)+'px';
         });
-        var m = $(
-            '<div class="fx_outline_pane '+ (pane_position === 'fixed' ? 'fx_outline_pane_fixed ' : '')+
-                'fx_outline_pane_'+type+' fx_outline_style_'+style+'" />'
+        var $pane_node = panes[type];
+        if (!$pane_node) {
+            $pane_node = $('<div></div>').appendTo(front_overlay);
+            panes[type] = $pane_node;
+        }
+        $pane_node.attr(
+            'class', 
+            'fx_outline_pane '+ 
+            (pane_position === 'fixed' ? 'fx_outline_pane_fixed ' : '')+
+            'fx_outline_pane_'+type+' fx_outline_style_'+style
         );
         css['z-index'] = pane_z_index;
         css['position'] = pane_position;
-        m.css(css);
-        /*
-        m.data('pane_props', $.extend(box, {
-            type:type,
-            vertical: type === 'left' || type === 'right'
-        }));
-        */
-        front_overlay.append(m);
-        return m;
+        $pane_node.css(css);
+        return $pane_node;
     }
-    var panes = {};
     var top_left_offset = 0;
     var top_top_offset = 0;
     var bottom_right_offset = 0;
     var bottom_bottom_offset = 0;
-    if (n.css('display') === 'inline' && n.text() !== '') {
-        var m_before = $('<span style="display:inline-block;width:1px; height:1px;background:#F00;"></span>');
-        m_before.insertBefore(n.get(0).firstChild);
-        var mbo = m_before.offset();
-        // compare the height for cases where the test pixel is on the previous line one,
-        // because it breaks, and the actual text - no
-        if (mbo.top > o.top && (mbo.left - parseInt(n.css('padding-left')) - o.left) > 10) {
-            top_left_offset = (mbo.left - o.left);
-            top_top_offset = mbo.top - o.top + size*2 + 1;
-            panes.top_left = make_pane({
-                top:o.top - size,
-                left:mbo.left - size,
-                height: (mbo.top - o.top) + size*2,
-                width:size
-            }, 'left');
-            panes.top_top = make_pane({
-                top:mbo.top +size*2,
-                left:o.left,
-                width:mbo.left - o.left,
-                height:size
-            }, 'top');
-        }
-        m_before.remove();
-        var m_after = $('<span style="display:inline-block;width:1px; height:1px;vertical-align: top; background:#FFF;"></spans>');
-        n.append(m_after);
-        var mao = m_after.offset();
-        /// catch correctly cases where span-tester takes a string
-        if (n.outerHeight() > nh) {
-            mao.top = o.top;
-            mao.left = o.left + nw;
-        }
-        
-        if ( (o.left+nw) - (mao.left + parseInt(n.css('padding-right')) ) > 10) {
-            bottom_right_offset = nw - (mao.left - o.left);
-            bottom_bottom_offset = o.top+nh-mao.top;
-            panes.bottom_right = make_pane({
-                top:mao.top,
-                left:mao.left,
-                width:size,
-                height:bottom_bottom_offset
-            }, 'right');
-            panes.bottom_bottom = make_pane({
-                top:mao.top,
-                left:mao.left,
-                width: bottom_right_offset,
-                height:size
-            }, 'bottom');
-        }
-        
-        m_after.remove();
-    }
+    
     if (pane_position==='fixed') {
         o.top -=$(window).scrollTop();
     }
-    panes.top = make_pane({
+    make_pane({
         top: o.top - size,
         left: (o.left + top_left_offset),
         width:(nw-top_left_offset ),
         height:size
     }, 'top');
-    panes.bottom = make_pane({
+    make_pane({
         top:o.top + nh,
         left:o.left,
         width: nw - bottom_right_offset,
         height:size
     }, 'bottom');
-    panes.left = make_pane({
+    make_pane({
         top: (o.top - size + top_top_offset),
         left:o.left - size ,
         width:size,
         height: (nh + size*2 - top_top_offset)
         
     }, 'left');
-    panes.right = make_pane({
+    make_pane({
         top:o.top - size ,
         left:o.left + nw ,
         width:size,

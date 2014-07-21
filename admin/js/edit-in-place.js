@@ -112,11 +112,6 @@ fx_edit_in_place.prototype.start = function(meta) {
                 } else {
                     var $n = this.node;
                     this.is_content_editable = true;
-                    /*
-                    $n.on('keydown.edit_in_place', function(e) {
-                        edit_in_place.handle_keydown(e);
-                    });
-                    */
                     if (!$($fx.front.get_selected_item()).hasClass('fx_essence')) {
                         setTimeout(function() {
                             $fx.front.stop_essences_sortable();
@@ -127,7 +122,19 @@ fx_edit_in_place.prototype.start = function(meta) {
                         $n.removeClass('fx_hidden_placeholded');
                         $n.html('');
                     }
+                    
+                    // create css stylesheet for placeholder color
+                    // we cannot just append styles to an element, 
+                    // because placeholder is implemented by css :before property
+                    var c_color = window.getComputedStyle($n[0]).color.replace(/[^0-9,]/g, '').split(',');
+                    var avg_color = (c_color[0]*1 + c_color[1]*1 + c_color[2]*1) / 3;
+                    
+                    $("<style type='text/css' class='fx_placeholder_stylesheet'>\n"+
+                        ".fx_var_editable:empty:after {color:rgb("+avg_color+","+avg_color+","+avg_color+") !important;}"+
+                    "</style>").appendTo( $('head') );
+                    
                     $n.addClass('fx_var_editable');
+                    $n.attr('placeholder', meta.label || meta.name || meta.id);
                     
                     if ( (meta.type === 'text' && meta.html && meta.html !== '0') || meta.type === 'html') {
                         $n.data('fx_saved_value', $n.html());
@@ -148,18 +155,25 @@ fx_edit_in_place.prototype.start = function(meta) {
                             );
                         });
                     }
-                    
+                    /*var $placeholder = $('<span class="fx_field_placeholder" contenteditable="false">Placeholder</span>');
+                    $placeholder.data('text', $placeholder.text()).hide();
+                    $n.append($placeholder);*/
                     var handle_node_size = function () {
+                        var is_empty = $n.text().length === 0;
+                        if (is_empty && !edit_in_place.is_wysiwyg) {
+                            $n.html('');
+                        }
                         $n.toggleClass(
                             'fx_editable_empty', 
-                            $n.text().length === 0
+                            is_empty
                         );
+                        $n.focus();
                     };
                     handle_node_size();
                     $n.attr('contenteditable', 'true').focus();
                     $n.on(
-                        'keyup.edit_in_place click.edit_in_place change.edit_in_place', 
-                        handle_node_size
+                        'keyup.edit_in_place keydown.edit_in_place click.edit_in_place change.edit_in_place', 
+                        function () {setTimeout(handle_node_size,1);}
                     );
                 }
                 break;
@@ -237,6 +251,7 @@ fx_edit_in_place.prototype.stop = function() {
     if (this.was_placeholded_by && this.node.text().match(/^\s*$/)) {
         this.node.addClass('fx_hidden_placeholded').html(this.was_placeholded_by);
     }
+    $('head .fx_placeholder_stylesheet').remove();
     return this;
 };
 
