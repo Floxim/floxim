@@ -36,7 +36,7 @@ class fx_template_compiler {
         foreach ($code as $s) {
             $s = trim($s);
             if (preg_match("~^[\}\)]~", $s)) {
-                $level--;
+                $level = $level > 0 ? $level-1 : 0;
             }
             $res .= str_repeat("    ", $level).$s."\n";
             if (preg_match("~[\{\(]$~", $s)) {
