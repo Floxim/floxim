@@ -148,7 +148,10 @@ class fx_controller_admin_field extends fx_controller_admin {
             $field->save();
             // run creating hook
             if ($input['to_essence']=='component') {
-                fx::hooks()->create(null,'field_create',array('data'=>$data));
+                $com = fx::data('component', $input['to_id']);
+                if ($com['vendor'] == 'std') {
+                    fx::hooks()->create(null,'field_create',array('data'=>$data));
+                }
             }
             $result['reload'] = '#admin.'.$input['to_essence'].'.edit('.$input['to_id'].',fields)';
         }
@@ -190,7 +193,12 @@ class fx_controller_admin_field extends fx_controller_admin {
         else {
             $result = array('status' => 'ok');
             $field->save();
-            fx::hooks()->create(null,'field_update',array('field'=>$field));
+            if ($field['component_id']) {
+                $com = fx::data('component', $field['component_id']);
+                if ($com['vendor'] == 'std') { 
+                    fx::hooks()->create(null,'field_update',array('field'=>$field));
+                }
+            }
         }
         
         return $result;
@@ -271,7 +279,12 @@ class fx_controller_admin_field extends fx_controller_admin {
             try {
                 $field=fx::data($es, $id);
                 $field->delete();
-                fx::hooks()->create(null,'field_delete',array('field'=>$field));
+                if ($field['component_id']) {
+                    $com = fx::data('component', $field['component_id']);
+                    if ($com['vendor'] == 'std') { 
+                        fx::hooks()->create(null,'field_delete',array('field'=>$field));
+                    }
+                }
             } catch (Exception $e) {
                 $result['status'] = 'error';
                 $result['text'][] = $e->getMessage();
