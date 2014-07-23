@@ -168,7 +168,6 @@ fx_edit_in_place.prototype.start = function(meta) {
                             'fx_editable_empty', 
                             is_empty
                         );
-                        console.log('hns', text);
                         if (is_empty && !edit_in_place.is_wysiwyg) {
                             setTimeout(
                                 function() {$n.focus();},

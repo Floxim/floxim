@@ -629,6 +629,11 @@ fx_front.prototype.is_selectable = function(node) {
         return false;
     }
     
+    var check_event = $.Event('fx_check_is_selectable')
+    n.trigger(check_event);
+    if (check_event.result === false) {
+        return false;
+    }
     
     switch($fx.front.mode) {
         case 'view': default:
@@ -1634,7 +1639,7 @@ fx_front.prototype.scrollTo = function($node, if_invisible, callback) {
     if ($node.length === 0) {
         return;
     }
-    $parents = $node.parents();
+    var $parents = $node.parents();
     for (var i = $parents.length - 1; i >= 0; i--) {
         if ($parents.eq(i).css('position') === 'fixed') {
             return;
