@@ -113,7 +113,7 @@ class fx_form implements ArrayAccess {
         if ($params['type'] == 'submit') {
             $this->params['fields']->find_remove('name', 'default_submit');
         }
-        $this->params['fields']->add_field($params);
+        return $this->params['fields']->add_field($params);
     }
     
     public function add_message($message, $after_finish = false) {
@@ -198,6 +198,7 @@ class fx_form_fields extends fx_collection {
     public function add_field($params) {
         $field = fx_form_field::create($params + array('owner' => $this));
         $this[$field['name']] = $field;
+        return $field;
     }
     
     public function get_field($name) {
@@ -243,7 +244,7 @@ class fx_form_fields extends fx_collection {
     
 }
 
-class fx_form_field implements ArrayAccess {
+class fx_form_field implements ArrayAccess, fx_template_essence {
     
     protected $params = array();
     
@@ -349,11 +350,27 @@ class fx_form_field implements ArrayAccess {
     /* ArrayAccess methods */
     
     public function offsetExists($offset) {
+        if (preg_match("~^%~", $offset)) {
+            return true;
+        }
         return array_key_exists($offset, $this->params) || method_exists($this, 'get_'.$offset);
     }
     
     public function offsetGet($offset) {
-        
+        if (preg_match("~^%~", $offset)) {
+            $essence = $this['_essence'];
+            if ($essence) {
+                return $essence[$offset];
+            }
+            $real_offset = preg_replace("~^%~", '', $offset);
+            $template = fx::env('current_template');
+            if ($template && $template instanceof fx_template) {
+                $template_value = $template->v($real_offset."_".$this['name']);
+                if ($template_value){
+                    return $template_value;
+                }
+            }
+        }
         if (method_exists($this, 'get_'.$offset)) {
             return call_user_func(array($this, 'get_'.$offset)); 
         }
@@ -429,6 +446,33 @@ class fx_form_field implements ArrayAccess {
     public function offsetUnset($offset) {
         unset($this->params[$offset]);
     }
+
+    public function add_template_record_meta($html, $collection, $index, $is_subroot) {
+        $essence = $this['_essence'];
+        if ($essence) {
+            return $essence->add_template_record_meta($html, $collection, $index, $is_subroot);
+        }
+        return $html;
+    }
+
+    public function get_field_meta($field_keyword) {
+        $essence = $this['_essence'];
+        if ($essence) {
+            $meta = $essence->get_field_meta($field_keyword);
+            return $meta;
+        }
+        if (preg_match("~^%~", $field_keyword)) {
+            $field_keyword = preg_replace("~^%~", '', $field_keyword);
+            $v_id = $this['name'];
+            $field_meta = array(
+                'var_type' => 'visual',
+                'id' => $field_keyword.'_'.$v_id,
+                'name' => $field_keyword.'_'.$v_id
+            );
+            return $field_meta;
+        }
+    }
+
 }
 
 class fx_form_field_captcha extends fx_form_field {

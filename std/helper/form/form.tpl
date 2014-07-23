@@ -40,6 +40,7 @@
         {if $.errors} fx_form_row_error{/if}
         {if $required} fx_form_row_required{/if}">
     {apply label /}
+    {apply comment /}
     {apply errors /}
     {apply input_block /}
 </div>
@@ -53,9 +54,13 @@
 </div>
 
 <label fx:template="label" class="fx_label" for="{$id}" fx:if="!in_array($type, array('hidden', 'submit'))">
-    {%label_$name}{$label /}{/%}
+    <span class="label">{$%label}</span>
     <span fx:if="$required" class="required">*</span>
 </label>
+    
+<div fx:template="comment" class="fx_field_comment">
+    <div class="fx_field_comment_text">{$%comment}</div>
+</div>
 
 <div fx:template="input_block" class="fx_input_block"> 
     {if $render.input}
@@ -77,8 +82,8 @@
     {if $autocomplete === false}
         autocomplete="off"
     {/if}
-    {if $placeholder && ($is_textlike || $type == 'textarea')}
-        placeholder="{$placeholder}" 
+    {if ($%placeholder || $_is_admin) && ($is_textlike || $type == 'textarea')}
+        placeholder="{$%placeholder | htmlspecialchars}" 
     {/if}
 {/template}
 
@@ -101,10 +106,11 @@
     fx:template="input[$type == 'submit']"
     type="submit"
     class="fx_input fx_input_type_submit"
-    value="{$label /}" />
+    value="{$%label}Submit{/$}" />
 
 <select 
     fx:template="input[$type == 'select']"
+    {if $is_multiple}multiple="multiple"{/if}
     {apply input_atts /}>
     <option 
         fx:each="$values as $key => $name" 
@@ -122,4 +128,12 @@
     
 <div class="fx_captcha_row_valid" fx:template="row[$type == 'captcha' && $was_valid]">
     <input type="hidden" {apply input_atts /} />
+</div>
+
+<div fx:template="input[$type == 'radio']">
+    {set $field_name = $name}
+    <label fx:each="$values as $key => $option">
+        <input type="radio" name="{$field_name}" value="{$key}" {if $value == $key}checked="checked"{/if} />
+        <span>{$option.name}</span>
+    </label>
 </div>
