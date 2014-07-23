@@ -39,6 +39,9 @@ class fx_template_field  {
         if (!$this->_meta['real_value'] && $this->_meta['var_type'] == 'visual' && $this->_meta['inatt']) {
             $this->_meta['value'] = $val;
         }
+        if ($this->_meta['in_att'] && !isset($this->_meta['value'])) {
+            $this->_meta['value'] = $val;
+        }
         //$this->_meta['value'] = $this->_value;
         self::$replacements []= array($this->_meta['id'], $this->_meta, $val);
         return '###fxf'.(self::$count_replacements++).'###';
