@@ -25,6 +25,18 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
      */
     public $finder = null;
     
+    protected function fork($data = array()) {
+        $collection = new fx_collection($data);
+        $collection->is_sortable = $this->is_sortable;
+        $collection->finder = $this->finder;
+        return $collection;
+    }
+    
+    protected function load($data) {
+        $this->data = $data;
+        return $this;
+    }
+    
     public function __construct($data = array()) {
         if (is_array($data)){
             $this->data = $data;
@@ -85,8 +97,10 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
      * $collection->find('price', '10', '>')
      */
     public function find($field, $prop = null, $compare_type = null) {
+        $fork = $this->fork();
         if (count($this->data) == 0) {
-            return new fx_collection();
+            //return new fx_collection();
+            return $fork;
         }
         if (is_null($prop)) {
             $compare_type = is_callable($field) ? self::FILTER_CALLBACK : self::FILTER_EXISTS;
@@ -108,7 +122,7 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
                 }
             }
             $this->set_position($initial_key);
-            return new fx_collection($res);
+            return $fork->load($res);
         }
         if ($compare_type == self::FILTER_NEQ) {
             foreach ($this->data as $item) {
@@ -117,7 +131,7 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
                 }
             }
             $this->set_position($initial_key);
-            return new fx_collection($res);
+            return $fork->load($res);
         }
         if ($compare_type == self::FILTER_IN) {
             foreach ($this->data as $item) {
@@ -126,7 +140,7 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
                 }
             }
             $this->set_position($initial_key);
-            return new fx_collection($res);
+            return $fork->load($res);
         }
         if ($compare_type == self::FILTER_EXISTS) {
             foreach ($this->data as $item) {
@@ -135,7 +149,7 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
                 }
             }
             $this->set_position($initial_key);
-            return new fx_collection($res);
+            return $fork->load($res);
         }
         if ($compare_type == self::FILTER_CALLBACK) {
             foreach ($this->data as $item) {
@@ -144,10 +158,10 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
                 }
             }
             $this->set_position($initial_key);
-            return new fx_collection($res);
+            return $fork->load($res);
         }
         $this->set_position($initial_key);
-        return new fx_collection($res);
+        return $fork->load($res);
     }
     
     public function find_one($field, $prop = null, $compare_type = null) {
