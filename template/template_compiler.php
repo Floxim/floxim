@@ -283,6 +283,7 @@ class fx_template_compiler {
         
         $modifiers = $token->get_prop('modifiers');
         $token->set_prop('modifiers', null);
+        $token_is_visual = $token->get_prop('var_type') == 'visual';
         
         $token_type = $token->get_prop('type');
         // analyze default value to get token type and wysiwyg linebreaks mode
@@ -290,7 +291,7 @@ class fx_template_compiler {
             !$token_type || 
             ($token_type == 'html' && !$token->get_prop('linebreaks'))
         ) {
-            $linebreaks = $token->get_prop('var_type') == 'visual';
+            $linebreaks = $token_is_visual;
             foreach ($token->get_children() as $child) {
                 $child_source = $child->get_prop('value');
                 if (!$token_type && preg_match("~<[a-z]+.*?>~i", $child_source)) {
@@ -305,7 +306,7 @@ class fx_template_compiler {
             } else {
                 $token->set_prop('type', $token_type);
             }
-            if ($linebreaks || $token->get_prop('var_type') === 'visual') {
+            if ($linebreaks || $token_is_visual) {
                 $token->set_prop('linebreaks', $linebreaks);
             }
         }
@@ -367,10 +368,14 @@ class fx_template_compiler {
                 }
                 if ($has_complex_tokens) {
                     $code .= "\tob_start();\n";
-                    $code .= '$'.$var_chunk.'_was_admin = $_is_admin;'."\n";
-                    $code .= '$_is_admin = false;'."\n";
+                    if ($token_is_visual) {
+                        $code .= '$'.$var_chunk.'_was_admin = $_is_admin;'."\n";
+                        $code .= '$_is_admin = false;'."\n";
+                    }
                     $code .= "\t".$this->_children_to_code($token);
-                    $code .= '$_is_admin = $'.$var_chunk.'_was_admin;'."\n";
+                    if ($token_is_visual) {
+                        $code .= '$_is_admin = $'.$var_chunk.'_was_admin;'."\n";
+                    }
                     $default = "ob_get_clean()";
                 } else {
                     $default = join(".", $default_parts);
@@ -381,10 +386,10 @@ class fx_template_compiler {
                 if ($token_is_file) {
                     $code .= $this->_make_file_check($display_val_var, true);
                 }
-                if ($token->get_prop('var_type') == 'visual') {
+                if ($token_is_visual) {
                     $code .= "\n".'$this->set_var('.$var_id.',  '.$display_val_var.");\n";
                 }
-            } elseif ($token->get_prop('var_type') == 'visual') {
+            } elseif ($token_is_visual) {
                 $code .= "\n".'$this->set_var('.$var_id.',  '.$default.");\n";
             }
             $code .= "}\n";
@@ -409,7 +414,6 @@ class fx_template_compiler {
             $code .= 'echo !$_is_admin ? '.$expr.' : $this->print_var('."\n";
             $code .= $expr;
             $code .= ", \n";
-            $token_is_visual = $token->get_prop('var_type') === 'visual';
             $meta_parts = array();
             if (!$token_is_visual) {
                 $meta_parts []= $var_meta_defined ? '$var_meta' : $var_meta_expr;
@@ -476,6 +480,8 @@ class fx_template_compiler {
     }
     
     protected function varialize($var) {
+        //static $counter;
+        //return 'v'.$counter++;
         return preg_replace("~^_+|_+$~", '', 
                 preg_replace(
             '~[^a-z0-9_]+~', '_', 
@@ -602,7 +608,7 @@ class fx_template_compiler {
     protected function _get_item_code($token, $item_alias, $counter_id = null, $arr_id = 'array()') {
         $code = '';
         $is_essence = '$'.$item_alias."_is_essence";
-        $code .=  $is_essence ." = \$".$item_alias." instanceof fx_essence;\n";
+        $code .=  $is_essence ." = \$".$item_alias." instanceof fx_template_essence;\n";
         $is_complex = 'is_array($'.$item_alias.') || is_object($'.$item_alias.')';
         $code .= '$this->push_context( '.$is_complex.' ? $'.$item_alias." : array());\n";
         

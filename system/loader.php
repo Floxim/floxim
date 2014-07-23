@@ -66,7 +66,8 @@ class fx_loader {
         'loop',
         'attr_parser',
         'attrtype_parser',
-        'modifier_parser'
+        'modifier_parser',
+        'essence'
     );
 
     protected static $system_classes = array(

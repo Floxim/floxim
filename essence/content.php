@@ -1,5 +1,5 @@
 <?php
-class fx_content extends fx_essence {
+class fx_content extends fx_essence implements fx_template_essence {
     
     protected $component_id;
 
@@ -133,6 +133,9 @@ class fx_content extends fx_essence {
             } else {
                 $field_meta['type'] = $cf->type;
             }
+            if ($field_meta['type'] === 'html' && $cf['format']['nl2br']) {
+                $field_meta['linebreaks'] = true;
+            }
         }
         return $field_meta;
     }
@@ -224,11 +227,7 @@ class fx_content extends fx_essence {
         return $finder;
     }
     
-    public function add_template_record_meta($html, $collection, $index, $is_subroot) {
-        // do nothing if html is empty
-        if (!trim($html)) {
-            return $html;
-        }
+    public function get_template_record_atts($collection, $index) {
         $essence_meta = array(
             $this->get('id'),
             $this->get_type(false)
@@ -250,6 +249,16 @@ class fx_content extends fx_essence {
         if (isset($this['_meta'])) {
             $essence_atts['data-fx_essence_meta'] = $this['_meta'];
         }
+        return $essence_atts;
+    }
+    
+    public function add_template_record_meta($html, $collection, $index, $is_subroot) {
+        // do nothing if html is empty
+        if (!trim($html)) {
+            return $html;
+        }
+        
+        $essence_atts = $this->get_template_record_atts($collection, $index);
         
         if ($is_subroot) {
             $html = preg_replace_callback(
