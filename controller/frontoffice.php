@@ -17,6 +17,9 @@ class fx_controller_frontoffice extends fx_controller {
         if (is_string($result) || is_bool($result)) {
             return $result;
         }
+        if ($result === null) {
+            $result = array();
+        }
         if (is_array($result) || $result instanceof ArrayAccess) {
             $result = array_merge_recursive($result, $this->_result);
             if (!isset($result['_meta'])) {
