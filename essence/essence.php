@@ -288,12 +288,11 @@ abstract class fx_essence implements ArrayAccess {
         if (self::_is_template_var($offset)) {
             $offset = mb_substr($offset, 1);
             $template = fx::env('current_template');
-            if (!$template || !($template instanceof fx_template) ) {
-                return parent::offsetGet($offset);
-            }
-            $template_value = $template->v($offset."_".$this['id']);
-            if ($template_value){
-                return $template_value;
+            if ($template && $template instanceof fx_template) {
+                $template_value = $template->v($offset."_".$this['id']);
+                if ($template_value){
+                    return $template_value;
+                }
             }
         }
         
