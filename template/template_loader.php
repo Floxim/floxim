@@ -110,6 +110,7 @@ class fx_template_loader {
         }
         //$prefix='['.$this->_target_hash.']';
         $prefix = $this->_target_hash.'__';
+        return $this->_target_dir.'/'.preg_replace("~\.php$~", '.'.$this->_target_hash.'.php', $this->_target_file);
         return $this->_target_dir.'/'.$prefix.$this->_target_file;
     }
 
