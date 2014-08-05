@@ -24,7 +24,7 @@ return array(
                 'pagination' => array(
                     'label' => fx::alang('Paginate?','controller_component'),
                     'type' => 'checkbox',
-                    'parent' => array('limit' => '!=0')
+                    'parent' => array('limit' => '!=')
                 ),
                 'sorting' => array(
                     'name' => 'sorting',
@@ -40,6 +40,7 @@ return array(
                         'asc' => fx::alang('Ascending','controller_component'), 
                         'desc' => fx::alang('Descending','controller_component')
                     ),
+                    'join_with' => 'sorting',
                     'parent' => array('sorting' => '!=manual')
                 )
             )

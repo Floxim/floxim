@@ -249,6 +249,33 @@
     }
 }
 
+#fx_admin_control {
+    .fx_textarea_container {
+        position:relative;
+        .redactor_toolbar {
+            display:block;
+            position:absolute;
+            visibility:hidden;
+            top:-32px;
+            height:32px;
+            left:0;
+        }
+        //&, 
+        &.fx_textarea_container_redactor_focused .redactor_toolbar {
+            visibility:visible;
+        }
+        .redactor_editor {
+            padding:5px;
+            &, p, li {
+                font-size:13px;
+            }
+            p, ul, ol, li {
+                margin:5px 0 !important;
+            }
+        }
+    }
+}
+
 #fx_admin_control .fx_form_horizontal {
     .field_text .input_container {
         max-width:none;
@@ -587,7 +614,10 @@
         display:none;
     }
     .fx_admin_panel_body {
-        overflow:auto;
+        overflow:auto !important;
+        &.fx_admin_panel_body_overflow_hidden {
+            overflow:hidden !important;
+        }
     }
 }
 
@@ -608,4 +638,26 @@
 
 .pac-container {
     z-index:10000 !important;
+}
+
+.field_joined_group {
+    .fx_group_label_separator {
+        font-size:10px;
+    }
+    .fx_group_label {
+        border-bottom:1px dotted #28abd0;
+        color:#28abd0;
+        cursor:pointer;
+        &.fx_group_label_active {
+            color:#000;
+            border:none;
+            cursor:default;
+        }
+    }
+}
+
+.fx_field_limit {
+    .fx_input_limit {
+        width:30px !important;
+    }
 }

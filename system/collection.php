@@ -37,6 +37,14 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
         return $this;
     }
     
+    public function add_filter($field, $value) {
+        $this->filtered_by[]= array($field, $value);
+    }
+    
+    public function get_filters() {
+        return $this->filtered_by;
+    }
+    
     public function __construct($data = array()) {
         if (is_array($data)){
             $this->data = $data;
@@ -531,9 +539,8 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
         foreach ($what as $what_item) {
             $index_key = $what_item[$cond_field];
             if (!isset($res_index[$index_key])) {
-                $new_collection = new fx_collection();
-                $new_collection->finder = $what->finder;
-                $new_collection->is_sortable = $what->is_sortable;
+                $new_collection = $what->fork();
+                $new_collection->add_filter($cond_field, $index_key);
                 $res_index[$index_key] = $new_collection;
                 if ($extract_field) {
                     $res_index[$index_key]->linker_map = new fx_collection();

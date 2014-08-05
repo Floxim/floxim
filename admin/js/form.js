@@ -1,4 +1,4 @@
-(function($){
+(function($){;
 fx_form = {
     
     create:function(options, $target) {
@@ -47,6 +47,8 @@ fx_form = {
         if (settings.tabs) {
             $fx_form.init_tabs(settings, $form_node);
         }
+        
+        settings.fields = $fx_form.init_joins(settings.fields);
         
         if ($fx.mode !== 'page') {
             $fx.buttons.draw_buttons(settings.buttons);
@@ -111,6 +113,19 @@ fx_form = {
                 }
             }
         });
+        /*
+        if (settings.class_name === "fx_form_cols") {
+            setTimeout(function() {
+                var $first_field = $form_node.find('.field:visible').first();
+                $first_field.css('height', $first_field.outerHeight());
+                setTimeout(function() {
+                    $first_field.css('height', '');
+                }, 30);
+                console.log($first_field);
+                document.title = 'OO'+Math.random();
+            }, 30);
+        }
+        */
         $form_node.on('submit.fx_submit', $fx_form.submit_handler);
     },
             
@@ -192,6 +207,37 @@ fx_form = {
             });
         });
     },
+    
+    init_joins: function(fields) {
+        var groups = {},
+            res = [],
+            field_names = {};
+        for (var i = 0; i < fields.length; i++) {
+            var c_join = fields[i].join_with;
+            field_names[fields[i].name] = true;
+            if (!c_join) {
+                continue;
+            }
+            if (!groups[c_join]) {
+                groups[c_join] = {type:'joined_group', fields:[]};
+            }
+        }
+        
+        for (var i = 0; i < fields.length; i++) {
+            var f = fields[i];
+            if (f.join_with && field_names[f.join_with]) {
+                groups[f.join_with].fields.push(f);
+                continue;
+            }
+            if (groups[f.name]) {
+                groups[f.name].fields.push(f);
+                res.push(groups[f.name]);
+                continue;
+            }
+            res.push(f);
+        }
+        return res;
+    },
 
     draw_field: function(json, target) {
         if (json.type === undefined) {
@@ -249,17 +295,24 @@ fx_form = {
         }
         if (json.parent) {
             this.add_parent_condition(json.parent, node, target);
+        } else if (json.type === 'joined_group') {
+            $.each(json.fields, function() {
+                if (this.parent && this.$input) {
+                    $fx_form.add_parent_condition(this.parent, this.$input, target);
+                }
+            });
         }
         return node;
     },
 
     add_parent_condition: function(parent, _el, container) {
+        //console.log(parent, _el[0], container);
         //return;
         if (parent instanceof Array) {
             parent = {};
             parent[parent[0]] = parent[1];
         }
-
+       
         var check_parent_state = function() {
             var do_show = true;
             $.each(parent, function(pkey, pval) {
@@ -312,14 +365,16 @@ fx_form = {
                         break;
                 }
             });
-            if (do_show) {
+            var is_visible = _el.is(':visible');
+            var $el_inp =  _el.find(':input');
+            if (do_show && !is_visible) {
                 _el.show();
-            } else {
+                $el_inp.trigger('change');
+            } else if (!do_show && is_visible) {
+                $el_inp.trigger('change');
                 _el.hide();
             }
-            _el.find(':input').trigger('change');
         };
-
         _el.hide();
         var parent_selector = [];
         $.each(parent, function(pkey, pval) {

@@ -645,8 +645,14 @@ class fx {
     }
     
     public static function date($value, $format) {
+        if (empty($value)) {
+            return $value;
+        }
         if (!is_numeric($value)) {
             $value = strtotime($value);
+        }
+        if (empty($value)) {
+            return $value;
         }
         return date($format, $value);
     }

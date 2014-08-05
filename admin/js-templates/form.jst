@@ -97,6 +97,24 @@ if (_o.hide_in_panel) {
 if (_c.context !== 'panel') {
     setTimeout(function() {
         $fx_fields.make_redactor($('textarea.fx_wysiwyg', html), {extra_buttons:['html']});
+        var $box = html.find('.redactor_box'),
+            $container = html,
+            $editor = html.find('.redactor_editor'),
+            $toolbar = html.find('.redactor_toolbar');
+            
+        $editor.on('focus', function() {
+            $container.addClass('fx_textarea_container_redactor_focused').css('height', '');
+            var $buttons = $toolbar.find('>li');
+            $toolbar.css('width', $buttons.length * $buttons.first().outerWidth());
+        }).on('blur', function() {
+            setTimeout(function() {
+                var $focused = $(document.activeElement);
+                var $focused_box = $focused.closest('.redactor_box');
+                if (!$focused_box.length || $focused_box[0] !== $box[0]) {
+                    $editor.closest('.fx_textarea_container').removeClass('fx_textarea_container_redactor_focused');
+                }
+            },10);
+        });
     },50);
 } else {
     var expander = $('.fx_panel_text_expander', html);
@@ -287,3 +305,98 @@ for (var i in _c.tabs) {
 <!--jquery-->
 $('td', html).first().addClass('fx_tab_data_first');
 $('td', html).last().addClass('fx_tab_data_last');
+
+<!--[form_row ? _c.type === 'joined_group']-->
+<div class="field field_<?=_c.type?>">
+    <div class="form_label fx_group_labels">  
+    <?
+    $.each(_c.fields, function(index, field) {
+        ?>
+        <label class="fx_group_label<?= index === 0 ? ' fx_group_label_active' : '' ?>"><?=field.label?></label>
+        <?
+        if (index !== _c.fields.length - 1) {?>
+        <span class="fx_group_label_separator"> & </span>
+        <?}
+    });
+    ?>
+    </div>
+    <div class="input_container">
+        <?
+        $.each(_c.fields, function(index, field) {
+            ?>
+            <div class="fx_group_input" style="display:<?= index === 0 ? 'block' : 'none'?>">
+            
+            </div>
+            <?
+        });
+        ?>
+    </div>
+</div>
+
+<!--jquery-->
+var $containers = html.find('.fx_group_input');
+var $labels = html.find('label');
+
+$.each(_c.fields, function(index, item) {
+    var $input_node = $t.jQuery('input', item);
+    var $input_label = $labels.eq(index);
+    var $input = $input_node.add($input_label);
+    $input = $input.add($input_label.prev('.fx_group_label_separator').first());
+    item.$input = $input;
+    $containers.eq(index).append($input_node );
+});
+
+$labels.on('click', function() {
+    var $l = $(this);
+    $labels.removeClass('fx_group_label_active');
+    $l.addClass('fx_group_label_active');
+    $containers.hide();
+    var $c_container = $containers.eq( $labels.index(this) );
+    $c_container.show().find(':input').focus();
+});
+
+<!--[input ? _c.class_name === 'fx_field_limit']-->
+<div>
+    <input 
+        class="fx_input fx_input_limit" 
+        <?=$t.field_id_name(_c)?> 
+        <? if( !_c.value) {?>disabled="disabled"<?} else {?>value="<?=_c.value?>"<?}?>
+         />
+    <label>
+        <input type="checkbox" <? if( !_c.value) {?>checked="checked"<?}?> class="fx_limit_all" />
+        <?= $fx.lang('All?') ?>
+    </label>
+</div>
+
+<!--jquery-->
+var $inp = html.find('.fx_input_limit');
+$inp.data('stored_value', $inp.val());
+$inp.on('keyup', function() {
+    if ($inp.val() !== $inp.data('stored_value')) {
+        $inp.data('stored_value', $inp.val());
+        $inp.trigger('change');
+    }
+});
+
+html.on('change', '.fx_limit_all', function() {
+    var stored = $inp.data('stored_value');
+    var val = $inp.val();
+    
+    if (this.checked) {
+        $inp.data('stored_value', $inp.val());
+        $inp.val('');
+        $inp.attr('disabled', 'disabled');
+        if (val) {
+            $inp.trigger('change');
+        }
+        return false;
+    }
+    var changed = $inp.val() !== stored;
+    $inp.val( stored );
+    $inp.attr('disabled', null);
+    $inp.focus().select();
+    if (changed) {
+        $inp.trigger('change');
+    }
+    return false;
+});

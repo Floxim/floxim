@@ -223,6 +223,21 @@ class fx_template_html {
                     '{/item}'
                 );
             }
+            if ($n->has_attribute('fx:aif')) {
+                $if_test = $n->get_attribute('fx:aif');
+                $ep = new fx_template_expression_parser();
+                $empty_cond = $ep->build($if_test);
+                $class_code = '<?php echo ('.$empty_cond . ' ? "" : " fx_view_hidden ");?>';
+                $n->add_class($class_code);
+                $n->remove_attribute('fx:aif');
+                $if_test .= ' || $_is_admin';
+                
+                $n->wrap(
+                    '{if test="'.$if_test.'"}',
+                    '{/if}'
+                );
+                
+            }
             if ( $n->has_attribute('fx:if')) {
                 $if_test = $n->get_attribute('fx:if');
                 $n->remove_attribute('fx:if');

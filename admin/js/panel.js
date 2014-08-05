@@ -18,9 +18,9 @@
             $fx.front.disable_node_panel();
             
             this.stop();
-            $footer.html('').show();
+            $footer.html('').show().css('visibility', 'hidden');
             
-            $body.css('height', '1px').show();
+            $body.css({height:'1px', 'visibility':'hidden'}).removeClass('fx_admin_panel_body_overflow_hidden').show();
             
             if (params.view === 'horizontal') {
                 $.each(data.fields, function(key, field) {
@@ -35,7 +35,7 @@
             data.class_name = 'fx_form_'+params.view;
             data.button_container = $footer;
             
-            $form = $fx.form.create(data, $body);
+            var $form = $fx.form.create(data, $body);
             
             $form.on('fx_form_cancel', function() {
                 if (params.oncancel) {
@@ -54,6 +54,8 @@
                 }
             });
             setTimeout(function() {
+                $footer.css('visibility', 'visible');
+                $body.css('visibility', 'visible');
                 $fx.front_panel.animate_panel_height(null, function () {
                     $form.resize(function() {
                         $fx.front_panel.animate_panel_height();
@@ -67,16 +69,28 @@
         };
         
         this.animate_panel_height = function(panel_height, callback) {
+            //return;
             if (this.is_moving) {
                 return;
             }
             var max_height = Math.round(
                 $(window).height() * 0.75
             );
+            var $form = $('form', $body);
+            
+            var form_height = $form.outerHeight();
+            
             if (typeof panel_height === 'undefined' || panel_height === null) {
-                var form_height = $('form', $body).outerHeight();
                 panel_height = Math.min(form_height, max_height);
+                //console.log('cnt', form_height, max_height);
             }
+            if (panel_height > 0) {
+                $body.toggleClass('fx_admin_panel_body_overflow_hidden', form_height <= panel_height);
+            }
+            
+            $form.css({'box-sizing':'border-box', 'width': '101%'});
+            $form.css('width', '100%');
+            
             if (panel_height === $body.height()) {
                 return;
             }
@@ -87,7 +101,7 @@
             
             var height_delta = body_offset - parseInt($('body').css('margin-top'));
             this.is_moving = true;
-            var duration = 200;
+            var duration = 300;
             $body.animate(
                 {height: panel_height+'px'}, 
                 duration, 
@@ -134,7 +148,9 @@
                 $footer.hide();
                 $fx.front.enable_select();
                 $fx.front.enable_node_panel();
-                $fx.front.enable_hilight();
+                if (!$fx.front.get_selected_item()) {
+                    $fx.front.enable_hilight();
+                }
                 $fx.front_panel.is_visible = false;
             });
         };

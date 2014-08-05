@@ -314,7 +314,6 @@ class fx_template_expression_parser extends fx_template_fsm {
     
     public function build($expr) {
         $tree = $this->parse($expr);
-        fx::debug($tree->dump(), $tree);
         $res = $this->compile($tree);
         return $res;
     }

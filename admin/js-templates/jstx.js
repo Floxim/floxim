@@ -110,20 +110,20 @@ window.$t = {
         return tpl;
     },
     jQuery: function(name, obj, options) {
-            if (options === undefined) {
-                options = {};
-            }
+        if (options === undefined) {
+            options = {};
+        }
         var tpl = $t.findFor(name, obj, options);
         var res = tpl(obj,options);
         if (!res) {
             return '';
         }
         res = res.replace(/^\s+|\s+$/, '');
-        var html = $(res);
+        var $node = $(res);
         if (typeof tpl.jquery === 'function') {
-            tpl.jquery(html, obj, options);
+            tpl.jquery($node, obj, options);
         }
-        return html;
+        return $node;
     },
     addSlashes: function(str) {
         return str.replace(/([\"\'])/g, "\\$1").replace(/\0/g, "\\0");

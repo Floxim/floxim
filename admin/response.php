@@ -164,6 +164,9 @@ class fx_admin_response {
                     }
                     $field['parent'] = $np;
                 }
+                if ($field['join_with'] && !preg_match("~\[~", $field['join_with'])) {
+                    $field['join_with'] = $prefix.'['.$field['join_with'].']';
+                }
             }
         }
         $this->fields = array_merge($this->fields, $fields);

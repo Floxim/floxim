@@ -572,6 +572,7 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
             'type' => 'select',
             'label' => 'Visibility',
             'name' => 'visibility',
+            'join_with' => 'complex_scope',
             'values' => $this->_get_scope_visibility_options(),
             'value' => $infoblock['scope']['visibility']
         );
@@ -669,9 +670,10 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
         }
         if ($controller_name != 'layout' && (count($wrappers) > 1 || !isset($wrappers['']))) {
             $fields []= array(
-                'label' => fx::alang('Block wrapper','system'),
+                'label' => fx::alang('Wrapper','system'),
                 'name' => 'wrapper',
                 'type' => 'select',
+                'join_with' => 'template',
                 'values' => $wrappers,
                 'value' => $c_wrapper
             );

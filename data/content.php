@@ -330,6 +330,7 @@ class fx_data_content extends fx_data {
     protected function _set_statement($data) {
         $res = array();
         $chain = fx::data('component', $this->component_id)->get_chain();
+        fx::log('ss data', $data);
         foreach ($chain as $level_component) {
             $table_res = array();
             $fields = $level_component->fields();
@@ -359,8 +360,11 @@ class fx_data_content extends fx_data {
                     continue;
                 }
                 
-                if (isset($data[$field_keyword]) ) {
-                    $table_res['`'.fx::db()->escape($field_keyword).'`'] = "'".fx::db()->escape($data[$field_keyword])."'";
+                //if (isset($data[$field_keyword]) ) {
+                if (array_key_exists($field_keyword, $data)) {
+                    $field_val = $data[$field_keyword];
+                    $sql_val = is_null($field_val) ? 'NULL' : "'".fx::db()->escape($field_val)."'";
+                    $table_res['`'.fx::db()->escape($field_keyword).'`'] = $sql_val;
                 }
             }
             if (count($table_res) > 0) {
@@ -386,8 +390,16 @@ class fx_data_content extends fx_data {
             if ($field === 'id') {
                 return;
             }
-            if (!preg_match("~\.~", $field) && $cond[2] == '=') {
+            if (!preg_match("~\.~", $field) && $cond[2] == '=' && is_scalar($cond[1])) {
                 $params[$field] = $cond[1];
+            }
+        }
+        if ($collection) {
+            foreach ($collection->get_filters() as $coll_filter) {
+                list($filter_field, $filter_value) = $coll_filter;
+                if (is_scalar($filter_value)) {
+                    $params[$filter_field] = $filter_value;
+                }
             }
         }
         $placeholder = $this->create($params);

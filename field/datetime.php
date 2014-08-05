@@ -52,4 +52,16 @@ class fx_field_datetime extends fx_field_baze {
             $this->seconds = date('s', $timestamp);
         }
     }
+    
+    public function get_savestring() {
+        $v = $this->value;
+        if (empty($v)) {
+            return null;
+        }
+        $time = strtotime($v);
+        if (empty($time)) {
+            return null;
+        }
+        return $v;
+    }
 }

@@ -1,0 +1,32 @@
+.std_person_list {
+    .person {
+        margin-bottom:20px;
+        clear:both;
+        &:after {
+            content:'.';
+            visibility:hidden;
+            display:block;
+            clear:both;
+            height:0;
+        }
+    }
+    .photo {
+        float:left;
+        width:150px;
+        text-align:right;
+    }
+    .info {
+        margin-left:170px;  
+        h2, h2 a {
+            font-size:30px;
+            margin-bottom:5px;
+            //font-weight:bold;
+        }
+        h2, &>div {
+            margin-bottom:5px;
+        }
+        .short_description {
+            font-style:italic;
+        }
+    }
+}

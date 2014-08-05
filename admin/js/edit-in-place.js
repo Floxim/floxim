@@ -87,7 +87,7 @@ fx_edit_in_place.prototype.start = function(meta) {
             case 'datetime':
                 this.add_panel_field(
                     $.extend({}, meta, {
-                        value: meta.real_value || this.node.text()
+                        value: meta.real_value //|| this.node.text()
                     })
                 );
                 break;
@@ -155,9 +155,7 @@ fx_edit_in_place.prototype.start = function(meta) {
                             );
                         });
                     }
-                    /*var $placeholder = $('<span class="fx_field_placeholder" contenteditable="false">Placeholder</span>');
-                    $placeholder.data('text', $placeholder.text()).hide();
-                    $n.append($placeholder);*/
+                    
                     var handle_node_size = function () {
                         var text = $.trim($n.text());
                         var is_empty = text.length === 0;
@@ -191,6 +189,11 @@ fx_edit_in_place.prototype.start = function(meta) {
 	}).on('keydown.edit_in_place', function(e) {
             edit_in_place.handle_keydown(e);
         });
+        if (!this.is_content_editable && this.panel_fields.length) {
+            setTimeout(function() {
+                $(':input:visible', edit_in_place.panel_fields[0]).focus();
+            }, 50);
+        }
 };
 
 fx_edit_in_place.prototype.add_panel_field = function(meta) {

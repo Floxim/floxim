@@ -1,16 +1,15 @@
-<div fx:template="list" class="person_list">
+<div fx:template="list" class="std_person_list" fx:name="Default person list">
+    {css}person.less{/css}
     <div fx:item class="person">
-        <h2><a href="{$url}">{$full_name}Unnamed article{/$}</a></h2>
-        
-        <div class="photo">
-            <img fx:if="$photo" src="{$photo | 'max-width:100,max-height:100'}" alt="{$name}" />
+        <div class="photo" fx:if="$photo">
+            <img src="{$photo | 'max-width:150,max-height:150'}" alt="{$name}" />
         </div>
-        <div class = "company_name">Postion: {$company}</div>
-        <div class = "department">Department: {$department}</div>
-        <div class = "birthday">Birthday: {$birthday|'d.m.Y'}</div>
-        <div class="short_description">{$short_description}</div>
-        {call id="component_contact.entity_contact"}{$items select="$contacts" /}{/call}
+        <div class="info">
+            <h2><a href="{$url}">{$full_name}{$name /}{/$}</a></h2>
+            <div fx:if="$short_description" class="short_description">{$short_description}</div>
+            <div fx:if="$department" class="department">Department: <b>{$department}</b></div>
+            <div fx:if="$birthday" class="birthday">Birthday: <b>{$birthday|'F, d'}</b></div>
+        </div>
     </div>
-
-    {call id="component_content.pagination" /}
+    {apply component_content.pagination}
 </div>

@@ -95,6 +95,9 @@ window.$fx_fields = {
         new fx_google_map_field($field);
         return $field;
     },
+    joined_group: function(json) {
+        return $t.jQuery('form_row', json);
+    },
     make_codemirror: function(textarea, options) {
         
     },

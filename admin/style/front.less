@@ -327,13 +327,14 @@ img.fx_hilight {
     }
     &.fx_infoblock, &.fx_area {
         display: block !important;
-        padding: 15px !important;
+        //padding: 15px !important;
         margin-bottom:2px;
         box-sizing: border-box !important;
-        border: 2px dashed #000 !important;
+        outline: 1px dotted #000;
+        //border: 2px dashed #000 !important;
         &.fx_selected, &.fx_hilight_hover {
-            border:none !important;
-            padding:17px !important;
+            //border:none !important;
+            //padding:17px !important;
         }
     }
 }
@@ -445,4 +446,8 @@ img.fx_hilight {
 
 .fx_essence_adder_placeholder:not(.fx_essence_adder_placeholder_active) {
     display:none !important;
+}
+
+body:not(.fx_mode_edit) .fx_view_hidden {
+    display:none;
 }

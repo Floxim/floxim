@@ -257,6 +257,7 @@ class fx_template_compiler {
     protected function _make_file_check($var, $use_stub = false) {
         
         $code = $var . ' = trim('.$var.");\n";
+        //$code .= "if (!preg_match(\"~^###fxf\d+~\", ".$var.")) {\n";
         $code .= "\nif (".$var." && !preg_match('~^(https?://|/)~', ".$var.")) {\n";
         $code .= $var . '= $template_dir.'.$var.";\n";
         $code .= "}\n";
@@ -269,6 +270,7 @@ class fx_template_compiler {
             $code .= $var . "= '';\n";
         }
         $code .= "}\n";
+        //$code .= "}\n";
         return $code;
     }
     
@@ -368,14 +370,14 @@ class fx_template_compiler {
                 }
                 if ($has_complex_tokens) {
                     $code .= "\tob_start();\n";
-                    if ($token_is_visual) {
+                    //if ($token_is_visual || true) {
                         $code .= '$'.$var_chunk.'_was_admin = $_is_admin;'."\n";
                         $code .= '$_is_admin = false;'."\n";
-                    }
+                    //}
                     $code .= "\t".$this->_children_to_code($token);
-                    if ($token_is_visual) {
+                    //if ($token_is_visual || true) {
                         $code .= '$_is_admin = $'.$var_chunk.'_was_admin;'."\n";
-                    }
+                    //}
                     $default = "ob_get_clean()";
                 } else {
                     $default = join(".", $default_parts);
@@ -673,7 +675,7 @@ class fx_template_compiler {
         // add-in-place settings
         
         $code .= 'if ($_is_admin && '.$arr_id.' instanceof fx_collection && isset('.$arr_id.'->finder)';
-        $code .= ' && $this->get_mode("add") ';
+        $code .= ' && $this->get_mode("add") != "false" ';
         $code .= ' && '.$arr_id.'->finder instanceof fx_data_content) {'."\n";
         $code .= $arr_id.'->finder->create_adder_placeholder('.$arr_id.');'."\n";
         $code .= "}\n";

@@ -279,7 +279,7 @@ fx_front.prototype.get_placeholder_adder_closure = function ($placeholder) {
             }
         }
         $fx.front.select_item($placeholder_focus);
-        $fx.front.scrollTo($placeholder);
+        $fx.front.scrollTo($placeholder, true);
         $placeholder.on('fx_deselect', function() {
             setTimeout(function() {
                 var $c_selected_placeholder = 
@@ -1246,6 +1246,9 @@ fx_front.prototype.select_infoblock = function(n) {
         var area_node = $fx.front.get_area_node(ib_node);//ib_node.closest('.fx_area');
         var area_meta = $fx.front.get_area_meta(area_node);
         
+        var is_waiting = false, 
+            ib_loader = null;
+            
         $fx.front_panel.load_form({
             essence:'infoblock',
             action:'select_settings',
@@ -1266,15 +1269,15 @@ fx_front.prototype.select_infoblock = function(n) {
                     if (e.target.name === 'livesearch_input') {
                         return;
                     }
-                    if ($form.data('is_waiting')) {
-                        return;
+                    if (is_waiting) {
+                        ib_loader.abort();
                     }
-                    $form.data('is_waiting', true);
-                    $fx.front.reload_infoblock(
+                    is_waiting = true;
+                    ib_loader = $fx.front.reload_infoblock(
                         $form.data('ib_node'), 
                         function($new_ib_node) {
                             $form.data('ib_node', $new_ib_node);
-                            $form.data('is_waiting', false);
+                            is_waiting = false;
                         }, 
                         {override_infoblock:$form.serialize()}
                     );
