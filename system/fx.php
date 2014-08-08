@@ -424,18 +424,21 @@ class fx {
      * @return fx_core
      */
     public static function load($config = null) {
-        
+        require_once DOCUMENT_ROOT.'/floxim/system/config.php';
+
         if ($config !== null) {
-            require_once DOCUMENT_ROOT.'/floxim/system/config.php';
             self::config()->load($config);
         }
-        
+
         static $loader = false;
         if ($loader === false) {
             require_once fx::config()->SYSTEM_FOLDER . 'loader.php';
             $loader = new fx_loader();
         }
-        
+
+        // load options from DB
+        self::config()->load_from_db();
+
         if (fx::config('cache.meta')) {
             self::_load_meta_cache();
         }

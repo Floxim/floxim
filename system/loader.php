@@ -47,7 +47,8 @@ class fx_loader {
         'patch_migration',
         'lang_string',
         'lang',
-        'session'
+        'session',
+        'option'
     );
     
     protected static $tpl_classes = array(
