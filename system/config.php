@@ -37,7 +37,7 @@ class fx_config {
         'ADMIN_FOLDER' => '',
         'COMPONENT_FOLDER' => '',
         'WIDGET_FOLDER' => '',
-        'fx.version' => '0.1.1',
+        //'fx.version' => '0.1.1',
         'fx.update_url' => 'http://floxim-builder/get-update/',
         'FLOXIM_SITE_PROTOCOL' => 'http',
         'FLOXIM_SITE_HOST' => 'floxim.org',
