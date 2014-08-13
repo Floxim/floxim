@@ -62,6 +62,7 @@ class fx_migration_manager {
             $paths=array_slice($paths,0,2);
             $migration_names[join('_',$paths)]=$info['filename'];
         }
+        asort($migration_names);
 
         // get completed migration
         $migrations_completed=fx::data('patch_migration')->all();
