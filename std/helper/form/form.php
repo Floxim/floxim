@@ -357,6 +357,7 @@ class fx_form_field implements ArrayAccess, fx_template_essence {
     }
     
     public function offsetGet($offset) {
+        
         if (preg_match("~^%~", $offset)) {
             $essence = $this['_essence'];
             if ($essence) {
@@ -370,6 +371,7 @@ class fx_form_field implements ArrayAccess, fx_template_essence {
                     return $template_value;
                 }
             }
+            $offset = $real_offset;
         }
         if (method_exists($this, 'get_'.$offset)) {
             return call_user_func(array($this, 'get_'.$offset)); 
