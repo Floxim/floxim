@@ -304,20 +304,22 @@ class fx_system_page {
             $r .= '</script>';
         }
         
-        if (!preg_match("~<head(\s[^>]*?|)>~", $buffer)) {
-            if (preg_match("~<html[^>]*?>~", $buffer)) {
-                $buffer = preg_replace("~<html[^>]*?>~", '$0<head> </head>', $buffer);
+        if (!preg_match("~<head(\s[^>]*?|)>~i", $buffer)) {
+            if (preg_match("~<html[^>]*?>~i", $buffer)) {
+                $buffer = preg_replace("~<html[^>]*?>~i", '$0<head> </head>', $buffer);
             } else {
                 $buffer = '<html><head> </head>'.$buffer.'</html>';
             }
         }
         
-        $buffer = preg_replace("~<head(\s[^>]*?|)>~", '$0'.$r, $buffer);
+        //$buffer = preg_replace("~<head(\s[^>]*?|)>~", '$0'.$r, $buffer);
+        $buffer = preg_replace("~<title>.+</title>~i", '', $buffer);
+        $buffer = preg_replace("~</head\s*?>~i", $r.'$0', $buffer);
 
         if ($this->_after_body) {
             $after_body = $this->_after_body;
             $buffer = preg_replace_callback(
-                '~<body[^>]*?>~', 
+                '~<body[^>]*?>~i', 
                 function($body) use ($after_body) {
                     return $body[0].join("\r\n", $after_body);
                 },
