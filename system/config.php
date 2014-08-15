@@ -139,9 +139,13 @@ class fx_config {
      * Load options from DB
      */
     public function load_from_db() {
-        $options = fx::data('option')->all();
-        foreach($options as $option) {
-            $this->set($option['keyword'],$option['value']);
+        try {
+            $options = fx::data('option')->all();
+            foreach($options as $option) {
+                $this->set($option['keyword'],$option['value']);
+            }
+        } catch (Exception $e) {
+                    
         }
     }
 

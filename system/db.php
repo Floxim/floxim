@@ -63,10 +63,10 @@ class fx_db extends PDO {
 
         if (!$this->last_result) {
             $this->last_error = $this->errorInfo();
-            echo "<div style='border: 2pt solid red; margin: 10px; padding:10px; font-size:13px; color:black;'><br/>\n";
-            echo "Query: <b>" . $statement . "</b><br/>\n";
-            echo "Error: <b>" . $this->last_error[2] . "</b><br/>\n";
-            echo "</div>\n";
+            ob_start();
+            echo "Query: " . $statement . "\n";
+            echo "Error: " . $this->last_error[2];
+            throw new Exception(ob_get_clean());
             fx::log($statement, debug_backtrace());
         }
         if (!fx::config('dev.log_sql')) {
