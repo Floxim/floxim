@@ -369,8 +369,6 @@ class fx_content extends fx_essence implements fx_template_essence {
        }
        array_unshift($q_params, $q);
        fx::db()->query($q_params);
-       //fx::debug(fx::db()->prepare_query($q_params));
-       // fx::log('prior q', $q);
     }
     
     /*

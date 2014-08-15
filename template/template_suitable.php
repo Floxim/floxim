@@ -51,7 +51,8 @@ class fx_template_suitable {
         $layout_visual = $layout_ib->get_visual();
         $area_map = $layout_visual['area_map'];
         
-        $c_areas = fx::template($layout_ib->get_prop_inherited('visual.template'))->get_areas();
+        $layout_template_name = $layout_ib->get_prop_inherited('visual.template');
+        $c_areas = fx::template($layout_template_name)->get_areas();
         
         foreach ($infoblocks as $ib) {
             $ib_visual = $ib->get_visual($layout_id);
