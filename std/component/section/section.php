@@ -53,7 +53,7 @@ class fx_controller_component_section extends fx_controller_component_page {
             }
             fx::data('content_page')
                 ->make_tree($items, 'submenu', $extra_roots)
-                ->add_filter('parent_id', $this->_get_parent_id());
+                ->add_filter('parent_id', $ctr->_get_parent_id());
         });
         return parent::do_list();
     }
