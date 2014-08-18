@@ -342,6 +342,9 @@ class fx_template_compiler {
             $expr = $display_val_var;
             $real_val_defined = true;
         }
+        
+        $var_meta_expr = $this->_get_var_meta_expression($token, $var_token, $ep);
+        
         if ($has_default) {
             $code .= "\nif (is_null(".$real_val_var.") || ".$real_val_var." == '') {\n";
             
@@ -370,14 +373,25 @@ class fx_template_compiler {
                 }
                 if ($has_complex_tokens) {
                     $code .= "\tob_start();\n";
-                    //if ($token_is_visual || true) {
-                        $code .= '$'.$var_chunk.'_was_admin = $_is_admin;'."\n";
-                        $code .= '$_is_admin = false;'."\n";
-                    //}
+                    if (!$token_is_visual) {
+                        $code .= '$var_meta = '.$var_meta_expr.";\n";
+                        $code .= '$var_type = $var_meta["type"]'.";\n";
+                        $var_meta_defined = true;
+                        $code .= "if (\$var_meta) {\n";
+                    }
+                    $code .= '$'.$var_chunk.'_was_admin = $_is_admin;'."\n";
+                    $code .= '$_is_admin = false;'."\n";
+                    if (!$token_is_visual) {
+                        $code .= "}\n";
+                    }
                     $code .= "\t".$this->_children_to_code($token);
-                    //if ($token_is_visual || true) {
-                        $code .= '$_is_admin = $'.$var_chunk.'_was_admin;'."\n";
-                    //}
+                    if (!$token_is_visual) {
+                        $code .= "if (\$var_meta) {\n";
+                    }
+                    $code .= '$_is_admin = $'.$var_chunk.'_was_admin;'."\n";
+                    if (!$token_is_visual) {
+                        $code .= "}\n";
+                    }
                     $default = "ob_get_clean()";
                 } else {
                     $default = join(".", $default_parts);
@@ -397,7 +411,7 @@ class fx_template_compiler {
             $code .= "}\n";
         }
         
-        $var_meta_expr = $this->_get_var_meta_expression($token, $var_token, $ep);
+        
         
         
         if ($modifiers) {
