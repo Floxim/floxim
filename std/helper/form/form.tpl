@@ -58,8 +58,8 @@
     <span fx:if="$required" class="required">*</span>
 </label>
     
-<div fx:template="comment" class="fx_field_comment">
-    <div class="fx_field_comment_text">{$%comment}</div>
+<div fx:template="comment" class="fx_field_comment" fx:if="$%comment">
+    <span class="fx_field_comment_text">{$%comment}</span>
 </div>
 
 <div fx:template="input_block" class="fx_input_block"> 
