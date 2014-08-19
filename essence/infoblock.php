@@ -81,7 +81,7 @@ class fx_infoblock extends fx_essence {
             return $own_result;
         }
         if ( ($parent_ib = $this->get_parent_infoblock()) ) {
-            $parent_result = $parent_ib->get_prop_inherited($path_str);
+            $parent_result = $parent_ib->get_prop_inherited($path_str, $layout_id);
         }
         if (is_array($own_result) && is_array($parent_result)) {
             return array_merge($parent_result, $own_result);
