@@ -201,7 +201,8 @@ class fx_data {
         $with = array($relation, $finder, $only);
         $this->with [$relation]= $with;
         if ($only !== false) {
-            $this->_join_with($with, $only);
+            $join_type = is_string($only) ? $only : 'inner';
+            $this->_join_with($with, $join_type);
         }
         return $this;
     }
