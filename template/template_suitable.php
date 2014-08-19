@@ -1,15 +1,30 @@
 <?php
 class fx_template_suitable {
     
-    public static function unsuit($site_id, $layout_id) {
-        fx::data('infoblock')
+    public static function unsuit($site_id = null, $layout_id = null) {
+        if (is_null($site_id)) {
+            $site_id = fx::env('site')->get('id');
+        }
+        if (is_null($layout_id)) {
+            $layout_id = fx::data('site', $site_id)->get('layout_id');
+        }
+        $infoblocks_query = fx::data('infoblock')
             ->where('site_id', $site_id)
-            ->only_with('visuals')
-            ->where('visuals.layout_id', $layout_id)
-            ->all()
-            ->apply(function($ib) {
-                $ib['visuals'][0]->delete();
-            });
+            ->only_with(
+                'visuals', 
+                function($q) use ($layout_id) {
+                    $q->where('layout_id', $layout_id);
+                }
+            );
+        
+        
+        $infoblocks = $infoblocks_query->all();
+        $infoblocks->apply(function($ib) {
+            $visual = $ib['visuals']->first();
+            if ($visual) {
+                $visual->delete();
+            }
+        });
     }
     
     public function suit(fx_collection $infoblocks, $layout_id) {
@@ -28,6 +43,7 @@ class fx_template_suitable {
         }
         $layout_rate = array();
         $all_visual = fx::data('infoblock_visual')->get_for_infoblocks($stub_ibs, false);
+        
         foreach ($all_visual as $c_vis) {
             $c_layout_id = $c_vis['layout_id'];
             $infoblocks->
@@ -48,6 +64,7 @@ class fx_template_suitable {
         if ($layout_ib->get_visual()->get('is_stub')) {
             $this->_adjust_layout_visual($layout_ib, $layout_id, $source_layout_id);
         }
+        
         $layout_visual = $layout_ib->get_visual();
         $area_map = $layout_visual['area_map'];
         
@@ -91,7 +108,7 @@ class fx_template_suitable {
                 foreach ($c_areas as $ca) {
                     $area_size = self::get_size($ca['size']);
                     $area_count = self::check_sizes($block_size, $area_size);
-                    if ($area_count > $c_area_count) {
+                    if ($area_count >= $c_area_count) {
                         $c_area_count = $area_count;
                         $c_area = $ca['id'];
                     }
@@ -117,20 +134,21 @@ class fx_template_suitable {
             $c_relevance = 0;
             $c_variant = null;
             foreach ($template_variants as $tplv) {
-                if ($tplv['of'] == 'layout.show') {
-                    $test_layout_tpl = fx::template($tplv['full_id']);
-                    $tplv['real_areas'] = $test_layout_tpl->get_areas();
-                    $map = $this->_map_areas($old_areas, $tplv['real_areas']);
-                    if ( !$map ) {
-                        continue;
-                    }
-                    if ($map['relevance'] > $c_relevance) {
-                        $c_relevance = $map['relevance'];
-                        $c_variant = $map + array(
-                            'full_id' => $tplv['full_id'],
-                            'areas' => $tplv['real_areas']
-                        );
-                    }
+                if ($tplv['of'] !== 'layout.show' && $tplv['id'] !== '_layout_body') {
+                    continue;
+                }
+                $test_layout_tpl = fx::template($tplv['full_id']);
+                $tplv['real_areas'] = $test_layout_tpl->get_areas();
+                $map = $this->_map_areas($old_areas, $tplv['real_areas']);
+                if ( !$map ) {
+                    continue;
+                }
+                if ($map['relevance'] > $c_relevance) {
+                    $c_relevance = $map['relevance'];
+                    $c_variant = $map + array(
+                        'full_id' => $tplv['full_id'],
+                        'areas' => $tplv['real_areas']
+                    );
                 }
             }
         }
@@ -232,10 +250,11 @@ class fx_template_suitable {
             }
         }
         $map = array();
-        foreach ($old_set as $old_area) {
-            $map[$old_area['id']] = $old_area['analog'];
+        foreach ($old_set as $old_set_item) {
+            $map[$old_set_item['id']] = $old_set_item['analog'];
         }
-        return array('relevance' => $total_relevance, 'map' => $map);
+        $res = array('relevance' => $total_relevance, 'map' => $map);
+        return $res;
     }
     
     public static function get_size($size) {
