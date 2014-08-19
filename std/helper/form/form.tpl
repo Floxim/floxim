@@ -33,20 +33,25 @@
     <div fx:item class="fx_form_message">{$message /}</div>
 </div>
 
-<div 
-    fx:template="row" 
-    class="
-        fx_form_row fx_form_row_type_{$type} fx_form_row_name_{$name} 
-        {if $.errors} fx_form_row_error{/if}
-        {if $required} fx_form_row_required{/if}">
+<div fx:template="row" class="{apply row_class}">
     {apply label /}
     {apply comment /}
     {apply errors /}
     {apply input_block /}
 </div>
 
+{template id="row_class"}
+    fx_form_row fx_form_row_type_{$type} fx_form_row_name_{$name} 
+    {if $_.errors} fx_form_row_error{/if}
+    {if $required} fx_form_row_required{/if}
+{/template}
+
 <div fx:template="row[$type === 'hidden']" fx:omit='true'>
     {apply input /}
+</div>
+
+<div fx:template="row[$type === 'header']" class="{apply row_class}">
+    <h2>{$%label}</h2>
 </div>
 
 <div fx:template="errors" fx:each="$_.errors as $error" class="fx_form_error">
@@ -109,6 +114,7 @@
     value="{$%label}Submit{/$}" />
 
 <select 
+    fx:add="false"
     fx:template="input[$type == 'select']"
     {if $is_multiple}multiple="multiple"{/if}
     {apply input_atts /}>
@@ -132,7 +138,7 @@
 
 <div fx:template="input[$type == 'radio']">
     {set $field_name = $name}
-    <label fx:each="$values as $key => $option">
+    <label fx:each="$values as $key => $option" title="{$option.comment | strip_tags}">
         <input type="radio" name="{$field_name}" value="{$key}" {if $value == $key}checked="checked"{/if} />
         <span>{$option.name}</span>
     </label>

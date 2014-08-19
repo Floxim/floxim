@@ -1987,7 +1987,14 @@ $('html').on('click', '.fx_help .fx_help_expander', function() {
         $exp.data('help_node', $help);
    }
    var offset = $exp.offset();
-   $help.css({top: offset.top+'px', left:offset.left+'px'});
+   //$help.css({top: offset.top+'px', left:offset.left+'px'});
+   $help.css({
+        position:'fixed', 
+        top: '10px', 
+        left:offset.left+'px', 
+        'max-height': $(window).height() - 20 + 'px', 
+        overflow:'auto'
+   });
    if (!$help.is(':visible')) {
        $help.show();
        var z_index = ($help.css('z-index')+1);//+' !important';

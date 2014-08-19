@@ -157,6 +157,12 @@ class fx_form implements ArrayAccess {
         return $this->params['fields']->get_field($name);
     }
     
+    public function get($offset = null) {
+        if (is_null($offset)) {
+            return $this->params;
+        }
+        return $this->offsetGet($offset);
+    }
     
     /* ArrayAccess methods */
     
@@ -262,6 +268,14 @@ class fx_form_field implements ArrayAccess, fx_template_essence {
         return $field;
     }
     
+    public function get($offset = null) {
+        if (is_null($offset)) {
+            return $this->params;
+        }
+        return $this->offsetGet($offset);
+    }
+
+
     public function __construct($params = array()) {
         if (isset($params['owner'])) {
             $this->owner = $params['owner'];
@@ -535,4 +549,28 @@ class fx_form_field_captcha extends fx_form_field {
         }
         return $this;
     }
+}
+
+abstract class fx_form_field_options extends fx_form_field {
+    public function offsetSet($offset, $value) {
+        if ($offset === 'values' && (is_array($value) || $value instanceof Traversable)) {
+            if (is_array($value)) {
+                $value = fx::collection($value);
+            }
+            foreach ($value as $opt_key => $opt_val) {
+                if (is_scalar($opt_val)) {
+                    $value[$opt_key] = array('name' => $opt_val);
+                }
+            }
+        }
+        return parent::offsetSet($offset, $value);
+    }
+}
+
+class fx_form_field_select extends fx_form_field_options {
+    
+}
+
+class fx_form_field_radio extends fx_form_field_options {
+    
 }
