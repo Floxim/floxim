@@ -221,7 +221,7 @@ class fx_controller_admin_content extends fx_controller_admin {
         $content = fx::data($content_type)->where('id', $input['content_id'])->one();
         $next_id = isset($input['next_id']) ? $input['next_id'] : false;
         
-        $neighbours = fx::data($content_type)->
+        $neighbours = fx::data('content')->
                         where('parent_id', $content['parent_id'])->
                         where('infoblock_id', $content['infoblock_id'])->
                         where('id', $content['id'], '!=')->
