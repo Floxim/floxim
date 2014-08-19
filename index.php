@@ -3,6 +3,7 @@
 // e.g. admin interface
 require_once (dirname(__FILE__).'/../boot.php');
 
+
 register_shutdown_function(function() {
     if (!fx::env()->get('complete_ok')) {
     	$ob_level = ob_get_level();
@@ -13,7 +14,7 @@ register_shutdown_function(function() {
         if (fx::config('dev.on')) {
             echo fx::page()->post_process($res);
         }
-        fx::log('down', $res, debug_backtrace(), $_SERVER, $_POST); 
+        fx::log('down', $res, $_SERVER, $_POST); 
     }
 });
 
