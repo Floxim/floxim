@@ -374,10 +374,8 @@ class fx_template_compiler {
                 if ($has_complex_tokens) {
                     $code .= "\tob_start();\n";
                     if (!$token_is_visual) {
-                        $code .= '$var_meta = '.$var_meta_expr.";\n";
-                        $code .= '$var_type = $var_meta["type"]'.";\n";
-                        $var_meta_defined = true;
-                        $code .= "if (\$var_meta) {\n";
+                        $code .= '$var_has_meta = count('.$var_meta_expr.");\n";
+                        $code .= "if (\$var_has_meta) {\n";
                     }
                     $code .= '$'.$var_chunk.'_was_admin = $_is_admin;'."\n";
                     $code .= '$_is_admin = false;'."\n";
@@ -386,7 +384,7 @@ class fx_template_compiler {
                     }
                     $code .= "\t".$this->_children_to_code($token);
                     if (!$token_is_visual) {
-                        $code .= "if (\$var_meta) {\n";
+                        $code .= "if (\$var_has_meta) {\n";
                     }
                     $code .= '$_is_admin = $'.$var_chunk.'_was_admin;'."\n";
                     if (!$token_is_visual) {
@@ -519,6 +517,7 @@ class fx_template_compiler {
         
         if ( ($separator = $this->_find_separator($token)) ) {
             $each_token->add_child($separator);
+            fx::log('esp', $each_token);
         }
         
         
