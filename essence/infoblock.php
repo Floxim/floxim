@@ -1,5 +1,5 @@
 <?php
-class fx_infoblock extends fx_essence {
+class fx_infoblock extends fx_essence  implements fx_template_essence {
     
     protected $_visual = array();
     
@@ -479,29 +479,29 @@ class fx_infoblock extends fx_essence {
         return $html_result;
     }
 
-	/**
-	 * Return all pages ID where presents this infoblock
-	 *
-	 * @return array
-	 */
-	public function get_pages() {
-		list($page_id, $scope_pages, $scope_page_type) = array(
-			$this['page_id'],
-			$this['scope']['pages'],
-			$this['scope']['page_type']
-		);
+    /**
+     * Return all pages ID where presents this infoblock
+     *
+     * @return array
+     */
+    public function get_pages() {
+        list($page_id, $scope_pages, $scope_page_type) = array(
+            $this['page_id'],
+            $this['scope']['pages'],
+            $this['scope']['page_type']
+        );
 
-		$result_pages=array();
+        $result_pages=array();
 
-		if ($scope_pages=='this') {
-			/**
-			 * Only current page
-			 */
-			$result_pages[]=$page_id;
-		} elseif (in_array($scope_pages,array('descendants','children'))) {
-			/**
-			 * All descendants
-			 */
+        if ($scope_pages=='this') {
+            /**
+             * Only current page
+             */
+            $result_pages[]=$page_id;
+        } elseif (in_array($scope_pages,array('descendants','children'))) {
+            /**
+             * All descendants
+             */
             $finder=fx::data('content')->descendants_of($page_id);
             if ($scope_page_type) {
                 $finder->where('type',$scope_page_type);
@@ -513,7 +513,7 @@ class fx_infoblock extends fx_essence {
             if ($scope_pages=='descendants') {
                 $result_pages[]=$page_id;
             }
-		}
-		return array_unique($result_pages);
-	}
+        }
+        return array_unique($result_pages);
+    }
 }
