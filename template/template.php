@@ -182,7 +182,7 @@ class fx_template {
                     if (!$is_complex) {
                         echo htmlspecialchars($value);
                     } elseif ($is_recursion) {
-                        ?><span class="fx_help_recursion">* recursion *</span><?
+                        ?><span class="fx_help_recursion">* recursion *</span><?php
                     }
                     ?>
                 </td>
