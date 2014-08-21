@@ -517,7 +517,6 @@ class fx_template_compiler {
         
         if ( ($separator = $this->_find_separator($token)) ) {
             $each_token->add_child($separator);
-            fx::log('esp', $each_token);
         }
         
         
