@@ -7,12 +7,18 @@ class fx_template_html_tokenizer extends fx_template_fsm {
     const ATT_VAL = 6;
     const FX = 7;
     const FX_COMMENT = 8;
+    const HTML_COMMENT = 9;
     
     public function __construct() {
         $this->init_state = self::TEXT;
         // fx comments
         $this->add_rule(self::STATE_ANY, '{*', self::FX_COMMENT, 'fx_comment_start');
         $this->add_rule(self::FX_COMMENT, '*}', false, 'fx_comment_end');
+        
+        // html comments
+        $this->add_rule(self::STATE_ANY, '<!--', self::HTML_COMMENT);
+        $this->add_rule(self::HTML_COMMENT, '>', false, 'html_comment_check_end');
+        $this->add_rule(self::HTML_COMMENT, '-->', self::TEXT);
 
         // php
         $this->add_rule(self::STATE_ANY, '<?', self::PHP, 'php_start');
@@ -37,7 +43,7 @@ class fx_template_html_tokenizer extends fx_template_fsm {
     protected $stack = '';
     
     public function get_split_regexp() {
-        return "~(<[a-z0-9\/]+|>|\{\*|\*\}|<\?|\?>|[\{\}]|[\'\"]|\s*=\s*[\'\"]?|\s+)~";
+        return "~(\-\->|<!\-\-|<[a-z0-9\/]+|>|\{\*|\*\}|<\?|\?>|[\{\}]|[\'\"]|\s*=\s*[\'\"]?|\s+)~";
     }
 
     public function parse($string) {
@@ -46,6 +52,20 @@ class fx_template_html_tokenizer extends fx_template_fsm {
             $this->text_to_tag('');
         }
         return $this->res;
+    }
+    
+    /**
+     * Handle case like "<!--[if gt IE 8]><!-->"
+     * Here the end of comment will not be caught by splitter because "<!--" goes first
+     * So on every ">" inside html comment, we check if it's preceded by "--"
+     * @param type $ch
+     */
+    protected function html_comment_check_end($ch) {
+        $is_comment_end = mb_substr($this->stack, -2) === '--';
+        $this->stack .= $ch;
+        if ($is_comment_end) {
+            $this->state = self::TEXT;
+        }
     }
     
     public function default_callback($ch) {
