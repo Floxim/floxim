@@ -248,8 +248,13 @@ class fx_template_html {
             }
             if ( ($with_each = $n->get_attribute('fx:with-each'))) {
                 $n->remove_attribute('fx:with-each');
+                $weach_macro_tag = '{with-each '.$with_each.'}';
+                if ( ($separator = $n->get_attribute('fx:separator'))) {
+                    $weach_macro_tag .= '{separator}'.$separator.'{/separator}';
+                    $n->remove_attribute('fx:separator');
+                }
                 $n->wrap(
-                    '{with-each '.$with_each.'}',
+                    $weach_macro_tag,
                     '{/with-each}'
                 );
             }
