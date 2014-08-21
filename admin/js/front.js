@@ -405,7 +405,7 @@ fx_front.prototype.redraw_add_button = function($node) {
                 continue;
             }
             buttons.push({
-                name:c_meta.title + get_neighbour_buttons(),
+                name: get_neighbour_buttons( c_meta.title ),
                 callback: $fx.front.get_panel_adder_closure(c_meta)
             });
         };
