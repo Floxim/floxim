@@ -58,6 +58,7 @@ class fx_loader {
         'suitable',
         'html_token',
         'token',
+        'tokenizer',
         'html_tokenizer',
         'fsm',
         'compiler',
