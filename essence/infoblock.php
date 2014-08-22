@@ -49,11 +49,7 @@ class fx_infoblock extends fx_essence  implements fx_template_essence {
     }
     
     public function get_owned_content() {
-        if ($this['action'] != 'list_infoblock') {
-            return false;
-        }
-        $content_type = fx::controller($this['controller'])->get_content_type();
-        $content = fx::data('content_'.$content_type)->
+        $content = fx::data('content')->
                     where('infoblock_id',$this['id'])->
                     all();
         return $content;
