@@ -25,7 +25,7 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
      */
     public $finder = null;
     
-    protected function fork($data = array()) {
+    public function fork($data = array()) {
         $collection = new fx_collection($data);
         $collection->is_sortable = $this->is_sortable;
         $collection->finder = $this->finder;
