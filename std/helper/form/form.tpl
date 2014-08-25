@@ -107,11 +107,12 @@
     fx:template="input[$type == 'textarea']"
     {apply input_atts /}>{$value | htmlentities}</textarea>
 
-<input 
+<button 
     fx:template="input[$type == 'submit']"
     type="submit"
-    class="fx_input fx_input_type_submit"
-    value="{$%label}Submit{/$}" />
+    class="fx_input fx_input_type_submit">
+    <span>{$%label}Submit{/$}</span>
+</button>
 
 <select 
     fx:add="false"
@@ -138,7 +139,7 @@
 
 <div fx:template="input[$type == 'radio']">
     {set $field_name = $name}
-    <label fx:each="$values as $key => $option" title="{$option.comment | strip_tags}">
+    <label fx:each="$values as $key => $option" title="{$option.comment | strip_tags}" class="fx_form_option_label">
         <input type="radio" name="{$field_name}" value="{$key}" {if $value == $key}checked="checked"{/if} />
         <span>{$option.name}</span>
     </label>
