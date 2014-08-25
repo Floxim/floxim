@@ -59,6 +59,17 @@ class fx_template_html {
                 $n->source = fx_template_html::parse_floxim_vars_in_atts($n->source);
             }
             $subroot = $n->has_attribute('fx:omit') ? '' : ' subroot="true"';
+            if ( ($n->name == 'script' || $n->name == 'style') && !$n->has_attribute('fx:raw')) {
+                $n->set_attribute('fx:raw', 'true');
+            }
+            if ($n->has_attribute('fx:raw')) {
+                $raw_value = $n->get_attribute('fx:raw');
+                if ($raw_value != 'false') {
+                    $n->add_child_first(fx_template_html_token::create('{raw}'));
+                    $n->add_child(fx_template_html_token::create('{/raw}'));
+                }
+                $n->remove_attribute('fx:raw');
+            }
             if ($n->name == 'meta' && ($layout_id = $n->get_attribute('fx:layout'))) {
                 $layout_name = $n->get_attribute('fx:name');
                 $tpl_tag = '{template id="'.$layout_id.'" name="'.$layout_name.'" of="layout.show"}';
@@ -248,8 +259,13 @@ class fx_template_html {
             }
             if ( ($with_each = $n->get_attribute('fx:with-each'))) {
                 $n->remove_attribute('fx:with-each');
+                $weach_macro_tag = '{with-each '.$with_each.'}';
+                if ( ($separator = $n->get_attribute('fx:separator'))) {
+                    $weach_macro_tag .= '{separator}'.$separator.'{/separator}';
+                    $n->remove_attribute('fx:separator');
+                }
                 $n->wrap(
-                    '{with-each '.$with_each.'}',
+                    $weach_macro_tag,
                     '{/with-each}'
                 );
             }

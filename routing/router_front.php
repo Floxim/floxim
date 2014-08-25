@@ -11,9 +11,7 @@ class fx_router_front extends fx_router {
         fx::env('page', $page);
         fx::http()->status('200');
         $layout_ib = $this->get_layout_infoblock($page);
-        
         $res = $layout_ib->render();
-        
         return $res;
     }
     
@@ -40,7 +38,6 @@ class fx_router_front extends fx_router {
                 where('infoblock_id', $infoblocks->get_values('id'))->
                 where('layout_id', $layout_id)->
                 all();
-        
         
         foreach ($infoblocks as $ib) {
             if (!$ib->is_available_for_user()) {
@@ -73,6 +70,12 @@ class fx_router_front extends fx_router {
         if ($layout_ib->get_visual()->get('is_stub')) {
             $suitable = new fx_template_suitable();
             $infoblocks = $page->get_page_infoblocks();
+            
+            // delete all parent layouts from collection
+            $infoblocks->find_remove(function ($ib) use ($layout_ib) {
+                return $ib->is_layout() && $ib['id'] !== $layout_ib['id'];
+            });
+            
             $suitable->suit($infoblocks, fx::env('layout_id'));
             return $infoblocks->find_one(function ($ib) {
                return $ib->is_layout(); 

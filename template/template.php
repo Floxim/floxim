@@ -116,8 +116,9 @@ class fx_template {
     
     public function print_stack_help() {
         $context_stack = array_reverse($this->context_stack);
+        echo "<div class='fx_help_template_title'>".$this->_get_template_sign()."</div>";
         foreach ($context_stack as $level => $stack) {
-            echo $this->get_item_help($stack, 0, 'Level #'.$level);
+            echo $this->get_item_help($stack, 0);
         }
         if ($this->_parent && $this->_inherit_context){
             echo "<hr />";
@@ -125,18 +126,18 @@ class fx_template {
         }
     }
     
-    public function get_item_help($item, $level = 0, $title = '') {
-        if ($item instanceof fx_essence) {
+    public function get_item_help($item, $level = 0, $c_path = array()) {
+        $c_path []= $item;
+        $item_type = is_array($item) ? 'Array' : get_class($item);
+        if ($item instanceof fx_essence || $item instanceof fx_form_field || $item instanceof fx_form) {
             $item = $item->get();
         }
         ob_start();
         if ($level === 0) {
-            echo '<div class="fx_item_help_block">';
-            if ($title) {
-                //echo '<h2>'.$title.'</h2>';
-            }
             ?>
+            <div class="fx_item_help_block">
             <table>
+                <tr class="header"><td colspan="2"><?= $item_type ?></td></tr>
                 <tr class="header">
                     <td>Prop</td>
                     <td class="value_cell">Value</td>
@@ -145,6 +146,15 @@ class fx_template {
         }
         foreach ($item as $prop => $value) {
             $is_complex = is_object($value) || is_array($value);
+            $is_recursion = false;
+            if ($is_complex) {
+                foreach ($c_path as $c_path_item) {
+                    if ($value === $c_path_item) {
+                        $is_recursion = true;
+                        break;
+                    }
+                }
+            }
             ?>
             <tr class="help_level_<?=$level?>" 
                 <?php if ($level > 0) { echo ' style="display:none;" ';}?>>
@@ -165,14 +175,16 @@ class fx_template {
                     <?php
                     if (!$is_complex) {
                         echo htmlspecialchars($value);
+                    } elseif ($is_recursion) {
+                        ?><span class="fx_help_recursion">* recursion *</span><?php
                     }
                     ?>
                 </td>
             </tr>
             <?php
-            if ($is_complex) {
+            if ($is_complex && !$is_recursion) {
                 if (! ($value instanceof fx_template_loop)) {
-                    echo $this->get_item_help($value, $level+1);
+                    echo $this->get_item_help($value, $level+1, $c_path);
                 }
             }
         }

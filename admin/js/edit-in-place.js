@@ -302,6 +302,7 @@ fx_edit_in_place.prototype.get_vars = function() {
             var clear_old = this.clear_redactor_val(saved_val);
             
             is_changed = clear_new !== clear_old;
+            
             /*
             if (is_changed) {
                 for (var li = 0; li < clear_new.length; li++) {
@@ -315,6 +316,11 @@ fx_edit_in_place.prototype.get_vars = function() {
             */
         } else {
             var new_val = $.trim(node.text());
+            
+            // handle zero-width space
+            if (new_val.length === 1 && new_val.charCodeAt(0) === 8203) {
+                new_val = '';
+            }
             // put empty val instead of zero-width space
             if (!new_val) {
                 node.html(new_val);
@@ -378,7 +384,7 @@ fx_edit_in_place.prototype.get_vars = function() {
                 value_changed = new_value !== old_value;
             }
         }
-        if (value_changed) {    
+        if (value_changed) {
             vars.push({
                 'var': pf_meta,
                 value:new_value
@@ -402,6 +408,7 @@ fx_edit_in_place.prototype.save = function() {
             });
         }
     });
+    
     
     // nothing has changed
     if (vars.length === 0) {

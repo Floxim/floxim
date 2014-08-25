@@ -1,5 +1,5 @@
 <?php
-class fx_content_vacancy extends fx_content {
+class fx_content_vacancy extends fx_content_page {
     public function get_form_fields() {
         $fields = fx::collection(parent::get_form_fields());
         $fields->apply(function($f) {

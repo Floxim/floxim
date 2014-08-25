@@ -37,7 +37,7 @@ class fx_config {
         'ADMIN_FOLDER' => '',
         'COMPONENT_FOLDER' => '',
         'WIDGET_FOLDER' => '',
-        'fx.version' => '0.1.1',
+        //'fx.version' => '0.1.1',
         'fx.update_url' => 'http://floxim-builder/get-update/',
         'FLOXIM_SITE_PROTOCOL' => 'http',
         'FLOXIM_SITE_HOST' => 'floxim.org',
@@ -128,10 +128,42 @@ class fx_config {
     }
 
     public function __get($name) {
-        return isset($this->config[$name]) ? $this->config[$name] : null;
+        return $this->get($name);
     }
 
     public function __isset($name) {
         return isset($this->config[$name]);
+    }
+
+    /**
+     * Load options from DB
+     */
+    public function load_from_db() {
+        try {
+            $options = fx::data('option')->all();
+            foreach($options as $option) {
+                $this->set($option['keyword'],$option['value']);
+            }
+        } catch (Exception $e) {
+                    
+        }
+    }
+
+    /**
+     * Store params by keys in DB
+     *
+     * @param $keys
+     */
+    public function store($keys) {
+        if (!is_array($keys)) {
+            $keys = array($keys);
+        }
+        foreach($keys as $key) {
+            if (! ($option = fx::data('option')->where('keyword',$key)->one())) {
+                $option=fx::data('option')->create(array('keyword' => $key));
+            }
+            $option['value'] = $this->get($key);
+            $option->save();
+        }
     }
 }

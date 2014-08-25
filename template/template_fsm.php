@@ -91,9 +91,6 @@ class fx_template_fsm {
         $this->parts = $this->split_string($string);
         if ($this->debug) {
             fx::debug($string, $this->parts);
-            foreach ($this->parts as $p) {
-                fx::debug('~'.$p.'~');
-            }
         }
         while ( ($ch = current($this->parts)) !== false) {
             $this->position += mb_strlen($ch);
@@ -146,6 +143,7 @@ class fx_template_fsm {
             $this->default_callback($ch);
             return false;
         }
+        
         foreach($this->rules[$this->state] as $rule) {
             list($rule_val, $new_state, $callback, $rule_type) = $rule;
             if (

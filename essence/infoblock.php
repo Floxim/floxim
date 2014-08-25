@@ -1,5 +1,5 @@
 <?php
-class fx_infoblock extends fx_essence {
+class fx_infoblock extends fx_essence  implements fx_template_essence {
     
     protected $_visual = array();
     
@@ -49,11 +49,7 @@ class fx_infoblock extends fx_essence {
     }
     
     public function get_owned_content() {
-        if ($this['action'] != 'list_infoblock') {
-            return false;
-        }
-        $content_type = fx::controller($this['controller'])->get_content_type();
-        $content = fx::data('content_'.$content_type)->
+        $content = fx::data('content')->
                     where('infoblock_id',$this['id'])->
                     all();
         return $content;
@@ -81,7 +77,7 @@ class fx_infoblock extends fx_essence {
             return $own_result;
         }
         if ( ($parent_ib = $this->get_parent_infoblock()) ) {
-            $parent_result = $parent_ib->get_prop_inherited($path_str);
+            $parent_result = $parent_ib->get_prop_inherited($path_str, $layout_id);
         }
         if (is_array($own_result) && is_array($parent_result)) {
             return array_merge($parent_result, $own_result);
@@ -479,29 +475,29 @@ class fx_infoblock extends fx_essence {
         return $html_result;
     }
 
-	/**
-	 * Return all pages ID where presents this infoblock
-	 *
-	 * @return array
-	 */
-	public function get_pages() {
-		list($page_id, $scope_pages, $scope_page_type) = array(
-			$this['page_id'],
-			$this['scope']['pages'],
-			$this['scope']['page_type']
-		);
+    /**
+     * Return all pages ID where presents this infoblock
+     *
+     * @return array
+     */
+    public function get_pages() {
+        list($page_id, $scope_pages, $scope_page_type) = array(
+            $this['page_id'],
+            $this['scope']['pages'],
+            $this['scope']['page_type']
+        );
 
-		$result_pages=array();
+        $result_pages=array();
 
-		if ($scope_pages=='this') {
-			/**
-			 * Only current page
-			 */
-			$result_pages[]=$page_id;
-		} elseif (in_array($scope_pages,array('descendants','children'))) {
-			/**
-			 * All descendants
-			 */
+        if ($scope_pages=='this') {
+            /**
+             * Only current page
+             */
+            $result_pages[]=$page_id;
+        } elseif (in_array($scope_pages,array('descendants','children'))) {
+            /**
+             * All descendants
+             */
             $finder=fx::data('content')->descendants_of($page_id);
             if ($scope_page_type) {
                 $finder->where('type',$scope_page_type);
@@ -513,7 +509,7 @@ class fx_infoblock extends fx_essence {
             if ($scope_pages=='descendants') {
                 $result_pages[]=$page_id;
             }
-		}
-		return array_unique($result_pages);
-	}
+        }
+        return array_unique($result_pages);
+    }
 }

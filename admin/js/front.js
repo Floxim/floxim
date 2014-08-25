@@ -15,13 +15,13 @@ window.fx_front = function () {
     
     this.mode_selectable_selector = null;
     
-    $('#fx_admin_page_modes').on('click', 'a', function() {
+    $('#fx_admin_page_modes').on('click.fx_mode_click', 'a', function() {
         var mode = $(this).attr('href').match(/\.([^\.]+)$/)[1];
         $fx.front.load(mode);
         return false;
     });
     
-    $('html').on('keyup', function(e) {
+    $('html').on('keyup.fx_front_keyup', function(e) {
         if ($fx.front_panel.parse_stris_visible) {
             return;
         }
@@ -72,81 +72,80 @@ fx_front.prototype.make_unselectable = function (selector) {
 };
 
 fx_front.prototype.handle_mouseover = function(e) {
-        if ($fx.front.mode === 'view') {
-            return;
-        }
-        if ($fx.front.hilight_disabled) {
-            return;
-        }
-        if (e.fx_hilight_done) {
-            return;
-        }
-        var node = $(this);
-        if (node.hasClass('fx_selected')) {
-            e.fx_hilight_done = true;
-            return;
-        } 
-        if (!$fx.front.is_selectable(this)) {
-            return;
-        }
-        for ( var sel_index = 0; sel_index < $fx.front.unselectable_selectors.length; i++) {
-            if (node.is($fx.front.unselectable_selectors[sel_index])) {
-                return;
-            }
-        }
-        $fx.front.outline_block_off($($fx.front.c_hover),100);
-        var $editable = $(e.target).closest('.fx_template_var'),
-            field_type = ($editable.data('fx_var') || {}).type,
-            make_content_editable = $editable.length > 0 
-                                    && field_type !== 'datetime' && field_type !== 'file' && field_type !== 'image'
-                                    && $fx.front.mode === 'edit' 
-                                    && !($editable.get(0).nodeName === 'A' && e.ctrlKey);
-        var is_hover_parent = $fx.front.last_hover_node 
-                                && $.contains(this, $fx.front.last_hover_node);
-        $fx.front.c_hover = this;
-        setTimeout(
-            function() {
-                if ($fx.front.c_hover !== node.get(0)) {
-                    return;
-                }
-                if (node.hasClass('fx_selected')) {
-                    return;
-                }
-                if ($fx.front.hilight_disabled) {
-                    return false;
-                }
-                $fx.front.last_hover_node = node[0];
-                if (!node.hasClass('fx_hilight_hover')) {
-                    $('.fx_hilight_hover').removeClass('fx_hilight_hover');
-                    node.addClass('fx_hilight_hover');
-                    $fx.front.outline_block(node, 'hover', 400);
-                    if (make_content_editable) {
-                        $editable.addClass('fx_var_editable').attr('contenteditable', 'true');
-                    }
-                }
-            }, 
-            is_hover_parent ? 400 : 30
-        );
-        node.one('mouseout', function() {
-            $fx.front.c_hover = null;
-            if (node.closest('.fx_selected').length > 0) {
-                return false;
-            }
-            setTimeout(
-                function() {
-                    if ($fx.front.c_hover !== node[0]) {
-                        node.removeClass('fx_hilight_hover');
-                        $fx.front.outline_block_off(node, 100);
-                        $editable.removeClass('fx_var_editable').attr('contenteditable', null);
-                    }
-                },
-                100
-            );
-        });
+    if ($fx.front.mode === 'view') {
+        return;
+    }
+    if ($fx.front.hilight_disabled) {
+        return;
+    }
+    if (e.fx_hilight_done) {
+        return;
+    }
+    var node = $(this);
+    if (node.hasClass('fx_selected')) {
         e.fx_hilight_done = true;
         return;
-        return false;
-    };
+    } 
+    if (!$fx.front.is_selectable(this)) {
+        return;
+    }
+    for ( var sel_index = 0; sel_index < $fx.front.unselectable_selectors.length; i++) {
+        if (node.is($fx.front.unselectable_selectors[sel_index])) {
+            return;
+        }
+    }
+    $fx.front.outline_block_off($($fx.front.c_hover),100);
+    var $editable = $(e.target).closest('.fx_template_var'),
+        field_type = ($editable.data('fx_var') || {}).type,
+        make_content_editable = $editable.length > 0 
+                                && field_type !== 'datetime' && field_type !== 'file' && field_type !== 'image'
+                                && $fx.front.mode === 'edit' 
+                                && !($editable.get(0).nodeName === 'A' && e.ctrlKey);
+    var is_hover_parent = $fx.front.last_hover_node 
+                            && $.contains(this, $fx.front.last_hover_node);
+    $fx.front.c_hover = this;
+    setTimeout(
+        function() {
+            if ($fx.front.c_hover !== node.get(0)) {
+                return;
+            }
+            if (node.hasClass('fx_selected')) {
+                return;
+            }
+            if ($fx.front.hilight_disabled) {
+                return false;
+            }
+            $fx.front.last_hover_node = node[0];
+            if (!node.hasClass('fx_hilight_hover')) {
+                $('.fx_hilight_hover').removeClass('fx_hilight_hover');
+                node.addClass('fx_hilight_hover');
+                $fx.front.outline_block(node, 'hover', 400);
+                if (make_content_editable) {
+                    $editable.addClass('fx_var_editable').attr('contenteditable', 'true');
+                }
+            }
+        }, 
+        is_hover_parent ? 400 : 30
+    );
+    node.one('mouseout.fx_front_mouseout', function() {
+        $fx.front.c_hover = null;
+        if (node.closest('.fx_selected').length > 0) {
+            return false;
+        }
+        setTimeout(
+            function() {
+                if ($fx.front.c_hover !== node[0]) {
+                    node.removeClass('fx_hilight_hover');
+                    $fx.front.outline_block_off(node, 100);
+                    $editable.removeClass('fx_var_editable').attr('contenteditable', null);
+                }
+            },
+            100
+        );
+    });
+    e.fx_hilight_done = true;
+    return;
+};
 
 fx_front.prototype.handle_click = function(e) {
     if ($fx.front.mode === 'view' || $fx.front.select_disabled) {
@@ -373,11 +372,14 @@ fx_front.prototype.redraw_add_button = function($node) {
     if (!$node || $node.is('.fx_essence_adder_placeholder') || !$node.is('.fx_infoblock, .fx_area, .fx_essence')) {
         return;
     }
-    var get_neighbour_buttons = function() {
+    var get_neighbour_buttons = function(between_text) {
         if (!$node.is('.fx_essence') || !$node.is('.fx_sortable')) {
             return '';
         }
         var res = ' <a class="fx_button_extra fx_before" title="'+$fx.lang('Before')+'">&#9668;</a>';
+        if (typeof  between_text !== 'undefined') {
+            res += ' ' + between_text+' ';
+        }
         res += ' <a class="fx_button_extra fx_after" title="'+$fx.lang('After')+'">&#9658;</a>';
         return res;
     };
@@ -386,14 +388,14 @@ fx_front.prototype.redraw_add_button = function($node) {
         $ib_node = $node.closest('.fx_infoblock'),
         ib_accept = ($ib_node.data('fx_controller_meta') || {}).accept_content;
     
-    if ($node.is('.fx_essence')) {
+    if ($node.is('.fx_essence') && mode === 'edit') {
         var is_top_essence = $fx.front.is_top_essence($node),
             $placeholder = $('>.fx_essence_adder_placeholder', $node.parent());
         if ($placeholder.length) {
             var placeholder_meta = $placeholder.data('fx_essence_meta') || {},
                 placeholder_name = placeholder_meta.placeholder_name;
             buttons.push({
-                name:  $fx.lang('Add') + ' ' + placeholder_name + get_neighbour_buttons(),
+                name:  get_neighbour_buttons( $fx.lang('Add') + ' ' + placeholder_name ),
                 callback: $fx.front.get_placeholder_adder_closure($placeholder)
             });
         }
@@ -403,7 +405,7 @@ fx_front.prototype.redraw_add_button = function($node) {
                 continue;
             }
             buttons.push({
-                name:c_meta.title + get_neighbour_buttons(),
+                name: get_neighbour_buttons( c_meta.title ),
                 callback: $fx.front.get_panel_adder_closure(c_meta)
             });
         };
@@ -413,10 +415,10 @@ fx_front.prototype.redraw_add_button = function($node) {
         $.each(extra_accept, function () {
             buttons.push({
                 name: this.title,
-                callback: $fx.front.get_panel_adder_closure(this[0])
+                callback: $fx.front.get_panel_adder_closure(this)
             });
         });
-    } else if (ib_accept) {
+    } else if (ib_accept && mode === 'edit') {
         $.each(ib_accept, function () {
             var $placeholder  = $fx.front.find_placeholder_by_meta(this, $node.find('.fx_essence_adder_placeholder'));
             buttons.push({
@@ -740,9 +742,11 @@ fx_front.prototype.select_item = function(node) {
         this.make_node_panel($node);
     }
     
-    $node.on('mouseout.fx_catch_mouseout', function (e) {
-       e.stopImmediatePropagation();
-    });
+   var closest_ib_node = $node.closest('.fx_infoblock')[0];
+   $fx.front.freeze_events(closest_ib_node);
+   $node.one('fx_deselect', function() {
+       $fx.front.unfreeze_events(closest_ib_node);
+   });
     
     var selectable_up = this.get_selectable_up();
     if (selectable_up) {
@@ -872,10 +876,10 @@ fx_front.prototype.recount_node_panel = function() {
     var $lpi = $p_items.last();
     $lpi.css('margin-right', '3px');
     var p_right = $lpi.offset().left + $lpi.outerWidth() + parseInt($lpi.css('margin-right'));
-    var p_width = p_right - p_left;
+    var p_width = p_right - p_left + 5;
     var p_height = $p.outerHeight();
     var css = {
-        width:p_right - p_left + 'px',
+        width:p_width + 'px',
         visibility:'visible',
         opacity:1
     };
@@ -891,7 +895,6 @@ fx_front.prototype.recount_node_panel = function() {
             top_fix = i_bottom;
         }
     });
-    $p.css('width', '100px');
     var $node = $($fx.front.get_selected_item());
     var no = $node.offset();
     css.left = no.left - 4;
@@ -1745,6 +1748,31 @@ fx_front.prototype.get_panel_z_index = function() {
     return this.panel_z_index;
 };
 
+
+/**
+ * Hide outline pane if the cursor comes very close to it to prevent mouseout unexpected by template js
+ * @todo we should cache visible panes with their positions
+ */
+fx_front.prototype.hide_hover_outlines = function(pos) {
+    var $panes = $('body>.fx_front_overlay .fx_outline_style_hover');
+    var treshold = 3;
+    $panes.each(function(i, p) {
+        var $p = $(p),
+            offset = $p.offset(),
+            top = offset.top - treshold,
+            left = offset.left - treshold,
+            bottom = top + $p.height() + treshold*2,
+            right = left + $p.width() + treshold*2;
+        if (pos.top > top && pos.top < bottom && pos.left > left && pos.left < right) {
+            //$p.css('outline', '3px solid #FF0');
+            $p.css('visibility', 'hidden');
+        } else {
+            //$p.css('outline', 'none');
+            $p.css('visibility', 'visible');
+        }
+    });
+};
+
 fx_front.prototype.outline_block = function(n, style, speed) {
     if (!style) {
         style = 'hover';
@@ -1881,9 +1909,15 @@ fx_front.prototype.outline_block = function(n, style, speed) {
     }
     n.data('fx_outline_panes', panes);
     n.data('fx_outline_style', style);
+    if (style === 'hover') {
+        n.off('.fx_hide_hover_outlines').on('mousemove.fx_hide_hover_outlines', function(e) {
+            $fx.front.hide_hover_outlines({top:e.pageY, left:e.pageX});
+        });
+    }
 };
 
 fx_front.prototype.outline_block_off = function(n, speed) {
+    n.off('.fx_hide_hover_outlines');
     if (n.hasClass('fx_hilight_outline')) {
         return;
     }
@@ -1959,6 +1993,66 @@ fx_front.prototype.prepare_page_infoblock_form = function(settings) {
     });
 };
 
+
+fx_front.prototype.freeze_events = function(frozen_node) {            
+    var $ = window.jQuery,
+        $node = $(frozen_node),
+        frozen_handlers = [];
+    
+    function freeze_event_hanlder(handler, check_context) {
+        if (handler.namespace.match(/^fx_/)) {
+            return;
+        }
+        if (handler._realHandler) {
+            return;
+        }
+        frozen_handlers.push(handler);
+        handler._realHandler = handler.handler;
+        if (!check_context) {
+            handler.handler = function(e) {};
+            return;
+        }
+        handler.handler = function(e) {
+            if (frozen_node !== e.target && !$.contains(frozen_node, e.target)) {
+                return handler._realHandler(e);
+            }
+        };
+    }
+
+    function freeze_node_events(node, check_context) {
+        var events = $._data(node, 'events');
+        if (!events) {
+            return;
+        }
+        $.each( events, function (e_type, events) {
+            $.each(events, function (e_index, e) {
+                freeze_event_hanlder(e, check_context);
+            });
+        });
+    }
+
+    $.each($('*', $node).add($node), function (index, node) {
+        freeze_node_events(node, false);
+    });
+
+    $.each($node.parents().add( document ), function (index, node) {
+        freeze_node_events(node, true);
+    });
+
+    $node.data('frozen_handlers', frozen_handlers);
+};
+
+fx_front.prototype.unfreeze_events = function(frozen_node) {
+    var $ = window.jQuery,
+        $node = $(frozen_node);
+    $.each($node.data('frozen_handlers'), function (index, h) {
+        if (h._realHandler) {
+            h.handler = h._realHandler;
+            delete h._realHandler;
+        }
+    });
+};
+
 $('html').on('fx_before_adm_form_created', function(e, settings) {
     if ($fx.front) {
         $fx.front.prepare_page_infoblock_form(settings);
@@ -1989,7 +2083,14 @@ $('html').on('click', '.fx_help .fx_help_expander', function() {
         $exp.data('help_node', $help);
    }
    var offset = $exp.offset();
-   $help.css({top: offset.top+'px', left:offset.left+'px'});
+   //$help.css({top: offset.top+'px', left:offset.left+'px'});
+   $help.css({
+        position:'fixed', 
+        top: '10px', 
+        left:offset.left+'px', 
+        'max-height': $(window).height() - 20 + 'px', 
+        overflow:'auto'
+   });
    if (!$help.is(':visible')) {
        $help.show();
        var z_index = ($help.css('z-index')+1);//+' !important';

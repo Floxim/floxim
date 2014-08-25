@@ -330,7 +330,6 @@ class fx_data_content extends fx_data {
     protected function _set_statement($data) {
         $res = array();
         $chain = fx::data('component', $this->component_id)->get_chain();
-        fx::log('ss data', $data);
         foreach ($chain as $level_component) {
             $table_res = array();
             $fields = $level_component->fields();

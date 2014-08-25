@@ -47,7 +47,8 @@ class fx_loader {
         'patch_migration',
         'lang_string',
         'lang',
-        'session'
+        'session',
+        'option'
     );
     
     protected static $tpl_classes = array(
@@ -57,6 +58,7 @@ class fx_loader {
         'suitable',
         'html_token',
         'token',
+        'tokenizer',
         'html_tokenizer',
         'fsm',
         'compiler',

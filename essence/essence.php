@@ -415,7 +415,7 @@ abstract class fx_essence implements ArrayAccess {
      * @param string $html the html code of record
      * @return string string with added meta-data
      */
-    public function add_template_record_meta($html) {
+    public function add_template_record_meta($html, $collection, $index, $is_subroot) {
         return $html;
     }
     

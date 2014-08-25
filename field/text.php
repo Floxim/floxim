@@ -6,6 +6,7 @@ class fx_field_text extends fx_field_baze {
         parent::get_js_field($content);
         if (isset($this['format']) && isset($this['format']['html']) && $this['format']['html']) {
             $this->_js_field['wysiwyg'] = true;
+            $this->_js_field['nl2br'] = $this['format']['nl2br'];
         }
 
         return $this->_js_field;

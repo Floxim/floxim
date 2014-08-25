@@ -33,20 +33,25 @@
     <div fx:item class="fx_form_message">{$message /}</div>
 </div>
 
-<div 
-    fx:template="row" 
-    class="
-        fx_form_row fx_form_row_type_{$type} fx_form_row_name_{$name} 
-        {if $.errors} fx_form_row_error{/if}
-        {if $required} fx_form_row_required{/if}">
+<div fx:template="row" class="{apply row_class}">
     {apply label /}
     {apply comment /}
     {apply errors /}
     {apply input_block /}
 </div>
 
+{template id="row_class"}
+    fx_form_row fx_form_row_type_{$type} fx_form_row_name_{$name} 
+    {if $_.errors} fx_form_row_error{/if}
+    {if $required} fx_form_row_required{/if}
+{/template}
+
 <div fx:template="row[$type === 'hidden']" fx:omit='true'>
     {apply input /}
+</div>
+
+<div fx:template="row[$type === 'header']" class="{apply row_class}">
+    <h2>{$%label}</h2>
 </div>
 
 <div fx:template="errors" fx:each="$_.errors as $error" class="fx_form_error">
@@ -58,8 +63,8 @@
     <span fx:if="$required" class="required">*</span>
 </label>
     
-<div fx:template="comment" class="fx_field_comment">
-    <div class="fx_field_comment_text">{$%comment}</div>
+<div fx:template="comment" class="fx_field_comment" fx:if="$%comment">
+    <span class="fx_field_comment_text">{$%comment}</span>
 </div>
 
 <div fx:template="input_block" class="fx_input_block"> 
@@ -102,13 +107,15 @@
     fx:template="input[$type == 'textarea']"
     {apply input_atts /}>{$value | htmlentities}</textarea>
 
-<input 
+<button 
     fx:template="input[$type == 'submit']"
     type="submit"
-    class="fx_input fx_input_type_submit"
-    value="{$%label}Submit{/$}" />
+    class="fx_input fx_input_type_submit">
+    <span>{$%label}Submit{/$}</span>
+</button>
 
 <select 
+    fx:add="false"
     fx:template="input[$type == 'select']"
     {if $is_multiple}multiple="multiple"{/if}
     {apply input_atts /}>
@@ -132,7 +139,7 @@
 
 <div fx:template="input[$type == 'radio']">
     {set $field_name = $name}
-    <label fx:each="$values as $key => $option">
+    <label fx:each="$values as $key => $option" title="{$option.comment | strip_tags}" class="fx_form_option_label">
         <input type="radio" name="{$field_name}" value="{$key}" {if $value == $key}checked="checked"{/if} />
         <span>{$option.name}</span>
     </label>

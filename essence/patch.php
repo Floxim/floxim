@@ -133,15 +133,7 @@ class fx_patch extends fx_essence {
     }
     
     protected function _update_version_number($new_version) {
-        $config_file = fx::path('floxim', '/system/config.php');
-        $config_content = file_get_contents($config_file);
-        $config_content = preg_replace_callback(
-            "~['\"]fx.version['\"]\s*=>\s*['\"]([\d\.]+)['\"]~is",
-            function($matches) use ($new_version) {
-                return str_replace($matches[1], $new_version, $matches[0]);
-            }, 
-            $config_content
-        );
-        fx::files()->writefile($config_file, $config_content);
+        fx::config('fx.version',$new_version);
+        fx::config()->store('fx.version');
     }
 }
