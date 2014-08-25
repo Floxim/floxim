@@ -15,13 +15,13 @@ window.fx_front = function () {
     
     this.mode_selectable_selector = null;
     
-    $('#fx_admin_page_modes').on('click', 'a', function() {
+    $('#fx_admin_page_modes').on('click.fx_mode_click', 'a', function() {
         var mode = $(this).attr('href').match(/\.([^\.]+)$/)[1];
         $fx.front.load(mode);
         return false;
     });
     
-    $('html').on('keyup', function(e) {
+    $('html').on('keyup.fx_front_keyup', function(e) {
         if ($fx.front_panel.parse_stris_visible) {
             return;
         }
@@ -127,7 +127,7 @@ fx_front.prototype.handle_mouseover = function(e) {
         }, 
         is_hover_parent ? 400 : 30
     );
-    node.one('mouseout', function() {
+    node.one('mouseout.fx_front_mouseout', function() {
         $fx.front.c_hover = null;
         if (node.closest('.fx_selected').length > 0) {
             return false;
@@ -742,9 +742,11 @@ fx_front.prototype.select_item = function(node) {
         this.make_node_panel($node);
     }
     
-    $node.on('mouseout.fx_catch_mouseout', function (e) {
-       e.stopImmediatePropagation();
-    });
+   var closest_ib_node = $node.closest('.fx_infoblock')[0];
+   $fx.front.freeze_events(closest_ib_node);
+   $node.one('fx_deselect', function() {
+       $fx.front.unfreeze_events(closest_ib_node);
+   });
     
     var selectable_up = this.get_selectable_up();
     if (selectable_up) {
@@ -1743,6 +1745,31 @@ fx_front.prototype.get_panel_z_index = function() {
     return this.panel_z_index;
 };
 
+
+/**
+ * Hide outline pane if the cursor comes very close to it to prevent mouseout unexpected by template js
+ * @todo we should cache visible panes with their positions
+ */
+fx_front.prototype.hide_hover_outlines = function(pos) {
+    var $panes = $('body>.fx_front_overlay .fx_outline_style_hover');
+    var treshold = 3;
+    $panes.each(function(i, p) {
+        var $p = $(p),
+            offset = $p.offset(),
+            top = offset.top - treshold,
+            left = offset.left - treshold,
+            bottom = top + $p.height() + treshold*2,
+            right = left + $p.width() + treshold*2;
+        if (pos.top > top && pos.top < bottom && pos.left > left && pos.left < right) {
+            //$p.css('outline', '3px solid #FF0');
+            $p.css('visibility', 'hidden');
+        } else {
+            //$p.css('outline', 'none');
+            $p.css('visibility', 'visible');
+        }
+    });
+};
+
 fx_front.prototype.outline_block = function(n, style, speed) {
     if (!style) {
         style = 'hover';
@@ -1879,9 +1906,15 @@ fx_front.prototype.outline_block = function(n, style, speed) {
     }
     n.data('fx_outline_panes', panes);
     n.data('fx_outline_style', style);
+    if (style === 'hover') {
+        n.off('.fx_hide_hover_outlines').on('mousemove.fx_hide_hover_outlines', function(e) {
+            $fx.front.hide_hover_outlines({top:e.pageY, left:e.pageX});
+        });
+    }
 };
 
 fx_front.prototype.outline_block_off = function(n, speed) {
+    n.off('.fx_hide_hover_outlines');
     if (n.hasClass('fx_hilight_outline')) {
         return;
     }
@@ -1954,6 +1987,66 @@ fx_front.prototype.prepare_page_infoblock_form = function(settings) {
                 value : this.area
             }
         };
+    });
+};
+
+
+fx_front.prototype.freeze_events = function(frozen_node) {            
+    var $ = window.jQuery,
+        $node = $(frozen_node),
+        frozen_handlers = [];
+    
+    function freeze_event_hanlder(handler, check_context) {
+        if (handler.namespace.match(/^fx_/)) {
+            return;
+        }
+        if (handler._realHandler) {
+            return;
+        }
+        frozen_handlers.push(handler);
+        handler._realHandler = handler.handler;
+        if (!check_context) {
+            handler.handler = function(e) {};
+            return;
+        }
+        handler.handler = function(e) {
+            if (frozen_node !== e.target && !$.contains(frozen_node, e.target)) {
+                return handler._realHandler(e);
+            }
+        };
+    }
+
+    function freeze_node_events(node, check_context) {
+        var events = $._data(node, 'events');
+        if (!events) {
+            return;
+        }
+        $.each( events, function (e_type, events) {
+            $.each(events, function (e_index, e) {
+                freeze_event_hanlder(e, check_context);
+            });
+        });
+    }
+
+    $.each($('*', $node).add($node), function (index, node) {
+        freeze_node_events(node, false);
+    });
+
+    $.each($node.parents().add( document ), function (index, node) {
+        freeze_node_events(node, true);
+    });
+
+    $node.data('frozen_handlers', frozen_handlers);
+};
+
+fx_front.prototype.unfreeze_events = function(frozen_node) {
+    var $ = window.jQuery,
+        $node = $(frozen_node);
+    $.each($node.data('frozen_handlers'), function (index, h) {
+        if (h._realHandler) {
+            h.handler = h._realHandler;
+            delete h._realHandler;
+        }
     });
 };
 
