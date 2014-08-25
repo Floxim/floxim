@@ -96,7 +96,6 @@ if (_o.hide_in_panel) {
 
 if (_c.context !== 'panel') {
     setTimeout(function() {
-        console.log(_c);
         $fx_fields.make_redactor(
             $('textarea.fx_wysiwyg', html), 
             {extra_buttons:['html'], linebreaks: _c.nl2br}
@@ -109,7 +108,16 @@ if (_c.context !== 'panel') {
         $editor.on('focus', function() {
             $container.addClass('fx_textarea_container_redactor_focused').css('height', '');
             var $buttons = $toolbar.find('>li');
-            $toolbar.css('width', $buttons.length * $buttons.first().outerWidth());
+            var toolbar_width = $buttons.length * $buttons.first().outerWidth();
+            $toolbar.css('position', 'absolute');
+            var toolbar_offset = toolbar_width + $toolbar.offset().left - $(window).width();
+            if (toolbar_offset > 0) {
+                $toolbar.css({
+                    position:'absolute',
+                    left:'-'+(toolbar_offset+15)+'px'
+                });
+            }
+            $toolbar.css('width', toolbar_width);
         }).on('blur', function() {
             setTimeout(function() {
                 var $focused = $(document.activeElement);
