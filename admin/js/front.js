@@ -374,7 +374,7 @@ fx_front.prototype.redraw_add_button = function($node) {
     }
     var get_neighbour_buttons = function(between_text) {
         if (!$node.is('.fx_essence') || !$node.is('.fx_sortable')) {
-            return '';
+            return between_text;
         }
         var res = ' <a class="fx_button_extra fx_before" title="'+$fx.lang('Before')+'">&#9668;</a>';
         if (typeof  between_text !== 'undefined') {
