@@ -37,13 +37,13 @@ window.$fx = {
                 $fx.front.load(c_mode);
             }
             
-            $('html').on('click', '.fx_button', $fx.buttons.form_button_click);
+            $('html').on('click.fx', '.fx_button', $fx.buttons.form_button_click);
             $(document).ajaxComplete(function(e, jqXHR) {
                 ajax_counter--;
                 if (ajax_counter === 0) {
                     $('.fx_preloader').css('visibility', 'hidden');
                 }
-                if (!jqXHR.getResponseHeader) {
+                if (!jqXHR || !jqXHR.getResponseHeader) {
                     return;
                 }
                 var js_assets = jqXHR.getResponseHeader('fx_assets_js');

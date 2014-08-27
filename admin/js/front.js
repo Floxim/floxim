@@ -2,7 +2,7 @@
 
 window.fx_front = function () {
     this.mode = '';
-    $('html').on('mouseover', function(e) {
+    $('html').on('mouseover.fx_front', function(e) {
         $fx.front.mouseover_node = e.target;
     });
     var more_menu = new fx_more_menu($fx.settings.more_menu); 
@@ -519,7 +519,7 @@ fx_front.prototype.add_infoblock_select_settings = function(data) {
         },
         onready:function($form) {
            var back = $('.form_header a.back', $form);
-            back.on('click', function() {
+            back.on('click.fx_front', function() {
                 infoblock_back();
                 cancel_adding();
             });
@@ -586,7 +586,7 @@ fx_front.prototype.add_infoblock_select_settings = function(data) {
             };
             var ib_loader = null, 
                 is_waiting = false;
-            $form.on('change', function(e) {
+            $form.on('change.fx_front', function(e) {
                 if (is_waiting) {
                     if (ib_loader !== null) {
                         ib_loader.abort();
@@ -849,7 +849,7 @@ fx_front.prototype.make_node_panel = function($node) {
         $fx.front.recount_node_panel();
     });
     */
-    $panel.on('change keyup livesearch_value_loaded click', function () {
+    $panel.on('change.fx_front keyup.fx_front livesearch_value_loaded.fx_front click.fx_front', function () {
         $fx.front.recount_node_panel();
     });
     
@@ -944,7 +944,7 @@ fx_front.prototype.deselect_item = function() {
     var selected_item = this.get_selected_item();
     if (selected_item) {
         var $node = $(selected_item);
-        $node.off('.recount_outlines');
+        $node.off('.fx_recount_outlines');
         
         $node.off('.fx_catch_mouseout');
         $fx.front.enable_hilight();
@@ -1268,7 +1268,7 @@ fx_front.prototype.select_infoblock = function(n) {
             },
             onready:function($form) {
                 $form.data('ib_node', ib_node);
-                $form.on('change', function(e) {
+                $form.on('change.fx_front', function(e) {
                     if (e.target.name === 'livesearch_input') {
                         return;
                     }
@@ -1790,7 +1790,7 @@ fx_front.prototype.outline_block = function(n, style, speed) {
             $fx.front.outline_block(n, 'selected');
             $fx.front.recount_node_panel();
         };
-        n.off('.recount_outlines').on('resize.recount_outlines keydown.recount_outlines', recount_outlines);
+        n.off('.fx_recount_outlines').on('resize.fx_recount_outlines keydown.fx_recount_outlines', recount_outlines);
     }
     var o = n.offset();
     var overlay_offset = parseInt(this.get_front_overlay().css('top'));
@@ -1930,8 +1930,8 @@ fx_front.prototype.outline_block_off = function(n, speed) {
         //panes[i].remove();
         $panes = $panes.add(panes[i]);
     }
-    n.off('.recount_outlines');
-    $(window).off('.recount_outlines');
+    n.off('.fx_recount_outlines');
+    $(window).off('.fx_recount_outlines');
     n.data('fx_outline_panes', null);
     
     if (speed === undefined) {
@@ -2000,7 +2000,7 @@ fx_front.prototype.freeze_events = function(frozen_node) {
         frozen_handlers = [];
     
     function freeze_event_hanlder(handler, check_context) {
-        if (handler.namespace.match(/^fx_/)) {
+        if (handler.namespace.match(/^fx/) || handler.type.match(/^fx/)) {
             return;
         }
         if (handler._realHandler) {
@@ -2059,7 +2059,7 @@ $('html').on('fx_before_adm_form_created', function(e, settings) {
     }
 });
 
-$('html').on('click', '.fx_item_help_block .level_expander', function() {
+$('html').on('click.fx_front', '.fx_item_help_block .level_expander', function() {
     var $c_row = $(this).closest('tr');
     var c_level = $c_row.attr('class').match(/help_level_(\d+)/)[1]*1;
     var $next = $c_row.nextAll('tr');
@@ -2074,7 +2074,7 @@ $('html').on('click', '.fx_item_help_block .level_expander', function() {
     }
 });
 
-$('html').on('click', '.fx_help .fx_help_expander', function() {
+$('html').on('click.fx_front', '.fx_help .fx_help_expander', function() {
    var $exp = $(this);
    var $help = $exp.data('help_node');
    if (!$help) {

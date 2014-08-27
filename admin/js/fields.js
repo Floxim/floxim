@@ -126,7 +126,7 @@ window.$fx_fields = {
 // file field
 
 var $html = $('html');
-$html.on('click', '.fx_image_field .fx_remote_file_block a',  function() {
+$html.on('click.fx', '.fx_image_field .fx_remote_file_block a',  function() {
     var $block = $(this).closest('.fx_remote_file_block');
     $block.addClass('active');
     $block.closest('.fx_preview').addClass('fx_preview_active');
@@ -138,7 +138,7 @@ $html.on('click', '.fx_image_field .fx_remote_file_block a',  function() {
     });
 });
 
-$html.on('blur', '.fx_image_field .fx_remote_file_block input', function() {
+$html.on('blur.fx', '.fx_image_field .fx_remote_file_block input', function() {
     $(this).closest('.fx_remote_file_block').removeClass('active');
     $(this).closest('.fx_preview').removeClass('fx_preview_active');
 });
@@ -162,7 +162,7 @@ function handle_upload(data, $block) {
     $res_inp.trigger('fx_change_file');
 }
 
-$html.on('change', '.fx_image_field input.file', function() {
+$html.on('change.fx', '.fx_image_field input.file', function() {
     var $field = $(this);
     var $block = $field.closest('.fx_image_field');
     var inp_id = $field.attr('id');
@@ -179,11 +179,11 @@ $html.on('change', '.fx_image_field input.file', function() {
     });
 });
 
-$html.on('click', '.fx_image_field .fx_file_uploader', function() {
+$html.on('click.fx', '.fx_image_field .fx_file_uploader', function() {
     $(this).closest('.fx_image_field').find('input.file').focus().click();
 });
 
-$html.on('click', '.fx_image_field .fx_file_killer', function() {
+$html.on('click.fx', '.fx_image_field .fx_file_killer', function() {
    var $field = $(this).closest('.fx_image_field'); 
    $('.fx_preview img', $field).hide();
    $('.real_value', $field).val('').trigger('fx_change_file');
@@ -192,7 +192,7 @@ $html.on('click', '.fx_image_field .fx_file_killer', function() {
    $(this).hide();
 });
 
-$html.on('paste', '.fx_image_field .remote_file_location', function() {
+$html.on('paste.fx', '.fx_image_field .remote_file_location', function() {
     var $inp = $(this);
     var $block = $inp.closest('.fx_image_field');
     setTimeout(function() {
