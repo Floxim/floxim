@@ -16,7 +16,7 @@ class fx_template_html_tokenizer extends fx_template_fsm {
         $this->add_rule(self::FX_COMMENT, '*}', false, 'fx_comment_end');
         
         // html comments
-        $this->add_rule(self::STATE_ANY, '<!--', self::HTML_COMMENT);
+        $this->add_rule(self::TEXT, '<!--', self::HTML_COMMENT);
         $this->add_rule(self::HTML_COMMENT, '>', false, 'html_comment_check_end');
         $this->add_rule(self::HTML_COMMENT, '-->', self::TEXT);
 

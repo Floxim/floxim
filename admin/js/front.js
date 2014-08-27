@@ -1676,6 +1676,9 @@ fx_front.prototype.scrollTo = function($node, if_invisible, callback) {
     if (move) {
         var distance = Math.abs(st - top_offset);
         var speed = distance*2;
+        if (speed > 800) {
+            speed = 800;
+        }
         $('body').stop().scrollTo(
             top_offset,
             speed
