@@ -163,21 +163,49 @@ class fx_controller_admin_content extends fx_controller_admin {
         if (!$content) {
             return;
         }
-        $current_page_path = null;
-        if ($input['page_id']) {
-            $current_page_path = fx::data('content_page' , $input['page_id'])->get_path()->get_values('id');
+        $fields = array(
+            array(
+                'label' => fx::alang('I am REALLY sure','system'),
+                'name' => 'delete_confirm',
+                'type' => 'checkbox'
+            ),
+            $this->ui->hidden('essence', 'content'),
+            $this->ui->hidden('action', 'delete_save'),
+            $this->ui->hidden('content_id', $content['id']),
+            $this->ui->hidden('fx_admin', true)
+        );
+        if (isset($input['content_type'])) {
+            $fields[]=$this->ui->hidden('content_type', $input['content_type']);
         }
-        $response = array('status'=>'ok');
-        if ($content->is_instanceof('page') && is_array($current_page_path) && in_array($content['id'], $current_page_path) ) {
-            if ($content['parent_id'] == 0){
-                $response['reload'] = '/';
-            } else {
-                $parent_page = fx::data('content_page', $content['parent_id']);
-                $response['reload'] = $parent_page['url'];
+        if (isset($input['page_id'])) {
+            $fields[]=$this->ui->hidden('page_id', $input['page_id']);
+        }
+        /**
+         * check children
+         */
+        $descendants = fx::data('content')->descendants_of($content)->all();
+        if ($count_descendants=$descendants->count()) {
+            $fields[]=array('type' => 'html', 'html' => fx::alang('The content contains some descendants','system') . ', <b>' . $count_descendants . '</b> '. fx::alang('items. These items are removed.','system'));
+        }
+
+        $this->response->add_fields($fields);
+        if ($input['delete_confirm']) {
+            $current_page_path = null;
+            if ($input['page_id']) {
+                $current_page_path = fx::data('content_page' , $input['page_id'])->get_path()->get_values('id');
             }
+            $response = array('status'=>'ok');
+            if ($content->is_instanceof('page') && is_array($current_page_path) && in_array($content['id'], $current_page_path) ) {
+                if ($content['parent_id'] == 0){
+                    $response['reload'] = '/';
+                } else {
+                    $parent_page = fx::data('content_page', $content['parent_id']);
+                    $response['reload'] = $parent_page['url'];
+                }
+            }
+            $content->delete();
+            return $response;
         }
-        $content->delete();
-        return $response;
     }
     
     public function livesearch($input) {
