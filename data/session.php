@@ -22,13 +22,17 @@ class fx_data_session extends fx_data {
         return $session;
     }
     
+    /*
+     * @todo should we do something with www/nowww problem?
+     */
     public function set_cookie($sid, $time) {
+        $host = null;
         setcookie(
             $this->cookie_name, 
             $sid, 
             $time, 
             "/", 
-            str_replace("www.", "", $_SERVER['HTTP_HOST'])
+            $host
         );
     }
     
