@@ -1963,7 +1963,7 @@ fx_front.prototype.enable_node_panel = function() {
 };
 
 fx_front.prototype.prepare_page_infoblock_form = function(settings) {
-    if (settings.id !== 'page_infoblocks') {
+    if (!settings  || settings.id !== 'page_infoblocks') {
         return;
     }
     var $areas = $('.fx_area');
