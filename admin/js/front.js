@@ -1177,21 +1177,21 @@ fx_front.prototype.select_content_essence = function($essence) {
     });
     
     $fx.front.add_panel_button('delete', function() {
-       if (confirm($fx.lang("Are you sure?"))) {
-           
-           $fx.front.disable_infoblock(ib_node);
-           var ce_type = essence_meta[3] || essence_meta[1];
-           var ce_id = essence_meta[2] || essence_meta[0];
-           $fx.post({
-               essence:'content',
-               action:'delete_save',
-               content_type:ce_type,
-               content_id:ce_id,
-               page_id:$fx.front.get_page_id() //$('body').data('fx_page_id')
-           }, function () {
-               $fx.front.reload_infoblock(ib_node);
-           });
-       }
+        var ce_type = essence_meta[3] || essence_meta[1];
+        var ce_id = essence_meta[2] || essence_meta[0];
+
+        $fx.front_panel.load_form({
+            essence:'content',
+            action:'delete_save',
+            content_type:ce_type,
+            content_id:ce_id,
+            page_id:$fx.front.get_page_id(),
+            fx_admin:true
+        }, {
+            onfinish: function() {
+                $fx.front.reload_layout();
+            }
+        });
     });
     
     if (
