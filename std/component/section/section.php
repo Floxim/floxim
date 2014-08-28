@@ -51,9 +51,11 @@ class fx_controller_component_section extends fx_controller_component_page {
             if (!$extra_roots) {
                 $extra_roots = array();
             }
-            fx::data('content_page')
-                ->make_tree($items, 'submenu', $extra_roots)
-                ->add_filter('parent_id', $items->first()->get('parent_id'));
+            if (count($items) > 0) {
+                fx::data('content_page')
+                    ->make_tree($items, 'submenu', $extra_roots)
+                    ->add_filter('parent_id', $items->first()->get('parent_id'));
+            }
         });
         return parent::do_list();
     }
