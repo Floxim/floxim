@@ -2059,7 +2059,7 @@ $('html').on('fx_before_adm_form_created', function(e, settings) {
     }
 });
 
-$('html').on('click.fx_front', '.fx_item_help_block .level_expander', function() {
+$('html').on('click.fx_help', '.fx_item_help_block .level_expander', function() {
     var $c_row = $(this).closest('tr');
     var c_level = $c_row.attr('class').match(/help_level_(\d+)/)[1]*1;
     var $next = $c_row.nextAll('tr');
@@ -2074,7 +2074,7 @@ $('html').on('click.fx_front', '.fx_item_help_block .level_expander', function()
     }
 });
 
-$('html').on('click.fx_front', '.fx_help .fx_help_expander', function() {
+$('html').on('click.fx_help', '.fx_help .fx_help_expander', function() {
    var $exp = $(this);
    var $help = $exp.data('help_node');
    if (!$help) {
