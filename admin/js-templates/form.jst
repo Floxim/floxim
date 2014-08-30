@@ -322,11 +322,21 @@ $('td', html).last().addClass('fx_tab_data_last');
 <div class="field field_<?=_c.type?>">
     <div class="form_label fx_group_labels">  
     <?
+    var is_first_visible = null;
+    var first_visible_index = null;
     $.each(_c.fields, function(index, field) {
+        if (is_first_visible === null) {
+            if (field.type !== 'hidden') {
+                is_first_visible = true;
+                first_visible_index = index;
+            }
+        } else {
+            is_first_visible = false;
+        }
         ?>
-        <label class="fx_group_label<?= index === 0 ? ' fx_group_label_active' : '' ?>"><?=field.label?></label>
+        <label class="fx_group_label<?= is_first_visible ? ' fx_group_label_active' : '' ?>"><?=field.label?></label>
         <?
-        if (index !== _c.fields.length - 1) {?>
+        if (index !== _c.fields.length - 1 && field.type !== 'hidden') {?>
         <span class="fx_group_label_separator"> & </span>
         <?}
     });
@@ -336,7 +346,7 @@ $('td', html).last().addClass('fx_tab_data_last');
         <?
         $.each(_c.fields, function(index, field) {
             ?>
-            <div class="fx_group_input" style="display:<?= index === 0 ? 'block' : 'none'?>">
+            <div class="fx_group_input" style="display:<?= index === first_visible_index ? 'block' : 'none'?>">
             
             </div>
             <?
