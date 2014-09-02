@@ -1,5 +1,8 @@
-<?
-class fx_event {
+<?php
+
+namespace Floxim\Floxim\System;
+
+class Event {
     public $name = 'event';
     public function __construct($name, $params) {
         $this->name = $name;
@@ -8,4 +11,3 @@ class fx_event {
         }
     }
 }
-?>

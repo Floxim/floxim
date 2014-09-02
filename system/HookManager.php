@@ -1,6 +1,8 @@
 <?php
 
-class fx_hook_manager {
+namespace Floxim\Floxim\System;
+
+class HookManager {
 
     public function create($name=null,$type=null,$params=array()) {
         if (is_null($name) and !is_null($type)) {

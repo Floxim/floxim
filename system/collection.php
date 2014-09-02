@@ -1,6 +1,11 @@
 <?php
-class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
-    
+
+namespace Floxim\Floxim\System;
+
+use Floxim\Floxim\Template;
+
+class Collection implements ArrayAccess, IteratorAggregate, Countable {
+
     /**
      * The data array itself
      * @type array
@@ -26,7 +31,7 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
     public $finder = null;
     
     public function fork($data = array()) {
-        $collection = new fx_collection($data);
+        $collection = new Collection($data);
         $collection->is_sortable = $this->is_sortable;
         $collection->finder = $this->finder;
         return $collection;
@@ -90,7 +95,7 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
     /**
      * Set internal array pointer to the specified key
      * @param string $key
-     * @return fx_collection Returns collection itself
+     * @return Collection Returns collection itself
      */
     public function set_position($key) {
         reset($this->data);
@@ -107,7 +112,7 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
     public function find($field, $prop = null, $compare_type = null) {
         $fork = $this->fork();
         if (count($this->data) == 0) {
-            //return new fx_collection();
+            //return new Collection();
             return $fork;
         }
         if (is_null($prop)) {
@@ -248,7 +253,7 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
     
     public function unique($field = null) {
         $res = array();
-        if (is_null($field) && $this->first() instanceof fx_essence) {
+        if (is_null($field) && $this->first() instanceof Essence) {
             $field = 'id';
         }
         if (!is_null($field)) {
@@ -291,10 +296,10 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
      * If the $grupper
      * @param int|string|callable $groupper 
      * @param bool $force_property Force to handle $groupper as property name
-     * @return \fx_collection
+     * @return Collection
      */
     public function group($groupper, $force_property = false) {
-        $res = new fx_collection();
+        $res = new Collection();
         $initial_key = key($this->data);
         if (!$force_property) {
             if (is_numeric($groupper)) {
@@ -305,7 +310,7 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
                         $r++;
                     }
                     if (!isset($res[$r])) {
-                        $res[$r] = new fx_collection();
+                        $res[$r] = new Collection();
                     }
                     $res[$r] []= $item;
                     $c++;
@@ -317,7 +322,7 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
                 foreach ($this as $item) {
                     $key = call_user_func($groupper, $item);
                     if (!isset($res[$key])) {
-                        $res[$key] = new fx_collection();
+                        $res[$key] = new Collection();
                     }
                     $res[$key] []= $item;
                 }
@@ -332,7 +337,7 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
                 $groupper_parts = explode("|", $groupper, 2);
                 $groupper = trim($groupper_parts[0]);
                 
-                $p = new fx_template_modifier_parser();
+                $p = new Template\ModifierParser();
                 $parsed_modifiers = $p->parse('|'.$groupper_parts[1]);
                 if ($parsed_modifiers) {
                     foreach ($parsed_modifiers as $pmod) {
@@ -373,13 +378,13 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
                     }
                 }
                 
-                if ($key instanceof fx_essence) {
+                if ($key instanceof Essence) {
                     $key_index = $key['id'];
                 } else {
                     $key_index = $key;
                 }
                 if (!isset($res[$key_index])) {
-                    $group_collection = new fx_collection();
+                    $group_collection = new Collection();
                     $group_collection->is_sortable = $this->is_sortable;
                     $group_collection->group_key = $key;
                     $res[$key_index] = $group_collection;
@@ -446,7 +451,7 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
                 $result[$res_key] = call_user_func($field, $v, $k);
             }
             if ($as_collection) {
-                $result = new fx_collection($result);
+                $result = new Collection($result);
             }
             return $result;
         }
@@ -465,7 +470,7 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
             }
 
             if ($as_collection) {
-                $result = new fx_collection($result);
+                $result = new Collection($result);
             }
             return $result;
         } 
@@ -480,7 +485,7 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
             }
         }
         if ($as_collection) {
-            $result = new fx_collection($result);
+            $result = new Collection($result);
         }
         return $result;
     }
@@ -488,13 +493,13 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
     /*
      * $users = fx::data("user")->all();
      * $posts = fx::data("post")->all();
-     * $user['posts'] = fx_collection(1,2,3);
+     * $user['posts'] = Collection(1,2,3);
      * $users->attach_many($posts, 'author_id', 'posts');
      * 
      * $post['author'] = $user;
      * $posts->attach($users, 'this.creator_id=author.user_id')
      */
-    public function attach(fx_collection $what, $cond_field, $res_field = null, $check_field = 'id') {
+    public function attach(Collection $what, $cond_field, $res_field = null, $check_field = 'id') {
         if ($res_field === null) {
             $res_field = preg_replace("~_id$~", '', $cond_field);
         }
@@ -516,15 +521,15 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
      * which have $cond_field equal to $item[$check_field] 
      * and append them to $item[$res_field] as a new collection.
      * If $extract_field argument is specified, $other[$extract_field] is used instead if $other
-     * @param fx_collection $what
+     * @param Collection $what
      * @param string $cond_field
      * @param string $res_field
      * @param string $check_field
      * @param string $extract_field
-     * @return \fx_collection
+     * @return \Floxim\Floxim\System\Collection
      */
     public function attach_many(
-            fx_collection $what, 
+            Collection $what,
             $cond_field, 
             $res_field, 
             $check_field = 'id',
@@ -543,7 +548,7 @@ class fx_collection implements ArrayAccess, IteratorAggregate, Countable {
                 $new_collection->add_filter($cond_field, $index_key);
                 $res_index[$index_key] = $new_collection;
                 if ($extract_field) {
-                    $res_index[$index_key]->linker_map = new fx_collection();
+                    $res_index[$index_key]->linker_map = new Collection();
                 }
             }
             if (!$extract_field) {

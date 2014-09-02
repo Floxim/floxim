@@ -1,5 +1,8 @@
 <?php
-class fx_cache {
+
+namespace Floxim\Floxim\System;
+
+class Cache {
     protected $_local_cache = array();
     
     public function get($key) {
@@ -14,4 +17,3 @@ class fx_cache {
         unset($this->_local_cache[$key]);
     }
 }
-?>

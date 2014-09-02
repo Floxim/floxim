@@ -1,5 +1,8 @@
 <?php
-class fx_system_eventmanager {
+
+namespace Floxim\Floxim\System;
+
+class Eventmanager {
     protected $_listeners = array();
 
     public function listen($event_name, $callback) {
@@ -47,7 +50,7 @@ class fx_system_eventmanager {
     
     public function trigger($e, $params = null) {
         if (is_string($e)) {
-            $e = new fx_event($e, $params);
+            $e = new Event($e, $params);
         }
         foreach ($this->_listeners as $lst) {
             if ($lst['event_name'] == $e->name) {

@@ -1,5 +1,8 @@
 <?php
-class fx_thumb
+
+namespace Floxim\Floxim\System;
+
+class Thumb
 {
     protected $source_path = null;
     protected $info = array();

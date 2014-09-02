@@ -1,5 +1,8 @@
 <?php
-class fx_system_modules {
+
+namespace Floxim\Floxim\System;
+
+class Modules {
 
     public function get_data() {
         static $all_modules_data = false;

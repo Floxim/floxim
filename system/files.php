@@ -1,5 +1,10 @@
 <?php
-class fx_system_files {
+
+namespace Floxim\Floxim\System;
+
+use Floxim\Floxim\System\Exception;
+
+class Files {
     public $ftp_host;
     public $ftp_port;
     public $ftp_path;
@@ -287,7 +292,7 @@ class fx_system_files {
         }
         $fh = fopen($filename, $mode);
         if (!$fh) {
-            throw new fx_exception_files('Can not open file '.$filename);
+            throw new Exception\Files('Can not open file '.$filename);
         }
         return $fh;
     }
@@ -338,7 +343,7 @@ class fx_system_files {
             return 0;
         }
 
-        throw new fx_exception_files( fx::alang('File is not writable','system') . ' ' . $filename);
+        throw new Exception\Files( fx::alang('File is not writable','system') . ' ' . $filename);
 
         // If not, write via ftp
         $tmpfile = tmpfile();
@@ -395,7 +400,7 @@ class fx_system_files {
             return true;
         }
         else {
-            throw new fx_exception_files("Cannot create directory ".$path);
+            throw new Exception\Files("Cannot create directory ".$path);
         }
 
         return 1;
@@ -413,7 +418,7 @@ class fx_system_files {
 
         // Check for the existence, the ability to read and is not a directory
         if (!file_exists($local_filename) || !is_readable($local_filename) || is_dir($local_filename)) {
-            throw new fx_exception_files("Unable to read file $local_filename");
+            throw new Exception\Files("Unable to read file $local_filename");
         }
 
         return file_get_contents($local_filename);
@@ -842,7 +847,7 @@ class fx_system_files {
 
         $h = fopen($local_filename, "w");
         if (!$h) {
-            throw new fx_exception_files("Cannot create temporary file");
+            throw new Exception\Files("Cannot create temporary file");
         }
         fclose($h);
 
@@ -864,7 +869,7 @@ class fx_system_files {
 
         $res = mkdir($local_filename);
         if (!$res) {
-            throw new fx_exception_files("Cannot create temporary directory");
+            throw new Exception\Files("Cannot create temporary directory");
         }
 
         $count = 1;
@@ -1213,8 +1218,4 @@ class fx_system_files {
         }
         return false;
     }
-}
-
-class fx_exception_files extends fx_exception {
-
 }

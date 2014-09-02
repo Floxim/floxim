@@ -1,5 +1,8 @@
 <?php
-class fx_config {
+
+namespace Floxim\Floxim\System;
+
+class Config {
     private $config = array(
         'db.prefix' => 'fx',
         'path.jquery' => '/floxim/lib/js/jquery-1.9.1.min.js',

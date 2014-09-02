@@ -1,5 +1,8 @@
 <?php
-class fx_system_input {
+
+namespace Floxim\Floxim\System;
+
+class Input {
 
 
   public function __construct () {

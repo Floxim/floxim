@@ -1,5 +1,10 @@
 <?php
-class fx_loader {
+
+namespace Floxim\Floxim\System;
+
+use Floxim\Floxim\System\Exception;
+
+class Loader {
 
     public function __construct() {
         spl_autoload_register(array($this, 'load_class'));
@@ -12,7 +17,7 @@ class fx_loader {
      */
     static public function load_class($classname) {
         if (in_array($classname, self::$classes_with_no_file)) {
-            throw new fx_exception_classload('AGAIN: Unable to load class '.$classname);
+            throw new Exception\Classload('AGAIN: Unable to load class '.$classname);
         }
         $file = self::get_class_file($classname);
         if (!$file) {
@@ -20,7 +25,7 @@ class fx_loader {
         }
         $file = fx::path()->to_abs($file.'.php');
         if (!file_exists($file)) {
-            $e = new fx_exception_classload('Unable to load class '.$classname." - ".$file);
+            $e = new Exception\Classload('Unable to load class '.$classname." - ".$file);
             $e->class_file = $file;
             self::$classes_with_no_file[]= $classname;
             throw $e;
@@ -86,7 +91,8 @@ class fx_loader {
         'migration_manager',
         'hook_manager',
     );
-    
+
+    // todo: psr0 need rewrite method
     public static function get_class_file($classname) {
         $root = fx::config()->ROOT_FOLDER;
         $doc_root = fx::config()->DOCUMENT_ROOT.'/';
@@ -264,15 +270,4 @@ class fx_loader {
         
         return $root.$classname;
     }
-}
-
-class fx_exception extends Exception {
-
-}
-
-class fx_exception_classload extends fx_exception {
-	public $class_file = false;
-	public function get_class_file() {
-		return $this->class_file;
-	}
 }

@@ -1,5 +1,8 @@
 <?php
-class fx_system_env {
+
+namespace Floxim\Floxim\System;
+
+class Env {
     protected $current = array();
 
   
@@ -26,7 +29,7 @@ class fx_system_env {
 
 
     /**
-     * @return fx_site
+     * @return \Floxim\Floxim\System\Site
      */
     public function get_site () {
         if (!isset($this->current['site'])) {
@@ -82,7 +85,7 @@ class fx_system_env {
 
     public function get_user () {
         if (!isset($this->current['user'])) {
-            $this->current['user'] = fx_content_user::load();
+            $this->current['user'] = \Floxim\User\Component\User\Essence::load();
         }
         return $this->current['user'];
     }
@@ -138,7 +141,7 @@ class fx_system_env {
     
     /**
      * Add template object to global stack
-     * @param fx_template $template
+     * @param Template $template
      */
     public function add_current_template($template) {
         $this->current_template_stack[]= $template;

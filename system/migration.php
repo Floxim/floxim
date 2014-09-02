@@ -1,6 +1,8 @@
 <?php
 
-abstract class fx_migration {
+namespace Floxim\Floxim\System;
+
+abstract class Migration {
 
     abstract protected function up();
 

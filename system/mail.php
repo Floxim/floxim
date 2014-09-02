@@ -1,8 +1,11 @@
 <?php
+
+namespace Floxim\Floxim\System;
+
 /**
  * Floxim wrapper for PHPMailer library
  */
-class fx_system_mail {
+class Mail {
     public $mailer = null;
     protected $_data = null;
     
@@ -40,7 +43,7 @@ class fx_system_mail {
     /**
      * Set params from array
      * @param array $params
-     * @return \fx_system_mail
+     * @return \Floxim\Floxim\System\Mail
      */
     public function set_params($params = array()) {
         
@@ -76,7 +79,7 @@ class fx_system_mail {
     /**
      * Set mail subject
      * @param string $subject
-     * @return \fx_system_mail
+     * @return \Floxim\Floxim\System\Mail
      */
     public function subject($subject) {
         $this->mailer->Subject = $subject;
@@ -86,7 +89,7 @@ class fx_system_mail {
     /**
      * Set or get mail body
      * @param string $message
-     * @return \fx_system_mail
+     * @return \Floxim\Floxim\System\Mail
      */
     public function message($message = null) {
         if ($message === null) {
@@ -103,7 +106,7 @@ class fx_system_mail {
      * Set up or disable smtp mode
      * @param mixed $host host name or false to switch off smtp mode
      * @param string $password
-     * @return \fx_system_mail
+     * @return \Floxim\Floxim\System\Mail
      */
     public function smtp($host, $password = null) {
         if ($host === false) {
@@ -121,7 +124,7 @@ class fx_system_mail {
     /**
      * Set mail reciever address
      * @param mixed $to one address or array of addresses
-     * @return \fx_system_mail
+     * @return \Floxim\Floxim\System\Mail
      */
     public function to($to) {
         if (!is_array($to)) {
@@ -137,7 +140,7 @@ class fx_system_mail {
      * Set mail sender address
      * @param string $address email or email+name: "ivan@petrov.ru <Ivan Petrov>"
      * @param string $name
-     * @return \fx_system_mail
+     * @return \Floxim\Floxim\System\Mail
      */
     public function from($address, $name = null) {
         $real_address = null;
@@ -185,7 +188,7 @@ class fx_system_mail {
      * Append data for message template
      * @param mixed $key
      * @param mixed $value
-     * @return \fx_system_mail
+     * @return \Floxim\Floxim\System\Mail
      */
     public function data($key, $value = null) {
         if (func_num_args() == 2 && is_string($key)) {

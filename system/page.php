@@ -1,5 +1,8 @@
 <?php
-class fx_system_page {
+
+namespace Floxim\Floxim\System;
+
+class Page {
 
     // title, keywords, description
     protected $metatags = array();

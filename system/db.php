@@ -1,5 +1,8 @@
 <?php
-class fx_db extends PDO {
+
+namespace Floxim\Floxim\System;
+
+class Db extends PDO {
 
     // information about the last error
     protected $last_error;
@@ -126,7 +129,7 @@ class fx_db extends PDO {
     
     public function get_collection($query = null) {
         $res = $this->get_results($query, PDO::FETCH_ASSOC);
-        return new fx_collection($res);
+        return new Collection($res);
     }
 
     public function get_col ( $query = null, $col_num = 0 ) {

@@ -1,5 +1,8 @@
 <?php
-class fx_debug {
+
+namespace Floxim\Floxim\System;
+
+class Debug {
     protected $dir = null;
     protected $id = null;
     protected $file = null;

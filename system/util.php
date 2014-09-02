@@ -1,5 +1,8 @@
 <?php
-class fx_system_util {
+
+namespace Floxim\Floxim\System;
+
+class Util {
 
     public function is_even($input) {
         return (bool) ( round($input / 2) == $input / 2 );

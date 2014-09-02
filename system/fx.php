@@ -1,10 +1,15 @@
 <?php
 
+namespace Floxim\Floxim\System;
+
+use Floxim\Floxim\Router;
+use Floxim\Floxim\Template;
+
 /**
 "Static" class, just a helpers collection
 */ 
 
-class fx {
+class Fx {
     protected function __construct() {
 
     }
@@ -31,7 +36,7 @@ class fx {
     static public function config($k = null, $v = null) {
         static $config = false;
         if ($config === false) {
-            $config = new fx_config();
+            $config = new Config();
         }
         $argc = func_num_args();
         if ($argc == 0) {
@@ -46,12 +51,12 @@ class fx {
     
     /**
      * Access a database object
-     * @return fx_db
+     * @return \Floxim\Floxim\System\Db
      */
     public static function db() {
         static $db = false;
     	if ($db === false) {
-            $db = new fx_db();
+            $db = new Db();
             $db->query("SET NAMES '".fx::config()->DB_CHARSET."'");
     	}
     	return $db;
@@ -63,6 +68,8 @@ class fx {
      * @param mixed [$id] IDs or ids array
      */
     public static $data_stat = array();
+
+    // todo: psr0 need fix
     public static function  data($datatype, $id = null) {
     	
     	static $data_classes_cache = array();
@@ -72,7 +79,7 @@ class fx {
         }
         
         // fx::data($page) instead of $page_id
-        if (is_object($id) && $id instanceof fx_essence) {
+        if (is_object($id) && $id instanceof Essence) {
             return $id;
         }
         if (
@@ -126,7 +133,7 @@ class fx {
                                 $data_classes_cache[$ne] = $classname;
                             }
                             break;
-                        } catch (Exception $ex) {
+                        } catch (\Exception $ex) {
                             $not_existing []= $c_datatype;
                         }
                     }
@@ -176,11 +183,11 @@ class fx {
     /**
      * Get a basic routing Manager or router $router_name
      * @param $router_name = null
-     * @return fx_router_manager
+     * @return \Floxim\Floxim\Router\Manager
      */
     public static function router($router_name = null) {
     	if (self::$router === null) {
-            self::$router = new fx_router_manager();
+            self::$router = new Router\Manager();
     	}
         if (func_num_args() == 1) {
             return self::$router->get_router($router_name);
@@ -204,7 +211,7 @@ class fx {
     public static function env() {
         static $env = false;
         if ($env === false) {
-            $env = new fx_system_env();
+            $env = new Env();
         }
     	
         $args = func_get_args();
@@ -233,11 +240,13 @@ class fx {
     }
     
     /**
+     * todo: psr0 need fix
+     *
      * to create a controller, install options
      * @param string $controller 'controller_name' or 'controller_name.action_name'
      * @param array $input
      * @param string $action
-     * @return fx_controller initialized controller
+     * @return \Floxim\Floxim\System\Controller initialized controller
      */
     public static function controller($controller, $input = null, $action = null) {
     	$c_parts = explode(".", $controller);
@@ -293,9 +302,10 @@ class fx {
     	}
     }
 
+    // todo: psr0 need fix
     public static function template($template = null, $data = array()) {
         if (func_num_args() == 0) {
-            return new fx_template_loader();
+            return new Template\Loader();
         }
         $parts= explode(".", $template);
         if (count($parts) == 2) {
@@ -314,11 +324,11 @@ class fx {
     protected static $page = null;
     
     /**
-     * @return fx_system_page page instance
+     * @return \Floxim\Floxim\System\Page page instance
      */
     public static function page() {
         if (!self::$page) {
-            self::$page = new fx_system_page();
+            self::$page = new Page();
         }
         return self::$page;
     }
@@ -391,20 +401,20 @@ class fx {
     
     /**
      * 
-     * @param fx_collection $data
-     * @return fx_collection
+     * @param \Floxim\Floxim\System\Collection $data
+     * @return \Floxim\Floxim\System\Collection
      */
     public static function collection($data = array()) {
-        return $data instanceof fx_collection ? $data : new fx_collection($data);
+        return $data instanceof Collection ? $data : new Collection($data);
     }
     
     /*
-     * @return fx_system_input
+     * @return \Floxim\Floxim\System\Input
      */
     public static function input() {
         static $input = false;
         if ($input === false) {
-            $input = new fx_system_input();
+            $input = new Input();
         }
         if (func_num_args() === 0) {
             return $input;
@@ -430,10 +440,11 @@ class fx {
             self::config()->load($config);
         }
 
+        // todo: psr0 need fix
         static $loader = false;
         if ($loader === false) {
             require_once fx::config()->SYSTEM_FOLDER . 'loader.php';
-            $loader = new fx_loader();
+            $loader = new Loader();
         }
 
         // load options from DB
@@ -531,11 +542,11 @@ class fx {
     protected static $http = null;
     /**
      * http helper
-     * @return fx_http
+     * @return \Floxim\Floxim\System\Http
      */
     public static function http() {
         if (!self::$http) {
-            self::$http = new fx_http();
+            self::$http = new Http();
         }
         return self::$http;
     }
@@ -545,11 +556,11 @@ class fx {
      * migration manager
      * @param array $params
      *
-     * @return fx_migration_manager
+     * @return \Floxim\Floxim\System\MigrationManager
      */
     public static function migrations($params=array()) {
         if (!self::$migration_manager) {
-            self::$migration_manager = new fx_migration_manager($params);
+            self::$migration_manager = new MigrationManager($params);
         }
         return self::$migration_manager;
     }
@@ -558,18 +569,18 @@ class fx {
     /**
      * hook manager
      *
-     * @return fx_hook_manager
+     * @return \Floxim\Floxim\System\HookManager
      */
     public static function hooks() {
         if (!self::$hook_manager) {
-            self::$hook_manager = new fx_hook_manager();
+            self::$hook_manager = new \Floxim\Floxim\System\HookManager();
         }
         return self::$hook_manager;
     }
     
     /**
      * Get current user or new empty essence (with no id) if not logged in
-     * @return fx_content_user
+     * @return \Floxim\User\Component\User\Essence
      */
     public static function user() {
         return self::env()->get_user();
@@ -578,7 +589,7 @@ class fx {
     protected static function _get_event_manager() {
         static $event_manager = null;
         if (is_null($event_manager)) {
-            $event_manager = new fx_system_eventmanager();
+            $event_manager = new Eventmanager();
         }
         return $event_manager;
     }
@@ -602,7 +613,7 @@ class fx {
      */
     public static function cache($key = null, $value = null) {
         if (!self::$_cache) {
-            self::$_cache = new fx_cache();
+            self::$_cache = new Cache();
         }
         $count_args = func_num_args();
         switch ($count_args) {
@@ -621,7 +632,7 @@ class fx {
     public static function files() {
         static $files = false;
         if ($files === false) {
-            $files = new fx_system_files();
+            $files = new Files();
         }
         
         if (func_num_args() == 0) {
@@ -642,7 +653,7 @@ class fx {
     public static function util() {
         static $util = false;
         if ($util === false) {
-            $util = new fx_system_util();
+            $util = new Util();
         }
         return $util;
     }
@@ -662,7 +673,7 @@ class fx {
     
     public static function image($value, $format) {
         try {
-            $thumber = new fx_thumb($value, $format);
+            $thumber = new Thumb($value, $format);
             $res = $thumber->get_result_path();
         } catch (Exception $e) {
             $res = '';
@@ -697,7 +708,7 @@ class fx {
             return;
         }
         if (is_null(self::$debugger)) {
-            self::$debugger = new fx_debug();
+            self::$debugger = new Debug();
         }
         if (func_num_args() == 0) {
             return self::$debugger;
@@ -707,7 +718,7 @@ class fx {
     
     public static function log($what) {
         if (is_null(self::$debugger)) {
-            self::$debugger = new fx_debug();
+            self::$debugger = new Debug();
         }
         call_user_func_array(array(self::$debugger, 'log'), func_get_args());
     }
@@ -715,7 +726,7 @@ class fx {
     public static function profiler() {
         static $profiler = null;
         if (is_null($profiler)) {
-            $profiler = new fx_profiler();
+            $profiler = new Profiler();
         }
         return $profiler;
     }
@@ -725,7 +736,7 @@ class fx {
         if (!$path) {
             // we can not autoload path because it gonna be used by autoloader itself
             require_once (dirname(__FILE__).'/path.php');
-            $path = new fx_path();
+            $path = new Path();
         }
         switch(func_num_args()) {
             case 0: default:
@@ -741,10 +752,10 @@ class fx {
      * Get mailer service
      * @param array $params 
      * @param array $data
-     * @return \fx_system_mail
+     * @return \Floxim\Floxim\System\Mail
      */
     public static function mail($params = null, $data = null) {
-        $mailer = new fx_system_mail($params, $data);
+        $mailer = new Mail($params, $data);
         return $mailer;
     }
 }

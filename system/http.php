@@ -1,5 +1,8 @@
 <?php
-class fx_http {
+
+namespace Floxim\Floxim\System;
+
+class Http {
     
     protected $status_values = array(
         200 => 'OK',

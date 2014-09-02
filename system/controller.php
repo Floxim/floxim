@@ -1,11 +1,15 @@
 <?php
 
+namespace Floxim\Floxim\System;
+
+use Floxim\Floxim\Template;
+
 /**
  * Base class for all controllers
  * The constructor accepts parameters and action
  * Development - through the process()method
  */
-class fx_controller {
+class Controller {
     
     protected $input = array();
     protected $action = null;
@@ -129,6 +133,7 @@ class fx_controller {
     
     // controller_name.action_name
     public function get_signature() {
+        // todo: psr0 need fix
         return str_replace('fx_controller_', '', get_class($this)).'.'.$this->action;
     }
 
@@ -143,6 +148,7 @@ class fx_controller {
      * For components overridden by adding inheritance chain
      */
     protected function _get_controller_variants() {
+        // todo: psr0 need fix
         return array(str_replace('fx_controller_', '', get_class($this)));
     }
     
@@ -151,7 +157,7 @@ class fx_controller {
      * Call after the controller is initialized (action)
      */
     public function get_available_templates( $layout_name = null , $area_meta = null) {
-        $area_size = fx_template_suitable::get_size($area_meta['size']);
+        $area_size = Template\Suitable::get_size($area_meta['size']);
         $layout_defined = !is_null($layout_name);
         if (is_numeric($layout_name)) {
             $layout_names = array(fx::data('layout', $layout_name)->get('keyword'));
@@ -219,8 +225,8 @@ class fx_controller {
                 $tplv['layout_match_rate'] = $layout_defined && preg_match("~^layout_~", $tplv['full_id']) ? 1 : 0;
                 
                 if ($area_size && isset($tplv['size'])) {
-                    $size = fx_template_suitable::get_size($tplv['size']);
-                    $size_rate = fx_template_suitable::check_sizes($size, $area_size);
+                    $size = Template\Suitable::get_size($tplv['size']);
+                    $size_rate = Template\Suitable::check_sizes($size, $area_size);
                     if (!$size_rate) {
                         continue;
                     }

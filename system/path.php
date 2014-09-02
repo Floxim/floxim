@@ -1,5 +1,8 @@
 <?php
-class fx_path {
+
+namespace Floxim\Floxim\System;
+
+class Path {
     
     protected $root = '';
     public function __construct() {

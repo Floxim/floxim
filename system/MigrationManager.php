@@ -1,6 +1,8 @@
 <?php
 
-class fx_migration_manager {
+namespace Floxim\Floxim\System;
+
+class MigrationManager {
 
     protected $params=array();
 
@@ -16,7 +18,7 @@ class fx_migration_manager {
     public function create($name=null) {
         $name='m'.date('Ymd_His').(!is_null($name) ? "_$name" : '');
         $content="<?php
-        class {$name} extends fx_migration {
+        class {$name} extends \\Floxim\\Floxim\\System\\Migration {
 
             // Run for up migration
             protected function up() {
