@@ -1,5 +1,8 @@
 <?php
-class fx_controller_admin_log extends fx_controller_admin {
+
+namespace Floxim\Floxim\Admin\Controller;
+
+class Log extends Admin {
     
     public function process() {
         fx::debug()->disable();

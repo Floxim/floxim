@@ -149,6 +149,7 @@ class Controller {
      */
     protected function _get_controller_variants() {
         // todo: psr0 need fix
+        // \Floxim\User\Component\User\Controller
         return array(str_replace('fx_controller_', '', get_class($this)));
     }
     

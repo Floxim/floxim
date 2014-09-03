@@ -1,6 +1,8 @@
 <?php
 
-class fx_controller_admin_layout extends fx_controller_admin {
+namespace Floxim\Floxim\Admin\Controller;
+
+class Layout extends Admin {
 
     /**
      * List all of layout design in development
@@ -207,7 +209,7 @@ class fx_controller_admin_layout extends fx_controller_admin {
     	
     	$fm_action = isset($params[2]) ? $params[2] : 'ls';
     	$fm_path = isset($params[3]) ? $params[3] : '';
-    	
+    	// todo: psr0 need verify - class fx_controller_admin_module_filemanager not found
     	$filemanager = new fx_controller_admin_module_filemanager($fm_input, $fm_action, true);
     	$path = $template->get_path();
     	$fm_input = array(

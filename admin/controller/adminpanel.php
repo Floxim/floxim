@@ -1,5 +1,8 @@
 <?php
-class fx_controller_admin_adminpanel extends fx_controller_admin {
+
+namespace Floxim\Floxim\Admin\Controller;
+
+class Adminpanel extends Admin {
     
     public function index() {
         

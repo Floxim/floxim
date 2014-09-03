@@ -242,6 +242,13 @@ class Fx {
     /**
      * todo: psr0 need fix
      *
+     * [02.09.14, 18:32:34] Илья Мясин: fx::controller('floxim.user.user') - контроллер компонента юзер
+    [02.09.14, 18:32:49] Илья Мясин: fx::controller('floxim.user.profile') - контроллер компонента "профайл"
+    [02.09.14, 18:33:34] Илья Мясин: и добавить магические слова "admin" / "widget"
+    [02.09.14, 18:33:38] Илья Мясин: fx::controller('floxim.user.widget') - общий виджет модуля
+    [02.09.14, 18:33:52] Илья Мясин: fx::controller('floxim.user.admin') - общая админка
+    [02.09.14, 18:34:12] Илья Мясин: fx::controller('floxim.user.user.admin') - админка отдельного компонента
+     *
      * to create a controller, install options
      * @param string $controller 'controller_name' or 'controller_name.action_name'
      * @param array $input
@@ -249,7 +256,42 @@ class Fx {
      * @return \Floxim\Floxim\System\Controller initialized controller
      */
     public static function controller($controller, $input = null, $action = null) {
-    	$c_parts = explode(".", $controller);
+        /**
+         * vendor.module.component - front controller component
+         * vendor.module.component:action - front controller component with action
+         * vendor.module.component.admin - admin controller component
+         * vendor.module.component.widget - admin controller component
+         * vendor.module.admin - admin controller module
+         * vendor.module.widget - widget controller module
+         * layout - layout controller
+         * content - base controller component
+         */
+
+        /*
+        $c_parts = explode(":", $controller);
+        if (count($c_parts) == 2) {
+            $controller = $c_parts[0];
+            $action = $c_parts[1];
+        }
+
+        if ($controller=='layout') {
+
+        }
+
+        $c_class = 'fx_controller_'.$controller;
+        try {
+            $controller_instance = new $c_class($input, $action);
+            return $controller_instance;
+        } catch (Exception $e) {
+
+
+        }
+        */
+
+
+
+
+        $c_parts = explode(".", $controller);
         if (count($c_parts) == 2) {
             $controller = $c_parts[0];
             $action = $c_parts[1];

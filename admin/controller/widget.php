@@ -1,6 +1,8 @@
 <?php
 
-class fx_controller_admin_widget extends fx_controller_admin_component {
+namespace Floxim\Floxim\Admin\Controller;
+
+class Widget extends Component {
     
     public function all() {
         $field = array('type' => 'list', 'filter' => true);
@@ -13,7 +15,7 @@ class fx_controller_admin_widget extends fx_controller_admin_component {
         $field['essence'] = 'widget';
         $widgets = fx::data('widget')->all();
         foreach ($widgets as $widget) {
-            $submenu = fx_controller_admin_component::get_component_submenu($widget);
+            $submenu = Component::get_component_submenu($widget);
             $submenu_first = current($submenu);
             $r = array(
                 'id' => $widget['id'],

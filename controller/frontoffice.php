@@ -1,8 +1,14 @@
 <?php
+
+namespace Floxim\Floxim\Controller;
+
+use Floxim\Floxim\System;
+use Floxim\Floxim\Helper;
+
 /**
  * Front office controller - common base for widgets and components
  */
-class fx_controller_frontoffice extends fx_controller {
+class Frontoffice extends System\Controller {
     protected $_meta = array();
     protected $_action_prefix = 'do_';
     
@@ -32,7 +38,7 @@ class fx_controller_frontoffice extends fx_controller {
     
     public function ajax_form($form = null) {
         if (!$form) {
-            $form = new fx_form();
+            $form = new Helper\Form\Form();
         }
         $form['action'] = '/~ajax/';
         $form['method'] = 'POST';

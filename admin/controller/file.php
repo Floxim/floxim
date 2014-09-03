@@ -1,5 +1,8 @@
 <?php
-class fx_controller_admin_file extends fx_controller_admin {
+
+namespace Floxim\Floxim\Admin\Controller;
+
+class File extends Admin {
 
     public function upload_save($input) {
         $path = 'content';

@@ -1,5 +1,10 @@
 <?php
-class fx_controller_layout extends fx_controller {
+
+namespace Floxim\Floxim\Controller;
+
+use Floxim\Floxim\System;
+//todo: psr0 need fix fx_
+class Layout extends System\Controller {
     
     public function show() {
         

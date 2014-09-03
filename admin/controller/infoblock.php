@@ -1,5 +1,12 @@
 <?php
-class fx_controller_admin_infoblock extends fx_controller_admin {
+
+namespace Floxim\Floxim\Admin\Controller;
+
+use Floxim\Floxim\Component\Component;
+use Floxim\Floxim\Component\Infoblock as CompInfoblock;
+use Floxim\Floxim\System;
+
+class Infoblock extends Admin {
 
     protected function _component_actions ( $key ) {
         $arr = array(
@@ -41,7 +48,8 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
         $controllers->concat(fx::data('widget')->all());
         
         foreach ($controllers as $c) {
-            $controller_type = $c instanceof fx_component ? 'component' : 'widget';
+            $controller_type = $c instanceof Component\Essence ? 'component' : 'widget';
+            // todo: psr0 need fix
             $controller_name = $controller_type.'_'.$c['keyword'];
             $c_item = array(
                 'data' => $c['name'],
@@ -233,7 +241,7 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
             }
             
             $infoblock['params'] = $action_params;
-            if (isset($controller) && $controller instanceof fx_controller) {
+            if (isset($controller) && $controller instanceof System\Controller) {
                 $controller->set_input($action_params);
             }
             
@@ -478,8 +486,9 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
      */
     
     protected function _get_scope_fields(
-                fx_infoblock $infoblock, 
-                fx_content_page $c_page
+                CompInfoblock\Essence $infoblock,
+                // todo: psr0 need verify
+                Floxim\Page\Component\Page\Essence $c_page
             ) {
         
         $fields = array();
@@ -591,7 +600,7 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
     /*
      * Receipt of the form fields for the tab "How to show"
      */
-    protected function _get_format_fields(fx_infoblock $infoblock, $area_meta = null) {
+    protected function _get_format_fields(CompInfoblock\Essence $infoblock, $area_meta = null) {
         $i2l = $infoblock->get_visual();
         $fields = array(
             array(
@@ -601,7 +610,7 @@ class fx_controller_admin_infoblock extends fx_controller_admin {
                 'type' => 'hidden'
             )
         );
-        $area_suit = fx_template_suitable::parse_area_suit_prop($area_meta['suit']);
+        $area_suit = Template\Suitable::parse_area_suit_prop($area_meta['suit']);
         
         $force_wrapper = $area_suit['force_wrapper'];
         $default_wrapper = $area_suit['default_wrapper'];

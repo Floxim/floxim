@@ -1,6 +1,8 @@
 <?php
 
-class fx_controller_admin_lang extends fx_controller_admin {
+namespace Floxim\Floxim\Admin\Controller;
+
+class Lang extends Admin {
 
     public function all() {
         $langs = fx::data('lang')->all();

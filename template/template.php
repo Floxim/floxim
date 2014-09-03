@@ -1,5 +1,11 @@
 <?php
-class fx_template {
+
+namespace Floxim\Floxim\Template;
+
+use Floxim\Floxim\System;
+use Floxim\Floxim\Helper\Form;
+
+class Template {
     
     public $action = null;
     protected $_parent = null;
@@ -92,7 +98,7 @@ class fx_template {
     protected function print_var($val, $meta = null) {
         $tf = null;
         if ($meta && isset($meta['var_type'])) {
-            $tf = new fx_template_field($val, $meta);
+            $tf = new Field($val, $meta);
         }
         $res = $tf ? $tf : $val;
         return (string) $res;
@@ -129,7 +135,7 @@ class fx_template {
     public function get_item_help($item, $level = 0, $c_path = array()) {
         $c_path []= $item;
         $item_type = is_array($item) ? 'Array' : get_class($item);
-        if ($item instanceof fx_essence || $item instanceof fx_form_field || $item instanceof fx_form) {
+        if ($item instanceof System\Essence || $item instanceof Form\Field\Field || $item instanceof Form\Form) {
             $item = $item->get();
         }
         ob_start();
@@ -183,7 +189,7 @@ class fx_template {
             </tr>
             <?php
             if ($is_complex && !$is_recursion) {
-                if (! ($value instanceof fx_template_loop)) {
+                if (! ($value instanceof Loop)) {
                     echo $this->get_item_help($value, $level+1, $c_path);
                 }
             }
@@ -200,12 +206,12 @@ class fx_template {
         if ($var_name === null) {
             return array();
         }
-        if ($source && $source instanceof fx_template_essence) {
+        if ($source && $source instanceof Essence) {
             $meta = $source->get_field_meta($var_name);
             return is_array($meta) ? $meta : array();
         }
         for ($i = count($this->context_stack) - 1; $i >= 0; $i--) {
-            if ( !($this->context_stack[$i] instanceof fx_template_essence) ) {
+            if ( !($this->context_stack[$i] instanceof Essence) ) {
                 continue;
             }
             if ( ($meta = $this->context_stack[$i]->get_field_meta($var_name))) {
@@ -329,6 +335,7 @@ class fx_template {
     }
     
     protected function _get_template_sign() {
+        // todo: psr0 need fix
         $template_name = preg_replace("~^fx_template_~", '', get_class($this));
         return $template_name.'.'.$this->action;
     }
@@ -430,8 +437,8 @@ class fx_template {
         }
         if (fx::is_admin() && !$this->_parent) {
             self::$count_replaces++;
-            $result = fx_template::replace_areas($result);
-            $result = fx_template_field::replace_fields($result);
+            $result = Template::replace_areas($result);
+            $result = Field::replace_fields($result);
         }
         return $result;
     }
@@ -471,10 +478,10 @@ class fx_template {
             /*"~(<[a-z0-9_-]+[^>]*?>)\s*###fxa(\d+)###\s*(</[a-z0-9_-]+>)~s",*/
             "~(<[a-z0-9_-]+[^>]*?>)\s*###fxa(\d+)\|?(.*?)###~s",
             function($matches) use ($html) {
-                $replacement = fx_template::$area_replacements[$matches[2]];
+                $replacement = Template::$area_replacements[$matches[2]];
                 $mode = $matches[3];
                 if ($mode == 'data') {
-                    fx_template::$area_replacements[$matches[2]] = null;
+                    Template::$area_replacements[$matches[2]] = null;
                     $res = $matches[1].$replacement[1];
                     if (!$replacement[1]) {
                         $res .= '<span class="fx_area_marker"></span>';
@@ -482,7 +489,7 @@ class fx_template {
                     return $res;
                 }
                 
-                $tag = fx_template_html_token::create_standalone($matches[1]);
+                $tag = HtmlToken::create_standalone($matches[1]);
                 $tag->add_meta(array(
                     'class' => 'fx_area',
                     'data-fx_area' => $replacement[0]
@@ -493,7 +500,7 @@ class fx_template {
                     return $tag;
                 }
                 
-                fx_template::$area_replacements[$matches[2]] = null;
+                Template::$area_replacements[$matches[2]] = null;
                 return $tag.$replacement[1].$matches[3]; 
             },
             $html
@@ -506,7 +513,7 @@ class fx_template {
             "~###fxa(\d+)\|?(.*?)###~",
             function($matches) {
                 $mode = $matches[2];
-                $replacement = fx_template::$area_replacements[$matches[1]];
+                $replacement = Template::$area_replacements[$matches[1]];
                 if ($mode == 'data') {
                     if (!$replacement[1]) {
                         return '<span class="fx_area_marker"></span>';
@@ -514,13 +521,13 @@ class fx_template {
                     return $replacement[1];
                 }
                 $tag_name = 'div';
-                $tag = fx_template_html_token::create_standalone('<'.$tag_name.'>');
+                $tag = HtmlToken::create_standalone('<'.$tag_name.'>');
                 $tag->add_meta(array(
                     'class' => 'fx_area fx_wrapper',
                     'data-fx_area' => $replacement[0]
                 ));
                 $tag = $tag->serialize();
-                fx_template::$area_replacements[$matches[1]] = null;
+                Template::$area_replacements[$matches[1]] = null;
                 return $tag.$replacement[1].'</'.$tag_name.'>';
             },
             $html

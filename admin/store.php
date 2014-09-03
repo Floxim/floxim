@@ -1,6 +1,8 @@
 <?php
 
-class fx_admin_store extends fx_admin_floximsite {
+namespace Floxim\Floxim\Admin;
+
+class Store extends Floximsite {
 
     public function get_items($type, $filter = array(), $reason = 'first', $position = 0) {
         $post = $this->get_base_post();

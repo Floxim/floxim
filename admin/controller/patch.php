@@ -1,5 +1,8 @@
 <?php
-class fx_controller_admin_patch extends fx_controller_admin {
+
+namespace Floxim\Floxim\Admin\Controller;
+
+class Patch extends Admin {
     
     public function all($input) {
         if (isset($input['params'][0])) {

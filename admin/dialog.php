@@ -1,6 +1,8 @@
 <?php
 
-class fx_admin_dialog {
+namespace Floxim\Floxim\Admin;
+
+class Dialog {
 
     protected $title;
 

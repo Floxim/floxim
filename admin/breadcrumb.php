@@ -1,6 +1,8 @@
 <?php
 
-class fx_admin_breadcrumb {
+namespace Floxim\Floxim\Admin;
+
+class Breadcrumb {
     protected $path = array();
     
     public function add_item ( $name, $href = '' ) {
@@ -11,5 +13,3 @@ class fx_admin_breadcrumb {
         return $this->path;
     }
 }
-
-?>

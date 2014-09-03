@@ -1,14 +1,18 @@
 <?php
 
-class fx_admin_configjs {
+namespace Floxim\Floxim\Admin;
+
+use Floxim\Floxim\Admin\Controller;
+
+class Configjs {
   protected $options;
 
   public function  __construct() {
     $this->options['login'] = 'admin';
     $this->options['action_link'] = fx::config()->HTTP_ACTION_LINK;
 
-    $this->add_more_menu(fx_controller_admin_adminpanel::get_more_menu());
-    $this->add_buttons(fx_controller_admin_adminpanel::get_buttons());
+    $this->add_more_menu(Controller\Adminpanel::get_more_menu());
+    $this->add_buttons(Controller\Adminpanel::get_buttons());
     
     
     $main_menu = array(

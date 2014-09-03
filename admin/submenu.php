@@ -1,6 +1,8 @@
 <?php
 
-class fx_admin_submenu {
+namespace Floxim\Floxim\Admin;
+
+class Submenu {
 
     protected $menu = array();
     protected $error = false;
@@ -199,7 +201,7 @@ class fx_admin_submenu {
                 $this->menu[] = $this->add_node('layout-'.$l['id'], $l['name'], 'layout.edit('.$l['id'].')', 'layouts');
             }
             */
-            
+            // todo: psr0 need fix - not found class fx_controller_admin_template
             $items = fx_controller_admin_template::get_template_submenu($layout);
             foreach ($items as $item) {
             	$this->menu []= $this->add_node($item['code'], $item['title'], $item['url']);

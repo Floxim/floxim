@@ -1,5 +1,8 @@
 <?php
-class fx_controller_admin_component extends fx_controller_admin {
+
+namespace Floxim\Floxim\Admin\Controller;
+
+class Component extends Admin {
 
     /**
      * A list of all components
@@ -21,7 +24,7 @@ class fx_controller_admin_component extends fx_controller_admin {
         $field['essence'] = $essence;
         $append_coms = function($coll, $level) use (&$field, &$append_coms) {
             foreach ($coll as $v) {
-                $submenu = fx_controller_admin_component::get_component_submenu($v);
+                $submenu = Component::get_component_submenu($v);
                 $submenu_first = current($submenu);
                 $r = array(
                     'id' => $v['id'],
@@ -73,7 +76,7 @@ class fx_controller_admin_component extends fx_controller_admin {
     }
     
     public function get_component_submenu($component) {
-    	
+    	// todo: psr0 need fix
     	$essence_code = str_replace('fx_','',get_class($component));
     	
     	$titles = array(
@@ -112,6 +115,7 @@ class fx_controller_admin_component extends fx_controller_admin {
     }
     
     protected function _get_component_templates($ctr_essence) {
+        // todo: psr0 need fix
         $ctr_type = ($ctr_essence instanceof fx_widget ? 'widget' : 'component');
         $controller_name = $ctr_type.'_'.$ctr_essence['keyword'];
         $controller = fx::controller($controller_name);
@@ -215,6 +219,7 @@ class fx_controller_admin_component extends fx_controller_admin {
     }
     
     public static function make_breadcrumb($component, $action, $breadcrumb) {
+        // todo: psr0 need fix
     	$essence_code = str_replace('fx_','',get_class($component));
     	$submenu = self::get_component_submenu($component);
         $submenu_first = current($submenu);
@@ -282,6 +287,7 @@ class fx_controller_admin_component extends fx_controller_admin {
 
         $result = array('status' => 'ok');
         try {
+            // todo: psr0 need fix - class fx_import not found
             $imex = new fx_import();
             $imex->import_by_file($file['tmp_name']);
         } catch (Exception $e) {
@@ -293,7 +299,7 @@ class fx_controller_admin_component extends fx_controller_admin {
     }
 
     public function fields($component) {
-        $controller = new fx_controller_admin_field(
+        $controller = new Field(
              array(
                  'essence' => $component,
                  'do_return' => true
@@ -305,7 +311,7 @@ class fx_controller_admin_component extends fx_controller_admin {
     }
     
     public function add_field($component) {
-        $controller = new fx_controller_admin_field(
+        $controller = new Field(
             array(
                 'to_id' => $component['id'],
                 'to_essence' => 'component',
@@ -324,6 +330,7 @@ class fx_controller_admin_component extends fx_controller_admin {
     }
     
     public function templates($component, $input) {
+        // todo: psr0 need fix
         $ctr_type = $component instanceof fx_widget ? 'widget' : 'component';
         $this->response->submenu->set_subactive('templates');
         if (isset($input['params'][2])) {
@@ -485,7 +492,7 @@ class fx_controller_admin_component extends fx_controller_admin {
     }
     
     public function edit_field($component) {
-    	$controller = new fx_controller_admin_field();
+    	$controller = new Field();
     	$field_id = $this->input['params'][2];
     	
     	$field = fx::data('field', $field_id);
@@ -506,7 +513,7 @@ class fx_controller_admin_component extends fx_controller_admin {
     public function items($component, $input) {
         $this->response->submenu->set_subactive('items');
         //$this->response->breadcrumb->add_item(fx::alang('Items'));
-        $ctr = new fx_controller_admin_content(
+        $ctr = new Content(
                 array(
                     'content_type' => $component['keyword'],
                     'do_return' => true
@@ -535,7 +542,7 @@ class fx_controller_admin_component extends fx_controller_admin {
         $this->response->submenu->set_subactive('items');
         $this->response->breadcrumb->add_item(fx::alang('Items'), $items_url);
         $this->response->breadcrumb->add_item(fx::alang('Add'));
-        $ctr = new fx_controller_admin_content(
+        $ctr = new Content(
                 array(
                     'content_type' => $component['keyword'],
                     'mode' => 'backoffice',
@@ -553,7 +560,7 @@ class fx_controller_admin_component extends fx_controller_admin {
         $items_url = '#admin.component.edit('.$component['id'].',items)';
         $this->response->breadcrumb->add_item(fx::alang('Items'), $items_url);
         $this->response->breadcrumb->add_item(fx::alang('Edit'));
-        $ctr = new fx_controller_admin_content(
+        $ctr = new Content(
                 array(
                     'content_type' => $component['keyword'],
                     'content_id' => $input['params'][2],

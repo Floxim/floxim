@@ -1,5 +1,8 @@
 <?php
-class fx_controller_admin_console extends fx_controller_admin {
+
+namespace Floxim\Floxim\Admin\Controller;
+
+class Console extends Admin {
     public function show($input) {
         $this->response->breadcrumb->add_item(fx::alang('Console'), '#admin.console.show');
         $this->response->submenu->set_menu('console');

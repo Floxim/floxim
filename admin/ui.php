@@ -1,6 +1,8 @@
 <?php
 
-class fx_admin_ui {
+namespace Floxim\Floxim\Admin;
+
+class Ui {
     const STORE_ADMIN = 0;
     const STORE_FRONT = 1;
 
@@ -106,7 +108,7 @@ class fx_admin_ui {
     }
     
     public function store($type, $filter = array(), $reason = 'first', $position = 0) {
-        $store = new fx_admin_store();
+        $store = new Store();
         $response = $store->get_items($type, $filter, $reason, $position);
         if ($response === false) {
             $result = $this->error( fx::alang('Unable to connect to server','system') );
@@ -140,9 +142,5 @@ class fx_admin_ui {
     public function button_func ( $label, $func  ) {
         return array('label' => $label, 'type' => 'button', 'func' => $func);
     }
-    
-    
-   
 
 }
-?>

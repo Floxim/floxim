@@ -1,12 +1,16 @@
 <?php
 
-class fx_admin_response {
+namespace Floxim\Floxim\Admin;
 
-    /** @var fx_admin_submenu  */
+use Floxim\Floxim\System;
+
+class Response {
+
+    /** @var \Floxim\Floxim\Admin\Submenu  */
     public $submenu;
-    /** @var fx_admin_breadcrumb  */
+    /** @var \Floxim\Floxim\Admin\Breadcrumb  */
     public $breadcrumb;
-    /** @var fx_admin_dialog  */
+    /** @var \Floxim\Floxim\Admin\Dialog  */
     public $dialog;
     
     protected $buttons = array(), $buttons_pulldown = array(), $fields = array(), $tabs = array(), $form_buttons = array();
@@ -16,9 +20,9 @@ class fx_admin_response {
     protected $status, $status_text, $error_fields, $reload;
     
     public function __construct($input) {
-        $this->submenu = new fx_admin_submenu($input['menu_id']);
-        $this->breadcrumb = new fx_admin_breadcrumb();
-        $this->dialog = new fx_admin_dialog();
+        $this->submenu = new Submenu($input['menu_id']);
+        $this->breadcrumb = new Breadcrumb();
+        $this->dialog = new Dialog();
     }
 
     public function to_array() {
@@ -139,7 +143,7 @@ class fx_admin_response {
     }
     
     public function add_fields ( $fields, $tab = null, $prefix = null ) {
-        if ($fields instanceof fx_collection) {
+        if ($fields instanceof System\Collection) {
             $fields = $fields->get_data();
         }
         if (!is_array($fields) ) {

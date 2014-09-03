@@ -1,6 +1,8 @@
 <?php
 
-class fx_controller_admin_site extends fx_controller_admin {
+namespace Floxim\Floxim\Admin\Controller;
+
+class Site extends Admin {
 
     public function all() {
         $sites = fx::data('site')->all();

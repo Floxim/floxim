@@ -1,13 +1,18 @@
 <?php
 
-class fx_controller_admin_field extends fx_controller_admin {
+namespace Floxim\Floxim\Admin\Controller;
+
+use Floxim\Floxim\Component\Field as CompField;
+use Floxim\Floxim\System;
+
+class Field extends Admin {
 
     public function items( $input ) {
         $essence = $input['essence'];
         
         $items = $essence->all_fields();
         $ar = array('type' => 'list', 'filter' => true, 'is_sortable' => true);
-        
+        // todo: psr0 need fix
         $essence_code = str_replace('fx_','',get_class($essence));
         
         $ar['essence'] = 'field';
@@ -36,13 +41,13 @@ class fx_controller_admin_field extends fx_controller_admin {
                 $r['inherited'] = ' ';
             }
             switch ($field['type_of_edit']) {
-                case fx_field::EDIT_ALL:
+                case CompField\Essence::EDIT_ALL:
                     $r['editable'] = fx::alang('Yes','system');
                     break;
-                case fx_field::EDIT_NONE:
+                case CompField\Essence::EDIT_NONE:
                     $r['editable'] = fx::alang('No','system');
                     break;
-                case fx_field::EDIT_ADMIN:
+                case CompField\Essence::EDIT_ADMIN:
                     $r['editable'] = fx::alang('For admin only', 'system');
                     break;
             }
@@ -110,15 +115,15 @@ class fx_controller_admin_field extends fx_controller_admin {
         );
         
         $values = array(
-            fx_field::EDIT_ALL => fx::alang('anybody','system'),
-            fx_field::EDIT_ADMIN => fx::alang('admins only','system'),
-            fx_field::EDIT_NONE => fx::alang('nobody','system')
+            CompField\Essence::EDIT_ALL => fx::alang('anybody','system'),
+            CompField\Essence::EDIT_ADMIN => fx::alang('admins only','system'),
+            CompField\Essence::EDIT_NONE => fx::alang('nobody','system')
         );
         $fields[] = $this->ui->select(
                 'type_of_edit', 
                 fx::alang('Field is available for','system'),
                 $values, 
-                $info['type_of_edit'] ? $info['type_of_edit'] : fx_field::EDIT_ALL  
+                $info['type_of_edit'] ? $info['type_of_edit'] : CompField\Essence::EDIT_ALL
         );
         
         $fields[] = $this->ui->hidden('posting');
@@ -231,7 +236,7 @@ class fx_controller_admin_field extends fx_controller_admin {
             $field[$to_key] = $to_val;
         }
        
-        $datatype = fx_data::optional('datatype')->get_by_id($input['type']);
+        $datatype = System\Data::optional('datatype')->get_by_id($input['type']);
         if ( $datatype['not_null'] ) {
             $fields[] = $this->ui->checkbox('not_null', fx::alang('Required','system'), null, $field['not_null']);
         }

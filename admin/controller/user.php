@@ -1,6 +1,8 @@
 <?php
 
-class fx_controller_admin_user extends fx_controller_admin {
+namespace Floxim\Floxim\Admin\Controller;
+
+class User extends Admin {
 
     public function all() {
         $users = fx::data('content_user')->all();

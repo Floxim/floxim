@@ -1,6 +1,8 @@
 <?php
 
-class fx_admin_floximsite {
+namespace Floxim\Floxim\Admin;
+
+class Floximsite {
 
     protected $url = 'http://floxim.org/';
 

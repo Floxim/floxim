@@ -1,6 +1,10 @@
 <?php
 
-class fx_controller_admin_content extends fx_controller_admin {
+namespace Floxim\Floxim\Admin\Controller;
+
+use Floxim\Floxim\Component\Field;
+
+class Content extends Admin {
 
     public function add_edit($input) {
         // get the edited object
@@ -297,7 +301,7 @@ class fx_controller_admin_content extends fx_controller_admin {
         $fields = $com->all_fields();
         
         $fields->find_remove(function($f) {
-            return $f['type_of_edit'] == fx_field::EDIT_NONE;
+            return $f['type_of_edit'] == Field\Essence::EDIT_NONE;
         });
         
         foreach ($fields as $f) {
@@ -314,21 +318,21 @@ class fx_controller_admin_content extends fx_controller_admin {
             foreach ($fields as $f) {
                 $val = $item[$f['keyword']];
                 switch ($f['type']) {
-                    case fx_field::FIELD_LINK:
+                    case Field\Essence::FIELD_LINK:
                         if ($val) {
                             $linked = fx::data($f->get_related_type(), $val);
                             $val = $linked['name'];
                         }
                         break;
-                    case fx_field::FIELD_STRING: case fx_field::FIELD_TEXT:
+                    case Field\Essence::FIELD_STRING: case Field\Essence::FIELD_TEXT:
                         $val = strip_tags($val);
                         $val = mb_substr($val, 0, 150);
                         break;
-                    case fx_field::FIELD_IMAGE:
+                    case Field\Essence::FIELD_IMAGE:
                         $val = fx::image($val, 'max-width:100px,max-height:50px');
                         $val = '<img src="'.$val.'" alt="" />';
                         break;
-                    case fx_field::FIELD_MULTILINK:
+                    case Field\Essence::FIELD_MULTILINK:
                         $val = fx::alang('%d items', 'system', count($val));
                         break;
                 }

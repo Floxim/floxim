@@ -1,5 +1,11 @@
 <?php
-class fx_controller_component extends fx_controller_frontoffice {
+
+namespace Floxim\Floxim\Controller;
+
+use Floxim\Floxim\Component\Field;
+use Floxim\Floxim\System;
+
+class Component extends Frontoffice {
     
     protected function _count_parent_id() {
         if (preg_match("~^list_infoblock~", $this->action)) {
@@ -180,18 +186,18 @@ class fx_controller_component extends fx_controller_frontoffice {
         $searchable_fields =  
                 $com
                 ->all_fields()
-                ->find('type', fx_field::FIELD_IMAGE, '!=');
+                ->find('type', Field\Essence::FIELD_IMAGE, '!=');
         foreach ($searchable_fields as $field) {
             $res = array(
                 'description' => $field['name'],
-                'type' => fx_field::get_type_by_id($field['type'])
+                'type' => Field\Essence::get_type_by_id($field['type'])
             );
-            if ($field['type'] == fx_field::FIELD_LINK) {
+            if ($field['type'] == Field\Essence::FIELD_LINK) {
                 $res['content_type'] = $field->get_target_name();
             }
-            if ($field['type'] == fx_field::FIELD_MULTILINK) {
+            if ($field['type'] == Field\Essence::FIELD_MULTILINK) {
                 $relation = $field->get_relation();
-                $res['content_type'] = $relation[0] == fx_data::MANY_MANY ? $relation[4] : $relation[1] ;
+                $res['content_type'] = $relation[0] == System\Data::MANY_MANY ? $relation[4] : $relation[1] ;
             }
             // Add allow values for select parent page
             if ($field['keyword'] == 'parent_id') {
@@ -233,11 +239,11 @@ class fx_controller_component extends fx_controller_frontoffice {
         $link_fields = $this->
                             get_component()->
                             all_fields()->
-                            find('type', array(fx_field::FIELD_LINK, fx_field::FIELD_MULTILINK))->
-                            find('type_of_edit', fx_field::EDIT_NONE, fx_collection::FILTER_NEQ);
+                            find('type', array(Field\Essence::FIELD_LINK, Field\Essence::FIELD_MULTILINK))->
+                            find('type_of_edit', Field\Essence::EDIT_NONE, System\Collection::FILTER_NEQ);
         $fields = array();
         foreach ($link_fields as $lf) {
-            if ($lf['type'] == fx_field::FIELD_LINK) {
+            if ($lf['type'] == Field\Essence::FIELD_LINK) {
                 $target_com_id = $lf['format']['target'];
             } else {
                 $target_com_id = isset($lf['format']['mm_datatype']) 
@@ -640,7 +646,7 @@ class fx_controller_component extends fx_controller_frontoffice {
                         $condition['operator'] = 'RAW';
                         break;
                 }
-                if ($field['type'] == fx_field::FIELD_LINK){
+                if ($field['type'] == Field\Essence::FIELD_LINK){
                     if (!isset($condition['value'])) {
                         $error = true;
                     } else {
@@ -657,7 +663,7 @@ class fx_controller_component extends fx_controller_frontoffice {
                     }
                 }
 
-                if ($field['type'] == fx_field::FIELD_MULTILINK) {
+                if ($field['type'] == Field\Essence::FIELD_MULTILINK) {
 
                     if (!isset($condition['value']) || !is_array($condition['value'])) {
                         $error = true;
@@ -666,7 +672,7 @@ class fx_controller_component extends fx_controller_frontoffice {
                             $ids[]= $v;
                         }
                         $relation = $field->get_relation();
-                        if ($relation[0] === fx_data::MANY_MANY){
+                        if ($relation[0] === System\Data::MANY_MANY){
                             $content_ids = fx::data($relation[1])->
                                 where($relation[5], $ids)->
                                 select('content_id')->
@@ -741,6 +747,7 @@ class fx_controller_component extends fx_controller_frontoffice {
      */
     public function get_content_type() {
         if (!$this->_content_type) {
+            // todo: psr0 need fix
             if (preg_match("~fx_controller_component_(.+)$~", get_class($this), $cc)) {
                 $this->_content_type = $cc[1];
             }
