@@ -482,13 +482,6 @@ class Fx {
             self::config()->load($config);
         }
 
-        // todo: psr0 need fix
-        static $loader = false;
-        if ($loader === false) {
-            require_once fx::config()->SYSTEM_FOLDER . 'loader.php';
-            $loader = new Loader();
-        }
-
         // load options from DB
         self::config()->load_from_db();
 

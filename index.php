@@ -1,7 +1,8 @@
 <?php
 // if request directs right to /floxim/index.php 
 // e.g. admin interface
-require_once (dirname(__FILE__).'/../boot.php');
+// current dir /vendor/floxim/floxim/
+require_once (dirname(__FILE__).'/../../../boot.php');
 
 
 register_shutdown_function(function() {
