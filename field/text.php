@@ -1,6 +1,8 @@
 <?php
 
-class fx_field_text extends fx_field_baze {
+namespace Floxim\Floxim\Field;
+
+class Text extends Baze {
     
     public function get_js_field($content) {
         parent::get_js_field($content);

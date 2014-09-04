@@ -1,6 +1,8 @@
 <?php
 
-class fx_field_color extends fx_field_baze {
+namespace Floxim\Floxim\Field;
+
+class Color extends Baze {
     public function get_sql_type() {
         return "VARCHAR(7)";
     }

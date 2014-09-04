@@ -1,6 +1,8 @@
 <?php
 
-class fx_field_datetime extends fx_field_baze {
+namespace Floxim\Floxim\Field;
+
+class Datetime extends Baze {
 
     protected $day = '', $month = '', $year = '', $hours = '', $minutes = '', $seconds = '';
 

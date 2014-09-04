@@ -1,7 +1,8 @@
 <?php
 
+namespace Floxim\Floxim\Field;
 
-class fx_field_float extends fx_field_baze {
+class Float extends Baze {
     public function get_js_field($content) {
         parent::get_js_field($content);
         $this->_js_field['type'] = 'floatfield';

@@ -1,6 +1,10 @@
 <?php
 
-class fx_field_link extends fx_field_baze {
+namespace Floxim\Floxim\Field;
+
+use Floxim\Floxim\System;
+
+class Link extends Baze {
 
     public function validate_value($value) {
         if (!parent::validate_value($value)) {
@@ -128,7 +132,7 @@ class fx_field_link extends fx_field_baze {
         }
         $rel_target = $this->get_target_name();
         return array(
-            fx_data::BELONGS_TO,
+            System\Data::BELONGS_TO,
             $rel_target,
             $this['keyword']
         );

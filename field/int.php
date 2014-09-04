@@ -1,6 +1,8 @@
 <?php
 
-class fx_field_int extends fx_field_baze {
+namespace Floxim\Floxim\Field;
+
+class Int extends Baze {
 
     public function validate_value($value) {
         if (!parent::validate_value($value)) {

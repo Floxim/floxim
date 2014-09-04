@@ -1,5 +1,11 @@
 <?php
-class fx_field_multilink extends fx_field_baze {
+
+namespace Floxim\Floxim\Field;
+
+use Floxim\Floxim\System;
+use Floxim\Floxim\Component\Field;
+
+class Multilink extends Baze {
     public function get_sql_type() {
         return false;
     }
@@ -45,7 +51,7 @@ class fx_field_multilink extends fx_field_baze {
             }
             $this->_js_field['values'] = array();
             if (isset($content[$this['keyword']])) {
-                if ($rel[0] === fx_data::HAS_MANY) {
+                if ($rel[0] === System\Data::HAS_MANY) {
                     $linkers = $content[$this['keyword']];
                 } else {
                     $linkers = $content[$this['keyword']]->linker_map;
@@ -77,10 +83,10 @@ class fx_field_multilink extends fx_field_baze {
         }
         
         $com = fx::data('component', $this['component_id']);
-        $chain = new fx_collection($com->get_chain());
+        $chain = new System\Collection($com->get_chain());
         $chain_ids = $chain->get_values('id');
         $link_fields = fx::data('field')
-                        ->where('type', fx_field::FIELD_LINK)
+                        ->where('type', Field\Essence::FIELD_LINK)
                         ->where('component_id', 0, '!=')
                         ->all();
         
@@ -121,7 +127,7 @@ class fx_field_multilink extends fx_field_baze {
                     // get the field-component links that point to other components
                     $linking_component_links = $linking_component->
                             all_fields()->
-                            find('type', fx_field::FIELD_LINK)->
+                            find('type', Field\Essence::FIELD_LINK)->
                             find('id', $lf['id'], '!=');
                     
                     // exclude fields, connected to the parent
@@ -256,7 +262,7 @@ class fx_field_multilink extends fx_field_baze {
      */
     public function get_savestring($content) {
         $rel = $this->get_relation();
-        $is_mm = $rel[0] == fx_data::MANY_MANY;
+        $is_mm = $rel[0] == System\Data::MANY_MANY;
         if ($is_mm) {
             $res = $this->_append_many_many($content);
         } else {
@@ -281,8 +287,8 @@ class fx_field_multilink extends fx_field_baze {
         // the name of the property, the linker where to target
         $linker_prop_name = $rel[3];
         // value to be returned
-        $new_value = new fx_collection();
-        $new_value->linker_map = new fx_collection();
+        $new_value = new System\Collection();
+        $new_value->linker_map = new System\Collection();
         // Find the name for the field, for example "most part"
         // something strashnenko...
         $linker_com_name = preg_replace('~^content_~', '', $linker_data_type);
@@ -381,10 +387,10 @@ class fx_field_multilink extends fx_field_baze {
     public function get_related_component() {
         $rel = $this->get_relation();
         switch ($rel[0]) {
-            case fx_data::HAS_MANY:
+            case System\Data::HAS_MANY:
                 $content_type = $rel[1];
                 break;
-            case fx_data::MANY_MANY:
+            case System\Data::MANY_MANY:
                 $content_type = $rel[4];
                 break;
         }
@@ -408,7 +414,7 @@ class fx_field_multilink extends fx_field_baze {
         
         if (!$this['format']['mm_field']) {
             $res_rel = array(
-                fx_data::HAS_MANY,
+                System\Data::HAS_MANY,
                 $first_type,
                 $direct_target_field['keyword']
             );
@@ -424,7 +430,7 @@ class fx_field_multilink extends fx_field_baze {
         }
         
         return array(
-            fx_data::MANY_MANY,
+            System\Data::MANY_MANY,
             $first_type,
             $direct_target_field['keyword'],
             $end_target_field->get_prop_name(),

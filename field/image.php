@@ -1,5 +1,8 @@
 <?php
-class fx_field_image extends fx_field_file {
+
+namespace Floxim\Floxim\Field;
+
+class Image extends File {
 
     public function get_js_field($content) {
         parent::get_js_field($content);
@@ -18,6 +21,6 @@ class fx_field_image extends fx_field_file {
     public function fake_value() {
         static $num = 1;
         $num = $num === 1 ? 2 : 1;
-        return '/floxim/admin/style/images/stub_'.$num.'.jpg';
+        return '/vendor/floxim/floxim/admin/style/images/stub_'.$num.'.jpg';
     }
 }

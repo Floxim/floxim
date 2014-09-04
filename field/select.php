@@ -1,6 +1,8 @@
 <?php
 
-class fx_field_select extends fx_field_baze {
+namespace Floxim\Floxim\Field;
+
+class Select extends Baze {
 
     public function get_js_field($content) {
         

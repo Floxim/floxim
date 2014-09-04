@@ -1,9 +1,12 @@
 <?php
 
+namespace Floxim\Floxim\Field;
+
+use Floxim\Floxim\Component\Field;
 /**
  * Base class for the various field types
  */
-class fx_field_baze extends fx_field {
+class Baze extends Field\Essence {
 
     protected $value, $error, $is_error = false;
     protected $_edit_jsdata;
@@ -39,11 +42,11 @@ class fx_field_baze extends fx_field {
     }
 
     protected function get_css_class() {
-        return "fx_form_field fx_form_field_".fx_field::get_type_by_id($this->type_id).($this->is_error ? " fx_form_field_error" : "");
+        return "fx_form_field fx_form_field_".Field\Essence::get_type_by_id($this->type_id).($this->is_error ? " fx_form_field_error" : "");
     }
 
     protected function get_wrap_css_class() {
-        return "fx_form_wrap fx_form_wrap_".fx_field::get_type_by_id($this->type_id);
+        return "fx_form_wrap fx_form_wrap_".Field\Essence::get_type_by_id($this->type_id);
     }
 
     public function set_value($value) {

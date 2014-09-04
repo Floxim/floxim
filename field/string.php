@@ -1,6 +1,8 @@
 <?php
 
-class fx_field_string extends fx_field_baze {
+namespace Floxim\Floxim\Field;
+
+class String extends Baze {
 
     public function format_settings() {
         $fields = array(

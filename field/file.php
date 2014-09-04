@@ -1,6 +1,10 @@
 <?php
 
-class fx_field_file extends fx_field_baze {
+namespace Floxim\Floxim\Field;
+
+use Floxim\Floxim\System;
+
+class File extends Baze {
 
     protected $_to_delete_id = 0;
 
@@ -22,7 +26,7 @@ class fx_field_file extends fx_field_baze {
         return $this->_js_field;
     }
 
-    public function get_savestring(fx_essence $content = null) {
+    public function get_savestring(System\Essence $content = null) {
         $old_value = $content[$this['keyword']];
         if ($old_value != $this->value) {
             if (!empty($old_value)) {
