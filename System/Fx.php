@@ -72,64 +72,73 @@ class Fx {
     public static $data_stat = array();
 
     // todo: psr0 need fix
+    /**
+     * vendor.module.component - finder component
+     * component - finder system component
+     */
     public static function  data($datatype, $id = null) {
-    	
-    	static $data_classes_cache = array();
-        
-        if (is_array($datatype)) {
-            $datatype = join("_", $datatype);
-        }
-        
+
+        static $data_classes_cache = array();
+
         // fx::data($page) instead of $page_id
         if (is_object($id) && $id instanceof Essence) {
             return $id;
         }
         if (
-            !is_null($id) && 
-            !is_array($id) && 
-            isset(self::$data_cache[$datatype]) &&  
+            !is_null($id) &&
+            !is_array($id) &&
+            isset(self::$data_cache[$datatype]) &&
             isset(self::$data_cache[$datatype][$id])
         ) {
-                return self::$data_cache[$datatype][$id];
+            return self::$data_cache[$datatype][$id];
         }
-        
+
         $data_finder = null;
-        
         $component = null;
-        
-        if (preg_match("~^content~", $datatype)) {
-            if ($datatype == 'content_content') {
-                $datatype = 'content';
-            }
-            if ($datatype == 'content') {
-                $component = fx::data('component', 'content');
-            } else {
-                $component = fx::data('component', preg_replace("~^content_~", '', $datatype));
-            }
+
+        $parts = explode('.',$datatype);
+        if (count($parts)==3) {
+            // vendor.module.component
+            $component = fx::data('component',$datatype);
         }
-        
+
         // look for data-* class in cache
         if (isset($data_classes_cache[$datatype])) {
             $finder_class = $data_classes_cache[$datatype];
-            if ($finder_class == 'fx_data') {
-                $data_finder = new fx_data($datatype);
+            if ($finder_class == 'Floxim\\Floxim\\System\\Data') {
+                $data_finder = new Data($datatype);
             } else {
                 $data_finder = new $finder_class();
             }
         } else {
             try {
-                $classname = 'fx_data_'.$datatype;
+                /**
+                 * 1. module - [vendor].[module].[component]
+                 * 2. system - [component]
+                 */
+                if (count($parts) == 3) {
+                    list($d_vendor, $d_module, $d_component) = $parts;
+                    $classname = '\\'.ucfirst($d_vendor).'\\'.ucfirst($d_module).'\\Component\\'.ucfirst($d_component).'\\Finder';
+                } else {
+                    $classname = '\\Floxim\\Floxim\\Component\\'.ucfirst($datatype).'\\Finder';
+                }
                 $data_finder = new $classname();
                 $data_classes_cache[$datatype] = $classname;
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 // Finder for the content that the class is not defined
                 if ($component) {
                     $not_existing = array($datatype);
                     foreach ($component->get_ancestors() as $parent_com) {
                         try {
-                            $keyword = $parent_com['keyword'];
-                            $c_datatype = 'content'.($keyword == 'content' ? '' : '_'.$keyword);
-                            $classname = 'fx_data_'.$c_datatype;
+                            $keyword = $parent_com['keyword']; // vendor.module.component
+                            $c_datatype = $keyword;
+                            if ($keyword == 'floxim.content.content') {
+                                $classname = '\\Floxim\\Floxim\\Component\\Content\\Finder';
+                            } else {
+                                list($d_vendor, $d_module, $d_component) = $parts;
+                                $classname = '\\'.ucfirst($d_vendor).'\\'.ucfirst($d_module).'\\Component\\'.ucfirst($d_component).'\\Finder';
+                            }
+
                             $data_finder = new $classname;
                             foreach ($not_existing as $ne) {
                                 $data_classes_cache[$ne] = $classname;
@@ -140,20 +149,21 @@ class Fx {
                         }
                     }
                 } elseif (preg_match("~^field_~", $datatype)) {
-                    $data_finder = new fx_data_field();
-                    $data_classes_cache[$datatype] = 'fx_data_field';
+                    $data_finder = new \Floxim\Floxim\Component\Field\Finder();
+                    $data_classes_cache[$datatype] = 'Floxim\\Floxim\\Component\\Field\\Finder';
                 }
             }
             if (is_null($data_finder)) {
-                $data_finder = new fx_data($datatype);
-                $data_classes_cache[$datatype] = 'fx_data';
+                $data_finder = new \Floxim\Floxim\System\Data($datatype);
+                $data_classes_cache[$datatype] = 'Floxim\\Floxim\\System\\Data';
             }
         }
-		
+
+
         if ($component) {
             $data_finder->set_component($component['id']);
         }
-		
+
         if (func_num_args() == 2) {
             if (is_numeric($id) || is_string($id)) {
                 $res = $data_finder->get_by_id($id);
@@ -165,7 +175,7 @@ class Fx {
             }
             return null;
         }
-    	return $data_finder;
+        return $data_finder;
     }
     
     public static function content($type = null, $id = null) {

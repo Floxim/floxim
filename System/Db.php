@@ -2,7 +2,7 @@
 
 namespace Floxim\Floxim\System;
 
-class Db extends PDO {
+class Db extends \PDO {
 
     // information about the last error
     protected $last_error;
@@ -19,7 +19,7 @@ class Db extends PDO {
     public function __construct() {
         try {
             parent::__construct(fx::config('db.dsn'), fx::config('db.user'), fx::config('db.password'));
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             echo $e->getMessage();
         }
         $prefix = fx::config('db.prefix');
@@ -69,7 +69,7 @@ class Db extends PDO {
             ob_start();
             echo "Query: " . $statement . "\n";
             echo "Error: " . $this->last_error[2];
-            throw new Exception(ob_get_clean());
+            throw new \Exception(ob_get_clean());
             fx::log($statement, debug_backtrace());
         }
         if (!fx::config('dev.log_sql')) {
@@ -95,15 +95,15 @@ class Db extends PDO {
             $res = $this->last_result_array;
         } else {
             if (($result = $this->query($query))) {
-                $res = $result->fetch(PDO::FETCH_ASSOC);
-                $this->last_result_array = $result->fetchAll(PDO::FETCH_ASSOC);
+                $res = $result->fetch(\PDO::FETCH_ASSOC);
+                $this->last_result_array = $result->fetchAll(\PDO::FETCH_ASSOC);
             }
         }
 
         return $res;
     }
 
-    public function get_results($query = null, $result_type = PDO::FETCH_ASSOC) {
+    public function get_results($query = null, $result_type = \PDO::FETCH_ASSOC) {
         $res = array();
 
         if (!$query) {
@@ -120,7 +120,7 @@ class Db extends PDO {
     public function get_indexed_results($query, $index = 'id') {
         $res = array();
         if ( ($result = $this->query($query))) {
-            while ( ($row = $result->fetch(PDO::FETCH_ASSOC))) {
+            while ( ($row = $result->fetch(\PDO::FETCH_ASSOC))) {
                 $res[ $row[$index] ] = $row;
             }
         }
@@ -128,7 +128,7 @@ class Db extends PDO {
     }
     
     public function get_collection($query = null) {
-        $res = $this->get_results($query, PDO::FETCH_ASSOC);
+        $res = $this->get_results($query, \PDO::FETCH_ASSOC);
         return new Collection($res);
     }
 
@@ -139,10 +139,10 @@ class Db extends PDO {
             $res = $this->last_result_array;
         } else {
             if (($result = $this->query($query))) {
-                while ($row = $result->fetch(PDO::FETCH_NUM)) {
+                while ($row = $result->fetch(\PDO::FETCH_NUM)) {
                     $res[] = $row[ $col_num];
                 }
-                $this->last_result_array = $result->fetchAll(PDO::FETCH_ASSOC);
+                $this->last_result_array = $result->fetchAll(\PDO::FETCH_ASSOC);
             }
         }
 
@@ -155,12 +155,12 @@ class Db extends PDO {
         if (!$query) {
             $res = $this->last_result_array;
         } elseif (($result = $this->query($query))) {
-            $res = $result->fetch(PDO::FETCH_NUM);
+            $res = $result->fetch(\PDO::FETCH_NUM);
             if (!is_array($res)) {
                 return false;
             }
             $res = $res[0];
-            $this->last_result_array = $result->fetchAll(PDO::FETCH_ASSOC);
+            $this->last_result_array = $result->fetchAll(\PDO::FETCH_ASSOC);
         } else {
             return false;
         }
