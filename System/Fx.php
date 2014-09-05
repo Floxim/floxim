@@ -4,6 +4,8 @@ namespace Floxim\Floxim\System;
 
 use Floxim\Floxim\Router;
 use Floxim\Floxim\Template;
+use Floxim\Floxim\Controller;
+use Floxim\Floxim\Admin;
 
 /**
 "Static" class, just a helpers collection
@@ -242,13 +244,6 @@ class Fx {
     /**
      * todo: psr0 need fix
      *
-     * [02.09.14, 18:32:34] Илья Мясин: fx::controller('floxim.user.user') - контроллер компонента юзер
-    [02.09.14, 18:32:49] Илья Мясин: fx::controller('floxim.user.profile') - контроллер компонента "профайл"
-    [02.09.14, 18:33:34] Илья Мясин: и добавить магические слова "admin" / "widget"
-    [02.09.14, 18:33:38] Илья Мясин: fx::controller('floxim.user.widget') - общий виджет модуля
-    [02.09.14, 18:33:52] Илья Мясин: fx::controller('floxim.user.admin') - общая админка
-    [02.09.14, 18:34:12] Илья Мясин: fx::controller('floxim.user.user.admin') - админка отдельного компонента
-     *
      * to create a controller, install options
      * @param string $controller 'controller_name' or 'controller_name.action_name'
      * @param array $input
@@ -265,9 +260,9 @@ class Fx {
          * vendor.module.widget - widget controller module
          * layout - layout controller
          * content - base controller component
+         * admin.controller - admin controller site
          */
 
-        /*
         $c_parts = explode(":", $controller);
         if (count($c_parts) == 2) {
             $controller = $c_parts[0];
@@ -275,73 +270,70 @@ class Fx {
         }
 
         if ($controller=='layout') {
-
-        }
-
-        $c_class = 'fx_controller_'.$controller;
-        try {
-            $controller_instance = new $c_class($input, $action);
+            return new Controller\Layout($input, $action);
+        } elseif($controller=='content') {
+            $controller_instance = new Controller\Component($input, $action);
+            $controller_instance->set_content_type('content');
             return $controller_instance;
-        } catch (Exception $e) {
-
-
         }
-        */
-
-
-
 
         $c_parts = explode(".", $controller);
-        if (count($c_parts) == 2) {
-            $controller = $c_parts[0];
-            $action = $c_parts[1];
-    	}
-    	$c_class = 'fx_controller_'.$controller;
-    	try {
-            $controller_instance = new $c_class($input, $action);
-            return $controller_instance;
-    	} catch (Exception $e) {
-            if ($controller === 'component_content') {
-                $controller_instance = new fx_controller_component($input, $action);
-                $controller_instance->set_content_type('content');
+        /**
+         * Admin controllers
+         */
+        if ($c_parts[0] == 'admin') {
+            $c_name = isset($c_parts[1]) ? $c_parts[1] : 'Admin';
+            $c_class = 'Admin\\Controller\\'.ucfirst($c_name);
+            if (class_exists($c_class)) {
+                $controller_instance = new $c_class($input, $action);
                 return $controller_instance;
             }
-            if (preg_match("~^(component|widget|layout)_(.+)$~", $controller, $c_parts)) {
-                $ctr_type = $c_parts[1];
-                $ctr_name = $c_parts[2];
-                if ($ctr_type === 'component') {
-                    $component = fx::data('component', $ctr_name);
+            die("Failed loading controller class ".$c_class);
+        }
+        /**
+         * Component controllers
+         */
+        if (count($c_parts) >= 3) {
+            $c_vendor = $c_parts[0];
+            $c_module = $c_parts[1];
+            $c_component = $c_parts[2];
+            if (in_array($c_component,array('admin','widget'))) {
+                // todo: admin module controllers
+                // .....
+            } else {
+                if (isset($c_parts[3])) {
+                    // todo: check type - admin/widget
+                    // .....
+                } else {
+                    // Component essence
+                    // todo: psr0 need replace by fx::data('component', $ctr_name)
+                    $c_keyword = "{$c_vendor}.{$c_module}.{$c_component}";
+                    $comp_finder = new \Floxim\Floxim\Component\Component\Finder();
+                    $component = $comp_finder->get_by_id($c_keyword);
                     if ($component) {
                         foreach ($component->get_ancestors() as $parent_com) {
                             try {
-                                $keyword = $parent_com['keyword'];
-                                $c_class = 'fx_controller_component'.($keyword == 'content' ? '' : '_'.$keyword);
+                                list($cp_vendor, $cp_module, $cp_component) = explode('.',$parent_com['keyword']); // vendor.module.component todo: need fix DB data
+                                if ($parent_com['keyword'] == 'floxim.content.content') {
+                                    $c_class = 'Controller\\Component';
+                                } else {
+                                    $c_class = '\\'.ucfirst($cp_vendor).'\\'.ucfirst($cp_module).'\\Component\\'.ucfirst($cp_component).'\\Controller';
+                                }
+
                                 $controller_instance = new $c_class($input, $action);
-                                $controller_instance->set_content_type($ctr_name);
+                                $controller_instance->set_content_type($c_keyword); // todo: psr0 need verify
                                 return $controller_instance;
-                            } catch (Exception $ex) {
-                                
+                            } catch (\Exception $ex) {
+
                             }
                         }
                     } else {
-                        fx::log("no com", $ctr_name, debug_backtrace());
+                        fx::log("no com", $c_keyword, debug_backtrace());
                     }
-                }
-                $c_class = 'fx_controller_'.$ctr_type;
-                try {
-                    $controller_instance = new $c_class($input, $action);
-                    switch ($ctr_type) {
-                        case 'widget':
-                            $controller_instance->set_keyword($ctr_name);
-                            break;
-                    }
-                    return $controller_instance;
-                } catch (exception $e) {
-                    
                 }
             }
-            die("Failed loading controller class ".$c_class);
-    	}
+        }
+        die("Failed loading class controller ".$controller);
     }
 
     // todo: psr0 need fix
@@ -476,8 +468,6 @@ class Fx {
      * @return fx_core
      */
     public static function load($config = null) {
-        require_once DOCUMENT_ROOT.'/floxim/system/config.php';
-
         if ($config !== null) {
             self::config()->load($config);
         }
@@ -488,7 +478,6 @@ class Fx {
         if (fx::config('cache.meta')) {
             self::_load_meta_cache();
         }
-        return $loader;
     }
     
     protected static function _load_meta_cache() {

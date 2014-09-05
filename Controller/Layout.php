@@ -3,7 +3,8 @@
 namespace Floxim\Floxim\Controller;
 
 use Floxim\Floxim\System;
-//todo: psr0 need fix fx_
+use Floxim\Floxim\Admin;
+
 class Layout extends System\Controller {
     
     public function show() {
@@ -13,7 +14,7 @@ class Layout extends System\Controller {
         
         // add admin files bundle BEFORE site scripts/styles
         if (! $this->get_param('ajax_mode') && fx::is_admin()) {
-            fx_controller_admin::add_admin_files();
+            Admin\Controller\Admin::add_admin_files();
         }
         $page_infoblocks = fx::router('front')->get_page_infoblocks(
             $page_id, 
@@ -77,8 +78,8 @@ class Layout extends System\Controller {
         // initialize the admin panel
         
         $p = fx::page();
-        $js_config = new fx_admin_configjs();
+        $js_config = new Admin\Configjs();
         $p->add_js_text("\$fx.init(".$js_config->get_config().");");
-        $p->set_after_body(fx_controller_admin_adminpanel::panel_html());        
+        $p->set_after_body(Admin\Controller\Adminpanel::panel_html());
     }
 }
