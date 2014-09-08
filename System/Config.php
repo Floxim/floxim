@@ -147,7 +147,7 @@ class Config {
             foreach($options as $option) {
                 $this->set($option['keyword'],$option['value']);
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
                     
         }
     }

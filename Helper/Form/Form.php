@@ -2,7 +2,7 @@
 
 namespace Floxim\Floxim\Helper\Form;
 
-class Form implements ArrayAccess {
+class Form implements \ArrayAccess {
 
     protected $params = array();
     

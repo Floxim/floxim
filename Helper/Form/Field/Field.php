@@ -4,7 +4,7 @@ namespace Floxim\Floxim\Helper\Form\Field;
 
 use Floxim\Floxim\Template;
 
-class Field implements ArrayAccess, Template\Essence {
+class Field implements \ArrayAccess, Template\Essence {
 
     protected $params = array();
 

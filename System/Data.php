@@ -604,8 +604,21 @@ class Data {
 
     public function __construct($table = null) {
         if (!$table) {
-            $class = array_reverse(explode("\\", get_class($this)));
-            $table = strtolower($class[1]);
+            $class = get_class($this);
+            if ($class[0] == '\\') $class = substr($class, 1);
+
+            /**
+             * vendor.module.component - finder component - \Vendor\Module\Component\[Name]\Finder
+             * component - finder system component - \Floxim\Floxim\Component\[Name]\Finder
+             */
+            if (preg_match('#^Floxim\\\Floxim\\\Component\\\([\w]+)\\\Finder$#i', $class, $match)) {
+                // component
+                $table = strtolower($match[1]);
+            } elseif(preg_match('#^([\w]+)\\\([\w]+)\\\Component\\\([\w]+)\\\Finder$#i', $class, $match)) {
+                // vendor_module_component
+                // todo: psr0 need verify
+                $table = strtolower($match[1]).'_'.strtolower($match[2]).'_'.strtolower($match[3]);
+            }
         }
         $this->table = $table;
     }
@@ -750,13 +763,9 @@ class Data {
     }
 
     /**
-     * Get the name of the class to create essence
      * @param array $data data essence'and
      * @return string
      */
-    public function get_class_name() {
-        $classname = preg_replace("~\\\\(Finder|Data)$~", "\\Essence", get_class($this));
-        return $classname;
     }
     
     protected function _get_columns($table = null) {

@@ -4,7 +4,7 @@ namespace Floxim\Floxim\Template;
 
 use Floxim\Floxim\System;
 
-class Loop implements ArrayAccess {
+class Loop implements \ArrayAccess {
     
     public $loop;
     
