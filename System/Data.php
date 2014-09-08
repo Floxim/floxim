@@ -761,11 +761,25 @@ class Data {
     public function next_priority() {
         return fx::db()->get_var("SELECT MAX(`priority`)+1 FROM `{{".$this->table."}}`");
     }
-
+    
     /**
+     * Get the name of the class to essence
      * @param array $data data essence'and
      * @return string
      */
+    public function get_class_name() {
+        $class = explode("\\", get_class($this));
+        $class[count($class)-1]= 'Essence';
+        $class = join("\\", $class);
+        return $class;
+        // todo: psr0 need fix
+        $classname = 'fx_'.str_replace('fx_data_', '', get_class($this));
+        try {
+            if (class_exists($classname)) {
+                return $classname;
+            }
+        } catch (Exception $e) {}
+        return '\\Floxim\\Floxim\\System\\Simplerow';
     }
     
     protected function _get_columns($table = null) {
