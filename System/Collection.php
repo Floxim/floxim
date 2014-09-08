@@ -4,7 +4,7 @@ namespace Floxim\Floxim\System;
 
 use Floxim\Floxim\Template;
 
-class Collection implements ArrayAccess, IteratorAggregate, Countable {
+class Collection implements \ArrayAccess, \IteratorAggregate, \Countable {
 
     /**
      * The data array itself
@@ -611,7 +611,7 @@ class Collection implements ArrayAccess, IteratorAggregate, Countable {
     /* IteratorAggregate */
     
     public function getIterator() {
-        return new ArrayIterator($this->data);
+        return new \ArrayIterator($this->data);
     }
 
     public function set($offset, $value) {

@@ -5,6 +5,7 @@ namespace Floxim\Floxim\Component\Content;
 use Floxim\Floxim\System;
 use Floxim\Floxim\Component\Field;
 use Floxim\Floxim\Component\Lang;
+use \fx;
 
 class Finder extends System\Data {
     
@@ -60,7 +61,7 @@ class Finder extends System\Data {
             if (!$type) {
                 continue;
             }
-            $type_tables = array_reverse(fx::data('content_'.$type)->get_tables());
+            $type_tables = array_reverse(fx::data($type)->get_tables());
             $missed_tables = array();
             foreach ($type_tables as $table) {
                 if ($table == $base_table) {
@@ -105,11 +106,18 @@ class Finder extends System\Data {
     
     public function __construct($table = null) {
         parent::__construct($table);
-        $content_type = null;
+        ///$content_type = null;
         // todo: psr0 need fix
+        
+        $class = array_reverse(explode("\\", get_class($this)));
+        $com = strtolower($class[1]);
+        $this->set_component($com);
+        /*
         if (preg_match("~^fx_data_content_(.+)$~", get_class($this), $content_type)) {
             $this->set_component($content_type[1]);
         }
+         * 
+         */
     }
     
     public function set_component($component_id_or_code) {
@@ -217,6 +225,7 @@ class Finder extends System\Data {
      */
     public function essence($data = array()) {
         $classname = $this->get_class_name($data);
+        say($classname);
         if (isset($data['type'])) {
             $component_id = fx::data('component', $data['type'])->get('id');
         } else {

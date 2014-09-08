@@ -1,0 +1,34 @@
+.deep_menu {
+    font-size:18px;
+}
+
+.deep_menu ul, .deep_menu li {
+    list-style-type:none;
+    padding:0;
+    margin:0;
+    max-width:300px;
+}
+
+.deep_menu a {
+    text-decoration: none;
+}
+
+.deep_menu .menu_item_1 li {
+    margin-left:20px;
+}
+
+.deep_menu li.menu_item_2 {
+    font-size:90%;
+}
+
+.deep_menu li.menu_item_3 {
+    font-size:14px;
+}
+
+.deep_menu li.menu_item_4 {
+    font-size:12px;
+}
+
+.deep_menu a.active {
+    color:#FF0;
+}

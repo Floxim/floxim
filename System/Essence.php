@@ -4,7 +4,7 @@ namespace Floxim\Floxim\System;
 
 use Floxim\Floxim\Template;
 
-abstract class Essence implements ArrayAccess {
+abstract class Essence implements \ArrayAccess {
 
     // reference to the class object fx_data_
     //protected $finder;
@@ -409,8 +409,9 @@ abstract class Essence implements ArrayAccess {
     protected $_type = null;
     public function get_type() {
         if (is_null($this->_type)) {
-            // todo: psr0 need fix
-            $this->_type = str_replace("fx_", "", get_class($this));
+            $class = array_reverse(explode("\\", get_class($this)));
+            $type = $class[1];
+            $this->_type = $type;
         }
         return $this->_type;
     }

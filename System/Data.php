@@ -604,8 +604,8 @@ class Data {
 
     public function __construct($table = null) {
         if (!$table) {
-            // todo: psr0 need fix
-            $table = str_replace('fx_data_', '', get_class($this));
+            $class = array_reverse(explode("\\", get_class($this)));
+            $table = strtolower($class[1]);
         }
         $this->table = $table;
     }
@@ -750,19 +750,13 @@ class Data {
     }
 
     /**
-     * Get the name of the class to essence
+     * Get the name of the class to create essence
      * @param array $data data essence'and
      * @return string
      */
-    public function get_class_name($data = array()) {
-        // todo: psr0 need fix
-        $classname = 'fx_'.str_replace('fx_data_', '', get_class($this));
-        try {
-            if (class_exists($classname)) {
-                return $classname;
-            }
-        } catch (Exception $e) {}
-        return '\\Floxim\\Floxim\\System\\Simplerow';
+    public function get_class_name() {
+        $classname = preg_replace("~\\\\(Finder|Data)$~", "\\Essence", get_class($this));
+        return $classname;
     }
     
     protected function _get_columns($table = null) {

@@ -122,6 +122,9 @@ class Fx {
                 } else {
                     $classname = '\\Floxim\\Floxim\\Component\\'.ucfirst($datatype).'\\Finder';
                 }
+                if (!class_exists($classname)) {
+                    say($classname, debug_backtrace());
+                }
                 $data_finder = new $classname();
                 $data_classes_cache[$datatype] = $classname;
             } catch (\Exception $e) {

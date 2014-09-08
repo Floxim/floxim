@@ -1,6 +1,7 @@
 <?php
 
 namespace Floxim\Floxim\Router;
+use \fx;
 
 /**
 $controller = fx::routers()->route('/news/news_10.html');
@@ -10,16 +11,12 @@ fx::routers()->register($callback, 1);
 class Manager {
 
     public function __construct() {
-        foreach (array('admin', 'front', 'infoblock', 'ajax', 'error') as $r_name) {
-            try {
-                // todo: psr0 need fix
-                $classname = 'fx_router_'.$r_name;
-                if (class_exists($classname)) {
-                    $router = new $classname;
-                    $this->register($router);
-                }
-            } catch (Exception $e) {
-                // no file
+        $namespace = 'Floxim\Floxim\Router';
+        foreach (array('Admin', 'Front', 'Infoblock', 'Ajax', 'Error') as $r_name) {
+            $classname = $namespace.'\\'.$r_name;
+            if (class_exists($classname)) {
+                $router = new $classname;
+                $this->register($router);
             }
         }
     }
