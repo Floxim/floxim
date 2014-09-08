@@ -2,7 +2,7 @@
 
 namespace Floxim\Floxim\Template;
 
-interface Essence extends ArrayAccess {
+interface Essence extends \ArrayAccess {
     /**
      * Add meta attributes to essence buffered html
      */

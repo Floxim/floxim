@@ -4,7 +4,7 @@ namespace Floxim\Floxim\System;
 
 use Floxim\Floxim\Template;
 
-abstract class Essence implements ArrayAccess {
+abstract class Essence implements \ArrayAccess {
 
     // reference to the class object fx_data_
     //protected $finder;

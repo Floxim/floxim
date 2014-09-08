@@ -77,7 +77,6 @@ class Fx {
      * component - finder system component
      */
     public static function  data($datatype, $id = null) {
-
         static $data_classes_cache = array();
 
         // fx::data($page) instead of $page_id
@@ -122,6 +121,9 @@ class Fx {
                 } else {
                     $classname = '\\Floxim\\Floxim\\Component\\'.ucfirst($datatype).'\\Finder';
                 }
+                if (!class_exists($classname)) {
+                    throw new \Exception();
+                }
                 $data_finder = new $classname();
                 $data_classes_cache[$datatype] = $classname;
             } catch (\Exception $e) {
@@ -139,6 +141,9 @@ class Fx {
                                 $classname = '\\'.ucfirst($d_vendor).'\\'.ucfirst($d_module).'\\Component\\'.ucfirst($d_component).'\\Finder';
                             }
 
+                            if (!class_exists($classname)) {
+                                throw new \Exception();
+                            }
                             $data_finder = new $classname;
                             foreach ($not_existing as $ne) {
                                 $data_classes_cache[$ne] = $classname;
@@ -320,6 +325,9 @@ class Fx {
                     $c_keyword = "{$c_vendor}.{$c_module}.{$c_component}";
                     $comp_finder = new \Floxim\Floxim\Component\Component\Finder();
                     $component = $comp_finder->get_by_id($c_keyword);
+
+                    //$component = fx::data('component',$c_keyword);
+
                     if ($component) {
                         foreach ($component->get_ancestors() as $parent_com) {
                             try {
@@ -330,6 +338,9 @@ class Fx {
                                     $c_class = '\\'.ucfirst($cp_vendor).'\\'.ucfirst($cp_module).'\\Component\\'.ucfirst($cp_component).'\\Controller';
                                 }
 
+                                if (!class_exists($c_class)) {
+                                    throw new \Exception();
+                                }
                                 $controller_instance = new $c_class($input, $action);
                                 $controller_instance->set_content_type($c_keyword); // todo: psr0 need verify
                                 return $controller_instance;

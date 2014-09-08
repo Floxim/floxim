@@ -604,8 +604,21 @@ class Data {
 
     public function __construct($table = null) {
         if (!$table) {
-            // todo: psr0 need fix
-            $table = str_replace('fx_data_', '', get_class($this));
+            $class = get_class($this);
+            if ($class[0] == '\\') $class = substr($class, 1);
+
+            /**
+             * vendor.module.component - finder component - \Vendor\Module\Component\[Name]\Finder
+             * component - finder system component - \Floxim\Floxim\Component\[Name]\Finder
+             */
+            if (preg_match('#^Floxim\\\Floxim\\\Component\\\([\w]+)\\\Finder$#i', $class, $match)) {
+                // component
+                $table = strtolower($match[1]);
+            } elseif(preg_match('#^([\w]+)\\\([\w]+)\\\Component\\\([\w]+)\\\Finder$#i', $class, $match)) {
+                // vendor_module_component
+                // todo: psr0 need verify
+                $table = strtolower($match[1]).'_'.strtolower($match[2]).'_'.strtolower($match[3]);
+            }
         }
         $this->table = $table;
     }
