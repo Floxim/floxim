@@ -209,7 +209,7 @@ class Finder extends System\Data {
         while(!$exists && count($chain) > 0) {
             $c_level = array_shift($chain);
             // todo: psr0 need fix
-            $class_name = $c_level['keyword'] == 'content' ? 'fx_content' : 'fx_content_'.$c_level['keyword'];
+            $class_name = '\Floxim\Floxim\Component\\'.ucfirst($c_level['keyword']).'\Essence';
             try {
                 $exists = class_exists($class_name);
             } catch (Exception $e) {}

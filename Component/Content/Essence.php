@@ -5,6 +5,7 @@ namespace Floxim\Floxim\Component\Content;
 use Floxim\Floxim\System;
 use Floxim\Floxim\Template;
 use Floxim\Floxim\Component\Field;
+use \fx;
 
 class Essence extends System\Essence implements Template\Essence {
     
@@ -30,6 +31,7 @@ class Essence extends System\Essence implements Template\Essence {
                 $this->_type = fx::data('component', $this->component_id)->get('keyword');
             }
         }
+        return ucfirst($this->_type);
         return ($full ? 'content_' : '').$this->_type;
     }
     

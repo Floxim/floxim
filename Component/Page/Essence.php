@@ -1,5 +1,7 @@
 <?php
-class fx_content_page extends fx_content {
+namespace Floxim\Floxim\Component\Page;
+
+class Essence extends \Floxim\Floxim\Component\Content\Essence {
     protected $parent_ids = null;
     protected $path = null;
     /**
