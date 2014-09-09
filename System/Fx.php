@@ -5,7 +5,6 @@ namespace Floxim\Floxim\System;
 use Floxim\Floxim\Router;
 use Floxim\Floxim\Template;
 use Floxim\Floxim\Controller;
-use Floxim\Floxim\Admin;
 
 /**
 "Static" class, just a helpers collection
@@ -70,37 +69,63 @@ class Fx {
      * @param mixed [$id] IDs or ids array
      */
     public static $data_stat = array();
+    
+    /**
+     * Transform dot-separated component name to full namespace
+     * @param type $name
+     * @return type
+     */
+    public static function getComponentNamespace($name) {
+        $path = explode(".", $name);
+        foreach ($path as &$part) {
+            $chunks = explode("_", $part);
+            foreach ($chunks as &$chunk) {
+                $chunk = ucfirst($chunk);
+            }
+            $part = join('', $chunks);
+        }
+        if (count($path) === 1) {
+            // list of components inside standard library
+            $lib_components = array();
+            if (in_array($path[0], $lib_components)) {
+                array_unshift($path, 'Main');
+            } else {
+                array_unshift($path, 'Floxim\Component');
+            }
+        }
+        if (count($path) === 2) {
+            array_unshift($path, 'Floxim');
+        }
+        return '\\'.join('\\', $path);
+    }
 
     // todo: psr0 need fix
     /**
-     * vendor.module.component - finder component
-     * component - finder system component
+     * vendor.module.component - component finder
+     * component - system component finder
      */
     public static function  data($datatype, $id = null) {
-        static $data_classes_cache = array();
-
+        
         // fx::data($page) instead of $page_id
         if (is_object($id) && $id instanceof Essence) {
             return $id;
         }
-        if (
-            !is_null($id) &&
-            !is_array($id) &&
-            isset(self::$data_cache[$datatype]) &&
-            isset(self::$data_cache[$datatype][$id])
-        ) {
-            return self::$data_cache[$datatype][$id];
+        
+        $namespace = self::getComponentNamespace($datatype);
+        
+        $class_name = $namespace.'\\Finder';
+        if (!class_exists($class_name)) {
+            say(debug_backtrace());
+            throw new \Exception('Class not found: '.$class_name. ' for '.$datatype);
         }
-
-        $data_finder = null;
-        $component = null;
-
-        $parts = explode('.',$datatype);
-        if (count($parts)==3) {
-            // vendor.module.component
-            $component = fx::data('component',$datatype);
+        
+        $finder = new $class_name;
+        
+        if (func_num_args() === 1) {
+            return $finder;
         }
-
+        
+        return $finder->get_by_id($id);
         // look for data-* class in cache
         if (isset($data_classes_cache[$datatype])) {
             $finder_class = $data_classes_cache[$datatype];
@@ -159,6 +184,7 @@ class Fx {
                 }
             }
             if (is_null($data_finder)) {
+                say('no df', $datatype);
                 $data_finder = new \Floxim\Floxim\System\Data($datatype);
                 $data_classes_cache[$datatype] = 'Floxim\\Floxim\\System\\Data';
             }
@@ -259,20 +285,20 @@ class Fx {
     /**
      * todo: psr0 need fix
      *
-     * to create a controller, install options
-     * @param string $controller 'controller_name' or 'controller_name.action_name'
+     * @param string $controller 'controller_name' or 'controller_name:action_name'
      * @param array $input
      * @param string $action
      * @return \Floxim\Floxim\System\Controller initialized controller
      */
     public static function controller($controller, $input = null, $action = null) {
         /**
-         * vendor.module.component - front controller component
-         * vendor.module.component:action - front controller component with action
-         * vendor.module.component.admin - admin controller component
-         * vendor.module.component.widget - admin controller component
-         * vendor.module.admin - admin controller module
-         * vendor.module.widget - widget controller module
+         * vendor.module.component - front component controller
+         * vendor.module.component:action - front component controller with action
+         * vendor.module.component.admin - component admin controller
+         * vendor.module.admin - module admin
+         * vendor.module.widget - widget controller
+         * com -> \Floxim\Floxim\Component\com
+         *     or \Floxim\Main\com
          * layout - layout controller
          * content - base controller component
          * admin.controller - admin controller site
@@ -306,8 +332,21 @@ class Fx {
             die("Failed loading controller class ".$c_class);
         }
         /**
+         * Sytem components
+         */
+        if (count($c_parts === 1)) {
+            $com_name = ucfirst($c_parts[0]);
+            $c_class = '\\Floxim\\Floxim\\Component\\'.$com_name.'\\Controller';
+            if (!class_exists($c_class)) {
+                $c_class = '\\Floxim\\Main\\'.$com_name.'\\Controller';
+            }
+            $controller_instance = new $c_class($input, $action);
+            return $controller_instance;
+        }
+        /**
          * Component controllers
          */
+        
         if (count($c_parts) >= 3) {
             $c_vendor = $c_parts[0];
             $c_module = $c_parts[1];
@@ -354,6 +393,7 @@ class Fx {
                 }
             }
         }
+        say(debug_backtrace());
         die("Failed loading class controller ".$controller);
     }
 
@@ -371,7 +411,7 @@ class Fx {
         }
         $class_name = 'fx_template_'.$template;
         if (!class_exists($class_name)) {
-            $class_name = 'fx_template';
+            $class_name = '\\Floxim\\Floxim\\Template\\Template';
         }
         return new $class_name($action, $data);
     }

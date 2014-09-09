@@ -3,6 +3,7 @@
 namespace Floxim\Floxim\Component\Session;
 
 use Floxim\Floxim\System;
+use fx;
 
 class Essence extends System\Essence {
     public function set_cookie() {

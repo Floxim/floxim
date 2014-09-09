@@ -1,6 +1,8 @@
 <?php
 namespace Floxim\Floxim\Component\Page;
 
+use fx;
+
 class Essence extends \Floxim\Floxim\Component\Content\Essence {
     protected $parent_ids = null;
     protected $path = null;
@@ -28,7 +30,7 @@ class Essence extends \Floxim\Floxim\Component\Content\Essence {
         $ids = array();
         while ($c_pid != 0) {
             array_unshift($ids, $c_pid);
-            $c_pid = fx::data('content_page', $ids[0])->get('parent_id');
+            $c_pid = fx::data('page', $ids[0])->get('parent_id');
         }
         $this->parent_ids = $ids;
         return $ids;
@@ -40,7 +42,7 @@ class Essence extends \Floxim\Floxim\Component\Content\Essence {
         }
         $path_ids = $this->get_parent_ids();
         $path_ids []= $this['id'];
-        $this->path = fx::data('content_page')->where('id', $path_ids)->all();
+        $this->path = fx::data('page')->where('id', $path_ids)->all();
         return $this->path;
     }
     
@@ -91,7 +93,7 @@ class Essence extends \Floxim\Floxim\Component\Content\Essence {
                 $url = '/'.$url;
             }
             $index = 1;
-            while ( fx::data('content_page')->
+            while ( fx::data('page')->
                     where('url', $url)->
                     where('site_id', $this['site_id'])->
                     where('id', $this['id'], '!=')->
@@ -141,7 +143,7 @@ class Essence extends \Floxim\Floxim\Component\Content\Essence {
      * @return fx_collection Found infoblocks
      */
     public function get_nested_infoblocks($with_own = true) {
-        $q = fx::data('content_page')->descendants_of($this, $with_own);
+        $q = fx::data('page')->descendants_of($this, $with_own);
         $q->join('{{infoblock}}', '{{infoblock}}.page_id = {{content}}.id');
         $q->select('{{infoblock}}.id');
         $ids = $q->get_data()->get_values('id');

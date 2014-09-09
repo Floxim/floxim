@@ -13,7 +13,7 @@ class Ajax extends Base {
         if ($c_url) {
             $_SERVER['REQUEST_URI'] = $c_url;
             
-            $page = fx::data('content_page')->get_by_url($c_url, $context['site_id']);
+            $page = fx::data('page')->get_by_url($c_url, $context['site_id']);
             fx::env('page', $page);
             
             $c_url = parse_url($c_url);

@@ -3,13 +3,13 @@
 namespace Floxim\Floxim\Router;
 
 use Floxim\Floxim\Template;
-use \fx;
+use fx;
 
 class Front extends Base {
 
     public function route($url = null, $context = null) {
         
-        $page = fx::data('content_page')->get_by_url(urldecode($url), $context['site_id']);
+        $page = fx::data('page')->get_by_url(urldecode($url), $context['site_id']);
         
         if (!$page) {
             return null;
@@ -32,7 +32,7 @@ class Front extends Base {
             return $this->_ib_cache[$cache_key];
         }
         
-        $c_page = $page_id === fx::env('page_id') ? fx::env('page') : fx::data('content_page', $page_id);
+        $c_page = $page_id === fx::env('page_id') ? fx::env('page') : fx::data('page', $page_id);
 
         $infoblocks = $c_page
                         ->get_page_infoblocks()

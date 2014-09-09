@@ -3,6 +3,7 @@
 namespace Floxim\Floxim\Component\Field;
 
 use Floxim\Floxim\System;
+use fx;
 
 class Essence extends System\Essence {
 
@@ -29,9 +30,12 @@ class Essence extends System\Essence {
 
         static $res = array();
         if (empty($res)) {
-            $types = fx::data('datatype')->all();
-            foreach ($types as $v) {
-                $res[$v['id']] = $v['name'];
+            $reflection = new \ReflectionClass(get_class($this));
+            $constants = $reflection->getConstants();
+            foreach ($constants as $name => $value) {
+                if (preg_match("~^FIELD_~", $name)) {
+                    $res[$value] = strtolower(substr($name, 6));
+                }
             }
         }
 
@@ -43,7 +47,8 @@ class Essence extends System\Essence {
 
         $this->format = $this['format'];
         $this->type_id = $this['type'];
-        $this->type = Field::get_type_by_id($this->type_id);
+
+        $this->type = self::get_type_by_id($this->type_id);
         $this->_edit_jsdata = array('type' => 'input');
     }
     

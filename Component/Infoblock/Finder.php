@@ -3,6 +3,7 @@
 namespace Floxim\Floxim\Component\Infoblock;
 
 use Floxim\Floxim\System;
+use fx;
 
 class Finder extends System\Data {
     
@@ -37,7 +38,7 @@ class Finder extends System\Data {
     }
     
     public function get_for_page($page_id) {
-        $page = $page_id instanceof System\Essence ? $page_id : fx::data('content_page', $page_id);
+        $page = $page_id instanceof System\Essence ? $page_id : fx::data('page', $page_id);
         if (!$page) {
             return;
         }

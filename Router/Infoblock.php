@@ -31,7 +31,7 @@ class Infoblock extends Base {
         // when updating from "layout settings" panel
         $infoblock = fx::data('infoblock', $ib_id);
         if ((!$infoblock && isset($_POST['infoblock_is_layout'])) || $infoblock->is_layout()) {
-            $infoblock = fx::data('content_page', $page_id)->get_layout_infoblock();
+            $infoblock = fx::data('page', $page_id)->get_layout_infoblock();
         }
         
         fx::http()->status('200');

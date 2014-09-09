@@ -4,6 +4,7 @@ namespace Floxim\Floxim\Template;
 
 use Floxim\Floxim\System;
 use Floxim\Floxim\Helper\Form;
+use fx;
 
 class Template {
     

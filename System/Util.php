@@ -207,4 +207,8 @@ class Util {
         $str = preg_replace("~[^a-z0-9_-]+~", '_', $str);
         return $str;
     }
+    
+    public function camelToUnderscore($string) {
+        return strtolower(preg_replace('/([a-z])([A-Z])/', '$1_$2', $string));
+    }
 }

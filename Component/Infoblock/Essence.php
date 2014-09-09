@@ -5,6 +5,7 @@ namespace Floxim\Floxim\Component\Infoblock;
 use Floxim\Floxim\System;
 use Floxim\Floxim\Template;
 use Floxim\Floxim\Component;
+use fx;
 
 class Essence extends System\Essence  implements Template\Essence {
     

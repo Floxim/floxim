@@ -428,8 +428,8 @@ class Controller {
     
 
     public function _get_real_actions() {
-        $class = new ReflectionClass(get_class($this));
-        $methods = $class->getMethods(ReflectionMethod::IS_PUBLIC);
+        $class = new \ReflectionClass(get_class($this));
+        $methods = $class->getMethods(\ReflectionMethod::IS_PUBLIC);
         $props = $class->getDefaultProperties();
         $prefix = isset($props['_action_prefix']) ? $props['_action_prefix'] : '';
         $actions = array();

@@ -1,5 +1,4 @@
 <?php
-
 namespace Floxim\Floxim\Admin\Controller;
 
 use Floxim\Floxim\Component\Field;
@@ -13,7 +12,7 @@ class Content extends Admin {
             $content_type = $content['type'];
         } else {
             $content_type = $input['content_type'];
-            $parent_page = fx::data('content_page', $input['parent_id']);
+            $parent_page = fx::data('page', $input['parent_id']);
             $content = fx::data('content_'.$content_type)->create(array(
                 'parent_id' => $input['parent_id'],
                 'infoblock_id' => $input['infoblock_id'],
@@ -196,14 +195,14 @@ class Content extends Admin {
         if ($input['delete_confirm']) {
             $current_page_path = null;
             if ($input['page_id']) {
-                $current_page_path = fx::data('content_page' , $input['page_id'])->get_path()->get_values('id');
+                $current_page_path = fx::data('page' , $input['page_id'])->get_path()->get_values('id');
             }
             $response = array('status'=>'ok');
             if ($content->is_instanceof('page') && is_array($current_page_path) && in_array($content['id'], $current_page_path) ) {
                 if ($content['parent_id'] == 0){
                     $response['reload'] = '/';
                 } else {
-                    $parent_page = fx::data('content_page', $content['parent_id']);
+                    $parent_page = fx::data('page', $content['parent_id']);
                     $response['reload'] = $parent_page['url'];
                 }
             }

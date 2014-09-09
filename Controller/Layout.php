@@ -21,7 +21,7 @@ class Layout extends System\Controller {
             $layout_id
         );
         fx::page()->set_infoblocks($page_infoblocks);
-        $path = fx::data('content_page', $page_id)->get_path();
+        $path = fx::data('page', $page_id)->get_path();
         $current_page = $path->last();
         $res = array(
             'page_id' => $page_id,
@@ -54,7 +54,7 @@ class Layout extends System\Controller {
         if ($this->_layout) {
             return $this->_layout;
         }
-        $page = fx::data('content_page', $this->get_param('page_id'));
+        $page = fx::data('page', $this->get_param('page_id'));
         if ($page['layout_id']) {
             $layout_id = $page['layout_id'];
         } else {

@@ -6,7 +6,7 @@ class fx_content_comment extends fx_content {
             return;  
         } 
         
-        return fx::data('content_page', $this['parent_id']);
+        return fx::data('page', $this['parent_id']);
     }
     
     protected function _after_insert() {

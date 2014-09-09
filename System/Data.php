@@ -7,7 +7,7 @@ use Floxim\Floxim\Helper\Form;
 /**
  * Layer between the table and the object
  */
-class Data {
+abstract class Data {
 
     protected $table;
     protected $pk = 'id';
@@ -603,9 +603,15 @@ class Data {
     }
 
     public function __construct($table = null) {
+        if (get_class($this) == 'Floxim\\Floxim\\System\\Data') {
+            say(debug_backtrace());
+            die();
+        }
         if (!$table) {
             $class = get_class($this);
-            if ($class[0] == '\\') $class = substr($class, 1);
+            if ($class[0] == '\\') {
+                $class = substr($class, 1);
+            }
 
             /**
              * vendor.module.component - finder component - \Vendor\Module\Component\[Name]\Finder
@@ -613,7 +619,7 @@ class Data {
              */
             if (preg_match('#^Floxim\\\Floxim\\\Component\\\([\w]+)\\\Finder$#i', $class, $match)) {
                 // component
-                $table = strtolower($match[1]);
+                $table = fx::util()->camelToUnderscore($match[1]);
             } elseif(preg_match('#^([\w]+)\\\([\w]+)\\\Component\\\([\w]+)\\\Finder$#i', $class, $match)) {
                 // vendor_module_component
                 // todo: psr0 need verify
@@ -693,6 +699,9 @@ class Data {
      */
     public function essence($data = array()) {
         $classname = $this->get_class_name($data);
+        if (!class_exists($classname)) {
+            say($this);
+        }
         $obj = new $classname(array('data' => $data));
         // todo: psr0 verify
         if ($classname == '\\Floxim\\Floxim\\System\\Simplerow') {

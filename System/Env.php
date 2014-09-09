@@ -55,7 +55,7 @@ class Env {
 
     public function set_page ( $page ) {
         if (is_numeric($page)) {
-            $page = fx::data('content_page', $page);
+            $page = fx::data('page', $page);
         }
         $this->current['page'] = $page;
     }
@@ -69,7 +69,7 @@ class Env {
            return $this->current['page']->get('id');
         }
         if (isset($this->current['page_id'])) {
-            $this->current['page'] = fx::data('content_page', $this->current['page_id']);
+            $this->current['page'] = fx::data('page', $this->current['page_id']);
             return $this->current['page_id'];
         }
         return NULL;
@@ -85,7 +85,7 @@ class Env {
 
     public function get_user () {
         if (!isset($this->current['user'])) {
-            $this->current['user'] = \Floxim\User\Component\User\Essence::load();
+            $this->current['user'] = \Floxim\Floxim\Component\User\Essence::load();
         }
         return $this->current['user'];
     }
@@ -101,7 +101,7 @@ class Env {
     public function get_home_id() {
         if (!isset($this->current['home_id'])) {
             $site = $this->get_site();
-            $home_page = fx::data('content_page')
+            $home_page = fx::data('page')
                 ->where('parent_id', 0)
                 ->where('site_id', $site['id'])
                 ->one();
@@ -118,7 +118,7 @@ class Env {
         if (!$this->current['layout']) {
             $page_id = $this->get_page_id();
             if ($page_id) {
-                $page = fx::data('content_page', $page_id);
+                $page = fx::data('page', $page_id);
                 if ($page['layout_id']) {
                     $this->current['layout'] = $page['layout_id'];
                 }

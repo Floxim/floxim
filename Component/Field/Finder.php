@@ -34,10 +34,13 @@ class Finder extends System\Data {
     }
 
     public function get_class_name($data = array()) {
-        $class_name  = parent::get_class_name($data);
+        //$class_name  = parent::get_class_name($data);
         if (isset($data['type'])) {
             // todo: psr0 need verify
-            $class_name .= '_'.Essence::get_type_by_id($data['type']);
+            $type = Essence::get_type_by_id($data['type']);
+            $type = ucfirst($type);
+            $class_name = '\\Floxim\\Floxim\\Field\\'.$type;
+            //$class_name .= '_'.Essence::get_type_by_id($data['type']);
         }
         return $class_name;
     }

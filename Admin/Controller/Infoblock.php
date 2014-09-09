@@ -33,7 +33,7 @@ class Infoblock extends Admin {
         );
 	
         fx::env('page', $input['page_id']);
-        $page = fx::data('content_page', $input['page_id']);
+        $page = fx::data('page', $input['page_id']);
         
         $area_meta = $input['area'];
         
@@ -166,7 +166,7 @@ class Infoblock extends Admin {
     	} else {
             // Create a new type and ID of the controller received from the previous step
             list($controller, $action) = explode(".", $input['controller']);
-            $site_id = fx::data('content_page', $input['page_id'])->get('site_id');
+            $site_id = fx::data('page', $input['page_id'])->get('site_id');
             $infoblock = fx::data("infoblock")->create(array(
                 'controller' => $controller,
                 'action' => $action,
@@ -220,7 +220,7 @@ class Infoblock extends Admin {
         $format_fields = $this->_get_format_fields($infoblock, $area_meta);
         $this->response->add_fields($format_fields, false, 'visual');
         
-        $c_page = fx::data('content_page', $input['page_id']);
+        $c_page = fx::data('page', $input['page_id']);
         $scope_fields = $this->_get_scope_fields($infoblock, $c_page);
         $this->response->add_fields($scope_fields, false, 'scope');
         
@@ -363,10 +363,10 @@ class Infoblock extends Admin {
     }
     
     public function layout_settings($input) {
-        $c_page = fx::data('content_page', $input['page_id']);
+        $c_page = fx::data('page', $input['page_id']);
         $infoblock = $c_page->get_layout_infoblock();
         
-        $c_page = fx::data('content_page', $input['page_id']);
+        $c_page = fx::data('page', $input['page_id']);
         $scope_fields = $this->_get_scope_fields($infoblock, $c_page);
         unset($scope_fields['visibility']);
         $this->response->add_fields($scope_fields, false, 'scope');
@@ -418,7 +418,7 @@ class Infoblock extends Admin {
         $old_layout = $visual['template'];
         $new_layout = $input['visual']['template'];
         
-        $c_page = fx::data('content_page', $input['page_id']);
+        $c_page = fx::data('page', $input['page_id']);
         
         if ($old_layout == $new_layout && $old_scope == $new_scope) {
             return;
@@ -496,7 +496,7 @@ class Infoblock extends Admin {
         
         
         $path_ids = $c_page->get_parent_ids();
-        $path = fx::data('content_page', $path_ids);
+        $path = fx::data('page', $path_ids);
         $path []= $c_page;
         $path_count = count($path);
         $c_type = $c_page['type'];

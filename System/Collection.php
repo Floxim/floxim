@@ -459,7 +459,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable {
             foreach ($field as $fd) {
                 foreach ($this->data as $k => $v) {
                     $res_key = $key_field ? $v[$key_field] : $k;
-                    if ( (is_array($v) || $v instanceof ArrayAccess) && isset($v[$fd])) {
+                    if ( (is_array($v) || $v instanceof \ArrayAccess) && isset($v[$fd])) {
                         $result[$res_key][$fd] = $v[$fd];
                     } elseif (is_object($v) && isset($v->$fd)) {
                         $result[$res_key][$fd] = $v->$fd;
@@ -476,7 +476,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable {
         } 
         foreach ($this->data as $k => $v) {
             $res_key = $key_field ? $v[$key_field] : $k;
-            if ( (is_array($v) || $v instanceof ArrayAccess) && isset($v[$field])) {
+            if ( (is_array($v) || $v instanceof \ArrayAccess) && isset($v[$field])) {
                 $result[$res_key] = $v[$field];
             } elseif (is_object($v) && isset($v->$field)) {
                 $result[$res_key] = $v->$field;

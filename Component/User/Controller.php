@@ -1,5 +1,9 @@
 <?php
-class fx_controller_component_user extends fx_controller_component {
+namespace Floxim\Floxim\Component\User;
+
+use fx;
+
+class Controller extends \Floxim\Floxim\Controller\Frontoffice {
     public function do_auth_form() {
         $user = fx::user();
         

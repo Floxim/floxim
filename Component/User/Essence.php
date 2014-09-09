@@ -1,16 +1,20 @@
 <?php
-class fx_content_user extends fx_content {
+namespace Floxim\Floxim\Component\User;
+
+use fx;
+
+class Essence extends \Floxim\Floxim\Component\Content\Essence {
 
     static public function load() {
         $session = fx::data('session')->load();
         $user = null;
         if ($session && $session['user_id']) {
             $session->set_cookie();
-            $user = fx::data('content_user', $session['user_id']);
+            $user = fx::data('user', $session['user_id']);
         }
         
         if (!$user) {
-            $user = fx::data('content_user')->create();
+            $user = fx::data('user')->create();
         }
         
         fx::env()->set_user($user);
@@ -18,7 +22,7 @@ class fx_content_user extends fx_content {
     }
 
     public function login($login, $password, $remember = true) {
-        $user = fx::data('content_user')->get_by_login($login); 
+        $user = fx::data('user')->get_by_login($login); 
         if (!$user || !$user['password'] || crypt($password, $user['password'])!==$user['password']) {
             return false;
         }
@@ -61,7 +65,7 @@ class fx_content_user extends fx_content {
             $this['password'] = crypt($this['password'],  uniqid(mt_rand(), true));
         }
         if ($this->is_modified('email')) {
-            $existing = fx::data('content_user')
+            $existing = fx::data('user')
                             ->where('email', $this['email'])
                             ->where('id', $this['id'], '!=')
                             ->one();

@@ -4,6 +4,7 @@ namespace Floxim\Floxim\Admin\Controller;
 
 use Floxim\Floxim\System;
 use Floxim\Floxim\Admin as FxAdmin;
+use fx;
 
 class Admin extends System\Controller {
 
@@ -26,7 +27,7 @@ class Admin extends System\Controller {
         parent::__construct($input, $action);
         // todo: psr0 need fix
         $this->essence_type = str_replace('fx_controller_admin_', '', get_class($this));
-        $this->ui = new Ui();
+        $this->ui = new FxAdmin\Ui;
         
         $this->process_do_return = isset($input['do_return']) ? $input['do_return'] : $do_return;
     }
@@ -151,11 +152,11 @@ class Admin extends System\Controller {
             $js_config = new FxAdmin\Configjs();
             fx::page()->add_js_text("\$fx.init(".$js_config->get_config().");");
         } else {
-            $auth_form = fx::controller('component_user.auth_form')
-                            ->render('component_user.auth_form');
+            $auth_form = fx::controller('user.auth_form')
+                            ->render('user.auth_form');
             
-            $recover_form = fx::controller('component_user.recover_form', array('email' => $_POST['email']))
-                            ->render('component_user.recover_form');
+            $recover_form = fx::controller('user.recover_form', array('email' => $_POST['email']))
+                            ->render('user.recover_form');
             $res = fx::template('helper_admin.authorize')->render(array(
                 'auth_form' => $auth_form,
                 'recover_form' => $recover_form

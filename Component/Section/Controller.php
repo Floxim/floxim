@@ -52,7 +52,7 @@ class fx_controller_component_section extends fx_controller_component_page {
                 $extra_roots = array();
             }
             if (count($items) > 0) {
-                fx::data('content_page')
+                fx::data('page')
                     ->make_tree($items, 'submenu', $extra_roots)
                     ->add_filter('parent_id', $items->first()->get('parent_id'));
             }
@@ -109,7 +109,7 @@ class fx_controller_component_section extends fx_controller_component_page {
         if ( !($page_id = $this->get_param('page_id'))) {
             $page_id = fx::env('page_id');
         }
-        $essence_page = fx::data('content_page',$page_id);
+        $essence_page = fx::data('page',$page_id);
         $essence_page['active'] = true;
         if ($this->get_param('header_only')) {
             $pages = new fx_collection(array($essence_page));

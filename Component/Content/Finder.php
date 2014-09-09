@@ -5,7 +5,7 @@ namespace Floxim\Floxim\Component\Content;
 use Floxim\Floxim\System;
 use Floxim\Floxim\Component\Field;
 use Floxim\Floxim\Component\Lang;
-use \fx;
+use fx;
 
 class Finder extends System\Data {
     
@@ -225,7 +225,6 @@ class Finder extends System\Data {
      */
     public function essence($data = array()) {
         $classname = $this->get_class_name($data);
-        say($classname);
         if (isset($data['type'])) {
             $component_id = fx::data('component', $data['type'])->get('id');
         } else {
