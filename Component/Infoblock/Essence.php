@@ -107,7 +107,7 @@ class Essence extends System\Essence  implements Template\Essence {
         if (!$controller || !$action) {
             return null;
         }
-        $ctr = fx::controller($controller.'.'.$action, $this->get_prop_inherited('params'));
+        $ctr = fx::controller($controller.':'.$action, $this->get_prop_inherited('params'));
         $ctr->set_param('infoblock_id', $this['id']);
         return $ctr;
     }

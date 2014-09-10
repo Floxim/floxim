@@ -4,6 +4,7 @@ namespace Floxim\Floxim\Controller;
 
 use Floxim\Floxim\Component\Field;
 use Floxim\Floxim\System;
+use fx;
 
 class Component extends Frontoffice {
     

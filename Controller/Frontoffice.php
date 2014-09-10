@@ -4,6 +4,7 @@ namespace Floxim\Floxim\Controller;
 
 use Floxim\Floxim\System;
 use Floxim\Floxim\Helper;
+use fx;
 
 /**
  * Front office controller - common base for widgets and components
@@ -26,7 +27,7 @@ class Frontoffice extends System\Controller {
         if ($result === null) {
             $result = array();
         }
-        if (is_array($result) || $result instanceof ArrayAccess) {
+        if (is_array($result) || $result instanceof \ArrayAccess) {
             $result = array_merge_recursive($result, $this->_result);
             if (!isset($result['_meta'])) {
                 $result['_meta'] = array();

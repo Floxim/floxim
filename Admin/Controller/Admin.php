@@ -152,10 +152,10 @@ class Admin extends System\Controller {
             $js_config = new FxAdmin\Configjs();
             fx::page()->add_js_text("\$fx.init(".$js_config->get_config().");");
         } else {
-            $auth_form = fx::controller('user.auth_form')
-                            ->render('user.auth_form');
+            $auth_form = fx::controller('user:auth_form')
+                            ->render('user:auth_form');
             
-            $recover_form = fx::controller('user.recover_form', array('email' => $_POST['email']))
+            $recover_form = fx::controller('user:recover_form', array('email' => $_POST['email']))
                             ->render('user.recover_form');
             $res = fx::template('helper_admin.authorize')->render(array(
                 'auth_form' => $auth_form,

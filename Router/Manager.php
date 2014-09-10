@@ -1,7 +1,7 @@
 <?php
 
 namespace Floxim\Floxim\Router;
-use \fx;
+use fx;
 
 /**
 $controller = fx::routers()->route('/news/news_10.html');
@@ -73,6 +73,7 @@ class Manager {
      * fx::router('front')
      */
     public function get_router($router_name) {
-        return fx::dig($this->routers, $router_name.'.router');
+        $class = 'Floxim\\Floxim\\Router\\' . ucfirst($router_name);
+        return fx::dig($this->routers, $class.'.router');
     }
 }

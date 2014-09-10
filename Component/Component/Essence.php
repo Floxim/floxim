@@ -204,7 +204,7 @@ class Essence extends System\Essence {
         $controller_file = $base_path.$keyword.'.php';
         
         $parent_com = fx::data('component', $this['parent_id']);
-        $parent_ctr = fx::controller('component_'.$parent_com['keyword']);
+        $parent_ctr = fx::controller($parent_com['keyword']);
         $parent_ctr_class = get_class($parent_ctr);
         
         $parent_finder = fx::content($parent_com['keyword']);

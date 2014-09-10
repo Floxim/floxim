@@ -69,7 +69,7 @@ class Infoblock extends Admin {
                         continue;
                     }
                 }
-                $act_ctr = fx::controller($controller_name.'.'.$action_code);
+                $act_ctr = fx::controller($controller_name.':'.$action_code);
                 $act_templates = $act_ctr->get_available_templates(fx::env('layout'), $area_meta);
                 if (count($act_templates) == 0) {
                     continue;
@@ -193,7 +193,7 @@ class Infoblock extends Admin {
         }
         
         $controller = fx::controller(
-                $controller.'.'.$action, 
+                $controller.':'.$action,
                 array('infoblock_id' => $infoblock['id']) + $infoblock['params']
         );
         $settings = $controller->get_action_settings($action);
@@ -654,7 +654,7 @@ class Infoblock extends Admin {
         }
 
         // Collect the available templates
-        $controller = fx::controller($controller_name.'.'.$action_name);
+        $controller = fx::controller($controller_name.':'.$action_name);
         $tmps = $controller->get_available_templates($layout_name, $area_meta);
         if ( !empty($tmps) ) {
             foreach ( $tmps as $template ) {
