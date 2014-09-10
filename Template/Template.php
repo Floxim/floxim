@@ -425,7 +425,7 @@ class Template {
         if ($this->has_action()) {
             try {
                 $this->$method();
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 fx::log('template exception', $e);
             }
         } else {
@@ -455,7 +455,7 @@ class Template {
     
     public function get_info() {
         if (!$this->action) {
-            throw new Exception('Specify template action/variant before getting info');
+            throw new \Exception('Specify template action/variant before getting info');
         }
         foreach ($this->_templates as $tpl) {
             if ($tpl['id'] == $this->action) {
