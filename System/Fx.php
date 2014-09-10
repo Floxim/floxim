@@ -102,7 +102,7 @@ class Fx {
         return '\\'.join('\\', $path);
     }
 
-    // todo: psr0 need fix
+    // todo: psr0 need verify - recursive request finder class
     /**
      * vendor.module.component - component finder
      * component - system component finder
@@ -219,7 +219,6 @@ class Fx {
             }
             $type = fx::data('component', $type)->get('keyword');
         }
-        $type = 'content'. (!$type ? '' : '_'.$type);
         $args = func_get_args();
         $args[0] = $type;
         return call_user_func_array('fx::data', $args); 
@@ -337,12 +336,8 @@ class Fx {
         /**
          * Sytem components
          */
-        if (count($c_parts === 1)) {
-            $com_name = ucfirst($c_parts[0]);
-            $c_class = '\\Floxim\\Floxim\\Component\\'.$com_name.'\\Controller';
-            if (!class_exists($c_class)) {
-                $c_class = '\\Floxim\\Main\\'.$com_name.'\\Controller';
-            }
+        if (count($c_parts) === 1) {
+            $c_class = fx::getComponentNamespace($c_parts[0]) . '\\Controller';
             $controller_instance = new $c_class($input, $action);
             return $controller_instance;
         }
@@ -363,23 +358,13 @@ class Fx {
                     // .....
                 } else {
                     // Component essence
-                    // todo: psr0 need replace by fx::data('component', $ctr_name)
                     $c_keyword = "{$c_vendor}.{$c_module}.{$c_component}";
-                    $comp_finder = new \Floxim\Floxim\Component\Component\Finder();
-                    $component = $comp_finder->get_by_id($c_keyword);
-
-                    //$component = fx::data('component',$c_keyword);
+                    $component = fx::data('component',$c_keyword);
 
                     if ($component) {
                         foreach ($component->get_ancestors() as $parent_com) {
                             try {
-                                list($cp_vendor, $cp_module, $cp_component) = explode('.',$parent_com['keyword']); // vendor.module.component todo: need fix DB data
-                                if ($parent_com['keyword'] == 'floxim.content.content') {
-                                    $c_class = 'Controller\\Component';
-                                } else {
-                                    $c_class = '\\'.ucfirst($cp_vendor).'\\'.ucfirst($cp_module).'\\Component\\'.ucfirst($cp_component).'\\Controller';
-                                }
-
+                                $c_class = fx::getComponentNamespace($parent_com['keyword']) . '\\Controller';
                                 if (!class_exists($c_class)) {
                                     throw new \Exception();
                                 }
@@ -448,7 +433,7 @@ class Fx {
         }
         $arr = $collection;
         foreach ($var_path as $pp) {
-            if (is_array($arr) || $arr instanceof ArrayAccess) {
+            if (is_array($arr) || $arr instanceof \ArrayAccess) {
                 if (!isset($arr[$pp])) {
                     return null;
                 }
@@ -472,7 +457,7 @@ class Fx {
         $total = count($var_path);
         foreach ($var_path as $num => $pp) {
             $is_arr = is_array($arr);
-            $is_aa = $arr instanceof ArrayAccess;
+            $is_aa = $arr instanceof \ArrayAccess;
             if (!$is_arr && !$is_aa) {
                 return null;
             }
@@ -586,7 +571,7 @@ class Fx {
         if (!($res = $lang->get_string($string, $dict))) {
             try {
                 $lang->add_string($string, $dict);
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 fx::log('exc', $e);
             }
             $res = $string;
@@ -612,7 +597,7 @@ class Fx {
         if (!($res = $lang->get_string($string, $dict))) {
             try {
                 $lang->add_string($string, $dict);
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 fx::log('exc', $e);
             }
             $res = $string;
@@ -661,7 +646,7 @@ class Fx {
      */
     public static function hooks() {
         if (!self::$hook_manager) {
-            self::$hook_manager = new \Floxim\Floxim\System\HookManager();
+            self::$hook_manager = new HookManager();
         }
         return self::$hook_manager;
     }
@@ -763,7 +748,7 @@ class Fx {
         try {
             $thumber = new Thumb($value, $format);
             $res = $thumber->get_result_path();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $res = '';
         }
         return $res;
@@ -822,8 +807,6 @@ class Fx {
     public static function path($key = null, $tale = null) {
         static $path = null;
         if (!$path) {
-            // we can not autoload path because it gonna be used by autoloader itself
-            require_once (dirname(__FILE__).'/path.php');
             $path = new Path();
         }
         switch(func_num_args()) {
