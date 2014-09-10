@@ -86,9 +86,12 @@ class Fx {
         }
         if (count($path) === 1) {
             // list of components inside standard library
-            $lib_components = array();
-            if (in_array($path[0], $lib_components)) {
-                array_unshift($path, 'Main');
+            // todo: psr0 need verify component 'content'
+            $lib_components = array('award', 'classifier', 'classifier_linker', 'comment', 'company', 'contact', 'faq', 'news', 'page', 'person', 'photo',
+                                    'product', 'project', 'publication', 'section', 'social_icon', 'tag', 'text', 'user', 'vacancy', 'video');
+            if (in_array(strtolower($path[0]), $lib_components)) {
+                array_unshift($path, 'Component');
+                array_unshift($path, 'Floxim\Main');
             } else {
                 array_unshift($path, 'Floxim\Component');
             }

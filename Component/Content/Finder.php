@@ -208,11 +208,12 @@ class Finder extends System\Data {
         
         while(!$exists && count($chain) > 0) {
             $c_level = array_shift($chain);
-            // todo: psr0 need fix
-            $class_name = '\Floxim\Floxim\Component\\'.ucfirst($c_level['keyword']).'\Essence';
+            // todo: psr0 need verify
+            $class_namespace = fx::getComponentNamespace($c_level['keyword']);
+            $class_name = $class_namespace . '\\Essence';
             try {
                 $exists = class_exists($class_name);
-            } catch (Exception $e) {}
+            } catch (\Exception $e) {}
         }
         Finder::$content_classes[$data['type']] = $class_name;
         return $class_name;
