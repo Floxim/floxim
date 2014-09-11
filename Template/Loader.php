@@ -2,6 +2,8 @@
 
 namespace Floxim\Floxim\Template;
 
+use Floxim\Floxim\System\Fx as fx;
+
 /*
  * Class collects the sources from different sources
  * Able to find sources on the template name
@@ -9,7 +11,7 @@ namespace Floxim\Floxim\Template;
  */
 class Loader {
     protected $_source_files = array();
-    protected $_template_name = null;
+    protected $template_name = null;
     protected $_target_hash = null;
 
     public function __construct() {
@@ -18,7 +20,7 @@ class Loader {
     
     public function add_source_file($source_file) {
         if (!file_exists($source_file)) {
-            throw new Exception('Source file '.$source_file.' does not exist');
+            throw new \Exception('Source file '.$source_file.' does not exist');
         }
         if (is_dir($source_file)) {
             $this->add_source_dir($source_file);
@@ -29,7 +31,7 @@ class Loader {
     
     public function add_source_dir($source_dir) {
         if (!file_exists($source_dir) || !is_dir($source_dir)) {
-            throw new Exception('Source dir '.$source_dir.' does not exist');
+            throw new \Exception('Source dir '.$source_dir.' does not exist');
         }
         
         $tpl_files = glob($source_dir.'/*.tpl');
@@ -47,7 +49,7 @@ class Loader {
     
     public function add_source($file_or_dir) {
         if (!file_exists($file_or_dir)) {
-            throw new Exception('Source '.$file_or_dir.' does not exist');
+            throw new \Exception('Source '.$file_or_dir.' does not exist');
         }
         is_dir($file_or_dir) 
             ? $this->add_source_dir($file_or_dir) 
@@ -57,7 +59,7 @@ class Loader {
     protected $_controller_type = null;
     protected $_controller_name = null;
     
-    public function set_name($tpl_name) {
+    public function setTemplateName($tpl_name) {
         $tpl_name_parts = null;
         if (preg_match("~^(layout|component|widget|helper|virtual)_([a-z0-9_]+)$~", $tpl_name, $tpl_name_parts)) {
             $this->_controller_type = $tpl_name_parts[1];
@@ -66,10 +68,21 @@ class Loader {
             $this->_controller_type = 'other';
             $this->_controller_name = $tpl_name;
         }
-        $this->_template_name = $tpl_name;
+        $this->template_name = $tpl_name;
+    }
+    
+    public function getTemplateName() {
+        return $this->template_name;
     }
 
     public function add_default_source_dirs() {
+        
+        $ns = fx::getComponentNamespace($this->getTemplateName());
+        $ns = explode("\\", trim($ns, "\\"));
+        
+        $dirs = array( fx::path()->to_abs('/module/'.join("/", $ns)) );
+        /*
+        
         $dir_end = $this->_controller_type.'/'.$this->_controller_name;
         $root = fx::config()->DOCUMENT_ROOT;
         
@@ -77,14 +90,16 @@ class Loader {
             $root.'/'.$dir_end,
             $root.'/floxim/std/'.$dir_end
         );
-        
+        */
         foreach ($dirs as $dir) {
             try {
                 $this->add_source_dir($dir);
-            } catch (Exception $e) {
-
+                fx::debug('dir added');
+            } catch (\Exception $e) {
+                fx::debug('no dir added', $e, $dir);
             }
         }
+        fx::debug($this, $dirs);
     }
     
     protected $_target_dir = null;
@@ -100,10 +115,10 @@ class Loader {
     
     public function get_target_path() {
         if (!$this->_target_dir) {
-            $this->_target_dir = fx::config()->COMPILED_TEMPLATES_FOLDER;
+            $this->_target_dir = fx::config('templates.cache_dir');
         }
         if (!$this->_target_file) {
-            $this->_target_file = $this->_template_name.'.php';
+            $this->_target_file = $this->getTemplateName().'.php';
         }
         /**
          * Calc prefix hash by sources files
@@ -111,10 +126,7 @@ class Loader {
         if (!$this->_target_hash) {
             $this->recalc_target_hash();
         }
-        //$prefix='['.$this->_target_hash.']';
-        $prefix = $this->_target_hash.'__';
         return $this->_target_dir.'/'.preg_replace("~\.php$~", '.'.$this->_target_hash.'.php', $this->_target_file);
-        return $this->_target_dir.'/'.$prefix.$this->_target_file;
     }
 
     public function recalc_target_hash() {
@@ -130,18 +142,28 @@ class Loader {
         $path=$this->get_target_path();
         return str_replace($this->_target_hash, '*', $path);
     }
-
+    
     /*
      * Automatically load the template by name
      * Standard scheme
      */
-    public static function autoload($tpl_name) {
+    public static function load($tpl_name, $action = null, $data = null) {
         $processor = new self();
-        $processor->set_name($tpl_name);
+        $processor->setTemplateName($tpl_name);
         $processor->add_default_source_dirs();
-        $processor->load();
+        $processor->process();
+        $classname = $processor->getCompiledClassName();
+        $tpl = new $classname($action, $data);
+        return $tpl;
     }
     
+    protected function getCompiledClassName() {
+        $tpl_name = $this->getTemplateName();
+        $tpl_name = preg_replace("~[^a-z0-9]+~i", '_', $tpl_name);
+        return 'fx_template_'.$tpl_name;
+    }
+
+
     public function is_fresh($target_path) {
         $ttl = fx::config('templates.ttl');
         // special mode, templates are recompiled every time
@@ -155,7 +177,7 @@ class Loader {
         return true;
     }
     
-    public function load() {
+    public function process() {
         $target_path = $this->get_target_path();
         if ($this->is_fresh($target_path)) {
             require_once ($target_path);
@@ -177,12 +199,13 @@ class Loader {
             $source = fx::files()->readfile($source);
         }
         $count_virtual++;
-        $this->set_name('virtual_'.$count_virtual);
+        $this->setTemplateName('virtual_'.$count_virtual);
         $src = $this->build_source(array('/dev/null/virtual.tpl' => $source));
         $php = $this->compile($src);
         $this->run_eval($php);
         // todo: psr0 need verify
-        $classname = 'fx_template_virtual_'.$count_virtual;
+        //$classname = 'fx_template_virtual_'.$count_virtual;
+        $classname = $this->getCompiledClassName();
         $tpl = new $classname(is_null($action) ? 'virtual' : $action);
         $tpl->source = $src;
         $tpl->compiled = $php;
@@ -192,7 +215,7 @@ class Loader {
     public function run_eval(&$source) {
         try {
             return eval(preg_replace("~^<\?(php)?~", '', $source));
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             // ignore
         }
     }
@@ -207,7 +230,7 @@ class Loader {
         
         unset($parser);
         $compiler = new Compiler();
-        $res = $compiler->compile($tree);
+        $res = $compiler->compile($tree, $this->getCompiledClassName());
         return $res;
     }
     
@@ -217,7 +240,7 @@ class Loader {
             $this->remove_old_files();
             fx::files()->writefile($this->get_target_path(), $source);
             return true;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return false;
         }
     }
@@ -248,7 +271,7 @@ class Loader {
         if (is_null($sources)) {
             $sources = $this->_load_sources();
         }
-        $res = '{templates name="'.$this->_template_name.'"';
+        $res = '{templates name="'.$this->getTemplateName().'"';
         if (!empty($this->_controller_type)) {
             $res .= ' controller_type="'.$this->_controller_type.'"';
         }
@@ -276,7 +299,7 @@ class Loader {
         $T = new Html($file_data);
         try {
             $file_data = $T->transform_to_floxim();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             fx::debug('Floxim html parser error', $e->getMessage(), $file);
         }
 

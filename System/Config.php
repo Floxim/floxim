@@ -5,10 +5,8 @@ namespace Floxim\Floxim\System;
 class Config {
     private $config = array(
         'db.prefix' => 'fx',
-        'path.jquery' => '/floxim/lib/js/jquery-1.9.1.min.js',
-        'path.jquery-ui' => '/floxim/lib/js/jquery-ui-1.10.3.custom.min.js',
+        'db.charset' => 'utf8',
         'dev.on' => false,
-        'DB_CHARSET' => 'utf8',
         'CHARSET' => 'utf-8',
         'ADMIN_LANG' => 'en',
         'auth.login_field' => 'email',
@@ -69,15 +67,20 @@ class Config {
         fx::path()->register('root', DOCUMENT_ROOT);
         fx::path()->register('home', DOCUMENT_ROOT);
         
-        fx::path()->register('floxim', '/floxim/');
+        fx::path()->register('floxim', '/vendor/Floxim/Floxim/');
         fx::path()->register('std', fx::path('floxim', '/std'));
         fx::path()->register('layouts', array('/layout', fx::path('std', '/layout')));
         fx::path()->register('files', '/floxim_files/');
         fx::path()->register('log', fx::path('files', '/log'));
         fx::path()->register('thumbs', fx::path('files', '/fx_thumbs'));
         fx::path()->register('content_files', fx::path('files', '/content'));
-                
         
+        
+        $this->config['path.jquery'] = fx::path('floxim', 'lib/js/jquery-1.9.1.min.js');
+        $this->config['path.jquery-ui'] = fx::path('floxim', 'lib/js/jquery-ui-1.10.3.custom.min.js');
+        
+        $this->config['templates.cache_dir'] = fx::path('files', 'compiled_templates');
+        /*
         $this->config['DOCUMENT_ROOT'] = DOCUMENT_ROOT;
         $this->config['HTTP_HOST'] = getenv("HTTP_HOST");
         $this->config['FLOXIM_FOLDER'] = $this->config['DOCUMENT_ROOT'];
@@ -97,7 +100,7 @@ class Config {
         $this->config['MODULE_FOLDER'] = $this->config['FLOXIM_FOLDER'].$this->config['HTTP_MODULE_PATH'];
         $this->config['ADMIN_FOLDER'] = $this->config['ROOT_FOLDER'].'admin/';
         $this->config['COMPILED_TEMPLATES_FOLDER'] = $this->config['FILES_FOLDER'].'compiled_templates';
-
+        */
     }
 
     public function load(array $config = array()) {

@@ -12,7 +12,6 @@ class Debug {
     protected $separator = "\n=============\n";
     protected $max_log_files = 30;
     protected $disabled = false;
-    protected $head_files_added = false;
     
     public function __construct() {
         $this->id = md5(microtime().rand(0, 10000));
@@ -296,11 +295,14 @@ class Debug {
     public function debug() {
         $e = call_user_func_array(array($this, '_entry'), func_get_args());
         $this->_print_entry($e);
-        if (!$this->head_files_added) {
+        static $head_files_added = false;
+        if (!$head_files_added) {
             fx::page()->add_css_file(fx::path('floxim', 'admin/style/debug.less'));
             fx::page()->add_js_file(FX_JQUERY_PATH);
-            fx::page()->add_js_file('/floxim/admin/js/fxj.js');
+            fx::page()->add_js_file(fx::path('floxim', 'admin/js/fxj.js'));
             fx::page()->add_js_file(fx::path('floxim', 'admin/js/debug.js'));
+            echo fx::page()->getAssetsCode();
+            $head_files_added = true;
         }
     }
     

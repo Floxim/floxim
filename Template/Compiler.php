@@ -2,19 +2,21 @@
 
 namespace Floxim\Floxim\Template;
 
+use fx;
+
 /*
- * Class makes the tree tokens in ready php code
+ * Transform token tree into php code
  */
 class Compiler {
     protected $template_set_name = null;
     
     /**
      * Convert the tree of tokens in the php code
-     * @param string $source source code of the template
+     * @param string $tree source code of the template
      * @return string of php code
      */
-    public function compile($tree) {
-        $code = $this->_make_code($tree);
+    public function compile($tree, $class_name) {
+        $code = $this->_make_code($tree, $class_name);
         $code = self::add_tabs($code);
         if (fx::config('templates.check_php_syntax')) {
             $is_correct = self::is_php_syntax_correct($code);
@@ -26,7 +28,7 @@ class Compiler {
                 $error = $is_correct[0].': '.$is_correct[1][0].' (line '.$error_line.')';
                 fx::debug($error, $lined);
                 fx::log($error, $lined);
-                throw new Exception('Syntax error');
+                throw new \Exception('Syntax error');
             }
         }
         return $code;
@@ -173,8 +175,7 @@ class Compiler {
     public function parse_expression($str) {
         static $expression_parser = null;
         // todo: need verify name $expession_parser
-        if ($expession_parser === null) {
-            require_once (dirname(__FILE__).'/template_expression_parser.php');
+        if ($expression_parser === null) {
             $expression_parser = new ExpressionParser();
             $expression_parser->local_vars []= '_is_admin';
         }
@@ -1107,7 +1108,7 @@ class Compiler {
         }
     }
     
-    protected function  _make_code(Token $tree) {
+    protected function  _make_code(Token $tree, $class_name) {
         // Name of the class/template group
         $this->_template_set_name = $tree->get_prop('name');
         if ( ($ct = $tree->get_prop('controller_type'))) {
@@ -1120,7 +1121,7 @@ class Compiler {
         ob_start();
         echo "<?php\n";
         // todo: psr0 need fix
-        echo 'class fx_template_'.$this->_template_set_name." extends \\Floxim\\Floxim\\Template\\Template {\n";
+        echo 'class '.$class_name." extends \\Floxim\\Floxim\\Template\\Template {\n";
         
         $tpl_var = array();
         foreach ( $this->templates as $tpl_props) {

@@ -123,7 +123,7 @@ class Token {
             $props['as'] = $item_alias;
             $props['key'] = $item_key;
         }
-        return new fx_template_token($name, $type, $props);   
+        return new self($name, $type, $props);   
     }
     
     
@@ -233,7 +233,7 @@ class Token {
         $this->props = $props;
     }
     
-    public function add_child(fx_template_token $token) {
+    public function add_child(Token $token) {
         if (!isset($this->children)) {
             $this->children = array();
         }

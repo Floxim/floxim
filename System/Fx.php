@@ -58,7 +58,7 @@ class Fx {
         static $db = false;
     	if ($db === false) {
             $db = new Db();
-            $db->query("SET NAMES '".fx::config()->DB_CHARSET."'");
+            $db->query("SET NAMES '".fx::config('db.charset')."'");
     	}
     	return $db;
     }
@@ -70,34 +70,63 @@ class Fx {
      */
     public static $data_stat = array();
     
+    public function getComponentFullName($name) {
+        $path = explode(".", $name);
+        if (count($path) === 1) {
+            $lib_components = array(
+                'award', 
+                'classifier', 
+                'classifier_linker', 
+                'comment', 
+                'company', 
+                'contact', 
+                'faq', 
+                'news', 
+                'page', 
+                'person', 
+                'photo',
+                'product', 
+                'project', 
+                'publication', 
+                'section', 
+                'social_icon', 
+                'tag', 
+                'text', 
+                'user', 
+                'vacancy', 
+                'video'
+            );
+            if (in_array(strtolower($path[0]), $lib_components)) {
+                array_unshift($path, 'main');
+            } else {
+                array_unshift($path, 'component');
+            }
+        }
+        if (count($path) === 2) {
+            array_unshift($path, 'floxim');
+        }
+        return join(".", $path);
+    }
+    
     /**
      * Transform dot-separated component name to full namespace
      * @param type $name
      * @return type
      */
     public static function getComponentNamespace($name) {
+        
+        $name = self::getComponentFullName($name);
+        
         $path = explode(".", $name);
+        if ($path[0] === 'floxim' && $path[1] === 'component') {
+            array_unshift($path, "floxim");
+        }
         foreach ($path as &$part) {
             $chunks = explode("_", $part);
             foreach ($chunks as &$chunk) {
                 $chunk = ucfirst($chunk);
             }
             $part = join('', $chunks);
-        }
-        if (count($path) === 1) {
-            // list of components inside standard library
-            // todo: psr0 need verify component 'content'
-            $lib_components = array('award', 'classifier', 'classifier_linker', 'comment', 'company', 'contact', 'faq', 'news', 'page', 'person', 'photo',
-                                    'product', 'project', 'publication', 'section', 'social_icon', 'tag', 'text', 'user', 'vacancy', 'video');
-            if (in_array(strtolower($path[0]), $lib_components)) {
-                array_unshift($path, 'Component');
-                array_unshift($path, 'Floxim\Main');
-            } else {
-                array_unshift($path, 'Floxim\Component');
-            }
-        }
-        if (count($path) === 2) {
-            array_unshift($path, 'Floxim');
         }
         return '\\'.join('\\', $path);
     }
@@ -129,87 +158,6 @@ class Fx {
         }
         
         return $finder->get_by_id($id);
-        // look for data-* class in cache
-        if (isset($data_classes_cache[$datatype])) {
-            $finder_class = $data_classes_cache[$datatype];
-            if ($finder_class == 'Floxim\\Floxim\\System\\Data') {
-                $data_finder = new Data($datatype);
-            } else {
-                $data_finder = new $finder_class();
-            }
-        } else {
-            try {
-                /**
-                 * 1. module - [vendor].[module].[component]
-                 * 2. system - [component]
-                 */
-                if (count($parts) == 3) {
-                    list($d_vendor, $d_module, $d_component) = $parts;
-                    $classname = '\\'.ucfirst($d_vendor).'\\'.ucfirst($d_module).'\\Component\\'.ucfirst($d_component).'\\Finder';
-                } else {
-                    $classname = '\\Floxim\\Floxim\\Component\\'.ucfirst($datatype).'\\Finder';
-                }
-                if (!class_exists($classname)) {
-                    throw new \Exception();
-                }
-                $data_finder = new $classname();
-                $data_classes_cache[$datatype] = $classname;
-            } catch (\Exception $e) {
-                // Finder for the content that the class is not defined
-                if ($component) {
-                    $not_existing = array($datatype);
-                    foreach ($component->get_ancestors() as $parent_com) {
-                        try {
-                            $keyword = $parent_com['keyword']; // vendor.module.component
-                            $c_datatype = $keyword;
-                            if ($keyword == 'floxim.content.content') {
-                                $classname = '\\Floxim\\Floxim\\Component\\Content\\Finder';
-                            } else {
-                                list($d_vendor, $d_module, $d_component) = $parts;
-                                $classname = '\\'.ucfirst($d_vendor).'\\'.ucfirst($d_module).'\\Component\\'.ucfirst($d_component).'\\Finder';
-                            }
-
-                            if (!class_exists($classname)) {
-                                throw new \Exception();
-                            }
-                            $data_finder = new $classname;
-                            foreach ($not_existing as $ne) {
-                                $data_classes_cache[$ne] = $classname;
-                            }
-                            break;
-                        } catch (\Exception $ex) {
-                            $not_existing []= $c_datatype;
-                        }
-                    }
-                } elseif (preg_match("~^field_~", $datatype)) {
-                    $data_finder = new \Floxim\Floxim\Component\Field\Finder();
-                    $data_classes_cache[$datatype] = 'Floxim\\Floxim\\Component\\Field\\Finder';
-                }
-            }
-            if (is_null($data_finder)) {
-                say('no df', $datatype);
-                $data_finder = new \Floxim\Floxim\System\Data($datatype);
-                $data_classes_cache[$datatype] = 'Floxim\\Floxim\\System\\Data';
-            }
-        }
-
-
-        if ($component) {
-            $data_finder->set_component($component['id']);
-        }
-
-        if (func_num_args() == 2) {
-            if (is_numeric($id) || is_string($id)) {
-                $res = $data_finder->get_by_id($id);
-                self::$data_cache[$datatype][$id] = $res;
-                return $res;
-            }
-            if (is_array($id)) {
-                return $data_finder->get_by_ids($id);
-            }
-            return null;
-        }
-        return $data_finder;
     }
     
     public static function content($type = null, $id = null) {
@@ -386,22 +334,30 @@ class Fx {
     }
 
     // todo: psr0 need fix
-    public static function template($template = null, $data = array()) {
+    public static function template($template_name = null, $data = array()) {
         if (func_num_args() == 0) {
             return new Template\Loader();
         }
-        $parts= explode(".", $template);
+        $parts = explode(":", $template_name);
         if (count($parts) == 2) {
-            $template = $parts[0];
+            $template_name = $parts[0];
             $action = $parts[1];
         } else {
             $action = null;
         }
-        $class_name = 'fx_template_'.$template;
+        $template_name = self::getComponentFullName($template_name);
+        $template = Template\Loader::load($template_name, $action, $data);
+        return $template;
+        /*
+        $template = Template\Loader::autoload($template_name);
+        
+        fx::debug($class_name);
         if (!class_exists($class_name)) {
             $class_name = '\\Floxim\\Floxim\\Template\\Template';
         }
         return new $class_name($action, $data);
+         * 
+         */
     }
     
     protected static $page = null;

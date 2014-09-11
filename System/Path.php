@@ -30,6 +30,27 @@ class Path {
         }
     }
     
+    /**
+     * Resolve path aliases, e.g. @floxim/js/olo.js => /vendor/Floxim/Floxim/js/olo.js
+     * Not ready yet =(
+     */
+    public function resolve($path) {
+        
+        $parts = preg_split("~^(@[^\\\\/]+)~", $path, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
+        if (count($parts) === 1) {
+            array_unshift($parts, '@root');
+        }
+        $parts[0] = preg_replace("~^@~", '', $parts[0]);
+        
+        
+        if (!isset($this->registry[$parts[0]])) {
+            return null;
+        }
+        
+        $res = $this->to_abs(join("/", $parts));
+        return $res;
+    }
+    
     public function abs($key, $tale = null) {
         if (!isset($this->registry[$key])) {
             return null;

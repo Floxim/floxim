@@ -236,29 +236,17 @@ class Field extends Admin {
             $field[$to_key] = $to_val;
         }
        
-        $datatype = System\Data::optional('datatype')->get_by_id($input['type']);
-        if ( $datatype['not_null'] ) {
-            $fields[] = $this->ui->checkbox('not_null', fx::alang('Required','system'), null, $field['not_null']);
-        }
-        /*
-        if ( $datatype['searchable'] ) {
-            $fields[] = $this->ui->checkbox('searchable', fx::alang('Field can be used for searching','system'), null, $field['searchable']);
-        }
-         * 
-         */
-        if ( $datatype['default'] ) {
-            if ($datatype['name'] == 'datetime') {
-                $fields[] = array(
-                    'name' => 'default',
-                    'type' => 'radio',
-                    'label' => fx::alang('Default value','system'),
-                    'values' => array(''=>'No', 'now'=>'NOW'),
-                    'value' => $field['default'],
-                    'selected_first' => true
-                );
-            } else {
-                $fields[] = $this->ui->input('default', fx::alang('Default value','system'), $field['default']);
-            }
+        if ($input['type'] === CompField\Essence::FIELD_DATETIME) {
+            $fields[] = array(
+                'name' => 'default',
+                'type' => 'radio',
+                'label' => fx::alang('Default value','system'),
+                'values' => array(''=>'No', 'now'=>'NOW'),
+                'value' => $field['default'],
+                'selected_first' => true
+            );
+        } else {
+            $fields[] = $this->ui->input('default', fx::alang('Default value','system'), $field['default']);
         }
 
         $format_settings =  $field->format_settings();  

@@ -596,12 +596,6 @@ abstract class Data {
         }
     }
     
-
-    
-    static public function optional($table) {
-        return new self($table);
-    }
-
     public function __construct($table = null) {
         if (get_class($this) == 'Floxim\\Floxim\\System\\Data') {
             say(debug_backtrace());

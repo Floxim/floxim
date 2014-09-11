@@ -62,7 +62,7 @@ class Page {
                 fx::profiler()->block('compile less '.$file);
                 $http_base = preg_replace("~[^/]+$~", '', $file);
                 
-                $less = new lessc();
+                $less = new \lessc();
                 
                 $file_content = file_get_contents($full_source_path);
                 $file_content = $this->_css_url_replace($file_content, $http_base);
@@ -120,8 +120,7 @@ class Page {
             }
 
             if ($less_flag) {
-                //require_once $doc_root.'/floxim/lib/lessphp/lessc.inc.php';
-                $less = new lessc();
+                $less = new \lessc();
                 $file_content = $less->compile($file_content);
             }
             
@@ -265,20 +264,9 @@ class Page {
         fx::http()->header('fx_assets_js', $this->_files_js);
         fx::http()->header('fx_assets_css', $this->_files_css);
     }
-
-    public function post_process($buffer) {
-        if ($this->metatags['seo_title']) {
-            $r = "<title>".strip_tags($this->metatags['seo_title'])."</title>".PHP_EOL;
-        }
-        if ($this->metatags['seo_description']) {
-            $r .= '<meta name="description" content="' 
-                    . strip_tags($this->metatags['seo_description']) . '" />'.PHP_EOL;
-        }
-        if ($this->metatags['seo_keywords']) {
-            $r .= '<meta name="keywords" content="' 
-                    . strip_tags($this->metatags['seo_keywords']) . '" />'.PHP_EOL;
-        }
-
+    
+    public function getAssetsCode() {
+        $r = '';
         if ($this->_files_css) {
             $files_css = array_unique($this->_files_css);
             foreach ($files_css as $v) {
@@ -306,6 +294,23 @@ class Page {
             }
             $r .= '</script>';
         }
+        return $r;
+    }
+
+    public function post_process($buffer) {
+        if ($this->metatags['seo_title']) {
+            $r = "<title>".strip_tags($this->metatags['seo_title'])."</title>".PHP_EOL;
+        }
+        if ($this->metatags['seo_description']) {
+            $r .= '<meta name="description" content="' 
+                    . strip_tags($this->metatags['seo_description']) . '" />'.PHP_EOL;
+        }
+        if ($this->metatags['seo_keywords']) {
+            $r .= '<meta name="keywords" content="' 
+                    . strip_tags($this->metatags['seo_keywords']) . '" />'.PHP_EOL;
+        }
+
+        $r .= $this->getAssetsCode();
         
         if (!preg_match("~<head(\s[^>]*?|)>~i", $buffer)) {
             if (preg_match("~<html[^>]*?>~i", $buffer)) {
