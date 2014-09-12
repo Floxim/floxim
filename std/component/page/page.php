@@ -8,7 +8,7 @@ class fx_controller_component_page extends fx_controller_component {
         $q_next = clone $q;
         $q_prev = clone $q;
         
-        if ($this->get_param('sorting') === 'auto') {
+        if ($this->get_param('sorting') === 'auto' && $item['infoblock_id']) {
             $item_ib_params = fx::data('infoblock', $item['infoblock_id'])->get('params');
             $ib_sorting = $item_ib_params['sorting'];
             $this->set_param('sorting', $ib_sorting == 'manual' ? 'priority' : $ib_sorting);

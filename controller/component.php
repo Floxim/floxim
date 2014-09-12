@@ -195,7 +195,8 @@ class fx_controller_component extends fx_controller_frontoffice {
             }
             // Add allow values for select parent page
             if ($field['keyword'] == 'parent_id') {
-                $pages = $this->_get_allow_parent_pages();
+                $pages = $this->_get_allowed_parents();
+                fx::log($pages, $this);
                 $values = $pages->get_values(array('id','name'));
                 $res['values'] = $values;
             }
@@ -838,7 +839,19 @@ class fx_controller_component extends fx_controller_frontoffice {
      *
      * @return fx_collection
      */
-    protected function _get_allow_parent_pages() {
-        return fx::collection();
+    protected function _get_allowed_parents() {
+        $infoblocks = fx::data('infoblock')
+                        ->where('site_id', fx::env('site_id'))
+                        ->get_content_infoblocks(
+                            $this->get_component()->get('keyword')
+                        );
+        $res = fx::collection();
+        foreach ($infoblocks as $ib) {
+            $ib_finder = $ib->get_avail_parents_finder();
+            if ($ib_finder) {
+                $res->concat($ib_finder->all());
+            }
+        }
+        return $res;
     }
 }

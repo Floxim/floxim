@@ -1652,7 +1652,7 @@ fx_front.prototype.scrollTo = function($node, if_invisible, callback) {
         }
     }
     var body_offset = parseInt($('body').css('margin-top'));
-    var top_offset = $node.offset().top - body_offset - 40;
+    var top_offset = $node.offset().top - body_offset - 50; //40;
     var move = true;
     var st = $(document).scrollTop();
     if (if_invisible){
@@ -2003,6 +2003,9 @@ fx_front.prototype.freeze_events = function(frozen_node) {
         if (handler.namespace.match(/^fx/) || handler.type.match(/^fx/)) {
             return;
         }
+        if (!handler.type.match(/^(click|key|mouse)/)) {
+            return;
+        }
         if (handler._realHandler) {
             return;
         }
@@ -2013,8 +2016,8 @@ fx_front.prototype.freeze_events = function(frozen_node) {
             return;
         }
         handler.handler = function(e) {
-            if (frozen_node !== e.target && !$.contains(frozen_node, e.target)) {
-                return handler._realHandler(e);
+            if (false && frozen_node !== e.target && !$.contains(frozen_node, e.target)) {
+                return handler._realHandler.apply(this, [e]);
             }
         };
     }

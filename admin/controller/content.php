@@ -94,6 +94,7 @@ class fx_controller_admin_content extends fx_controller_admin {
                     ' <span title="#'.$input['content_id'].'">'.$com_item_name.'</span>';
         } else {
             $res['header'] = fx::alang('Adding new ', 'system'). ' '.$com_item_name;
+            // add words "after smth." to the header
             if ($move_meta) {
                 $res['header'] .= ' <span class="fx_header_notice">'.
                                 $move_meta['type'].' '.$move_meta['item']['name'].
@@ -184,11 +185,16 @@ class fx_controller_admin_content extends fx_controller_admin {
          * check children
          */
         $descendants = fx::data('content')->descendants_of($content)->all();
-        if ($count_descendants=$descendants->count()) {
-            $fields[]=array('type' => 'html', 'html' => fx::alang('The content contains some descendants','system') . ', <b>' . $count_descendants . '</b> '. fx::alang('items. These items are removed.','system'));
+        if ( ($count_descendants = $descendants->count()) )  {
+            $fields[]=array(
+                'type' => 'html', 
+                'html' => fx::alang('The content contains some descendants','system') . 
+                            ', <b>' . $count_descendants . '</b> '. fx::alang('items. These items are removed.','system')
+            );
         }
 
         $this->response->add_fields($fields);
+        $this->response->add_form_button(array('key' => 'save', 'label' => 'Delete'));
         if ($input['delete_confirm']) {
             $current_page_path = null;
             if ($input['page_id']) {
@@ -206,6 +212,14 @@ class fx_controller_admin_content extends fx_controller_admin {
             $content->delete();
             return $response;
         }
+        $component = fx::data('component', $content['type']);
+        
+        $header = fx::alang("Delete").' '.$component['item_name'];
+        if ( ($content_name = $content['name']) ) {
+            $header .= ' "'.$content_name.'" ';
+        }
+        $res = array('header' => $header);
+        return $res;
     }
     
     public function livesearch($input) {

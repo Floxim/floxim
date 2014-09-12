@@ -124,7 +124,7 @@ class fx_controller_component_section extends fx_controller_component_page {
      *
      * @return fx_collection
      */
-    protected function _get_allow_parent_pages() {
+    protected function _get_allowed_parents() {
         /**
          * Retrieve pages object
          */

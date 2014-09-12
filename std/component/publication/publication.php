@@ -100,9 +100,10 @@ class fx_controller_component_publication extends fx_controller_component_page {
      *
      * @return fx_collection
      */
-    protected function _get_allow_parent_pages() {
-        // TODO: method get_content_infoblocks not use site_id filter
-        $infoblocks=fx::data('infoblock')->get_content_infoblocks($this->get_content_type());
+    protected function _get_allowed_parents() {
+        $infoblocks = fx::data('infoblock')
+                        ->where('site_id', fx::env('site_id'))
+                        ->get_content_infoblocks($this->get_content_type());
 
         $pages_id=array();
         foreach($infoblocks as $infoblock) {
