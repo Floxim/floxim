@@ -301,7 +301,11 @@ class Debug {
             fx::page()->add_js_file(FX_JQUERY_PATH);
             fx::page()->add_js_file(fx::path('floxim', 'admin/js/fxj.js'));
             fx::page()->add_js_file(fx::path('floxim', 'admin/js/debug.js'));
-            //echo fx::page()->getAssetsCode();
+            register_shutdown_function(function() {
+                if (!fx::env()->get('complete_ok')) {
+                    echo fx::page()->getAssetsCode();
+                }
+            });
             $head_files_added = true;
         }
     }

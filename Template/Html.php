@@ -2,6 +2,8 @@
 
 namespace Floxim\Floxim\Template;
 
+use Floxim\Floxim\System\Fx as fx;
+
 class Html {
     protected $_string = null;
     public function __construct($string) {
@@ -352,7 +354,7 @@ class Html {
                                 " (line ".$start_line.") ".
                                 "doesn't match end tag </".$token->name.'> (line '.$end_line.')';
                         
-                        throw new Exception($msg);
+                        throw new \Exception($msg);
                     }
                     if ($token->offset) {
                         $closed_tag->end_offset = $token->offset;
