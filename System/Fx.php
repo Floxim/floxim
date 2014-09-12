@@ -147,7 +147,7 @@ class Fx {
         
         $class_name = $namespace.'\\Finder';
         if (!class_exists($class_name)) {
-            say(debug_backtrace());
+            say($class_name, $datatype, debug_backtrace());
             throw new \Exception('Class not found: '.$class_name. ' for '.$datatype);
         }
         

@@ -151,7 +151,7 @@ class Token {
 
 
     public static function get_var_modifiers($source_str) {
-        $p = new fx_template_modifier_parser();
+        $p = new ModifierParser();
         $res = $p->parse($source_str);
         return $res;
     }

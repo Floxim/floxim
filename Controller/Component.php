@@ -4,7 +4,7 @@ namespace Floxim\Floxim\Controller;
 
 use Floxim\Floxim\Component\Field;
 use Floxim\Floxim\System;
-use fx;
+use Floxim\Floxim\System\Fx as fx;
 
 class Component extends Frontoffice {
     
@@ -748,10 +748,8 @@ class Component extends Frontoffice {
      */
     public function get_content_type() {
         if (!$this->_content_type) {
-            // todo: psr0 need fix
-            if (preg_match("~fx_controller_component_(.+)$~", get_class($this), $cc)) {
-                $this->_content_type = $cc[1];
-            }
+            $path = array_reverse(explode("\\", get_class($this)));
+            $this->_content_type = fx::util()->camelToUnderscore($path[1]);
         }
         return $this->_content_type;
     }
@@ -780,7 +778,7 @@ class Component extends Frontoffice {
         if (!is_null($this->_finder)) {
             return $this->_finder;
         }
-        $finder = fx::data('content_'.$this->get_content_type());
+        $finder = fx::data($this->get_content_type());
         $show_pagination = $this->get_param('pagination');
         $c_page = $this->_get_current_page_number();
         $limit = $this->get_param('limit');

@@ -4,7 +4,7 @@ namespace Floxim\Floxim\Template;
 
 use Floxim\Floxim\System;
 use Floxim\Floxim\Helper\Form;
-use fx;
+use Floxim\Floxim\System\Fx as fx;
 
 class Template {
     
@@ -364,7 +364,6 @@ class Template {
             (!isset($area['render']) || $area['render'] != 'manual')
         ) {
             $area_blocks = fx::page()->get_area_infoblocks($area['id']);
-            
             $pos = 1;
             foreach ($area_blocks as $ib) {
                 $ib->add_params(array('infoblock_area_position' => $pos));

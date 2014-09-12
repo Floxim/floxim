@@ -3,6 +3,7 @@
 namespace Floxim\Floxim\Component\InfoblockVisual;
 
 use Floxim\Floxim\System;
+use Floxim\Floxim\System\Fx as fx;
 
 class Essence extends System\Essence {
     protected  function _before_save() {

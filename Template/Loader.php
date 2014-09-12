@@ -78,28 +78,24 @@ class Loader {
     public function add_default_source_dirs() {
         
         $ns = fx::getComponentNamespace($this->getTemplateName());
+        
         $ns = explode("\\", trim($ns, "\\"));
         
-        $dirs = array( fx::path()->to_abs('/module/'.join("/", $ns)) );
-        /*
+        if ($ns[0] === 'Theme') {
+            $ns[0] = 'theme';
+        } else {
+            array_unshift($ns, 'module');
+        }
         
-        $dir_end = $this->_controller_type.'/'.$this->_controller_name;
-        $root = fx::config()->DOCUMENT_ROOT;
+        $dirs = array( fx::path()->to_abs('/'.join("/", $ns)) );
         
-        $dirs = array(
-            $root.'/'.$dir_end,
-            $root.'/floxim/std/'.$dir_end
-        );
-        */
         foreach ($dirs as $dir) {
             try {
                 $this->add_source_dir($dir);
-                fx::debug('dir added');
             } catch (\Exception $e) {
-                fx::debug('no dir added', $e, $dir);
+                
             }
         }
-        fx::debug($this, $dirs);
     }
     
     protected $_target_dir = null;
@@ -150,9 +146,11 @@ class Loader {
     public static function load($tpl_name, $action = null, $data = null) {
         $processor = new self();
         $processor->setTemplateName($tpl_name);
-        $processor->add_default_source_dirs();
-        $processor->process();
         $classname = $processor->getCompiledClassName();
+        if (!class_exists($classname)) {
+            $processor->add_default_source_dirs();
+            $processor->process();
+        }
         $tpl = new $classname($action, $data);
         return $tpl;
     }
@@ -165,13 +163,26 @@ class Loader {
 
 
     public function is_fresh($target_path) {
-        $ttl = fx::config('templates.ttl');
-        // special mode, templates are recompiled every time
-        if ($ttl < 0) {
+        
+        $cache = fx::config('templates.cache');
+        
+        // template caching is disabled
+        if (!$cache) {
             return false;
         }
+        
+        $ttl = fx::config('templates.ttl');
+        
         // file is not created yet
         if (!file_exists($target_path)) {
+            return false;
+        }
+        // cache forever
+        if ($ttl === 0) {
+            return true;
+        }
+        // file is older than ttl
+        if (time() - filemtime($target_path) > $ttl ) {
             return false;
         }
         return true;
@@ -314,9 +325,10 @@ class Loader {
 
 
     public function wrap_file($file, $file_data) {
-        $is_layout = $this->_controller_type == 'layout';
+        //$is_layout = $this->_controller_type == 'layout';
+        $is_theme = preg_match("~^theme\.~", $this->getTemplateName());
         $tpl_of = 'false';
-        if ($is_layout) {
+        if ($is_theme) {
             $tpl_id = '_layout_body';
         } else {
             $file_tpl_name = null;

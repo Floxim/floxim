@@ -3,7 +3,7 @@
 namespace Floxim\Floxim\Router;
 
 use Floxim\Floxim\Admin\Controller;
-use fx;
+use Floxim\Floxim\System\Fx as fx;
 
 class Admin extends Base {
     

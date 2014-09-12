@@ -4,7 +4,7 @@ namespace Floxim\Floxim\Controller;
 
 use Floxim\Floxim\System;
 use Floxim\Floxim\Helper;
-use fx;
+use Floxim\Floxim\System\Fx as fx;
 
 /**
  * Front office controller - common base for widgets and components

@@ -5,7 +5,7 @@ namespace Floxim\Floxim\Component\Content;
 use Floxim\Floxim\System;
 use Floxim\Floxim\Component\Field;
 use Floxim\Floxim\Component\Lang;
-use fx;
+use Floxim\Floxim\System\Fx as fx;
 
 class Finder extends System\Data {
     

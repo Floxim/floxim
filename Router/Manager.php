@@ -1,12 +1,9 @@
 <?php
 
 namespace Floxim\Floxim\Router;
-use fx;
 
-/**
-$controller = fx::routers()->route('/news/news_10.html');
-fx::routers()->register($callback, 1);
-*/
+use Floxim\Floxim\System\Fx as fx;
+
 
 class Manager {
 

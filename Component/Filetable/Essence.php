@@ -3,7 +3,7 @@
 namespace Floxim\Floxim\Component\Filetable;
 
 use Floxim\Floxim\System;
-use fx;
+use Floxim\Floxim\System\Fx as fx;
 
 class Essence extends System\Essence {
     public static function get_path($id) {

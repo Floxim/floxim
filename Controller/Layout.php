@@ -4,7 +4,7 @@ namespace Floxim\Floxim\Controller;
 
 use Floxim\Floxim\System;
 use Floxim\Floxim\Admin;
-use fx;
+use Floxim\Floxim\System\Fx as fx;
 
 class Layout extends System\Controller {
     

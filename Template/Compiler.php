@@ -2,7 +2,7 @@
 
 namespace Floxim\Floxim\Template;
 
-use fx;
+use Floxim\Floxim\System\Fx as fx;
 
 /*
  * Transform token tree into php code
@@ -85,11 +85,11 @@ class Compiler {
         $code = "<?php\n";
         $tpl_name = $token->get_prop('id');
         // not a plain name
-        if (!preg_match("~^[a-z0-9_\.]+$~", $tpl_name)) {
+        if (!preg_match("~^[a-z0-9_\.\:]+$~", $tpl_name)) {
             $tpl_name = self::parse_expression($tpl_name);
         } else {
-            if (!preg_match("~\.~", $tpl_name)) {
-                $tpl_name = $this->_template_set_name.".".$tpl_name;
+            if (!preg_match("~\:~", $tpl_name)) {
+                $tpl_name = $this->_template_set_name.":".$tpl_name;
             }
             $tpl_name = '"'.$tpl_name.'"';
         }

@@ -3,6 +3,7 @@
 namespace Floxim\Floxim\Component\InfoblockVisual;
 
 use Floxim\Floxim\System;
+use Floxim\Floxim\System\Fx as fx;
 
 class Finder extends System\Data {
     public function __construct() {

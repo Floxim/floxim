@@ -2,7 +2,7 @@
 
 namespace Floxim\Floxim\Controller;
 
-use fx;
+use Floxim\Floxim\System\Fx as fx;
 
 class Widget extends Frontoffice {
     protected $_action_prefix = 'do_';

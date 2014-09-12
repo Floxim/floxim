@@ -3,7 +3,7 @@
 namespace Floxim\Floxim\Router;
 
 use Floxim\Floxim\Template;
-use fx;
+use Floxim\Floxim\System\Fx as fx;
 
 class Front extends Base {
 

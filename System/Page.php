@@ -364,9 +364,10 @@ class Page {
         if (isset($this->areas_cache[$area_id])) {
             return $this->areas_cache[$area_id];
         }
+        
         $area_blocks = isset($this->areas[$area_id]) ? $this->areas[$area_id] : array();
         
-        if (!$area_blocks || !(is_array($area_blocks) || $area_blocks instanceof ArrayAccess) ) {
+        if (!$area_blocks || !(is_array($area_blocks) || $area_blocks instanceof \ArrayAccess) ) {
             $area_blocks = array();
         }
         $area_blocks = fx::collection($area_blocks)->sort(function($a, $b) {
@@ -374,6 +375,7 @@ class Page {
             $b_pos = $b->get_prop_inherited('visual.priority');
             return $a_pos - $b_pos;
         });
+        
         $area_blocks->find_remove(function($ib) {
             return $ib->is_disabled();
         });

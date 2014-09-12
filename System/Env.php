@@ -85,7 +85,7 @@ class Env {
 
     public function get_user () {
         if (!isset($this->current['user'])) {
-            $this->current['user'] = \Floxim\Main\Component\User\Essence::load();
+            $this->current['user'] = \Floxim\Main\User\Essence::load();
         }
         return $this->current['user'];
     }

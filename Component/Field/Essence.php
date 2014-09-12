@@ -3,7 +3,7 @@
 namespace Floxim\Floxim\Component\Field;
 
 use Floxim\Floxim\System;
-use fx;
+use Floxim\Floxim\System\Fx as fx;
 
 class Essence extends System\Essence {
 

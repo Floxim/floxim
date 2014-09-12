@@ -4,7 +4,7 @@ namespace Floxim\Floxim\Admin\Controller;
 
 use Floxim\Floxim\System;
 use Floxim\Floxim\Admin as FxAdmin;
-use fx;
+use Floxim\Floxim\System\Fx as fx;
 
 class Admin extends System\Controller {
 
