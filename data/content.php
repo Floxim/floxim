@@ -460,6 +460,9 @@ class fx_data_content extends fx_data {
                 $parent_ids = $parents->get_values('id');
             }
         }
+        if (is_scalar($parent_ids)) {
+            $parent_ids = fx::data('content', $parent_ids);
+        }
         if ($parent_ids instanceof fx_content) {
             $parents = array($parent_ids);
             $parent_ids = array($parent_ids['id']);
@@ -469,6 +472,12 @@ class fx_data_content extends fx_data {
             }
             $parents = fx::data('content', $parent_ids);
         }
+        
+        if (!is_array($parents) || count($parents) === 0) {
+            $this->where('FALSE');
+            return $this;
+        }
+        
         $conds = array();
         foreach ($parents as $p) {
             $conds []= array('materialized_path', $p['materialized_path'].$p['id'].'.%', 'like');
