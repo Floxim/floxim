@@ -2,6 +2,8 @@
 
 namespace Floxim\Floxim\Helper\Form\Field;
 
+use Floxim\Floxim\System\Fx as fx;
+
 abstract class Options extends Field {
     public function offsetSet($offset, $value) {
         if ($offset === 'values' && (is_array($value) || $value instanceof Traversable)) {

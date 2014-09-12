@@ -2,6 +2,8 @@
 
 namespace Floxim\Floxim\Helper\Form\Field;
 
+use Floxim\Floxim\System\Fx as fx;
+
 class Captcha extends Field {
     public function __construct($params = array()) {
         if (!session_id()) {

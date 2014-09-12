@@ -3,6 +3,7 @@
 namespace Floxim\Floxim\Helper\Form\Field;
 
 use Floxim\Floxim\Template;
+use Floxim\Floxim\System\Fx as fx;
 
 class Field implements \ArrayAccess, Template\Essence {
 
@@ -12,10 +13,13 @@ class Field implements \ArrayAccess, Template\Essence {
         if (!isset($params['type'])) {
             $params['type'] = 'text';
         }
-        $classname = "fx_form_field_".$params['type'];
+        $classname = 'Floxim\\Floxim\\Helper\\Form\\Field\\'.ucfirst($params['type']);
         try {
+            if (!class_exists($classname)) {
+                throw new \Exception();
+            }
             $field = new  $classname($params);
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             $field = new Field($params);
         }
 
