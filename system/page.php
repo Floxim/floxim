@@ -83,12 +83,6 @@ class fx_system_page {
 
     public function add_css_bundle ($files, $params = array()) {
 
-        if (fx::config('dev.on')) {
-            foreach ($files as $f) {
-                $this->add_css_file($f);
-            }
-            return;
-        }
         if (!isset($params['name'])) {
             $params['name'] = md5(join($files));
         }
@@ -97,19 +91,28 @@ class fx_system_page {
         $http_path = fx::path()->http('files', 'asset_cache/'.$params['name']);
         $full_path = fx::path()->to_abs($http_path);
         
-        if (!file_exists($full_path)) {
-            $less_flag = false;
+        $last_modified = 0;
+        $less_flag = false;
+        foreach ($files as $file) {
+            if (preg_match("~\.less$~", $file)) {
+                $less_flag = true;
+            }
+            if (!preg_match("~^http://~i", $file)) {
+                $file_path = fx::path()->to_abs($file);
+                $c_modified = filemtime($file_path);
+                if ($c_modified > $last_modified) {
+                    $last_modified = $c_modified;
+                }
+            }
+        }
+        
+        if (!file_exists($full_path) || filemtime($full_path) < $last_modified) {
             $file_content = '';
             foreach ($files as $file) {
-                if (preg_match("~\.less$~", $file)) {
-                    $less_flag = true;
-                }
-                
                 if (preg_match("~^http://~i", $file)) {
                     $file_contents = file_get_contents($file);
                 } else {
                     $http_base = preg_replace("~[^/]+$~", '', $file);
-                    //$file = $doc_root.$file;
                     $file_contents = file_get_contents(fx::path()->to_abs($file));
                     $file_contents = $this->_css_url_replace($file_contents, $http_base);
                 }
@@ -117,7 +120,6 @@ class fx_system_page {
             }
 
             if ($less_flag) {
-                //require_once $doc_root.'/floxim/lib/lessphp/lessc.inc.php';
                 $less = new lessc();
                 $file_content = $less->compile($file_content);
             }

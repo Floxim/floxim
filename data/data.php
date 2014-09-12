@@ -148,7 +148,12 @@ class fx_data {
         return array($field, $value, $type, $original_field);
     }
     
-    public function where($field, $value, $type = '=') {
+    public function where($field, $value = null, $type = '=') {
+        if (func_num_args() === 1 && strtolower($field) === 'false') {
+            $field = null;
+            $value = 'FALSE';
+            $type = 'RAW';
+        }
         $cond = $this->_prepare_condition($field, $value, $type);
         $this->where []= $cond;
         return $this;

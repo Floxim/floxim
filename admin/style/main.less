@@ -1515,6 +1515,25 @@ td {
     color: #fff !important;
 }
 
+.fx_buttons_dropdown {
+    position:absolute;
+    display:none;
+    &.fx_buttons_dropdown_active {
+        display:inline-block;
+        padding:5px;
+        background:#FFF;
+        .fx_shadow();
+        .fx_admin_button_text {
+            margin:0;
+            margin-bottom:5px;
+            &:last-child {
+                margin-bottom:0;
+                padding:0;
+            }
+        }
+    }
+}
+
 }
 
 .fx_admin_html body {
