@@ -144,3 +144,11 @@
         <span>{$option.name}</span>
     </label>
 </div>
+    
+<div fx:template="input[$type == 'checkbox_set']">
+    {set $field_name = $name}
+    <label fx:each="$values as $key => $option" title="{$option.comment | strip_tags}" class="fx_form_option_label">
+        <input type="checkbox" name="{$field_name}[{$key}]" {if $value && $value.$key}checked="checked"{/if} />
+        <span>{$option.name}</span>
+    </label>
+</div>
