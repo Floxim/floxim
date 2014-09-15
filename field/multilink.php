@@ -232,18 +232,20 @@ class fx_field_multilink extends fx_field_baze {
     protected function _before_save() {
         if ($this->is_modified('format') || !$this['id']) {
             $c_lf = $this['format']['linking_field'];
-            $format = array(
-                'render_type' => $this['format']['render_type'],
-                'linking_field' => $c_lf
-            );
             $c_ldt = $this['format']['linking_field_'.$c_lf.'_datatype'];
-            $format['linking_datatype'] = $c_ldt;
-            $mm_field = $this['format']['linking_mm_field_'.$c_lf.'_'.$c_ldt];
-            if ($mm_field) {
-                $format['mm_field'] = $mm_field;
-                $format['mm_datatype'] = $this['format']['linking_mm_type_'.$c_lf.'_'.$c_ldt.'_'.$mm_field];
+            if ($c_ldt) {
+                $format = array(
+                    'render_type' => $this['format']['render_type'],
+                    'linking_field' => $c_lf
+                );
+                $format['linking_datatype'] = $c_ldt;
+                $mm_field = $this['format']['linking_mm_field_'.$c_lf.'_'.$c_ldt];
+                if ($mm_field) {
+                    $format['mm_field'] = $mm_field;
+                    $format['mm_datatype'] = $this['format']['linking_mm_type_'.$c_lf.'_'.$c_ldt.'_'.$mm_field];
+                }
+                $this['format'] = $format;
             }
-            $this['format'] = $format;
         }
         parent::_before_save();
     }

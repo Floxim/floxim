@@ -443,6 +443,9 @@ fx_front.prototype.redraw_add_button = function($node) {
             });
         }
     }
+    if (buttons.length === 0) {
+        return;
+    }
     if (buttons.length === 1) {
         buttons[0].is_add = true;
         $fx.front.add_panel_button(buttons[0]);
