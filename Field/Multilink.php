@@ -4,6 +4,7 @@ namespace Floxim\Floxim\Field;
 
 use Floxim\Floxim\System;
 use Floxim\Floxim\Component\Field;
+use Floxim\Floxim\System\Fx as fx;
 
 class Multilink extends Baze {
     public function get_sql_type() {
@@ -408,9 +409,6 @@ class Multilink extends Baze {
         $direct_target_component = fx::data('component', $this['format']['linking_datatype']);
 
         $first_type = $direct_target_component['keyword'];
-        if ($first_type !== 'content') {
-            $first_type = 'content_'.$first_type;
-        }
         
         if (!$this['format']['mm_field']) {
             $res_rel = array(
@@ -425,9 +423,6 @@ class Multilink extends Baze {
         $end_datatype = fx::data('component', $this['format']['mm_datatype']);
         
         $end_type = $end_datatype['keyword'];
-        if ($end_type !== 'content') {
-            $end_type = 'content_'.$end_type;
-        }
         
         return array(
             System\Data::MANY_MANY,

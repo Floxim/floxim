@@ -110,7 +110,7 @@ class Finder extends System\Data {
         // todo: psr0 need fix
         
         $class = array_reverse(explode("\\", get_class($this)));
-        $com = strtolower($class[1]);
+        $com = fx::util()->camelToUnderscore($class[1]);
         $this->set_component($com);
         /*
         if (preg_match("~^fx_data_content_(.+)$~", get_class($this), $content_type)) {
@@ -123,6 +123,7 @@ class Finder extends System\Data {
     public function set_component($component_id_or_code) {
         $component = fx::data('component', $component_id_or_code);
         if (!$component) {
+            say($component_id_or_code,$component,debug_backtrace());
             die("Component not found: ".$component_id_or_code);
         }
         $this->component_id = $component['id'];

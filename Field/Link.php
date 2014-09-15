@@ -3,6 +3,7 @@
 namespace Floxim\Floxim\Field;
 
 use Floxim\Floxim\System;
+use Floxim\Floxim\System\Fx as fx;
 
 class Link extends Baze {
 
@@ -143,6 +144,7 @@ class Link extends Baze {
      */
     public function get_related_component() {
         $rel = $this->get_relation();
+        // todo: psr0 need fix
         return fx::data(
                 'component', 
                 preg_replace("~^content_~", '', $rel[1])

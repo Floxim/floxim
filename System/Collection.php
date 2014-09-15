@@ -569,7 +569,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable {
     }
 
     public function concat ( $collection ) {
-        if (!is_array($collection) && ! ($collection instanceof Traversable) )  {
+        if (!is_array($collection) && ! ($collection instanceof \Traversable) )  {
             return $this;
         }
         foreach ($collection as $item) {
