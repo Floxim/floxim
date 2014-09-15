@@ -356,8 +356,6 @@ class Fx {
             $action = null;
         }
         if (!preg_match("~^@~", $template_name)) {
-            //$template_name = preg_replace("~^@~", '', $template_name);
-        //} else {
             $template_name = self::getComponentFullName($template_name);
         }
         $template = Template\Loader::loadByName($template_name, $action, $data);
