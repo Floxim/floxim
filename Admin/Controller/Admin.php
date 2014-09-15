@@ -147,8 +147,10 @@ class Admin extends System\Controller {
     {   
         self::add_admin_files();
         
+        fx::template()->registerSource('admin', fx::path('floxim', '/Admin/templates'));
+        
         if (fx::is_admin()) {
-            $res = fx::template('helper_admin.back_office')->render();
+            $res = fx::template('@admin:back_office')->render();
             $js_config = new FxAdmin\Configjs();
             fx::page()->add_js_text("\$fx.init(".$js_config->get_config().");");
         } else {
@@ -156,8 +158,8 @@ class Admin extends System\Controller {
                             ->render('user:auth_form');
             
             $recover_form = fx::controller('user:recover_form', array('email' => $_POST['email']))
-                            ->render('user.recover_form');
-            $res = fx::template('helper_admin.authorize')->render(array(
+                            ->render('user:recover_form');
+            $res = fx::template('@admin:authorize')->render(array(
                 'auth_form' => $auth_form,
                 'recover_form' => $recover_form
             ));

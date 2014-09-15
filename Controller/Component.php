@@ -73,7 +73,7 @@ class Component extends Frontoffice {
                 $parent_id = $ib['page_id'];
             }
             foreach ($ids as $id) {
-                $linker = fx::data('content_select_linker')->create();
+                $linker = fx::data('linker')->create();
                 $linker['parent_id'] = $parent_id;
                 $linker['infoblock_id'] = $ib['id'];
                 $linker['linked_id'] = $id;
@@ -84,7 +84,7 @@ class Component extends Frontoffice {
     }
     
     public function drop_selected_linkers() {    
-        $linkers = fx::data('content_select_linker')
+        $linkers = fx::data('linker')
                 ->where('infoblock_id', $this->get_param('infoblock_id'))
                 ->all();
         $linkers->apply(function($i){ 
@@ -96,7 +96,7 @@ class Component extends Frontoffice {
      * @return fx_collection
      */
     protected function _get_selected_linkers () {
-        $q = fx::data('content_select_linker')
+        $q = fx::data('linker')
             ->where('infoblock_id', $this->get_param('infoblock_id'))
             ->order('priority');
         if ($this->get_param('parent_type') == 'current_page_id') {
@@ -703,7 +703,7 @@ class Component extends Frontoffice {
                     }
                     $target_ib = $target_ib->first();
                     if ($target_ib['action'] == 'list_selected') {
-                        $linkers = fx::data('content_select_linker')
+                        $linkers = fx::data('linker')
                                     ->where('infoblock_id', $target_ib['id'])
                                     ->all();
                         $content_ids = $linkers->get_values('linked_id');

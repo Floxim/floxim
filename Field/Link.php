@@ -3,6 +3,7 @@
 namespace Floxim\Floxim\Field;
 
 use Floxim\Floxim\System;
+use Floxim\Floxim\System\Fx as fx;
 
 class Link extends Baze {
 
@@ -121,7 +122,7 @@ class Link extends Baze {
         if (!is_numeric($rel_target_id)) {
             $rel_target = $rel_target_id;
         } else {
-            $rel_target = 'content_'.fx::data('component', $rel_target_id)->get('keyword');
+            $rel_target = fx::data('component', $rel_target_id)->get('keyword');
         }
         return $rel_target;
     }
@@ -143,10 +144,7 @@ class Link extends Baze {
      */
     public function get_related_component() {
         $rel = $this->get_relation();
-        return fx::data(
-                'component', 
-                preg_replace("~^content_~", '', $rel[1])
-        );
+        return fx::data('component', $rel[1]);
     }
     
     public function get_related_type() {

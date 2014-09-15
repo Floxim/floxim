@@ -106,18 +106,10 @@ class Finder extends System\Data {
     
     public function __construct($table = null) {
         parent::__construct($table);
-        ///$content_type = null;
-        // todo: psr0 need fix
         
         $class = array_reverse(explode("\\", get_class($this)));
-        $com = strtolower($class[1]);
+        $com = fx::util()->camelToUnderscore($class[1]);
         $this->set_component($com);
-        /*
-        if (preg_match("~^fx_data_content_(.+)$~", get_class($this), $content_type)) {
-            $this->set_component($content_type[1]);
-        }
-         * 
-         */
     }
     
     public function set_component($component_id_or_code) {

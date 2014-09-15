@@ -530,7 +530,7 @@ abstract class Data {
         }
         $rel = $relations[$rel_name];
         list($rel_type, $rel_datatype, $rel_field) = $rel;
-        
+        //fx::debug('arel', $rel);
         if (!$rel_finder){
             $rel_finder = $this->_get_default_relation_finder($rel);
         }

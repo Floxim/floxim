@@ -60,14 +60,6 @@ class Loader {
     protected $_controller_name = null;
     
     public function setTemplateName($tpl_name) {
-        $tpl_name_parts = null;
-        if (preg_match("~^(layout|component|widget|helper|virtual)_([a-z0-9_]+)$~", $tpl_name, $tpl_name_parts)) {
-            $this->_controller_type = $tpl_name_parts[1];
-            $this->_controller_name = $tpl_name_parts[2];
-        } else {
-            $this->_controller_type = 'other';
-            $this->_controller_name = $tpl_name;
-        }
         $this->template_name = $tpl_name;
     }
     
@@ -77,25 +69,42 @@ class Loader {
 
     public function add_default_source_dirs() {
         
-        $ns = fx::getComponentNamespace($this->getTemplateName());
+        $template_name = $this->getTemplateName();
         
-        $ns = explode("\\", trim($ns, "\\"));
+        if (!preg_match("~@~", $template_name)) {
         
-        if ($ns[0] === 'Theme') {
-            $ns[0] = 'theme';
-        } else {
-            array_unshift($ns, 'module');
-        }
-        
-        $dirs = array( fx::path()->to_abs('/'.join("/", $ns)) );
-        
-        foreach ($dirs as $dir) {
-            try {
-                $this->add_source_dir($dir);
-            } catch (\Exception $e) {
-                
+            $ns = fx::getComponentNamespace($this->getTemplateName());
+
+            $ns = explode("\\", trim($ns, "\\"));
+
+            if ($ns[0] === 'Theme') {
+                $ns[0] = 'theme';
+            } else {
+                array_unshift($ns, 'module');
+            }
+
+            $dirs = array( fx::path()->to_abs('/'.join("/", $ns)) );
+            
+            foreach ($dirs as $dir) {
+                try {
+                    $this->add_source_dir($dir);
+                } catch (\Exception $e) {
+
+                }
             }
         }
+        
+        $template_name = preg_replace("~^@~", '', $template_name);
+        if (isset(self::$source_paths[$template_name])) {
+            foreach (self::$source_paths[$template_name] as $sp) {
+                try {
+                    $this->add_source($sp);
+                } catch (Exception $ex) {
+
+                }
+            }
+        }
+        
     }
     
     protected $_target_dir = null;
@@ -139,11 +148,21 @@ class Loader {
         return str_replace($this->_target_hash, '*', $path);
     }
     
+    
+    protected static $source_paths = array();
+    
+    public function registerSource($tpl_name, $path) {
+        if (!isset(self::$source_paths[$tpl_name])) {
+            self::$source_paths[$tpl_name] = array();
+        }
+        self::$source_paths[$tpl_name][]= $path;
+    }
+    
     /*
      * Automatically load the template by name
      * Standard scheme
      */
-    public static function load($tpl_name, $action = null, $data = null) {
+    public static function loadByName($tpl_name, $action = null, $data = null) {
         $processor = new self();
         $processor->setTemplateName($tpl_name);
         $classname = $processor->getCompiledClassName();

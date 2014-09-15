@@ -4,6 +4,7 @@ namespace Floxim\Floxim\Field;
 
 use Floxim\Floxim\System;
 use Floxim\Floxim\Component\Field;
+use Floxim\Floxim\System\Fx as fx;
 
 class Multilink extends Baze {
     public function get_sql_type() {
@@ -291,7 +292,8 @@ class Multilink extends Baze {
         $new_value->linker_map = new System\Collection();
         // Find the name for the field, for example "most part"
         // something strashnenko...
-        $linker_com_name = preg_replace('~^content_~', '', $linker_data_type);
+        //$linker_com_name = preg_replace('~^content_~', '', $linker_data_type);
+        $linker_com_name = $linker_data_type;
         $end_link_field_name = 
             fx::data('component', $linker_com_name)
             ->all_fields()
@@ -346,7 +348,7 @@ class Multilink extends Baze {
      */
     protected function _append_has_many($content) {
         // end type (for fields lot)
-        $linked_type = 'content_'.$this->get_related_component()->get('keyword');
+        $linked_type = $this->get_related_component()->get('keyword');
         $new_value = fx::collection();
         foreach ($this->value as $item_id => $item_props) {
             $linked_finder = fx::data($linked_type);
@@ -394,10 +396,7 @@ class Multilink extends Baze {
                 $content_type = $rel[4];
                 break;
         }
-        return fx::data(
-                'component', 
-                preg_replace("~^content_~", '', $content_type)
-        );
+        return fx::data('component', $content_type);
     }
     
     public function get_relation() {
@@ -408,9 +407,12 @@ class Multilink extends Baze {
         $direct_target_component = fx::data('component', $this['format']['linking_datatype']);
 
         $first_type = $direct_target_component['keyword'];
+        /*
         if ($first_type !== 'content') {
             $first_type = 'content_'.$first_type;
         }
+         * 
+         */
         
         if (!$this['format']['mm_field']) {
             $res_rel = array(
@@ -425,9 +427,12 @@ class Multilink extends Baze {
         $end_datatype = fx::data('component', $this['format']['mm_datatype']);
         
         $end_type = $end_datatype['keyword'];
+        /*
         if ($end_type !== 'content') {
             $end_type = 'content_'.$end_type;
         }
+         * 
+         */
         
         return array(
             System\Data::MANY_MANY,

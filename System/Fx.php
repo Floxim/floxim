@@ -70,7 +70,7 @@ class Fx {
      */
     public static $data_stat = array();
     
-    public function getComponentFullName($name) {
+    public static function getComponentFullName($name) {
         $path = explode(".", $name);
         if (count($path) === 1) {
             $lib_components = array(
@@ -89,12 +89,15 @@ class Fx {
                 'project', 
                 'publication', 
                 'section', 
+                'linker',
                 'social_icon', 
                 'tag', 
                 'text', 
                 'user', 
                 'vacancy', 
-                'video'
+                'video',
+                // temp hack
+                'widget_grid'
             );
             if (in_array(strtolower($path[0]), $lib_components)) {
                 array_unshift($path, 'main');
@@ -147,7 +150,7 @@ class Fx {
         
         $class_name = $namespace.'\\Finder';
         if (!class_exists($class_name)) {
-            say($class_name, $datatype, debug_backtrace());
+            say($class_name, $datatype, self::getComponentFullName($datatype), debug_backtrace());
             throw new \Exception('Class not found: '.$class_name. ' for '.$datatype);
         }
         
@@ -156,7 +159,9 @@ class Fx {
         if (func_num_args() === 1) {
             return $finder;
         }
-        
+        if (is_array($id) || $id instanceof \Traversable ) {
+            return $finder->get_by_ids($id);
+        }
         return $finder->get_by_id($id);
     }
     
@@ -345,8 +350,12 @@ class Fx {
         } else {
             $action = null;
         }
-        $template_name = self::getComponentFullName($template_name);
-        $template = Template\Loader::load($template_name, $action, $data);
+        if (!preg_match("~^@~", $template_name)) {
+            //$template_name = preg_replace("~^@~", '', $template_name);
+        //} else {
+            $template_name = self::getComponentFullName($template_name);
+        }
+        $template = Template\Loader::loadByName($template_name, $action, $data);
         return $template;
         /*
         $template = Template\Loader::autoload($template_name);
