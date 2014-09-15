@@ -2,6 +2,8 @@
 
 namespace Floxim\Floxim\Router;
 
+use Floxim\Floxim\System\Fx as fx;
+
 class Infoblock extends Base {
     public function route($url = null, $context = null) {
         if (!preg_match("~^/\~ib/(\d+|fake(?:\-\d+)?)@(\d+)$~", $url, $ib_info)) {

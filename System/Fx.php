@@ -131,6 +131,11 @@ class Fx {
         return '\\'.join('\\', $path);
     }
 
+    public static function getClassNameFromNamespaceFull($namespace) {
+        $path = explode('\\',$namespace);
+        return array_pop($path);
+    }
+
     // todo: psr0 need verify - recursive request finder class
     /**
      * vendor.module.component - component finder

@@ -208,7 +208,6 @@ class Finder extends System\Data {
         
         while(!$exists && count($chain) > 0) {
             $c_level = array_shift($chain);
-            // todo: psr0 need verify
             $class_namespace = fx::getComponentNamespace($c_level['keyword']);
             $class_name = $class_namespace . '\\Essence';
             try {

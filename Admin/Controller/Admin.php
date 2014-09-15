@@ -25,8 +25,7 @@ class Admin extends System\Controller {
 
     public function __construct($input = array(), $action = null, $do_return = false) {
         parent::__construct($input, $action);
-        // todo: psr0 need fix
-        $this->essence_type = str_replace('fx_controller_admin_', '', get_class($this));
+        $this->essence_type = strtolower(fx::getClassNameFromNamespaceFull(get_class($this)));
         $this->ui = new FxAdmin\Ui;
         
         $this->process_do_return = isset($input['do_return']) ? $input['do_return'] : $do_return;
@@ -197,7 +196,7 @@ class Admin extends System\Controller {
         foreach ($ids as $id) {
             try {
                 fx::data($es)->get_by_id($id)->checked();
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 $result['status'] = 'error';
                 $result['text'][] = $e->getMessage();
             }
@@ -219,7 +218,7 @@ class Admin extends System\Controller {
         foreach ($ids as $id) {
             try {
                 fx::data($es)->get_by_id($id)->unchecked();
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 $result['status'] = 'error';
                 $result['text'][] = $e->getMessage();
             }
@@ -241,7 +240,7 @@ class Admin extends System\Controller {
         foreach ($ids as $id) {
             try {
                 fx::data($es, $id)->delete();
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 $result['status'] = 'error';
                 $result['text'][] = $e->getMessage();
             }

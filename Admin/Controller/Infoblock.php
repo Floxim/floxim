@@ -5,6 +5,7 @@ namespace Floxim\Floxim\Admin\Controller;
 use Floxim\Floxim\Component\Component;
 use Floxim\Floxim\Component\Infoblock as CompInfoblock;
 use Floxim\Floxim\System;
+use Floxim\Floxim\System\Fx as fx;
 
 class Infoblock extends Admin {
 
@@ -487,8 +488,7 @@ class Infoblock extends Admin {
     
     protected function _get_scope_fields(
                 CompInfoblock\Essence $infoblock,
-                // todo: psr0 need verify
-                Floxim\Page\Component\Page\Essence $c_page
+                \Floxim\Main\Page\Essence $c_page
             ) {
         
         $fields = array();
