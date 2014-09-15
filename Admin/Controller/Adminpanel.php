@@ -9,7 +9,7 @@ class Adminpanel extends Admin {
     }
 
     static public function panel_html() {
-        $res = fx::template('helper_admin.panel')->render(array('is_front' => true));
+        $res = fx::template('helper_admin:panel')->render(array('is_front' => true));
         return $res;
     }
 

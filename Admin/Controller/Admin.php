@@ -85,57 +85,58 @@ class Admin extends System\Controller {
     }
     
     public static function add_admin_files() {
+        $path_floxim = fx::path('floxim');
         $js_files = array(
             FX_JQUERY_PATH,
-            '/floxim/admin/js/fxj.js',
-            '/floxim/admin/js/fx.js',
-            '/floxim/admin/js/js-dictionary-'.fx::config()->ADMIN_LANG.'.js',
+            $path_floxim.'/admin/js/fxj.js',
+            $path_floxim.'/admin/js/fx.js',
+            $path_floxim.'/admin/js/js-dictionary-'.fx::config()->ADMIN_LANG.'.js',
             FX_JQUERY_UI_PATH,
-            '/floxim/lib/js/jquery.nestedSortable.js',
-            '/floxim/lib/js/jquery.ba-hashchange.min.js',
-            '/floxim/lib/js/jquery.json-2.3.js',
-            '/floxim/lib/js/ajaxfileupload.js',                                            
-            '/floxim/admin/js-templates/jstx.js',
-            'http://'.getenv("HTTP_HOST").'/floxim/admin/js-templates/compile.php',
-            '/floxim/admin/js/lib.js',
-            '/floxim/admin/js/front.js',
-            '/floxim/admin/js/buttons.js',                                     
-            '/floxim/admin/js/form.js',
-            '/floxim/admin/js/patch.js',
-            '/floxim/admin/js/debug.js',
-            '/floxim/admin/js/livesearch.js',
-            '/floxim/admin/js/fields.js',
-            '/floxim/admin/js/edit-in-place.js',
-            '/floxim/admin/js/panel.js',
-            '/floxim/admin/js/popup.js',
-            '/floxim/admin/js/admin.js',
-            '/floxim/admin/js/nav.js',
-            '/floxim/lib/editors/redactor/redactor.js',
-            '/floxim/lib/editors/redactor/fontcolor.js',
-            '/floxim/lib/codemirror/codemirror.all.min.js',
-            '/floxim/lib/js/jquery.form.js',
-            '/floxim/lib/js/jquery.cookie.js',
-            '/floxim/lib/js/jquery.ba-resize.min.js',
-            '/floxim/lib/js/jquery.scrollTo.js',
-            '/floxim/admin/js/map.js',
-            '/floxim/admin/js/infoblock.js' // infoblock form overrides
+            $path_floxim.'/lib/js/jquery.nestedSortable.js',
+            $path_floxim.'/lib/js/jquery.ba-hashchange.min.js',
+            $path_floxim.'/lib/js/jquery.json-2.3.js',
+            $path_floxim.'/lib/js/ajaxfileupload.js',
+            $path_floxim.'/admin/js-templates/jstx.js',
+            'http://'.getenv("HTTP_HOST").'/vendor/Floxim/Floxim/admin/js-templates/compile.php',
+            $path_floxim.'/admin/js/lib.js',
+            $path_floxim.'/admin/js/front.js',
+            $path_floxim.'/admin/js/buttons.js',
+            $path_floxim.'/admin/js/form.js',
+            $path_floxim.'/admin/js/patch.js',
+            $path_floxim.'/admin/js/debug.js',
+            $path_floxim.'/admin/js/livesearch.js',
+            $path_floxim.'/admin/js/fields.js',
+            $path_floxim.'/admin/js/edit-in-place.js',
+            $path_floxim.'/admin/js/panel.js',
+            $path_floxim.'/admin/js/popup.js',
+            $path_floxim.'/admin/js/admin.js',
+            $path_floxim.'/admin/js/nav.js',
+            $path_floxim.'/lib/editors/redactor/redactor.js',
+            $path_floxim.'/lib/editors/redactor/fontcolor.js',
+            $path_floxim.'/lib/codemirror/codemirror.all.min.js',
+            $path_floxim.'/lib/js/jquery.form.js',
+            $path_floxim.'/lib/js/jquery.cookie.js',
+            $path_floxim.'/lib/js/jquery.ba-resize.min.js',
+            $path_floxim.'/lib/js/jquery.scrollTo.js',
+            $path_floxim.'/admin/js/map.js',
+            $path_floxim.'/admin/js/infoblock.js' // infoblock form overrides
         );
         $page = fx::page();
         
         
         
         $page->add_js_bundle($js_files, array('name' => 'fx_admin'));
-        
+        // todo: need fix path for css - now used server path
         $page->add_css_bundle(array(
-            '/floxim/lib/editors/redactor/redactor.css',
+            $path_floxim.'/lib/editors/redactor/redactor.css',
         ));
         
         $page->add_css_bundle(array(
-            '/floxim/admin/style/main.less',
-            '/floxim/admin/style/forms.less',
-            '/floxim/admin/style/front.less',
-            '/floxim/admin/style/debug.less',
-            '/floxim/lib/codemirror/codemirror.css'
+            $path_floxim.'/admin/style/main.less',
+            $path_floxim.'/admin/style/forms.less',
+            $path_floxim.'/admin/style/front.less',
+            $path_floxim.'/admin/style/debug.less',
+            $path_floxim.'/lib/codemirror/codemirror.css'
         ), array('name' => 'admin_less'));
     }
     
@@ -147,7 +148,7 @@ class Admin extends System\Controller {
         self::add_admin_files();
         
         if (fx::is_admin()) {
-            $res = fx::template('helper_admin.back_office')->render();
+            $res = fx::template('helper_admin:back_office')->render();
             $js_config = new FxAdmin\Configjs();
             fx::page()->add_js_text("\$fx.init(".$js_config->get_config().");");
         } else {
@@ -155,8 +156,8 @@ class Admin extends System\Controller {
                             ->render('user:auth_form');
             
             $recover_form = fx::controller('user:recover_form', array('email' => $_POST['email']))
-                            ->render('user.recover_form');
-            $res = fx::template('helper_admin.authorize')->render(array(
+                            ->render('user:recover_form');
+            $res = fx::template('helper_admin:authorize')->render(array(
                 'auth_form' => $auth_form,
                 'recover_form' => $recover_form
             ));

@@ -88,6 +88,11 @@ class Loader {
         }
         
         $dirs = array( fx::path()->to_abs('/'.join("/", $ns)) );
+
+        // todo: psr0 fix this mega-hack
+        if (strpos($this->getTemplateName(),'helper_admin')===0) {
+            $dirs[]=fx::path('floxim').'/std/helper/admin';
+        }
         
         foreach ($dirs as $dir) {
             try {

@@ -355,7 +355,12 @@ class Fx {
         } else {
             $action = null;
         }
-        $template_name = self::getComponentFullName($template_name);
+
+        // todo: psr0 fix this mega-hack
+        if ($template_name != 'helper_admin') {
+            $template_name = self::getComponentFullName($template_name);
+        }
+
         $template = Template\Loader::load($template_name, $action, $data);
         return $template;
         /*
