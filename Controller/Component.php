@@ -118,7 +118,7 @@ class Component extends Frontoffice {
             'is_multiple' => true,
             'ajax_preload' => true,
             'params' => array(
-                'content_type' => 'content_'.$this->_content_type
+                'content_type' => $this->_content_type
             ),
             'stored' => false
         );

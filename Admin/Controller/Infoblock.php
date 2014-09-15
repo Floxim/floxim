@@ -851,7 +851,7 @@ class Infoblock extends Admin {
         foreach ($contents as $content_id => $content_info) {
             fx::log($content_id, $content_info);
             $finder = fx::data(
-                'content_'.fx::data('component', $content_info['content_type_id'])->get('keyword')
+                fx::data('component', $content_info['content_type_id'])->get('keyword')
             );
             if ($content_id) {
                 $content = $finder->get_by_id($content_id);

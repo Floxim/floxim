@@ -347,7 +347,7 @@ class Multilink extends Baze {
      */
     protected function _append_has_many($content) {
         // end type (for fields lot)
-        $linked_type = 'content_'.$this->get_related_component()->get('keyword');
+        $linked_type = $this->get_related_component()->get('keyword');
         $new_value = fx::collection();
         foreach ($this->value as $item_id => $item_props) {
             $linked_finder = fx::data($linked_type);
