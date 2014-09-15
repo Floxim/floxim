@@ -2,6 +2,8 @@
 
 namespace Floxim\Floxim\Router;
 
+use Floxim\Floxim\System\Fx as fx;
+
 class Error extends Front {
     public function route($url = null, $context = null) {
         $site = fx::data(

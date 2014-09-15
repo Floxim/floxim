@@ -2,6 +2,8 @@
 
 namespace Floxim\Floxim\Router;
 
+use Floxim\Floxim\System\Fx as fx;
+
 class Ajax extends Base {
     public function route($url = null, $context = null) {
         $action_info = null;

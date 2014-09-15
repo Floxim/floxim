@@ -37,7 +37,7 @@ class Essence extends System\Essence implements Template\Essence {
     
     public function set_component_id($component_id) {
         if ($this->component_id && $component_id != $this->component_id) {
-            throw new Exception("Component id can not be changed");
+            throw new \Exception("Component id can not be changed");
         }
         $this->component_id = intval($component_id);
     }

@@ -81,7 +81,9 @@ class Fx {
                 'company', 
                 'contact', 
                 'faq', 
-                'news', 
+                'widget_grid',
+                'widget_map',
+                'news',
                 'page', 
                 'person', 
                 'photo',
@@ -89,9 +91,7 @@ class Fx {
                 'project', 
                 'publication', 
                 'section', 
-                'linker',
-                'social_icon', 
-                'tag', 
+                'social_icon',                 'linker',                 'tag', 
                 'text', 
                 'user', 
                 'vacancy', 
@@ -132,6 +132,11 @@ class Fx {
             $part = join('', $chunks);
         }
         return '\\'.join('\\', $path);
+    }
+
+    public static function getClassNameFromNamespaceFull($namespace) {
+        $path = explode('\\',$namespace);
+        return array_pop($path);
     }
 
     // todo: psr0 need verify - recursive request finder class

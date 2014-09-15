@@ -188,8 +188,7 @@ class Essence extends System\Essence {
 
     static public function get_sql_type_by_type($type_id) {
         $type = self::get_type_by_id($type_id);
-        // todo: psr0 need fix
-        $classname = "fx_field_".$type;
+        $classname = 'Floxim\\Floxim\\Field\\'.ucfirst($type);
 
         $field = new $classname();
         return $field->get_sql_type();

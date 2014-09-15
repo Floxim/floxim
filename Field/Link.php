@@ -144,8 +144,7 @@ class Link extends Baze {
      */
     public function get_related_component() {
         $rel = $this->get_relation();
-        return fx::data('component', $rel[1]);
-    }
+        );    }
     
     public function get_related_type() {
         $rel = $this->get_relation();

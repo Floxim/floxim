@@ -1,6 +1,7 @@
 <?php
 
 namespace Floxim\Floxim\Field;
+use Floxim\Floxim\System\Fx as fx;
 
 class Text extends Baze {
     

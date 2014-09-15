@@ -37,7 +37,7 @@ class Admin extends Base {
        
         try {
             $controller = new $classname($input, $action);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             die("Error! Essence: " . htmlspecialchars($essence));
         }
         return $controller;

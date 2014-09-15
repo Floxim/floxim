@@ -73,8 +73,7 @@ class Component extends Frontoffice {
                 $parent_id = $ib['page_id'];
             }
             foreach ($ids as $id) {
-                $linker = fx::data('linker')->create();
-                $linker['parent_id'] = $parent_id;
+                $linker = fx::data('content_select_linker')->create();                $linker['parent_id'] = $parent_id;
                 $linker['infoblock_id'] = $ib['id'];
                 $linker['linked_id'] = $id;
                 $linker['priority'] = ++$last_priority;
@@ -84,8 +83,7 @@ class Component extends Frontoffice {
     }
     
     public function drop_selected_linkers() {    
-        $linkers = fx::data('linker')
-                ->where('infoblock_id', $this->get_param('infoblock_id'))
+        $linkers = fx::data('linker')                ->where('infoblock_id', $this->get_param('infoblock_id'))
                 ->all();
         $linkers->apply(function($i){ 
            $i->delete(); 
@@ -96,8 +94,7 @@ class Component extends Frontoffice {
      * @return fx_collection
      */
     protected function _get_selected_linkers () {
-        $q = fx::data('linker')
-            ->where('infoblock_id', $this->get_param('infoblock_id'))
+        $q = fx::data('linker')            ->where('infoblock_id', $this->get_param('infoblock_id'))
             ->order('priority');
         if ($this->get_param('parent_type') == 'current_page_id') {
            $q->where('parent_id', fx::env('page_id')); 
@@ -118,7 +115,7 @@ class Component extends Frontoffice {
             'is_multiple' => true,
             'ajax_preload' => true,
             'params' => array(
-                'content_type' => 'content_'.$this->_content_type
+                'content_type' => $this->_content_type
             ),
             'stored' => false
         );
@@ -703,8 +700,7 @@ class Component extends Frontoffice {
                     }
                     $target_ib = $target_ib->first();
                     if ($target_ib['action'] == 'list_selected') {
-                        $linkers = fx::data('linker')
-                                    ->where('infoblock_id', $target_ib['id'])
+                        $linkers = fx::data('linker')                                    ->where('infoblock_id', $target_ib['id'])
                                     ->all();
                         $content_ids = $linkers->get_values('linked_id');
                         $condition['name'] = 'id';

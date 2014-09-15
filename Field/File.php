@@ -3,6 +3,7 @@
 namespace Floxim\Floxim\Field;
 
 use Floxim\Floxim\System;
+use Floxim\Floxim\System\Fx as fx;
 
 class File extends Baze {
 

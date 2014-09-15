@@ -115,6 +115,7 @@ class Finder extends System\Data {
     public function set_component($component_id_or_code) {
         $component = fx::data('component', $component_id_or_code);
         if (!$component) {
+            say($component_id_or_code,$component,debug_backtrace());
             die("Component not found: ".$component_id_or_code);
         }
         $this->component_id = $component['id'];
@@ -200,7 +201,6 @@ class Finder extends System\Data {
         
         while(!$exists && count($chain) > 0) {
             $c_level = array_shift($chain);
-            // todo: psr0 need verify
             $class_namespace = fx::getComponentNamespace($c_level['keyword']);
             $class_name = $class_namespace . '\\Essence';
             try {

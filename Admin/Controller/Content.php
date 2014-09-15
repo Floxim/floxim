@@ -2,6 +2,7 @@
 namespace Floxim\Floxim\Admin\Controller;
 
 use Floxim\Floxim\Component\Field;
+use Floxim\Floxim\System\Fx as fx;
 
 class Content extends Admin {
 
@@ -13,7 +14,7 @@ class Content extends Admin {
         } else {
             $content_type = $input['content_type'];
             $parent_page = fx::data('page', $input['parent_id']);
-            $content = fx::data('content_'.$content_type)->create(array(
+            $content = fx::data($content_type)->create(array(
                 'parent_id' => $input['parent_id'],
                 'infoblock_id' => $input['infoblock_id'],
                 'checked' => 1,
@@ -217,6 +218,7 @@ class Content extends Admin {
         }
         $content_type = $input['content_type'];
         $finder = fx::data($content_type);
+        // todo: psr0 need fix
         if (preg_match("~^content_~", $content_type) && $content_type !== 'content_user'){
             $finder->where('site_id', fx::env('site')->get('id'));
         }
@@ -248,7 +250,7 @@ class Content extends Admin {
      * If there are no raises in the end
      */
     public function move($input) {
-        $content_type = 'content_'.$input['content_type'];
+        $content_type = $input['content_type'];
         $content = fx::data($content_type)->where('id', $input['content_id'])->one();
         $next_id = isset($input['next_id']) ? $input['next_id'] : false;
         
