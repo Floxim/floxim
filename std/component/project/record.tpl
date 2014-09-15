@@ -1,18 +1,11 @@
-<div fx:template="record" class="project_record_wrap">
-	{css}listing.css{/css}
-	<div fx:item class="project_record">
-		<div class="left_block">
-		  <div class="year">{$date|'d.m.Y'}</div>
-		</div>
-		<div class="right_block">
-		  <div class="image">
-		      <img src="{$image}" alt="" />
-		  </div>
-          <div class="description">
-            <h3>{$client}Client{/$}</h3>
-            {$description}Description{/$}
-          </div>		  
-		</div>
-		<div class="clear"></div>
-	</div>
+<div fx:template="record" class="std_record project_record" fx:name="Default project record" fx:with="$item">
+    <div class="image">
+        <img src="{$image | 'max-width:500,max-height:500'}" alt="{$name}" />
+    </div>
+    <div class="data">
+        <div class="name">{$name}</div>
+        <div class="date">{$date|'d.m.Y'}</div>
+        <div class="short_description">{$short_description}</div>
+        <div class="description">{$description}</div>
+    </div>
 </div>
