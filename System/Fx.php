@@ -81,7 +81,8 @@ class Fx {
                 'company', 
                 'contact', 
                 'faq', 
-                'news', 
+                'widget_grid',
+                'news',
                 'page', 
                 'person', 
                 'photo',
@@ -162,7 +163,9 @@ class Fx {
         if (func_num_args() === 1) {
             return $finder;
         }
-        
+        if (is_array($id)) {
+            return $finder->get_by_ids($id);
+        }
         return $finder->get_by_id($id);
     }
     
