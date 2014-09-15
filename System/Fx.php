@@ -82,6 +82,7 @@ class Fx {
                 'contact', 
                 'faq', 
                 'widget_grid',
+                'widget_map',
                 'news',
                 'page', 
                 'person', 
