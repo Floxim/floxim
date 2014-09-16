@@ -10,9 +10,8 @@ class Mail {
     protected $_data = null;
     
     public function __construct($params = null, $data = null) {
-        require_once ( fx::path('floxim', 'lib/PHPMailer/PHPMailerAutoload.php') );
         $this->_data = $data;
-        $this->mailer = new PHPMailer();
+        $this->mailer = new \PHPMailer();
         
         if (!is_array($params)) {
             $params = array();

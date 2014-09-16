@@ -272,7 +272,7 @@ class Template {
                         if (array_key_exists($name, $cc)) {
                             return $cc[$name];
                         }
-                    } elseif ($cc instanceof ArrayAccess) {
+                    } elseif ($cc instanceof \ArrayAccess) {
                         if (isset($cc[$name])) {
                             return $cc[$name];
                         }

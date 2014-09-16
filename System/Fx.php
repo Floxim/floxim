@@ -91,13 +91,15 @@ class Fx {
                 'project', 
                 'publication', 
                 'section', 
-                'social_icon',                 'linker',                 'tag', 
+                'social_icon',
+                'linker',
+                'tag', 
                 'text', 
                 'user', 
                 'vacancy', 
                 'video',
-                // temp hack
-                'widget_grid'
+                'message_template',
+                'mail_template'
             );
             if (in_array(strtolower($path[0]), $lib_components)) {
                 array_unshift($path, 'main');
