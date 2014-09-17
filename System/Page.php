@@ -85,13 +85,7 @@ class Page {
     }
 
     public function add_css_bundle ($files, $params = array()) {
-
-        if (fx::config('dev.on')) {
-            foreach ($files as $f) {
-                $this->add_css_file($f);
-            }
-            return;
-        }
+        
         if (!isset($params['name'])) {
             $params['name'] = md5(join($files));
         }
@@ -111,8 +105,8 @@ class Page {
                 if (preg_match("~^http://~i", $file)) {
                     $file_contents = file_get_contents($file);
                 } else {
-                    $http_base = preg_replace("~[^/]+$~", '', $file);
-                    //$file = $doc_root.$file;
+                    $http_base = fx::path()->to_http($file);
+                    $http_base = preg_replace("~[^/]+$~", '', $http_base);
                     $file_contents = file_get_contents(fx::path()->to_abs($file));
                     $file_contents = $this->_css_url_replace($file_contents, $http_base);
                 }
