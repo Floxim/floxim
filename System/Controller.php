@@ -148,9 +148,10 @@ class Controller {
      * For components overridden by adding inheritance chain
      */
     protected function _get_controller_variants() {
-        // todo: psr0 need fix
-        // \Floxim\User\Component\User\Controller
-        return array(str_replace('fx_controller_', '', get_class($this)));
+        // todo: psr0 need verify
+        // \Floxim\Main\User\Controller
+        // \Vendor\Module\Component\Controller
+        return fx::getComponentNameByClass(get_class($this));
     }
     
     /*

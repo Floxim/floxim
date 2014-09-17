@@ -2,6 +2,8 @@
 
 namespace Floxim\Floxim\Admin\Controller;
 
+use Floxim\Floxim\System\Fx as fx;
+
 class Widget extends Component {
     
     public function all() {

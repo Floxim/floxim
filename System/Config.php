@@ -77,6 +77,7 @@ class Config {
         
         
         $this->config['path.jquery'] = fx::path('floxim', 'lib/js/jquery-1.9.1.min.js');
+        $this->config['path.jquery.http'] = fx::path()->http('floxim', 'lib/js/jquery-1.9.1.min.js');
         $this->config['path.jquery-ui'] = fx::path('floxim', 'lib/js/jquery-ui-1.10.3.custom.min.js');
         
         $this->config['templates.cache_dir'] = fx::path('files', 'compiled_templates');
@@ -114,6 +115,7 @@ class Config {
                 $this->config['db.dsn'] = 'mysql:dbname='.$this->config['db.name'].';host='.$this->config['db.host'];
             }
             define('FX_JQUERY_PATH', $this->config['path.jquery']);
+            define('FX_JQUERY_PATH_HTTP', $this->config['path.jquery.http']);
             define('FX_JQUERY_UI_PATH', $this->config['path.jquery-ui']);
         }
         ini_set('date.timezone', $this->config['date.timezone']);

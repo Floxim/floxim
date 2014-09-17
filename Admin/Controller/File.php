@@ -2,6 +2,8 @@
 
 namespace Floxim\Floxim\Admin\Controller;
 
+use Floxim\Floxim\System\Fx as fx;
+
 class File extends Admin {
 
     public function upload_save($input) {

@@ -1033,11 +1033,11 @@ class Compiler {
             $name = $token->get_prop('id');
         }
         
-        $tpl_props['full_id'] = $this->_template_set_name.'.'.$tpl_props['id'];
+        $tpl_props['full_id'] = $this->_template_set_name.':'.$tpl_props['id'];
         
         $of = $token->get_prop('of');
         $of_map = array(
-            'menu' => 'component_section.list',
+            'menu' => 'section.list',
             'wrapper' => 'widget_wrapper.show', // fake widget!
             'blockset' => 'widget_blockset.show',
             'grid' => 'widget_grid.show',
@@ -1051,18 +1051,18 @@ class Compiler {
         
         if (!$of) {
             if ($this->_controller_type != 'layout') {
-                $of = $this->_controller_type."_".$this->_controller_name.".".$token->get_prop('id');
+                $of = $this->_controller_type."_".$this->_controller_name.":".$token->get_prop('id');
             } else {
                 $of = false;
             }
         } elseif ($of === 'false') {
             $of = false;
         } elseif (!preg_match("~\.~", $of ) ) {
-            $of = $this->_controller_type."_".$this->_controller_name.".".$of;
+            $of = $this->_controller_type."_".$this->_controller_name.":".$of;
         }
-        
+        // todo: psr0 need verify
         if ($of && !preg_match("~^(layout|component_|widget_)~", $of)) {
-            $of = 'component_'.$of;
+            //$of = 'component_'.$of;
         }
         
         $tpl_props += array(

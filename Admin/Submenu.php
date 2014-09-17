@@ -2,6 +2,8 @@
 
 namespace Floxim\Floxim\Admin;
 
+use Floxim\Floxim\System\Fx as fx;
+
 class Submenu {
 
     protected $menu = array();

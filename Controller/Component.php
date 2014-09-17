@@ -73,7 +73,7 @@ class Component extends Frontoffice {
                 $parent_id = $ib['page_id'];
             }
             foreach ($ids as $id) {
-                $linker = fx::data('content_select_linker')->create();                $linker['parent_id'] = $parent_id;
+                $linker = fx::data('linker')->create();                $linker['parent_id'] = $parent_id;
                 $linker['infoblock_id'] = $ib['id'];
                 $linker['linked_id'] = $id;
                 $linker['priority'] = ++$last_priority;
@@ -817,7 +817,7 @@ class Component extends Frontoffice {
         $chain = $com->get_chain();
         $chain = array_reverse($chain);
         foreach ($chain as $chain_item) {
-            $vars []= 'component_'.$chain_item['keyword'];
+            $vars []= $chain_item['keyword'];
         }
         $vars = array_unique($vars);
         return $vars;

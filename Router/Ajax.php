@@ -54,12 +54,12 @@ class Ajax extends Base {
             $action[1] = 'show';
         }
         $action_name = $action[1];
-        
+        // todo: psr0 need fix
         if (!preg_match("~^(component_|widget_)~", $controller_name)) {
-            $controller_name = 'component_'.$controller_name;
+            //$controller_name = 'component_'.$controller_name;
         }
         
-        $action = $controller_name.'.'.$action_name;
+        $action = $controller_name.':'.$action_name;
         
         $controller = fx::controller($action);
         if (!$template) {

@@ -141,6 +141,16 @@ class Fx {
         return array_pop($path);
     }
 
+    public static function getComponentNameByClass($class) {
+        // \Floxim\Main\User\Controller
+        // \Vendor\Module\Component\[Controller|Finder|Essence]
+        $path = explode('\\',$class);
+        array_pop($path);
+        $path=array_map(function($a){
+            return fx::util()->camelToUnderscore($a);
+        },$path);
+        return join('.',$path);
+    }
     // todo: psr0 need verify - recursive request finder class
     /**
      * vendor.module.component - component finder

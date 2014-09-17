@@ -4,6 +4,7 @@ namespace Floxim\Floxim\Admin\Controller;
 
 use Floxim\Floxim\Component\Field as CompField;
 use Floxim\Floxim\System;
+use Floxim\Floxim\System\Fx as fx;
 
 class Field extends Admin {
 

@@ -3,6 +3,7 @@
 namespace Floxim\Floxim\Admin;
 
 use Floxim\Floxim\Admin\Controller;
+use Floxim\Floxim\System\Fx as fx;
 
 class Configjs {
   protected $options;

@@ -2,6 +2,8 @@
 
 namespace Floxim\Floxim\Admin\Controller;
 
+use Floxim\Floxim\System\Fx as fx;
+
 class Module extends Admin {
 
     protected $menu_items = array();
