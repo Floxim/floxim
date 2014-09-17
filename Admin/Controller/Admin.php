@@ -147,8 +147,6 @@ class Admin extends System\Controller {
     {   
         self::add_admin_files();
         
-        fx::template()->registerSource('admin', fx::path('floxim', '/Admin/templates'));
-        
         if (fx::is_admin()) {
             $res = fx::template('@admin:back_office')->render();
             $js_config = new FxAdmin\Configjs();

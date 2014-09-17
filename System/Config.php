@@ -119,6 +119,7 @@ class Config {
             define('FX_JQUERY_UI_PATH', $this->config['path.jquery-ui']);
         }
         ini_set('date.timezone', $this->config['date.timezone']);
+        fx::template()->registerSource('admin', fx::path('floxim', '/Admin/templates'));
         $loaded = true;
         return $this;
     }

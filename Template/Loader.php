@@ -99,7 +99,7 @@ class Loader {
             foreach (self::$source_paths[$template_name] as $sp) {
                 try {
                     $this->add_source($sp);
-                } catch (Exception $ex) {
+                } catch (\Exception $ex) {
 
                 }
             }
