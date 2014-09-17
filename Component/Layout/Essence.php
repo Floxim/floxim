@@ -3,6 +3,7 @@
 namespace Floxim\Floxim\Component\Layout;
 
 use Floxim\Floxim\System;
+use Floxim\Floxim\System\Fx as fx;
 
 class Essence extends System\Essence {
     public function get_path() {

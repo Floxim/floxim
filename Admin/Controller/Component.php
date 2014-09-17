@@ -78,8 +78,13 @@ class Component extends Admin {
     }
     
     public function get_component_submenu($component) {
-    	// todo: psr0 need fix
-    	$essence_code = str_replace('fx_','',get_class($component));
+    	// todo: psr0 need verify
+        // Floxim\Floxim\Component\Widget\Essence
+        if (preg_match('#^Floxim\\\Floxim\\\Component\\\Widget\\\#i',get_class($component))) {
+            $essence_code = 'widget';
+        } else {
+            $essence_code = 'component';
+        }
     	
     	$titles = array(
             'component' => array(

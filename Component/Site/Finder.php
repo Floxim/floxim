@@ -3,6 +3,7 @@
 namespace Floxim\Floxim\Component\Site;
 
 use Floxim\Floxim\System;
+use Floxim\Floxim\System\Fx as fx;
 
 class Finder extends System\Data {
 

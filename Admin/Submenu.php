@@ -177,7 +177,7 @@ class Submenu {
             $this->backlink = 'component.all';
             $cid = $component['id'];
             // print the main sections
-            $submenu_items = fx_controller_admin_component::get_component_submenu($component);
+            $submenu_items = Controller\Component::get_component_submenu($component);
             foreach ($submenu_items as $item) {
             	$this->menu[] = $this->add_node(
                         $item['code'], 
@@ -204,7 +204,7 @@ class Submenu {
             }
             */
             // todo: psr0 need fix - not found class fx_controller_admin_template
-            $items = fx_controller_admin_template::get_template_submenu($layout);
+            $items = Controller\Template::get_template_submenu($layout);
             foreach ($items as $item) {
             	$this->menu []= $this->add_node($item['code'], $item['title'], $item['url']);
             }
@@ -220,7 +220,7 @@ class Submenu {
             $this->title = $widget['name'];
             $this->backlink = 'widget.all';
             
-            $items = fx_controller_admin_component::get_component_submenu($widget);
+            $items = Controller\Component::get_component_submenu($widget);
             foreach ($items as $item) {
             	$this->menu []= $this->add_node($item['code'], $item['title'], $item['url']);
             }

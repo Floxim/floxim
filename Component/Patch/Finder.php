@@ -3,6 +3,7 @@
 namespace Floxim\Floxim\Component\Patch;
 
 use Floxim\Floxim\System;
+use Floxim\Floxim\System\Fx as fx;
 
 class Finder extends System\Data {
     public function check_updates() {

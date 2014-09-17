@@ -211,4 +211,13 @@ class Util {
     public function camelToUnderscore($string) {
         return strtolower(preg_replace('/([a-z])([A-Z])/', '$1_$2', $string));
     }
+
+    public function underscoreToCamal($string) {
+        $parts = explode('_', $string);
+        $camelized = '';
+        foreach($parts as $part) {
+            $camelized .= ucfirst($part);
+        }
+        return $camelized;
+    }
 }

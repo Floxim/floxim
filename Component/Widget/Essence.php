@@ -3,6 +3,7 @@
 namespace Floxim\Floxim\Component\Widget;
 
 use Floxim\Floxim\System;
+use Floxim\Floxim\System\Fx as fx;
 
 class Essence extends System\Essence {
 

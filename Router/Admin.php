@@ -32,8 +32,12 @@ class Admin extends Base {
             $action .= "_save";
         }
 
-        // todo: psr0 need fix
-        $classname = 'fx_controller_' . $essence;
+        $path = explode('_',$essence,2);
+        if ($path[0] == 'admin') {
+            $classname = 'Floxim\\Floxim\\Admin\\Controller\\'.fx::util()->underscoreToCamal($path[1]);
+        } else {
+            // todo: psr0 what?
+        }
        
         try {
             $controller = new $classname($input, $action);
