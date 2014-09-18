@@ -1,20 +1,20 @@
 .img-list .images {
-    padding: 10px;
+    //padding: 10px;
     overflow: hidden;
     background: #fff;
     font-size: 18px;
-    width: 881px;
-    height: 571px;
+    //width: 881px;
+    //height: 571px;
     position: relative;
     color: #33373a;
 }
 
 .img-block {
     display:none;
-    position: absolute;
-    width: 881px;
-    top:10px;
-    left:10px;
+    //position: absolute;
+    //width: 881px;
+    //top:10px;
+    //left:10px;
 }
 
 .img-block-active {
@@ -25,7 +25,8 @@
 .img-block img {
     display: block;
     margin: 0 auto;
-    max-width:880px; 
+    //max-width:880px; 
+    max-width:100%;
     max-height:550px;
 }
 .img-block .left { float: left; }

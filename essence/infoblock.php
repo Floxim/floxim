@@ -268,6 +268,9 @@ class fx_infoblock extends fx_essence  implements fx_template_essence {
             $this['controller'] = $ctr[0];
             $this['action'] = $ctr[1];
         }
+        if (isset($data['name'])) {
+            $this['name'] = $data['name'];
+        }
     }
 
 
