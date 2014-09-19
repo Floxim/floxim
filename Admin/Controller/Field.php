@@ -13,8 +13,9 @@ class Field extends Admin {
         
         $items = $essence->all_fields();
         $ar = array('type' => 'list', 'filter' => true, 'is_sortable' => true);
-        // todo: psr0 need fix
-        $essence_code = str_replace('fx_','',get_class($essence));
+
+        // todo: psr0 need verify
+        $essence_code=fx::getComponentNameByClass(get_class($essence));
         
         $ar['essence'] = 'field';
         $ar['values'] = array();

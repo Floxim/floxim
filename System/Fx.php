@@ -83,6 +83,8 @@ class Fx {
                 'faq', 
                 'widget_grid',
                 'widget_map',
+                'widget_custom_code',
+                'widget_blockset',
                 'news',
                 'page', 
                 'person', 
@@ -111,6 +113,29 @@ class Fx {
             array_unshift($path, 'floxim');
         }
         return join(".", $path);
+    }
+
+    public static function getComponentParts($name) {
+        $parts = array(
+            'vendor' => '',
+            'module' => '',
+            'component' => '',
+            'type' => '',
+            'action' => '',
+        );
+        $name = self::getComponentFullName($name);
+        $act_path = explode(':', $name);
+        $path = explode(".", $act_path[0]);
+
+        $parts['vendor'] = $path[0];
+        $parts['module'] = $path[1];
+        $parts['component'] = $path[2];
+
+        if (isset($act_path[1])) {
+            $parts['action'] = $act_path[1];
+        }
+
+        return $parts;
     }
     
     /**
@@ -142,14 +167,19 @@ class Fx {
     }
 
     public static function getComponentNameByClass($class) {
-        // \Floxim\Main\User\Controller
-        // \Vendor\Module\Component\[Controller|Finder|Essence]
+        // Floxim\Main\User\Controller
+        // Vendor\Module\Component\[Controller|Finder|Essence]
+        // Floxim\Floxim\Component\Component\[Essence|Finder]
         $path = explode('\\',$class);
         array_pop($path);
         $path=array_map(function($a){
             return fx::util()->camelToUnderscore($a);
         },$path);
-        return join('.',$path);
+        $name = join('.',$path);
+        if (strpos($name,'floxim.floxim.component') === 0) {
+            return $path[3];
+        }
+        return $name;
     }
     // todo: psr0 need verify - recursive request finder class
     /**
@@ -308,6 +338,7 @@ class Fx {
          */
         if (count($c_parts) === 1) {
             $c_class = fx::getComponentNamespace($c_parts[0]) . '\\Controller';
+            //say(debug_backtrace());
             $controller_instance = new $c_class($input, $action);
             return $controller_instance;
         }

@@ -79,12 +79,7 @@ class Component extends Admin {
     
     public function get_component_submenu($component) {
     	// todo: psr0 need verify
-        // Floxim\Floxim\Component\Widget\Essence
-        if (preg_match('#^Floxim\\\Floxim\\\Component\\\Widget\\\#i',get_class($component))) {
-            $essence_code = 'widget';
-        } else {
-            $essence_code = 'component';
-        }
+        $essence_code = fx::getComponentNameByClass(get_class($component));
     	
     	$titles = array(
             'component' => array(
@@ -122,14 +117,14 @@ class Component extends Admin {
     }
     
     protected function _get_component_templates($ctr_essence) {
-        // todo: psr0 need fix
-        $ctr_type = ($ctr_essence instanceof fx_widget ? 'widget' : 'component');
-        $controller_name = $ctr_type.'_'.$ctr_essence['keyword'];
+        // todo: psr0 need verify
+        $ctr_type = fx::getComponentNameByClass(get_class($ctr_essence));
+        $controller_name = ($ctr_type == 'widget' ? $ctr_type.'_' : '').$ctr_essence['keyword'];
         $controller = fx::controller($controller_name);
         $actions = $controller->get_actions();
         $templates = array();
         foreach (array_keys($actions) as $action_code) {
-            $action_controller = fx::controller($controller_name.'.'.$action_code);
+            $action_controller = fx::controller($controller_name.':'.$action_code);
             $action_templates = $action_controller->get_available_templates();
             foreach ($action_templates as $atpl) {
                 $templates[$atpl['full_id']] = $atpl;
@@ -226,8 +221,8 @@ class Component extends Admin {
     }
     
     public static function make_breadcrumb($component, $action, $breadcrumb) {
-        // todo: psr0 need fix
-    	$essence_code = str_replace('fx_','',get_class($component));
+        // todo: psr0 need verify
+        $essence_code = fx::getComponentNameByClass(get_class($component));
     	$submenu = self::get_component_submenu($component);
         $submenu_first = current($submenu);
     	$breadcrumb->add_item(self::_essence_types($essence_code), '#admin.'.$essence_code.'.all');
@@ -337,8 +332,8 @@ class Component extends Admin {
     }
     
     public function templates($component, $input) {
-        // todo: psr0 need fix
-        $ctr_type = $component instanceof fx_widget ? 'widget' : 'component';
+        // todo: psr0 need verify
+        $ctr_type = fx::getComponentNameByClass(get_class($component));
         $this->response->submenu->set_subactive('templates');
         if (isset($input['params'][2])) {
             return $this->template(array('template_full_id' => $input['params'][2]));
@@ -378,7 +373,7 @@ class Component extends Admin {
             }
             if (preg_match("~^layout_~", $tpl['full_id'])) {
                 $layout_code = 
-                    preg_replace('~\..+$~', '', 
+                    preg_replace('~\:.+$~', '',
                         preg_replace('~layout_~', '', $tpl['full_id'])
                     );
                 $r['source'] = 
@@ -387,12 +382,10 @@ class Component extends Admin {
                                 one()->
                                 get('name') . ' (layout)';
             } else {
-                $ctr_code = 
-                    preg_replace('~\..+$~', '', 
-                        preg_replace('~^(component_|widget_)~', '', $tpl['full_id'])
-                    );
+                // todo: psr0 need verify
+                $c_parts = fx::getComponentParts($tpl['full_id']);
                 $r['source'] = 
-                    fx::data($ctr_type, $ctr_code)->get('name');
+                    fx::data($ctr_type, $c_parts['component'])->get('name');
             }
             $r['file'] = fx::path()->to_http($tpl['file']);
             $field['values'][] = $r;
