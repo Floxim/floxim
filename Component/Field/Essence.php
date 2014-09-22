@@ -176,10 +176,10 @@ class Essence extends System\Essence {
     }
 
     public function check_rights() {
-        if ($this['type_of_edit'] == Field::EDIT_ALL || empty($this['type_of_edit'])) {
+        if ($this['type_of_edit'] == Essence::EDIT_ALL || empty($this['type_of_edit'])) {
             return true;
         }
-        if ($this['type_of_edit'] == Field::EDIT_ADMIN) {
+        if ($this['type_of_edit'] == Essence::EDIT_ADMIN) {
             return fx::is_admin();
         }
 

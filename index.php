@@ -1,4 +1,6 @@
 <?php
+
+use Floxim\Floxim\System\Fx as fx;
 // if request directs right to /floxim/index.php 
 // e.g. admin interface
 // current dir /vendor/floxim/floxim/

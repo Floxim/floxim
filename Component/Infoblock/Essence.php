@@ -432,7 +432,7 @@ class Essence extends System\Essence  implements Template\Essence {
         }
         
         $ib_info['controller'] = $this->get_prop_inherited('controller')
-                                    .'.'.$this->get_prop_inherited('action');
+                                    .':'.$this->get_prop_inherited('action');
         
         $meta = array(
             'data-fx_infoblock' => $ib_info,

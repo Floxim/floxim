@@ -60,8 +60,8 @@ class Page {
             
             if (!file_exists($full_target_path) || filemtime($full_source_path) > filemtime($full_target_path)) {
                 fx::profiler()->block('compile less '.$file);
-                $http_base = preg_replace("~[^/]+$~", '', $file);
-                
+                $http_base = fx::path()->to_http(preg_replace("~[^/]+$~", '', $file));
+
                 $less = new \lessc();
                 
                 $file_content = file_get_contents($full_source_path);
@@ -74,6 +74,9 @@ class Page {
             $this->_files_css[]= $target_path;
             $this->_all_css[] = $target_path;
             return;
+        }
+        if (!preg_match("~^https?://~", $file)) {
+            $file = fx::path()->to_http($file);
         }
         $this->_files_css[] = $file;
     }

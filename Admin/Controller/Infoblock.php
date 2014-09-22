@@ -744,7 +744,8 @@ class Infoblock extends Admin {
             foreach ($content_groups as $content_id => $content_vars) {
                 if ($content_id !== 'new') {
                     $fv = $content_vars->first();
-                    $c_content = fx::content($fv['content_type_id'], $content_id);
+                    // todo: verify $fv['content_type_id'] -> $fv['var']['content_type_id']
+                    $c_content = fx::content($fv['var']['content_type_id'], $content_id);
                     if (!$c_content) {
                         continue;
                     }
