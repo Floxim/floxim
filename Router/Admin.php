@@ -8,7 +8,7 @@ use Floxim\Floxim\System\Fx as fx;
 class Admin extends Base {
     
     public function route($url = null, $context = null) {
-        $regexp = "/((floxim\/)+|(floxim\/index.php)+)$/";
+        $regexp = "/((vendor\/Floxim\/Floxim\/)+|(vendor\/Floxim\/Floxim\/index.php)+)$/";
         if (!preg_match($regexp, $url)) {
             return null;
         }

@@ -81,13 +81,14 @@ class Config {
         $this->config['path.jquery-ui'] = fx::path('floxim', 'lib/js/jquery-ui-1.10.3.custom.min.js');
         
         $this->config['templates.cache_dir'] = fx::path('files', 'compiled_templates');
+        $this->config['HTTP_ACTION_LINK'] = fx::path()->http('floxim', 'index.php');
         /*
         $this->config['DOCUMENT_ROOT'] = DOCUMENT_ROOT;
         $this->config['HTTP_HOST'] = getenv("HTTP_HOST");
         $this->config['FLOXIM_FOLDER'] = $this->config['DOCUMENT_ROOT'];
 
         $this->config['HTTP_MODULE_PATH'] = $this->config['HTTP_ROOT_PATH'] . 'modules/';
-        $this->config['HTTP_ACTION_LINK'] = $this->config['HTTP_ROOT_PATH'] . 'index.php';
+
 
         $this->config['ADMIN_PATH'] = $this->config['HTTP_ROOT_PATH'].'admin/';
         $this->config['ADMIN_TEMPLATE'] = $this->config['ADMIN_PATH'].'skins/default/';
