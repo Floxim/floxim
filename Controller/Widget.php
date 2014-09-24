@@ -11,6 +11,7 @@ class Widget extends Frontoffice {
     protected function _get_config_sources() {
         $sources = array();
         $c_name = $this->get_controller_name();
+        // todo: psr0 need fix
         $std_conf = fx::config()->DOCUMENT_ROOT.'/floxim/std/widget/'.$c_name."/".$c_name.'.cfg.php';
         $custom_conf = fx::config()->DOCUMENT_ROOT.'/widget/'.$c_name."/".$c_name.'.cfg.php';
         if (file_exists($std_conf)) {

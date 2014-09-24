@@ -40,7 +40,7 @@ window.fx_livesearch = function (node) {
     
     this.getSuggestParams = function() {
         var params = {
-            url: '/floxim/index.php',
+            url: '/vendor/Floxim/Floxim/index.php',
             data:{
                 essence:'content',
                 action:'livesearch',
