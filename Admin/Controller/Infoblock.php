@@ -5,6 +5,7 @@ namespace Floxim\Floxim\Admin\Controller;
 use Floxim\Floxim\Component\Component;
 use Floxim\Floxim\Component\Infoblock as CompInfoblock;
 use Floxim\Floxim\System;
+use Floxim\Floxim\Template;
 use Floxim\Floxim\System\Fx as fx;
 
 class Infoblock extends Admin {

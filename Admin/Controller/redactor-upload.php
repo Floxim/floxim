@@ -1,5 +1,6 @@
 <?php
-require_once '../../../boot.php';
+//todo: psr0 need fix - move code to exists controller or create new
+require_once '../../../../../boot.php';
 
 use Floxim\Floxim\System\Fx as fx;
 

@@ -122,7 +122,7 @@ class Finder extends System\Data {
                 fx::hooks()->create(null,'component_create',array('data'=>$data));
             }
             return $result;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $result['status'] = 'error';
             $result['error'] = $e->getMessage();
             if ($component['id']) {

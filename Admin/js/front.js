@@ -996,7 +996,7 @@ fx_front.prototype.hilight = function() {
     
     var is_view_mode = $fx.front.mode === 'view';
     
-    var noimg = '/floxim/admin/style/images/no.png';
+    var noimg = '/vendor/Floxim/Floxim/Admin/style/images/no.png';
     items.filter('img').each(function() {
         var $img = $(this);
         var src = $img.attr('src');
