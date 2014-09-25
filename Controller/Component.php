@@ -211,11 +211,9 @@ class Component extends Frontoffice {
             'content_type' => 'infoblock',
             'conditions' => array(
                 'controller' => array(
-                    $com->get_all_variants()->get_values(function($ch) {
-                        return 'component_'.$ch['keyword'];
-                    }),
+                    $com->get_all_variants()->get_values('keyword'),
                     'IN'
-                ),//'component_'.$com['keyword'],
+                ),
                 'site_id' => fx::env('site_id'),
                 'action' => array( array('list_infoblock', 'list_selected'), 'IN')
             )

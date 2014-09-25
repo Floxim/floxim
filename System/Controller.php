@@ -281,7 +281,7 @@ class Controller {
         }
         $settings = $params['settings'];
         foreach ($settings as $prop => $value) {
-            if ($value instanceof Closure) {
+            if ($value instanceof \Closure) {
                 $settings[$prop] = call_user_func($value, $this);
             }
         }

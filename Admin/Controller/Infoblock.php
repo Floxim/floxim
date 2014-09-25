@@ -205,6 +205,7 @@ class Infoblock extends Admin {
         }
         foreach ($infoblock['params'] as $ib_param => $ib_param_value) {
             if (isset($settings[$ib_param])) {
+                fx::log($settings, $ib_param, $ib_param_value);
                 $settings[$ib_param]['value'] = $ib_param_value;
             }
         }

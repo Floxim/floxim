@@ -445,7 +445,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable {
     
     public function get_values($field, $key_field = null, $as_collection = false) {
         $result = array();
-        if ($field instanceof Closure) {
+        if ($field instanceof \Closure) {
             foreach ($this->data as $k => $v) {
                 $res_key = $key_field ? $v[$key_field] : $k;
                 $result[$res_key] = call_user_func($field, $v, $k);
