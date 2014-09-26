@@ -12,19 +12,19 @@ class Field  {
         $this->_meta = $meta;
     }
     
-    public function get_value(){
+    public function getValue(){
         return $this->_value;
     }
     
-    public function set_value($value) {
+    public function setValue($value) {
         $this->_value = $value;
     }
     
-    public function set_meta($key, $value) {
+    public function setMeta($key, $value) {
         $this->_meta[$key] = $value;
     }
     
-    public function get_meta($key) {
+    public function getMeta($key) {
         return isset($this->_meta[$key])? $this->_meta[$key] : null;
     }
     
@@ -56,13 +56,13 @@ class Field  {
      * Postprocessing fields
      * @param string $html
      */
-    public static function replace_fields($html) {
+    public static function replaceFields($html) {
         if (!strpos($html, '#fxf')) {
             return $html;
         }
-        $html = self::_replace_fields_in_atts($html);
-        $html = self::_replace_fields_wrapped_by_tag($html);
-        $html = self::_replace_fields_in_text($html);
+        $html = self::replaceFieldsInAtts($html);
+        $html = self::replaceFieldsWrappedByTag($html);
+        $html = self::replaceFieldsInText($html);
         foreach (self::$fields_to_drop as $id) {
             unset(self::$replacements[$id]);
         }
@@ -70,12 +70,12 @@ class Field  {
         return $html;
     }
     
-    protected static function _replace_fields_in_atts($html) {
+    protected static function replaceFieldsInAtts($html) {
         $html = preg_replace_callback(
             "~<[^>]+###fxf\d+###[^>]+?>~", 
             function($tag_matches) {
                 $att_fields = array();
-                $tag = preg_replace_callback(
+                $tag = pregReplaceCallback(
                     '~###fxf(\d+)###~', 
                     function($field_matches) use (&$att_fields) {
                         $replacement = Field::$replacements[$field_matches[1]];
@@ -90,8 +90,8 @@ class Field  {
                 foreach ($att_fields as $afk => $af) {
                     $tag_meta['data-fx_template_var_'.$afk] = $af;
                 }
-                $tag = HtmlToken::create_standalone($tag);
-                $tag->add_meta($tag_meta);
+                $tag = HtmlToken::createStandalone($tag);
+                $tag->addMeta($tag_meta);
                 $tag = $tag->serialize();
                 return $tag;
             }, 
@@ -100,13 +100,13 @@ class Field  {
         return $html;
     }
 
-    protected static function _replace_fields_wrapped_by_tag($html) {
+    protected static function replaceFieldsWrappedByTag($html) {
         $html = preg_replace_callback(
             "~(<[a-z0-9_-]+[^>]*?>)(\s*?)###fxf(\d+)###(\s*?</[a-z0-9_-]+>)~", 
             function($matches) {
                 $replacement = Field::$replacements[$matches[3]];
-                $tag = HtmlToken::create_standalone($matches[1]);
-                $tag->add_meta(array(
+                $tag = HtmlToken::createStandalone($matches[1]);
+                $tag->addMeta(array(
                     'class' => 'fx_template_var',
                     'data-fx_var' => $replacement[1]
                 ));
@@ -120,7 +120,7 @@ class Field  {
         return $html;
     }
     
-    protected static function _replace_fields_in_text($html) {
+    protected static function replaceFieldsInText($html) {
         $html = preg_replace_callback(
             "~###fxf(\d+)###~", 
             function($matches) {
@@ -132,10 +132,10 @@ class Field  {
                 ) {
                     $tag_name = 'div';
                 } else {
-                    $tag_name = Html::get_wrapper_tag($replacement[2]);
+                    $tag_name = Html::getWrapperTag($replacement[2]);
                 }
-                $tag = HtmlToken::create_standalone('<'.$tag_name.'>');
-                $tag->add_meta(array(
+                $tag = HtmlToken::createStandalone('<'.$tag_name.'>');
+                $tag->addMeta(array(
                     'class' => 'fx_template_var',
                     'data-fx_var' => $replacement[1]
                 ));

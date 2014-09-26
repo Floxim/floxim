@@ -14,20 +14,20 @@ class Baze extends Field\Entity {
     protected $_js_field = array();
     protected $_wrap_tag = 'span';
 
-    public function get_edit_jsdata($content) {
-        $data = $this->get_js_field($content);
+    public function getEditJsdata($content) {
+        $data = $this->getJsField($content);
         unset($data['label'], $data['id'], $data['parent'], $data['name']);
         return $data;
     }
 
-    public function get_js_field($content) {
+    public function getJsField($content) {
 
         $name = $this['keyword'];
         $this->_js_field = array(
             'id' => $name, 
             'name' => $name, 
             'label' => $this['name'],
-            'type' => $this->get_type_keyword()
+            'type' => $this->getTypeKeyword()
         );
         $this->_js_field['value'] = $this['default'];
         if ($content[$name]) {
@@ -37,24 +37,24 @@ class Baze extends Field\Entity {
     }
 
 
-    public function get_html($opt = '') {
+    public function getHtml($opt = '') {
         $asterisk = $this['not_null'] ? '<span class="fx_field_asterisk">*</span>' : '';
-        return '<div class="'.$this->get_wrap_css_class().'"><label>'.$this['description'].$asterisk.'</label>:'.$this->get_input($opt).'</div>';
+        return '<div class="'.$this->getWrapCssClass().'"><label>'.$this['description'].$asterisk.'</label>:'.$this->get_input($opt).'</div>';
     }
 
-    protected function get_css_class() {
-        return "fx_form_field fx_form_field_".Field\Entity::get_type_by_id($this->type_id).($this->is_error ? " fx_form_field_error" : "");
+    protected function getCssClass() {
+        return "fx_form_field fx_form_field_".Field\Entity::getTypeById($this->type_id).($this->is_error ? " fx_form_field_error" : "");
     }
 
-    protected function get_wrap_css_class() {
-        return "fx_form_wrap fx_form_wrap_".Field\Entity::get_type_by_id($this->type_id);
+    protected function getWrapCssClass() {
+        return "fx_form_wrap fx_form_wrap_".Field\Entity::getTypeById($this->type_id);
     }
 
-    public function set_value($value) {
+    public function setValue($value) {
         $this->value = $value;
     }
 
-    public function validate_value($value) {
+    public function validateValue($value) {
         if (!is_array($value) && !is_object($value)) {
             $value = trim($value);
         }
@@ -65,23 +65,23 @@ class Baze extends Field\Entity {
         return true;
     }
 
-    public function get_savestring() {
+    public function getSavestring() {
         return $this->value;
     }
 
-    public function get_error() {
+    public function getError() {
         return $this->error;
     }
 
-    public function set_error() {
+    public function setError() {
         $this->is_error = true;
     }
     
-    public function get_export_value ( $value, $dir = '' ) {
+    public function getExportValue ( $value, $dir = '' ) {
         return $value;
     }
     
-    public function get_import_value ( $content, $value, $dir = '' ) {
+    public function getImportValue ( $content, $value, $dir = '' ) {
         return $value;
     }
 }

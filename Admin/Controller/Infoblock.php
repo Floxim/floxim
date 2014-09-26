@@ -9,21 +9,12 @@ use Floxim\Floxim\Template;
 use Floxim\Floxim\System\Fx as fx;
 
 class Infoblock extends Admin {
-
-    protected function _component_actions ( $key ) {
-        $arr = array(
-            'listing' => fx::alang('List','system'),
-            'mirror' => fx::alang('Mirror','system'),
-            'record' => fx::alang('Single entry','system')
-        );
-        return empty($key) ? $arr : $arr[$key];
-    }
     
     
     /**
      * Select a controller action
      */
-    public function select_controller($input) {
+    public function selectController($input) {
         $fields = array(
             $this->ui->hidden('action', 'select_settings'),
             $this->ui->hidden('entity', 'infoblock'),
@@ -59,7 +50,7 @@ class Infoblock extends Admin {
                 'children' => array()
             );
             $ctrl = fx::controller($controller_name);
-            $actions = $ctrl->get_actions();
+            $actions = $ctrl->getActions();
             foreach ($actions as $action_code => $action_info) {
                 // do not show actions starting with "_"
                 if (preg_match("~^_~", $action_code)) {
@@ -72,7 +63,7 @@ class Infoblock extends Admin {
                     }
                 }
                 $act_ctr = fx::controller($controller_name.':'.$action_code);
-                $act_templates = $act_ctr->get_available_templates(fx::env('layout'), $area_meta);
+                $act_templates = $act_ctr->getAvailableTemplates(fx::env('layout'), $area_meta);
                 if (count($act_templates) == 0) {
                     continue;
                 }
@@ -110,11 +101,11 @@ class Infoblock extends Admin {
                 $fields['controller']['values'][]= $c_item;
             }
         }
-        $this->response->add_form_button(array(
+        $this->response->addFormButton(array(
             'key' => 'next',
             'label' => fx::alang('Next','system')
         ));
-        $this->response->add_form_button(array(
+        $this->response->addFormButton(array(
             'key' => 'finish',
             'label' => fx::alang('Finish','system')
         ));
@@ -128,26 +119,11 @@ class Infoblock extends Admin {
         return $result;
     }
     
-    protected function _get_controller_name($controller) {
-        list($controller, $action) = explode(".", $controller);
-        list($type, $controller) = explode("_", $controller);
-        if (!$type) {
-            return $controller;
-        }
-        $ctr = fx::data($type, $controller);
-        if ($type == 'component') {
-            $action_name = $this->_component_actions($action);
-        } else {
-            $action_name = fx::alang('Widget','system');
-        }
-        return $ctr['name'].' / '.$action_name;
-    }
-    
     /**
      * The choice of settings for infoblock
      */
     
-    public function select_settings($input) {
+    public function selectSettings($input) {
         // The current, editable) InfoBlock
     	$infoblock = null;
         
@@ -162,9 +138,9 @@ class Infoblock extends Admin {
     	if (isset($input['id']) && is_numeric($input['id'])) {
             // Edit existing InfoBlock
             $infoblock = fx::data('infoblock', $input['id']);
-            $controller = $infoblock->get_prop_inherited('controller');
-            $action = $infoblock->get_prop_inherited('action');
-            $i2l = $infoblock->get_visual();
+            $controller = $infoblock->getPropInherited('controller');
+            $action = $infoblock->getPropInherited('action');
+            $i2l = $infoblock->getVisual();
     	} else {
             // Create a new type and ID of the controller received from the previous step
             list($controller, $action) = explode(".", $input['controller']);
@@ -187,20 +163,20 @@ class Infoblock extends Admin {
                 'layout_id' => fx::env('layout'),
                 'priority' => $priority
             ));
-            $infoblock->set_visual($i2l);
+            $infoblock->setVisual($i2l);
     	}
 
         if (!isset($infoblock['params']) || !is_array($infoblock['params'])) {
-            $infoblock->add_params(array());
+            $infoblock->addParams(array());
         }
         
         $controller = fx::controller(
                 $controller.':'.$action,
                 array('infoblock_id' => $infoblock['id']) + $infoblock['params']
         );
-        $settings = $controller->get_action_settings($action);
+        $settings = $controller->getActionSettings($action);
         if (!$infoblock['id']) {
-            $cfg = $controller->get_config();
+            $cfg = $controller->getConfig();
             $infoblock['name'] = $cfg['actions'][$action]['name'];
         }
         foreach ($infoblock['params'] as $ib_param => $ib_param_value) {
@@ -209,7 +185,7 @@ class Infoblock extends Admin {
                 $settings[$ib_param]['value'] = $ib_param_value;
             }
         }
-        $this->response->add_fields(
+        $this->response->addFields(
             array(array(
                 'label' => fx::alang('Block name','system'),
                 'name' => 'name', 
@@ -218,14 +194,14 @@ class Infoblock extends Admin {
             ))
         );
         
-        $this->response->add_fields($settings, false, 'params');
+        $this->response->addFields($settings, false, 'params');
         
-        $format_fields = $this->_get_format_fields($infoblock, $area_meta);
-        $this->response->add_fields($format_fields, false, 'visual');
+        $format_fields = $this->getFormatFields($infoblock, $area_meta);
+        $this->response->addFields($format_fields, false, 'visual');
         
         $c_page = fx::data('page', $input['page_id']);
-        $scope_fields = $this->_get_scope_fields($infoblock, $c_page);
-        $this->response->add_fields($scope_fields, false, 'scope');
+        $scope_fields = $this->getScopeFields($infoblock, $c_page);
+        $this->response->addFields($scope_fields, false, 'scope');
         
         if ($input['settings_sent'] == 'true') {
             $infoblock['name'] = $input['name'];
@@ -245,11 +221,11 @@ class Infoblock extends Admin {
             
             $infoblock['params'] = $action_params;
             if (isset($controller) && $controller instanceof System\Controller) {
-                $controller->set_input($action_params);
+                $controller->setInput($action_params);
             }
             
-            $infoblock->set_scope_string($input['scope']['complex_scope']);
-            $infoblock->dig_set('scope.visibility', $input['scope']['visibility']);
+            $infoblock->setScopeString($input['scope']['complex_scope']);
+            $infoblock->digSet('scope.visibility', $input['scope']['visibility']);
             
             $i2l['wrapper'] = fx::dig($input, 'visual.wrapper');
             $i2l['template'] = fx::dig($input, 'visual.template');
@@ -257,19 +233,19 @@ class Infoblock extends Admin {
             $infoblock->save();
             $i2l['infoblock_id'] = $infoblock['id'];
             $i2l->save();
-            $controller->set_param('infoblock_id', $infoblock['id']);
+            $controller->setParam('infoblock_id', $infoblock['id']);
             if (isset($controller)) {
                 if ($is_new_infoblock) {
-                    $controller->handle_infoblock('install', $infoblock, $input);
+                    $controller->handleInfoblock('install', $infoblock, $input);
                 }
-                $controller->handle_infoblock('save', $infoblock, $input);
+                $controller->handleInfoblock('save', $infoblock, $input);
             }
-            $this->response->set_status_ok();
-            $this->response->set_prop('infoblock_id', $infoblock['id']);
+            $this->response->setStatusOk();
+            $this->response->setProp('infoblock_id', $infoblock['id']);
             return;
         }
     	
-        $actions = $controller->get_actions();
+        $actions = $controller->getActions();
         $action_name = $actions[$action]['name'];
         
         if (!$infoblock['id']) {
@@ -291,11 +267,11 @@ class Infoblock extends Admin {
             $this->ui->hidden('mode', $input['mode'])
     	);
     	
-    	$this->response->add_fields($fields);
+    	$this->response->addFields($fields);
     	return $result;
     }
     
-    public function list_for_page($input) {
+    public function listForPage($input) {
         $fields = array();
         if (!$input['page_id']) {
             return;
@@ -303,17 +279,17 @@ class Infoblock extends Admin {
         $c_page = fx::content('page', $input['page_id']);
         fx::env('page', $c_page);
         
-        $infoblocks = $c_page->get_page_infoblocks();
+        $infoblocks = $c_page->getPageInfoblocks();
         
         if ($input['data_sent']) {
             foreach ($infoblocks as $ib) {
                 if (isset($input['area'][$ib['id']])) {
-                    $vis = $ib->get_visual();
+                    $vis = $ib->getVisual();
                     $vis['area'] = $input['area'][$ib['id']];
                     $vis->save();
                 }
                 if (isset($input['visibility'][$ib['id']])) {
-                    $ib->dig_set('scope.visibility', $input['visibility'][$ib['id']]);
+                    $ib->digSet('scope.visibility', $input['visibility'][$ib['id']]);
                     $ib->save();
                 }
             }
@@ -333,10 +309,10 @@ class Infoblock extends Admin {
         );
         
         foreach ($infoblocks as $ib) {
-            if ($ib->is_layout()) {
+            if ($ib->isLayout()) {
                 continue;
             }
-            $vis = $ib->get_visual();
+            $vis = $ib->getVisual();
             $list['values'] []= array(
                 'id' => $ib['id'],
                 'name' => $ib['name'],
@@ -345,7 +321,7 @@ class Infoblock extends Admin {
                     'field' => array(
                         'name' => 'visibility['.$ib['id'].']',
                         'type' => 'select',
-                        'values' => $this->_get_scope_visibility_options(),
+                        'values' => $this->getScopeVisibilityOptions(),
                         'value' => $ib['scope']['visibility']
                     )
                 ),
@@ -365,20 +341,20 @@ class Infoblock extends Admin {
         return $res;
     }
     
-    public function layout_settings($input) {
+    public function layoutSettings($input) {
         $c_page = fx::data('page', $input['page_id']);
-        $infoblock = $c_page->get_layout_infoblock();
+        $infoblock = $c_page->getLayoutInfoblock();
         
         $c_page = fx::data('page', $input['page_id']);
-        $scope_fields = $this->_get_scope_fields($infoblock, $c_page);
+        $scope_fields = $this->getScopeFields($infoblock, $c_page);
         unset($scope_fields['visibility']);
-        $this->response->add_fields($scope_fields, false, 'scope');
+        $this->response->addFields($scope_fields, false, 'scope');
         
-        $format_fields = $this->_get_format_fields($infoblock);
-        $this->response->add_fields($format_fields, false, 'visual');
+        $format_fields = $this->getFormatFields($infoblock);
+        $this->response->addFields($format_fields, false, 'visual');
         
         if ($input['settings_sent']) {
-            $this->_save_layout_settings($infoblock, $input);
+            $this->saveLayoutSettings($infoblock, $input);
             return;
         }
         
@@ -390,22 +366,22 @@ class Infoblock extends Admin {
             $this->ui->hidden('page_id', $input['page_id'])
     	);
         
-        $existing = fx::data('infoblock')->is_layout()->get_for_page($c_page['id'], false);
+        $existing = fx::data('infoblock')->isLayout()->getForPage($c_page['id'], false);
         if (count($existing) > 1) {
-            $existing = fx::data('infoblock')->sort_infoblocks($existing);
+            $existing = fx::data('infoblock')->sortInfoblocks($existing);
             $next = $existing->eq(1);
             $fields []= array(
                 'type' => 'button',
                 'role' => 'preset',
                 'label' => fx::alang('Drop current rule and use the wider one', 'system'),
                 'data' => array(
-                    'scope[complex_scope]' => $next->get_scope_string(),
-                    'visual[template]' => $next->get_prop_inherited('visual.template')
+                    'scope[complex_scope]' => $next->getScopeString(),
+                    'visual[template]' => $next->getPropInherited('visual.template')
                 )
             );
         }
     	
-    	$this->response->add_fields($fields);
+    	$this->response->addFields($fields);
         $res = array(
             'header' => fx::alang('Layout settings','system'),
             'view' => 'horizontal'
@@ -413,9 +389,9 @@ class Infoblock extends Admin {
         return $res;
     }
     
-    protected function _save_layout_settings($infoblock, $input) {
-        $visual = $infoblock->get_visual();
-        $old_scope = $infoblock->get_scope_string();
+    protected function saveLayoutSettings($infoblock, $input) {
+        $visual = $infoblock->getVisual();
+        $old_scope = $infoblock->getScopeString();
         $new_scope = $input['scope']['complex_scope'];
         
         $old_layout = $visual['template'];
@@ -449,11 +425,11 @@ class Infoblock extends Admin {
             else {
                 $update = true;
             }
-            $existing = fx::data('infoblock')->is_layout()->get_for_page($c_page['id'], false);
+            $existing = fx::data('infoblock')->isLayout()->getForPage($c_page['id'], false);
             if (count($existing) > 1) {
-                $existing = fx::data('infoblock')->sort_infoblocks($existing);
+                $existing = fx::data('infoblock')->sortInfoblocks($existing);
                 $next = $existing->eq(1);
-                if ($next->get_scope_string() == $new_scope && $next->get_prop_inherited('visual.template') == $new_layout) {
+                if ($next->getScopeString() == $new_scope && $next->getPropInherited('visual.template') == $new_layout) {
                     $delete = true;
                 }
             }
@@ -466,7 +442,7 @@ class Infoblock extends Admin {
             $new_ib = fx::data('infoblock')->create($params);
             $c_parent = $infoblock['parent_infoblock_id'];
             $new_ib['parent_infoblock_id'] =  $c_parent ? $c_parent : $infoblock['id'];
-            $new_ib->set_scope_string($new_scope);
+            $new_ib->setScopeString($new_scope);
             $new_vis = fx::data('infoblock_visual')->create(array(
                 'layout_id' => $visual['layout_id']
             ));
@@ -475,7 +451,7 @@ class Infoblock extends Admin {
             $new_vis['infoblock_id'] = $new_ib['id'];
             $new_vis->save();
         } elseif ($update) {
-            $infoblock->set_scope_string($new_scope);
+            $infoblock->setScopeString($new_scope);
             $visual->set('template', $new_layout);
             $infoblock->save();
             $visual->save();
@@ -488,7 +464,7 @@ class Infoblock extends Admin {
      * @param fx_content_page $c_page - page, where he opened the window settings
      */
     
-    protected function _get_scope_fields(
+    protected function getScopeFields(
                 CompInfoblock\Entity $infoblock,
                 \Floxim\Main\Page\Entity $c_page
             ) {
@@ -497,7 +473,7 @@ class Infoblock extends Admin {
         // format: [page_id]-[descendants|children|this]-[|type_id]
         
         
-        $path_ids = $c_page->get_parent_ids();
+        $path_ids = $c_page->getParentIds();
         $path = fx::data('page', $path_ids);
         $path []= $c_page;
         $path_count = count($path);
@@ -510,7 +486,7 @@ class Infoblock extends Admin {
             $container_infoblock = fx::data('infoblock', $infoblock['container_infoblock_id']);
         }
         
-        $c_scope_code = $infoblock->get_scope_string();
+        $c_scope_code = $infoblock->getScopeString();
         
         $vals = array();
         
@@ -559,13 +535,13 @@ class Infoblock extends Admin {
         
         if (!$infoblock['id']) {
             if ($container_infoblock) {
-                $c_scope_code = $container_infoblock->get_scope_string();
+                $c_scope_code = $container_infoblock->getScopeString();
                 if ($container_infoblock['scope']['pages'] === 'this') {
                     $scope_field_type = 'hidden';
                 }
             } else {
-                $ctr = $infoblock->init_controller();
-                $cfg = $ctr->get_config(true);
+                $ctr = $infoblock->initController();
+                $cfg = $ctr->getConfig(true);
                 if (isset($cfg['default_scope']) && is_callable($cfg['default_scope'])) {
                     $c_scope_code = call_user_func($cfg['default_scope']);
                 }
@@ -584,13 +560,13 @@ class Infoblock extends Admin {
             'label' => 'Visibility',
             'name' => 'visibility',
             'join_with' => 'complex_scope',
-            'values' => $this->_get_scope_visibility_options(),
+            'values' => $this->getScopeVisibilityOptions(),
             'value' => $infoblock['scope']['visibility']
         );
         return $fields;
     }
     
-    protected function _get_scope_visibility_options() {
+    protected function getScopeVisibilityOptions() {
         return array(
             'all' => 'Everybody',
             'admin' => 'Admins',
@@ -602,8 +578,8 @@ class Infoblock extends Admin {
     /*
      * Receipt of the form fields for the tab "How to show"
      */
-    protected function _get_format_fields(CompInfoblock\Entity $infoblock, $area_meta = null) {
-        $i2l = $infoblock->get_visual();
+    protected function getFormatFields(CompInfoblock\Entity $infoblock, $area_meta = null) {
+        $i2l = $infoblock->getVisual();
         $fields = array(
             array(
                 'label' => "Area",
@@ -612,7 +588,7 @@ class Infoblock extends Admin {
                 'type' => 'hidden'
             )
         );
-        $area_suit = Template\Suitable::parse_area_suit_prop($area_meta['suit']);
+        $area_suit = Template\Suitable::parseAreaSuitProp($area_meta['suit']);
         
         $force_wrapper = $area_suit['force_wrapper'];
         $default_wrapper = $area_suit['default_wrapper'];
@@ -629,14 +605,14 @@ class Infoblock extends Admin {
         }
         $layout_name = fx::data('layout', $i2l['layout_id'])->get('keyword');
         
-        $controller_name = $infoblock->get_prop_inherited('controller');
+        $controller_name = $infoblock->getPropInherited('controller');
 
-        $action_name = $infoblock->get_prop_inherited('action');
+        $action_name = $infoblock->getPropInherited('action');
 
         // Collect available wrappers
         $layout_tpl = fx::template('layout_'.$layout_name);
         if ( $layout_tpl ) {
-            $template_variants = $layout_tpl->get_template_variants();
+            $template_variants = $layout_tpl->getTemplateVariants();
             foreach ($template_variants  as $tplv) {
                 $full_id = 'layout_'.$layout_name.'.'.$tplv['id'];
                 if ($tplv['suit'] == 'local' && $area_meta['id'] != $tplv['area']) {
@@ -657,7 +633,7 @@ class Infoblock extends Admin {
 
         // Collect the available templates
         $controller = fx::controller($controller_name.':'.$action_name);
-        $tmps = $controller->get_available_templates($layout_name, $area_meta);
+        $tmps = $controller->getAvailableTemplates($layout_name, $area_meta);
         if ( !empty($tmps) ) {
             foreach ( $tmps as $template ) {
                 $templates[] = array($template['full_id'], $template['name']);
@@ -695,7 +671,7 @@ class Infoblock extends Admin {
     /*
      * Save multiple fields from the front-end
      */
-    public function save_var($input) {
+    public function saveVar($input) {
         /* @var $ib fx_infoblock */
         
         if (isset($input['page_id'])) {
@@ -704,13 +680,13 @@ class Infoblock extends Admin {
         
         $ib = fx::data('infoblock', $input['infoblock']['id']);
         // for InfoBlock-layouts always save the parameters in the root InfoBlock
-        if ($ib->is_layout()) {
-            $root_ib = $ib->get_root_infoblock();
-            $ib_visual = $root_ib->get_visual();
+        if ($ib->isLayout()) {
+            $root_ib = $ib->getRootInfoblock();
+            $ib_visual = $root_ib->getVisual();
         } elseif ( ($visual_id = fx::dig($input, 'infoblock.visual_id')) ) {
             $ib_visual = fx::data('infoblock_visual', $visual_id);
         } else {
-            $ib_visual = $ib->get_visual();
+            $ib_visual = $ib->getVisual();
         }
         
         // group vars by type to process content vars first
@@ -757,7 +733,7 @@ class Infoblock extends Admin {
                 foreach ($content_vars as $var)  {
                     $vals[$var['var']['name']] = $var['value'];
                 }
-                $contents[$content_id]->set_field_values($vals, array_keys($vals));
+                $contents[$content_id]->setFieldValues($vals, array_keys($vals));
             }
         }
         
@@ -798,14 +774,14 @@ class Infoblock extends Admin {
                 $value = $c_var['value'];
                 fx::log('ibp', $var, $value);
                 if (!isset($var['stored']) || ($var['stored'] && $var['stored'] != 'false')) {
-                    $ib->dig_set('params.'.$var['name'], $value);      
+                    $ib->digSet('params.'.$var['name'], $value);      
                 }
                 $modified_params[$var['name']] = $value;
             }
             if (count($modified_params) > 0) {
-                $controller = $ib->init_controller();
+                $controller = $ib->initController();
                 $ib->save();
-                $controller->handle_infoblock('save', $ib, array('params' => $modified_params));
+                $controller->handleInfoblock('save', $ib, array('params' => $modified_params));
             }
         }
         return;
@@ -840,14 +816,14 @@ class Infoblock extends Admin {
                     $contents[$var['content_id']]['values'][$var['name']] = $value;
                 }
             } elseif ($var['var_type'] == 'ib_param') {
-                $controller = $ib->init_controller();
+                $controller = $ib->initController();
                 $ib_params = $ib['params'];
                 $ib_params[$var['name']] = $value;
                 $ib['params'] = $ib_params;
                 if (!isset($var['stored']) || ($var['stored'] && $var['stored'] != 'false')) {
                     $ib->save();
                 }
-                $controller->handle_infoblock('save', $ib, array('params' => array($var['name'] => $value)));
+                $controller->handleInfoblock('save', $ib, array('params' => array($var['name'] => $value)));
             }
         }
         fx::log($contents, count($contents), $input);
@@ -857,12 +833,12 @@ class Infoblock extends Admin {
                 fx::data('component', $content_info['content_type_id'])->get('keyword')
             );
             if ($content_id) {
-                $content = $finder->get_by_id($content_id);
+                $content = $finder->getById($content_id);
             } else {
                 $content = $finder->create( isset($input['new_entity_props']) ? $input['new_entity_props'] : array());
             }
             if ($content) {
-                $content->set_field_values($content_info['values'], array_keys($content_info['values']));
+                $content->setFieldValues($content_info['values'], array_keys($content_info['values']));
                 fx::log('saving', $content);
                 return;
                 $content->save();
@@ -873,12 +849,12 @@ class Infoblock extends Admin {
     }
     
     
-    public function delete_infoblock($input) {
+    public function deleteInfoblock($input) {
         $infoblock = fx::data('infoblock', $input['id']);
         if (!$infoblock) {
             return;
         }
-        $controller = $infoblock->init_controller();
+        $controller = $infoblock->initController();
         $fields = array(
             array(
                 'label' => fx::alang('I am REALLY sure','system'),
@@ -890,7 +866,7 @@ class Infoblock extends Admin {
             $this->ui->hidden('action', 'delete_infoblock'),
             $this->ui->hidden('fx_admin', true)
         );        
-        $ib_content = $infoblock->get_owned_content();
+        $ib_content = $infoblock->getOwnedContent();
         if ($ib_content->length > 0) {
             $fields[]= array(
                 'name' => 'content_handle',
@@ -905,9 +881,9 @@ class Infoblock extends Admin {
             unset($fields[0]);
             $fields []= array('type' => 'html', 'html' => fx::alang('Layouts can not be deleted','system'));
         }
-        $this->response->add_fields($fields);
+        $this->response->addFields($fields);
         if ($input['delete_confirm']) {
-            $this->response->set_status_ok();
+            $this->response->setStatusOk();
             if ($ib_content) {
                 if ($input['content_handle'] == 'delete') {
                     foreach ($ib_content as $ci) {
@@ -919,13 +895,13 @@ class Infoblock extends Admin {
                     }
                 }
             }
-            $controller->handle_infoblock('delete', $infoblock, $input);
+            $controller->handleInfoblock('delete', $infoblock, $input);
             $infoblock->delete();
         }
     }
     
-    protected function _get_area_visual($area, $layout_id, $site_id) {
-        return fx::db()->get_results(
+    protected function getAreaVisual($area, $layout_id, $site_id) {
+        return fx::db()->getResults(
                 "SELECT V.* 
                     FROM {{infoblock}} as I 
                     INNER JOIN {{infoblock_visual}} as V ON V.infoblock_id = I.id
@@ -956,7 +932,7 @@ class Infoblock extends Admin {
         // need to rearrange the blocks from the old area
         // until very stupidly, in order
         if ($vis['area'] != $input['area']) {
-            $source_vis = $this->_get_area_visual(
+            $source_vis = $this->getAreaVisual(
                 $vis['area'], $vis['layout_id'], $infoblock['site_id']
             );
             $cpos = 1;
@@ -973,7 +949,7 @@ class Infoblock extends Admin {
             }
         }
         
-        $target_vis = $this->_get_area_visual($input['area'], $vis['layout_id'], $infoblock['site_id']);
+        $target_vis = $this->getAreaVisual($input['area'], $vis['layout_id'], $infoblock['site_id']);
         
         $next_visual_id = isset($input['next_visual_id']) ? $input['next_visual_id'] : null;
         
@@ -1016,7 +992,7 @@ class Infoblock extends Admin {
         if ($next_vis) {
             $new_priority = $next_vis['priority']-1;
         } else {
-            $last_priority = fx::db()->get_col(
+            $last_priority = fx::db()->getCol(
                 'SELECT MAX(priority) FROM {{infoblock_visual}} 
                  WHERE layout_id = '.$vis['layout_id'].' AND area = "'.$input['area'].'"'
             );

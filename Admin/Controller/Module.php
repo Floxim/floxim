@@ -11,33 +11,33 @@ class Module extends Admin {
     public function basesettings($input) {
         // todo: psr0 need fix
         $module_keyword = str_replace('fx_controller_admin_module_', '', get_class($this));
-        $this->response->submenu->set_menu('settings')->set_subactive('settings-'.$module_keyword);
-        $this->response->breadcrumb->add_item( fx::alang('Configuring the','system') . ' ' . $module_keyword);
+        $this->response->submenu->setMenu('settings')->setSubactive('settings-'.$module_keyword);
+        $this->response->breadcrumb->addItem( fx::alang('Configuring the','system') . ' ' . $module_keyword);
         $this->settings();
     }
 
     public function settings() {
-        $this->response->add_field($this->ui->label( fx::alang('Override the settings in the class','system') ));
+        $this->response->addField($this->ui->label( fx::alang('Override the settings in the class','system') ));
     }
 
-    public function basesettings_save($input) {
-        $this->settings_save($input);
+    public function basesettingsSave($input) {
+        $this->settingsSave($input);
     }
 
-    public function settings_save($input) {
+    public function settingsSave($input) {
         ;
     }
 
-    public function add_node($id, $name, $href = '') {
+    public function addNode($id, $name, $href = '') {
         $this->menu_items[] = array('id' => $id, 'name' => $name, 'href' => $href);
     }
 
-    public function get_menu_items() {
-        $this->init_menu();
+    public function getMenuItems() {
+        $this->initMenu();
         return $this->menu_items;
     }
 
-    public function init_menu() {
+    public function initMenu() {
 
     }
 

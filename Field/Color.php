@@ -3,7 +3,7 @@
 namespace Floxim\Floxim\Field;
 
 class Color extends Baze {
-    public function get_sql_type() {
+    public function getSqlType() {
         return "VARCHAR(7)";
     }
 }

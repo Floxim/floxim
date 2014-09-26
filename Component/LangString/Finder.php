@@ -12,7 +12,7 @@ class Finder extends System\Data {
     const DEFAULT_DICT = 'system';
 
 
-    public function set_lang ($lang=null) {
+    public function setLang ($lang=null) {
         if (!$lang) {
             $this->lang = fx::config()->ADMIN_LANG;
         } else {
@@ -20,23 +20,23 @@ class Finder extends System\Data {
         }
     }
     
-    public function get_multi_lang_fields() {
+    public function getMultiLangFields() {
         return array(
             'lang'
         );
     }
 
 
-    public function get_string($string, $dict = null) {
+    public function getString($string, $dict = null) {
         if ($dict === null) {
             $dict = self::DEFAULT_DICT;
         }
         if (!isset($this->lang)) {
-            $this->set_lang();
+            $this->setLang();
         }
 
         if (!isset($this->loaded[$dict][$this->lang])) {
-            $this->load_dictionary($dict);
+            $this->loadDictionary($dict);
         }
         if (array_key_exists($string, $this->loaded[$dict][$this->lang])) {
             $res = $this->loaded[$dict][$this->lang][$string];
@@ -44,27 +44,27 @@ class Finder extends System\Data {
         }
     }
 
-    public function check_string($string, $dict) {
+    public function checkString($string, $dict) {
 
         if (!isset($this->lang)) {
-            $this->set_lang();
+            $this->setLang();
         }
 
         if (!isset($this->loaded[$dict][$this->lang])) {
-            $this->load_dictionary($dict);
+            $this->loadDictionary($dict);
         }
         return array_key_exists($string, $this->loaded[$dict][$this->lang]);
     }
 
-    public function get_dict_file($dict) {
+    public function getDictFile($dict) {
 
         if (!isset($this->lang)) {
-            $this->set_lang();
+            $this->setLang();
         }
         return fx::path('files', '/php_dictionaries/'.$this->lang.'.'.$dict.'.php');
     }
 
-    public function drop_dict_files($dict) {
+    public function dropDictFiles($dict) {
         $files = glob(fx::path('files', '/php_dictionaries/*.'.$dict.'.php'));
         if (!$files) {
             return;
@@ -74,21 +74,21 @@ class Finder extends System\Data {
         }
     }
 
-    protected function load_dictionary($dict) {
+    protected function loadDictionary($dict) {
 
         if (!isset($this->lang)) {
-            $this->set_lang();
+            $this->setLang();
         }
-        $dict_file = self::get_dict_file($dict);
+        $dict_file = self::getDictFile($dict);
         if (!file_exists($dict_file)) {
-            $this->dump_dictionary($dict, $dict_file);
+            $this->dumpDictionary($dict, $dict_file);
         }
         $this->loaded[$dict][$this->lang] = @include($dict_file);
     }
 
-    protected function dump_dictionary($dict, $file) {
+    protected function dumpDictionary($dict, $file) {
         if (!isset($this->lang)) {
-            $this->set_lang();
+            $this->setLang();
         }
         $data = fx::data('lang_string')->where('dict', $dict)->all();
         $res = array();
@@ -99,10 +99,10 @@ class Finder extends System\Data {
         fx::files()->writefile($file, "<?php\nreturn ".var_export($res,1).";");
     }
 
-    public function add_string($string, $dict = null) {
+    public function addString($string, $dict = null) {
 
         if (!isset($this->lang)) {
-            $this->set_lang();
+            $this->setLang();
         }
         if ($dict === null) {
             $dict = self::DEFAULT_DICT;

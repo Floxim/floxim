@@ -16,7 +16,7 @@ class Finder extends System\Data {
         );
     }
     
-    public function get_multi_lang_fields() {
+    public function getMultiLangFields() {
         return array(
             'name',
             'description'
@@ -29,15 +29,15 @@ class Finder extends System\Data {
         $this->order = 'priority';
     }
 
-    public function get_by_component($component_id) {
+    public function getByComponent($component_id) {
         return $this->where('component_id', $component_id)->all();
     }
 
-    public function get_class_name($data = array()) {
+    public function getClassName($data = array()) {
         //$class_name  = parent::get_class_name($data);
         if (isset($data['type'])) {
             // todo: psr0 need verify
-            $type = Entity::get_type_by_id($data['type']);
+            $type = Entity::getTypeById($data['type']);
             $type = ucfirst($type);
             $class_name = '\\Floxim\\Floxim\\Field\\'.$type;
             //$class_name .= '_'.Entity::get_type_by_id($data['type']);

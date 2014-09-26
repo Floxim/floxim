@@ -5,12 +5,12 @@ use Floxim\Floxim\System\Fx as fx;
 
 class Select extends Baze {
 
-    public function get_js_field($content) {
+    public function getJsField($content) {
         
-        parent::get_js_field($content);
+        parent::getJsField($content);
 
-        $values = $this->get_options();
-        if (!$this->is_not_null() && is_array($values)) {
+        $values = $this->getOptions();
+        if (!$this->isNotNull() && is_array($values)) {
             $values = array_merge(
                 array( array('', fx::alang('-- choose something --', 'system'))),
                 $values
@@ -26,7 +26,7 @@ class Select extends Baze {
         return $this->_js_field;
     }
 
-    public function format_settings() {
+    public function formatSettings() {
         $fields = array();
 
         $fields[] = array(
@@ -51,7 +51,7 @@ class Select extends Baze {
         return $fields;
     }
 
-    public function get_options() {
+    public function getOptions() {
         $values = array();
         if ($this->format['values']) {
             foreach ($this->format['values'] as $v) {
@@ -61,7 +61,7 @@ class Select extends Baze {
         return $values;
     }
     
-    public function get_values() {
+    public function getValues() {
         $values = array();
         if ($this->format['values']) {
             foreach ($this->format['values'] as $v) {
@@ -71,7 +71,7 @@ class Select extends Baze {
         return $values;
     }
 
-    public function get_sql_type() {
+    public function getSqlType() {
         return "VARCHAR (255)";
     }
 }

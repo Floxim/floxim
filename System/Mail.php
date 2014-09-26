@@ -36,7 +36,7 @@ class Mail {
             }
         }
         
-        $this->set_params($params);
+        $this->setParams($params);
     }
     
     /**
@@ -44,7 +44,7 @@ class Mail {
      * @param array $params
      * @return \Floxim\Floxim\System\Mail
      */
-    public function set_params($params = array()) {
+    public function setParams($params = array()) {
         
         if (isset($params['template'])) {
             $this->template($params['template']);
@@ -179,7 +179,7 @@ class Mail {
                 $this->bcc($tpl['bcc']);
             }
         }
-        $this->_process_template();
+        $this->processTemplate();
         return $this;
     }
     
@@ -200,7 +200,7 @@ class Mail {
         return $this;
     }
     
-    protected function _process_template() {
+    protected function processTemplate() {
         if (!$this->_mail_template) {
             return;
         }
@@ -209,7 +209,7 @@ class Mail {
         foreach ($props as $prop) {
             $prop_tpl = $this->_mail_template[$prop];
             $tpl = fx::template()->virtual($prop_tpl);
-            $tpl->is_admin(false);
+            $tpl->isAdmin(false);
             $res[$prop] = $tpl->render($this->_data);
         }
         $this->subject($res['subject']);

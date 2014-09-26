@@ -22,14 +22,14 @@ class ProfilerBlock {
         return $this->name.' <sup>'.$this->level.'</sup>';
     }
 
-    public function add_child($block) {
+    public function addChild($block) {
         array_unshift($this->children, $block);
     }
 
-    public function get_tags() {
+    public function getTags() {
         $tags = $this->tags;
         foreach ($this->children as  $ch) {
-            $child_tags = $ch->get_tags();
+            $child_tags = $ch->getTags();
             foreach ($child_tags as $tag => $time) {
                 if (!isset($tags[$tag])) {
                     $tags[$tag] = 0;
@@ -70,7 +70,7 @@ class ProfilerBlock {
             </ul>
         <?php
         }
-        $tags = $this->get_tags();
+        $tags = $this->getTags();
         if ($this->level > 0 && count($tags) > 0) {
             ?>
             <ul>

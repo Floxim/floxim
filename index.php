@@ -15,7 +15,7 @@ register_shutdown_function(function() {
             $res .= ob_get_clean();
         }
         if (fx::config('dev.on')) {
-            echo fx::page()->post_process($res);
+            echo fx::page()->postProcess($res);
         }
         fx::log('down', $res, $_SERVER, $_POST); 
     }
@@ -26,7 +26,7 @@ $result = fx::router()->route();
 if ( $result ) {
     $result = $result instanceof \Floxim\Floxim\System\Controller ? $result->process() : $result;
     if (fx::env('ajax')) {
-        fx::page()->add_assets_ajax();
+        fx::page()->addAssetsAjax();
     }
     echo $result;
     fx::env()->set('complete_ok', true);

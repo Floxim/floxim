@@ -6,9 +6,9 @@ use Floxim\Floxim\System\Fx as fx;
 
 class File extends Admin {
 
-    public function upload_save($input) {
+    public function uploadSave($input) {
         $path = 'content';
-        $result = fx::files()->save_file($input['file'], $path);
+        $result = fx::files()->saveFile($input['file'], $path);
         return $result;
     }
 }

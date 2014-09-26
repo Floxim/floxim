@@ -63,7 +63,7 @@ class Profiler {
             do {
                 $c_target = array_pop($roots);
             } while ($b->level <= $c_target->level);
-            $c_target->add_child($b);
+            $c_target->addChild($b);
             $roots[]= $c_target;
             $roots[]= $b;
         }

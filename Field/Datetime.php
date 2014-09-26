@@ -6,10 +6,10 @@ class Datetime extends Baze {
 
     protected $day = '', $month = '', $year = '', $hours = '', $minutes = '', $seconds = '';
 
-    public function get_js_field($content) {
-        parent::get_js_field($content);
+    public function getJsField($content) {
+        parent::getJsField($content);
 
-        $this->load_values_by_str($content[$this['keyword']]);
+        $this->loadValuesByStr($content[$this['keyword']]);
         $this->_js_field['day'] = $this->day;
         $this->_js_field['month'] = $this->month;
         $this->_js_field['year'] = $this->year;
@@ -20,7 +20,7 @@ class Datetime extends Baze {
         return $this->_js_field;
     }
 
-    public function set_value($value) {
+    public function setValue($value) {
         if (is_array($value)) {
             $this->day = $value['day'];
             $this->month = $value['month'];
@@ -33,17 +33,17 @@ class Datetime extends Baze {
             $this->value .= $this->hours.':'.$this->minutes.':'.$this->seconds;
         } else if ($value) {
             $this->value = $value;
-            $this->load_values_by_str($this->value);
+            $this->loadValuesByStr($this->value);
         } else {
             $this->value = '';
         }
     }
 
-    public function get_sql_type() {
+    public function getSqlType() {
         return "DATETIME";
     }
 
-    protected function load_values_by_str($str) {
+    protected function loadValuesByStr($str) {
         if ($str) {
             $timestamp = strtotime($str);
             $this->day = date('d', $timestamp);
@@ -55,7 +55,7 @@ class Datetime extends Baze {
         }
     }
     
-    public function get_savestring() {
+    public function getSavestring() {
         $v = $this->value;
         if (empty($v)) {
             return null;

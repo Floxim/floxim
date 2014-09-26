@@ -12,8 +12,8 @@ class Configjs {
     $this->options['login'] = 'admin';
     $this->options['action_link'] = fx::config()->HTTP_ACTION_LINK;
 
-    $this->add_more_menu(Controller\Adminpanel::get_more_menu());
-    $this->add_buttons(Controller\Adminpanel::get_buttons());
+    $this->addMoreMenu(Controller\Adminpanel::getMoreMenu());
+    $this->addButtons(Controller\Adminpanel::getButtons());
     
     
     $main_menu = array(
@@ -44,36 +44,36 @@ class Configjs {
             );
         }
     }
-    $this->add_main_menu($main_menu);
+    $this->addMainMenu($main_menu);
   }
 
-  public function get_config() {
+  public function getConfig() {
     return json_encode($this->options);
   }
 
-  public function add_menu ( $structure ) {
+  public function addMenu ( $structure ) {
     $this->options['menu'] = $structure;
   }
 
-  public function add_main_menu ( $structure ) {
+  public function addMainMenu ( $structure ) {
     $this->options['mainmenu'] = $structure;
   }
 
-  public function add_more_menu ( $structure ) {
+  public function addMoreMenu ( $structure ) {
     $this->options['more_menu'] = $structure;
   }
 
-  public function add_buttons ( $buttons ) {
+  public function addButtons ( $buttons ) {
     $this->options['buttons'] = $buttons;
   }
 
-  public function add_additional_text ( $text ) {
+  public function addAdditionalText ( $text ) {
       $this->options['additional_text'] = $text;
   }
 
   // Additional admin panel
   // e.g. layout preview navigation
-  public function add_additional_panel ( $data ) {
+  public function addAdditionalPanel ( $data ) {
       $this->options['additional_panel'] = $data;
   }
 }

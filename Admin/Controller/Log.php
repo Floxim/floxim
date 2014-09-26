@@ -22,7 +22,7 @@ class Log extends Admin {
         $field['values'] = array();
         
         $logger = fx::debug();
-        $index = $logger->get_index();
+        $index = $logger->getIndex();
         
         foreach ($index as $item) {
             $r = array(
@@ -39,8 +39,8 @@ class Log extends Admin {
             $field['values'][]= $r;
         }
         
-        $this->response->breadcrumb->add_item(fx::alang('Logs'), '#admin.log.all');
-        $this->response->submenu->set_menu('log');
+        $this->response->breadcrumb->addItem(fx::alang('Logs'), '#admin.log.all');
+        $this->response->submenu->setMenu('log');
         $fields = array();
         if (count($field['values']) > 0) {
             $fields []= array(
@@ -62,14 +62,14 @@ class Log extends Admin {
         
         $logger = fx::debug();
         
-        $meta = $logger->get_index($log_id);
+        $meta = $logger->getIndex($log_id);
         
-        $this->response->breadcrumb->add_item(fx::alang('Logs'), '#admin.log.all');
+        $this->response->breadcrumb->addItem(fx::alang('Logs'), '#admin.log.all');
         if ($meta) {
             $name = '['.$meta['method'].'] '.$meta['url'].', '.date('d.m.Y, H:i:s', round($meta['start']));
-            $this->response->breadcrumb->add_item($name, '#admin.log.show');
+            $this->response->breadcrumb->addItem($name, '#admin.log.show');
         }
-        $this->response->submenu->set_menu('log');
+        $this->response->submenu->setMenu('log');
         return array(
             'fields' => array(
                 array(
@@ -93,18 +93,18 @@ class Log extends Admin {
                 ),
                 array(
                     'type' => 'html',
-                    'html' => '<div class="fx_debug_entries">'.$logger->show_item($log_id)."</div>"
+                    'html' => '<div class="fx_debug_entries">'.$logger->showItem($log_id)."</div>"
                 )
             )
         );
     }
     
-    public function drop_log($input) {
-        fx::debug()->drop_log($input['log_id']);
+    public function dropLog($input) {
+        fx::debug()->dropLog($input['log_id']);
         return array('reload' => '#admin.log.all');
     }
-    public function drop_all() {
-        fx::debug()->drop_all();
+    public function dropAll() {
+        fx::debug()->dropAll();
         return array('reload' => '#admin.log.all');
     }
 }

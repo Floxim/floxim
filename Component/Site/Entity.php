@@ -16,19 +16,19 @@ class Entity extends System\Entity {
         return $res;
     }
     
-    protected function _before_delete() {
-        $this->delete_infoblocks();
-        $this->delete_content();
+    protected function beforeDelete() {
+        $this->deleteInfoblocks();
+        $this->deleteContent();
     }
     
-    protected function delete_content() {
+    protected function deleteContent() {
         $content = fx::data('content')->where('site_id', $this['id'])->all();
         foreach ( $content as $content_item ) {
             $content_item->delete();
         }
     }
     
-    protected function delete_infoblocks () {
+    protected function deleteInfoblocks () {
         $infoblocks = fx::data('infoblock')->where('site_id', $this['id'])->all();
         foreach ($infoblocks as $infoblock) {
             $infoblock->delete();
@@ -39,7 +39,7 @@ class Entity extends System\Entity {
      * Get all host names bound to the site
      * @return array
      */
-    public function get_all_hosts() {
+    public function getAllHosts() {
         $hosts = array();
         $hosts[]= trim($this['domain']);
         if (empty($this['mirrors'])) {

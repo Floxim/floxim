@@ -6,8 +6,8 @@ use Floxim\Floxim\System;
 use Floxim\Floxim\System\Fx as fx;
 
 class Entity extends System\Entity {
-    protected  function _before_save() {
-        parent::_before_save();
+    protected  function beforeSave() {
+        parent::beforeSave();
         unset($this['is_stub']);
         if (!$this['priority'] && $this['layout_id']) {
             $last_vis = fx::data('infoblock_visual')
@@ -18,15 +18,15 @@ class Entity extends System\Entity {
                             ->one();
             $this['priority'] = $last_vis['priority']+1;
         }
-        $files = $this->get_modified_file_params();
+        $files = $this->getModifiedFileParams();
         foreach ($files as $f) {
             fx::files()->rm($f);
         }
     }
     
-    protected  function _before_delete() {
-        parent::_before_delete();
-        $files = $this->get_file_params();
+    protected  function beforeDelete() {
+        parent::beforeDelete();
+        $files = $this->getFileParams();
         foreach ($files as $f) {
             fx::files()->rm($f);
         }
@@ -35,7 +35,7 @@ class Entity extends System\Entity {
     /**
      * find file paths inside params collection and drop them
      */
-    public function get_file_params(System\Collection $params = null) {
+    public function getFileParams(System\Collection $params = null) {
         if (!$params) {
             $params = fx::collection($this['template_visual'])->concat($this['wrapper_visual']);
         }
@@ -46,21 +46,21 @@ class Entity extends System\Entity {
             if (empty($p)) {
                 continue;
             }
-            if ($path->is_inside($p, $files_path) && $path->is_file($p)) {
+            if ($path->isInside($p, $files_path) && $path->isFile($p)) {
                 $res []= $p;
             }
         }
         return $res;
     }
     
-    public function get_modified_file_params() {
+    public function getModifiedFileParams() {
         $params = fx::collection();
         foreach (array('template_visual', 'wrapper_visual') as $field) {
-            if (!$this->is_modified($field)) {
+            if (!$this->isModified($field)) {
                 continue;
             }
             $new = $this[$field];
-            $old = $this->get_old($field);
+            $old = $this->getOld($field);
             if (!$old || !is_array($old)) {
                 continue;
             }
@@ -70,6 +70,6 @@ class Entity extends System\Entity {
                 }
             }
         }
-        return $this->get_file_params($params);
+        return $this->getFileParams($params);
     }
 }

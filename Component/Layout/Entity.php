@@ -6,19 +6,19 @@ use Floxim\Floxim\System;
 use Floxim\Floxim\System\Fx as fx;
 
 class Entity extends System\Entity {
-    public function get_path() {
+    public function getPath() {
         return fx::config()->HTTP_LAYOUT_PATH.$this['keyword'].'/';
     }
     
-    protected function _before_insert() {
-        parent::_before_insert();
-        $path = $this->get_path();
+    protected function beforeInsert() {
+        parent::beforeInsert();
+        $path = $this->getPath();
         fx::files()->mkdir($path);
     }
     
-    protected function _after_delete() {
-        parent::_after_delete();
-        $path = fx::path()->to_abs($this->get_path());
+    protected function afterDelete() {
+        parent::afterDelete();
+        $path = fx::path()->toAbs($this->getPath());
         fx::files()->rm($path);
     }
 }

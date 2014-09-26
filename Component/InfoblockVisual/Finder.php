@@ -14,8 +14,8 @@ class Finder extends System\Data {
         $this->order('priority');
     }
     
-    public function get_for_infoblocks(System\Collection $infoblocks, $layout_id) {
-        $ib_ids = $infoblocks->get_values('id');
+    public function getForInfoblocks(System\Collection $infoblocks, $layout_id) {
+        $ib_ids = $infoblocks->getValues('id');
         $this->where('infoblock_id', $ib_ids);
         if ($layout_id) {
             $this->where('layout_id', $layout_id);

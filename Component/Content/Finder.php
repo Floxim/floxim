@@ -12,15 +12,15 @@ class Finder extends System\Data {
     public function relations() {
         $relations = array();
         $fields = fx::data('component', $this->component_id)->
-                    all_fields()->
+                    allFields()->
                     find('type', array(Field\Entity::FIELD_LINK, Field\Entity::FIELD_MULTILINK));
         foreach ($fields as $f) {
-            if ( !($relation = $f->get_relation()) ) {
+            if ( !($relation = $f->getRelation()) ) {
                 continue;
             }
             switch ($f['type']) {
                 case Field\Entity::FIELD_LINK:
-                    $relations[$f->get_prop_name()] = $relation;
+                    $relations[$f->getPropName()] = $relation;
                     break;
                 case Field\Entity::FIELD_MULTILINK:
                     $relations[$f['keyword']] = $relation;
@@ -30,24 +30,24 @@ class Finder extends System\Data {
         return $relations;
     }
     
-    protected function _get_default_relation_finder($rel) {
-        $finder = parent::_get_default_relation_finder($rel);
+    protected function getDefaultRelationFinder($rel) {
+        $finder = parent::getDefaultRelationFinder($rel);
         if ( ! $finder instanceof Lang\Finder ) {
             $finder->order('priority');
         }
         return $finder;
     }
     
-    public function get_data() {
-        $data = parent::get_data();
-        $types_by_id = $data->get_values('type', 'id');
+    public function getData() {
+        $data = parent::getData();
+        $types_by_id = $data->getValues('type', 'id');
         unset($types_by_id['']);
         if (count($types_by_id) == 0) {
             return $data;
         }
         $base_component = fx::data('component', $this->component_id);
         $base_type = $base_component['keyword'];
-        $base_table = $base_component->get_content_table();
+        $base_table = $base_component->getContentTable();
         $types = array();
         foreach ($types_by_id as $id => $type) {
             if ($type != $base_type) {
@@ -61,7 +61,7 @@ class Finder extends System\Data {
             if (!$type) {
                 continue;
             }
-            $type_tables = array_reverse(fx::data($type)->get_tables());
+            $type_tables = array_reverse(fx::data($type)->getTables());
             $missed_tables = array();
             foreach ($type_tables as $table) {
                 if ($table == $base_table) {
@@ -75,7 +75,7 @@ class Finder extends System\Data {
                 $q .= " INNER JOIN `{{".$mt.'}}` ON `{{'.$mt.'}}`.id = `{{'.$base_missed_table."}}`.id\n";
             }
             $q .= "WHERE `{{".$base_missed_table."}}`.id IN (".join(", ", $ids).")";
-            $extensions = fx::db()->get_indexed_results($q);
+            $extensions = fx::db()->getIndexedResults($q);
             
             foreach ($data as $data_index => $data_item) {
                 $extension = $extensions[$data_item['id']];
@@ -89,14 +89,14 @@ class Finder extends System\Data {
     
     protected static $_com_tables_cache = array();
     
-    public function get_tables() {
+    public function getTables() {
         if (isset(self::$_com_tables_cache[$this->component_id])) {
             return self::$_com_tables_cache[$this->component_id];
         }
-        $chain = fx::data('component', $this->component_id)->get_chain();
+        $chain = fx::data('component', $this->component_id)->getChain();
         $tables = array();
         foreach ($chain as $comp) {
-            $tables []= $comp->get_content_table();
+            $tables []= $comp->getContentTable();
         }
         self::$_com_tables_cache[$this->component_id] = $tables;
         return $tables;
@@ -109,36 +109,36 @@ class Finder extends System\Data {
         
         $class = array_reverse(explode("\\", get_class($this)));
         $com = fx::util()->camelToUnderscore($class[1]);
-        $this->set_component($com);
+        $this->setComponent($com);
     }
     
-    public function set_component($component_id_or_code) {
+    public function setComponent($component_id_or_code) {
         $component = fx::data('component', $component_id_or_code);
         if (!$component) {
             say($component_id_or_code,$component,debug_backtrace());
             die("Component not found: ".$component_id_or_code);
         }
         $this->component_id = $component['id'];
-        $this->table = $component->get_content_table();
+        $this->table = $component->getContentTable();
         return $this;
     }
     
-    public function get_component() {
+    public function getComponent() {
         return fx::data('component', $this->component_id);
     }
     
-    public function content_exists() {
+    public function contentExists() {
         static $content_by_type = null;
         if (is_null($content_by_type)) {
-            $res = fx::db()->get_results(
+            $res = fx::db()->getResults(
                 'select `type`, count(*) as cnt '
                     . 'from {{content}} '
                     . 'where site_id = "'.fx::env('site_id').'" '
                     . 'group by `type`'
             );
-            $content_by_type = fx::collection($res)->get_values('cnt', 'type');
+            $content_by_type = fx::collection($res)->getValues('cnt', 'type');
         }
-        return isset($content_by_type[$this->get_component()->get('keyword')]);
+        return isset($content_by_type[$this->getComponent()->get('keyword')]);
     }
 
     /**
@@ -152,7 +152,7 @@ class Finder extends System\Data {
         $component = fx::data('component', $this->component_id);
         
         $obj['created'] = date("Y-m-d H:i:s");
-        if ($component['keyword'] != 'user' && ($user = fx::env()->get_user())) {
+        if ($component['keyword'] != 'user' && ($user = fx::env()->getUser())) {
             $obj['user_id'] = $user['id'];
         }
         $obj['checked'] = 1;
@@ -160,7 +160,7 @@ class Finder extends System\Data {
         if (!isset($data['site_id'])) {
             $obj['site_id'] = fx::env('site')->get('id');
         }
-        $fields = $component->all_fields()->find('default', '', System\Collection::FILTER_NEQ);
+        $fields = $component->allFields()->find('default', '', System\Collection::FILTER_NEQ);
         foreach ($fields as $f) {
             if (!isset($obj[$f['keyword']])) {
                 if ($f['type'] == Field\Entity::FIELD_DATETIME) {
@@ -173,15 +173,15 @@ class Finder extends System\Data {
         return $obj;
     }
 
-    public function next_priority () {
-        return fx::db()->get_var(
+    public function nextPriority () {
+        return fx::db()->getVar(
                 "SELECT MAX(`priority`)+1 FROM `{{content}}`"
         );
     }
     
     protected static $content_classes = array();
     
-    public function get_class_name($data = null) {
+    public function getClassName($data = null) {
         if ($data && isset($data['type'])) {
             if (isset(Finder::$content_classes[$data['type']])) {
                 return Finder::$content_classes[$data['type']];
@@ -195,7 +195,7 @@ class Finder extends System\Data {
         if (!$component) {
             throw new Exception("No component: ".$c_type);
         }
-        $chain = array_reverse($component->get_chain());
+        $chain = array_reverse($component->getChain());
         
         $exists = false;
         
@@ -217,7 +217,7 @@ class Finder extends System\Data {
      * @return fx_content
      */
     public function entity($data = array()) {
-        $classname = $this->get_class_name($data);
+        $classname = $this->getClassName($data);
         if (isset($data['type'])) {
             $component_id = fx::data('component', $data['type'])->get('id');
         } else {
@@ -237,9 +237,9 @@ class Finder extends System\Data {
             $wh[] = "`".fx::db()->escape($k)."` = '".fx::db()->escape($v)."' ";
         }
 
-        $update = $this->_set_statement($data);
+        $update = $this->setStatement($data);
         foreach ($update as $table => $props) {
-            $q = 'UPDATE `{{'.$table.'}}` SET '.$this->_compile_set_statement($props); //join(', ', $props);
+            $q = 'UPDATE `{{'.$table.'}}` SET '.$this->compileSetStatement($props); //join(', ', $props);
             if ($wh) {
                 $q .= " WHERE ".join(' AND ', $wh);
             }
@@ -254,7 +254,7 @@ class Finder extends System\Data {
         if ($cond_field != 'id' || !is_numeric($cond_val)) {
             throw new Exception("Content can be killed only by id!");
         }
-        $tables = $this->get_tables();
+        $tables = $this->getTables();
         
         $q = 'DELETE {{'.join("}}, {{", $tables).'}} ';
         $q .= 'FROM {{'.join("}} INNER JOIN {{", $tables).'}} ';
@@ -275,7 +275,7 @@ class Finder extends System\Data {
      * joined pairs (with no SET keyword)
      * e.g. "`id` = 1, `name` = 'My super name'"
      */
-    protected function  _compile_set_statement($props) {
+    protected function  compileSetStatement($props) {
         $res = array();
         foreach ($props as $p => $v){
             $res []= $p.' = '.$v;
@@ -287,9 +287,9 @@ class Finder extends System\Data {
         if (!isset($data['type'])){
             throw  new Exception('Can not save entity with no type specified');
         }
-        $set = $this->_set_statement($data);
+        $set = $this->setStatement($data);
         
-        $tables = $this->get_tables();
+        $tables = $this->getTables();
         
         $base_table = array_shift($tables);
         $root_set = $set[$base_table];
@@ -300,13 +300,13 @@ class Finder extends System\Data {
             $q .= join(", ", $root_set);
             $q .= ' FROM {{'.$base_table.'}}';
         } else {
-            $q .= "SET ".$this->_compile_set_statement($root_set);
+            $q .= "SET ".$this->compileSetStatement($root_set);
         }
         
         $tables_inserted = array();
         
         $q_done = fx::db()->query($q);
-        $id = fx::db()->insert_id();
+        $id = fx::db()->insertId();
         if ($q_done) {
             // remember, whatever table has inserted
             $tables_inserted []= $base_table;
@@ -319,7 +319,7 @@ class Finder extends System\Data {
             $table_set = isset($set[$table]) ? $set[$table] : array();
             
             $table_set['`id`'] = "'".$id."'";
-            $q = "INSERT INTO `{{".$table."}}` SET ".$this->_compile_set_statement($table_set); 
+            $q = "INSERT INTO `{{".$table."}}` SET ".$this->compileSetStatement($table_set); 
             
             $q_done = fx::db()->query($q);
             if ($q_done) {
@@ -337,13 +337,13 @@ class Finder extends System\Data {
         return $id;
     }
     
-    protected function _set_statement($data) {
+    protected function setStatement($data) {
         $res = array();
-        $chain = fx::data('component', $this->component_id)->get_chain();
+        $chain = fx::data('component', $this->component_id)->getChain();
         foreach ($chain as $level_component) {
             $table_res = array();
             $fields = $level_component->fields();
-            $field_keywords = $fields->get_values('keyword');
+            $field_keywords = $fields->getValues('keyword');
             // while the underlying field content manually prescription
             if ($level_component['keyword'] == 'content') {
                 $field_keywords = array_merge($field_keywords, array(
@@ -356,16 +356,16 @@ class Finder extends System\Data {
                     'level'
                 ));
             }
-            $table_name = $level_component->get_content_table();
-            $table_cols = $this->_get_columns($table_name);
+            $table_name = $level_component->getContentTable();
+            $table_cols = $this->getColumns($table_name);
             foreach ($field_keywords as $field_keyword) {
                 if (!in_array($field_keyword, $table_cols)) {
                     continue;
                 }
                 
-                $field = $fields->find_one('keyword', $field_keyword);
+                $field = $fields->findOne('keyword', $field_keyword);
                 // put only if the sql type of the field is not false (e.g. multilink)
-                if ($field && !$field->get_sql_type()) {
+                if ($field && !$field->getSqlType()) {
                     continue;
                 }
                 
@@ -390,7 +390,7 @@ class Finder extends System\Data {
         return $content;
     }
     
-    public function create_adder_placeholder($collection = null) {
+    public function createAdderPlaceholder($collection = null) {
         $params = array();
         foreach ($this->where as $cond) {
             // original field
@@ -404,7 +404,7 @@ class Finder extends System\Data {
             }
         }
         if ($collection) {
-            foreach ($collection->get_filters() as $coll_filter) {
+            foreach ($collection->getFilters() as $coll_filter) {
                 list($filter_field, $filter_value) = $coll_filter;
                 if (is_scalar($filter_value)) {
                     $params[$filter_field] = $filter_value;
@@ -412,9 +412,9 @@ class Finder extends System\Data {
             }
         }
         $placeholder = $this->create($params);
-        $placeholder->dig_set('_meta.placeholder', $params + array('type' => $placeholder['type']));
-        $placeholder->dig_set('_meta.placeholder_name', fx::data('component', $placeholder['type'])->get('item_name'));
-        $placeholder->is_adder_placeholder(true);
+        $placeholder->digSet('_meta.placeholder', $params + array('type' => $placeholder['type']));
+        $placeholder->digSet('_meta.placeholder_name', fx::data('component', $placeholder['type'])->get('item_name'));
+        $placeholder->isAdderPlaceholder(true);
         // guess item's position here
         if ($collection) {
             $collection[]= $placeholder;
@@ -422,22 +422,22 @@ class Finder extends System\Data {
         return $placeholder;
     }
     
-    protected function _livesearch_apply_terms($terms) {
-        $table = $this->get_col_table('name');
+    protected function livesearchApplyTerms($terms) {
+        $table = $this->getColTable('name');
         if ($table) {
-            parent::_livesearch_apply_terms($terms);
+            parent::livesearchApplyTerms($terms);
             return;
         }
         
         $c_component = fx::data('component', $this->component_id);
-        $components = $c_component->get_all_variants();
+        $components = $c_component->getAllVariants();
         $name_conds = array();
         foreach ($components as $com) {
-            $name_field = $com->fields()->find_one('keyword', 'name');
+            $name_field = $com->fields()->findOne('keyword', 'name');
             if (!$name_field) {
                 continue;
             }
-            $table = '{{'.$com->get_content_table().'}}';
+            $table = '{{'.$com->getContentTable().'}}';
             $this->join($table, $table.'.id = {{content}}.id', 'left');
             $cond = array(
                 array(),
@@ -460,14 +460,14 @@ class Finder extends System\Data {
      * @param boolean $add_parents - include parents to subtree
      * @return fx_data_content
      */
-    public function descendants_of($parent_ids, $include_parents = false) {
+    public function descendantsOf($parent_ids, $include_parents = false) {
         if ($parent_ids instanceof System\Collection) {
             $non_content = $parent_ids->find(function($i) {
                 return !($i instanceof Entity);
             });
             if (count($non_content) == 0) {
                 $parents = $parent_ids;
-                $parent_ids = $parents->get_values('id');
+                $parent_ids = $parents->getValues('id');
             }
         }
         if ($parent_ids instanceof Entity) {

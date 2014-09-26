@@ -18,34 +18,34 @@ class ModifierParser extends Fsm {
     public function __construct() {
         $this->debug = false;
         $this->init_state = self::INIT;
-        $this->add_rule(array(self::INIT, self::MODIFIER, self::PARAM), "~^\|+~", false, 'start_modifier');
-        $this->add_rule(array(self::MODIFIER, self::PARAM), ":", false, 'start_param');
-        $this->add_rule(array(self::MODIFIER, self::PARAM), '~[\"\']~', false, 'start_string');
-        $this->add_rule(array(self::QSTRING, self::DQSTRING), '~\\\?[\"\']~', false, 'end_string');
+        $this->addRule(array(self::INIT, self::MODIFIER, self::PARAM), "~^\|+~", false, 'start_modifier');
+        $this->addRule(array(self::MODIFIER, self::PARAM), ":", false, 'start_param');
+        $this->addRule(array(self::MODIFIER, self::PARAM), '~[\"\']~', false, 'start_string');
+        $this->addRule(array(self::QSTRING, self::DQSTRING), '~\\\?[\"\']~', false, 'end_string');
     }
     
     protected $c_mod = null;
     
     public function parse($s) {
         parent::parse($s);
-        $this->_bubble();
+        $this->bubble();
         return $this->res;
     }
     
-    protected function _bubble() {
+    protected function bubble() {
         while ($this->state != self::INIT) {
             if ($this->state == self::PARAM) {
-                $this->end_param();
+                $this->endParam();
             } elseif ($this->state == self::MODIFIER) {
-                $this->end_modifier();
+                $this->endModifier();
             }
-            $this->pop_state();
+            $this->popState();
         }
     }
     
-    public function start_modifier($ch) {
-        $this->_bubble();
-        $this->push_state(self::MODIFIER);
+    public function startModifier($ch) {
+        $this->bubble();
+        $this->pushState(self::MODIFIER);
         $this->c_mod = array(
             'name' => '',
             'is_each' => $ch == '||',
@@ -53,7 +53,7 @@ class ModifierParser extends Fsm {
         );
     }
     
-    public function end_modifier() {
+    public function endModifier() {
         if ($this->stack != '') {
             $this->c_mod['name'] = $this->stack;
             $this->stack = '';
@@ -78,40 +78,40 @@ class ModifierParser extends Fsm {
         $this->res []= $m;
     }
     
-    public function end_param() {
+    public function endParam() {
         $param = $this->stack;
         $this->c_mod['args'] []= trim($param);
         $this->stack = '';
     }
     
-    public function start_param($ch) {
+    public function startParam($ch) {
         if ($this->state == self::MODIFIER) {
             $this->c_mod['name'] = $this->stack;
         } else {
-            $this->pop_state();
-            $this->end_param();
+            $this->popState();
+            $this->endParam();
         }
         $this->stack = '';
-        $this->push_state(self::PARAM);
+        $this->pushState(self::PARAM);
     }
     
-    public function start_string($ch) {
-        $this->push_state($ch == '"' ? self::DQSTRING : self::QSTRING);
+    public function startString($ch) {
+        $this->pushState($ch == '"' ? self::DQSTRING : self::QSTRING);
         $this->stack .= $ch;
     }
     
-    public function end_string($ch) {
+    public function endString($ch) {
         if (
             ($this->state == self::DQSTRING && ($ch == "'" || $ch == '\"')) ||
             ($this->state == self::QSTRING && ($ch == '"' || $ch == "\'"))
         ) {
                 return false;
         }
-        $this->pop_state();
+        $this->popState();
         $this->stack .= $ch;
     }
     
-    public function default_callback($ch) {
+    public function defaultCallback($ch) {
         $this->stack .= $ch;
     }
 }

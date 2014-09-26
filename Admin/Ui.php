@@ -103,13 +103,13 @@ class Ui {
         return $fl;
     }
     
-    public function code_editor($name, $label, $value = '', $code = 'html') {
+    public function codeEditor($name, $label, $value = '', $code = 'html') {
         return array('label' => $label, 'name' => $name, 'value' => $value, 'type' => 'text', 'code' => $code);
     }
     
     public function store($type, $filter = array(), $reason = 'first', $position = 0) {
         $store = new Store();
-        $response = $store->get_items($type, $filter, $reason, $position);
+        $response = $store->getItems($type, $filter, $reason, $position);
         if ($response === false) {
             $result = $this->error( fx::alang('Unable to connect to server','system') );
         } 
@@ -131,15 +131,15 @@ class Ui {
         return array('type' => 'tree', 'values' => $values, 'filter' => true, 'name' => $name);
     }
     
-    public function button_post ( $label, $post = array() ) {
+    public function buttonPost ( $label, $post = array() ) {
         return array('label' => $label, 'type' => 'button', 'postdata' => $post);
     }
     
-    public function button_dialog ( $label, $post = array() ) {
+    public function buttonDialog ( $label, $post = array() ) {
         return array('label' => $label, 'type' => 'button', 'dialog' => $post);
     }
     
-    public function button_func ( $label, $func  ) {
+    public function buttonFunc ( $label, $func  ) {
         return array('label' => $label, 'type' => 'button', 'func' => $func);
     }
 

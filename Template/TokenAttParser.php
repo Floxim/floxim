@@ -3,7 +3,7 @@
 namespace Floxim\Floxim\Template;
 
 class TokenAttParser extends Fsm {
-    public static function get_atts(&$source) {
+    public static function getAtts(&$source) {
         $p = new self();
         $res = $p->parse($source);
         $source = !empty($p->modifiers) ? ' |'.$p->modifiers : '';
@@ -22,24 +22,24 @@ class TokenAttParser extends Fsm {
     public function __construct() {
         //$this->debug = true;
         $this->init_state = self::INIT;
-        $this->add_rule(self::INIT, '~.+=$~', self::ATT_NAME, 'read_att_name');
-        $this->add_rule(self::ATT_NAME, array('"', "'"), self::ATT_VAL, 'start_att_val');
-        $this->add_rule(self::ATT_VAL, array('"', "'"), self::INIT, 'end_att_val');
-        $this->add_rule(self::INIT, '|', self::MODIFIERS);
+        $this->addRule(self::INIT, '~.+=$~', self::ATT_NAME, 'read_att_name');
+        $this->addRule(self::ATT_NAME, array('"', "'"), self::ATT_VAL, 'start_att_val');
+        $this->addRule(self::ATT_VAL, array('"', "'"), self::INIT, 'end_att_val');
+        $this->addRule(self::INIT, '|', self::MODIFIERS);
     }
 
-    public function read_att_name($ch) {
+    public function readAttName($ch) {
         $this->c_att = array(
             'name' => trim($ch, '='),
             'value' => ''
         );
     }
 
-    public function start_att_val($ch) {
+    public function startAttVal($ch) {
         $this->c_att['quot'] = $ch;
     }
 
-    public function end_att_val($ch) {
+    public function endAttVal($ch) {
         if ($ch !== $this->c_att['quot']) {
             return false;
         }
@@ -47,7 +47,7 @@ class TokenAttParser extends Fsm {
         $this->res [$this->c_att['name']] = $this->c_att['value'];
     }
 
-    public function default_callback($ch) {
+    public function defaultCallback($ch) {
         switch($this->state) {
             case self::ATT_VAL:
                 $this->c_att['value'] .= $ch;
@@ -55,8 +55,8 @@ class TokenAttParser extends Fsm {
             case self::ATT_NAME:
                 $this->c_att['value'] = $ch;
                 $this->c_att['quot'] = '';
-                $this->end_att_val('');
-                $this->set_state(self::INIT);
+                $this->endAttVal('');
+                $this->setState(self::INIT);
                 break;
             case self::MODIFIERS:
                 $this->modifiers .= $ch;

@@ -30,9 +30,9 @@ class Lang extends Admin {
             $list['values'][] = $r;
         }
 
-        $this->response->add_field($list);
+        $this->response->addField($list);
 
-        $this->response->add_buttons(
+        $this->response->addButtons(
             array(
                 array(
                     'key' => 'add', 
@@ -42,8 +42,8 @@ class Lang extends Admin {
                 'delete'
             )
         );
-        $this->response->breadcrumb->add_item( fx::alang('Languages','system') );
-        $this->response->submenu->set_menu('lang');
+        $this->response->breadcrumb->addItem( fx::alang('Languages','system') );
+        $this->response->submenu->setMenu('lang');
     }
 
     public function add($input) {
@@ -55,20 +55,20 @@ class Lang extends Admin {
         $fields[] = $this->ui->input('native_name', fx::alang('Native language name','system'));
         $fields[] = $this->ui->input('lang_code', fx::alang('Language code','system'));
 
-        $this->response->add_fields($fields);
-        $this->response->dialog->set_title( fx::alang('Create a new language','system') );
-        $this->response->breadcrumb->add_item( 
+        $this->response->addFields($fields);
+        $this->response->dialog->setTitle( fx::alang('Create a new language','system') );
+        $this->response->breadcrumb->addItem( 
             fx::alang('Languages','system'),
             '#admin.administrate.lang.all'
         );
-        $this->response->breadcrumb->add_item(
+        $this->response->breadcrumb->addItem(
             fx::alang('Add new language','system')
         );
-        $this->response->add_form_button('save');
-        $this->response->submenu->set_menu('lang');
+        $this->response->addFormButton('save');
+        $this->response->submenu->setMenu('lang');
     }
 
-    public function add_save($input) {
+    public function addSave($input) {
         $result = array('status' => 'ok');
 
         $lang = fx::data('lang')->create(
@@ -81,7 +81,7 @@ class Lang extends Admin {
 
         if (!$lang->validate()) {
             $result['status'] = 'error';
-            $result['errors'] = $lang->get_validate_errors();
+            $result['errors'] = $lang->getValidateErrors();
             return $result;
         }
         try {
@@ -104,22 +104,22 @@ class Lang extends Admin {
         $main_fields[] = $this->ui->input('en_name', fx::alang('Language name','system'), $lang['en_name']);
         $main_fields[] = $this->ui->input('native_name', fx::alang('Naitive name','system'), $lang['native_name']);
         $main_fields[] = $this->ui->input('lang_code', fx::alang('Language code','system'), $lang['lang_code']);
-        $this->response->add_fields($main_fields);
+        $this->response->addFields($main_fields);
 
         $fields = array();
         $fields[] = $this->ui->hidden('entity', 'lang');
         $fields[] = $this->ui->hidden('action', 'edit');
         $fields[] = $this->ui->hidden('posting');
         $fields [] = $this->ui->hidden('id', $lang['id']);
-        $this->response->add_fields($fields);
-        $this->response->add_form_button('save');
+        $this->response->addFields($fields);
+        $this->response->addFormButton('save');
 
-        $this->response->breadcrumb->add_item( fx::alang('Languages','system'), '#admin.lang.all');
-        $this->response->breadcrumb->add_item($lang['en_name'], '#admin.lang.edit('.$lang['id'].')');
-        $this->response->submenu->set_menu('lang');
+        $this->response->breadcrumb->addItem( fx::alang('Languages','system'), '#admin.lang.all');
+        $this->response->breadcrumb->addItem($lang['en_name'], '#admin.lang.edit('.$lang['id'].')');
+        $this->response->submenu->setMenu('lang');
     }
 
-    public function edit_save($input) {
+    public function editSave($input) {
         
         $lang = fx::data('lang', $input['id']);
         $result = array('status' => 'ok');
@@ -171,17 +171,17 @@ class Lang extends Admin {
         }
         
         $fields = array('strings' => $list);
-        $this->response->add_fields($fields);
+        $this->response->addFields($fields);
         
         $lang_name = fx::config('ADMIN_LANG') == $lang['lang_code'] ? $lang['native_name'] : $lang['en_name'];
         
-        $this->response->breadcrumb->add_item( fx::alang('Languages','system'), '#admin.lang.all');
-        $this->response->breadcrumb->add_item($lang_name, '#admin.lang.edit('.$lang['id'].')');
-        $this->response->breadcrumb->add_item( fx::alang('Language strings'), '#admin.lang.strings('.$lang['id'].')');
-        $this->response->submenu->set_menu('lang');
+        $this->response->breadcrumb->addItem( fx::alang('Languages','system'), '#admin.lang.all');
+        $this->response->breadcrumb->addItem($lang_name, '#admin.lang.edit('.$lang['id'].')');
+        $this->response->breadcrumb->addItem( fx::alang('Language strings'), '#admin.lang.strings('.$lang['id'].')');
+        $this->response->submenu->setMenu('lang');
     }
     
-    public function string_save($input) {
+    public function stringSave($input) {
         if (!isset($input['id'])) {
             return;
         }

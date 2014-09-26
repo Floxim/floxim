@@ -12,8 +12,8 @@ class Patch extends Admin {
         }
         $bSkipCheckUpdates=isset($input['params'][0]) ? $input['params'][0] : false;
         if (!$bSkipCheckUpdates) {
-            if (!fx::data('patch')->check_updates()) {
-                $this->response->add_field(array(
+            if (!fx::data('patch')->checkUpdates()) {
+                $this->response->addField(array(
                     'type' => 'label',
                     'value' => '<p style="color:#F00;">'.
                         fx::alang('Update check failed','system').
@@ -22,7 +22,7 @@ class Patch extends Admin {
             }
         }
         
-        $this->response->add_field(array(
+        $this->response->addField(array(
             'type' => 'label',
             'value' => '<p>'.
                     fx::alang('Current Floxim version:', 'system').
@@ -61,27 +61,27 @@ class Patch extends Admin {
             };
             $list['values'][] = $r;
         }
-        $this->response->add_field($list);
+        $this->response->addField($list);
         if ($have_ready) {
-            $this->response->add_field(array(
+            $this->response->addField(array(
                                        'type' => 'button',
                                        'func' => 'fx_patch.install_chain',
                                        'label' => fx::alang('Install all')
                                    ));
         }
-        $this->_set_layout();
+        $this->setLayout();
     }
 
-    public function get_next_for_install() {
+    public function getNextForInstall() {
         $result=array();
-        if ($patch=fx::data('patch')->get_ready_for_install()) {
+        if ($patch=fx::data('patch')->getReadyForInstall()) {
             $result=$patch->get();
         }
 
         return json_encode($result);
     }
 
-    public function install_silent($input) {
+    public function installSilent($input) {
         // TODO: duplicate logic with method "install"
         $result=array('error'=>null);
 
@@ -116,7 +116,7 @@ class Patch extends Admin {
         if (!$patch) {
             return;
         }
-        $this->response->add_field(array(
+        $this->response->addField(array(
             'type' => 'label',
             'value' => 
                 '<p>'.
@@ -128,14 +128,14 @@ class Patch extends Admin {
         try {
             $res = $patch->install();
         } catch (Exception $e) {
-            $this->response->add_field(array(
+            $this->response->addField(array(
                                            'type' => 'label',
                                            'value' => '<p style="color:#F00;">'.$e->getMessage().'</p>'
                                        ));
         }
         
         if (!$res) {
-            $this->response->add_field(array(
+            $this->response->addField(array(
                 'type' => 'label',
                 'value' => '<p style="color:#F00;">Install failed!</p>'
             ));
@@ -148,27 +148,27 @@ class Patch extends Admin {
             }
             $changes.='</ul>';
 
-            $this->response->add_field(array(
+            $this->response->addField(array(
                 'type' => 'label',
                 'value' => '<p>Patch installed sucessfully!</p>'.$changes
             ));
         }
-        $this->response->add_field(array(
+        $this->response->addField(array(
             'type' => 'button',
             'url' => 'patch.all',
             'label' => 'Back'
         ));
-        $this->_set_layout($patch);
+        $this->setLayout($patch);
     }
     
-    protected function _set_layout($c_patch = null) {
-    	$this->response->breadcrumb->add_item( fx::alang('Patches','system'), '#admin.patch.all');
+    protected function setLayout($c_patch = null) {
+    	$this->response->breadcrumb->addItem( fx::alang('Patches','system'), '#admin.patch.all');
         if ($c_patch) {
-            $this->response->breadcrumb->add_item( 
+            $this->response->breadcrumb->addItem( 
                 $c_patch['to'], 
                 '#admin.patch.view('.$c_patch['id'].')'
             );
         }
-        $this->response->submenu->set_menu('patch');
+        $this->response->submenu->setMenu('patch');
     }
 }

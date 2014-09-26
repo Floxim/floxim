@@ -8,9 +8,9 @@ use Floxim\Floxim\System\Fx as fx;
 
 class Component extends Frontoffice {
     
-    protected function _count_parent_id() {
+    protected function countParentId() {
         if (preg_match("~^list_infoblock~", $this->action)) {
-            $this->set_param('parent_id', $this->_get_parent_id());
+            $this->setParam('parent_id', $this->getParentId());
         }
     }
     
@@ -20,18 +20,18 @@ class Component extends Frontoffice {
         return $result;
     }
     
-    protected function _get_config_sources() {
+    protected function getConfigSources() {
         $sources = array();
-        $com_dir = fx::path()->to_abs('component');
+        $com_dir = fx::path()->toAbs('component');
         $sources []= fx::path('floxim', '/controller/component.cfg.php');
-        $com = $this->get_component();
-        $chain = $com->get_chain();
+        $com = $this->getComponent();
+        $chain = $com->getChain();
         foreach ($chain as $com) {
             $com_file = fx::path('std', '/component/'.$com['keyword'].'/'.$com['keyword'].'.cfg.php');
             if (file_exists($com_file)) {
                 $sources[]= $com_file;
             }
-            $com_file = fx::path()->to_abs($com_dir.'/'.$com['keyword'].'/'.$com['keyword'].'.cfg.php');
+            $com_file = fx::path()->toAbs($com_dir.'/'.$com['keyword'].'/'.$com['keyword'].'.cfg.php');
             if (file_exists($com_file)) {
                 $sources[]= $com_file;
             }
@@ -39,7 +39,7 @@ class Component extends Frontoffice {
         return $sources;
     } 
 
-    public function get_controller_name($with_type = false){
+    public function getControllerName($with_type = false){
         $name = $this->_content_type;
         if ($with_type) {
             $name = 'component_'.$name;
@@ -47,17 +47,17 @@ class Component extends Frontoffice {
         return $name;
     }
     
-    public function save_selected_linkers($ids) {
+    public function saveSelectedLinkers($ids) {
         if (!is_array($ids)) {
             return;
         }
-        $linkers = $this->_get_selected_linkers();
+        $linkers = $this->getSelectedLinkers();
         $last_priority = 0;
         foreach ($linkers as $linker) {
             $linker_pos = array_search($linker['linked_id'], $ids);
             if ($linker_pos === false) {
                 $linker->delete();
-                $linkers->find_remove('id', $linker['id']);
+                $linkers->findRemove('id', $linker['id']);
             } else {
                 $linker['priority'] = $linker_pos;
                 $last_priority = $linker_pos;
@@ -66,8 +66,8 @@ class Component extends Frontoffice {
             }
         }
         if (count($ids) > 0) {
-            $ib = fx::data('infoblock', $this->get_param('infoblock_id'));
-            if ($this->get_param('parent_type') == 'current_page_id') {
+            $ib = fx::data('infoblock', $this->getParam('infoblock_id'));
+            if ($this->getParam('parent_type') == 'current_page_id') {
                 $parent_id = fx::env('page_id');
             } else {
                 $parent_id = $ib['page_id'];
@@ -82,8 +82,8 @@ class Component extends Frontoffice {
         }
     }
     
-    public function drop_selected_linkers() {    
-        $linkers = fx::data('linker')                ->where('infoblock_id', $this->get_param('infoblock_id'))
+    public function dropSelectedLinkers() {    
+        $linkers = fx::data('linker')                ->where('infoblock_id', $this->getParam('infoblock_id'))
                 ->all();
         $linkers->apply(function($i){ 
            $i->delete(); 
@@ -93,21 +93,21 @@ class Component extends Frontoffice {
     /*
      * @return fx_collection
      */
-    protected function _get_selected_linkers () {
-        $q = fx::data('linker')            ->where('infoblock_id', $this->get_param('infoblock_id'))
+    protected function getSelectedLinkers () {
+        $q = fx::data('linker')            ->where('infoblock_id', $this->getParam('infoblock_id'))
             ->order('priority');
-        if ($this->get_param('parent_type') == 'current_page_id') {
+        if ($this->getParam('parent_type') == 'current_page_id') {
            $q->where('parent_id', fx::env('page_id')); 
         }
         return $q->all();
     }
     
-    protected function _get_selected_values() {
-        $res = $this->_get_selected_linkers()->column('linked_id');
+    protected function getSelectedValues() {
+        $res = $this->getSelectedLinkers()->column('linked_id');
         return $res;
     }
     
-    public function get_selected_field($with_values = true) {
+    public function getSelectedField($with_values = true) {
         $field = array (
             'name' => 'selected', 
             'label' => fx::alang('Selected','controller_component'),
@@ -120,12 +120,12 @@ class Component extends Frontoffice {
             'stored' => false
         );
         if ($with_values) {
-            $field['value'] =  $this->_get_selected_values()->get_data();
+            $field['value'] =  $this->getSelectedValues()->getData();
         }
         return $field;
     }
 
-    public function get_conditions_field() {
+    public function getConditionsField() {
         $res_field = array(
             'name' => 'conditions',
             'label' => fx::alang('Conditions','controller_component'),
@@ -180,27 +180,27 @@ class Component extends Frontoffice {
                 'Value'
             ),
         );
-        $com = $this->get_component();
+        $com = $this->getComponent();
         $searchable_fields =  
                 $com
-                ->all_fields()
+                ->allFields()
                 ->find('type', Field\Entity::FIELD_IMAGE, '!=');
         foreach ($searchable_fields as $field) {
             $res = array(
                 'description' => $field['name'],
-                'type' => Field\Entity::get_type_by_id($field['type'])
+                'type' => Field\Entity::getTypeById($field['type'])
             );
             if ($field['type'] == Field\Entity::FIELD_LINK) {
-                $res['content_type'] = $field->get_target_name();
+                $res['content_type'] = $field->getTargetName();
             }
             if ($field['type'] == Field\Entity::FIELD_MULTILINK) {
-                $relation = $field->get_relation();
+                $relation = $field->getRelation();
                 $res['content_type'] = $relation[0] == System\Data::MANY_MANY ? $relation[4] : $relation[1] ;
             }
             // Add allow values for select parent page
             if ($field['keyword'] == 'parent_id') {
-                $pages = $this->_get_allow_parent_pages();
-                $values = $pages->get_values(array('id','name'));
+                $pages = $this->getAllowParentPages();
+                $values = $pages->getValues(array('id','name'));
                 $res['values'] = $values;
             }
             $res_field['tpl'][0]['values'][$field['keyword']] = $res;
@@ -211,21 +211,21 @@ class Component extends Frontoffice {
             'content_type' => 'infoblock',
             'conditions' => array(
                 'controller' => array(
-                    $com->get_all_variants()->get_values('keyword'),
+                    $com->getAllVariants()->getValues('keyword'),
                     'IN'
                 ),
                 'site_id' => fx::env('site_id'),
                 'action' => array( array('list_infoblock', 'list_selected'), 'IN')
             )
         );
-        if ( ($cib_id = $this->get_param('infoblock_id'))) {
+        if ( ($cib_id = $this->getParam('infoblock_id'))) {
             $ib_field_params['conditions']['id'] = array($cib_id, '!=');
         }
         $res_field['tpl'][0]['values']['infoblock_id'] = $ib_field_params;
         return $res_field;
     }  
     
-    public function get_target_config_fields() {
+    public function getTargetConfigFields() {
         
         /*
          * Below is the code that produces valid InfoBlock for fields-references
@@ -233,8 +233,8 @@ class Component extends Frontoffice {
          * you may elect not for incomprehensible Guia
          */
         $link_fields = $this->
-                            get_component()->
-                            all_fields()->
+                            getComponent()->
+                            allFields()->
                             find('type', array(Field\Entity::FIELD_LINK, Field\Entity::FIELD_MULTILINK))->
                             find('type_of_edit', Field\Entity::EDIT_NONE, System\Collection::FILTER_NEQ);
         $fields = array();
@@ -252,7 +252,7 @@ class Component extends Frontoffice {
             }
             $com_infoblocks = fx::data('infoblock')->
                     where('site_id', fx::env('site')->get('id'))->
-                    get_content_infoblocks($target_com['keyword']);
+                    getContentInfoblocks($target_com['keyword']);
             
             $ib_values = array();
             foreach ($com_infoblocks as $ib) {
@@ -286,12 +286,12 @@ class Component extends Frontoffice {
      * Get option to bind lost content (having no infoblock_id) to the newly created infoblock
      * @return array
      */
-    public function get_lost_content_field() {
+    public function getLostContentField() {
         // infoblock already exists
-        if ($this->get_param('infoblock_id')) {
+        if ($this->getParam('infoblock_id')) {
             return array();
         }
-        $com = $this->get_component();
+        $com = $this->getComponent();
         $lost = fx::content($com['keyword'])
                     ->where('infoblock_id', 0)
                     ->where('site_id', fx::env('site_id'))
@@ -307,11 +307,11 @@ class Component extends Frontoffice {
         );
     }
     
-    public function bind_lost_content($ib, $params) {
+    public function bindLostContent($ib, $params) {
         if (!isset($params['params']['bind_lost_content']) || !$params['params']['bind_lost_content']) {
             return;
         }
-        $com = $this->get_component();
+        $com = $this->getComponent();
         $lost = fx::content($com['keyword'])
                     ->where('infoblock_id', 0)
                     ->where('site_id', fx::env('site_id'))
@@ -325,13 +325,13 @@ class Component extends Frontoffice {
         }
     }
     
-    public function do_record() {
+    public function doRecord() {
         $page = fx::env('page');
         return array('item' => $page);
     }
     
-    public function do_list() {
-        $f = $this->get_finder();
+    public function doList() {
+        $f = $this->getFinder();
         $this->trigger('query_ready', $f);
         $items = $f->all();
         if (count($items) === 0) {
@@ -339,14 +339,14 @@ class Component extends Frontoffice {
         }
         $this->trigger('items_ready', $items);
         $res = array('items' => $items);
-        if ( ($pagination = $this->_get_pagination()) ) {
+        if ( ($pagination = $this->getPagination()) ) {
             $res ['pagination'] = $pagination;
         }
         return $res;
     }
     
-    protected function _get_fake_items($count = 3) {
-        $finder = $this->get_finder();
+    protected function getFakeItems($count = 3) {
+        $finder = $this->getFinder();
         $items = fx::collection();
         foreach (range(1,$count) as $n) {
             $items []= $finder->fake();
@@ -355,32 +355,32 @@ class Component extends Frontoffice {
     }
 
 
-    public function do_list_infoblock() {
+    public function doListInfoblock() {
         // "fake mode" - preview of newly created infoblock
-        if ($this->get_param('is_fake')) {
-            return array('items' => $this->_get_fake_items(3));
+        if ($this->getParam('is_fake')) {
+            return array('items' => $this->getFakeItems(3));
         }
         $this->listen('query_ready', function($q, $ctr) {
-            $parent_id = $ctr->get_param('parent_id');
-            if ( $parent_id && !$ctr->get_param('skip_parent_filter')) {
+            $parent_id = $ctr->getParam('parent_id');
+            if ( $parent_id && !$ctr->getParam('skip_parent_filter')) {
                 $q->where('parent_id', $parent_id);
             }
-            $infoblock_id = $ctr->get_param('infoblock_id');
-            if ( $infoblock_id && !$ctr->get_param('skip_infoblock_filter')) {
+            $infoblock_id = $ctr->getParam('infoblock_id');
+            if ( $infoblock_id && !$ctr->getParam('skip_infoblock_filter')) {
                 $q->where('infoblock_id', $infoblock_id);
             }
         });
-        $res = $this->do_list();
-        if (fx::is_admin()) {
-            $infoblock = fx::data('infoblock', $this->get_param('infoblock_id'));
-            $component = $this->get_component();
+        $res = $this->doList();
+        if (fx::isAdmin()) {
+            $infoblock = fx::data('infoblock', $this->getParam('infoblock_id'));
+            $component = $this->getComponent();
             $adder_title = fx::alang('Add').' '.$component['item_name'];//.' &rarr; '.$ib_name;
             
-            $this->accept_content(array(
+            $this->acceptContent(array(
                 'title' => $adder_title,
-                'parent_id' => $this->_get_parent_id(),
+                'parent_id' => $this->getParentId(),
                 'type' => $component['keyword'],
-                'infoblock_id' => $this->get_param('infoblock_id')
+                'infoblock_id' => $this->getParam('infoblock_id')
             ));
             
             if (count($res['items']) == 0) {
@@ -391,11 +391,11 @@ class Component extends Frontoffice {
         return $res;
     }
     
-    public function accept_content($params,$entity = null) {
+    public function acceptContent($params,$entity = null) {
         $params = array_merge(
             array(
-                'infoblock_id' => $this->get_param('infoblock_id'),
-                'type' => $this->get_content_type()
+                'infoblock_id' => $this->getParam('infoblock_id'),
+                'type' => $this->getContentType()
             ), $params
         );
         if (!is_null($entity)) {
@@ -413,27 +413,27 @@ class Component extends Frontoffice {
         $this->_meta['accept_content'] []= $params;
     }
     
-    protected function _get_pagination_url_template() {
+    protected function getPaginationUrlTemplate() {
         $url = $_SERVER['REQUEST_URI'];
         $url = preg_replace("~[\?\&]page=\d+~", '', $url);
         return $url.'##'.(preg_match("~\?~", $url) ? '&' : '?').'page=%d##';
     }
     
-    protected function _get_current_page_number() {
+    protected function getCurrentPageNumber() {
         return isset($_GET['page']) ? $_GET['page'] : 1;
     }
 
-    protected function _get_pagination() {
+    protected function getPagination() {
         
-        if (!$this->get_param('pagination')){
+        if (!$this->getParam('pagination')){
             return null;
         }
-        $total_rows = $this->get_finder()->get_found_rows();
+        $total_rows = $this->getFinder()->getFoundRows();
         
         if ($total_rows == 0) {
             return null;
         }
-        $limit = $this->get_param('limit');
+        $limit = $this->getParam('limit');
         if ($limit == 0) {
             return null;
         }
@@ -442,10 +442,10 @@ class Component extends Frontoffice {
             return null;
         }
         $links = array();
-        $url_tpl = $this->_get_pagination_url_template();
+        $url_tpl = $this->getPaginationUrlTemplate();
         $base_url = preg_replace('~##.*?##~', '', $url_tpl);
         $url_tpl = str_replace("##", '', $url_tpl);
-        $c_page = $this->_get_current_page_number();
+        $c_page = $this->getCurrentPageNumber();
         foreach (range(1, $total_pages) as $page_num) {
             $links[$page_num]= array(
                 'active' => $page_num == $c_page,
@@ -471,10 +471,10 @@ class Component extends Frontoffice {
         return $res;
     }
     
-    protected function _get_parent_id() {
-        $ib = fx::data('infoblock', $this->get_param('infoblock_id')); 
+    protected function getParentId() {
+        $ib = fx::data('infoblock', $this->getParam('infoblock_id')); 
         $parent_id = null;
-        switch($this->get_param('parent_type')) {
+        switch($this->getParam('parent_type')) {
             case 'mount_page_id':
                 $parent_id = $ib['page_id'];
                 if ($parent_id === 0) {
@@ -488,20 +488,20 @@ class Component extends Frontoffice {
         return $parent_id;
     }
     
-    public function do_list_selected() {
-        $is_overriden = $this->get_param('is_overriden');
+    public function doListSelected() {
+        $is_overriden = $this->getParam('is_overriden');
         $linkers = null;
         // preview
         if ( $is_overriden) {
             $content_ids = array();
-            $selected_val  = $this->get_param('selected');
+            $selected_val  = $this->getParam('selected');
             if (is_array($selected_val)) {
                 $content_ids = $selected_val;
             }
         } else {
             // normal
-            $linkers = $this->_get_selected_linkers();
-            $content_ids = $linkers->get_values('linked_id');
+            $linkers = $this->getSelectedLinkers();
+            $content_ids = $linkers->getValues('linked_id');
         }
         
         $this->listen('query_ready', function($q) use ($content_ids) {
@@ -509,29 +509,29 @@ class Component extends Frontoffice {
         });
         if ($linkers) {
             $this->listen('items_ready', function($c, $ctr) use ($linkers) {
-                if ($ctr->get_param('sorting') === 'manual') {
+                if ($ctr->getParam('sorting') === 'manual') {
                     $c->sort(function($a, $b) use ($linkers) {
-                        $a_l = $linkers->find_one('linked_id', $a['id']);
-                        $b_l = $linkers->find_one('linked_id', $b['id']);
+                        $a_l = $linkers->findOne('linked_id', $a['id']);
+                        $b_l = $linkers->findOne('linked_id', $b['id']);
                         if (!$a_l || !$b_l) {
                             return 0;
                         }
-                        $a_priority = $linkers->find_one('linked_id', $a['id'])->get('priority');
-                        $b_priority = $linkers->find_one('linked_id', $b['id'])->get('priority');
+                        $a_priority = $linkers->findOne('linked_id', $a['id'])->get('priority');
+                        $b_priority = $linkers->findOne('linked_id', $b['id'])->get('priority');
                         return $a_priority - $b_priority;
                     });
                     $c->is_sortable = true;
                 }
                 $c->linker_map = array();
                 foreach ($c as $cc) {
-                    $c->linker_map []= $linkers->find_one('linked_id', $cc['id']);
+                    $c->linker_map []= $linkers->findOne('linked_id', $cc['id']);
                 }
             });
         } else {
             $this->listen('items_ready', function($c, $ctr) use ($content_ids) {
-                if ($ctr->get_param('sorting') === 'manual') {
+                if ($ctr->getParam('sorting') === 'manual') {
                     $c->sort(function($a, $b) use ($content_ids) {
-                        $a_priority = array_search($a['id'], $content_ids);
+                        $a_priority = arraySearch($a['id'], $content_ids);
                         $b_priority = array_search($b['id'], $content_ids);
                         return $a_priority - $b_priority;
                     });
@@ -542,12 +542,12 @@ class Component extends Frontoffice {
             $this->_meta['fields'] = array();
         }
         
-        $res = $this->do_list();
+        $res = $this->doList();
         
         // if we are admin and not viewing the block in preview mode,
         // let's add livesearch field loaded with the selected values
-        if (!$is_overriden && fx::is_admin()) {
-            $selected_field = $this->get_selected_field(false);
+        if (!$is_overriden && fx::isAdmin()) {
+            $selected_field = $this->getSelectedField(false);
             $selected_field['value'] = array();
             // filter result by selected content ids, 
             // because some items can be added from inherited controllers (e.g. menu with subsections)
@@ -562,21 +562,21 @@ class Component extends Frontoffice {
             unset($selected_field['ajax_preload']);
             $this->_meta['fields'][]= $selected_field;
         }
-        if (count($res['items']) === 0 && fx::is_admin()) {
-            $component = $this->get_component();
-            $ib = fx::data('infoblock', $this->get_param('infoblock_id'));
+        if (count($res['items']) === 0 && fx::isAdmin()) {
+            $component = $this->getComponent();
+            $ib = fx::data('infoblock', $this->getParam('infoblock_id'));
             $this->_meta['hidden_placeholder'] = 'Infoblock "'.$ib['name'].'" is empty. '.
                                                 'Select '.$component['item_name'].' to show here';
         }
         return $res;
     }
     
-    public function do_list_filtered() {
+    public function doListFiltered() {
         $this->listen('query_ready', function($q, $ctr) {
-            $component = $ctr->get_component();
-            $fields = $component->all_fields();
-            $conditions = fx::collection($ctr->get_param('conditions'));
-            if (!$conditions->find_one('name', 'site_id')) {
+            $component = $ctr->getComponent();
+            $fields = $component->allFields();
+            $conditions = fx::collection($ctr->getParam('conditions'));
+            if (!$conditions->findOne('name', 'site_id')) {
                 $conditions[]= array(
                     'name' => 'site_id',
                     'operator' => '=',
@@ -600,7 +600,7 @@ class Component extends Frontoffice {
                     $target_infoblock_id = current($condition['value']);
                 }
                 
-                $field = $fields->find_one('keyword', $condition['name']);
+                $field = $fields->findOne('keyword', $condition['name']);
                 $error = false;
                 switch ($condition['operator']) {
                     case 'contains': case 'not_contains':
@@ -667,16 +667,16 @@ class Component extends Frontoffice {
                         foreach ($condition['value'] as $v) {
                             $ids[]= $v;
                         }
-                        $relation = $field->get_relation();
+                        $relation = $field->getRelation();
                         if ($relation[0] === System\Data::MANY_MANY){
                             $content_ids = fx::data($relation[1])->
                                 where($relation[5], $ids)->
                                 select('content_id')->
-                                get_data()->get_values('content_id');
+                                getData()->getValues('content_id');
                         } else {
                             $content_ids = fx::data($relation[1])->
                                 where('id', $ids)->
-                                select($relation[2])->get_data()->get_values($relation[2]);
+                                select($relation[2])->getData()->getValues($relation[2]);
                         }
                         $condition['name'] = 'id';    
                         $condition['value'] = $content_ids;
@@ -700,7 +700,7 @@ class Component extends Frontoffice {
                     if ($target_ib['action'] == 'list_selected') {
                         $linkers = fx::data('linker')                                    ->where('infoblock_id', $target_ib['id'])
                                     ->all();
-                        $content_ids = $linkers->get_values('linked_id');
+                        $content_ids = $linkers->getValues('linked_id');
                         $condition['name'] = 'id';
                         $condition['value'] = $content_ids;
                         $condition['operator'] = 'IN';
@@ -716,7 +716,7 @@ class Component extends Frontoffice {
             }
             if ($target_parent_id && $target_infoblock_id) {
                 $adder_title = fx::alang('Add').' '.$component['item_name'];
-                $ctr->accept_content(array(
+                $ctr->acceptContent(array(
                     'title' => $adder_title,
                     'parent_id' => $target_parent_id,
                     'type' => $component['keyword'],
@@ -725,7 +725,7 @@ class Component extends Frontoffice {
             }
         });
         
-        $res = $this->do_list();
+        $res = $this->doList();
         return $res;
     }
     
@@ -740,7 +740,7 @@ class Component extends Frontoffice {
     /**
      * @return string
      */
-    public function get_content_type() {
+    public function getContentType() {
         if (!$this->_content_type) {
             $path = array_reverse(explode("\\", get_class($this)));
             $this->_content_type = fx::util()->camelToUnderscore($path[1]);
@@ -751,7 +751,7 @@ class Component extends Frontoffice {
     /**
      * @param string $content_type
      */
-    public function set_content_type($content_type) {
+    public function setContentType($content_type) {
         $this->_content_type = $content_type;
     }
     
@@ -759,8 +759,8 @@ class Component extends Frontoffice {
      * Returns the component at the value of the property _content_type
      * @return fx_data_component
      */
-    public function get_component() {
-        return fx::data('component', $this->get_content_type());
+    public function getComponent() {
+        return fx::data('component', $this->getContentType());
     }
     
     
@@ -768,16 +768,16 @@ class Component extends Frontoffice {
     /**
      * @return fx_data_content data finder
      */
-    public function get_finder() {
+    public function getFinder() {
         if (!is_null($this->_finder)) {
             return $this->_finder;
         }
-        $finder = fx::data($this->get_content_type());
-        $show_pagination = $this->get_param('pagination');
-        $c_page = $this->_get_current_page_number();
-        $limit = $this->get_param('limit');
+        $finder = fx::data($this->getContentType());
+        $show_pagination = $this->getParam('pagination');
+        $c_page = $this->getCurrentPageNumber();
+        $limit = $this->getParam('limit');
         if ( $show_pagination && $limit) {
-            $finder->calc_found_rows();
+            $finder->calcFoundRows();
         }
         if ( $limit ) {
             if ($show_pagination && $c_page != 1) {
@@ -789,8 +789,8 @@ class Component extends Frontoffice {
                 $finder->limit($limit);
             }
         }
-        if ( ($sorting = $this->get_param('sorting'))) {
-            $dir = $this->get_param('sorting_dir');
+        if ( ($sorting = $this->getParam('sorting'))) {
+            $dir = $this->getParam('sorting_dir');
             if ($sorting === 'manual') {
                 $sorting = 'priority';
                 $dir = 'ASC';
@@ -804,15 +804,15 @@ class Component extends Frontoffice {
         return $finder;
     }
     
-    public function get_signature() {
-        return 'component_'.$this->get_content_type().".".$this->action;;
+    public function getSignature() {
+        return 'component_'.$this->getContentType().".".$this->action;;
     }
     
-    protected function _get_controller_variants() {
+    protected function getControllerVariants() {
         //$vars = parent::_get_controller_variants();
         $vars = array();
-        $com = $this->get_component();
-        $chain = $com->get_chain();
+        $com = $this->getComponent();
+        $chain = $com->getChain();
         $chain = array_reverse($chain);
         foreach ($chain as $chain_item) {
             $vars []= $chain_item['keyword'];
@@ -821,9 +821,9 @@ class Component extends Frontoffice {
         return $vars;
     }
     
-    public function get_actions() {
-        $actions = parent::get_actions();
-        $com = $this->get_component();
+    public function getActions() {
+        $actions = parent::getActions();
+        $com = $this->getComponent();
         foreach ($actions as $action => &$info) {
             if (!isset($info['name'])) {
                 $info['name'] = $com['name'].' / '.$action;
@@ -838,7 +838,7 @@ class Component extends Frontoffice {
      *
      * @return fx_collection
      */
-    protected function _get_allow_parent_pages() {
+    protected function getAllowParentPages() {
         return fx::collection();
     }
 }

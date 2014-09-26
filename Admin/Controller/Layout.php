@@ -28,7 +28,7 @@ class Layout extends Admin {
         $ar['labels'] = array('name' => fx::alang('Name', 'system'), 'use' => fx::alang('Used on','system'), 'buttons' => array('type' => 'buttons'));
 
         foreach ($items as $item) {
-            $submenu = self::get_template_submenu($item);
+            $submenu = self::getTemplateSubmenu($item);
             $submenu_first = current($submenu);
             $name = array(
             	'name' => $item['name'],
@@ -55,7 +55,7 @@ class Layout extends Admin {
 
         $fields[] = $ar;
 
-        $this->response->add_buttons(array(
+        $this->response->addButtons(array(
             array(
                 'key'=> 'add',
                 'title' => 'Add new layout',
@@ -65,7 +65,7 @@ class Layout extends Admin {
         ));
 
         $result = array('fields' => $fields);
-        $this->response->submenu->set_menu('layout');
+        $this->response->submenu->setMenu('layout');
         return $result;
     }
 
@@ -79,27 +79,27 @@ class Layout extends Admin {
             $this->ui->hidden('source', $input['source']),
             $this->ui->hidden('posting')
         );
-        $this->response->submenu->set_menu('layout');
-        $this->response->breadcrumb->add_item(
+        $this->response->submenu->setMenu('layout');
+        $this->response->breadcrumb->addItem(
             fx::alang('Layouts','system'),
             '#admin.layout.all'
         );
-        $this->response->breadcrumb->add_item(
+        $this->response->breadcrumb->addItem(
             fx::alang('Add new layout','system')
         );
-        $this->response->add_form_button('save');
+        $this->response->addFormButton('save');
         $result['fields'] = $fields;
         return $result;
     }
     
 
-    public function add_save($input) {
+    public function addSave($input) {
         $result = array('status' => 'ok');
         $keyword = trim($input['keyword']);
         $name = trim($input['name']);
         
         if (empty($keyword)) {
-            $keyword = fx::util()->str_to_keyword($name);
+            $keyword = fx::util()->strToKeyword($name);
         }
         
         $existing = fx::data('layout')->where('keyword', $keyword)->one();
@@ -121,7 +121,7 @@ class Layout extends Admin {
         return $result;
     }
     
-    public function delete_save($input) {
+    public function deleteSave($input) {
         $result = array('status' => 'ok');
         $ids = $input['id'];
         if (!is_array($ids)) {
@@ -150,23 +150,23 @@ class Layout extends Admin {
             return array('fields' => $fields);
         }
         
-        self::make_breadcrumb($layout, $action, $this->response->breadcrumb);
+        self::makeBreadcrumb($layout, $action, $this->response->breadcrumb);
         
         if (method_exists($this, $action)) {
         	$result = call_user_func(array($this, $action), $layout);
         }
 
-        $this->response->submenu->set_menu('layout-'.$layout['id'])->set_subactive($action);
+        $this->response->submenu->setMenu('layout-'.$layout['id'])->setSubactive($action);
         return $result;
     }
     
-    public static function make_breadcrumb($template, $action, $breadcrumb) {
-    	$tpl_submenu = self::get_template_submenu($template);
+    public static function makeBreadcrumb($template, $action, $breadcrumb) {
+    	$tpl_submenu = self::getTemplateSubmenu($template);
         $tpl_submenu_first = current($tpl_submenu);
         
-    	$breadcrumb->add_item(fx::alang('Layouts','system'), '#admin.layout.all');
-        $breadcrumb->add_item($template['name'], $tpl_submenu_first['url']);
-        $breadcrumb->add_item($tpl_submenu[$action]['title'], $tpl_submenu[$action]['url']);
+    	$breadcrumb->addItem(fx::alang('Layouts','system'), '#admin.layout.all');
+        $breadcrumb->addItem($template['name'], $tpl_submenu_first['url']);
+        $breadcrumb->addItem($tpl_submenu[$action]['title'], $tpl_submenu[$action]['url']);
     }
 
     public function layouts($template) {
@@ -188,7 +188,7 @@ class Layout extends Admin {
         return $result;
     }
     
-    public static function get_template_submenu($layout) {
+    public static function getTemplateSubmenu($layout) {
     	$titles = array(
             'settings' => fx::alang('Settings','system'),
             'source' => "Source"
@@ -213,7 +213,7 @@ class Layout extends Admin {
     	$fm_path = isset($params[3]) ? $params[3] : '';
     	// todo: psr0 need verify - class fx_controller_admin_module_filemanager not found
     	$filemanager = new fx_controller_admin_module_filemanager($fm_input, $fm_action, true);
-    	$path = $template->get_path();
+    	$path = $template->getPath();
     	$fm_input = array(
     		'base_path' => $path,
     		'path' => $fm_path,
@@ -238,12 +238,12 @@ class Layout extends Admin {
         $fields[] = $this->ui->hidden('action', 'settings');
         $fields[] = $this->ui->hidden('id', $template['id']);
         
-        $this->response->submenu->set_menu('layout');
+        $this->response->submenu->setMenu('layout');
         $result = array('fields' => $fields, 'form_button' => array('save'));
         return $result;
     }
     
-    public function settings_save ( $input ) {
+    public function settingsSave ( $input ) {
         $name = trim($input['name']);
         if ( !$name ) {
             $result['status'] = 'error';
@@ -251,7 +251,7 @@ class Layout extends Admin {
             $result['fields'][] = 'name';
         }
         else {
-            $template = fx::data('template')->get_by_id($input['id']);
+            $template = fx::data('template')->getById($input['id']);
             if ( $template ) {
                 $result['status'] = 'ok';
                 $template->set('name', $name)->save();
@@ -268,17 +268,17 @@ class Layout extends Admin {
     
     public function source($layout) {
         $template = fx::template('layout_'.$layout['keyword']);
-        $vars = $template->get_template_variants();
+        $vars = $template->getTemplateVariants();
         $files = array();
         foreach ($vars as $var) {
             $files[preg_replace("~^.+/~", '', $var['file'])]= $var['file'];
         }
         foreach ($files as $file => $path) {
             $tab_code = md5($file);//preg_replace("~\.~", '_', $file);
-            $tab_name = fx::path()->file_name($file);
+            $tab_name = fx::path()->fileName($file);
             $source = file_get_contents($path);
-            $this->response->add_tab($tab_code, $tab_name);
-            $this->response->add_fields(
+            $this->response->addTab($tab_code, $tab_name);
+            $this->response->addFields(
                 array(array(
                     'type' => 'text',
                     'code' => 'htmlmixed',
@@ -292,8 +292,8 @@ class Layout extends Admin {
             $this->ui->hidden('entity', 'layout'),
             $this->ui->hidden('action', 'source')
         );
-        $this->response->submenu->set_menu('layout');
-        $this->response->add_form_button('save');
+        $this->response->submenu->setMenu('layout');
+        $this->response->addFormButton('save');
         return array('fields' => $fields, 'form_button' => array('save'));
     }
 }

@@ -6,7 +6,7 @@ use Floxim\Floxim\System;
 use Floxim\Floxim\System\Fx as fx;
 
 class Entity extends System\Entity {
-    public static function get_path($id) {
+    public static function getPath($id) {
         if (!is_numeric($id)) {
             return $id;
         }
@@ -14,26 +14,26 @@ class Entity extends System\Entity {
         if (!$file) {
             return null;
         }
-        return $file->get_http_path();
+        return $file->getHttpPath();
     }
     
-    protected function _after_delete() {
-        $this->delete_file();
+    protected function afterDelete() {
+        $this->deleteFile();
     }
     
-    public function delete_file() {
-        $path = $this->get_full_path();
+    public function deleteFile() {
+        $path = $this->getFullPath();
         if (file_exists($path) && is_file($path)) {
             unlink($path);
         }
     }
 
 
-    public function get_http_path() {
+    public function getHttpPath() {
         return fx::config()->HTTP_FILES_PATH.$this['path'];
     }
     
-    public function get_full_path() {
-        return fx::config()->DOCUMENT_ROOT .$this->get_http_path();
+    public function getFullPath() {
+        return fx::config()->DOCUMENT_ROOT .$this->getHttpPath();
     }
 }

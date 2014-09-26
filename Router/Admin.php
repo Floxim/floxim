@@ -12,11 +12,11 @@ class Admin extends Base {
         if (!preg_match($regexp, $url)) {
             return null;
         }
-        $input = fx::input()->make_input();
+        $input = fx::input()->makeInput();
         
 
-        $entity = fx::input()->fetch_post('entity');
-        $action = fx::input()->fetch_post('action');
+        $entity = fx::input()->fetchPost('entity');
+        $action = fx::input()->fetchPost('action');
         
         if (!$entity || !$action) {
             return new Controller\Admin();
@@ -24,8 +24,8 @@ class Admin extends Base {
         
         fx::env('ajax', true);
         
-        $posting = fx::input()->fetch_post('posting');
-        if (!preg_match("~^module_~", $entity) || fx::input()->fetch_post('fx_admin')) {
+        $posting = fx::input()->fetchPost('posting');
+        if (!preg_match("~^module_~", $entity) || fx::input()->fetchPost('fx_admin')) {
             $entity = 'admin_'.$entity;
         }
         if ($posting && $posting !== 'false') {
@@ -34,7 +34,7 @@ class Admin extends Base {
 
         $path = explode('_',$entity,2);
         if ($path[0] == 'admin') {
-            $classname = 'Floxim\\Floxim\\Admin\\Controller\\'.fx::util()->underscoreToCamal($path[1]);
+            $classname = 'Floxim\\Floxim\\Admin\\Controller\\'.fx::util()->underscoreToCamel($path[1]);
         } else {
             // todo: psr0 what?
         }

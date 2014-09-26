@@ -8,9 +8,9 @@ class Widget extends Frontoffice {
     protected $_action_prefix = 'do_';
     protected $_meta = array();
     
-    protected function _get_config_sources() {
+    protected function getConfigSources() {
         $sources = array();
-        $c_name = $this->get_controller_name();
+        $c_name = $this->getControllerName();
         // todo: psr0 need fix
         $std_conf = fx::config()->DOCUMENT_ROOT.'/floxim/std/widget/'.$c_name."/".$c_name.'.cfg.php';
         $custom_conf = fx::config()->DOCUMENT_ROOT.'/widget/'.$c_name."/".$c_name.'.cfg.php';
@@ -23,23 +23,23 @@ class Widget extends Frontoffice {
         return $sources;
     }
     
-    public function do_show() {
+    public function doShow() {
         return $this->input;
     }
     
     protected $widget_keyword = null;
-    public function set_keyword($keyword) {
+    public function setKeyword($keyword) {
         $this->widget_keyword = $keyword;
     }
     
-    public function get_controller_name($with_type = false){
+    public function getControllerName($with_type = false){
         if (!is_null($this->widget_keyword)) {
             return ($with_type ? "widget_" : '').$this->widget_keyword;
         }
-        return parent::get_controller_name($with_type);
+        return parent::getControllerName($with_type);
     }
     
-    protected function _get_controller_variants() {
-        return array($this->get_controller_name(true));
+    protected function getControllerVariants() {
+        return array($this->getControllerName(true));
     }
 }

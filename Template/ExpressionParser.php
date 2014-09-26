@@ -26,7 +26,7 @@ class ExpressionParser extends Fsm {
     const T_ARR = 3;
     const T_ROOT = 0;
     
-    public function show_state() {
+    public function showState() {
         $vars = array(
             1 => 'CODE',
             2 => 'VAR_NAME',
@@ -38,18 +38,18 @@ class ExpressionParser extends Fsm {
     }
     
     public function __construct() {
-        $this->add_rule(self::CODE, '`', null, 'start_esc');
-        $this->add_rule(self::ESC, '`', null, 'end_esc');
-        $this->add_rule(array(self::CODE, self::ARR_INDEX, self::VAR_NAME), '~^\$~', null, 'start_var');
-        $this->add_rule(array(self::VAR_NAME, self::ARR_INDEX), array('[', '.'), null, 'start_arr');
-        $this->add_rule(
+        $this->addRule(self::CODE, '`', null, 'start_esc');
+        $this->addRule(self::ESC, '`', null, 'end_esc');
+        $this->addRule(array(self::CODE, self::ARR_INDEX, self::VAR_NAME), '~^\$~', null, 'start_var');
+        $this->addRule(array(self::VAR_NAME, self::ARR_INDEX), array('[', '.'), null, 'start_arr');
+        $this->addRule(
             self::VAR_NAME, 
             "~^[^\%a-z0-9_]~i",
             null, 
             'end_var'
         );
-        $this->add_rule(self::ARR_INDEX, "~^[^a-z0-9\%_\.]~", null, 'end_var_dot');
-        $this->add_rule(self::ARR_INDEX, ']', null, 'end_arr');
+        $this->addRule(self::ARR_INDEX, "~^[^a-z0-9\%_\.]~", null, 'end_var_dot');
+        $this->addRule(self::ARR_INDEX, ']', null, 'end_arr');
         $this->init_state = self::CODE;
     }
     
@@ -57,20 +57,20 @@ class ExpressionParser extends Fsm {
     public $curr_node = null;
     
     
-    public function start_esc($ch) {
-        $this->push_state(self::ESC);
+    public function startEsc($ch) {
+        $this->pushState(self::ESC);
     }
     
-    public function end_esc($ch) {
-        $this->pop_state();
+    public function endEsc($ch) {
+        $this->popState();
     }
     
-    public function push_stack($node) {
+    public function pushStack($node) {
         $this->stack[]= $node;
         $this->curr_node = $node;
     }
     
-    public function pop_stack() {
+    public function popStack() {
         $node = array_pop($this->stack);
         $this->curr_node = end($this->stack);
         return $node;
@@ -79,13 +79,13 @@ class ExpressionParser extends Fsm {
     public function parse($string) {
         $this->root = self::node(self::T_ROOT);
         $this->stack = array();
-        $this->push_stack($this->root);
+        $this->pushStack($this->root);
         $this->string = $string;
         parent::parse($string);
         return $this->root;
     }
     
-    public function start_arr($ch) {
+    public function startArr($ch) {
         $is_dot = $ch == '.';
         // $item["olo".$id] - ignore dot
         if ($is_dot && $this->state == self::ARR_INDEX && $this->curr_node->starter != '.') {
@@ -95,15 +95,15 @@ class ExpressionParser extends Fsm {
                 ($is_dot && $this->state == self::ARR_INDEX) ||
                 $this->curr_node->starter == '.'
             ) {
-            $this->end_arr();
+            $this->endArr();
         }
         
         // test for $loop.items.count()
         if ($is_dot) {
-            list($method_name, $bracket) = $this->get_next(2);
+            list($method_name, $bracket) = $this->getNext(2);
             $is_method = preg_match("~^[a-z0-9_]+$~", $method_name) && $bracket == '(';
             if ($is_method) {
-                $this->end_var('->');
+                $this->endVar('->');
                 return;
             }
         }
@@ -111,51 +111,51 @@ class ExpressionParser extends Fsm {
         // if var still has no name - just continue without switching state
         if ($this->curr_node->type == self::T_VAR && count($this->curr_node->name) == 0) {
             if ($ch == '.') {
-                $this->curr_node->context_level_up(0);
+                $this->curr_node->contextLevelUp(0);
                 return;
             }
         }
         $arr = self::node(self::T_ARR);
         $arr->starter = $ch;
-        $this->curr_node->add_child($arr);
-        $this->push_stack($arr);
-        $this->push_state(self::ARR_INDEX);
+        $this->curr_node->addChild($arr);
+        $this->pushStack($arr);
+        $this->pushState(self::ARR_INDEX);
     }
     
-    public function end_var_dot($ch) {
+    public function endVarDot($ch) {
         if ($this->curr_node->starter != '.') {
             return false;
         }
-        $this->end_var($ch);
+        $this->endVar($ch);
     }
     
-    public function start_var($ch) {
+    public function startVar($ch) {
         $var = self::node(self::T_VAR);
         $var->name = array();
         if ($this->curr_node->type == self::T_VAR) {
             $this->curr_node->name []= $var;
         } else {
-            $this->curr_node->add_child($var);
+            $this->curr_node->addChild($var);
         }
-        $this->push_stack($var);
-        $this->push_state(self::VAR_NAME);
+        $this->pushStack($var);
+        $this->pushState(self::VAR_NAME);
     }
     
-    public function end_var($ch) {
+    public function endVar($ch) {
         do {
-            $this->pop_state();
-            $this->pop_stack();
+            $this->popState();
+            $this->popStack();
         } while ($this->state == self::VAR_NAME);
         if ($ch == ']') {
-            $this->end_arr();
+            $this->endArr();
         } else {
-            $this->read_code($ch);
+            $this->readCode($ch);
         }
     }
     
-    public function end_arr() {
-        $this->pop_stack();
-        $this->pop_state();
+    public function endArr() {
+        $this->popStack();
+        $this->popState();
         // $_[$x] -> $this->v($this->v('x'), 0)
         if ($this->curr_node->type == self::T_VAR && count($this->curr_node->name) == 0) {
             $index_expr = $this->curr_node->children;
@@ -165,32 +165,32 @@ class ExpressionParser extends Fsm {
         }
     }
     
-    public function default_callback($ch) {
+    public function defaultCallback($ch) {
         switch ($this->state) {
             case self::VAR_NAME:
                 if ($ch == '_') {
-                    $this->curr_node->context_level_up();
+                    $this->curr_node->contextLevelUp();
                 } else {
-                    $this->curr_node->append_name_chunk($ch);
+                    $this->curr_node->appendNameChunk($ch);
                 }
                 break;
             case self::CODE: case self::ESC:
-                $this->read_code($ch);
+                $this->readCode($ch);
                 break;
             case self::ARR_INDEX:
                 if ($this->curr_node->starter == '.' && preg_match("~^[\%a-z0-9_]+$~i", $ch)) {
                     $ch = '"'.$ch.'"';
                 }
-                $this->read_code($ch);
+                $this->readCode($ch);
                 break;
         }
     }
     
-    public function read_code($ch) {
+    public function readCode($ch) {
         
         if ($ch == '.') {
-            $next = $this->get_next(2);
-            $back = $this->get_prev();
+            $next = $this->getNext(2);
+            $back = $this->getPrev();
             if ($next[1] === '(' && !preg_match("~\s~", $next[0]) && !preg_match("~\s~", $back[0])) {
                 $ch = '->';
             }
@@ -214,11 +214,11 @@ class ExpressionParser extends Fsm {
             }
             $code->data = $ch;
             
-            $node->add_child($code);
+            $node->addChild($code);
             if ($ch == ')') {
-                $this->pop_stack();
+                $this->popStack();
             } elseif ($ch == '(') {
-                $this->push_stack($code);
+                $this->pushStack($code);
             }
         }
         if ($this->looking_for_var_name && count($this->stack) == 1) {
@@ -241,7 +241,7 @@ class ExpressionParser extends Fsm {
      * makes:
      * array('$' => '$news', '$title' => 'strtoupper($news)', '$author' => '$user');
      */
-    public function parse_with($expr) {
+    public function parseWith($expr) {
         $tree = $this->parse($expr);
         $parts = array();
         $stack = array();
@@ -261,7 +261,7 @@ class ExpressionParser extends Fsm {
         $res = array();
         // helper to trim & clean parts
         $trim_esc = function($s) {
-            return str_replace('``', '', trim($s));
+            return strReplace('``', '', trim($s));
         };
         foreach ($parts as $p) {
             $value = null;
@@ -297,7 +297,7 @@ class ExpressionParser extends Fsm {
     }
     
     protected $looking_for_var_name = false;
-    public function find_var_name($str) {
+    public function findVarName($str) {
         $this->looking_for_var_name = true;
         try {
             $this->parse($str);
@@ -343,7 +343,7 @@ class ExpressionParser extends Fsm {
             case self::T_VAR:
                 $is_local = $rebuild;
                 $var_name = '';
-                $context_level = $node->get_context_level();
+                $context_level = $node->getContextLevel();
                 if (!is_null($context_level)) {
                     $context_level = ", ".$context_level;
                 }

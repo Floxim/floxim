@@ -16,33 +16,33 @@ class Template {
     
     public function __construct($action, $data = array()) {
         if (count($data) > 0) {
-            $this->push_context($data);
+            $this->pushContext($data);
         }
         $this->action = $action;
     }
     
-    public function set_parent($parent_template, $inherit = false) {
+    public function setParent($parent_template, $inherit = false) {
         $this->_parent = $parent_template;
         $this->_inherit_context = $inherit;
-        $this->_level = $parent_template->get_level() + 1;
+        $this->_level = $parent_template->getLevel() + 1;
         return $this;
     }
     
-    public function is_admin($set = null) {
+    public function isAdmin($set = null) {
         if ($set === null) {
-            return !$this->_admin_disabled && fx::is_admin();
+            return !$this->_admin_disabled && fx::isAdmin();
         }
         $this->_admin_disabled = ! $set;
         return $this;
     }
     
-    public function get_level() {
+    public function getLevel() {
         return $this->_level;
     }
     
     protected $context_stack_meta = array();
     
-    public function push_context($data = array(), $meta = array()) {
+    public function pushContext($data = array(), $meta = array()) {
         $this->context_stack []= $data;
         $meta = array_merge(array(
             'transparent' => false,
@@ -51,7 +51,7 @@ class Template {
         $this->context_stack_meta[] = $meta;
     }
     
-    public function pop_context() {
+    public function popContext() {
         array_pop($this->context_stack);
         $meta = array_pop($this->context_stack_meta);
         if ($meta['autopop']) {
@@ -62,41 +62,41 @@ class Template {
     
     protected $mode_stack = array();
     
-    public function push_mode($mode, $value) {
+    public function pushMode($mode, $value) {
         if (!isset($this->mode_stack[$mode])) {
             $this->mode_stack[$mode] = array();
         }
         $this->mode_stack[$mode] []= $value;
     }
     
-    public function pop_mode($mode) {
+    public function popMode($mode) {
         if (isset($this->mode_stack[$mode])) {
             array_pop($this->mode_stack[$mode]);
         }
     }
     
-    public function get_mode($mode) {
+    public function getMode($mode) {
         if (isset($this->mode_stack[$mode])) {
             return end($this->mode_stack[$mode]);
         }
         if ($this->_parent) {
-            return $this->_parent->get_mode($mode);
+            return $this->_parent->getMode($mode);
         }
     }
 
-    public function set_var($var, $val) {
+    public function setVar($var, $val) {
         $stack_count = count($this->context_stack);
         if ($stack_count == 0) {
-            $this->push_context(array(), array('transparent' => true));
+            $this->pushContext(array(), array('transparent' => true));
         }
         if (!is_array($this->context_stack[$stack_count-1])) {
-            $this->push_context(array(), array('transparent' => true, 'autopop' => true));
+            $this->pushContext(array(), array('transparent' => true, 'autopop' => true));
             $stack_count++;
         }
         $this->context_stack[$stack_count-1][$var] = $val;
     }
     
-    protected function print_var($val, $meta = null) {
+    protected function printVar($val, $meta = null) {
         $tf = null;
         if ($meta && isset($meta['var_type'])) {
             $tf = new Field($val, $meta);
@@ -105,7 +105,7 @@ class Template {
         return (string) $res;
     }
     
-    public function get_help() {
+    public function getHelp() {
         ini_set('memory_limit', '1G');
         ob_start();
         ?>
@@ -113,7 +113,7 @@ class Template {
             <a class="fx_help_expander">?</a>
             <div class="fx_help_data" style="display:none;">
             <?php
-            $this->print_stack_help();
+            $this->printStackHelp();
             ?>
             </div>
         </div>
@@ -121,19 +121,19 @@ class Template {
         return ob_get_clean();
     }
     
-    public function print_stack_help() {
+    public function printStackHelp() {
         $context_stack = array_reverse($this->context_stack);
-        echo "<div class='fx_help_template_title'>".$this->_get_template_sign()."</div>";
+        echo "<div class='fx_help_template_title'>".$this->getTemplateSign()."</div>";
         foreach ($context_stack as $level => $stack) {
-            echo $this->get_item_help($stack, 0);
+            echo $this->getItemHelp($stack, 0);
         }
         if ($this->_parent && $this->_inherit_context){
             echo "<hr />";
-            $this->_parent->print_stack_help();
+            $this->_parent->printStackHelp();
         }
     }
     
-    public function get_item_help($item, $level = 0, $c_path = array()) {
+    public function getItemHelp($item, $level = 0, $c_path = array()) {
         $c_path []= $item;
         $item_type = is_array($item) ? 'Array' : get_class($item);
         if ($item instanceof System\Entity || $item instanceof Form\Field\Field || $item instanceof Form\Form) {
@@ -191,7 +191,7 @@ class Template {
             <?php
             if ($is_complex && !$is_recursion) {
                 if (! ($value instanceof Loop)) {
-                    echo $this->get_item_help($value, $level+1, $c_path);
+                    echo $this->getItemHelp($value, $level+1, $c_path);
                 }
             }
         }
@@ -203,32 +203,32 @@ class Template {
         return ob_get_clean();
     }
     
-    protected function get_var_meta($var_name = null, $source = null) {
+    protected function getVarMeta($var_name = null, $source = null) {
         if ($var_name === null) {
             return array();
         }
         if ($source && $source instanceof Entity) {
-            $meta = $source->get_field_meta($var_name);
+            $meta = $source->getFieldMeta($var_name);
             return is_array($meta) ? $meta : array();
         }
         for ($i = count($this->context_stack) - 1; $i >= 0; $i--) {
             if ( !($this->context_stack[$i] instanceof Entity) ) {
                 continue;
             }
-            if ( ($meta = $this->context_stack[$i]->get_field_meta($var_name))) {
+            if ( ($meta = $this->context_stack[$i]->getFieldMeta($var_name))) {
                 return $meta;
             }
         }
         if ($this->_parent && $this->_inherit_context) {
-            return $this->_parent->get_var_meta($var_name);
+            return $this->_parent->getVarMeta($var_name);
         }
         return array();
     }
     
     protected $is_wrapper = false;
-    public function is_wrapper($set = null){
+    public function isWrapper($set = null){
         if (func_num_args() == 0) {
-            return $this->is_wrapper ? true : ($this->_parent ? $this->_parent->is_wrapper() : false);
+            return $this->is_wrapper ? true : ($this->_parent ? $this->_parent->isWrapper() : false);
         }
         $this->is_wrapper = (bool) $set;
     }
@@ -311,13 +311,13 @@ class Template {
         return null;
     }
     
-    public static function beautify_html($html) {
+    public static function beautifyHtml($html) {
         $level = 0;
         $html = preg_replace_callback(
             '~\s*?<(/?)([a-z0-9]+)[^>]*?(/?)>\s*?~', 
             function($matches) use (&$level) {
                 $is_closing = $matches[1] == '/';
-                $is_single = in_array(strtolower($matches[2]), array('img', 'br', 'link')) || $matches[3] == '/';
+                $is_single = inArray(strtolower($matches[2]), array('img', 'br', 'link')) || $matches[3] == '/';
                     
                 if ($is_closing) {
                     $level = $level == 0 ? $level : $level - 1;
@@ -335,7 +335,7 @@ class Template {
         return $html;
     }
     
-    protected function _get_template_sign() {
+    protected function getTemplateSign() {
         // todo: psr0 need fix
         $template_name = preg_replace("~^fx_template_~", '', get_class($this));
         return $template_name.'.'.$this->action;
@@ -346,8 +346,8 @@ class Template {
     /*
      * @param $mode - marker | data | both
      */
-    public function render_area($area, $mode = 'both') {
-    	$is_admin =  fx::is_admin();
+    public function renderArea($area, $mode = 'both') {
+    	$is_admin =  fx::isAdmin();
         if ($mode != 'marker') {
             fx::trigger('render_area', array('area' => $area));
             if ($this->v('_idle')) {
@@ -363,10 +363,10 @@ class Template {
             $mode != 'marker' && 
             (!isset($area['render']) || $area['render'] != 'manual')
         ) {
-            $area_blocks = fx::page()->get_area_infoblocks($area['id']);
+            $area_blocks = fx::page()->getAreaInfoblocks($area['id']);
             $pos = 1;
             foreach ($area_blocks as $ib) {
-                $ib->add_params(array('infoblock_area_position' => $pos));
+                $ib->addParams(array('infoblock_area_position' => $pos));
                 $result = $ib->render();
                 echo $result;
                 $pos++;
@@ -384,7 +384,7 @@ class Template {
         }
     }
 
-    public function get_areas() {
+    public function getAreas() {
         $areas = array();
         ob_start();
         fx::listen('render_area.get_areas', function($e) use (&$areas) {
@@ -400,14 +400,14 @@ class Template {
         return $areas;
     }
     
-    public function has_action($action = null) {
+    public function hasAction($action = null) {
         if (is_null($action)) {
             $action = $this->action;
         }
-        return method_exists($this, self::_get_action_method($action));
+        return method_exists($this, self::getActionMethod($action));
     }
     
-    protected static function _get_action_method($action) {
+    protected static function getActionMethod($action) {
         return 'tpl_'.$action;
     }
 
@@ -417,11 +417,11 @@ class Template {
             return '<div class="fx_template_error">bad recursion?</div>';
         }
         if (count($data) > 0) {
-            $this->push_context($data);
+            $this->pushContext($data);
         }
         ob_start();
-        $method = self::_get_action_method($this->action);
-        if ($this->has_action()) {
+        $method = self::getActionMethod($this->action);
+        if ($this->hasAction()) {
             try {
                 $this->$method();
             } catch (\Exception $e) {
@@ -436,10 +436,10 @@ class Template {
         if ($this->v('_idle')) {
             return $result;
         }
-        if (fx::is_admin() && !$this->_parent) {
+        if (fx::isAdmin() && !$this->_parent) {
             self::$count_replaces++;
-            $result = Template::replace_areas($result);
-            $result = Field::replace_fields($result);
+            $result = Template::replaceAreas($result);
+            $result = Field::replaceFields($result);
         }
         return $result;
     }
@@ -449,11 +449,11 @@ class Template {
     protected $_templates = array();
 
 
-    public function get_template_variants() {
+    public function getTemplateVariants() {
         return $this->_templates;
     }
     
-    public function get_info() {
+    public function getInfo() {
         if (!$this->action) {
             throw new \Exception('Specify template action/variant before getting info');
         }
@@ -464,16 +464,16 @@ class Template {
         }
     }
     
-    public static function replace_areas($html) {
+    public static function replaceAreas($html) {
         if (!strpos($html, '###fxa')) {
             return $html;
         }
-        $html = self::_replace_areas_wrapped_by_tag($html);
-        $html = self::_replace_areas_in_text($html);
+        $html = self::replaceAreasWrappedByTag($html);
+        $html = self::replaceAreasInText($html);
         return $html;
     }
     
-    protected static function _replace_areas_wrapped_by_tag($html) {
+    protected static function replaceAreasWrappedByTag($html) {
     	//$html = preg_replace("~<!--.*?-->~s", '', $html);
     	$html = preg_replace_callback(
             /*"~(<[a-z0-9_-]+[^>]*?>)\s*###fxa(\d+)###\s*(</[a-z0-9_-]+>)~s",*/
@@ -490,8 +490,8 @@ class Template {
                     return $res;
                 }
                 
-                $tag = HtmlToken::create_standalone($matches[1]);
-                $tag->add_meta(array(
+                $tag = HtmlToken::createStandalone($matches[1]);
+                $tag->addMeta(array(
                     'class' => 'fx_area',
                     'data-fx_area' => $replacement[0]
                 ));
@@ -509,7 +509,7 @@ class Template {
         return $html;
     }
     
-    protected static function _replace_areas_in_text($html) {
+    protected static function replaceAreasInText($html) {
     	$html = preg_replace_callback(
             "~###fxa(\d+)\|?(.*?)###~",
             function($matches) {
@@ -522,8 +522,8 @@ class Template {
                     return $replacement[1];
                 }
                 $tag_name = 'div';
-                $tag = HtmlToken::create_standalone('<'.$tag_name.'>');
-                $tag->add_meta(array(
+                $tag = HtmlToken::createStandalone('<'.$tag_name.'>');
+                $tag->addMeta(array(
                     'class' => 'fx_area fx_wrapper',
                     'data-fx_area' => $replacement[0]
                 ));

@@ -10,7 +10,7 @@ class MigrationManager {
         $this->params=array_merge($this->params,$params);
     }
 
-    protected function get_param($name, $default=null) {
+    protected function getParam($name, $default=null) {
         return isset($this->params[$name]) ? $this->params[$name] : $default;
     }
 
@@ -38,12 +38,12 @@ class MigrationManager {
                 fx::files()->mkdir($dir);
             }
             fx::files()->writefile($dir.'/'.$name.'.php', $content);
-            if ($this->get_param('console')) {
+            if ($this->getParam('console')) {
                 echo('Successful!');
             }
             return true;
         } catch (Exception $e) {
-            if ($this->get_param('console')) {
+            if ($this->getParam('console')) {
                 echo('Error: '.$e->getMessage());
             }
             return false;
@@ -68,7 +68,7 @@ class MigrationManager {
 
         // get completed migration
         $migrations_completed=fx::data('patch_migration')->all();
-        if ($migrations_completed_name=$migrations_completed->get_values('name')) {
+        if ($migrations_completed_name=$migrations_completed->getValues('name')) {
             $migration_names=array_diff_key($migration_names,array_combine($migrations_completed_name,array_fill(0,count($migrations_completed_name),1)));
         }
 
@@ -79,7 +79,7 @@ class MigrationManager {
             if (file_exists($file)) {
                 require_once($file);
                 $migration=new $name_full;
-                $migration->exec_up();
+                $migration->execUp();
                 $count++;
             }
         }

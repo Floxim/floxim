@@ -28,13 +28,13 @@ class Entity extends System\Entity {
         return true;
     }
     
-    protected function _after_save() {
-        parent::_after_save();
-        fx::alang()->drop_dict_files($this['dict']);
+    protected function afterSave() {
+        parent::afterSave();
+        fx::alang()->dropDictFiles($this['dict']);
     }
     
-    protected function _after_delete() {
-        parent::_after_delete();
-        fx::alang()->drop_dict_files($this['dict']);
+    protected function afterDelete() {
+        parent::afterDelete();
+        fx::alang()->dropDictFiles($this['dict']);
     }
 }

@@ -207,9 +207,9 @@ class Fx {
             return $finder;
         }
         if (is_array($id) || $id instanceof \Traversable ) {
-            return $finder->get_by_ids($id);
+            return $finder->getByIds($id);
         }
-        return $finder->get_by_id($id);
+        return $finder->getById($id);
     }
     
     public static function content($type = null, $id = null) {
@@ -235,12 +235,12 @@ class Fx {
             self::$router = new Router\Manager();
     	}
         if (func_num_args() == 1) {
-            return self::$router->get_router($router_name);
+            return self::$router->getRouter($router_name);
         }
     	return self::$router;
     }
     
-    public static function is_admin() {
+    public static function isAdmin() {
         static $is_admin = null;
         if (is_null($is_admin)) {
             $is_admin = (bool) self::env('is_admin');
@@ -316,7 +316,7 @@ class Fx {
             return new Controller\Layout($input, $action);
         } elseif($controller=='content') {
             $controller_instance = new Controller\Component($input, $action);
-            $controller_instance->set_content_type('content');
+            $controller_instance->setContentType('content');
             return $controller_instance;
         }
 
@@ -363,14 +363,14 @@ class Fx {
                     $component = fx::data('component',$c_keyword);
 
                     if ($component) {
-                        foreach ($component->get_ancestors() as $parent_com) {
+                        foreach ($component->getAncestors() as $parent_com) {
                             try {
                                 $c_class = fx::getComponentNamespace($parent_com['keyword']) . '\\Controller';
                                 if (!class_exists($c_class)) {
                                     throw new \Exception();
                                 }
                                 $controller_instance = new $c_class($input, $action);
-                                $controller_instance->set_content_type($c_keyword); // todo: psr0 need verify
+                                $controller_instance->setContentType($c_keyword); // todo: psr0 need verify
                                 return $controller_instance;
                             } catch (\Exception $ex) {
 
@@ -461,7 +461,7 @@ class Fx {
         return $arr;
     }
     
-    public static function dig_set(&$collection, $var_path, $var_value, $merge = false) {
+    public static function digSet(&$collection, $var_path, $var_value, $merge = false) {
         $var_path = explode('.', $var_path);
         
         $arr =& $collection;
@@ -533,14 +533,14 @@ class Fx {
         }
 
         // load options from DB
-        self::config()->load_from_db();
+        self::config()->loadFromDb();
 
         if (fx::config('cache.meta')) {
-            self::_load_meta_cache();
+            self::loadMetaCache();
         }
     }
     
-    protected static function _load_meta_cache() {
+    protected static function loadMetaCache() {
         // preload meta info
         $cache_file = fx::path('files', 'cache/meta_cache.php');
         
@@ -573,15 +573,15 @@ class Fx {
         static $lang = null;
         if (!$lang) {
             $lang = fx::data('lang_string');
-            $lang->set_lang(fx::env()->get_site()->get('language'));
+            $lang->setLang(fx::env()->getSite()->get('language'));
         }
         if ($string === null) {
             return $lang;
         }
         
-        if (!($res = $lang->get_string($string, $dict))) {
+        if (!($res = $lang->getString($string, $dict))) {
             try {
-                $lang->add_string($string, $dict);
+                $lang->addString($string, $dict);
             } catch (\Exception $e) {
                 fx::log('exc', $e);
             }
@@ -599,15 +599,15 @@ class Fx {
         static $lang = null;
         if (!$lang) {
             $lang = fx::data('lang_string');
-            $lang->set_lang();
+            $lang->setLang();
         }
         if ($string === null) {
             return $lang;
         }
         
-        if (!($res = $lang->get_string($string, $dict))) {
+        if (!($res = $lang->getString($string, $dict))) {
             try {
-                $lang->add_string($string, $dict);
+                $lang->addString($string, $dict);
             } catch (\Exception $e) {
                 fx::log('exc', $e);
             }
@@ -667,10 +667,10 @@ class Fx {
      * @return \Floxim\User\Component\User\Entity
      */
     public static function user() {
-        return self::env()->get_user();
+        return self::env()->getUser();
     }
     
-    protected static function _get_event_manager() {
+    protected static function getEventManager() {
         static $event_manager = null;
         if (is_null($event_manager)) {
             $event_manager = new Eventmanager();
@@ -678,15 +678,15 @@ class Fx {
         return $event_manager;
     }
     public static function listen($event_name, $callback) {
-        self::_get_event_manager()->listen($event_name, $callback);
+        self::getEventManager()->listen($event_name, $callback);
     }
     
     public static function unlisten($event_name) {
-        self::_get_event_manager()->unlisten($event_name);
+        self::getEventManager()->unlisten($event_name);
     }
     
     public static function trigger($event, $params = null) {
-        self::_get_event_manager()->trigger($event, $params);
+        self::getEventManager()->trigger($event, $params);
     }
     
     
@@ -725,12 +725,12 @@ class Fx {
         $args = func_get_args();
         switch ($args[1]) {
             case 'size':
-                $path = fx::path()->to_abs($args[0]);
-                return $files->readable_size($path);
+                $path = fx::path()->toAbs($args[0]);
+                return $files->readableSize($path);
             case 'name':
-                return fx::path()->file_name($args[0]);
+                return fx::path()->fileName($args[0]);
             case 'type':
-                return trim(fx::path()->file_extension($args[0]), '.');
+                return trim(fx::path()->fileExtension($args[0]), '.');
         }
     }
     
@@ -758,7 +758,7 @@ class Fx {
     public static function image($value, $format) {
         try {
             $thumber = new Thumb($value, $format);
-            $res = $thumber->get_result_path();
+            $res = $thumber->getResultPath();
         } catch (\Exception $e) {
             $res = '';
         }

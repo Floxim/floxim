@@ -14,7 +14,7 @@ class Eventmanager {
                 $this->listen($event_name_var, $callback);
             }
         }
-        $event = $this->_parse_event_name($event_name);
+        $event = $this->parseEventName($event_name);
         if ($event['name'] == '*') {
             return;
         }
@@ -25,7 +25,7 @@ class Eventmanager {
         );
     }
     
-    protected function _parse_event_name($event_name) {
+    protected function parseEventName($event_name) {
         $parts = explode(".", $event_name);
         if (!isset($parts[1])) {
             $parts[1] = 'global';
@@ -38,7 +38,7 @@ class Eventmanager {
     }
     
     public function unlisten($event_name) {
-        $event = $this->_parse_event_name($event_name);
+        $event = $this->parseEventName($event_name);
         foreach ($this->_listeners as $lst_num => $lst) {
             if ($event['name'] == '*' || $event['name'] == $lst['event_name']) {
                 if ($event['scope'] == $lst['event_scope']) {

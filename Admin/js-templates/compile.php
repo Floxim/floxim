@@ -1,4 +1,4 @@
-<?
+<?php
 class JSTX {
 	protected $options = array();
 	public function __construct($options = array()) {
@@ -46,7 +46,7 @@ class JSTX {
             return $res;
 	}
 	
-	protected function _groupSplit($string, $regexp) {
+	protected function groupSplit($string, $regexp) {
             $string = trim($string);
             $parts = preg_split($regexp, $string, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
             $res = array();
@@ -84,7 +84,7 @@ class JSTX {
 
             $delegated_jquery = array();
 
-            foreach ($this->_groupSplit($tpls, "~<!--\[(.+?)\]-->~") as $k => $tpl) {
+            foreach ($this->groupSplit($tpls, "~<!--\[(.+?)\]-->~") as $k => $tpl) {
                 if (!is_array($tpl)) {
                     $tpl = array($tpl);
                 }
@@ -96,7 +96,7 @@ class JSTX {
                 }
 			
                 foreach ($tpl as $tpl_num => $tpl_data) {
-                    $tpl_parts = $this->_groupSplit(
+                    $tpl_parts = $this->groupSplit(
                         "<!--template-->".$tpl_data, "~<!--(.+?)-->~"
                     );
                     foreach ($tpl_parts as $part_key => $part_data) {

@@ -24,14 +24,14 @@ class Finder extends System\Data {
         $data['remember'] = $data['remember'] ? 1 : 0;
         $session = $this->create($data);
         $session->save();
-        $session->set_cookie();
+        $session->setCookie();
         return $session;
     }
     
     /*
      * @todo should we do something with www/nowww problem?
      */
-    public function set_cookie($sid, $time) {
+    public function setCookie($sid, $time) {
         $host = null;
         setcookie(
             $this->cookie_name, 
@@ -45,12 +45,12 @@ class Finder extends System\Data {
     public function load() {
         static $session = null;
         if (is_null($session)) {
-            $this->drop_old_sessions();
-            $session_key = fx::input()->fetch_cookie($this->cookie_name);
+            $this->dropOldSessions();
+            $session_key = fx::input()->fetchCookie($this->cookie_name);
             if (!$session_key) {
                 return null;
             }
-            $session = $this->get_by_key($session_key);
+            $session = $this->getByKey($session_key);
             if ($session) {
                 $session->set('last_activity_time', time())->save();
             }
@@ -58,7 +58,7 @@ class Finder extends System\Data {
         return $session;
     }
     
-    public function drop_old_sessions() {
+    public function dropOldSessions() {
         $ttl = (int) fx::config('auth.remember_ttl');
         fx::db()->query(
                 'delete from {{session}} '
@@ -68,7 +68,7 @@ class Finder extends System\Data {
         );
     }
     
-    public function get_by_key($session_key) {
+    public function getByKey($session_key) {
         return $this
                 ->where('session_key', $session_key)
                 ->where('site_id', array(fx::env('site_id'), 0))
@@ -76,12 +76,12 @@ class Finder extends System\Data {
     }
     
     public function stop() {
-        $session_key = fx::input()->fetch_cookie($this->cookie_name);
+        $session_key = fx::input()->fetchCookie($this->cookie_name);
         if (!$session_key) {
             return;
         }
-        $this->set_cookie(null, null);
-        $session = $this->get_by_key($session_key);
+        $this->setCookie(null, null);
+        $session = $this->getByKey($session_key);
         if (!$session) {
             return;
         }

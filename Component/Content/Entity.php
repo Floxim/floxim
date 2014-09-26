@@ -23,10 +23,10 @@ class Entity extends System\Entity implements Template\Entity {
      * Returns the type of the form "content_page"
      * And if $full = false type "page"
      */
-    public function get_type($full = true) {
+    public function getType($full = true) {
         if (is_null($this->_type)) {
             if (!$this->component_id) {
-                $this->_type = parent::get_type();
+                $this->_type = parent::getType();
             } else {
                 $this->_type = fx::data('component', $this->component_id)->get('keyword');
             }
@@ -35,22 +35,22 @@ class Entity extends System\Entity implements Template\Entity {
         return ($full ? 'content_' : '').$this->_type;
     }
     
-    public function set_component_id($component_id) {
+    public function setComponentId($component_id) {
         if ($this->component_id && $component_id != $this->component_id) {
             throw new \Exception("Component id can not be changed");
         }
         $this->component_id = intval($component_id);
     }
 
-    public function get_component_id() {
+    public function getComponentId() {
         return $this->component_id;
     }
     
-    public function is_instanceof($type) {
+    public function isInstanceof($type) {
         if ($this['type'] == $type) {
             return true;
         }
-        $chain = fx::data('component', $this->get_component_id())->get_chain();
+        $chain = fx::data('component', $this->getComponentId())->getChain();
         foreach ($chain as $com) {
             if ($com['keyword'] == $type) {
                 return true;
@@ -59,18 +59,18 @@ class Entity extends System\Entity implements Template\Entity {
         return false;
     }
 
-    public function get_upload_folder() {
+    public function getUploadFolder() {
         return "content/".$this->component_id;
     }
 
     /*
      * Populates $this->data based on administrative forms
      */
-    public function set_field_values($values = array(), $save_fields = null) {
+    public function setFieldValues($values = array(), $save_fields = null) {
         if (count($values) == 0) {
             return;
         }
-        $fields = $save_fields ? $this->get_fields()->find('keyword', $save_fields) : $this->get_fields();
+        $fields = $save_fields ? $this->getFields()->find('keyword', $save_fields) : $this->getFields();
         $result = array('status' => 'ok');
         foreach ($fields as $field) {
             $field_keyword = $field['keyword'];
@@ -84,17 +84,17 @@ class Entity extends System\Entity implements Template\Entity {
                 $value = $values[$field_keyword];
             }
             
-            if (!$field->check_rights()) {
+            if (!$field->checkRights()) {
                 continue;
             }
             
-            if ($field->validate_value($value)) {
-                $field->set_value($value);
-                $this[$field_keyword] = $field->get_savestring($this);
+            if ($field->validateValue($value)) {
+                $field->setValue($value);
+                $this[$field_keyword] = $field->getSavestring($this);
             } else {
-                $field->set_error();
+                $field->setError();
                 $result['status'] = 'error';
-                $result['text'][] = $field->get_error();
+                $result['text'][] = $field->getError();
                 $result['fields'][] = $field_keyword;
             }
         }
@@ -107,9 +107,9 @@ class Entity extends System\Entity implements Template\Entity {
 
     protected $_fields_to_show = null;
     
-    public function get_field_meta($field_keyword) {
-        $fields = $this->get_fields();
-        $is_template_var = self::_is_template_var($field_keyword);
+    public function getFieldMeta($field_keyword) {
+        $fields = $this->getFields();
+        $is_template_var = self::isTemplateVar($field_keyword);
         if ($is_template_var) {
             $field_keyword = mb_substr($field_keyword, 1);
             $cf = $fields[$field_keyword];
@@ -149,8 +149,8 @@ class Entity extends System\Entity implements Template\Entity {
         return $field_meta;
     }
     
-    public function get_form_fields() {
-        $all_fields = $this->get_fields();
+    public function getFormFields() {
+        $all_fields = $this->getFields();
         $form_fields = array();
         $coms = array();
         foreach ($all_fields as $field) {
@@ -160,7 +160,7 @@ class Entity extends System\Entity implements Template\Entity {
             if (method_exists($this, 'get_form_field_'.$field['keyword'])) {
                 $jsf = call_user_func(array($this, 'get_form_field_'.$field['keyword']), $field);
             } else {
-                $jsf = $field->get_js_field($this);
+                $jsf = $field->getJsField($this);
             }
             if ($jsf) {
                 if (!$jsf['tab']) {
@@ -177,16 +177,16 @@ class Entity extends System\Entity implements Template\Entity {
         return $form_fields;
     }
     
-    public function get_form_field_parent_id($field = null) {
+    public function getFormFieldParentId($field = null) {
         if (!$this['id']) {
             return;
         }
         
-        $finder = $this->get_avail_parents_finder();
+        $finder = $this->getAvailParentsFinder();
         if (!$finder) {
             return;
         }
-        $parents = $finder->get_tree('nested');
+        $parents = $finder->getTree('nested');
         $values = array();
         $c_id = $this['id'];
         $get_values = function($level, $level_num = 0) use (&$values, &$get_values, $c_id) {
@@ -194,7 +194,7 @@ class Entity extends System\Entity implements Template\Entity {
                 if ($page['id'] == $c_id) {
                     continue;
                 }
-                $values []= array($page['id'], str_repeat('- ', $level_num*2).$page['name']);
+                $values []= array($page['id'], strRepeat('- ', $level_num*2).$page['name']);
                 if ($page['nested']) {
                     $get_values($page['nested'], $level_num+1);
                 }
@@ -204,7 +204,7 @@ class Entity extends System\Entity implements Template\Entity {
         if (count($values) === 1) {
             return;
         }
-        $jsf = $field ? $field->get_js_field($this) : array();
+        $jsf = $field ? $field->getJsField($this) : array();
         $jsf['values'] = $values;
         $jsf['tab'] = 1;
         return $jsf;;
@@ -213,7 +213,7 @@ class Entity extends System\Entity implements Template\Entity {
     /**
      * Returns a finder to get "potential" parents for the object
      */
-    public function get_avail_parents_finder() {
+    public function getAvailParentsFinder() {
         $ib = fx::data('infoblock', $this['infoblock_id']);
         if (!$ib) {
             return false;
@@ -231,15 +231,15 @@ class Entity extends System\Entity implements Template\Entity {
         if ($ib['scope']['pages'] === 'this') {
             $finder->where('id', $ib['page_id']);
         } else {
-            $finder->descendants_of($root_id, $ib['scope']['pages'] != 'children');
+            $finder->descendantsOf($root_id, $ib['scope']['pages'] != 'children');
         }
         return $finder;
     }
     
-    public function get_template_record_atts($collection, $index) {
+    public function getTemplateRecordAtts($collection, $index) {
         $entity_meta = array(
             $this->get('id'),
-            $this->get_type(false)
+            $this->getType(false)
         );
         
         if ($collection->linker_map && isset($collection->linker_map[$index])) {
@@ -253,7 +253,7 @@ class Entity extends System\Entity implements Template\Entity {
             'class' => 'fx_entity'. ($collection->is_sortable ? ' fx_sortable' : '')
         );
         
-        if ($this->is_adder_placeholder()) {
+        if ($this->isAdderPlaceholder()) {
             $entity_atts['class'] .= ' fx_entity_adder_placeholder';
         }
         if (isset($this['_meta'])) {
@@ -262,20 +262,20 @@ class Entity extends System\Entity implements Template\Entity {
         return $entity_atts;
     }
     
-    public function add_template_record_meta($html, $collection, $index, $is_subroot) {
+    public function addTemplateRecordMeta($html, $collection, $index, $is_subroot) {
         // do nothing if html is empty
         if (!trim($html)) {
             return $html;
         }
         
-        $entity_atts = $this->get_template_record_atts($collection, $index);
+        $entity_atts = $this->getTemplateRecordAtts($collection, $index);
         
         if ($is_subroot) {
             $html = preg_replace_callback(
                 "~^(\s*?)(<[^>]+>)~", 
                 function($matches) use ($entity_atts) {
-                    $tag = Template\HtmlToken::create_standalone($matches[2]);
-                    $tag->add_meta($entity_atts);
+                    $tag = Template\HtmlToken::createStandalone($matches[2]);
+                    $tag->addMeta($entity_atts);
                     return $matches[1].$tag->serialize();
                 }, 
                 $html
@@ -283,11 +283,11 @@ class Entity extends System\Entity implements Template\Entity {
             return $html;
         }
         $proc = new Template\Html($html);
-        $html = $proc->add_meta($entity_atts);
+        $html = $proc->addMeta($entity_atts);
         return $html;
     }
     
-    protected function _before_save() {
+    protected function beforeSave() {
         
         $component = fx::data('component', $this->component_id);
         $link_fields = $component->fields()->find('type', Field\Entity::FIELD_LINK);
@@ -317,16 +317,16 @@ class Entity extends System\Entity implements Template\Entity {
             }
         }
         
-        if ($this->is_modified('parent_id') || ($this['parent_id'] && !$this['materialized_path'])) {
+        if ($this->isModified('parent_id') || ($this['parent_id'] && !$this['materialized_path'])) {
             $new_parent = $this['parent'];
             $this['level'] = $new_parent['level']+1;
             $this['materialized_path'] = $new_parent['materialized_path'].$new_parent['id'].'.';
         }
-        $this->_handle_move();
-        parent::_before_save();
+        $this->handleMove();
+        parent::beforeSave();
     }
     
-    public function _handle_move() {
+    public function handleMove() {
         $rel_item_id = null;
         if (isset($this['__move_before'])) {
             $rel_item_id = $this['__move_before'];
@@ -342,7 +342,7 @@ class Entity extends System\Entity implements Template\Entity {
         if (!$rel_item) {
             return;
         }
-        $rel_priority = fx::db()->get_var(array(
+        $rel_priority = fx::db()->getVar(array(
             'select priority from {{content}} where id = %d',
             $rel_item_id
         ));
@@ -384,14 +384,14 @@ class Entity extends System\Entity implements Template\Entity {
     /*
      * Store multiple links, linked to the entity
      */
-    protected function _save_multi_links() {
+    protected function saveMultiLinks() {
         $link_fields = 
-            $this->get_fields()->
+            $this->getFields()->
             find('keyword', $this->modified)->
             find('type', Field\Entity::FIELD_MULTILINK);
         foreach ($link_fields as $link_field) {
             $val = $this[$link_field['keyword']];
-            $relation = $link_field->get_relation();
+            $relation = $link_field->getRelation();
             $related_field_keyword = $relation[2];
             
             switch ($relation[0]) {
@@ -406,7 +406,7 @@ class Entity extends System\Entity implements Template\Entity {
                         $linked_item['priority'] = $c_priority;
                         $linked_item->save();
                     }
-                    $old_data->find_remove('id', $val->get_values('id'));
+                    $old_data->findRemove('id', $val->getValues('id'));
                     $old_data->apply(function($i) {
                         $i->delete();
                     });
@@ -427,7 +427,7 @@ class Entity extends System\Entity implements Template\Entity {
                         $linker_obj->save();
                     }
                     
-                    $old_linkers->find_remove('id', $val->linker_map->get_values('id'));
+                    $old_linkers->findRemove('id', $val->linker_map->getValues('id'));
                     $old_linkers->apply(function ($i) {
                         $i->delete();
                     });
@@ -439,18 +439,18 @@ class Entity extends System\Entity implements Template\Entity {
     /*
      * Get the id of the information block where to add the linked objects on the field $link_field
      */
-    public function get_link_field_infoblock($link_field_id) {
+    public function getLinkFieldInfoblock($link_field_id) {
         // information block, where ourselves live
         $our_infoblock = fx::data('infoblock', $this['infoblock_id']);
         return $our_infoblock['params']['field_'.$link_field_id.'_infoblock'];
     }
     
-    public function get_fields() {
+    public function getFields() {
         $com_id= $this->component_id;
         
         if (!isset(self::$content_fields_by_component[$com_id])) {
             $fields = array();
-            foreach ( fx::data('component', $com_id)->all_fields()  as $f) {
+            foreach ( fx::data('component', $com_id)->allFields()  as $f) {
                 $fields[$f['keyword']] = $f;
             }
             self::$content_fields_by_component[$com_id] = fx::collection($fields);
@@ -458,46 +458,46 @@ class Entity extends System\Entity implements Template\Entity {
         return self::$content_fields_by_component[$com_id];
     }
     
-    public function has_field($field_keyword) {
-        $fields = $this->get_fields();
+    public function hasField($field_keyword) {
+        $fields = $this->getFields();
         return isset($fields[$field_keyword]);
     }
 
-    protected function _after_delete() {
-        parent::_after_delete();
+    protected function afterDelete() {
+        parent::afterDelete();
         // delete images when deleting content
-        $image_fields = $this->get_fields()->
+        $image_fields = $this->getFields()->
                         find('type', Field\Entity::FIELD_IMAGE);
         foreach ($image_fields as $f) {
             $c_prop = $this[$f['keyword']];
-            if (fx::path()->is_file($c_prop)) {
+            if (fx::path()->isFile($c_prop)) {
                 fx::files()->rm($c_prop);
             }
         }
         
         if (!$this->_skip_cascade_delete_children) {
-            $this->delete_children();
+            $this->deleteChildren();
         }
     }
     
-    public function delete_children() {
-        $descendants = fx::data('content')->descendants_of($this);
+    public function deleteChildren() {
+        $descendants = fx::data('content')->descendantsOf($this);
         foreach ($descendants->all() as $d) {
             $d->_skip_cascade_delete_children = true;
             $d->delete();
         }
     }
     
-    protected function _after_update() {
-        parent::_after_update();
+    protected function afterUpdate() {
+        parent::afterUpdate();
         // modified image fields
-        $image_fields = $this->get_fields()->
+        $image_fields = $this->getFields()->
                         find('keyword', $this->modified)->
                         find('type', Field\Entity::FIELD_IMAGE);
         
         foreach ($image_fields as $img_field) {
             $old_value = $this->modified_data[$img_field['keyword']];
-            if (fx::path()->is_file($old_value)) {
+            if (fx::path()->isFile($old_value)) {
                 fx::files()->rm($old_value);
             }
         }
@@ -505,13 +505,13 @@ class Entity extends System\Entity implements Template\Entity {
         /*
          * Update level and mat.path for children if item moved somewhere
          */
-        if ($this->is_modified('parent_id')) {
+        if ($this->isModified('parent_id')) {
             $old_path = $this->modified_data['materialized_path'].$this['id'].'.';
             // new path for descendants
             $new_path = $this['materialized_path'].$this['id'].'.';
             $nested_items = fx::data('content')->where('materialized_path', $old_path.'%', 'LIKE')->all();
             $level_diff = 0;
-            if ($this->is_modified('level')) {
+            if ($this->isModified('level')) {
                 $level_diff = $this['level'] - $this->modified_data['level'];
             }
             foreach ($nested_items as $child) {
@@ -525,9 +525,9 @@ class Entity extends System\Entity implements Template\Entity {
     }
 
     public function fake() {
-        $fields = $this->get_fields();
+        $fields = $this->getFields();
         foreach ($fields as $f) {
-            $this[$f['keyword']] = $f->fake_value();
+            $this[$f['keyword']] = $f->fakeValue();
         }
     }
     
@@ -536,7 +536,7 @@ class Entity extends System\Entity implements Template\Entity {
      * @param bool $switch_to set true or false
      * @return bool
      */
-    public function is_adder_placeholder($switch_to = null) {
+    public function isAdderPlaceholder($switch_to = null) {
         if (func_num_args() == 1) {
             $this->_is_adder_placeholder = $switch_to;
         }

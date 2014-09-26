@@ -24,25 +24,25 @@ class Finder extends System\Data {
         $this->serialized = array('params', 'scope');
     }
     
-    public function is_layout() {
+    public function isLayout() {
         return $this->where('controller', 'layout')->where('action', 'show');
     }
     
-    public function get_by_id($id) {
+    public function getById($id) {
         if (is_numeric($id)) {
-            return parent::get_by_id($id);
+            return parent::getById($id);
         }
         if (preg_match("~fake~", $id)) {
             return $this->create(array('id' => $id));
         }
     }
     
-    public function get_for_page($page_id) {
+    public function getForPage($page_id) {
         $page = $page_id instanceof System\Entity ? $page_id : fx::data('page', $page_id);
         if (!$page) {
             return;
         }
-        $ids = $page->get_parent_ids();
+        $ids = $page->getParentIds();
         $ids []= $page['id'];
         $ids []= 0; // root
         $infoblocks = $this->
@@ -50,7 +50,7 @@ class Finder extends System\Data {
             where('site_id', $page['site_id'])->
             all();
         foreach ($infoblocks as $ib) {
-            if (!$ib->is_available_on_page($page)) {
+            if (!$ib->isAvailableOnPage($page)) {
                 $infoblocks->remove($ib);
             }
         }
@@ -69,18 +69,18 @@ class Finder extends System\Data {
      * If mount page is the same, the newer is stronger
      * @param fx_collection $infoblocks
      */
-    public function sort_infoblocks($infoblocks) {
+    public function sortInfoblocks($infoblocks) {
         $infoblocks->sort(function($a, $b) {
-            $a_scope = $a->get_scope_weight();
-            $b_scope = $b->get_scope_weight();
+            $a_scope = $a->getScopeWeight();
+            $b_scope = $b->getScopeWeight();
             if ($a_scope > $b_scope) {
                 return -1;
             }
             if ($a_scope < $b_scope) {
                 return 1;
             }
-            $a_level = count(fx::content('page', $a['page_id'])->get_parent_ids());
-            $b_level = count(fx::content('page', $b['page_id'])->get_parent_ids());
+            $a_level = count(fx::content('page', $a['page_id'])->getParentIds());
+            $b_level = count(fx::content('page', $b['page_id'])->getParentIds());
             if ($a_level > $b_level) {
                 return -1;
             }
@@ -93,7 +93,7 @@ class Finder extends System\Data {
         return $infoblocks;
     }
 
-    public function get_content_infoblocks($content_type = null) {
+    public function getContentInfoblocks($content_type = null) {
         if ($content_type) {
             $this->where('controller', 'component_'.$content_type);
         }

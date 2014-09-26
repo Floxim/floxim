@@ -31,7 +31,7 @@ class Token {
         $is_var = in_array($first_char, array('$', '%'));
         if ($is_var && !$is_close) {
             $ep = new ExpressionParser();
-            $name = $ep->find_var_name(trim($source, '/ '));
+            $name = $ep->findVarName(trim($source, '/ '));
         } else {
             preg_match("~^[^\s\/\\|}]+~", $source, $name);
             $name = $name[0];
@@ -54,7 +54,7 @@ class Token {
         }
         
         
-        $type_info = self::get_token_info($name);
+        $type_info = self::getTokenInfo($name);
         //if (preg_match("~^[\\\$%]~", $name, $var_marker)) {
         if ($is_var) {
             $props['id'] = preg_replace("~^[\\\$%]~", '', $name);
@@ -98,9 +98,9 @@ class Token {
         } elseif ($name == 'with' && !preg_match("~select=~", $source)) {
             $props['select'] = trim($source);
         } else {
-            $props = array_merge($props, TokenAttParser::get_atts($source));
+            $props = array_merge($props, TokenAttParser::getAtts($source));
             if ($name == 'var' && preg_match("~^\s*\|~", $source)) {
-                $props['modifiers'] = self::get_var_modifiers($source);
+                $props['modifiers'] = self::getVarModifiers($source);
             }
         }
         
@@ -129,7 +129,7 @@ class Token {
     
     public function dump() {
         if ($this->name == 'code') {
-            return $this->get_prop('value');
+            return $this->getProp('value');
         }
         $res = '{';
         $res .= $this->type == 'close' ? '/' : '';
@@ -142,15 +142,15 @@ class Token {
         return $res;
     }
     
-    public function is_empty() {
+    public function isEmpty() {
         if ($this->name != 'code') {
             return false;
         }
-        return !trim($this->get_prop('value'));
+        return !trim($this->getProp('value'));
     }
 
 
-    public static function get_var_modifiers($source_str) {
+    public static function getVarModifiers($source_str) {
         $p = new ModifierParser();
         $res = $p->parse($source_str);
         return $res;
@@ -213,7 +213,7 @@ class Token {
         )
     );
     
-    public static function get_token_info($type) {
+    public static function getTokenInfo($type) {
         $info = isset(self::$_token_types[$type]) ? self::$_token_types[$type] : array();
         if (!isset($info['contains'])) {
             $info['contains'] = array();
@@ -233,44 +233,44 @@ class Token {
         $this->props = $props;
     }
     
-    public function add_child(Token $token) {
+    public function addChild(Token $token) {
         if (!isset($this->children)) {
             $this->children = array();
         }
         $this->children []= $token;
     }
     
-    public function add_children(array $children) {
+    public function addChildren(array $children) {
         foreach ($children as $child) {
-            $this->add_child($child);
+            $this->addChild($child);
         }
     }
 
 
-    public function clear_children() {
+    public function clearChildren() {
         $this->children = array();
     }
     
-    public function get_children() {
+    public function getChildren() {
         return isset($this->children) ? $this->children : array();
     }
     
-    public function get_non_empty_children() {
+    public function getNonEmptyChildren() {
         $res = array();
-        $children = $this->get_children();
+        $children = $this->getChildren();
         foreach ($children as $i => $ch) {
-            if (!$ch->is_empty()) {
+            if (!$ch->isEmpty()) {
                 $res []= $ch;
             }
         }
         return $res;
     }
     
-    public function has_children() {
+    public function hasChildren() {
         return isset($this->children) && count($this->children) > 0;
     }
     
-    public function set_child($child, $index) {
+    public function setChild($child, $index) {
         if ($child === null) {
             unset($this->children[$index]);
         } else {
@@ -278,12 +278,12 @@ class Token {
         }
     }
     
-    public function set_children($children){
+    public function setChildren($children){
         $this->children = $children;
     }
 
 
-    public function set_prop($name, $value) {
+    public function setProp($name, $value) {
         if ($value === null){
             unset($this->props[$name]);
         } else {
@@ -291,11 +291,11 @@ class Token {
         }
     }
     
-    public function get_prop($name) {
+    public function getProp($name) {
         return isset($this->props[$name]) ? $this->props[$name] : null;
     }
     
-    public function get_all_props() {
+    public function getAllProps() {
         return $this->props;
     }
     

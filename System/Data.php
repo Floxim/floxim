@@ -26,7 +26,7 @@ abstract class Data {
     const HAS_ONE = 2;
     const MANY_MANY = 3;
     
-    protected function _livesearch_apply_terms($terms) {
+    protected function livesearchApplyTerms($terms) {
         foreach ($terms as $tp) {
             $this->where('name', '%'.$tp.'%', 'LIKE');
         }
@@ -39,17 +39,17 @@ abstract class Data {
         $term = trim($term);
         if (!empty($term)) {
             $terms = explode(" ", $term);
-            $this->_livesearch_apply_terms($terms);
+            $this->livesearchApplyTerms($terms);
         }
         if ($limit) {
             $this->limit($limit);
         }
-        $this->calc_found_rows(true);
+        $this->calcFoundRows(true);
         $items = $this->all();
         if (!$items) {
             return;
         }
-        $count = $this->get_found_rows();
+        $count = $this->getFoundRows();
         $res = array('meta' => array('total'=>$count), 'results' => array());
         
         $props = array('name', 'id');
@@ -73,12 +73,12 @@ abstract class Data {
         return array();
     }
     
-    public function get_relation($name) {
+    public function getRelation($name) {
         $rels = $this->relations();
         return isset($rels[$name]) ? $rels[$name] : null;
     }
 
-    public function get_multi_lang_fields() {
+    public function getMultiLangFields() {
         return array();
     }
 
@@ -86,13 +86,13 @@ abstract class Data {
      * @return \Floxim\Floxim\System\Collection
      */
     public function all() {
-        $data = $this->_get_entitys();
+        $data = $this->getEntitys();
         return $data;
     }
 
     public function one() {
         $this->limit = 1;
-        $data = $this->_get_entitys();
+        $data = $this->getEntitys();
         return isset($data[0]) ? $data[0] : false;
     }
     
@@ -110,12 +110,12 @@ abstract class Data {
      * For relational fields: join related item and prepare real field name
      * @param string $field
      */
-    protected function _prepare_complex_field($field, $operator = 'where') {
+    protected function prepareComplexField($field, $operator = 'where') {
         list($rel, $field_name) = explode('.', $field, 2);
         if (preg_match("~^\{\{.+\}\}$~", $rel)) {
             return $field;
         }
-        $relation = $this->get_relation($rel);
+        $relation = $this->getRelation($rel);
         if (!$relation) {
             return '`'.$rel.'`.`'.$field_name.'`';
         }
@@ -126,23 +126,23 @@ abstract class Data {
         $with_finder = $c_with[1];
         
         
-        $table = $with_finder->get_col_table($field_name, false);
+        $table = $with_finder->getColTable($field_name, false);
         $field = $with_name.'__'.$table.'.'.$field_name;
         return $field;
     }
     
-    protected function _prepare_condition($field, $value, $type) {
+    protected function prepareCondition($field, $value, $type) {
         if (is_array($field)) {
             foreach ($field as $n => $c_cond) {
-                $field[$n] = $this->_prepare_condition($c_cond[0], $c_cond[1], $c_cond[2]);
+                $field[$n] = $this->prepareCondition($c_cond[0], $c_cond[1], $c_cond[2]);
             }
             return array($field, $value, $type);
         }
         $original_field = $field;
         if (strstr($field, '.')) {
-            $field = $this->_prepare_complex_field($field, 'where');
+            $field = $this->prepareComplexField($field, 'where');
         } elseif (preg_match("~^[a-z0-9_-]~", $field)) {
-            $table = $this->get_col_table($field, false);
+            $table = $this->getColTable($field, false);
             $field = '{{'.$table.'}}.'.$field;
         }
         if (is_array($value) && count($value) == 1 && ($type == '=' || $type == 'IN')) {
@@ -153,18 +153,18 @@ abstract class Data {
     }
     
     public function where($field, $value, $type = '=') {
-        $cond = $this->_prepare_condition($field, $value, $type);
+        $cond = $this->prepareCondition($field, $value, $type);
         $this->where []= $cond;
         return $this;
     }
     
-    public function where_or() {
+    public function whereOr() {
         $conditions = func_get_args();
         $this->where []= array($conditions, null, 'OR');
         return $this;
     }
     
-    public function clear_where($field, $value = null) {
+    public function clearWhere($field, $value = null) {
         foreach ($this->where as $where_num => $where_props) {
             if ($where_props[0] == $field) {
                 if (func_num_args() == 1 || $value == $where_props[1]) {
@@ -185,9 +185,9 @@ abstract class Data {
             $direction = 'ASC';
         }
         if (strstr($field, '.')) {
-            $this->order []= $this->_prepare_complex_field($field, 'order').' '.$direction;
+            $this->order []= $this->prepareComplexField($field, 'order').' '.$direction;
         } else {
-            $table = $this->get_col_table($field);
+            $table = $this->getColTable($field);
             $this->order []= "{{".$table."}}.`".$field."` ".$direction;
         }
         return $this;
@@ -195,8 +195,8 @@ abstract class Data {
         
     public function with($relation, $finder = null, $only = false) {
         if ( is_callable($finder) || is_null($finder) ) {
-            $rel = $this->get_relation($relation);
-            $default_finder = $this->_get_default_relation_finder($rel);
+            $rel = $this->getRelation($relation);
+            $default_finder = $this->getDefaultRelationFinder($rel);
             if (is_callable($finder)) {
                 call_user_func($finder, $default_finder);
             }
@@ -206,22 +206,22 @@ abstract class Data {
         $this->with [$relation]= $with;
         if ($only !== false) {
             $join_type = is_string($only) ? $only : 'inner';
-            $this->_join_with($with, $join_type);
+            $this->joinWith($with, $join_type);
         }
         return $this;
     }
     
-    public function only_with($relation, $finder = null) {
+    public function onlyWith($relation, $finder = null) {
         $this->with($relation, $finder, true);
         return $this;
     }
 
     protected $calc_found_rows = false;
-    public function calc_found_rows($on = true) {
+    public function calcFoundRows($on = true) {
         $this->calc_found_rows = (bool) $on;
     }
     
-    public function get_found_rows() {
+    public function getFoundRows() {
         return isset($this->found_rows) ? $this->found_rows : null;
     }
     
@@ -238,7 +238,7 @@ abstract class Data {
         }
         foreach (func_get_args() as $arg) {
             if ($arg === 'id') {
-                $tables = $this->get_tables();
+                $tables = $this->getTables();
                 $arg = '{{'.$tables[0].'}}.id';
             }
             $this->select []= $arg;
@@ -256,9 +256,9 @@ abstract class Data {
         return $this;
     }
     
-    public function build_query() {
+    public function buildQuery() {
         // 1. To get tables-parents
-        $tables = $this->get_tables();
+        $tables = $this->getTables();
         if (is_null($this->select)) {
             foreach ($tables as $t) {
                 $this->select []= '{{'.$t.'}}.*';
@@ -283,7 +283,7 @@ abstract class Data {
         if (count($this->where) > 0) {
             $conds = array();
             foreach ($this->where as $cond) {
-                $conds []= $this->_make_cond($cond, $base_table);
+                $conds []= $this->makeCond($cond, $base_table);
             }
             $q .= "\nWHERE ".join(" AND ", $conds);
         }
@@ -319,11 +319,11 @@ abstract class Data {
     
     // inner join fx_content as user__fx_content on fx_content.user_id = user__fx_content.id
     // todo: psr0 need fix
-    protected function _join_with($with, $join_type = 'inner') {
+    protected function joinWith($with, $join_type = 'inner') {
         $rel_name = $with[0]; 
         $finder = $with[1];
-        $rel = $this->get_relation($rel_name);
-        $finder_tables = $finder->get_tables();
+        $rel = $this->getRelation($rel_name);
+        $finder_tables = $finder->getTables();
         
         // column-link
         $link_col = $rel[2];
@@ -333,7 +333,7 @@ abstract class Data {
                 $joined_table = array_shift($finder_tables);
                 $joined_alias = $rel_name.'__'.$joined_table;
                 // table of current finder containing the page, link
-                $our_table = $this->get_col_table($link_col, false);
+                $our_table = $this->getColTable($link_col, false);
                 $this->join(
                     array($joined_table, $joined_alias),
                     $joined_alias.'.id = {{'.$our_table.'}}.'.$link_col,
@@ -349,7 +349,7 @@ abstract class Data {
                 }
                 break;
             case Data::HAS_MANY:
-                $their_table = $finder->get_col_table($link_col, false);
+                $their_table = $finder->getColTable($link_col, false);
                 $joined_alias = $rel_name.'__'.$their_table;
                 $their_table_key = array_keys($finder_tables, $their_table);
                 unset($finder_tables[$their_table_key[0]]);
@@ -369,7 +369,7 @@ abstract class Data {
                 }
                 break;
             case Data::MANY_MANY:
-                $linker_table = $finder->get_col_table($link_col, false);
+                $linker_table = $finder->getColTable($link_col, false);
                 $joined_alias = $rel_name.'_linker__'.$linker_table;
                 $linker_table_key = array_keys($finder_tables, $linker_table);
                 unset($finder_tables[$linker_table_key[0]]);
@@ -387,10 +387,10 @@ abstract class Data {
                         $join_type
                     );
                 }
-                $link_table_alias = $rel_name.'_linker__'.$finder->get_col_table($rel[5], false);
+                $link_table_alias = $rel_name.'_linker__'.$finder->getColTable($rel[5], false);
                 
                 $end_finder = fx::data($rel[4]);
-                $end_tables = $end_finder->get_tables();
+                $end_tables = $end_finder->getTables();
                 $first_end_table = array_shift($end_tables);
                 $first_end_alias = $rel_name.'__'.$first_end_table;
                 $this->join(
@@ -410,14 +410,14 @@ abstract class Data {
         }
     }
     
-    protected function _make_cond($cond, $base_table) {
+    protected function makeCond($cond, $base_table) {
         if (strtoupper($cond[2]) === 'OR') {
             $parts = array();
             foreach ($cond[0] as $sub_cond) {
                 if (!isset($sub_cond[2])) {
                     $sub_cond[2] = '=';
                 }
-                $parts []= $this->_make_cond($sub_cond, $base_table);
+                $parts []= $this->makeCond($sub_cond, $base_table);
             }
             if (count($parts) == 0) {
                 return ' FALSE';
@@ -441,7 +441,7 @@ abstract class Data {
         if ($value instanceof Collection) {
             $value = $value->column(function($i) {
                 return $i instanceof Entity ? $i['id'] : (int) $i;
-            })->unique()->get_data();
+            })->unique()->getData();
         }
         if (is_array($value)) {
             if (count($value) == 0) {
@@ -459,23 +459,23 @@ abstract class Data {
         return $field.' '.$type.' '.$value;
     }
     
-    public function show_query() {
-        return fx::db()->prepare_query($this->build_query());
+    public function showQuery() {
+        return fx::db()->prepareQuery($this->buildQuery());
     }
     
      /*
      * Method collects flat data
      */
-    public function get_data() {
-        $query = $this->build_query();
-        $res = fx::db()->get_results($query);
+    public function getData() {
+        $query = $this->buildQuery();
+        $res = fx::db()->getResults($query);
 
-        if (fx::db()->is_error()) {
+        if (fx::db()->isError()) {
             throw new Exception("SQL ERROR");
         }
         
         if ($this->calc_found_rows) {
-            $this->found_rows = fx::db()->get_var('SELECT FOUND_ROWS()');
+            $this->found_rows = fx::db()->getVar('SELECT FOUND_ROWS()');
         }
 
         $objs = array();
@@ -505,24 +505,24 @@ abstract class Data {
      * Method call $this->get_data(),
      * from the collection of the flat data collects entity
      */
-    protected function _get_entitys() {
+    protected function getEntitys() {
         //fx::config('dev.on', fx::env('console'));
-        $data = $this->get_data();
+        $data = $this->getData();
         //fx::debug('start filless', $data);
         foreach ($data as $dk => $dv) {
             $data[$dk] = $this->entity($dv);
         }
         //fx::debug('start adrels');
-        $this->_add_relations($data);
+        $this->addRelations($data);
         //fx::debug('ready');
         return $data;
     }
     
-    protected function _get_default_relation_finder($rel) {
+    protected function getDefaultRelationFinder($rel) {
         return fx::data($rel[1]);
     }
     
-    public function add_related($rel_name, $entitys, $rel_finder = null) {
+    public function addRelated($rel_name, $entitys, $rel_finder = null) {
         
         $relations = $this->relations();
         if (!isset($relations[$rel_name])) {
@@ -532,19 +532,19 @@ abstract class Data {
         list($rel_type, $rel_datatype, $rel_field) = $rel;
         //fx::debug('arel', $rel);
         if (!$rel_finder){
-            $rel_finder = $this->_get_default_relation_finder($rel);
+            $rel_finder = $this->getDefaultRelationFinder($rel);
         }
         
         // e.g. $rel = array(fx_data::HAS_MANY, 'field', 'component_id');
         switch ($rel_type) {
             case self::BELONGS_TO:
-                $rel_items = $rel_finder->where('id', $entitys->get_values($rel_field))->all();
+                $rel_items = $rel_finder->where('id', $entitys->getValues($rel_field))->all();
                 $entitys->attach($rel_items, $rel_field, $rel_name);
                 break;
             case self::HAS_MANY:
                 //echo fx_debug('has manu', $rel_finder);
-                $rel_items = $rel_finder->where($rel_field, $entitys->get_values('id'))->all();
-                $entitys->attach_many($rel_items, $rel_field, $rel_name);
+                $rel_items = $rel_finder->where($rel_field, $entitys->getValues('id'))->all();
+                $entitys->attachMany($rel_items, $rel_field, $rel_name);
                 break;
             case self::HAS_ONE:
                 break;
@@ -565,12 +565,12 @@ abstract class Data {
                 
                 $rel_finder
                         ->with($end_rel, $end_finder)
-                        ->where($rel_field, $entitys->get_values('id'));
+                        ->where($rel_field, $entitys->getValues('id'));
                 if ($end_rel_field) {
                     $rel_finder->where($end_rel_field, 0, '!=');
                 }
                 $rel_items = $rel_finder->all()->find($end_rel, null, '!=');
-                $entitys->attach_many($rel_items, $rel_field, $rel_name, 'id', $end_rel);
+                $entitys->attachMany($rel_items, $rel_field, $rel_name, 'id', $end_rel);
                 break;
         }
     }
@@ -579,7 +579,7 @@ abstract class Data {
      * Method adds related-entity to the collection
      * uses $this->with & $this->relations
      */
-    protected function _add_relations(\Floxim\Floxim\System\Collection $entitys) {
+    protected function addRelations(\Floxim\Floxim\System\Collection $entitys) {
         if (count($this->with) == 0) {
             return;
         }
@@ -592,7 +592,7 @@ abstract class Data {
             if (!isset($relations[$rel_name])) {
                 continue;
             }
-            $this->add_related($rel_name, $entitys, $rel_finder);
+            $this->addRelated($rel_name, $entitys, $rel_finder);
         }
     }
     
@@ -623,7 +623,7 @@ abstract class Data {
         $this->table = $table;
     }
     
-    public function get_tables() {
+    public function getTables() {
         return array($this->table);
     }
     
@@ -633,15 +633,15 @@ abstract class Data {
      * @param bool $validate Check if the column really exists (for one-table models)
      * @return string Table name
      */
-    public function get_col_table($column, $validate = true) {
-        $tables = $this->get_tables();
+    public function getColTable($column, $validate = true) {
+        $tables = $this->getTables();
         
         if (count($tables) == 1 && !$validate) {
             return $tables[0];
         }
         
         foreach ($tables as $t) {
-            $cols = $this->_get_columns($t);
+            $cols = $this->getColumns($t);
             if (in_array($column, $cols)) {
                 return $t;
             }
@@ -649,7 +649,7 @@ abstract class Data {
         return null;
     }
 
-    public function get_pk() {
+    public function getPk() {
         return $this->pk;
     }
 
@@ -658,7 +658,7 @@ abstract class Data {
      * @param type $id
      * @return \Floxim\Floxim\System\Entity
      */
-    public function get_by_id($id) {
+    public function getById($id) {
         return $this->where('id', $id)->one();
     }
     
@@ -667,7 +667,7 @@ abstract class Data {
      * @param type $ids
      * @return array
      */
-    public function get_by_ids($ids) {
+    public function getByIds($ids) {
         return $this->where('id', $ids)->all();
     }
     
@@ -679,7 +679,7 @@ abstract class Data {
     public function create($data = array()) {
         if ($data instanceof Form\Form) {
             $entity = $this->entity();
-            $entity->load_from_form($data);
+            $entity->loadFromForm($data);
         } else {
             $entity = $this->entity($data);
         }
@@ -692,7 +692,7 @@ abstract class Data {
      * @return \Floxim\Floxim\System\Entity
      */
     public function entity($data = array()) {
-        $classname = $this->get_class_name($data);
+        $classname = $this->getClassName($data);
         if (!class_exists($classname)) {
             say($this);
         }
@@ -705,10 +705,10 @@ abstract class Data {
     }
 
     public function insert($data) {
-        $set = $this->_set_statement($data);
+        $set = $this->setStatement($data);
         if ($set) {
             fx::db()->query("INSERT INTO `{{".$this->table."}}` SET ".join(",", $set));
-            $id = fx::db()->insert_id();
+            $id = fx::db()->insertId();
         }
 
         return $id;
@@ -716,7 +716,7 @@ abstract class Data {
 
     public function update($data, $where = array()) {
         $wh = array();
-        $update = $this->_set_statement($data);
+        $update = $this->setStatement($data);
         
         foreach ($where as $k => $v) {
             $wh[] = "`".fx::db()->escape($k)."` = '".fx::db()->escape($v)."' ";
@@ -749,20 +749,20 @@ abstract class Data {
             $where = "\n WHERE ".join(" AND ", $where);
         }
 
-        fx::db()->get_results("DELETE FROM `{{".$this->table."}}`".$where);
+        fx::db()->getResults("DELETE FROM `{{".$this->table."}}`".$where);
     }
 
-    public function get_parent($item) {
+    public function getParent($item) {
         $id = $item;
         if ($item instanceof Entity || is_array($item)) {
             $id = $item['parent_id'];
         }
 
-        return $this->get_by_id($id);
+        return $this->getById($id);
     }
 
-    public function next_priority() {
-        return fx::db()->get_var("SELECT MAX(`priority`)+1 FROM `{{".$this->table."}}`");
+    public function nextPriority() {
+        return fx::db()->getVar("SELECT MAX(`priority`)+1 FROM `{{".$this->table."}}`");
     }
     
     /**
@@ -770,7 +770,7 @@ abstract class Data {
      * @param array $data data entity'and
      * @return string
      */
-    public function get_class_name() {
+    public function getClassName() {
         $class = explode("\\", get_class($this));
         $class[count($class)-1]= 'Entity';
         $class = join("\\", $class);
@@ -785,7 +785,7 @@ abstract class Data {
         return '\\Floxim\\Floxim\\System\\Simplerow';
     }
     
-    protected function _get_columns($table = null) {
+    protected function getColumns($table = null) {
         if (!$table) {
             $table = $this->table;
         }
@@ -793,14 +793,14 @@ abstract class Data {
         if ( ($columns = fx::cache($cache_key)) ) {
             return $columns;
         }
-        $columns = fx::db()->get_col('SHOW COLUMNS FROM {{'.$table.'}}', 0);
+        $columns = fx::db()->getCol('SHOW COLUMNS FROM {{'.$table.'}}', 0);
         fx::cache($cache_key, $columns);
         return $columns;
     }
 
-    protected function _set_statement($data) {
+    protected function setStatement($data) {
         
-        $cols = $this->_get_columns();
+        $cols = $this->getColumns();
         
         $set = array();
 

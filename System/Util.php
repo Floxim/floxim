@@ -4,7 +4,7 @@ namespace Floxim\Floxim\System;
 
 class Util {
 
-    public function is_even($input) {
+    public function isEven($input) {
         return (bool) ( round($input / 2) == $input / 2 );
     }
 
@@ -12,7 +12,7 @@ class Util {
      * @todo curl
      */
 
-    public function http_request($url, $params = '') {
+    public function httpRequest($url, $params = '') {
         if (is_array($params)) $params = http_build_query($params, null, '&');
         if ($params) $url .='?'.$params;
         return @file_get_contents($url);
@@ -24,7 +24,7 @@ class Util {
      * @param string the url of the page
      * @return array
      */
-    public function get_meta_tags($url) {
+    public function getMetaTags($url) {
         $result = array();
         $contents = @file_get_contents($url);
         if (!$contents) return false;
@@ -58,7 +58,7 @@ class Util {
         return $result;
     }
 
-    public function check_gzip() {
+    public function checkGzip() {
         // check "ob_gzhandler" existion
         $gzip_exist = false;
         if (ob_list_handlers()) {
@@ -89,7 +89,7 @@ class Util {
     /**
      * Generates UUIDs
      */
-    public function gen_uuid() {
+    public function genUuid() {
         return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
                         // 32 bits for "time_low"
                         mt_rand(0, 0xffff), mt_rand(0, 0xffff),
@@ -111,7 +111,7 @@ class Util {
      * Validates your e-mail
      * @param string $email
      */
-    public function validate_email($email) {
+    public function validateEmail($email) {
         $res = preg_match("#^[-a-z0-9!\\#\$%&'*+/=?^_`{|}~]+(?:\\.[-a-z0-9!\\#\$%&'*+/=?^_`{|}~]+)*@(?:[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?\\.)*(?:[a-z]{2,})\$#", $email);
         return $res ? true : false;
     }
@@ -121,7 +121,7 @@ class Util {
      * @param string parameters in a line, for example, 'keyword="center" repeat="yes"'
      * @return array an array with parameters, for example, array('keyword'=>'center', 'repeat'=>'yes')
      */
-    public function parse_attr($attr = "") {
+    public function parseAttr($attr = "") {
         if (!$attr) return array();
         //$re = "/([a-z0-9_-]+)\s*=\s*(['\"])([^\\2]+)\\2\s+/iu";
         $re = "/([a-z0-9_-]+)\s*=\s*\"([^\"]+)\"\s+/iu";
@@ -139,13 +139,13 @@ class Util {
      * @param type $text, long text, previews and which do
      * @param type $max_length how many maximum Simonov in the thumbnail
      */
-    public function get_text_preview($text, $max_length = 150) {
+    public function getTextPreview($text, $max_length = 150) {
         if (strlen($text) <= $max_length) return $text;
 
         $text = substr($text, 0, $max_length - strlen(strrchr(substr($text, 0, $max_length), ' ')))."&hellip;";
     }
 
-    public function is_mysql_keyword($name) {
+    public function isMysqlKeyword($name) {
         return in_array(strtolower($name), preg_split("/\s+/", "accessible add all alter analyze and as asc asensitive
                   before between bigint binary blob both by call cascade
                   case change char character check collate column condition connection
@@ -177,7 +177,7 @@ class Util {
                   xor year_month zerofill"));
     }
     
-    public function str_to_latin($str) {
+    public function strToLatin($str) {
         $tr = array("А"=>"A", "а"=>"a", "Б"=>"B", "б"=>"b",
         "В"=>"V", "в"=>"v", "Г"=>"G", "г"=>"g",
         "Д"=>"D", "д"=>"d", "Е"=>"E", "е"=>"e",
@@ -201,8 +201,8 @@ class Util {
         return $tr_text;
     }
     
-    public function str_to_keyword($str) {
-        $str = $this->str_to_latin($str);
+    public function strToKeyword($str) {
+        $str = $this->strToLatin($str);
         $str = strtolower($str);
         $str = preg_replace("~[^a-z0-9_-]+~", '_', $str);
         return $str;
@@ -212,11 +212,17 @@ class Util {
         return strtolower(preg_replace('/([a-z])([A-Z])/', '$1_$2', $string));
     }
 
-    public function underscoreToCamal($string) {
+    public function underscoreToCamel($string, $first_upper = true) {
         $parts = explode('_', $string);
         $camelized = '';
-        foreach($parts as $part) {
-            $camelized .= ucfirst($part);
+        foreach($parts as $part_num => $part) {
+            if ($part_num === 0 && $first_upper === false) {
+                $camelized .= $part;
+            } elseif ($part === '') {
+                $camelized .= '_';
+            } else {
+                $camelized .= ucfirst($part);
+            }
         }
         return $camelized;
     }

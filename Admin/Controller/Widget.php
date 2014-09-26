@@ -17,7 +17,7 @@ class Widget extends Component {
         $field['entity'] = 'widget';
         $widgets = fx::data('widget')->all();
         foreach ($widgets as $widget) {
-            $submenu = Component::get_component_submenu($widget);
+            $submenu = Component::getComponentSubmenu($widget);
             $submenu_first = current($submenu);
             $r = array(
                 'id' => $widget['id'],
@@ -41,7 +41,7 @@ class Widget extends Component {
 
             $field['values'][] = $r;
         }
-        $this->response->add_buttons(array(
+        $this->response->addButtons(array(
             array(
                 'key' => "add", 
                 'title' => fx::alang('Add new widget', 'system'),
@@ -52,8 +52,8 @@ class Widget extends Component {
         
         $result = array('fields' => array($field));
 
-        $this->response->breadcrumb->add_item(self::_entity_types('widget'), '#admin.widget.all');
-        $this->response->submenu->set_menu('widget');
+        $this->response->breadcrumb->addItem(self::entityTypes('widget'), '#admin.widget.all');
+        $this->response->submenu->setMenu('widget');
         return $result;
     }
 
@@ -66,34 +66,34 @@ class Widget extends Component {
                 $fields[] = $this->ui->hidden('action', 'add');
                 $fields[] = array('label' => fx::alang('Name','system'), 'name' => 'name');
                 $fields[] = array('label' => fx::alang('Keyword','system'), 'name' => 'keyword');
-                $fields[]= $this->_get_vendor_field();
+                $fields[]= $this->getVendorField();
         }
 
         $fields[] = $this->ui->hidden('source', $input['source']);
         $fields[] = $this->ui->hidden('posting');
         $fields[] = $this->ui->hidden('entity', 'widget');
         
-        $this->response->breadcrumb->add_item(
-            self::_entity_types('widget'), 
+        $this->response->breadcrumb->addItem(
+            self::entityTypes('widget'), 
             '#admin.widget.all'
         );
-        $this->response->breadcrumb->add_item(
+        $this->response->breadcrumb->addItem(
             fx::alang('Add new widget', 'system')
         );
         
-        $this->response->submenu->set_menu('widget');
-        $this->response->add_form_button('save');
+        $this->response->submenu->setMenu('widget');
+        $this->response->addFormButton('save');
         return array('fields' => $fields);
     }
 
-    public function add_save($input) {
+    public function addSave($input) {
         $result = array('status' => 'ok');
 
         $data['name'] = trim($input['name']);
         $data['keyword'] = trim($input['keyword']);
         
         if (!$data['keyword'] && $data['name']) {
-            $data['keyword'] = fx::util()->str_to_keyword($data['name']);
+            $data['keyword'] = fx::util()->strToKeyword($data['name']);
         }
         $data['vendor'] = $input['vendor'] ? $input['vendor'] : 'local';
 
@@ -102,7 +102,7 @@ class Widget extends Component {
         
         if (!$widget->validate()) {
             $result['status'] = 'error';
-            $result['errors'] = $widget->get_validate_errors();
+            $result['errors'] = $widget->getValidateErrors();
             return $result;
         }
         $widget->save();
@@ -110,8 +110,8 @@ class Widget extends Component {
         return $result;
     }
 
-    public function edit_save($input) {
-        $widget = fx::data('widget')->get_by_id($input['id']);
+    public function editSave($input) {
+        $widget = fx::data('widget')->getById($input['id']);
         $result['status'] = 'ok';
         // save settings
         if ($input['phase'] == 'settings') {
@@ -152,7 +152,7 @@ class Widget extends Component {
         $fields[] = array('type' => 'hidden', 'name' => 'phase', 'value' => 'settings');
         $fields[] = array('type' => 'hidden', 'name' => 'id', 'value' => $widget['id']);
         
-        $this->response->submenu->set_subactive('settings');
+        $this->response->submenu->setSubactive('settings');
         $fields[] = $this->ui->hidden('entity', 'widget');
         $fields[] = $this->ui->hidden('action', 'edit_save');
         

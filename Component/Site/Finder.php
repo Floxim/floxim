@@ -12,14 +12,14 @@ class Finder extends System\Data {
         $this->order = 'priority';
     }
     
-    public function get_by_id($id) {
+    public function getById($id) {
         if (is_numeric($id)) {
-            return parent::get_by_id($id);
+            return parent::getById($id);
         }
-        return $this->get_by_host_name($id);
+        return $this->getByHostName($id);
     }
 
-    public function get_by_host_name($host = '') {
+    public function getByHostName($host = '') {
         if (!$host) {
             $host = fx::config()->HTTP_HOST;
         }
@@ -32,7 +32,7 @@ class Finder extends System\Data {
         }
         // search for the domain and the mirrors
         foreach ($sites as $site) {
-            if (in_array($host, $site->get_all_hosts())) {
+            if (in_array($host, $site->getAllHosts())) {
                 return $site;
             }
         }
@@ -42,7 +42,7 @@ class Finder extends System\Data {
     public function create($data = array()) {
         $obj = parent::create($data);
         $obj['created'] = date("Y-m-d H:i:s");
-        $obj['priority'] = $this->next_priority();
+        $obj['priority'] = $this->nextPriority();
         return $obj;
     }
 }

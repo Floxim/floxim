@@ -41,20 +41,20 @@ class Db extends \PDO {
     protected static $q_time = 0;
     protected static $q_count = 0;
     
-    public function prepare_query($statement) {
+    public function prepareQuery($statement) {
         if (is_array($statement)) {
             $query = call_user_func_array('sprintf', $statement);
         } else {
             $query = $statement;
         }
-        return trim($this->replace_prefix($query));
+        return trim($this->replacePrefix($query));
     }
     
     public function query($statement) {
         self::$q_count++;
     	$start_time = microtime(true);
 
-        $statement = $this->prepare_query($statement);
+        $statement = $this->prepareQuery($statement);
 
         // determine the type of request
         preg_match("/^([a-z]+)\s+/i", $statement, $match);
@@ -88,7 +88,7 @@ class Db extends \PDO {
         return $this->last_result;
     }
 
-    public function get_row($query = null) {
+    public function getRow($query = null) {
         $res = array();
 
         if (!$query) {
@@ -103,7 +103,7 @@ class Db extends \PDO {
         return $res;
     }
 
-    public function get_results($query = null, $result_type = \PDO::FETCH_ASSOC) {
+    public function getResults($query = null, $result_type = \PDO::FETCH_ASSOC) {
         $res = array();
 
         if (!$query) {
@@ -117,7 +117,7 @@ class Db extends \PDO {
         return $res;
     }
     
-    public function get_indexed_results($query, $index = 'id') {
+    public function getIndexedResults($query, $index = 'id') {
         $res = array();
         if ( ($result = $this->query($query))) {
             while ( ($row = $result->fetch(\PDO::FETCH_ASSOC))) {
@@ -127,12 +127,12 @@ class Db extends \PDO {
         return $res;
     }
     
-    public function get_collection($query = null) {
-        $res = $this->get_results($query, \PDO::FETCH_ASSOC);
+    public function getCollection($query = null) {
+        $res = $this->getResults($query, \PDO::FETCH_ASSOC);
         return new Collection($res);
     }
 
-    public function get_col ( $query = null, $col_num = 0 ) {
+    public function getCol ( $query = null, $col_num = 0 ) {
         $res = array();
 
         if (!$query) {
@@ -149,7 +149,7 @@ class Db extends \PDO {
         return $res;
     }
 
-    public function get_var($query = null) {
+    public function getVar($query = null) {
         $res = array();
         
         if (!$query) {
@@ -167,36 +167,36 @@ class Db extends \PDO {
         return $res;
     }
 
-    public function row_count() {
+    public function rowCount() {
         return $this->last_result ? $this->last_result->rowCount() : 0;
     }
 
-    public function insert_id() {
+    public function insertId() {
         return $this->lastInsertId();
     }
 
-    public function is_error() {
+    public function isError() {
         return!(bool) $this->last_result;
     }
 
-    public function get_last_error() {
+    public function getLastError() {
         return $this->last_error;
     }
 
-    public function error_info() {
+    public function errorInfo() {
         return $this->errorInfo();
     }
 
-    protected function replace_prefix($query) {
+    protected function replacePrefix($query) {
         if ( $this->prefix ) {
             $query = preg_replace('/{{(.*?)}}/', $this->prefix . '\1', $query);
         }
         return $query;
     }
 
-    public function column_exists($table2check, $column) {
+    public function columnExists($table2check, $column) {
         $sql = "SHOW COLUMNS FROM {{".$table2check."}}";
-        foreach ($this->get_col($sql) as $column_name) {
+        foreach ($this->getCol($sql) as $column_name) {
             if ($column_name == $column) {
                 return true;
             }
@@ -208,7 +208,7 @@ class Db extends \PDO {
      * get the sql code of the last executed query
      * @return string
      */
-    public function get_last_query() {
+    public function getLastQuery() {
         return $this->last_query;
     }
 

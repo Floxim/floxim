@@ -5,7 +5,7 @@ use Floxim\Floxim\System\Fx as fx;
 
 class String extends Baze {
 
-    public function format_settings() {
+    public function formatSettings() {
         $fields = array(
             array(
                 'type' => 'checkbox', 
@@ -16,7 +16,7 @@ class String extends Baze {
         return $fields;
     }
 
-    public function get_sql_type() {
+    public function getSqlType() {
         return "VARCHAR(255)";
     }
 }

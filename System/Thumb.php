@@ -14,9 +14,9 @@ class Thumb
         if (empty($source_http_path)) {
             throw new Exception('Empty path');
         }
-        $this->config = $this->_read_config($config);
+        $this->config = $this->readConfig($config);
         
-        $source_path = fx::path()->to_abs($source_http_path);
+        $source_path = fx::path()->toAbs($source_http_path);
         if (!file_exists($source_path) || !is_file($source_path)) {
             throw new Exception('File not found: ' . $source_path);
         }
@@ -39,7 +39,7 @@ class Thumb
         $this->info += self::$_types[$info['imagetype']];
     }
     
-    public function get_info($key = null) {
+    public function getInfo($key = null) {
         switch (func_num_args()) {
             case 0: default:
                 return $this->info;
@@ -48,7 +48,7 @@ class Thumb
         }
     }
     
-    protected function _calculateSize($params, $source = null)
+    protected function calculateSize($params, $source = null)
     {
         if (!$source) {
             $source = $this->info;
@@ -221,7 +221,7 @@ class Thumb
     
     public function resize($params = null) {
         if (isset($params)) {
-            $params = $this->_read_config($params);
+            $params = $this->readConfig($params);
         } else {
             $params = $this->config;
         }
@@ -236,7 +236,7 @@ class Thumb
         ), $params);
         
         // the calculated sizes based on min-max, the size of the picture and a set of w-h
-        $st = array_merge($st, $this->_calculateSize($st));
+        $st = array_merge($st, $this->calculateSize($st));
         
         $width  = $this->info['width'];
         $height = $this->info['height'];
@@ -297,14 +297,14 @@ class Thumb
         }
         
         if (!$this->image) {
-            $this->_load_image();
+            $this->loadImage();
         }
         $source_i = $this->image;
         $target_i = imagecreatetruecolor($st['width'], $st['height']);
         
         
         if (($type == IMAGETYPE_PNG || $type == IMAGETYPE_GIF)) {
-            $this->_addTransparency($target_i, $source_i, $type);
+            $this->addTransparency($target_i, $source_i, $type);
         }
         
         $icr_args = array(
@@ -324,7 +324,7 @@ class Thumb
         return $this;
     }
     
-    protected function _addTransparency($dst, $src, $type)
+    protected function addTransparency($dst, $src, $type)
     {
         if ($type == IMAGETYPE_PNG) {
             imagealphablending($dst, false);
@@ -350,7 +350,7 @@ class Thumb
     
     public function save($target_path = false, $params = null) {
         if (isset($params)) {
-            $params = $this->_read_config($params);
+            $params = $this->readConfig($params);
         } else {
             $params = $this->config;
         }
@@ -358,9 +358,9 @@ class Thumb
         
         $type_props = null;
         if (isset($params['type'])) {
-            $type_props = self::image_type_by_path('pic.'.$params['type']);
+            $type_props = self::imageTypeByPath('pic.'.$params['type']);
         } elseif ($target_path) {
-            $type_props = self::image_type_by_path($target_path);
+            $type_props = self::imageTypeByPath($target_path);
         }
         
         if ($type_props && $type_props['type'] !== $this->info['imagetype']) {
@@ -384,7 +384,7 @@ class Thumb
             fx::files()->mkdir( dirname($target_path) );
         }
         if (!$this->image) {
-            $this->_load_image();
+            $this->loadImage();
         }
         //fx::debug('sav', $this->info['save_func'], $quality);
         call_user_func($save_function, $this->image, $target_path, $quality);
@@ -408,8 +408,8 @@ class Thumb
         )
     );
     
-    public static function image_type_by_path($path) {
-        $name = fx::path()->file_name($path);
+    public static function imageTypeByPath($path) {
+        $name = fx::path()->fileName($path);
         $ext = strtolower(preg_replace("~^.+\.~", '', $name));
         foreach (self::$_types as $type => $props) {
             if ($props['ext'] == $ext) {
@@ -418,7 +418,7 @@ class Thumb
         }
     }
     
-    protected function _load_image(){
+    protected function loadImage(){
         $this->image = call_user_func($this->info['create_func'], $this->source_path);
     }
 
@@ -426,15 +426,15 @@ class Thumb
     public function process($full_path = false) {
         // buffer errors
         ob_start();
-        $this->_load_image();
+        $this->loadImage();
         $this->resize();
         $this->save($full_path);
         $this->image = null;
         ob_end_clean();
     }
     
-    public function get_result_path() {
-        $rel_path = fx::path()->to_http($this->source_path);
+    public function getResultPath() {
+        $rel_path = fx::path()->toHttp($this->source_path);
         
         $folder_name = array();
         foreach ($this->config as $key => $value) {
@@ -449,13 +449,13 @@ class Thumb
         if (!file_exists($full_path)) {
             $this->process($full_path);
         }
-        $path = fx::path()->to_http($full_path);
+        $path = fx::path()->toHttp($full_path);
         return $path;
     }
     
-    public static function find_thumbs($source_path) {
+    public static function findThumbs($source_path) {
         $res = array();
-        $rel_path = fx::path()->to_http($source_path);
+        $rel_path = fx::path()->toHttp($source_path);
         $dir = glob(fx::path('thumbs').'/*');
         
         
@@ -464,8 +464,8 @@ class Thumb
         }
         foreach ($dir as $sub) {
             if (is_dir($sub)) {
-                $check_path = fx::path()->to_abs($sub.$rel_path);
-                if (fx::path()->is_file($check_path)) {
+                $check_path = fx::path()->toAbs($sub.$rel_path);
+                if (fx::path()->isFile($check_path)) {
                     $res []= $check_path;
                 }
             }
@@ -473,7 +473,7 @@ class Thumb
         return $res;
     }
     
-    protected function _read_config($config) {
+    protected function readConfig($config) {
         $prop_map = array(
             'w' => 'width',
             'h' => 'height',
@@ -492,7 +492,7 @@ class Thumb
             $config
         );
         
-        $config = str_replace(";", ',', $config);
+        $config = strReplace(";", ',', $config);
         if (empty($config)) {
             return array();
         }
@@ -509,10 +509,10 @@ class Thumb
         return $params;
     }
     
-    public function set_config($key, $value) {
+    public function setConfig($key, $value) {
         if (is_array($key)) {
             foreach ($key as $rk => $rv) {
-                $this->set_config($rk, $rv);
+                $this->setConfig($rk, $rv);
             }
             return $this;
         }

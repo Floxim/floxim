@@ -5,8 +5,8 @@ use Floxim\Floxim\System\Fx as fx;
 
 class Text extends Baze {
     
-    public function get_js_field($content) {
-        parent::get_js_field($content);
+    public function getJsField($content) {
+        parent::getJsField($content);
         if (isset($this['format']) && isset($this['format']['html']) && $this['format']['html']) {
             $this->_js_field['wysiwyg'] = true;
             $this->_js_field['nl2br'] = $this['format']['nl2br'];
@@ -15,7 +15,7 @@ class Text extends Baze {
         return $this->_js_field;
     }
 
-    public function format_settings() {
+    public function formatSettings() {
         $fields = array(
             array(
                 'type' => 'checkbox', 

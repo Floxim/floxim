@@ -33,11 +33,11 @@ class Manager {
         }
         $this->routers[$name] = array('router' => $router, 'priority' => $priority);
         if ($reorder_needed) {
-            $this->_reorder_routers();
+            $this->reorderRouters();
         }
     }
 
-    protected function _reorder_routers() {
+    protected function reorderRouters() {
         uasort($this->routers, function($a, $b) {
             return $a['priority'] - $b['priority'];
         });
@@ -69,7 +69,7 @@ class Manager {
      * Get the option router by name
      * fx::router('front')
      */
-    public function get_router($router_name) {
+    public function getRouter($router_name) {
         $class = 'Floxim\\Floxim\\Router\\' . ucfirst($router_name);
         return fx::dig($this->routers, $class.'.router');
     }

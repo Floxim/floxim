@@ -9,21 +9,21 @@ class Front extends Base {
 
     public function route($url = null, $context = null) {
         
-        $page = fx::data('page')->get_by_url(urldecode($url), $context['site_id']);
+        $page = fx::data('page')->getByUrl(urldecode($url), $context['site_id']);
         
         if (!$page) {
             return null;
         }
         fx::env('page', $page);
         fx::http()->status('200');
-        $layout_ib = $this->get_layout_infoblock($page);
+        $layout_ib = $this->getLayoutInfoblock($page);
         $res = $layout_ib->render();
         return $res;
     }
     
     protected $_ib_cache = array();
     
-    public function  get_page_infoblocks($page_id, $layout_id = null) {
+    public function  getPageInfoblocks($page_id, $layout_id = null) {
         if (is_null($layout_id)) {
             $layout_id = fx::env('layout');
         }
@@ -35,29 +35,29 @@ class Front extends Base {
         $c_page = $page_id === fx::env('page_id') ? fx::env('page') : fx::data('page', $page_id);
 
         $infoblocks = $c_page
-                        ->get_page_infoblocks()
+                        ->getPageInfoblocks()
                         ->find(function($ib) {
-                            return !$ib->is_layout();
+                            return !$ib->isLayout();
                         });
         $areas = fx::collection();
         $visual = fx::data('infoblock_visual')->
-                where('infoblock_id', $infoblocks->get_values('id'))->
+                where('infoblock_id', $infoblocks->getValues('id'))->
                 where('layout_id', $layout_id)->
                 all();
         
         foreach ($infoblocks as $ib) {
-            if (!$ib->is_available_for_user()) {
+            if (!$ib->isAvailableForUser()) {
                 continue;
             }
             
-            if (($c_visual = $visual->find_one('infoblock_id', $ib['id']))) {
-                $ib->set_visual($c_visual);
-            } elseif ($ib->get_visual()->get('is_stub')) {
+            if (($c_visual = $visual->findOne('infoblock_id', $ib['id']))) {
+                $ib->setVisual($c_visual);
+            } elseif ($ib->getVisual()->get('is_stub')) {
                 $suitable = new Template\Suitable();
                 $suitable->suit($infoblocks, $layout_id);
             }
 
-            if ( ($visual_area = $ib->get_prop_inherited('visual.area')) ) {
+            if ( ($visual_area = $ib->getPropInherited('visual.area')) ) {
                 $c_area = $visual_area;
             } else {
                 $c_area = 'unknown';
@@ -71,20 +71,20 @@ class Front extends Base {
         return $areas;
     }
     
-    public function get_layout_infoblock($page) {
-        $layout_ib = $page->get_layout_infoblock();
-        if ($layout_ib->get_visual()->get('is_stub')) {
+    public function getLayoutInfoblock($page) {
+        $layout_ib = $page->getLayoutInfoblock();
+        if ($layout_ib->getVisual()->get('is_stub')) {
             $suitable = new Template\Suitable();
-            $infoblocks = $page->get_page_infoblocks();
+            $infoblocks = $page->getPageInfoblocks();
             
             // delete all parent layouts from collection
-            $infoblocks->find_remove(function ($ib) use ($layout_ib) {
-                return $ib->is_layout() && $ib['id'] !== $layout_ib['id'];
+            $infoblocks->findRemove(function ($ib) use ($layout_ib) {
+                return $ib->isLayout() && $ib['id'] !== $layout_ib['id'];
             });
             
             $suitable->suit($infoblocks, fx::env('layout_id'));
-            return $infoblocks->find_one(function ($ib) {
-               return $ib->is_layout(); 
+            return $infoblocks->findOne(function ($ib) {
+               return $ib->isLayout(); 
             });
         }
         return $layout_ib;

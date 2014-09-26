@@ -3,20 +3,20 @@
 use Floxim\Floxim\System\Fx as fx;
 
 $sort_fields = $this
-            ->get_component()
-            ->all_fields()
+            ->getComponent()
+            ->allFields()
             ->find('type', \Floxim\Floxim\Component\Field\Entity::FIELD_MULTILINK, '!=')
             ->find('type', \Floxim\Floxim\Component\Field\Entity::FIELD_MULTILINK, '!=')
-            ->get_values(fx::is_admin() ? 'name' : 'id', 'keyword');
+            ->getValues(fx::isAdmin() ? 'name' : 'id', 'keyword');
 
-$component = $this->get_component();
-$content_exists = fx::content($component['keyword'])->content_exists();
-$is_new_infoblock = !$this->get_param('infoblock_id');
+$component = $this->getComponent();
+$content_exists = fx::content($component['keyword'])->contentExists();
+$is_new_infoblock = !$this->getParam('infoblock_id');
 
 return array(
     'actions' => array(
         '*.*' => array(
-            'icon' => self::_get_abbr($component['name'])
+            'icon' => self::getAbbr($component['name'])
         ),
         '*list*' => array(
             'settings' => array(
@@ -55,7 +55,7 @@ return array(
             'name' => $component['name'],
             // ! APC fatal error occured here sometimes
             'install' => function($ib, $ctr, $params) {
-                $ctr->bind_lost_content($ib, $params);
+                $ctr->bindLostContent($ib, $params);
             },
             'default_scope' => function() {
                 return fx::env('page_id').'-this-';
@@ -74,8 +74,8 @@ return array(
                     'parent' => array('scope[complex_scope]' => '!~this')
                 )
             ) 
-                + $this->get_target_config_fields()
-                + $this->get_lost_content_field(),
+                + $this->getTargetConfigFields()
+                + $this->getLostContentField(),
             'defaults' => array(
                 '!pagination' => true
             )
@@ -86,7 +86,7 @@ return array(
             //'settings' => fx::is_admin() ? $this->_config_conditions() : array()
             'settings' => array(
                 'conditions' => function($ctr) {
-                    return $ctr->get_conditions_field();
+                    return $ctr->getConditionsField();
                 }
             )
         ),
@@ -95,7 +95,7 @@ return array(
             'icon_extra' => 'sel',
             'settings' => array(
                 'selected' => function($ctr) {
-                    return $ctr->get_selected_field();
+                    return $ctr->getSelectedField();
                 },
                 'parent_type' => array(
                     'label' => fx::alang('Bind items to','controller_component'),
@@ -116,11 +116,11 @@ return array(
             ),
             'save' => function($ib, $ctr, $params) {
                 // update linkers
-                $ctr->save_selected_linkers($params['params']['selected']);
+                $ctr->saveSelectedLinkers($params['params']['selected']);
             },
             'delete' => function($ib, $ctr, $params) {
                 // drop linkers
-                $ctr->drop_selected_linkers();
+                $ctr->dropSelectedLinkers();
             }
         ),
         '*list_filtered*, *list_selected*, *listing_by*' => array(

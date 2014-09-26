@@ -36,8 +36,8 @@ class Admin extends System\Controller {
         $input = $this->input;
         $action = $this->action;
         
-        if (!fx::is_admin()) {
-            $result = $this->admin_office($input);
+        if (!fx::isAdmin()) {
+            $result = $this->adminOffice($input);
             if (is_string($result)) {
                 return $result;
             }    
@@ -55,14 +55,14 @@ class Admin extends System\Controller {
 
         if ($input['posting']) {
             if (!$result['text']) {
-                $result['text'] = $this->get_status_text();
+                $result['text'] = $this->getStatusText();
             }
         }
 
         if ($this->response) {
             $result = array_merge(
                 $result ? $result : array(), 
-                $this->response->to_array()
+                $this->response->toArray()
             );
         }
         // force numeric indexes for fields to preserve order
@@ -76,15 +76,15 @@ class Admin extends System\Controller {
         return json_encode($result);
     }
 
-    protected function get_status_text() {
+    protected function getStatusText() {
         return fx::alang('Saved','system');
     }
 
-    protected function get_active_tab() {
+    protected function getActiveTab() {
         return $this->input['params'][1];
     }
     
-    public static function add_admin_files() {
+    public static function addAdminFiles() {
         $path_floxim = fx::path('floxim');
         $js_files = array(
             FX_JQUERY_PATH,
@@ -125,13 +125,13 @@ class Admin extends System\Controller {
         
         
         
-        $page->add_js_bundle($js_files, array('name' => 'fx_admin'));
+        $page->addJsBundle($js_files, array('name' => 'fx_admin'));
         // todo: need fix path for css - now used server path
-        $page->add_css_bundle(array(
+        $page->addCssBundle(array(
             $path_floxim.'/lib/editors/redactor/redactor.css',
         ));
         
-        $page->add_css_bundle(array(
+        $page->addCssBundle(array(
             $path_floxim.'/admin/style/main.less',
             $path_floxim.'/admin/style/forms.less',
             $path_floxim.'/admin/style/front.less',
@@ -143,14 +143,14 @@ class Admin extends System\Controller {
     /**
      * @return string
      */
-    public function admin_office()
+    public function adminOffice()
     {   
-        self::add_admin_files();
+        self::addAdminFiles();
         
-        if (fx::is_admin()) {
+        if (fx::isAdmin()) {
             $res = fx::template('@admin:back_office')->render();
             $js_config = new FxAdmin\Configjs();
-            fx::page()->add_js_text("\$fx.init(".$js_config->get_config().");");
+            fx::page()->addJsText("\$fx.init(".$js_config->getConfig().");");
         } else {
             $auth_form = fx::controller('user:auth_form')
                             ->render('user:auth_form');
@@ -162,11 +162,11 @@ class Admin extends System\Controller {
                 'recover_form' => $recover_form
             ));
         }
-        return fx::page()->post_process($res);
+        return fx::page()->postProcess($res);
     }
     
     
-    public function move_save($input) {
+    public function moveSave($input) {
         
         $entity = $this->entity_type;
 
@@ -174,7 +174,7 @@ class Admin extends System\Controller {
         if ($positions) {
             $priority = 0;
             foreach ($positions as $id) {
-                $item = fx::data($entity)->get_by_id($id);
+                $item = fx::data($entity)->getById($id);
                 if ($item) {
                     $item->set('priority', $priority++)->save();
                 }
@@ -184,7 +184,7 @@ class Admin extends System\Controller {
         return array('status' => 'ok');
     }
 
-    public function on_save($input) {
+    public function onSave($input) {
 
         $es = $this->entity_type;
         $result = array('status' => 'ok');
@@ -196,7 +196,7 @@ class Admin extends System\Controller {
 
         foreach ($ids as $id) {
             try {
-                fx::data($es)->get_by_id($id)->checked();
+                fx::data($es)->getById($id)->checked();
             } catch (\Exception $e) {
                 $result['status'] = 'error';
                 $result['text'][] = $e->getMessage();
@@ -206,7 +206,7 @@ class Admin extends System\Controller {
         return $result;
     }
 
-    public function off_save($input) {
+    public function offSave($input) {
         
         $es = $this->entity_type;
         $result = array('status' => 'ok');
@@ -218,7 +218,7 @@ class Admin extends System\Controller {
 
         foreach ($ids as $id) {
             try {
-                fx::data($es)->get_by_id($id)->unchecked();
+                fx::data($es)->getById($id)->unchecked();
             } catch (\Exception $e) {
                 $result['status'] = 'error';
                 $result['text'][] = $e->getMessage();
@@ -228,7 +228,7 @@ class Admin extends System\Controller {
         return $result;
     }
 
-    public function delete_save($input) {
+    public function deleteSave($input) {
         
         $es = $this->entity_type;
         $result = array('status' => 'ok');

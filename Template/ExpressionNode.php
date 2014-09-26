@@ -35,20 +35,20 @@ class ExpressionNode {
         return $res;
     }
 
-    public function context_level_up($count = 1) {
+    public function contextLevelUp($count = 1) {
         if (is_null($this->context_offset)) {
             $this->context_offset = 0;
         }
         $this->context_offset += $count;
     }
 
-    public function get_context_level() {
+    public function getContextLevel() {
         return $this->context_offset;
     }
 
     public $last_child = null;
 
-    public function add_child($n) {
+    public function addChild($n) {
         if (!$this->last_child) {
             $this->children = array();
         }
@@ -56,7 +56,7 @@ class ExpressionNode {
         $this->last_child = $n;
     }
 
-    public function pop_child() {
+    public function popChild() {
         if (!$this->last_child) {
             return null;
         }
@@ -69,7 +69,7 @@ class ExpressionNode {
         return $child;
     }
 
-    public function append_name_chunk($ch) {
+    public function appendNameChunk($ch) {
         $last_chunk = end($this->name);
         if (is_string($last_chunk) && is_string($ch)) {
             $this->name[count($this->name) - 1] .= $ch;

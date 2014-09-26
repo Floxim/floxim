@@ -16,10 +16,10 @@ class Compiler {
      * @return string of php code
      */
     public function compile($tree, $class_name) {
-        $code = $this->_make_code($tree, $class_name);
-        $code = self::add_tabs($code);
+        $code = $this->makeCode($tree, $class_name);
+        $code = self::addTabs($code);
         if (fx::config('templates.check_php_syntax')) {
-            $is_correct = self::is_php_syntax_correct($code);
+            $is_correct = self::isPhpSyntaxCorrect($code);
             if ($is_correct !== true) {
                 $error_line = $is_correct[1][1];
                 $lines = explode("\n", $code);
@@ -34,7 +34,7 @@ class Compiler {
         return $code;
     }
     
-    public static function add_tabs($code) {
+    public static function addTabs($code) {
         $res = '';
         $level = 0;
         $code = preg_split("~[\n\r]+~", $code);
@@ -57,36 +57,36 @@ class Compiler {
     
     protected $_code_context = 'text';
     
-    protected function _token_code_to_code($token) {
-        return $token->get_prop('value');
+    protected function tokenCodeToCode($token) {
+        return $token->getProp('value');
     }
     
-    protected function _token_help_to_code($token) {
+    protected function tokenHelpToCode($token) {
         $code = "<?php\n";
         $code .= "echo \$this->get_help();\n";
         $code .= "?>";
         return $code;
     }
     
-    protected function _token_call_to_code(Token $token) {
-        $each = $token->get_prop('each');
+    protected function tokenCallToCode(Token $token) {
+        $each = $token->getProp('each');
         if ($each) {
             $each_token = Token::create('{each}');
-            $each_token->set_prop('select', $each);
+            $each_token->setProp('select', $each);
             
             $item = '$'.$this->varialize($each).'_item';
-            $each_token->set_prop('as', $item);
-            $c_with = $token->get_prop('with');
-            $token->set_prop('with', $item.($c_with ? ', '.$c_with : ''));
-            $token->set_prop('each', '');
-            $each_token->add_child($token);
-            return $this->_token_each_to_code($each_token);
+            $each_token->setProp('as', $item);
+            $c_with = $token->getProp('with');
+            $token->setProp('with', $item.($c_with ? ', '.$c_with : ''));
+            $token->setProp('each', '');
+            $each_token->addChild($token);
+            return $this->tokenEachToCode($each_token);
         }
         $code = "<?php\n";
-        $tpl_name = $token->get_prop('id');
+        $tpl_name = $token->getProp('id');
         // not a plain name
         if (!preg_match("~^[a-z0-9_\.\:]+$~", $tpl_name)) {
-            $tpl_name = self::parse_expression($tpl_name);
+            $tpl_name = self::parseExpression($tpl_name);
         } else {
             if (!preg_match("~\:~", $tpl_name)) {
                 $tpl_name = $this->_template_set_name.":".$tpl_name;
@@ -95,9 +95,9 @@ class Compiler {
         }
         $tpl = '$tpl_'.$this->varialize($tpl_name);
         $code .= $tpl.' = fx::template('.$tpl_name.");\n";
-        $inherit = $token->get_prop('apply') ? 'true' : 'false';
+        $inherit = $token->getProp('apply') ? 'true' : 'false';
         $code .= $tpl.'->set_parent($this, '.$inherit.");\n";
-        $call_children = $token->get_children();
+        $call_children = $token->getChildren();
         /*
          * Converted:
          * {call id="wrap"}<div>Something</div>{/call}
@@ -106,7 +106,7 @@ class Compiler {
          */
         $has_content_param = false;
         foreach ($call_children as $call_child) {
-            if ($call_child->name == 'code' && $call_child->is_empty()) {
+            if ($call_child->name == 'code' && $call_child->isEmpty()) {
                 continue;
             }
             if ($call_child->name != 'var') {
@@ -115,21 +115,21 @@ class Compiler {
             }
         }
         if ($has_content_param) {
-            $token->clear_children();
+            $token->clearChildren();
             $var_token = new Token('var', 'single', array('id' => 'content'));
             foreach ($call_children as $call_child) { 
-                $var_token->add_child($call_child);
+                $var_token->addChild($call_child);
             }
-            $token->add_child($var_token);
+            $token->addChild($var_token);
         }
-        $with_expr = $token->get_prop('with');
+        $with_expr = $token->getProp('with');
         if ($with_expr) {
             $ep = new ExpressionParser();
-            $with_expr = $ep->parse_with($with_expr);
+            $with_expr = $ep->parseWith($with_expr);
         }
         $switch_context = is_array($with_expr) && isset($with_expr['$']);
         if ($switch_context) {
-            $code .= '$this->push_context('.$this->parse_expression($with_expr['$']).");\n";
+            $code .= '$this->push_context('.$this->parseExpression($with_expr['$']).");\n";
         }
         $code .= $tpl."->push_context(array(), array('transparent' => false));\n";
         if (is_array($with_expr)) {
@@ -139,40 +139,40 @@ class Compiler {
                 }
                 $code .= $tpl."->set_var(".
                     "'".trim($alias, '$')."', ".
-                    $this->parse_expression($var).");\n";
+                    $this->parseExpression($var).");\n";
             }
         }
-        foreach ($token->get_children() as $param_var_token) {
+        foreach ($token->getChildren() as $param_var_token) {
             // internal call only handle var
             if ($param_var_token->name != 'var') {
                 continue;
             }
             $value_to_set = 'null';
-            if ($param_var_token->has_children()) {
+            if ($param_var_token->hasChildren()) {
                 // pass the inner html code
                 $code .= "ob_start();\n";
-                $code .= $this->_children_to_code($param_var_token);
+                $code .= $this->childrenToCode($param_var_token);
                 $code .= "\n";
                 $value_to_set = 'ob_get_clean()';
-            } elseif ( ($select_att = $param_var_token->get_prop('select') ) ) {
+            } elseif ( ($select_att = $param_var_token->getProp('select') ) ) {
                 // pass the result of executing the php code
-                $value_to_set = self::parse_expression($select_att);
+                $value_to_set = self::parseExpression($select_att);
             }
             $code .= $tpl."->set_var(".
-                "'".$param_var_token->get_prop('id')."', ".
+                "'".$param_var_token->getProp('id')."', ".
                 $value_to_set.");\n";
         }
         
         if ($switch_context) {
             $code .= "\$this->pop_context();\n";
-            $code .= $tpl."->push_context(".$this->parse_expression($with_expr['$']).");\n";
+            $code .= $tpl."->push_context(".$this->parseExpression($with_expr['$']).");\n";
         }
         $code .= 'echo '.$tpl."->render();\n";
         $code .= "\n?>";
         return $code;
     }
     
-    public function parse_expression($str) {
+    public function parseExpression($str) {
         static $expression_parser = null;
         // todo: need verify name $expession_parser
         if ($expression_parser === null) {
@@ -182,11 +182,11 @@ class Compiler {
         return $expression_parser->compile($expression_parser->parse($str));
     }
     
-    protected function _apply_modifiers($display_var, $modifiers, $token) {
+    protected function applyModifiers($display_var, $modifiers, $token) {
         if (!$modifiers || count($modifiers) == 0) {
             return '';
         }
-        $token_type = $token->get_prop('type');
+        $token_type = $token->getProp('type');
         $code = '';
         foreach ($modifiers as $mod) {
             $mod_callback = $mod['name'];
@@ -194,17 +194,17 @@ class Compiler {
             if ($mod['is_template']) {
                 $call_token = new Token('call', 'single', array('id' => $mod['name'], 'apply' => true));
                 if (isset($mod['with'])) {
-                    $call_token->set_prop('with', $mod['with']);
+                    $call_token->setProp('with', $mod['with']);
                 }
             }
             
             if ($mod['is_each'] && $mod['is_template']) {
-                $c_with = $call_token->get_prop('with');
-                $call_token->set_prop('with', "`".$display_var.'`_item'.($c_with ? ', '.$c_with : ''));
+                $c_with = $call_token->getProp('with');
+                $call_token->setProp('with', "`".$display_var.'`_item'.($c_with ? ', '.$c_with : ''));
                 $each_token = new Token('each', 'single', array('select' => "`".$display_var."`"));
-                $each_token->add_child($call_token);
+                $each_token->addChild($call_token);
                 $code = "ob_start();\n?>";
-                $code .= $this->_token_each_to_code($each_token);
+                $code .= $this->tokenEachToCode($each_token);
                 $code .= "<?php\n".$display_var." = ob_get_clean();\n";
                 continue;
             }
@@ -228,10 +228,10 @@ class Compiler {
                 }
             } elseif ($mod['is_template']) {
                 $code .= "ob_start();\n?>";
-                $c_with = $call_token->get_prop('with');
-                $call_token->set_prop('with', "`".$display_var.'`'.($c_with ? ', '.$c_with : ''));
-                $call_token->set_prop('apply', true);
-                $code .= $this->_token_call_to_code($call_token);
+                $c_with = $call_token->getProp('with');
+                $call_token->setProp('with', "`".$display_var.'`'.($c_with ? ', '.$c_with : ''));
+                $call_token->setProp('apply', true);
+                $code .= $this->tokenCallToCode($call_token);
                 $code .= "<?php\n".$display_var_item. " = ob_get_clean();\n";
             } else {
                 $mod_callback .= '(';
@@ -244,7 +244,7 @@ class Compiler {
                         $args []= $display_var_item;
                         $self_used = true;
                     } else {
-                        $args []= self::parse_expression($arg);
+                        $args []= self::parseExpression($arg);
                     }
                 }
                 if (!$self_used) {
@@ -259,7 +259,7 @@ class Compiler {
         return $code;
     }
     
-    protected function _make_file_check($var, $use_stub = false) {
+    protected function makeFileCheck($var, $use_stub = false) {
         
         $code = $var . ' = trim('.$var.");\n";
         //$code .= "if (!preg_match(\"~^###fxf\d+~\", ".$var.")) {\n";
@@ -279,28 +279,28 @@ class Compiler {
         return $code;
     }
     
-    protected function _token_var_to_code(Token $token) {
+    protected function tokenVarToCode(Token $token) {
         $code = "<?php\n";
         // parse var expression and store token 
         // to create correct expression for get_var_meta()
         $ep = new ExpressionParser();
-        $expr_token = $ep->parse('$'.$token->get_prop('id'));
+        $expr_token = $ep->parse('$'.$token->getProp('id'));
         $expr = $ep->compile($expr_token);
         $var_token = $expr_token->last_child;
         
-        $modifiers = $token->get_prop('modifiers');
-        $token->set_prop('modifiers', null);
-        $token_is_visual = $token->get_prop('var_type') == 'visual';
+        $modifiers = $token->getProp('modifiers');
+        $token->setProp('modifiers', null);
+        $token_is_visual = $token->getProp('var_type') == 'visual';
         
-        $token_type = $token->get_prop('type');
+        $token_type = $token->getProp('type');
         // analyze default value to get token type and wysiwyg linebreaks mode
         if (
             !$token_type || 
-            ($token_type == 'html' && !$token->get_prop('linebreaks'))
+            ($token_type == 'html' && !$token->getProp('linebreaks'))
         ) {
             $linebreaks = $token_is_visual;
-            foreach ($token->get_children() as $child) {
-                $child_source = $child->get_prop('value');
+            foreach ($token->getChildren() as $child) {
+                $child_source = $child->getProp('value');
                 if (!$token_type && preg_match("~<[a-z]+.*?>~i", $child_source)) {
                     $token_type = 'html';
                 }
@@ -311,17 +311,17 @@ class Compiler {
             if (!$token_type) {
                 $token_type = 'string';
             } else {
-                $token->set_prop('type', $token_type);
+                $token->setProp('type', $token_type);
             }
             if ($linebreaks || $token_is_visual) {
-                $token->set_prop('linebreaks', $linebreaks);
+                $token->setProp('linebreaks', $linebreaks);
             }
         }
         
         // e.g. "name" or "image_".$this->v('id')
         $var_id = preg_replace('~^\$this->v\(~', '', preg_replace("~\)$~", '', $expr));
         
-        $has_default = $token->get_prop('default') || count($token->get_children()) > 0;
+        $has_default = $token->getProp('default') || count($token->getChildren()) > 0;
         
         // if var has default value or there are some modifiers
         // store real value for editing
@@ -329,13 +329,13 @@ class Compiler {
         $var_chunk = $this->varialize($var_id);
         $token_is_file = ($token_type == 'image' || $token_type == 'file');
         
-        if ($modifiers || $has_default || $token->get_prop('inatt')) {
+        if ($modifiers || $has_default || $token->getProp('inatt')) {
             $real_val_var = '$'.$var_chunk.'_real_val';
             
             $code .= $real_val_var . ' = '.$expr.";\n";
             
             if ($token_is_file) {
-                $code .= $this->_make_file_check($real_val_var, !$has_default);
+                $code .= $this->makeFileCheck($real_val_var, !$has_default);
             }
             
             if ($modifiers || $has_default) {
@@ -348,18 +348,18 @@ class Compiler {
             $real_val_defined = true;
         }
         
-        $var_meta_expr = $this->_get_var_meta_expression($token, $var_token, $ep);
+        $var_meta_expr = $this->getVarMetaExpression($token, $var_token, $ep);
         
         if ($has_default) {
             $code .= "\nif (is_null(".$real_val_var.") || ".$real_val_var." == '') {\n";
             
-            if (!($default = $token->get_prop('default')) ) {
+            if (!($default = $token->getProp('default')) ) {
                 // ~= src="{%img}{$img /}{/%}" --> src="{%img}{$img type="image" /}{/%}
-                $token_def_children = $token->get_non_empty_children();
+                $token_def_children = $token->getNonEmptyChildren();
                 if (count($token_def_children) == 1 && $token_def_children[0]->name == 'var') {
                     $def_child = $token_def_children[0];
-                    if (!$def_child->get_prop('type')) {
-                        $def_child->set_prop('type', $token_type);
+                    if (!$def_child->getProp('type')) {
+                        $def_child->setProp('type', $token_type);
                     }
                 }
                 $has_complex_tokens = false;
@@ -369,7 +369,7 @@ class Compiler {
                         $has_complex_tokens = true;
                         break;
                     }
-                    $def_child_code = $def_child->get_prop('value');
+                    $def_child_code = $def_child->getProp('value');
                     if (preg_match("~<\?(php|=)~", $def_child_code)) {
                         $has_complex_tokens = true;
                         break;
@@ -387,7 +387,7 @@ class Compiler {
                     if (!$token_is_visual) {
                         $code .= "}\n";
                     }
-                    $code .= "\t".$this->_children_to_code($token);
+                    $code .= "\t".$this->childrenToCode($token);
                     if (!$token_is_visual) {
                         $code .= "if (\$var_has_meta) {\n";
                     }
@@ -403,7 +403,7 @@ class Compiler {
             if ($real_val_defined) {
                 $code .= "\n".$display_val_var.' = '.$default.";\n";
                 if ($token_is_file) {
-                    $code .= $this->_make_file_check($display_val_var, true);
+                    $code .= $this->makeFileCheck($display_val_var, true);
                 }
                 if ($token_is_visual) {
                     $code .= "\n".'$this->set_var('.$var_id.',  '.$display_val_var.");\n";
@@ -419,7 +419,7 @@ class Compiler {
         
         if ($modifiers) {
             
-            $modifiers_code = $this->_apply_modifiers($display_val_var, $modifiers, $token);
+            $modifiers_code = $this->applyModifiers($display_val_var, $modifiers, $token);
             if ($token->_need_type) {
                 $code .= '$var_meta = '.$var_meta_expr.";\n";
                 $code .= '$var_type = $var_meta["type"]'.";\n";
@@ -427,7 +427,7 @@ class Compiler {
             }
             $code .= $modifiers_code;
         }
-        if ($token->get_prop('editable') == 'false') {
+        if ($token->getProp('editable') == 'false') {
             $code .= 'echo  '.$expr.";\n";
         } else {
             $code .= 'echo !$_is_admin ? '.$expr.' : $this->print_var('."\n";
@@ -437,7 +437,7 @@ class Compiler {
             if (!$token_is_visual) {
                 $meta_parts []= $var_meta_defined ? '$var_meta' : $var_meta_expr;
             }
-            $token_props = $token->get_all_props();
+            $token_props = $token->getAllProps();
 
 
             $tp_parts = array();
@@ -461,7 +461,7 @@ class Compiler {
             }
             $meta_parts []= '$_is_wrapper_meta';
 
-            if ($token->get_prop('editable') == 'false') {
+            if ($token->getProp('editable') == 'false') {
                 $meta_parts []= 'array("editable"=>false)';
             }
             if ($real_val_defined) {
@@ -474,14 +474,14 @@ class Compiler {
         return $code;
     }
     
-    protected function _get_var_meta_expression($token, $var_token, $ep) {
+    protected function getVarMetaExpression($token, $var_token, $ep) {
         // Expression to get var meta
         $var_meta_expr = '$this->get_var_meta(';
         // if var is smth like $item['parent']['url'], 
         // it should be get_var_meta('url', fx::dig( $this->v('item'), 'parent'))
         if ($var_token->last_child) {
             if ($var_token->last_child->type == ExpressionParser::T_ARR) {
-                $last_index = $var_token->pop_child();
+                $last_index = $var_token->popChild();
                 $tale = $ep->compile($last_index).', ';
                 $tale .= $ep->compile($var_token).')';
                 $var_meta_expr .= $tale;
@@ -493,7 +493,7 @@ class Compiler {
             $var_meta_expr .= '"'.$prop_name.'", '.$ep->compile($var_token);
             $var_meta_expr .= ')';
         } else {
-            $var_meta_expr .= '"'.$token->get_prop('id').'")';
+            $var_meta_expr .= '"'.$token->getProp('id').'")';
         }
         return $var_meta_expr;
     }
@@ -508,20 +508,20 @@ class Compiler {
         ));
     }
     
-    protected function _token_with_each_to_code(Token $token) {
-        $expr = self::parse_expression($token->get_prop('select'));
+    protected function tokenWithEachToCode(Token $token) {
+        $expr = self::parseExpression($token->getProp('select'));
         $arr_id = '$'.$this->varialize($expr).'_items';
         
         $each_token = new Token('each', 'double', array(
             'select' => '`'.$arr_id.'`',
-            'as' => $token->get_prop('as'),
-            'key' => $token->get_prop('key'),
+            'as' => $token->getProp('as'),
+            'key' => $token->getProp('key'),
             'check_traversable' => 'false'
         ));
         
         
-        if ( ($separator = $this->_find_separator($token)) ) {
-            $each_token->add_child($separator);
+        if ( ($separator = $this->findSeparator($token)) ) {
+            $each_token->addChild($separator);
         }
         
         
@@ -538,16 +538,16 @@ class Compiler {
         }
         
         usort($items, function($a, $b) {
-            $ta = $a->get_prop('test') ? 1 : 0;
-            $tb = $b->get_prop('test') ? 1 : 0;
+            $ta = $a->getProp('test') ? 1 : 0;
+            $tb = $b->getProp('test') ? 1 : 0;
             return $tb - $ta;
         });
         
         $all_subroot = true;
         $target_token = $each_token;
         foreach ($items as $num => $item) {
-            $test = $item->get_prop('test');
-            $item_subroot = $item->get_prop('subroot');
+            $test = $item->getProp('test');
+            $item_subroot = $item->getProp('subroot');
             if (!$item_subroot || $item_subroot == 'false') {
                 $all_subroot = false;
             }
@@ -559,14 +559,14 @@ class Compiler {
                 'double', 
                 array('test' => $test)
             );
-            foreach ($item->get_children() as $item_child) {
-                $cond_token->add_child($item_child);
+            foreach ($item->getChildren() as $item_child) {
+                $cond_token->addChild($item_child);
             }
-            $target_token->add_child($cond_token);
+            $target_token->addChild($cond_token);
             $target_token = $cond_token;
         }
         if ($all_subroot) {
-            $each_token->set_prop('subroot', 'true');
+            $each_token->setProp('subroot', 'true');
         }
         
         $in_items = false;
@@ -576,18 +576,18 @@ class Compiler {
                 $in_items = true;
             }
             if (!$in_items) {
-                $code .= $this->_get_token_code($child, $token);
+                $code .= $this->getTokenCode($child, $token);
                 continue;
             }
             if (!$each_added) {
-                $code .= $this->_get_token_code($each_token, $token);
+                $code .= $this->getTokenCode($each_token, $token);
                 $each_added = true;
             }
-            if ($child->name == 'item' || $child->is_empty()) {
+            if ($child->name == 'item' || $child->isEmpty()) {
                 continue;
             }
             $in_items = false;
-            $code .= $this->_get_token_code($child, $token);
+            $code .= $this->getTokenCode($child, $token);
         }
         
         $code .= "<?php\n}\n?>";
@@ -597,34 +597,34 @@ class Compiler {
      * Find & remove separator from token children and return it
      * separator is special token {separator}..{/separator} or var {%separator}..{/%}
      */
-    protected function _find_separator(Token $token) {
+    protected function findSeparator(Token $token) {
         $separator = null;
-        if ( ($separator_text = $token->get_prop('separator')) ) {
+        if ( ($separator_text = $token->getProp('separator')) ) {
             $separator = new Token('separator', 'double', array());
             $separator_text = new Token('code', 'single', array('value' => $separator_text));
-            $separator->add_child($separator_text);
+            $separator->addChild($separator_text);
             return $separator;
         }
-        foreach ($token->get_children() as $each_child_num => $each_child) {
+        foreach ($token->getChildren() as $each_child_num => $each_child) {
             if (
                 $each_child->name == 'separator' || 
-                ($each_child->name == 'var' && $each_child->get_prop('id') == 'separator')
+                ($each_child->name == 'var' && $each_child->getProp('id') == 'separator')
             ) {
                 if ($each_child->name == 'var') {
                     $separator = new Token('separator', 'double', array());
-                    $separator->add_child($each_child);
+                    $separator->addChild($each_child);
                 } else {
                     $separator = $each_child;
                 }
                 
-                $token->set_child(null, $each_child_num);
+                $token->setChild(null, $each_child_num);
                 break;
             }
         }
         return $separator;
     }
     
-    protected function _get_item_code($token, $item_alias, $counter_id = null, $arr_id = 'array()') {
+    protected function getItemCode($token, $item_alias, $counter_id = null, $arr_id = 'array()') {
         $code = '';
         $is_entity = '$'.$item_alias."_is_entity";
         $code .=  $is_entity ." = \$".$item_alias." instanceof \\Floxim\\Floxim\\Template\\Entity;\n";
@@ -635,30 +635,30 @@ class Compiler {
         $code .= $meta_test;
         $code .= "\t\tob_start();\n";
         $code .= "\t}\n";
-        $code .= $this->_children_to_code($token)."\n";
+        $code .= $this->childrenToCode($token)."\n";
         $code .= $meta_test;
         $code .= "\t\techo \$".$item_alias."->add_template_record_meta(".
                     "ob_get_clean(), ".
                     $arr_id.", ".
                     ($counter_id ? '$'.$counter_id." - 1, " : '$this->v("position") - 1, ').
-                    ($token->get_prop('subroot') ? 'true' : 'false').
+                    ($token->getProp('subroot') ? 'true' : 'false').
                 ");\n";
         $code .= "\t}\n";
         $code .= "\$this->pop_context();\n";
         return $code;
     }
 
-    protected function _token_each_to_code(Token $token) {
+    protected function tokenEachToCode(Token $token) {
         $code = "<?php\n";
-        $select = $token->get_prop('select');
+        $select = $token->getProp('select');
         if (empty($select)) {
             $select = '$.items';
         }
-        $arr_id = self::parse_expression($select);
+        $arr_id = self::parseExpression($select);
         
         
         $loop_alias = 'null';
-        $item_alias = $token->get_prop('as');
+        $item_alias = $token->getProp('as');
         
         if (!preg_match('~^\$[a-z0-9_]+$~', $arr_id)) {
             $arr_hash_name = '$arr_'.$this->varialize($arr_id);
@@ -676,7 +676,7 @@ class Compiler {
         // key for loop
         $loop_key = 'null';
         
-        $item_key = $token->get_prop('key');
+        $item_key = $token->getProp('key');
         if (!$item_key) {
             $item_key = $item_alias.'_key';
         } else {
@@ -684,8 +684,8 @@ class Compiler {
             $loop_key = '"'.$item_key.'"';
         }
         
-        $separator = $this->_find_separator($token);
-        $check_traversable = $token->get_prop('check_traversable') !== 'false';
+        $separator = $this->findSeparator($token);
+        $check_traversable = $token->getProp('check_traversable') !== 'false';
         if ($check_traversable) {
             $code .= "if (is_array(".$arr_id.") || ".$arr_id." instanceof Traversable) {\n";
         }
@@ -704,11 +704,11 @@ class Compiler {
         $code .= "\nforeach (".$arr_id." as \$".$item_key." => \$".$item_alias.") {\n";
         $code .= $loop_id."->_move();\n";
         // get code for step with scope & meta
-        $code .= $this->_get_item_code($token, $item_alias, $counter_id, $arr_id);
+        $code .= $this->getItemCode($token, $item_alias, $counter_id, $arr_id);
         
         if ($separator) {
             $code .= 'if (!'.$loop_id.'->is_last()) {'."\n";
-            $code .= $this->_children_to_code($separator);
+            $code .= $this->childrenToCode($separator);
             $code .= "\n}\n";
         }
         $code .= "}\n"; // close foreach
@@ -721,26 +721,26 @@ class Compiler {
         return $code;
     }
     
-    protected function _token_with_to_code($token) {
+    protected function tokenWithToCode($token) {
         $code = "<?php\n";
-        $expr = self::parse_expression($token->get_prop('select'));
+        $expr = self::parseExpression($token->getProp('select'));
         $item_name = $this->varialize($expr).'_with_item';
         $code .= '$'.$item_name.' = '.$expr.";\n";
         $code .= "if ($".$item_name.") {\n";
-        $code .= $this->_get_item_code($token, $item_name);
+        $code .= $this->getItemCode($token, $item_name);
         $code .= "}\n";
         $code .= "?>";
         return $code;
     }
 
-    protected function _token_template_to_code($token) {
-        $this->_register_template($token);
+    protected function tokenTemplateToCode($token) {
+        $this->registerTemplate($token);
     }
     
-    protected function _token_set_to_code($token) {
-        $var = $token->get_prop('var');
-        $value = self::parse_expression($token->get_prop('value'));
-        $is_default = $token->get_prop('default');
+    protected function tokenSetToCode($token) {
+        $var = $token->getProp('var');
+        $value = self::parseExpression($token->getProp('value'));
+        $is_default = $token->getProp('default');
         $code .= "<?php\n";
         
         if (preg_match("~\.~",$var)) {
@@ -766,15 +766,15 @@ class Compiler {
         return $code;
     }
 
-    protected static function _get_area_local_templates($area_token) {
+    protected static function getAreaLocalTemplates($area_token) {
         $templates = array();
         $traverse = function(Token $node) use (&$templates, &$traverse) {
-            foreach ($node->get_children() as $child) {
+            foreach ($node->getChildren() as $child) {
                 if ($child->name === 'area') {
                     continue;
                 }
                 if ($child->name === 'template') {
-                   $templates[]= $child->get_prop('id'); 
+                   $templates[]= $child->getProp('id'); 
                 }
                 $traverse($child);
             }
@@ -783,15 +783,15 @@ class Compiler {
         return $templates;
     }
     
-    protected function _token_area_to_code($token) {
+    protected function tokenAreaToCode($token) {
         //$token_props = var_export($token->get_all_props(),1);
         $token_props_parts = array();
-        $local_templates = self::_get_area_local_templates($token);
+        $local_templates = self::getAreaLocalTemplates($token);
         $parsed_props = array();
-        foreach ($token->get_all_props() as $tp => $tpval) {
+        foreach ($token->getAllProps() as $tp => $tpval) {
             $c_part = "'".$tp."' => ";
             if ($tp === 'suit') {
-                $res_suit = Suitable::compile_area_suit_prop(
+                $res_suit = Suitable::compileAreaSuitProp(
                     $tpval, 
                     $local_templates, 
                     $this->_template_set_name
@@ -800,7 +800,7 @@ class Compiler {
             } elseif (preg_match("~^`.+`$~s", $tpval)) {
                 $c_val = trim($tpval, '`');
             } elseif (preg_match('~\$~', $tpval)) {
-                $c_val = $this->parse_expression($tpval);
+                $c_val = $this->parseExpression($tpval);
             } else {
                 $c_val = "'".addslashes($tpval)."'";
             }
@@ -811,9 +811,9 @@ class Compiler {
         $res = '';
         $res = '<?php $this->push_context(array("area_infoblocks" => fx::page()->get_area_infoblocks('.$parsed_props['id'].")));\n?>";
         $render_called = false;
-        foreach ($token->get_children() as $child_num => $child) {
+        foreach ($token->getChildren() as $child_num => $child) {
             if ($child->name == 'template') {
-                $child->set_prop('area', $token->get_prop('id'));
+                $child->setProp('area', $token->getProp('id'));
                 if (!$render_called) {
                     if ($child_num > 0) {
                         $res = 
@@ -828,9 +828,9 @@ class Compiler {
                     }
                     $render_called = true;
                 }
-                $this->_register_template($child);
+                $this->registerTemplate($child);
             } else {
-                $res .= $this->_get_token_code($child, $token);
+                $res .= $this->getTokenCode($child, $token);
             }
         }
         if (!$render_called) {
@@ -840,55 +840,55 @@ class Compiler {
         return $res;
     }
     
-    protected function _token_if_to_code($token) {
+    protected function tokenIfToCode($token) {
         $code  = "<?php\n";
-        $cond = $token->get_prop('test');
+        $cond = $token->getProp('test');
         $cond = trim($cond);
-        $cond = self::parse_expression($cond);
+        $cond = self::parseExpression($cond);
         if (empty($cond)) {
             $cond = 'false';
         }
         $code .= 'if ('.$cond.") {\n";
-        $code .= $this->_children_to_code($token)."\n";
+        $code .= $this->childrenToCode($token)."\n";
         $code .= "} ";
-        $code .= $this->_elses_to_code($token);
+        $code .= $this->elsesToCode($token);
         $code .= "\n?>";
         return $code;
     }
     
-    protected function _token_else_to_code($token) {
+    protected function tokenElseToCode($token) {
         $code .= " else {\n";
-        $code .= $this->_children_to_code($token)."\n";
+        $code .= $this->childrenToCode($token)."\n";
         $code .= "}\n";
         return $code;
     }
 
 
-    protected function _token_elseif_to_code($token) {
-        $cond = $token->get_prop('test');
+    protected function tokenElseifToCode($token) {
+        $cond = $token->getProp('test');
         $cond = trim($cond);
-        $cond = self::parse_expression($cond);
+        $cond = self::parseExpression($cond);
         
         $code = ' elseif ('.$cond.') {'."\n";
-        $code .= $this->_children_to_code($token)."\n";
+        $code .= $this->childrenToCode($token)."\n";
         $code .= "} ";
-        $code .= $this->_elses_to_code($token);
+        $code .= $this->elsesToCode($token);
         $code .= "\n";
         return $code;
     }
     
-    protected function _token_js_to_code($token) {
-        return $this->_token_headfile_to_code($token, 'js');
+    protected function tokenJsToCode($token) {
+        return $this->tokenHeadfileToCode($token, 'js');
     }
     
-    protected function _token_css_to_code($token) {
-        return $this->_token_headfile_to_code($token, 'css');
+    protected function tokenCssToCode($token) {
+        return $this->tokenHeadfileToCode($token, 'css');
     }
     
-    protected function _token_headfile_to_code($token, $type) {
+    protected function tokenHeadfileToCode($token, $type) {
         $code .= "<?php\n";
-        foreach ($token->get_children() as $set) {
-            $set = preg_split("~[\n]~", $set->get_prop('value'));
+        foreach ($token->getChildren() as $set) {
+            $set = preg_split("~[\n]~", $set->getProp('value'));
             foreach ($set as $file) {
                 $file = trim($file);
                 if (empty($file)) {
@@ -923,7 +923,7 @@ class Compiler {
         return $code;
     }
 
-    protected function _get_token_code($token, $parent) {
+    protected function getTokenCode($token, $parent) {
         $method_name = '_token_'.$token->name.'_to_code';
         if (method_exists($this, $method_name)) {
             return call_user_func(array($this, $method_name), $token, $parent);
@@ -931,11 +931,11 @@ class Compiler {
         return '';
     }
 
-    protected function _children_to_code(Token $token) {
+    protected function childrenToCode(Token $token) {
         $parts = array();
-        foreach ($token->get_children() as $child) {
+        foreach ($token->getChildren() as $child) {
             if ($child->name !== 'elseif' && $child->name !== 'else') {
-                $parts []= $this->_get_token_code($child, $token);
+                $parts []= $this->getTokenCode($child, $token);
             }
         }
         if (count($parts) == 0) {
@@ -945,17 +945,17 @@ class Compiler {
         return $code;
     }
     
-    protected function _elses_to_code($token) {
+    protected function elsesToCode($token) {
         $code = '';
-        foreach ($token->get_children() as $child) {
+        foreach ($token->getChildren() as $child) {
             if ($child->name == 'elseif' || $child->name == 'else') {
-                $code .= $this->_get_token_code($child, $token);
+                $code .= $this->getTokenCode($child, $token);
             }
         }
         return $code;
     }
     
-    protected function _make_template_code($tpl_props) {
+    protected function makeTemplateCode($tpl_props) {
         $tpl_id = $tpl_props['id'];
         
         $children_code = $tpl_props['_code'];
@@ -966,7 +966,7 @@ class Compiler {
         $template_path = str_replace('\\', '/', $template_path);
         $template_dir = preg_replace("~/[^/]+$~", '', $template_path).'/';
         
-        $code .= "fx::env()->add_current_template(\$this);\n";
+        $code .= "fx::env()->addCurrentTemplate(\$this);\n";
         
         $code .= "\$template_dir = '".$template_dir."';\n";
         $code .= "\$_is_admin = \$this->is_admin();\n";
@@ -977,8 +977,8 @@ class Compiler {
         if (isset($tpl_props['_variants'])) {
             foreach ($tpl_props['_variants'] as &$v) {
                 $t = $v['_token'];
-                if ( !($prior = $t->get_prop('priority')) ){ 
-                    $prior = $t->get_prop('test') ? 0.5 : 0;
+                if ( !($prior = $t->getProp('priority')) ){ 
+                    $prior = $t->getProp('test') ? 0.5 : 0;
                 }
                 $v['_priority'] = $prior;
             }
@@ -989,20 +989,20 @@ class Compiler {
             
             foreach ($tpl_props['_variants'] as $var_num => $var) {
                 $token = $var['_token'];
-                $test = $token->get_prop('test');
+                $test = $token->getProp('test');
                 if (!$test) {
                     $test = 'true';
                 }
                 $code .= $var_num == 0 ? 'if' : 'elseif';
-                $code .= '('.self::parse_expression($test).") {\n";
-                $is_subroot = $token->get_prop('subroot') ? 'true' : 'false';
+                $code .= '('.self::parseExpression($test).") {\n";
+                $is_subroot = $token->getProp('subroot') ? 'true' : 'false';
                 $code .= "\t\$this->is_subroot = ".($is_subroot).";\n";
                 $code .= $var['_code']."\n"; //$this->_children_to_code($token)."\n";
                 $code .= "}\n";
             }
         } else {
             $token = $tpl_props['_token'];
-            $is_subroot = $token->get_prop('subroot') ? 'true' : 'false';
+            $is_subroot = $token->getProp('subroot') ? 'true' : 'false';
             $code .= "\t\$this->is_subroot = ".($is_subroot).";\n";
             $code .= $children_code;
         }
@@ -1011,31 +1011,31 @@ class Compiler {
         return $code;
     }
     
-    protected function _get_template_props(Token $token) {
+    protected function getTemplateProps(Token $token) {
         $tpl_props = array(
-            'id' => $token->get_prop('id'),
+            'id' => $token->getProp('id'),
             'file' => $this->_current_source_file
         );
-        if ( ($offset = $token->get_prop('offset')) ) {
+        if ( ($offset = $token->getProp('offset')) ) {
             $tpl_props['offset'] = $offset;
         }
-        if ( ($size = $token->get_prop('size'))) {
+        if ( ($size = $token->getProp('size'))) {
             $tpl_props['size'] = $size;
         }
-        if ( ($suit=  $token->get_prop('suit'))) {
+        if ( ($suit=  $token->getProp('suit'))) {
             $tpl_props['suit'] = $suit;
         }
-        if (  ($area_id = $token->get_prop('area'))) {
+        if (  ($area_id = $token->getProp('area'))) {
             $tpl_props['area'] = $area_id;
         }
         
-        if ( !($name = $token->get_prop('name'))) {
-            $name = $token->get_prop('id');
+        if ( !($name = $token->getProp('name'))) {
+            $name = $token->getProp('id');
         }
         
         $tpl_props['full_id'] = $this->_template_set_name.':'.$tpl_props['id'];
         
-        $of = $token->get_prop('of');
+        $of = $token->getProp('of');
         $of_map = array(
             'menu' => 'section.list',
             'wrapper' => 'widget_wrapper.show', // fake widget!
@@ -1051,7 +1051,7 @@ class Compiler {
         
         if (!$of) {
             if ($this->_controller_type != 'layout') {
-                $of = $this->_controller_type."_".$this->_controller_name.":".$token->get_prop('id');
+                $of = $this->_controller_type."_".$this->_controller_name.":".$token->getProp('id');
             } else {
                 $of = false;
             }
@@ -1073,14 +1073,14 @@ class Compiler {
         return $tpl_props;
     }
     
-    protected function _register_template(Token $token) {
+    protected function registerTemplate(Token $token) {
         if ($token->name != 'template') {
             return;
         }
-        $tpl_id = $token->get_prop('id');
+        $tpl_id = $token->getProp('id');
         
-        $tpl_props = $this->_get_template_props($token);
-        $tpl_props['_code'] = $this->_children_to_code($token);
+        $tpl_props = $this->getTemplateProps($token);
+        $tpl_props['_code'] = $this->childrenToCode($token);
         
         if (isset($this->templates[$tpl_id])) {
             // this is the second template with the same name
@@ -1099,25 +1099,25 @@ class Compiler {
     /*
      * Passes through the upper level, starting the collection of templates deep
      */
-    protected function _collect_templates($root) {
-        foreach ($root->get_children() as $template_file_token) {
-            $this->_current_source_file = $template_file_token->get_prop('source');
-            foreach ($template_file_token->get_children() as $template_token) {
-                $this->_register_template($template_token);
+    protected function collectTemplates($root) {
+        foreach ($root->getChildren() as $template_file_token) {
+            $this->_current_source_file = $template_file_token->getProp('source');
+            foreach ($template_file_token->getChildren() as $template_token) {
+                $this->registerTemplate($template_token);
             }
         }
     }
     
-    protected function  _make_code(Token $tree, $class_name) {
+    protected function  makeCode(Token $tree, $class_name) {
         // Name of the class/template group
-        $this->_template_set_name = $tree->get_prop('name');
-        if ( ($ct = $tree->get_prop('controller_type'))) {
+        $this->_template_set_name = $tree->getProp('name');
+        if ( ($ct = $tree->getProp('controller_type'))) {
             $this->_controller_type = $ct;
         }
-        if ( ($cn = $tree->get_prop('controller_name'))) {
+        if ( ($cn = $tree->getProp('controller_name'))) {
             $this->_controller_name = $cn;
         }
-        $this->_collect_templates($tree);
+        $this->collectTemplates($tree);
         ob_start();
         echo "<?php\n";
         // todo: psr0 need fix
@@ -1125,7 +1125,7 @@ class Compiler {
         
         $tpl_var = array();
         foreach ( $this->templates as $tpl_props) {
-            echo $this->_make_template_code($tpl_props);
+            echo $this->makeTemplateCode($tpl_props);
             unset($tpl_props['_token']);
             unset($tpl_props['_variants']);
             unset($tpl_props['_code']);
@@ -1140,7 +1140,7 @@ class Compiler {
     /*
      * From comments: http://php.net/manual/en/function.php-check-syntax.php
      */
-    public static function is_php_syntax_correct($code) {
+    public static function isPhpSyntaxCorrect($code) {
         $braces = 0;
         $inString = 0;
         $code = preg_replace("~^\s*\<\?(php)?~", '', $code);

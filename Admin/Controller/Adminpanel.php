@@ -10,12 +10,12 @@ class Adminpanel extends Admin {
         
     }
 
-    static public function panel_html() {
+    static public function panelHtml() {
         $res = fx::template('@admin:panel')->render(array('is_front' => true));
         return $res;
     }
 
-    public static function get_more_menu() {
+    public static function getMoreMenu() {
         $more_menu = array();
         $c_page = fx::env('page');
         $more_menu[] = array(
@@ -47,7 +47,7 @@ class Adminpanel extends Admin {
         return $more_menu;
     }
 
-    public static function get_buttons() {
+    public static function getButtons() {
         $result = array(
             'source' => array(
                 'add' => array('title' => fx::alang('add', 'system'), 'type' => 'text'),

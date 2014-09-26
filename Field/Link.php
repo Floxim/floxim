@@ -7,8 +7,8 @@ use Floxim\Floxim\System\Fx as fx;
 
 class Link extends Baze {
 
-    public function validate_value($value) {
-        if (!parent::validate_value($value)) {
+    public function validateValue($value) {
+        if (!parent::validateValue($value)) {
             return false;
         }
         if (is_array($value) && isset($value['title']) && $value['title'] != '') {
@@ -21,15 +21,15 @@ class Link extends Baze {
         return true;
     }
 
-    public function get_sql_type (){
+    public function getSqlType (){
         return "INT";
     }
     
-    public function format_settings() {
+    public function formatSettings() {
         $fields = array();
         
         $comp_values = array_merge(
-            fx::data('component')->get_select_values(), 
+            fx::data('component')->getSelectValues(), 
             array(
                 array('site', 'Site'),
                 array('component', 'Component'),
@@ -49,7 +49,7 @@ class Link extends Baze {
             'id' => 'format[prop_name]',
             'name' => 'format[prop_name]',
             'label' => fx::alang('Key name for the property','system'),
-            'value' => $this->get_prop_name()
+            'value' => $this->getPropName()
         );
         $fields[]= array(
             'id' => 'format[is_parent]',
@@ -73,7 +73,7 @@ class Link extends Baze {
         return $fields;
     }
     
-    public function get_prop_name() {
+    public function getPropName() {
         if ($this['format']['prop_name']) {
             return $this['format']['prop_name'];
         }
@@ -83,11 +83,11 @@ class Link extends Baze {
         return '';
     }
     
-    public function get_js_field($content) {
-        parent::get_js_field($content);
+    public function getJsField($content) {
+        parent::getJsField($content);
         //$target_component = fx::data('component', $this['format']['target']);
         //$target_content = 'content_'.$target_component['keyword'];
-        $target_content = $this->get_target_name();
+        $target_content = $this->getTargetName();
         $finder = fx::data($target_content);
         
         if ($this['format']['render_type'] == 'livesearch') {
@@ -113,11 +113,11 @@ class Link extends Baze {
             $name_prop = 'en_name';
         }
         $val_items = $finder->all();
-        $this->_js_field['values'] = $val_items->get_values($name_prop, 'id');
+        $this->_js_field['values'] = $val_items->getValues($name_prop, 'id');
         return $this->_js_field;
     }
     
-   public function get_target_name () {
+   public function getTargetName () {
         $rel_target_id = $this['format']['target'];
         if (!is_numeric($rel_target_id)) {
             $rel_target = $rel_target_id;
@@ -127,11 +127,11 @@ class Link extends Baze {
         return $rel_target;
     }
 
-    public function get_relation() {
+    public function getRelation() {
         if (!$this['format']['target']) {
             return false;
         }
-        $rel_target = $this->get_target_name();
+        $rel_target = $this->getTargetName();
         return array(
             System\Data::BELONGS_TO,
             $rel_target,
@@ -142,24 +142,24 @@ class Link extends Baze {
     /*
      * Get the referenced component field
      */
-    public function get_related_component() {
-        $rel = $this->get_relation();
+    public function getRelatedComponent() {
+        $rel = $this->getRelation();
         return fx::data('component', $rel[1]);
     }
     
-    public function get_related_type() {
-        $rel = $this->get_relation();
+    public function getRelatedType() {
+        $rel = $this->getRelation();
         return $rel[1];
     }
 
 
-    public function get_savestring($content) {
+    public function getSavestring($content) {
         if (is_array($this->value) && isset($this->value['title'])) {
             $title = $this->value['title'];
             $entity_infoblock_id = 
                     isset($this->value['infoblock_id']) 
                     ? $this->value['infoblock_id']
-                    : $content->get_link_field_infoblock($this['id']);
+                    : $content->getLinkFieldInfoblock($this['id']);
             
             $entity_params = array(
                 'name' => $title
@@ -177,13 +177,13 @@ class Link extends Baze {
             if (isset($this->value['parent_id'])) {
                 $entity_params['parent_id'] = $this->value['parent_id'];
             }
-            $rel = $this->get_relation();
+            $rel = $this->getRelation();
             $entity_type = isset($this->value['type']) ? $this->value['type'] : $rel[1];
             $entity = fx::data($entity_type)->create($entity_params);
             $entity_prop_name = $this['format']['prop_name'];
             $content[$entity_prop_name] = $entity;
             return false;
         }
-        return parent::get_savestring();
+        return parent::getSavestring();
     }
 }

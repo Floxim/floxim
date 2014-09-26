@@ -4,8 +4,8 @@ namespace Floxim\Floxim\Admin;
 
 class Store extends Floximsite {
 
-    public function get_items($type, $filter = array(), $reason = 'first', $position = 0) {
-        $post = $this->get_base_post();
+    public function getItems($type, $filter = array(), $reason = 'first', $position = 0) {
+        $post = $this->getBasePost();
         $post['action'] = 'get_items';
         $post['type'] = $type;
         $post['filter'] = $filter;
@@ -22,8 +22,8 @@ class Store extends Floximsite {
         return $result;
     }
 
-    public function get_file($store_id) {
-        $post = $this->get_base_post();
+    public function getFile($store_id) {
+        $post = $this->getBasePost();
         $post['action'] = 'get_file';
         $post['store_id'] = $store_id;
 
@@ -31,8 +31,8 @@ class Store extends Floximsite {
         return $result;
     }
 
-    public function get_info($store_id) {
-        $post = $this->get_base_post();
+    public function getInfo($store_id) {
+        $post = $this->getBasePost();
         $post['action'] = 'get_info';
         $post['store_id'] = $store_id;
 
@@ -40,8 +40,8 @@ class Store extends Floximsite {
         return $result;
     }
 
-    protected function get_base_post() {
-        $post = parent::get_base_post();
+    protected function getBasePost() {
+        $post = parent::getBasePost();
         $post['entity'] = 'module_store';
         return $post;
     }

@@ -6,7 +6,7 @@ use Floxim\Floxim\System\Fx as fx;
 
 class Content extends Admin {
 
-    public function add_edit($input) {
+    public function addEdit($input) {
         // get the edited object
         if ($input['content_id']) {
             $content = fx::data('content', $input['content_id']);
@@ -53,23 +53,23 @@ class Content extends Admin {
             $fields []= $this->ui->hidden('infoblock_id', $input['infoblock_id']);
         }
         
-        $this->response->add_fields($fields);
-        $content_fields = fx::collection($content->get_form_fields());
+        $this->response->addFields($fields);
+        $content_fields = fx::collection($content->getFormFields());
         
         $is_backoffice = $input['mode'] == 'backoffice';
 		
         if (!$is_backoffice){ 
             $tabbed = $content_fields->group('tab');
             foreach ($tabbed as $tab => $tab_fields) {
-                $this->response->add_tab($tab, $tab);
-                $this->response->add_fields($tab_fields, $tab, 'content');
+                $this->response->addTab($tab, $tab);
+                $this->response->addFields($tab_fields, $tab, 'content');
             }
         } else {
             $content_fields->apply(function(&$f) {
                 unset($f['tab']);
             });
-            $this->response->add_fields($content_fields, '', 'content');
-            $this->response->add_fields(array(
+            $this->response->addFields($content_fields, '', 'content');
+            $this->response->addFields(array(
                 $this->ui->hidden('mode', 'backoffice'),
                 $this->ui->hidden('reload_url', $input['reload_url'])
             ));
@@ -79,7 +79,7 @@ class Content extends Admin {
         
         if ($input['data_sent']) {
             $res['is_new'] = !$content['id'];
-            $content->set_field_values($input['content']);
+            $content->setFieldValues($input['content']);
             foreach ($move_variants as $rel_prop) {
                 if (isset($input[$rel_prop])) {
                     $content[$rel_prop] = $input[$rel_prop];
@@ -105,11 +105,11 @@ class Content extends Admin {
             }
         }
         $res['view'] = 'cols';
-        $this->response->add_form_button('save');
+        $this->response->addFormButton('save');
         return $res;
     }
 
-    public function checked_save($input) {
+    public function checkedSave($input) {
         
         $ids = $input['id'];
         if (!is_array($ids)) {
@@ -122,7 +122,7 @@ class Content extends Admin {
                 $content_id = $match[2];
             }
 
-            $content = fx::data('content')->get_by_id($class_id, $content_id);
+            $content = fx::data('content')->getById($class_id, $content_id);
             $content->checked();
         }
 
@@ -130,11 +130,11 @@ class Content extends Admin {
         return $result;
     }
 
-    public function on_save($input) {
-        return $this->checked_save($input);
+    public function onSave($input) {
+        return $this->checkedSave($input);
     }
 
-    public function unchecked_save($input) {
+    public function uncheckedSave($input) {
         $ids = $input['id'];
         if (!is_array($ids)) {
             $ids = array($ids);
@@ -144,18 +144,18 @@ class Content extends Admin {
                 $class_id = $match[1];
                 $content_id = $match[2];
             }
-            $content = fx::data('content')->get_by_id($class_id, $content_id);
+            $content = fx::data('content')->getById($class_id, $content_id);
             $content->unchecked();
         }
         $result['status'] = 'ok';
         return $result;
     }
 
-    public function off_save($input) {
-        return $this->unchecked_save($input);
+    public function offSave($input) {
+        return $this->uncheckedSave($input);
     }
 
-    public function delete_save($input) {
+    public function deleteSave($input) {
         if (!isset($input['content_type']) || !isset($input['content_id'])) {
             if (!isset($input['id']) || !is_numeric($input['id'])) {
                 return;
@@ -187,19 +187,19 @@ class Content extends Admin {
         /**
          * check children
          */
-        $descendants = fx::data('content')->descendants_of($content)->all();
+        $descendants = fx::data('content')->descendantsOf($content)->all();
         if ($count_descendants=$descendants->count()) {
             $fields[]=array('type' => 'html', 'html' => fx::alang('The content contains some descendants','system') . ', <b>' . $count_descendants . '</b> '. fx::alang('items. These items are removed.','system'));
         }
 
-        $this->response->add_fields($fields);
+        $this->response->addFields($fields);
         if ($input['delete_confirm']) {
             $current_page_path = null;
             if ($input['page_id']) {
-                $current_page_path = fx::data('page' , $input['page_id'])->get_path()->get_values('id');
+                $current_page_path = fx::data('page' , $input['page_id'])->getPath()->getValues('id');
             }
             $response = array('status'=>'ok');
-            if ($content->is_instanceof('page') && is_array($current_page_path) && in_array($content['id'], $current_page_path) ) {
+            if ($content->isInstanceof('page') && is_array($current_page_path) && in_array($content['id'], $current_page_path) ) {
                 if ($content['parent_id'] == 0){
                     $response['reload'] = '/';
                 } else {
@@ -299,9 +299,9 @@ class Content extends Admin {
         
         $com = fx::data('component', $content_type);
         
-        $fields = $com->all_fields();
+        $fields = $com->allFields();
         
-        $fields->find_remove(function($f) {
+        $fields->findRemove(function($f) {
             return $f['type_of_edit'] == Field\Entity::EDIT_NONE;
         });
         
@@ -321,7 +321,7 @@ class Content extends Admin {
                 switch ($f['type']) {
                     case Field\Entity::FIELD_LINK:
                         if ($val) {
-                            $linked = fx::data($f->get_related_type(), $val);
+                            $linked = fx::data($f->getRelatedType(), $val);
                             $val = $linked['name'];
                         }
                         break;
@@ -343,7 +343,7 @@ class Content extends Admin {
             $list['values'][]= $r;
         }
         
-        $this->response->add_buttons(array(
+        $this->response->addButtons(array(
             "delete"
         ));
         

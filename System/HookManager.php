@@ -55,7 +55,7 @@ class HookManager {
      *
      * @return string
      */
-    protected function create_after_for_component_create($params) {
+    protected function createAfterForComponentCreate($params) {
         $data_export=var_export($params['data'],true);
         $code='$data='.$data_export.";\n";
         $data=$params['data'];
@@ -83,7 +83,7 @@ class HookManager {
      *
      * @return string
      */
-    protected function create_after_for_component_delete($params) {
+    protected function createAfterForComponentDelete($params) {
         $component=$params['component'];
         $code='
             $component=fx::data("component")->where("keyword","'.$component['keyword'].'")->one();
@@ -101,9 +101,9 @@ class HookManager {
      *
      * @return string
      */
-    protected function create_after_for_component_update($params) {
+    protected function createAfterForComponentUpdate($params) {
         $component=$params['component'];
-        $modified=$component->get_modified();
+        $modified=$component->getModified();
 
         $data=array();
         foreach($modified as $key) {
@@ -131,7 +131,7 @@ class HookManager {
      *
      * @return string
      */
-    protected function create_after_for_field_create($params) {
+    protected function createAfterForFieldCreate($params) {
         $data_export=var_export($params['data'],true);
         $code='$data='.$data_export.";\n";
         $data=$params['data'];
@@ -164,7 +164,7 @@ class HookManager {
      *
      * @return string
      */
-    protected function create_after_for_field_delete($params) {
+    protected function createAfterForFieldDelete($params) {
         $field=$params['field'];
 
         $component=fx::data("component",$field['component_id']);
@@ -182,16 +182,16 @@ class HookManager {
      *
      * @return string
      */
-    protected function create_after_for_field_update($params) {
+    protected function createAfterForFieldUpdate($params) {
         $field=$params['field'];
-        $modified=$field->get_modified();
+        $modified=$field->getModified();
 
         $data=array();
         foreach($modified as $key) {
             $data[$key]=$field[$key];
         }
 
-        $keyword=in_array('keyword',$modified) ? $field->get_old('keyword') : $field['keyword'];
+        $keyword=in_array('keyword',$modified) ? $field->getOld('keyword') : $field['keyword'];
         $code='$data='.var_export($data,true).";\n";
 
         $component=fx::data("component",$field['component_id']);

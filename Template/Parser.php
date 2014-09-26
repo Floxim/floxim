@@ -17,7 +17,7 @@ class Parser {
         $tokenizer = new Tokenizer();
         $tokens = $tokenizer->parse($source);
         unset($tokenizer);
-        $tree = $this->_make_tree($tokens);
+        $tree = $this->makeTree($tokens);
         return $tree;
     }
     
@@ -27,15 +27,15 @@ class Parser {
      * @param array $tokens following tokens
      * @return null
      */
-    protected  function solve_unclosed($token, $tokens) {
+    protected  function solveUnclosed($token, $tokens) {
         if (!$token  || $token->type != 'unknown') {
             return;
         }
-        $token_info = Token::get_token_info($token->name);
+        $token_info = Token::getTokenInfo($token->name);
         $stack = array();
         while ($next_token = array_shift($tokens)) {
             if ($next_token->type == 'unknown') {
-                $this->solve_unclosed($next_token, $tokens);
+                $this->solveUnclosed($next_token, $tokens);
             }
             switch ($next_token->type) {
                 case 'open':
@@ -64,13 +64,13 @@ class Parser {
     }
 
 
-    protected function _make_tree($tokens) {
+    protected function makeTree($tokens) {
         $stack = array();
         $root = $tokens[0];
         while ($token = array_shift($tokens)) {
             
             if ($token->type == 'unknown') {
-                $this->solve_unclosed($token, $tokens);
+                $this->solveUnclosed($token, $tokens);
             }
             if (preg_match("~^else~", $token->name) && $token->type == 'single') {
                 $token->type = 'open';
@@ -78,7 +78,7 @@ class Parser {
             switch ($token->type) {
                 case 'open':
                     if (count($stack) > 0) {
-                        end($stack)->add_child($token);
+                        end($stack)->addChild($token);
                     }
                     $stack []= $token;
                     break;
@@ -99,7 +99,7 @@ class Parser {
                         $count_skipped = 0;
                         foreach ($tokens as $next_token) {
                             // skip empty tokens
-                            if ($next_token->is_empty()) {
+                            if ($next_token->isEmpty()) {
                                 $count_skipped++;
                                 continue;
                             }
@@ -117,7 +117,7 @@ class Parser {
                         }
                     }
                     if ($token->name == 'template' && $closed_token->name == 'template') {
-                        $this->_template_to_each($closed_token);
+                        $this->templateToEach($closed_token);
                     }
                     if ($closed_token->stack_extra) {
                         array_pop($stack);
@@ -130,15 +130,15 @@ class Parser {
                         echo "<pre>" . htmlspecialchars(print_r($token, 1)) . "</pre>";
                         die();
                     }
-                    $stack_last->add_child($token);
+                    $stack_last->addChild($token);
                     break;
             }
         }
         return $root;
     }
     
-    protected function _template_to_each(Token $token) {
-        $children = $token->get_children();
+    protected function templateToEach(Token $token) {
+        $children = $token->getChildren();
         $has_items = false;
         foreach ($children as $child) {
             if ($child->name == 'item') {
@@ -150,8 +150,8 @@ class Parser {
             return;
         }
         $with_each_token = new Token('with_each', 'double', array('select' => '$.items'));
-        $with_each_token->set_children($children);
-        $token->clear_children();
-        $token->add_child($with_each_token);
+        $with_each_token->setChildren($children);
+        $token->clearChildren();
+        $token->addChild($with_each_token);
     }
 }

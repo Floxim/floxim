@@ -11,7 +11,7 @@ class Field extends Admin {
     public function items( $input ) {
         $entity = $input['entity'];
         
-        $items = $entity->all_fields();
+        $items = $entity->allFields();
         $ar = array('type' => 'list', 'filter' => true, 'is_sortable' => true);
 
         // todo: psr0 need verify
@@ -28,13 +28,13 @@ class Field extends Admin {
         );
         foreach ( $items as $field ) {
             $r = array(
-                'id' => $field->get_id(), 
+                'id' => $field->getId(), 
                 'keyword' => array(
                     'name' => $field['keyword'], 
                     'url' =>  '#admin.'.$entity_code.'.edit('.$field['component_id'].',edit_field,'.$field['id'].')'
                 ),
                 'name' => $field['name'], 
-                'type' => fx::alang("FX_ADMIN_FIELD_".strtoupper($field->get_type_keyword()), 'system')
+                'type' => fx::alang("FX_ADMIN_FIELD_".strtoupper($field->getTypeKeyword()), 'system')
             );
             if ($entity['id'] != $field['component_id']) {
                 $component_name = fx::data('component', $field['component_id'])->get('name');
@@ -57,7 +57,7 @@ class Field extends Admin {
         }
         
         $result['fields'] = array($ar);
-        $this->response->add_buttons(
+        $this->response->addButtons(
             array(
                 array(
                     'key' => 'add', 
@@ -71,17 +71,17 @@ class Field extends Admin {
     }
     
     public function add ( $input ) {
-        $fields = $this->_form();
+        $fields = $this->form();
 
         $fields[] = $this->ui->hidden('action', 'add');
         $fields[] = $this->ui->hidden('to_entity', $input['to_entity']);
         $fields[] = $this->ui->hidden('to_id', $input['to_id']);
-        $this->response->add_form_button('save');
+        $this->response->addFormButton('save');
         return array('fields' => $fields);
     }
     
     
-    protected function _form ( $info = array() ) {
+    protected function form ( $info = array() ) {
         $fields[] = $this->ui->input('keyword', fx::alang('Field keyword','system'), $info['keyword']);
         $fields[] = $this->ui->input('name', fx::alang('Field name','system'), $info['name']);
         /*
@@ -134,7 +134,7 @@ class Field extends Admin {
         return $fields;
     }
     
-    public function add_save( $input ) {
+    public function addSave( $input ) {
         $params = array('format', 'type', 'not_null', 'searchable', 'default', 'type_of_edit', 'form_tab');
         $data['keyword'] = trim($input['keyword']);
         $data['name'] = trim($input['name']);
@@ -143,12 +143,12 @@ class Field extends Admin {
         }
         $data['checked'] = 1;
         $data[ $input['to_entity'].'_id'] = $input['to_id'];
-        $data['priority'] = fx::data('field')->next_priority();
+        $data['priority'] = fx::data('field')->nextPriority();
 
         $field = fx::data('field')->create($data);
         if (!$field->validate()) {
             $result['status'] = 'error';
-            $result['errors'] = $field->get_validate_errors();
+            $result['errors'] = $field->getValidateErrors();
         }
         else {
             $result = array('status' => 'ok');
@@ -168,10 +168,10 @@ class Field extends Admin {
     }
     
     public function edit ( $input ) {
-        $field = fx::data('field')->get_by_id ( $input['id']);
+        $field = fx::data('field')->getById ( $input['id']);
         
         if ( $field ) {
-            $fields = $this->_form($field);
+            $fields = $this->form($field);
             $fields[] = $this->ui->hidden('id',$input['id'] );
             $fields[] = $this->ui->hidden('action','edit');
         }
@@ -182,8 +182,8 @@ class Field extends Admin {
         return array('fields' => $fields);
     }
     
-    public function edit_save ( $input ) {
-        $field = fx::data('field')->get_by_id( $input['id']);
+    public function editSave ( $input ) {
+        $field = fx::data('field')->getById( $input['id']);
 
         $params = array('keyword', 'name', 'format', 'type', 'not_null', 'searchable', 'default', 'type_of_edit', 'form_tab');
         $input['keyword'] = trim($input['keyword']);
@@ -195,7 +195,7 @@ class Field extends Admin {
 
         if (!$field->validate()) {
             $result['status'] = 'error';
-            $result['errors'] = $field->get_validate_errors();
+            $result['errors'] = $field->getValidateErrors();
         }
         else {
             $result = array('status' => 'ok');
@@ -211,7 +211,7 @@ class Field extends Admin {
         return $result;
     }
     
-    public function format_settings ( $input ) {
+    public function formatSettings ( $input ) {
         $fields = array();
         
         $input['id'] = intval($input['id']);
@@ -251,7 +251,7 @@ class Field extends Admin {
             $fields[] = $this->ui->input('default', fx::alang('Default value','system'), $field['default']);
         }
 
-        $format_settings =  $field->format_settings();  
+        $format_settings =  $field->formatSettings();  
         if ( $format_settings ) {
             foreach ( $format_settings as $v) {
                 $fields[] = $v;
@@ -260,7 +260,7 @@ class Field extends Admin {
         return (array('fields' => $fields)) ;
     }
 
-    public function delete_save($input) {
+    public function deleteSave($input) {
 
         $es = $this->entity_type;
         $result = array('status' => 'ok');

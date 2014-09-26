@@ -8,8 +8,8 @@ abstract class Migration {
 
     abstract protected function down();
 
-    public function exec_up() {
-        $name=$this->_get_name();
+    public function execUp() {
+        $name=$this->getName();
         // check already exec
         if (fx::data('patch_migration')->where('name',$name)->one()) {
             return;
@@ -25,8 +25,8 @@ abstract class Migration {
         $migration->save();
     }
 
-    public function exec_down() {
-        $name=$this->_get_name();
+    public function execDown() {
+        $name=$this->getName();
         // check not exec run
         if (!$migration=fx::data('patch_migration')->where('name',$name)->one()) {
             return;
@@ -37,7 +37,7 @@ abstract class Migration {
         $migration->delete();
     }
 
-    protected function _get_name() {
+    protected function getName() {
         $name=get_class($this);
         /**
          * Variants: m20140619_111111, m20140619_111111_any_skip_name

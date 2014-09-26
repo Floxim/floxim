@@ -3,7 +3,7 @@
 namespace Floxim\Floxim\System;
 
 class Simplerow extends Entity {
-    public function get_type() {
+    public function getType() {
         return $this->table;
     }
 }

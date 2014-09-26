@@ -27,7 +27,7 @@ class Loop implements \ArrayAccess {
         $this->current = null;
     }
     
-    public function _move() {
+    public function move() {
         $this->position++;
         if ($this->current === null) {
             $this->current = $this->_is_collection ? $this->looped->first() : current($this->looped);
@@ -37,19 +37,19 @@ class Loop implements \ArrayAccess {
         $this->key = $this->_is_collection ? $this->looped->key() : key($this->looped);
     }
     
-    public function is_last() {
+    public function isLast() {
         return $this->position == $this->total;
     }
     
-    public function is_first() {
+    public function isFirst() {
         return $this->position == 1;
     }
     
-    public function is_even() {
+    public function isEven() {
         return $this->position % 2 == 0;
     }
     
-    public function is_odd() {
+    public function isOdd() {
         return $this->position % 2 != 0;
     }
     

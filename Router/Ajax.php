@@ -11,11 +11,11 @@ class Ajax extends Base {
             return null;
         }
         
-        $c_url = fx::input()->fetch_get_post('_ajax_base_url');
+        $c_url = fx::input()->fetchGetPost('_ajax_base_url');
         if ($c_url) {
             $_SERVER['REQUEST_URI'] = $c_url;
             
-            $page = fx::data('page')->get_by_url($c_url, $context['site_id']);
+            $page = fx::data('page')->getByUrl($c_url, $context['site_id']);
             fx::env('page', $page);
             
             $c_url = parse_url($c_url);
@@ -23,7 +23,7 @@ class Ajax extends Base {
                 parse_str($c_url['query'], $_GET);
             }
         }
-        $c_infoblock_id = fx::input()->fetch_get_post('_ajax_infoblock_id');
+        $c_infoblock_id = fx::input()->fetchGetPost('_ajax_infoblock_id');
         if ($c_infoblock_id) {
             $infoblock = fx::data('infoblock', $c_infoblock_id);
             if ($infoblock) {
@@ -63,7 +63,7 @@ class Ajax extends Base {
         
         $controller = fx::controller($action);
         if (!$template) {
-            $tpls = $controller->get_available_templates();
+            $tpls = $controller->getAvailableTemplates();
             if (count($tpls) > 0) {
                 $template = $tpls[0]['full_id'];
             }

@@ -125,7 +125,7 @@ class Config {
         return $this;
     }
 
-    public function to_array() {
+    public function toArray() {
         return $this->config;
     }
     
@@ -148,7 +148,7 @@ class Config {
     /**
      * Load options from DB
      */
-    public function load_from_db() {
+    public function loadFromDb() {
         try {
             $options = fx::data('option')->all();
             foreach($options as $option) {

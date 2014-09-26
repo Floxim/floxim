@@ -22,31 +22,31 @@ class Infoblock extends Base {
         fx::env('page', $page_id);
         fx::env('ajax', true);
         
-        $page_infoblocks = fx::router('front')->get_page_infoblocks(
+        $page_infoblocks = fx::router('front')->getPageInfoblocks(
             $page_id, 
             fx::env('layout')
         );
-        fx::page()->set_infoblocks($page_infoblocks);
+        fx::page()->setInfoblocks($page_infoblocks);
         
         
         // front end can try to reload the layout which is out of date
         // when updating from "layout settings" panel
         $infoblock = fx::data('infoblock', $ib_id);
-        if ((!$infoblock && isset($_POST['infoblock_is_layout'])) || $infoblock->is_layout()) {
-            $infoblock = fx::data('page', $page_id)->get_layout_infoblock();
+        if ((!$infoblock && isset($_POST['infoblock_is_layout'])) || $infoblock->isLayout()) {
+            $infoblock = fx::data('page', $page_id)->getLayoutInfoblock();
         }
         
         fx::http()->status('200');
         $infoblock_overs = null;
-        if (fx::is_admin() && isset($_POST['override_infoblock'])) {
+        if (fx::isAdmin() && isset($_POST['override_infoblock'])) {
             $infoblock_overs = fx::input('post', 'override_infoblock');
             if (is_string($infoblock_overs)){
                 parse_str($infoblock_overs, $infoblock_overs);
-                $infoblock_overs = fx::input()->prepare_superglobal($infoblock_overs);
+                $infoblock_overs = fx::input()->prepareSuperglobal($infoblock_overs);
             }
             $infoblock->override($infoblock_overs);
         }
-        $infoblock->override_param('ajax_mode', true);
+        $infoblock->overrideParam('ajax_mode', true);
         return $infoblock->render();
     }
 }

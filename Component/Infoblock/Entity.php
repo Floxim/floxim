@@ -11,11 +11,11 @@ class Entity extends System\Entity  implements Template\Entity {
     
     protected $_visual = array();
     
-    public function set_visual(Component\InfoblockVisual\Entity $visual) {
+    public function setVisual(Component\InfoblockVisual\Entity $visual) {
         $this->_visual[$visual['layout_id']] = $visual;
     }
     
-    public function get_visual($layout_id = null) {
+    public function getVisual($layout_id = null) {
         if (!$layout_id) {
             $layout_id = fx::env('layout');
         }
@@ -40,15 +40,15 @@ class Entity extends System\Entity  implements Template\Entity {
         return $this->_visual[$layout_id];
     }
     
-    public function get_type() {
+    public function getType() {
         return 'infoblock';
     }
     
-    public function is_layout() {
-        return $this->get_prop_inherited('controller') == 'layout' && $this->get_prop_inherited('action') == 'show';
+    public function isLayout() {
+        return $this->getPropInherited('controller') == 'layout' && $this->getPropInherited('action') == 'show';
     }
     
-    protected function _after_delete() {
+    protected function afterDelete() {
         $killer = function($cv) {
             $cv->delete();
         };
@@ -56,26 +56,26 @@ class Entity extends System\Entity  implements Template\Entity {
         fx::data('infoblock')->where('parent_infoblock_id', $this['id'])->all()->apply($killer);
     }
     
-    public function get_owned_content() {
+    public function getOwnedContent() {
         $content = fx::data('content')->
                     where('infoblock_id',$this['id'])->
                     all();
         return $content;
     }
     
-    public function get_parent_infoblock() {
+    public function getParentInfoblock() {
         if ( !( $parent_ib_id = $this->get('parent_infoblock_id'))) {
             return;
         }
         return fx::data('infoblock', $parent_ib_id);
     }
     
-    public function get_prop_inherited($path_str, $layout_id = null) {
+    public function getPropInherited($path_str, $layout_id = null) {
         $own_result = null;
         $parent_result = null;
         $path = explode(".", $path_str);
         if ($path[0] == 'visual') {
-            $c_i2l = $this->get_visual($layout_id);
+            $c_i2l = $this->getVisual($layout_id);
             $vis_path_str = join(".", array_slice($path, 1));
             $own_result = fx::dig($c_i2l, $vis_path_str);
         } else {
@@ -84,8 +84,8 @@ class Entity extends System\Entity  implements Template\Entity {
         if ($own_result && !is_array($own_result)) {
             return $own_result;
         }
-        if ( ($parent_ib = $this->get_parent_infoblock()) ) {
-            $parent_result = $parent_ib->get_prop_inherited($path_str, $layout_id);
+        if ( ($parent_ib = $this->getParentInfoblock()) ) {
+            $parent_result = $parent_ib->getPropInherited($path_str, $layout_id);
         }
         if (is_array($own_result) && is_array($parent_result)) {
             return array_merge($parent_result, $own_result);
@@ -93,34 +93,34 @@ class Entity extends System\Entity  implements Template\Entity {
         return $own_result ? $own_result : $parent_result;
     }
     
-    public function get_root_infoblock() {
+    public function getRootInfoblock() {
         $cib = $this;
         while ($cib['parent_infoblock_id']) {
-            $cib = $cib->get_parent_infoblock();
+            $cib = $cib->getParentInfoblock();
         }
         return $cib;
     }
     
-    public function init_controller() {
-        $controller = $this->get_prop_inherited('controller');
-        $action = $this->get_prop_inherited('action');
+    public function initController() {
+        $controller = $this->getPropInherited('controller');
+        $action = $this->getPropInherited('action');
         if (!$controller || !$action) {
             return null;
         }
-        $ctr = fx::controller($controller.':'.$action, $this->get_prop_inherited('params'));
-        $ctr->set_param('infoblock_id', $this['id']);
+        $ctr = fx::controller($controller.':'.$action, $this->getPropInherited('params'));
+        $ctr->setParam('infoblock_id', $this['id']);
         return $ctr;
     }
     
     protected $controller_cache = null;
-    protected function _get_ib_controller() {
+    protected function getIbController() {
         if (!$this->controller_cache) {
-            $this->controller_cache = $this->init_controller();
+            $this->controller_cache = $this->initController();
         }
         return $this->controller_cache;
     }
     
-    public function add_params($params) {
+    public function addParams($params) {
         $c_params = $this['params'];
         if (!is_array($c_params)) {
             $c_params = array();
@@ -133,7 +133,7 @@ class Entity extends System\Entity  implements Template\Entity {
      * Check if infoblock's scope.visibility allows the current user to see this block
      * @return bool Is the block available
      */
-    public function is_available_for_user() {
+    public function isAvailableForUser() {
         $c_user = fx::user();
         $ib_visibility = $this['scope']['visibility'];
         if (!$ib_visibility || $ib_visibility === 'all') {
@@ -142,24 +142,24 @@ class Entity extends System\Entity  implements Template\Entity {
         if ($ib_visibility === 'nobody') {
             return false;
         }
-        if ($ib_visibility === 'admin' && !$c_user->is_admin()) {
+        if ($ib_visibility === 'admin' && !$c_user->isAdmin()) {
             return false;
         }
-        if ($ib_visibility === 'user' && $c_user->is_guest()) {
+        if ($ib_visibility === 'user' && $c_user->isGuest()) {
             return false;
         }
-        if ($ib_visibility === 'guest' && !$c_user->is_guest()) {
+        if ($ib_visibility === 'guest' && !$c_user->isGuest()) {
             return false;
         }
         return true;
     }
     
-    public function is_available_on_page($page) {
+    public function isAvailableOnPage($page) {
         if ($this['site_id'] != $page['site_id']) {
             return;
         }
         
-        $ids = $page->get_parent_ids();
+        $ids = $page->getParentIds();
         $ids []= $page['id'];
         $ids []= 0; // root
         
@@ -186,7 +186,7 @@ class Entity extends System\Entity  implements Template\Entity {
         return true;
     }
     
-    public function get_scope_string() {
+    public function getScopeString() {
         list($cib_page_id, $cib_pages, $cib_page_type) = array(
             $this['page_id'], 
             $this['scope']['pages'],
@@ -206,7 +206,7 @@ class Entity extends System\Entity  implements Template\Entity {
         return $cib_page_id.'-'.$cib_pages.'-'.$cib_page_type;
     }
     
-    public function read_scope_string($str) {
+    public function readScopeString($str) {
         list($scope_page_id, $scope_pages, $scope_page_type) = explode("-", $str);
         return array(
             'pages' => $scope_pages,
@@ -216,8 +216,8 @@ class Entity extends System\Entity  implements Template\Entity {
     }
 
 
-    public function set_scope_string($str) {
-        $ss = $this->read_scope_string($str);
+    public function setScopeString($str) {
+        $ss = $this->readScopeString($str);
         $new_scope = array(
             'pages' => $ss['pages'],
             'page_type' => $ss['page_type']
@@ -229,7 +229,7 @@ class Entity extends System\Entity  implements Template\Entity {
     /**
      * Returns number meaning "strength" (exactness) of infoblock's scope
      */
-    public function get_scope_weight() {
+    public function getScopeWeight() {
         $s = $this['scope'];
         $pages = isset($s['pages']) ? $s['pages'] : 'all';
         $page_type = isset($s['page_type']) ? $s['page_type'] : '';
@@ -249,12 +249,12 @@ class Entity extends System\Entity  implements Template\Entity {
         return 0;
     }
     
-    public function is_fake() {
+    public function isFake() {
         return preg_match("~^fake~", $this['id']);
     }
     
-    public function override_param($param, $value) {
-        $params = $this->get_prop_inherited('params');
+    public function overrideParam($param, $value) {
+        $params = $this->getPropInherited('params');
         $params[$param] = $value;
         $this['params'] = $params;
     }
@@ -265,7 +265,7 @@ class Entity extends System\Entity  implements Template\Entity {
             $this['params'] = $data['params'];
         }
         if (isset($data['visual'])) {
-            $vis = $this->get_visual();
+            $vis = $this->getVisual();
             //$vis['']
             foreach ($data['visual'] as $k => $v) {
                 $vis[$k] = $v;
@@ -281,15 +281,15 @@ class Entity extends System\Entity  implements Template\Entity {
 
     public function render() {
         $output = '';
-        if (!$this->is_available_for_user()) {
+        if (!$this->isAvailableForUser()) {
             return $output;
         }
-        if (fx::is_admin() || (!$this->is_disabled() && !$this->is_hidden() )) {   
-            $output = $this->get_output();
-            $output = $this->_wrap_output($output);
+        if (fx::isAdmin() || (!$this->isDisabled() && !$this->isHidden() )) {   
+            $output = $this->getOutput();
+            $output = $this->wrapOutput($output);
         }
-        $output = $this->_add_infoblock_meta($output);
-        if ( ($controller = $this->_get_ib_controller())) {
+        $output = $this->addInfoblockMeta($output);
+        if ( ($controller = $this->getIbController())) {
             $output = $controller->postprocess($output);
         }
         return $output;
@@ -300,14 +300,14 @@ class Entity extends System\Entity  implements Template\Entity {
     /**
      * get result (plain data) from infoblock's controller
      */
-    public function get_result() {
+    public function getResult() {
         if ($this->result_is_cached) {
             return $this->result_cache;
         }
-        if ($this->is_fake()) {
+        if ($this->isFake()) {
             $this->data['params']['is_fake'] = true;
         }
-        $controller = $this->_get_ib_controller();
+        $controller = $this->getIbController();
         if (!$controller) {
             $res = false;
         } else {
@@ -326,8 +326,8 @@ class Entity extends System\Entity  implements Template\Entity {
     /**
      * get controller_meta from the result 
      */
-    protected function _get_result_meta() {
-        $res = $this->get_result();
+    protected function getResultMeta() {
+        $res = $this->getResult();
         if ( ! (is_array($res) || $res instanceof ArrayAccess)) {
             return array();
         }
@@ -335,17 +335,17 @@ class Entity extends System\Entity  implements Template\Entity {
     }
     
     
-    public function is_disabled() {
-        $res = $this->get_result();
+    public function isDisabled() {
+        $res = $this->getResult();
         if ($res === false) {
             return true;
         }
-        $meta = $this->_get_result_meta();
+        $meta = $this->getResultMeta();
         return isset($meta['disabled']) && $meta['disabled'];
     }
     
-    public function get_template() {
-        $tpl_name = $this->get_prop_inherited('visual.template');
+    public function getTemplate() {
+        $tpl_name = $this->getPropInherited('visual.template');
         if (!$tpl_name) {
             return false;
         }
@@ -359,24 +359,24 @@ class Entity extends System\Entity  implements Template\Entity {
     /**
      * get result rendered by ib's template (with no wrapper and meta)
      */
-    public function get_output(){
+    public function getOutput(){
         if ($this->output_is_cached) {
             return $this->output_cache;
         }
-        $result = $this->get_result();
+        $result = $this->getResult();
         if ($result === false) {
             return false;
         }
-        $meta = $this->_get_result_meta();
+        $meta = $this->getResultMeta();
         
         if ($meta['disabled']) {
             return false;
         }
-        $tpl = $this->get_template();
+        $tpl = $this->getTemplate();
         if (!$tpl) {
             return '';
         }
-        $tpl_params = $this->get_prop_inherited('visual.template_visual');
+        $tpl_params = $this->getPropInherited('visual.template_visual');
         if (!is_array($tpl_params)) {
             $tpl_params = array();
         }
@@ -395,17 +395,17 @@ class Entity extends System\Entity  implements Template\Entity {
     /**
      * wrap ib's output
      */
-    protected function _wrap_output($output) {
-        $wrapper = $this->get_prop_inherited('visual.wrapper');
+    protected function wrapOutput($output) {
+        $wrapper = $this->getPropInherited('visual.wrapper');
         if (!$wrapper) {
             return $output;
         }
         $tpl_wrap = fx::template($wrapper);
-        if (!$tpl_wrap->has_action()) {
+        if (!$tpl_wrap->hasAction()) {
             return $output;
         }
-        $tpl_wrap->is_wrapper(true);
-        $wrap_params = $this->get_prop_inherited('visual.wrapper_visual');
+        $tpl_wrap->isWrapper(true);
+        $wrap_params = $this->getPropInherited('visual.wrapper_visual');
         if (!is_array($wrap_params)) {
             $wrap_params = array();
         }
@@ -416,23 +416,23 @@ class Entity extends System\Entity  implements Template\Entity {
         return $result;
     }
     
-    public function is_hidden() {
-        $controller_meta = $this->_get_result_meta();
+    public function isHidden() {
+        $controller_meta = $this->getResultMeta();
         return isset($controller_meta['hidden']) && $controller_meta['hidden'];
     }
     
-    protected function _add_infoblock_meta($html_result) {
-        $controller_meta = $this->_get_result_meta();
-        if (!fx::is_admin() && !$controller_meta['ajax_access']) {
+    protected function addInfoblockMeta($html_result) {
+        $controller_meta = $this->getResultMeta();
+        if (!fx::isAdmin() && !$controller_meta['ajax_access']) {
             return $html_result;
         }
         $ib_info = array('id' => $this['id']);
-        if (($vis = $this->get_visual()) && $vis['id']) {
+        if (($vis = $this->getVisual()) && $vis['id']) {
             $ib_info['visual_id'] = $vis['id'];
         }
         
-        $ib_info['controller'] = $this->get_prop_inherited('controller')
-                                    .':'.$this->get_prop_inherited('action');
+        $ib_info['controller'] = $this->getPropInherited('controller')
+                                    .':'.$this->getPropInherited('action');
         
         $meta = array(
             'data-fx_infoblock' => $ib_info,
@@ -440,9 +440,9 @@ class Entity extends System\Entity  implements Template\Entity {
             'class' => 'fx_infoblock fx_infoblock_'.$this['id']
         );
         
-        if ($this->is_fake()) {
+        if ($this->isFake()) {
             $meta['class'] .= ' fx_infoblock_fake';
-            if (!$this->_get_ib_controller()) {
+            if (!$this->getIbController()) {
                 $controller_meta['hidden_placeholder'] = fx::alang('Fake infoblock data', 'system');
             }
         }
@@ -450,16 +450,16 @@ class Entity extends System\Entity  implements Template\Entity {
         if ($controller_meta['hidden']) {
             $meta['class'] .= ' fx_infoblock_hidden';
         }
-        if (count($controller_meta) > 0 && fx::is_admin()) {
+        if (count($controller_meta) > 0 && fx::isAdmin()) {
             $meta['data-fx_controller_meta'] = $controller_meta;
         }
-        if ($this->is_layout()) {
+        if ($this->isLayout()) {
             $meta['class'] .= ' fx_unselectable';
             $html_result = preg_replace_callback(
                 '~<body[^>]*?>~is', 
                 function($matches) use ($meta) {
-                    $body_tag = Template\HtmlToken::create_standalone($matches[0]);
-                    $body_tag->add_meta($meta);
+                    $body_tag = Template\HtmlToken::createStandalone($matches[0]);
+                    $body_tag->addMeta($meta);
                     return $body_tag->serialize();
                 }, 
                 $html_result
@@ -468,15 +468,15 @@ class Entity extends System\Entity  implements Template\Entity {
             $html_result = preg_replace_callback(
                 "~^(\s*?)(<[^>]+?>)~", 
                 function($matches) use ($meta) {
-                    $tag = Template\HtmlToken::create_standalone($matches[2]);
-                    $tag->add_meta($meta);
+                    $tag = Template\HtmlToken::createStandalone($matches[2]);
+                    $tag->addMeta($meta);
                     return $matches[1].$tag->serialize();
                 }, 
                 $html_result
             );
         } else {
             $html_proc = new Template\Html($html_result);
-            $html_result = $html_proc->add_meta(
+            $html_result = $html_proc->addMeta(
                 $meta, 
                 mb_strlen($html_result) > 1000 // auto wrap long html blocks without parsing
             );
@@ -489,7 +489,7 @@ class Entity extends System\Entity  implements Template\Entity {
      *
      * @return array
      */
-    public function get_pages() {
+    public function getPages() {
         list($page_id, $scope_pages, $scope_page_type) = array(
             $this['page_id'],
             $this['scope']['pages'],
@@ -507,11 +507,11 @@ class Entity extends System\Entity  implements Template\Entity {
             /**
              * All descendants
              */
-            $finder=fx::data('content')->descendants_of($page_id);
+            $finder=fx::data('content')->descendantsOf($page_id);
             if ($scope_page_type) {
                 $finder->where('type',$scope_page_type);
             }
-            $result_pages=array_merge($result_pages,$finder->all()->get_values('id'));
+            $result_pages=array_merge($result_pages,$finder->all()->getValues('id'));
             /**
              * With self page
              */

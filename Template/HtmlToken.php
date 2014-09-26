@@ -36,7 +36,7 @@ class HtmlToken {
      * @param $source string with the html tag
      * @return fx_template_html_token
      */
-    public static function create_standalone($source) {
+    public static function createStandalone($source) {
         $token = self::create($source);
         $token->type = 'standalone';
         return $token;
@@ -51,7 +51,7 @@ class HtmlToken {
         }
     }
     
-    public function add_child(HtmlToken $token, $before_index = null) {
+    public function addChild(HtmlToken $token, $before_index = null) {
         if (!isset($this->children)) {
             $this->children = array();
         }
@@ -63,33 +63,33 @@ class HtmlToken {
         $token->parent = $this;
     }
     
-    public function add_child_first(HtmlToken $token) {
-        $this->add_child($token, 0);
+    public function addChildFirst(HtmlToken $token) {
+        $this->addChild($token, 0);
     }
     
-    public function add_child_before(HtmlToken $new_child, HtmlToken $ref_child) {
-        if (($ref_index = $this->get_child_index($ref_child)) === null ) {
+    public function addChildBefore(HtmlToken $new_child, HtmlToken $ref_child) {
+        if (($ref_index = $this->getChildIndex($ref_child)) === null ) {
             return;
         }
-        $this->add_child($new_child, $ref_index);
+        $this->addChild($new_child, $ref_index);
     }
     
     
     public function wrap($code_before, $code_after) {
-        $this->parent->add_child_before(HtmlToken::create($code_before), $this);
-        $this->parent->add_child_after(HtmlToken::create($code_after), $this);
+        $this->parent->addChildBefore(HtmlToken::create($code_before), $this);
+        $this->parent->addChildAfter(HtmlToken::create($code_after), $this);
     }
 
 
-    public function add_child_after(HtmlToken $new_child, HtmlToken $ref_child) {
-        if (($ref_index = $this->get_child_index($ref_child)) === null ) {
+    public function addChildAfter(HtmlToken $new_child, HtmlToken $ref_child) {
+        if (($ref_index = $this->getChildIndex($ref_child)) === null ) {
             return;
         }
-        $this->add_child($new_child, $ref_index+1);
+        $this->addChild($new_child, $ref_index+1);
     }
     
-    public function get_child_index(HtmlToken $ref_child) {
-        if ( ($index = array_search($ref_child, $this->get_children())) === false) {
+    public function getChildIndex(HtmlToken $ref_child) {
+        if ( ($index = array_search($ref_child, $this->getChildren())) === false) {
             return null;
         }
         return $index;
@@ -163,7 +163,7 @@ class HtmlToken {
         return $res;
     }
     
-    public function get_children() {
+    public function getChildren() {
         if (!isset($this->children)) {
             return array();
         }
@@ -172,29 +172,29 @@ class HtmlToken {
     
     protected static $attr_parser = null;
     
-    protected function _parse_attributes() {
+    protected function parseAttributes() {
         if (!self::$attr_parser) {
             self::$attr_parser = new AttrParser();
         }
-        self::$attr_parser->parse_atts($this);
+        self::$attr_parser->parseAtts($this);
     }
     
-    public function has_attribute($att_name) {
+    public function hasAttribute($att_name) {
         if ($this->name == 'text') {
             return null;
         }
         if (!isset($this->attributes)) {
-            $this->_parse_attributes();
+            $this->parseAttributes();
         }
         return array_key_exists($att_name, $this->attributes);
     }
     
-    public function get_attribute($att_name) {
+    public function getAttribute($att_name) {
         if ($this->name == 'text') {
             return null;
         }
         if (!isset($this->attributes)) {
-            $this->_parse_attributes();
+            $this->parseAttributes();
         }
         if (!isset($this->attributes[$att_name])) {
             return null;
@@ -203,42 +203,42 @@ class HtmlToken {
         return $att;
     }
     
-    public function set_attribute($att_name, $att_value) {
+    public function setAttribute($att_name, $att_value) {
         if ($this->name == 'text') {
             return;
         }
         if (!isset($this->attributes)) {
-            $this->_parse_attributes();
+            $this->parseAttributes();
         }
         $this->attributes[$att_name] = $att_value;
         $this->attributes_modified = true;
     }
     
-    public function add_class($class) {
-        if (! ($c_class = $this->get_attribute('class')) ) {
-            $this->set_attribute('class', $class);
+    public function addClass($class) {
+        if (! ($c_class = $this->getAttribute('class')) ) {
+            $this->setAttribute('class', $class);
 			return;
         }
         $c_class = preg_split("~\s+~", $c_class);
         if (in_array($class, $c_class)) {
             return;
         }
-        $this->set_attribute('class', join(" ", $c_class)." ".$class);
+        $this->setAttribute('class', join(" ", $c_class)." ".$class);
     }
     
-    public function remove_attribute($att_name) {
+    public function removeAttribute($att_name) {
         if (!isset($this->attributes)) {
-            $this->_parse_attributes();
+            $this->parseAttributes();
         }
         unset($this->attributes[$att_name]);
         $this->attributes_modified = true;
     }
     
     public $att_quotes = array();
-    public function add_meta($meta) {
+    public function addMeta($meta) {
         foreach ($meta as $k => $v) {
             if ($k == 'class') {
-                $this->add_class($v);
+                $this->addClass($v);
             } else {
                 if (is_array($v) || is_object($v)) {
                     $v = htmlentities(json_encode($v));
@@ -247,7 +247,7 @@ class HtmlToken {
                     $v = str_replace("&quot;", '"', $v);
                     $this->att_quotes[$k] = "'";
                 }
-                $this->set_attribute($k, $v);
+                $this->setAttribute($k, $v);
             }
         }
     }
@@ -255,7 +255,7 @@ class HtmlToken {
 
     public function apply($callback) {
         call_user_func($callback, $this);
-        foreach ($this->get_children() as $child) {
+        foreach ($this->getChildren() as $child) {
             $child->apply($callback);
         }
     }

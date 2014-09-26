@@ -17,7 +17,7 @@ class Entity extends System\Entity {
         $dir = fx::path('files', 'patches/'.$this['from'].'-'.$this['to']);
         
         if (!file_exists($dir)) {
-            $saved = fx::files()->save_file(
+            $saved = fx::files()->saveFile(
                 $this['url'],
                 'patches/',
                 $this['from'].'-'.$this['to'].'.zip'
@@ -63,13 +63,13 @@ class Entity extends System\Entity {
          * Remove files
          */
         if (isset($info_file['files']['del'])) {
-            $this->_remove_files($info_file['files']['del']);
+            $this->removeFiles($info_file['files']['del']);
         }
         /**
          * Copy files
          */
         if (file_exists($dir)) {
-            $this->_update_files($dir, $dir);
+            $this->updateFiles($dir, $dir);
         }
         /**
          * Run migrations
@@ -98,7 +98,7 @@ class Entity extends System\Entity {
             }
         }
 
-        $this->_update_version_number($this['to']);
+        $this->updateVersionNumber($this['to']);
 
         $this['status'] = 'installed';
         $this->save();
@@ -109,14 +109,14 @@ class Entity extends System\Entity {
         return true;
     }
 
-    protected function _remove_files($files) {
+    protected function removeFiles($files) {
         foreach($files as $file) {
             $path=fx::config('ROOT_FOLDER').$file;
             fx::files()->rm($path);
         }
     }
 
-    protected function _update_files($dir, $base) {
+    protected function updateFiles($dir, $base) {
         $items = glob($dir."/*");
         if (!$items) {
             return;
@@ -131,14 +131,14 @@ class Entity extends System\Entity {
                     continue;
                 }
                 fx::files()->mkdir($item_target);
-                $this->_update_files($item, $base);
+                $this->updateFiles($item, $base);
             } else {
                 fx::files()->writefile($item_target, file_get_contents($item));
             }
         }
     }
     
-    protected function _update_version_number($new_version) {
+    protected function updateVersionNumber($new_version) {
         fx::config('fx.version',$new_version);
         fx::config()->store('fx.version');
     }

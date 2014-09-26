@@ -7,7 +7,7 @@ use Floxim\Floxim\System\Fx as fx;
 
 class Entity extends System\Entity {
     
-    public function get_name() {
+    public function getName() {
         return $this->data['en_name'];
     }
 
@@ -24,15 +24,15 @@ class Entity extends System\Entity {
         return $res;
     }
     
-    protected function _get_multilang_entitys() {
+    protected function getMultilangEntitys() {
         return array('component', 'field', 'lang_string');
     }
     
-    protected function _before_delete() {
-        $entitys = $this->_get_multilang_entitys();
+    protected function beforeDelete() {
+        $entitys = $this->getMultilangEntitys();
         
         foreach ($entitys as $e) {
-            $fields = fx::data($e)->get_multi_lang_fields();
+            $fields = fx::data($e)->getMultiLangFields();
             if (count($fields) > 0) {
                 $q = 'ALTER TABLE `{{'.$e.'}}` ';
                 $parts = array();
@@ -45,11 +45,11 @@ class Entity extends System\Entity {
         }
     }
 
-    protected function _before_insert() {
-        $entitys = $this->_get_multilang_entitys();
+    protected function beforeInsert() {
+        $entitys = $this->getMultilangEntitys();
         fx::log('ess', $entitys);
         foreach ($entitys as $e) {
-            $fields = fx::data($e)->get_multi_lang_fields();
+            $fields = fx::data($e)->getMultiLangFields();
             fx::log('fld', $e, $fields);
             if (count($fields) > 0) {
                 $q = "ALTER TABLE `{{".$e."}}` ";

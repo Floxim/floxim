@@ -6,11 +6,11 @@ use Floxim\Floxim\System\Fx as fx;
 
 class Entity extends System\Entity {
     
-    public function get_content_table() {
+    public function getContentTable() {
         return $this['keyword'] == 'content' ? $this['keyword'] : 'content_'.$this['keyword'];
     }
     
-    public function get_chain($up_to_down = true) {
+    public function getChain($up_to_down = true) {
         $chain = array($this);
         $c_pid = $this->get('parent_id');
         while ($c_pid != 0) {
@@ -22,8 +22,8 @@ class Entity extends System\Entity {
         return $up_to_down ? array_reverse($chain) : $chain;
     }
     
-    public function get_ancestors() {
-        return array_slice($this->get_chain(false), 1);
+    public function getAncestors() {
+        return array_slice($this->getChain(false), 1);
     }
 
     protected $_class_id;
@@ -71,17 +71,17 @@ class Entity extends System\Entity {
         return $this['fields'];
     }
     
-    public function all_fields() {
+    public function allFields() {
         $fields = new System\Collection();
-        foreach ($this->get_chain() as $component) {
+        foreach ($this->getChain() as $component) {
             $fields->concat($component->fields());
         }
         return $fields;
     }
 
-    public function get_field_by_keyword($keyword,$use_chain=false) {
+    public function getFieldByKeyword($keyword,$use_chain=false) {
         if ($use_chain) {
-            $fields=$this->all_fields();
+            $fields=$this->allFields();
         } else {
             $fields=$this->fields();
         }
@@ -93,7 +93,7 @@ class Entity extends System\Entity {
         return null;
     }
 
-    public function get_sortable_fields() {
+    public function getSortableFields() {
         //$this->_load_fields();
 
         $result = array();
@@ -110,15 +110,15 @@ class Entity extends System\Entity {
         return $result;
     }
 
-    public function is_user_component() {
+    public function isUserComponent() {
         return $this['keyword'] == 'user';
     }
 
-    protected function _after_insert() {
-        $this->create_content_table();
+    protected function afterInsert() {
+        $this->createContentTable();
     }
     
-    public function create_content_table() {
+    public function createContentTable() {
         $sql = "DROP TABLE IF  EXISTS `{{content_".$this['keyword']."}}`;
             CREATE TABLE IF NOT EXISTS `{{content_".$this['keyword']."}}` (
             `id` int(11) NOT NULL,
@@ -127,25 +127,25 @@ class Entity extends System\Entity {
         fx::db()->query($sql);
     }
 
-    protected function _before_delete() {
+    protected function beforeDelete() {
         if ($this['children']) {
             foreach ($this['children'] as $child_com) {
                 $child_com->delete();
             }
         }
-        $this->delete_fields();
-        $this->delete_infoblocks();
-        $this->delete_content_table();
-        $this->delete_files();
+        $this->deleteFields();
+        $this->deleteInfoblocks();
+        $this->deleteContentTable();
+        $this->deleteFiles();
     }
 
-    protected function delete_fields() {
+    protected function deleteFields() {
         foreach ($this->fields() as $field) {
             $field->delete();
         }
     }
 
-    protected function delete_files() {
+    protected function deleteFiles() {
         $base_path = fx::path(
                 ($this['vendor'] === 'std') ? 'std' : 'root',
                 'component/'.$this['keyword'].'/'
@@ -153,7 +153,7 @@ class Entity extends System\Entity {
         fx::files()->rm($base_path);
     }
 
-    protected function delete_content_table() {
+    protected function deleteContentTable() {
         $contents = fx::data('content_'.$this['keyword'])->all();
         foreach ($contents as $content) {
             $content->delete();
@@ -162,7 +162,7 @@ class Entity extends System\Entity {
         fx::db()->query($sql);
     }
 
-    protected function delete_infoblocks() {
+    protected function deleteInfoblocks() {
         $infoblocks = fx::data('infoblock')->where('controller', 'component_'.$this['keyword'])->all();
         foreach ($infoblocks as $infoblock) {
             $infoblock->delete();
@@ -172,10 +172,10 @@ class Entity extends System\Entity {
      * Get collection of all component's descendants
      * @return \Floxim\Floxim\System\Collection
      */
-    public function get_all_children() {
+    public function getAllChildren() {
         $res = fx::collection()->concat($this['children']);
         foreach ($res as $child) {
-            $res->concat($child->get_all_children());
+            $res->concat($child->getAllChildren());
         }
         return $res;
     }
@@ -184,9 +184,9 @@ class Entity extends System\Entity {
      * Get collection of all component's descendants and the component itself
      * @return \Floxim\Floxim\System\Collection
      */
-    public function get_all_variants() {
+    public function getAllVariants() {
         $res = fx::collection($this);
-        $res->concat($this->get_all_children());
+        $res->concat($this->getAllChildren());
         return $res;
     }
     

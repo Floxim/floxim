@@ -35,9 +35,9 @@ class Site extends Admin {
             $list['values'][]= $r;
         }
 
-        $this->response->add_field($list);
+        $this->response->addField($list);
 
-        $this->response->add_buttons(
+        $this->response->addButtons(
             array(
                 array(
                     'key' => 'add', 
@@ -47,29 +47,29 @@ class Site extends Admin {
                 'delete'
             )
         );
-        $this->response->breadcrumb->add_item( fx::alang('Sites','system') );
-        $this->response->submenu->set_menu('site');
+        $this->response->breadcrumb->addItem( fx::alang('Sites','system') );
+        $this->response->submenu->setMenu('site');
     }
 
     public function add() {
-        $fields = $this->_get_fields(fx::data('site')->create());
+        $fields = $this->getFields(fx::data('site')->create());
         $fields[] = $this->ui->hidden('action', 'add_save');
         $fields[] = $this->ui->hidden('entity', 'site');
         
-        $this->response->add_fields($fields);
-        $this->response->dialog->set_title( fx::alang('Create a new site','system') );
-        $this->response->breadcrumb->add_item( 
+        $this->response->addFields($fields);
+        $this->response->dialog->setTitle( fx::alang('Create a new site','system') );
+        $this->response->breadcrumb->addItem( 
             fx::alang('Sites','system'),
             '#admin.administrate.site.all'
         );
-        $this->response->breadcrumb->add_item(
+        $this->response->breadcrumb->addItem(
             fx::alang('Add new site','system')
         );
-        $this->response->add_form_button('save');
-        $this->response->submenu->set_menu('site');
+        $this->response->addFormButton('save');
+        $this->response->submenu->setMenu('site');
     }
 
-    public function add_save($input) {
+    public function addSave($input) {
         
         $result = array();
         $site = fx::data('site')->create(array(
@@ -83,7 +83,7 @@ class Site extends Admin {
 
         if (!$site->validate()) {
             $result['status'] = 'error';
-            $result['errors'] = $site->get_validate_errors();
+            $result['errors'] = $site->getValidateErrors();
             return $result;
         }
 
@@ -114,7 +114,7 @@ class Site extends Admin {
             )
         )->save();
         $site->save();
-        fx::input()->set_cookie('fx_target_location', '/floxim/#admin.site.all');
+        fx::input()->setCookie('fx_target_location', '/floxim/#admin.site.all');
         $result = array(
             'status' => 'ok',
             'reload' => '/~ajax/user._crossite_auth_form'
@@ -122,16 +122,16 @@ class Site extends Admin {
         return $result;
     }
     
-    protected function _set_layout($section, $site) {
+    protected function setLayout($section, $site) {
     	$titles = array(
     		'map' => fx::alang('Site map','system'),
     		'settings' => fx::alang('Settings','system'),
     		'design' => fx::alang('Design','system')
 		);
-    	$this->response->breadcrumb->add_item( fx::alang('Sites','system'), '#admin.site.all');
-        $this->response->breadcrumb->add_item($site['name'], '#admin.site.settings('.$site['id'].')');
-        $this->response->breadcrumb->add_item($titles[$section]);
-        $this->response->submenu->set_menu('site-'.$site['id'])->set_subactive('site'.$section.'-'.$site['id']);
+    	$this->response->breadcrumb->addItem( fx::alang('Sites','system'), '#admin.site.all');
+        $this->response->breadcrumb->addItem($site['name'], '#admin.site.settings('.$site['id'].')');
+        $this->response->breadcrumb->addItem($titles[$section]);
+        $this->response->submenu->setMenu('site-'.$site['id'])->setSubactive('site'.$section.'-'.$site['id']);
     }
     
     /**
@@ -139,7 +139,7 @@ class Site extends Admin {
      * @param type fx_site $site
      * @return array
      */
-    protected function _get_fields($site) {
+    protected function getFields($site) {
         $main_fields = array();
         $main_fields[] = $this->ui->input('name', fx::alang('Site name','system'), $site['name']);
         $main_fields[] = $this->ui->input('domain', fx::alang('Domain','system'), $site['domain']);
@@ -150,7 +150,7 @@ class Site extends Admin {
             'type' => 'text'
         );
         
-        $languages = fx::data('lang')->all()->get_values('lang_code', 'lang_code');
+        $languages = fx::data('lang')->all()->getValues('lang_code', 'lang_code');
         $main_fields[] = array(
             'name' => 'language',
             'type' => 'select',
@@ -179,23 +179,23 @@ class Site extends Admin {
         $site_id = isset($input['id']) ? $input['id'] : isset($input['params'][0]) ? $input['params'][0] : null;
         $site = fx::data('site', $site_id);
         
-        $main_fields = $this->_get_fields($site);
+        $main_fields = $this->getFields($site);
             
-        $this->response->add_fields($main_fields);
+        $this->response->addFields($main_fields);
 
         $fields = array();
         $fields[] = $this->ui->hidden('entity', 'site');
         $fields[] = $this->ui->hidden('action', 'settings');
         $fields[] = $this->ui->hidden('posting');
         $fields [] = $this->ui->hidden('id', $site['id']);
-        $this->response->add_fields($fields);
-        $this->response->add_form_button('save');
-        $this->_set_layout('settings', $site);
+        $this->response->addFields($fields);
+        $this->response->addFormButton('save');
+        $this->setLayout('settings', $site);
     }
 
-    public function settings_save($input) {
+    public function settingsSave($input) {
         
-        $site = fx::data('site')->get_by_id($input['id']);
+        $site = fx::data('site')->getById($input['id']);
         $result = array(
             'status' => 'ok',
             'reload' => '#admin.site.all'

@@ -15,7 +15,7 @@ class Suitable {
         }
         $infoblocks_query = fx::data('infoblock')
             ->where('site_id', $site_id)
-            ->only_with(
+            ->onlyWith(
                 'visuals', 
                 function($q) use ($layout_id) {
                     $q->where('layout_id', $layout_id);
@@ -39,21 +39,21 @@ class Suitable {
         // Collect all Infoblox without the visual part
         // Find the InfoBlock-layout
         foreach ($infoblocks as $ib) {
-            if ($ib->get_visual()->get('is_stub')) {
+            if ($ib->getVisual()->get('is_stub')) {
                 $stub_ibs[]= $ib;
             }
-            if ($ib->is_layout()) {
+            if ($ib->isLayout()) {
                 $layout_ib = $ib;
             }
         }
         $layout_rate = array();
-        $all_visual = fx::data('infoblock_visual')->get_for_infoblocks($stub_ibs, false);
+        $all_visual = fx::data('infoblock_visual')->getForInfoblocks($stub_ibs, false);
         
         foreach ($all_visual as $c_vis) {
             $c_layout_id = $c_vis['layout_id'];
             $infoblocks->
-                    find_one('id', $c_vis['infoblock_id'])->
-                    set_visual($c_vis, $c_layout_id);
+                    findOne('id', $c_vis['infoblock_id'])->
+                    setVisual($c_vis, $c_layout_id);
             if (!isset($layout_rate[$c_layout_id])) {
                 $layout_rate[$c_layout_id] = 0;
             }
@@ -63,36 +63,36 @@ class Suitable {
         $source_layout_id = $c_layout_id;
         
         if (!$layout_ib) {
-            $layout_ib = fx::env('page')->get_layout_infoblock();
+            $layout_ib = fx::env('page')->getLayoutInfoblock();
         }
         
-        if ($layout_ib->get_visual()->get('is_stub')) {
-            $this->_adjust_layout_visual($layout_ib, $layout_id, $source_layout_id);
+        if ($layout_ib->getVisual()->get('is_stub')) {
+            $this->adjustLayoutVisual($layout_ib, $layout_id, $source_layout_id);
         }
         
-        $layout_visual = $layout_ib->get_visual();
+        $layout_visual = $layout_ib->getVisual();
         $area_map = $layout_visual['area_map'];
         
-        $layout_template_name = $layout_ib->get_prop_inherited('visual.template');
-        $c_areas = fx::template($layout_template_name)->get_areas();
+        $layout_template_name = $layout_ib->getPropInherited('visual.template');
+        $c_areas = fx::template($layout_template_name)->getAreas();
         
         foreach ($infoblocks as $ib) {
-            $ib_visual = $ib->get_visual($layout_id);
+            $ib_visual = $ib->getVisual($layout_id);
             if (!$ib_visual['is_stub'] ) {
                 continue;
             }
-            $old_area = $ib->get_prop_inherited('visual.area', $source_layout_id);
+            $old_area = $ib->getPropInherited('visual.area', $source_layout_id);
             if ($old_area && isset($area_map[$old_area])) {
                 $ib_visual['area'] = $area_map[$old_area];
-                $ib_visual['priority'] = $ib->get_prop_inherited('visual.priority', $source_layout_id);
+                $ib_visual['priority'] = $ib->getPropInherited('visual.priority', $source_layout_id);
             }
             $ib_controller = fx::controller(
-                    $ib->get_prop_inherited('controller'),
-                    $ib->get_prop_inherited('params'),
-                    $ib->get_prop_inherited('action')
+                    $ib->getPropInherited('controller'),
+                    $ib->getPropInherited('params'),
+                    $ib->getPropInherited('action')
             );
-            $controller_templates = $ib_controller->get_available_templates($layout['keyword']);
-            $old_template = $ib->get_prop_inherited('visual.template', $source_layout_id);
+            $controller_templates = $ib_controller->getAvailableTemplates($layout['keyword']);
+            $old_template = $ib->getPropInherited('visual.template', $source_layout_id);
             $used_template_props = null;
             foreach ($controller_templates as $c_tpl) {
                 if ($c_tpl['full_id'] == $old_template) {
@@ -107,12 +107,12 @@ class Suitable {
             }
             
             if (!$ib_visual['area']) {
-                $block_size = self::get_size( $used_template_props['size']);
+                $block_size = self::getSize( $used_template_props['size']);
                 $c_area = null;
                 $c_area_count = 0;
                 foreach ($c_areas as $ca) {
-                    $area_size = self::get_size($ca['size']);
-                    $area_count = self::check_sizes($block_size, $area_size);
+                    $area_size = self::getSize($ca['size']);
+                    $area_count = self::checkSizes($block_size, $area_size);
                     if ($area_count >= $c_area_count) {
                         $c_area_count = $area_count;
                         $c_area = $ca['id'];
@@ -126,16 +126,16 @@ class Suitable {
         }
     }
     
-    protected function _adjust_layout_visual($layout_ib, $layout_id, $source_layout_id) {
+    protected function adjustLayoutVisual($layout_ib, $layout_id, $source_layout_id) {
         $layout = fx::data('layout', $layout_id);
         
         
         $layout_tpl = fx::template('layout_'.$layout['keyword']);
-        $template_variants = $layout_tpl->get_template_variants();
+        $template_variants = $layout_tpl->getTemplateVariants();
         
         if ($source_layout_id) {
-            $source_template = $layout_ib->get_prop_inherited('visual.template', $source_layout_id);
-            $old_areas = fx::template($source_template)->get_areas();
+            $source_template = $layout_ib->getPropInherited('visual.template', $source_layout_id);
+            $old_areas = fx::template($source_template)->getAreas();
             $c_relevance = 0;
             $c_variant = null;
             foreach ($template_variants as $tplv) {
@@ -143,8 +143,8 @@ class Suitable {
                     continue;
                 }
                 $test_layout_tpl = fx::template($tplv['full_id']);
-                $tplv['real_areas'] = $test_layout_tpl->get_areas();
-                $map = $this->_map_areas($old_areas, $tplv['real_areas']);
+                $tplv['real_areas'] = $test_layout_tpl->getAreas();
+                $map = $this->mapAreas($old_areas, $tplv['real_areas']);
                 if ( !$map ) {
                     continue;
                 }
@@ -170,7 +170,7 @@ class Suitable {
             }
         }
         
-        $layout_vis = $layout_ib->get_visual();
+        $layout_vis = $layout_ib->getVisual();
         $layout_vis['template'] = $c_variant['full_id'];
         if ($c_variant['areas']) {
             $layout_vis['areas'] = $c_variant['areas'];
@@ -185,14 +185,14 @@ class Suitable {
      * Considers the relevance of size, title and employment
      * Returns an array with the keys in the map and relevance
      */
-    protected function _map_areas($old_set, $new_set) {
+    protected function mapAreas($old_set, $new_set) {
         $total_relevance = 0;
         foreach ($old_set as &$old_area) {
-            $old_size = $this->_get_size($old_area);
+            $old_size = $this->getSize($old_area);
             $c_match = false;
             $c_match_index = 1;
             foreach ($new_set as $new_area_id => $new_area) {
-                $new_size = $this->_get_size($new_area);
+                $new_size = $this->getSize($new_area);
                 $area_match = 0;
                 
                 // if one of the areas arbitrary width - existent, 1
@@ -262,7 +262,7 @@ class Suitable {
         return $res;
     }
     
-    public static function get_size($size) {
+    public static function getSize($size) {
         $res = array('width' => 'any', 'height' => 'any');
         if (empty($size)) {
             return $res;
@@ -278,7 +278,7 @@ class Suitable {
         return $res;
     }
     
-    public static function check_sizes($block, $area) {
+    public static function checkSizes($block, $area) {
         if ($area['width'] === 'narrow' && $block['width'] ==='wide') {
             return 0;
         }
@@ -299,7 +299,7 @@ class Suitable {
         return $n;
     }
     
-    protected function _get_size($block) {
+    protected function getSize($block) {
         $res = array('width' => 'any', 'height' => 'any');
         if (!isset($block['size'])) {
             return $res;
@@ -316,7 +316,7 @@ class Suitable {
     // suit props that should contain templates
     protected static $tpl_suit_props = array('force_wrapper', 'force_template','default_wrapper');
     
-    public static function parse_area_suit_prop($suit) {
+    public static function parseAreaSuitProp($suit) {
         $res = array();
         $suit = explode(";", $suit);
         foreach ($suit as $v) {
@@ -351,8 +351,8 @@ class Suitable {
         return $res;
     }
     
-    public static function compile_area_suit_prop($suit, $local_templates, $set_name) {
-        $suit = self::parse_area_suit_prop($suit);
+    public static function compileAreaSuitProp($suit, $local_templates, $set_name) {
+        $suit = self::parseAreaSuitProp($suit);
         foreach (self::$tpl_suit_props as $prop) {
             if (!$suit[$prop]) {
                 continue;

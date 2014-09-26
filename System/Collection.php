@@ -42,11 +42,11 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable {
         return $this;
     }
     
-    public function add_filter($field, $value) {
+    public function addFilter($field, $value) {
         $this->filtered_by[]= array($field, $value);
     }
     
-    public function get_filters() {
+    public function getFilters() {
         return $this->filtered_by;
     }
     
@@ -68,7 +68,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable {
         return count($this->data);
     }
     
-    public function get_data() {
+    public function getData() {
         return $this->data;
     }
     
@@ -97,7 +97,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable {
      * @param string $key
      * @return Collection Returns collection itself
      */
-    public function set_position($key) {
+    public function setPosition($key) {
         reset($this->data);
         while ( key($this->data) != $key) {
             next($this->data);
@@ -134,7 +134,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable {
                     $res []= $item;
                 }
             }
-            $this->set_position($initial_key);
+            $this->setPosition($initial_key);
             return $fork->load($res);
         }
         if ($compare_type == self::FILTER_NEQ) {
@@ -143,7 +143,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable {
                     $res []= $item;
                 }
             }
-            $this->set_position($initial_key);
+            $this->setPosition($initial_key);
             return $fork->load($res);
         }
         if ($compare_type == self::FILTER_IN) {
@@ -152,7 +152,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable {
                     $res []= $item;
                 }
             }
-            $this->set_position($initial_key);
+            $this->setPosition($initial_key);
             return $fork->load($res);
         }
         if ($compare_type == self::FILTER_EXISTS) {
@@ -161,7 +161,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable {
                     $res []= $item;
                 }
             }
-            $this->set_position($initial_key);
+            $this->setPosition($initial_key);
             return $fork->load($res);
         }
         if ($compare_type == self::FILTER_CALLBACK) {
@@ -170,14 +170,14 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable {
                     $res []= $item;
                 }
             }
-            $this->set_position($initial_key);
+            $this->setPosition($initial_key);
             return $fork->load($res);
         }
-        $this->set_position($initial_key);
+        $this->setPosition($initial_key);
         return $fork->load($res);
     }
     
-    public function find_one($field, $prop = null, $compare_type = null) {
+    public function findOne($field, $prop = null, $compare_type = null) {
         if (count($this->data) == 0) {
             return false;
         }
@@ -194,54 +194,54 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable {
         if ($compare_type == self::FILTER_EQ) {
             foreach ($this->data as $item) {
                 if ($item[$field] == $prop) {
-                    $this->set_position($initial_key);
+                    $this->setPosition($initial_key);
                     return $item;
                 }
             }
-            $this->set_position($initial_key);
+            $this->setPosition($initial_key);
             return false;
         }
         if ($compare_type == self::FILTER_NEQ) {
             foreach ($this->data as $item) {
                 if ($item[$field] != $prop) {
-                    $this->set_position($initial_key);
+                    $this->setPosition($initial_key);
                     return $item;
                 }
             }
-            $this->set_position($initial_key);
+            $this->setPosition($initial_key);
             return false;
         }
         if ($compare_type == self::FILTER_IN) {
             foreach ($this->data as $item) {
                 if (in_array($item[$field], $prop)) {
-                    $this->set_position($initial_key);
+                    $this->setPosition($initial_key);
                     return $item;
                 }
             }
-            $this->set_position($initial_key);
+            $this->setPosition($initial_key);
             return false;
         }
         if ($compare_type == self::FILTER_EXISTS) {
             foreach ($this->data as $item) {
                 if (isset($item[$field]) && $item[$field]) {
-                    $this->set_position($initial_key);
+                    $this->setPosition($initial_key);
                     return $item;
                 }
             }
-            $this->set_position($initial_key);
+            $this->setPosition($initial_key);
             return false;
         }
         if ($compare_type == self::FILTER_CALLBACK) {
             foreach ($this->data as $item) {
                 if (call_user_func($field, $item)) {
-                    $this->set_position($initial_key);
+                    $this->setPosition($initial_key);
                     return $item;
                 }
             }
-            $this->set_position($initial_key);
+            $this->setPosition($initial_key);
             return false;
         }
-        $this->set_position($initial_key);
+        $this->setPosition($initial_key);
         return false;
     }
     
@@ -315,7 +315,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable {
                     $res[$r] []= $item;
                     $c++;
                 }
-                $this->set_position($initial_key);
+                $this->setPosition($initial_key);
                 return $res;
             }
             if (is_callable($groupper)) {
@@ -326,7 +326,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable {
                     }
                     $res[$key] []= $item;
                 }
-                $this->set_position($initial_key);
+                $this->setPosition($initial_key);
                 return $res;
             }
         }
@@ -391,10 +391,10 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable {
                 }
                 $res[$key_index] []= $item;
             }
-            $this->set_position($initial_key);
+            $this->setPosition($initial_key);
             return $res;
         }
-        $this->set_position($initial_key);
+        $this->setPosition($initial_key);
     }
     
     /*
@@ -405,7 +405,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable {
         foreach ($this->data as &$di) {
             call_user_func_array($callback, array(&$di));
         }
-        $this->set_position($initial_key);
+        $this->setPosition($initial_key);
         return $this;
     }
     
@@ -430,7 +430,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable {
     /*
      * Find elemenets and remove them from the collection
      */
-    public function find_remove($field, $prop = null, $compare_type = null) {
+    public function findRemove($field, $prop = null, $compare_type = null) {
         $items=  $this->find($field, $prop, $compare_type);
         foreach ($items as $i) {
             $this->remove($i);
@@ -440,10 +440,10 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable {
     
     // alias for get_values()
     public function column($field, $key_field = null, $as_collection = true) {
-        return $this->get_values($field, $key_field, $as_collection);
+        return $this->getValues($field, $key_field, $as_collection);
     }
     
-    public function get_values($field, $key_field = null, $as_collection = false) {
+    public function getValues($field, $key_field = null, $as_collection = false) {
         $result = array();
         if ($field instanceof \Closure) {
             foreach ($this->data as $k => $v) {
@@ -528,7 +528,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable {
      * @param string $extract_field
      * @return \Floxim\Floxim\System\Collection
      */
-    public function attach_many(
+    public function attachMany(
             Collection $what,
             $cond_field, 
             $res_field, 
@@ -545,7 +545,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable {
             $index_key = $what_item[$cond_field];
             if (!isset($res_index[$index_key])) {
                 $new_collection = $what->fork();
-                $new_collection->add_filter($cond_field, $index_key);
+                $new_collection->addFilter($cond_field, $index_key);
                 $res_index[$index_key] = $new_collection;
                 if ($extract_field) {
                     $res_index[$index_key]->linker_map = new Collection();
@@ -583,7 +583,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable {
         return $this;
     }
     
-    public function make_tree($parent_field = 'parent_id', $children_field = 'nested', $id_field = 'id') {
+    public function makeTree($parent_field = 'parent_id', $children_field = 'nested', $id_field = 'id') {
         $index_by_parent = array();
         
         foreach ($this as $item) {
@@ -597,9 +597,9 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable {
         foreach ($this as $item) {
             if (isset($index_by_parent[$item[$id_field]])) {
                 $item[$children_field] = $index_by_parent[$item[$id_field]];
-                $this->find_remove(
+                $this->findRemove(
                     $id_field,
-                    $index_by_parent[$item[$id_field]]->get_values($id_field)
+                    $index_by_parent[$item[$id_field]]->getValues($id_field)
                 );
             } else {
                 $item[$children_field] = null;

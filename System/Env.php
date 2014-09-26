@@ -7,7 +7,7 @@ class Env {
 
   
     public function set($var, $val) {
-        $setter = 'set_'.$var;
+        $setter = 'set'.fx::util()->underscoreToCamel($var);
         if (method_exists($this, $setter)) {
             call_user_func(array($this, $setter), $val);
         } else {
@@ -16,14 +16,14 @@ class Env {
     }
   
     public function get($var) {
-        $getter = 'get_'.$var;
+        $getter = 'get'.fx::util()->underscoreToCamel($var);
         if (method_exists($this, $getter)) {
             return call_user_func(array($this, $getter));
         }
         return isset($this->current[$var]) ? $this->current[$var] : null;
     }
 
-    public function set_site ( $env ) {
+    public function setSite ( $env ) {
         $this->current['site'] = $env;
     }
 
@@ -31,40 +31,40 @@ class Env {
     /**
      * @return \Floxim\Floxim\System\Site
      */
-    public function get_site () {
+    public function getSite () {
         if (!isset($this->current['site'])) {
-            $this->current['site'] = fx::data('site')->get_by_host_name($_SERVER['HTTP_HOST'], 1);
+            $this->current['site'] = fx::data('site')->getByHostName($_SERVER['HTTP_HOST'], 1);
         }
         return $this->current['site'];
     }
     
-    public function get_host() {
+    public function getHost() {
         if (!isset($this->current['host'])) {
             $this->current['host'] = $_SERVER['HTTP_HOST'];
         }
         return $this->current['host'];
     }
 
-    public function set_action ( $action ) {
+    public function setAction ( $action ) {
         $this->current['action'] = $action;
     }
 
-    public function get_action ( ) {
+    public function getAction ( ) {
         return $this->current['action'];
     }
 
-    public function set_page ( $page ) {
+    public function setPage ( $page ) {
         if (is_numeric($page)) {
             $page = fx::data('page', $page);
         }
         $this->current['page'] = $page;
     }
 
-    public function get_page ( ) {
+    public function getPage ( ) {
         return $this->current['page'];
     }
 
-    public function get_page_id () {
+    public function getPageId () {
         if (isset($this->current['page']) && is_object($this->current['page'])) {
            return $this->current['page']->get('id');
         }
@@ -75,32 +75,32 @@ class Env {
         return NULL;
     }
 
-    public function get_site_id() {
-        return $this->get_site()->get('id');
+    public function getSiteId() {
+        return $this->getSite()->get('id');
     }
 
-    public function set_user ( $user ) {
+    public function setUser ( $user ) {
         $this->current['user'] = $user;
     }
 
-    public function get_user () {
+    public function getUser () {
         if (!isset($this->current['user'])) {
             $this->current['user'] = \Floxim\Main\User\Entity::load();
         }
         return $this->current['user'];
     }
 
-    public function set_main_content ( $str ) {
+    public function setMainContent ( $str ) {
         $this->current['main_content'] = $str;
     }
 
-    public function get_main_content () {
+    public function getMainContent () {
         return $this->current['main_content'];
     }
   
-    public function get_home_id() {
+    public function getHomeId() {
         if (!isset($this->current['home_id'])) {
-            $site = $this->get_site();
+            $site = $this->getSite();
             $home_page = fx::data('page')
                 ->where('parent_id', 0)
                 ->where('site_id', $site['id'])
@@ -110,13 +110,13 @@ class Env {
         return $this->current['home_id'];
     }
   
-    public function is_admin() {
-        return ($user = $this->get_user()) ? $user->is_admin() : false;
+    public function isAdmin() {
+        return ($user = $this->getUser()) ? $user->isAdmin() : false;
     }
   
-    public function get_layout() {
+    public function getLayout() {
         if (!$this->current['layout']) {
-            $page_id = $this->get_page_id();
+            $page_id = $this->getPageId();
             if ($page_id) {
                 $page = fx::data('page', $page_id);
                 if ($page['layout_id']) {
@@ -124,7 +124,7 @@ class Env {
                 }
             }
             if (!$this->current['layout']) {
-                $this->current['layout'] = $this->get_site()->get('layout_id');
+                $this->current['layout'] = $this->getSite()->get('layout_id');
             }
             if (!$this->current['layout']) {
                 $this->current['layout'] = fx::data('layout')->one()->get('id');
@@ -133,8 +133,8 @@ class Env {
         return $this->current['layout'];
     }
     
-    public function get_layout_id() {
-        return $this->get_layout();
+    public function getLayoutId() {
+        return $this->getLayout();
     }
     
     protected $current_template_stack = array();
@@ -143,21 +143,21 @@ class Env {
      * Add template object to global stack
      * @param Template $template
      */
-    public function add_current_template($template) {
+    public function addCurrentTemplate($template) {
         $this->current_template_stack[]= $template;
     }
     
     /**
      * Remove the last running template from stack
      */
-    public function pop_current_template() {
+    public function popCurrentTemplate() {
         array_pop($this->current_template_stack);
     }
     
     /**
      * Get currently runnnig template
      */
-    public function get_current_template() {
+    public function getCurrentTemplate() {
         if (count($this->current_template_stack) === 0) {
             return null;
         }

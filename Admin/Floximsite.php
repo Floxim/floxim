@@ -25,13 +25,13 @@ class Floximsite {
         return $response;
     }
 
-    protected function get_base_post() {
+    protected function getBasePost() {
         $post = array();
-        $post['userinfo'] = $this->get_userinfo();
+        $post['userinfo'] = $this->getUserinfo();
         return $post;
     }
 
-    protected function get_userinfo() {
+    protected function getUserinfo() {
         $info = array();
         $info['host'] = $_SERVER['HTTP_HOST'];
         return $info;

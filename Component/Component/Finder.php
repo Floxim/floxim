@@ -21,7 +21,7 @@ class Finder extends System\Data {
         );
     }
 
-    public function get_multi_lang_fields() {
+    public function getMultiLangFields() {
         return array(
             'name',
             'description',
@@ -34,9 +34,9 @@ class Finder extends System\Data {
         parent::__construct();
     }
 
-    public function get_all_groups() {
+    public function getAllGroups() {
         $result = array();
-        $groups = fx::db()->get_col("SELECT DISTINCT `group` FROM `{{component}}` ORDER BY `group`");
+        $groups = fx::db()->getCol("SELECT DISTINCT `group` FROM `{{component}}` ORDER BY `group`");
         if ($groups)
                 foreach ($groups as $v) {
                 $result[$v] = $v;
@@ -45,14 +45,14 @@ class Finder extends System\Data {
         return $result;
     }
 
-    public function get_all_store_ids() {
-        $result = fx::db()->get_col("SELECT `store_id` FROM `{{component}}` WHERE `store_id` IS NOT NULL");
+    public function getAllStoreIds() {
+        $result = fx::db()->getCol("SELECT `store_id` FROM `{{component}}` WHERE `store_id` IS NOT NULL");
         if (!$result) $result = array();
 
         return $result;
     }
     
-    public function get_by_id($id) {
+    public function getById($id) {
         if (!is_numeric($id)) {
             $this->where('keyword', $id);
         } else {
@@ -61,11 +61,11 @@ class Finder extends System\Data {
         return $this->one();
     }
     
-    public function get_by_keyword($keyword) {
+    public function getByKeyword($keyword) {
     	return $this->get('keyword', $keyword);
     }
     
-    public function get_select_values($com_id = null) {
+    public function getSelectValues($com_id = null) {
         $items = $this->all();
         $recursive_get = function($comp_coll, $result = array(), $level = 0) 
                             use (&$recursive_get, $items) {
@@ -91,12 +91,12 @@ class Finder extends System\Data {
         return $res;
     }
     
-    public function get_tree() {
+    public function getTree() {
         $items = $this->all();
-        return $items->make_tree('parent_id', 'children');
+        return $items->makeTree('parent_id', 'children');
     }
 
-    public function create_full($data) {
+    public function createFull($data) {
         $result=array(
             'status'=>'successful',
             'validate_result'=>true,
@@ -109,7 +109,7 @@ class Finder extends System\Data {
         if (!$component->validate()) {
             $result['status'] = 'error';
             $result['validate_result'] = false;
-            $result['validate_errors'] = $component->get_validate_errors();
+            $result['validate_errors'] = $component->getValidateErrors();
             return $result;
         }
 

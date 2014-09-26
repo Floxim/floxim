@@ -26,7 +26,7 @@ class Entity extends System\Entity {
     const EDIT_ADMIN = 2;
     const EDIT_NONE = 3;
     
-    public static function get_type_by_id($id) {
+    public static function getTypeById($id) {
 
         static $res = array();
         if (empty($res)) {
@@ -48,19 +48,19 @@ class Entity extends System\Entity {
         $this->format = $this['format'];
         $this->type_id = $this['type'];
 
-        $this->type = self::get_type_by_id($this->type_id);
+        $this->type = self::getTypeById($this->type_id);
         $this->_edit_jsdata = array('type' => 'input');
     }
     
-    public function get_type_keyword() {
+    public function getTypeKeyword() {
         return $this->type;
     }
     
-    public function get_type_id() {
+    public function getTypeId() {
         return $this->type_id;
     }
 
-    public function is_not_null() {
+    public function isNotNull() {
         return $this['not_null'];
     }
 
@@ -87,9 +87,9 @@ class Entity extends System\Entity {
             
             /// Edit here
             $component = fx::data('component')->where('id',$this['component_id'])->one();
-            $chain = $component->get_chain();
+            $chain = $component->getChain();
             foreach ( $chain as $c_level ) {
-                if ( fx::db()->column_exists( $c_level->get_content_table(), $this->data['keyword']) ) {
+                if ( fx::db()->columnExists( $c_level->getContentTable(), $this->data['keyword']) ) {
                     $this->validate_errors[] = array(
                         'field' => 'keyword', 
                         'text' => fx::alang('This field already exists','system')
@@ -97,7 +97,7 @@ class Entity extends System\Entity {
                     $res = false;
                 }
             }
-            if (fx::db()->column_exists($this->get_table(), $this->data['keyword'])) {
+            if (fx::db()->columnExists($this->getTable(), $this->data['keyword'])) {
                 $this->validate_errors[] = array(
                     'field' => 'keyword', 
                     'text' => fx::alang('This field already exists','system')
@@ -118,84 +118,84 @@ class Entity extends System\Entity {
         return $res;
     }
     
-    public function is_multilang() {
+    public function isMultilang() {
         return $this['format']['is_multilang'];
     }
 
-    protected function get_table() {
-        return fx::data('component')->where('id',$this['component_id'])->one()->get_content_table();
+    protected function getTable() {
+        return fx::data('component')->where('id',$this['component_id'])->one()->getContentTable();
     }
 
-    protected function _after_insert() {
-        $this->_drop_meta_cache();
+    protected function afterInsert() {
+        $this->dropMetaCache();
         if (!$this['component_id']) {
             return;
         }
-        $type = $this->get_sql_type();
+        $type = $this->getSqlType();
         if (!$type) {
             return;
         }
         
-        fx::db()->query("ALTER TABLE `{{".$this->get_table()."}}`
+        fx::db()->query("ALTER TABLE `{{".$this->getTable()."}}`
             ADD COLUMN `".$this['keyword']."` ".$type);
     }
 
-    protected function _after_update() {
+    protected function afterUpdate() {
         if ($this['component_id']) {
-            $type = self::get_sql_type_by_type($this->data['type']);
+            $type = self::getSqlTypeByType($this->data['type']);
             if ($type) {
                 if ($this->modified_data['keyword'] && $this->modified_data['keyword'] != $this->data['keyword']) {
-                    fx::db()->query("ALTER TABLE `{{".$this->get_table()."}}` 
+                    fx::db()->query("ALTER TABLE `{{".$this->getTable()."}}` 
                     CHANGE `".$this->modified_data['keyword']."` `".$this->data['keyword']."` ".$type);
                 } else if ($this->modified_data['keyword'] && $this->modified_data['keyword'] != $this->data['keyword']) {
-                    fx::db()->query("ALTER TABLE `{{".$this->get_table()."}}`
+                    fx::db()->query("ALTER TABLE `{{".$this->getTable()."}}`
                     MODIFY `".$this->data['keyword']."` ".$type);
                 }
             }
         }
-        $this->_drop_meta_cache();
+        $this->dropMetaCache();
     }
 
-    protected function _after_delete() {
+    protected function afterDelete() {
         if ($this['component_id']) {
-            if (self::get_sql_type_by_type($this->data['type'])) {
-                fx::db()->query("ALTER TABLE `{{".$this->get_table()."}}` DROP COLUMN `".$this['keyword']."`");
+            if (self::getSqlTypeByType($this->data['type'])) {
+                fx::db()->query("ALTER TABLE `{{".$this->getTable()."}}` DROP COLUMN `".$this['keyword']."`");
             }
         }
-        $this->_drop_meta_cache();
+        $this->dropMetaCache();
     }
 
     /* -- for admin interface -- */
 
-    public function format_settings() {
+    public function formatSettings() {
         return array();
     }
 
-    public function get_sql_type() {
+    public function getSqlType() {
         return "TEXT";
     }
 
-    public function check_rights() {
+    public function checkRights() {
         if ($this['type_of_edit'] == Entity::EDIT_ALL || empty($this['type_of_edit'])) {
             return true;
         }
         if ($this['type_of_edit'] == Entity::EDIT_ADMIN) {
-            return fx::is_admin();
+            return fx::isAdmin();
         }
 
         return false;
     }
 
-    static public function get_sql_type_by_type($type_id) {
-        $type = self::get_type_by_id($type_id);
+    static public function getSqlTypeByType($type_id) {
+        $type = self::getTypeById($type_id);
         $classname = 'Floxim\\Floxim\\Field\\'.ucfirst($type);
 
         $field = new $classname();
-        return $field->get_sql_type();
+        return $field->getSqlType();
     }
     
-    public function fake_value() {
-        $c_type = preg_replace("~\(.+?\)~", '', $this->get_sql_type());
+    public function fakeValue() {
+        $c_type = preg_replace("~\(.+?\)~", '', $this->getSqlType());
         $val = '';
         switch ($c_type) {
             case 'VARCHAR':
@@ -214,7 +214,7 @@ class Entity extends System\Entity {
         return $val;
     }
     
-    protected function _drop_meta_cache() {
+    protected function dropMetaCache() {
         fx::files()->rm( fx::path('files', 'cache/meta_cache.php') );
     }
 

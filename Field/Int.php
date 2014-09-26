@@ -4,8 +4,8 @@ namespace Floxim\Floxim\Field;
 
 class Int extends Baze {
 
-    public function validate_value($value) {
-        if (!parent::validate_value($value)) {
+    public function validateValue($value) {
+        if (!parent::validateValue($value)) {
             return false;
         }
         if ($value && ($value != strval(intval($value)))) {
@@ -15,7 +15,7 @@ class Int extends Baze {
         return true;
     }
 
-    public function get_sql_type (){
+    public function getSqlType (){
         return "INT";
     }
 }

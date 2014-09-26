@@ -6,8 +6,8 @@ use Floxim\Floxim\System;
 
 class Entity extends System\Entity {
 
-    protected  function _before_save() {
-        parent::_before_save();
+    protected  function beforeSave() {
+        parent::beforeSave();
         $this['value']=serialize($this['value']);
     }
 }

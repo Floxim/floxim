@@ -37,17 +37,17 @@ class Frontoffice extends System\Controller {
         return $result;
     }
     
-    public function ajax_form($form = null) {
+    public function ajaxForm($form = null) {
         if (!$form) {
             $form = new Helper\Form\Form();
         }
         $form['action'] = '/~ajax/';
         $form['method'] = 'POST';
         $form['ajax'] = true;
-        $form->add_field(array(
+        $form->addField(array(
             'type' => 'hidden',
             'name' => '_ajax_infoblock_id',
-            'value' => $this->get_param('infoblock_id')
+            'value' => $this->getParam('infoblock_id')
         ));
         $this->_meta['ajax_access'] = true;
         return $form;

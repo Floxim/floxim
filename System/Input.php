@@ -6,11 +6,11 @@ class Input {
 
 
   public function __construct () {
-    $this->prepare_extract();
+    $this->prepareExtract();
   }
 
 
-  public function prepare_extract () {
+  public function prepareExtract () {
     $request_uri = isset($_GET['REQUEST_URI']) ? $_GET['REQUEST_URI'] : (
                             isset($_POST['REQUEST_URI']) ? $_POST['REQUEST_URI'] : (
                             isset($_ENV['REQUEST_URI']) ? $_ENV['REQUEST_URI'] :
@@ -48,42 +48,42 @@ class Input {
     // merge superglobals arrays
     foreach ($superglobals as $key => $super_array) {
       // set internal data from superglobal arrays
-      $this->$key = self::prepare_superglobal($super_array);
+      $this->$key = self::prepareSuperglobal($super_array);
     }
 
     return false;
   }
 
-  public static function recursive_add_slashes ($input) {
+  public static function recursiveAddSlashes ($input) {
     if ( !is_array($input) ) {
       return addslashes($input);
     }
     $output = array();
 
     foreach ($input as $k => $v) {
-       $output[$k] = self::recursive_add_slashes($v);
+       $output[$k] = self::recursiveAddSlashes($v);
     }
 
     return $output;
   }
 
 
-  public static function prepare_superglobal ( $array ) {
+  public static function prepareSuperglobal ( $array ) {
     if ( !get_magic_quotes_gpc() ) {
         return $array;
     }
-    return self::recursive_stripslashes($array);
+    return self::recursiveStripslashes($array);
   }
 
-  public static function recursive_stripslashes ($input) {
+  public static function recursiveStripslashes ($input) {
     $output = array();
     foreach ($input as $k => $v) {
-        $output[$k] = is_array($v) ? self::recursive_stripslashes($v) : stripslashes($v);
+        $output[$k] = is_array($v) ? self::recursiveStripslashes($v) : stripslashes($v);
     }
     return $output;
   }
 
-  public function fetch_get ($item = "") {
+  public function fetchGet ($item = "") {
 
     if ( empty($this->_GET) ) return array();
 
@@ -96,7 +96,7 @@ class Input {
 
   }
 
-  public function fetch_post ($item = "") {
+  public function fetchPost ($item = "") {
     if ( empty($this->_POST) ) return array();
 
     if ( $item ) {
@@ -108,7 +108,7 @@ class Input {
 
   }
 
-  public function fetch_cookie ($item = "") {
+  public function fetchCookie ($item = "") {
 
     if ( empty($this->_COOKIE) ) return array();
 
@@ -121,11 +121,11 @@ class Input {
 
   }
   
-  public function set_cookie($name, $value, $expire = 0, $path = '/') {
+  public function setCookie($name, $value, $expire = 0, $path = '/') {
       setcookie($name, $value, $expire, $path);
   }
 
-  public function fetch_session ($item = "") {
+  public function fetchSession ($item = "") {
 
     if ( empty($this->_SESSION) ) return array();
 
@@ -138,7 +138,7 @@ class Input {
 
   }
 
-  public function fetch_files ($item = "") {
+  public function fetchFiles ($item = "") {
     if ( empty($this->_FILES) ) return array();
 
     if ( $item ) {
@@ -150,7 +150,7 @@ class Input {
 
   }
 
-  public function fetch_get_post ($item = "") {
+  public function fetchGetPost ($item = "") {
 
     if ( empty($this->_GET) && empty($this->_POST) ) return array();
 
@@ -163,20 +163,20 @@ class Input {
 
   }
 
-  public function get_service_session ( $item ) {
+  public function getServiceSession ( $item ) {
       $key = fx::config()->SESSION_KEY;
       $data = $_SESSION[$key];
       return $data[$item];
   }
 
-  public function set_service_session ( $item, $value ) {
+  public function setServiceSession ( $item, $value ) {
       $key = fx::config()->SESSION_KEY;
 	  $data = isset($_SESSION[$key]) ? $_SESSION[$key] : array();
 	  $data[$item] = $value;
       $_SESSION[$key] = $data;
   }
 
-  public function unset_service_session ( $item ) {
+  public function unsetServiceSession ( $item ) {
       $key = fx::config()->SESSION_KEY;
       $data = $_SESSION[$key];
       unset($data[$item]);
@@ -231,9 +231,9 @@ class Input {
   }
 
 
-  public function make_input () {
-      $files = $this->fetch_files();
-      $post = $this->fetch_get_post();
+  public function makeInput () {
+      $files = $this->fetchFiles();
+      $post = $this->fetchGetPost();
 
       // arrays should unite, but nothing to lose, not suitable array_merge
       // ex, POST['foto']['link'] = 'x', FILES['foto']['name'] = 'y' => input['foto']['link']='x',input['foto']['name']='y'

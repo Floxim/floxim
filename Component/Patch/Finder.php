@@ -6,7 +6,7 @@ use Floxim\Floxim\System;
 use Floxim\Floxim\System\Fx as fx;
 
 class Finder extends System\Data {
-    public function check_updates() {
+    public function checkUpdates() {
         $stored = $this->all();
         $url=fx::config('fx.update_url').'?action=find&from='.fx::version();
         @ $res = file_get_contents($url);
@@ -16,7 +16,7 @@ class Finder extends System\Data {
         $res = @json_decode($res);
         if ($res) {
             foreach($res as $patch) {
-                if ($stored->find_one('to', $patch->to)) {
+                if ($stored->findOne('to', $patch->to)) {
                     continue;
                 }
                 $new_patch = $this->create(array(
@@ -36,7 +36,7 @@ class Finder extends System\Data {
         return true;
     }
 
-    public function get_ready_for_install() {
+    public function getReadyForInstall() {
         return $this->where('status','ready')->one();
     }
 }

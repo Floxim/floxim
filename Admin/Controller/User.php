@@ -17,11 +17,11 @@ class User extends Admin {
         $result['values'] = array();
         foreach ($users as $v) {
             $r = array(
-                'id' => $v->get_id(),
+                'id' => $v->getId(),
                 'entity' => '',
                 'name' => array(
                     'name' => $v->get('name'),
-                    'url' => '#admin.user.edit('.$v->get_id().')'
+                    'url' => '#admin.user.edit('.$v->getId().')'
                 ),
                 'email' => $v->get('email')
             );
@@ -29,7 +29,7 @@ class User extends Admin {
         }
         $result['entity'] = 'user';
         $res = array('fields' => array( $result ));
-        $this->response->add_buttons(
+        $this->response->addButtons(
             array(
                 array(
                     'key' => 'add', 
@@ -39,8 +39,8 @@ class User extends Admin {
                 "delete"
             )
         );
-        $this->response->submenu->set_menu('user');
-        $this->response->breadcrumb->add_item(
+        $this->response->submenu->setMenu('user');
+        $this->response->breadcrumb->addItem(
             fx::alang('Users', 'system'),
             '#admin.user.all'
         );
@@ -52,21 +52,21 @@ class User extends Admin {
      * @param type $input
      * @return type
      */
-    public function add_save($input) {
-        return $this->_save($input);
+    public function addSave($input) {
+        return $this->save($input);
     }
 
-    public function edit_save($input) {
+    public function editSave($input) {
         $info = fx::data('user', $input['id']);
-        return $this->_save($input, $info);
+        return $this->save($input, $info);
     }
 
-    protected function _save($input, $info = null) {
+    protected function save($input, $info = null) {
         $result = array('status' => 'ok');
         
         $email = trim($input['f_email']);
         $name = trim($input['f_name']);
-        if (!$email || !fx::util()->validate_email($email)) {
+        if (!$email || !fx::util()->validateEmail($email)) {
             $result['status'] = 'error';
             $result['text'][] = fx::alang('Fill in correct email','system');
             $result['fields'][] = 'email';
@@ -128,41 +128,41 @@ class User extends Admin {
 
     public function edit($input) {
         $info = fx::data('user', $input['params'][0]);
-        $fields = $this->_form($info);
+        $fields = $this->form($info);
         $fields[] = $this->ui->hidden('action', 'edit');
         $fields[] = $this->ui->hidden('id', $info['id']);
 
         $result['fields'] = $fields;
-        $this->response->add_form_button('save');
-        $this->response->submenu->set_menu('user');
-        $this->response->breadcrumb->add_item(
+        $this->response->addFormButton('save');
+        $this->response->submenu->setMenu('user');
+        $this->response->breadcrumb->addItem(
             fx::alang('Users', 'system'),
             '#admin.user.all'
         );
-        $this->response->breadcrumb->add_item(
+        $this->response->breadcrumb->addItem(
             fx::alang('Edit user', 'system'),
             '#admin.user.edit('.$input['params'][0].')'
         );
         return $result;
     }
     public function add() {
-        $fields = $this->_form(null);
+        $fields = $this->form(null);
         $fields[] = $this->ui->hidden('action', 'add');
         $result['fields'] = $fields;
-        $this->response->add_form_button('save');
-        $this->response->submenu->set_menu('user');
-        $this->response->breadcrumb->add_item(
+        $this->response->addFormButton('save');
+        $this->response->submenu->setMenu('user');
+        $this->response->breadcrumb->addItem(
             fx::alang('Users', 'system'),
             '#admin.user.all'
         );
-        $this->response->breadcrumb->add_item(
+        $this->response->breadcrumb->addItem(
             fx::alang('Add user', 'system'),
             '#admin.user.add()'
         );
         return $result;
     }
     
-    protected function _allow_edit_admin($user) {
+    protected function allowEditAdmin($user) {
         if (!$user['id'] || !$user['is_admin']) {
             return true;
         }
@@ -173,13 +173,13 @@ class User extends Admin {
         return $another_admin ? true : false;
     }
 
-    protected function _form($info) {
+    protected function form($info) {
         $fields[] = $this->ui->input('f_email', fx::alang('Email','system'), $info['email']);
         $fields[] = $this->ui->input('f_name', fx::alang('User name','system'), $info['name']);
         $fields[] = $this->ui->password('password', fx::alang('Password','system'));
         $fields[] = $this->ui->password('password2', fx::alang('Confirm password','system'));
         
-        if ($this->_allow_edit_admin($info)) {
+        if ($this->allowEditAdmin($info)) {
             $fields[] = array(
                 'type' => 'checkbox', 
                 'name' => 'f_is_admin', 
@@ -194,7 +194,7 @@ class User extends Admin {
         return $fields;
     }
     
-    public function delete_save($input) {
+    public function deleteSave($input) {
         fx::data('user', $input['id'])->delete();
         return array('status' => 'ok');
     }

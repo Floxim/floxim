@@ -4,7 +4,7 @@ namespace Floxim\Floxim\Template;
 
 class AttrParser extends HtmlTokenizer {
     
-    public function parse_atts(HtmlToken $token) {
+    public function parseAtts(HtmlToken $token) {
         $token->attributes = array();
         $s = $token->source;
         if (!$s || !preg_match("~\s~", $s)) {
@@ -17,7 +17,7 @@ class AttrParser extends HtmlTokenizer {
     }
     
     protected $_count_injections = 0;
-    protected function _add_att() {
+    protected function addAtt() {
         if (!$this->c_att['name'] && !preg_match("~^<~", $this->stack)) {
             $this->c_att['name'] = $this->stack;
         }
@@ -41,39 +41,39 @@ class AttrParser extends HtmlTokenizer {
         $this->c_att = array('name' => null, 'value' => null);
     }
     
-    public function att_name_start($ch) {
-        $this->_add_att();
+    public function attNameStart($ch) {
+        $this->addAtt();
         $this->stack = '';
-        parent::att_name_start($ch);
+        parent::attNameStart($ch);
         $this->c_att = array('name' => '', 'value' => null);
     }
     
-    public function att_value_start($ch) {
+    public function attValueStart($ch) {
         $this->c_att['name'] = $this->stack;
-        parent::att_value_start($ch);
+        parent::attValueStart($ch);
         $this->stack = '';
     }
     
-    public function att_value_end($ch) {
+    public function attValueEnd($ch) {
         $this->c_quote = $this->att_quote;
         $c_val = $this->stack;
-        $res = parent::att_value_end($ch);
+        $res = parent::attValueEnd($ch);
         if ($this->debug) {
             fx::debug($res === false, $c_val);
         }
         if ($res !== false) {
             $this->c_att['value'] = $c_val;
-            $this->_add_att();
+            $this->addAtt();
             $this->stack = '';
         }
         $this->c_quote = null;
         return $res;
     }
     
-    public function tag_to_text($ch) {
+    public function tagToText($ch) {
         if (!empty($this->stack)) {
             $this->c_att['name'] = $this->stack;
-            $this->_add_att();
+            $this->addAtt();
         }
     }
 }

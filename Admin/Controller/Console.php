@@ -6,8 +6,8 @@ use Floxim\Floxim\System\Fx as fx;
 
 class Console extends Admin {
     public function show($input) {
-        $this->response->breadcrumb->add_item(fx::alang('Console'), '#admin.console.show');
-        $this->response->submenu->set_menu('console');
+        $this->response->breadcrumb->addItem(fx::alang('Console'), '#admin.console.show');
+        $this->response->submenu->setMenu('console');
         $fields = array(
             'console_text' => array(
                 'name' => 'console_text',
@@ -18,15 +18,15 @@ class Console extends Admin {
         );
         $fields []= $this->ui->hidden('entity', 'console');
         $fields []= $this->ui->hidden('action', 'execute');
-        $this->response->add_form_button(
+        $this->response->addFormButton(
             array(
                 'label' => fx::alang('Execute').' (Ctrl+Enter)',
                 'is_submit' => false,
                 'class' => 'execute'
             )
         );
-        $this->response->add_fields($fields);
-        fx::page()->add_js_file(fx::path('floxim').'/admin/js/console.js');
+        $this->response->addFields($fields);
+        fx::page()->addJsFile(fx::path('floxim').'/admin/js/console.js');
         return array('show_result' => 1);
     }
     

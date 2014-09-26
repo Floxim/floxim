@@ -10,19 +10,19 @@ class Layout extends System\Controller {
     
     public function show() {
         
-        $page_id = $this->get_param('page_id', fx::env('page_id'));
-        $layout_id = $this->get_param('layout_id', fx::env('layout'));
+        $page_id = $this->getParam('page_id', fx::env('page_id'));
+        $layout_id = $this->getParam('layout_id', fx::env('layout'));
         
         // add admin files bundle BEFORE site scripts/styles
-        if (! $this->get_param('ajax_mode') && fx::is_admin()) {
-            Admin\Controller\Admin::add_admin_files();
+        if (! $this->getParam('ajax_mode') && fx::isAdmin()) {
+            Admin\Controller\Admin::addAdminFiles();
         }
-        $page_infoblocks = fx::router('front')->get_page_infoblocks(
+        $page_infoblocks = fx::router('front')->getPageInfoblocks(
             $page_id, 
             $layout_id
         );
-        fx::page()->set_infoblocks($page_infoblocks);
-        $path = fx::data('page', $page_id)->get_path();
+        fx::page()->setInfoblocks($page_infoblocks);
+        $path = fx::data('page', $page_id)->getPath();
         $current_page = $path->last();
         $res = array(
             'page_id' => $page_id,
@@ -33,17 +33,17 @@ class Layout extends System\Controller {
     }
     
     public function postprocess($html) {
-        if ($this->get_param('ajax_mode')) {
+        if ($this->getParam('ajax_mode')) {
             $html = preg_replace("~^.+?<body[^>]*?>~is", '', $html);
             $html = preg_replace("~</body>.+?$~is", '', $html);
         } else {
             $page = fx::env('page');
             $meta_title = empty($page['title']) ? $page['name'] : $page['title'];
-            $this->_show_admin_panel();
-            $html = fx::page()->set_metatags('title',$meta_title)
-                                ->set_metatags('description',$page['description'])
-                                ->set_metatags('keywords',$page['keywords'])
-                                ->post_process($html);
+            $this->showAdminPanel();
+            $html = fx::page()->setMetatags('title',$meta_title)
+                                ->setMetatags('description',$page['description'])
+                                ->setMetatags('keywords',$page['keywords'])
+                                ->postProcess($html);
         }
         return $html;
     }
@@ -51,11 +51,11 @@ class Layout extends System\Controller {
     protected $_layout = null;
 
 
-    protected function _get_layout() {
+    protected function getLayout() {
         if ($this->_layout) {
             return $this->_layout;
         }
-        $page = fx::data('page', $this->get_param('page_id'));
+        $page = fx::data('page', $this->getParam('page_id'));
         if ($page['layout_id']) {
             $layout_id = $page['layout_id'];
         } else {
@@ -66,21 +66,21 @@ class Layout extends System\Controller {
         return $this->_layout;
     }
     
-    public function find_template() {
-        $layout = $this->_get_layout();
+    public function findTemplate() {
+        $layout = $this->getLayout();
         $tpl_name = 'layout_'.$layout['keyword'];
         return fx::template($tpl_name);
     }
     
-    protected function _show_admin_panel() {
-        if (!fx::is_admin()) {
+    protected function showAdminPanel() {
+        if (!fx::isAdmin()) {
             return;
         }
         // initialize the admin panel
         
         $p = fx::page();
         $js_config = new Admin\Configjs();
-        $p->add_js_text("\$fx.init(".$js_config->get_config().");");
-        $p->set_after_body(Admin\Controller\Adminpanel::panel_html());
+        $p->addJsText("\$fx.init(".$js_config->getConfig().");");
+        $p->setAfterBody(Admin\Controller\Adminpanel::panelHtml());
     }
 }

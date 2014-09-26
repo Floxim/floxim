@@ -18,8 +18,8 @@ abstract class Entity implements \ArrayAccess {
     
     protected $_form = null;
     
-    protected function get_finder() {
-        return fx::data($this->get_type());
+    protected function getFinder() {
+        return fx::data($this->getType());
     }
 
     protected static $_field_map = array();
@@ -30,7 +30,7 @@ abstract class Entity implements \ArrayAccess {
     
     public function __construct($input = array()) {
         
-        $this->_load_field_map();
+        $this->loadFieldMap();
         
         if (isset($input['data']) && $input['data']) {
             $data = $input['data'];
@@ -44,34 +44,34 @@ abstract class Entity implements \ArrayAccess {
         $this->_loaded = true;
     }
     
-    protected function _load_field_map() {
+    protected function loadFieldMap() {
         // cache relations & ml on first use
         // to increase offsetExists() speed (for isset($n[$val]) in templates)
-        $c_type = $this->get_type();
+        $c_type = $this->getType();
         if (!isset(self::$_field_map[$c_type])) {
-            $finder = $this->get_finder();
+            $finder = $this->getFinder();
             self::$_field_map[$c_type] = array();
             foreach ($finder->relations() as $rel_name => $rel) {
                 self::$_field_map[$c_type][$rel_name] = array(self::VIRTUAL_RELATION, $rel);
             }
-            foreach ($finder->get_multi_lang_fields() as $f) {
+            foreach ($finder->getMultiLangFields() as $f) {
                 self::$_field_map[$c_type][$f] = array(self::VIRTUAL_MULTILANG);
             }
         }
     }
     
     public function __wakeup() {
-        $this->_load_field_map();
+        $this->loadFieldMap();
     }
 
     public function save() {
-        $this->_before_save();
-        $pk = $this->_get_pk();
+        $this->beforeSave();
+        $pk = $this->getPk();
         // update
         if ($this->data[$pk]) {
-            $this->_before_update();
+            $this->beforeUpdate();
             if ($this->validate() === false) {
-                $this->throw_invalid();
+                $this->throwInvalid();
                 return false;
             }
             // updated only fields that have changed
@@ -79,22 +79,22 @@ abstract class Entity implements \ArrayAccess {
             foreach ($this->modified as $v) {
                 $data[$v] = $this->data[$v];
             }
-            $this->get_finder()->update($data, array($pk => $this->data[$pk]));
-            $this->_save_multi_links();
-            $this->_after_update();
+            $this->getFinder()->update($data, array($pk => $this->data[$pk]));
+            $this->saveMultiLinks();
+            $this->afterUpdate();
         } // insert
         else {
-            $this->_before_insert();
+            $this->beforeInsert();
             if ($this->validate() === false) {
-                $this->throw_invalid();
+                $this->throwInvalid();
                 return false;
             }
-            $id = $this->get_finder()->insert($this->data);
+            $id = $this->getFinder()->insert($this->data);
             $this->data['id'] = $id;
-            $this->_save_multi_links();
-            $this->_after_insert();
+            $this->saveMultiLinks();
+            $this->afterInsert();
         }
-        $this->_after_save();
+        $this->afterSave();
 
         return $this;
     }
@@ -103,19 +103,19 @@ abstract class Entity implements \ArrayAccess {
      * Throw validation exception or append errors to form if it exists
      * @throws fx_entity_validation_exception
      */
-    protected function throw_invalid() {
+    protected function throwInvalid() {
         $exception = new Exception\EntityValidation(
-            fx::lang("Unable to save entity \"".$this->get_type()."\"")
+            fx::lang("Unable to save entity \"".$this->getType()."\"")
         );
-        $exception->add_errors($this->validate_errors);
+        $exception->addErrors($this->validate_errors);
         if ($this->_form) {
-            $exception->to_form($this->_form);
+            $exception->toForm($this->_form);
         } else {
             throw $exception;
         }
     }
     
-    protected function _invalid($message, $field = null) {
+    protected function invalid($message, $field = null) {
         $error = array(
             'text' => $message
         );
@@ -129,15 +129,15 @@ abstract class Entity implements \ArrayAccess {
     /*
      * Saves the fields links is determined in fx_data_content
      */
-    protected function _save_multi_links() {
+    protected function saveMultiLinks() {
         
     }
     
-    protected function _before_save () {
+    protected function beforeSave () {
         
     }
     
-    protected function _after_save() {
+    protected function afterSave() {
         
     }
 
@@ -164,7 +164,7 @@ abstract class Entity implements \ArrayAccess {
         return $this;
     }
     
-    public function dig_set($path, $value) {
+    public function digSet($path, $value) {
         $parts = explode(".", $path, 2);
         if (count($parts) == 1)  {
             $this->offsetSet($path, $value);
@@ -174,21 +174,21 @@ abstract class Entity implements \ArrayAccess {
         if (!is_array($c_value)) {
             $c_value = array();
         }
-        fx::dig_set($c_value, $parts[1], $value);
+        fx::digSet($c_value, $parts[1], $value);
         $this->offsetSet($parts[0], $c_value);
         return $this;
     }
 
-    public function get_id() {
-        return $this->data[$this->_get_pk()];
+    public function getId() {
+        return $this->data[$this->getPk()];
     }
 
     public function delete() {
-        $pk = $this->_get_pk();
-        $this->_before_delete();
-        $this->get_finder()->delete($pk, $this->data[$pk]);
+        $pk = $this->getPk();
+        $this->beforeDelete();
+        $this->getFinder()->delete($pk, $this->data[$pk]);
         $this->modified_data = $this->data;
-        $this->_after_delete();
+        $this->afterDelete();
     }
 
     public function unchecked() {
@@ -203,49 +203,49 @@ abstract class Entity implements \ArrayAccess {
         return true;
     }
     
-    public function load_from_form($form, $fields = true) {
-        $vals = $this->_get_from_form($form, $fields);
+    public function loadFromForm($form, $fields = true) {
+        $vals = $this->getFromForm($form, $fields);
         $this->set($vals);
-        $this->bind_form($form);
+        $this->bindForm($form);
         return $this;
     }
     
-    public function bind_form(\Floxim\Floxim\Helper\Form\Form $form) {
+    public function bindForm(\Floxim\Floxim\Helper\Form\Form $form) {
         $this->_form = $form;
     }
     
     
     
-    protected function _get_from_form($form, $fields) {
+    protected function getFromForm($form, $fields) {
         if (is_array($fields)) {
             $vals = array();
             foreach ($fields as $f) {
                 $vals[]= $form->$f;
             }
         } else {
-            $vals = $form->get_values();
+            $vals = $form->getValues();
         }
         return $vals;
     }
     
-    public function validate_with_form($form, $fields = true) {
+    public function validateWithForm($form, $fields = true) {
         if ($fields !== false) {
-            $vals = $this->_get_from_form($form, $fields);
+            $vals = $this->getFromForm($form, $fields);
             $this->set($vals);
         }
-        $this->bind_form($form);
+        $this->bindForm($form);
         if (!$this->validate()) {
-            $this->throw_invalid();
+            $this->throwInvalid();
             return false;
         }
         return true;
     }
     
-    public function get_validate_errors () {
+    public function getValidateErrors () {
         return $this->validate_errors;
     }
     
-    protected function _get_pk() {
+    protected function getPk() {
         return 'id';
     }
 
@@ -257,31 +257,31 @@ abstract class Entity implements \ArrayAccess {
         return $res;
     }
     
-    protected function _before_insert () {
+    protected function beforeInsert () {
         return false;
     }
     
-    protected function _after_insert () {
+    protected function afterInsert () {
         return false;
     }
     
-    protected function _before_update () {
+    protected function beforeUpdate () {
         return false;
     }
     
-    protected function _after_update () {
+    protected function afterUpdate () {
         return false;
     }
     
-    protected function _before_delete () {
+    protected function beforeDelete () {
         return false;
     }
     
-    protected function _after_delete () {
+    protected function afterDelete () {
         return false;
     }
 
-    protected static function _is_template_var($var) {
+    protected static function isTemplateVar($var) {
         return mb_substr($var, 0, 1) === '%';
     }
     
@@ -289,7 +289,7 @@ abstract class Entity implements \ArrayAccess {
     public function offsetGet($offset) {
         
         // handle template-content vars like $item['%description']
-        if (self::_is_template_var($offset)) {
+        if (self::isTemplateVar($offset)) {
             $offset = mb_substr($offset, 1);
             $template = fx::env('current_template');
             if ($template && $template instanceof Template\Template) {
@@ -313,7 +313,7 @@ abstract class Entity implements \ArrayAccess {
         
         
         
-        $c_type = $this->get_type();
+        $c_type = $this->getType();
         $c_field = self::$_field_map[$c_type][$offset];
         
         if (!$c_field) {
@@ -333,8 +333,8 @@ abstract class Entity implements \ArrayAccess {
          * If connected not loaded, ask finder download
          */
         
-        $finder = $this->get_finder();
-        $finder->add_related($offset, new Collection(array($this)));
+        $finder = $this->getFinder();
+        $finder->addRelated($offset, new Collection(array($this)));
         if (!isset($this->data[$offset])) {
             return null;
         }
@@ -348,7 +348,7 @@ abstract class Entity implements \ArrayAccess {
         $offset_exists = array_key_exists($offset, $this->data);
         
         if (!$offset_exists) {
-            $c_type = $this->get_type();
+            $c_type = $this->getType();
             $c_field = self::$_field_map[$c_type][$offset];
             if ($c_field) {
                 switch ($c_field[0]) {
@@ -390,7 +390,7 @@ abstract class Entity implements \ArrayAccess {
     }
 
     public function offsetExists($offset) {
-        if (self::_is_template_var($offset)) {
+        if (self::isTemplateVar($offset)) {
             return true;
         }
         if  (array_key_exists($offset, $this->data)) {
@@ -399,7 +399,7 @@ abstract class Entity implements \ArrayAccess {
         if (method_exists($this, '_get_'.$offset)) {
             return true;
         }
-        return isset(self::$_field_map[$this->get_type()][$offset]);
+        return isset(self::$_field_map[$this->getType()][$offset]);
     }
 
     public function offsetUnset($offset) {
@@ -407,7 +407,7 @@ abstract class Entity implements \ArrayAccess {
     }
     
     protected $_type = null;
-    public function get_type() {
+    public function getType() {
         if (is_null($this->_type)) {
             $class = array_reverse(explode("\\", get_class($this)));
             $type = $class[1];
@@ -421,7 +421,7 @@ abstract class Entity implements \ArrayAccess {
      * @param string $html the html code of record
      * @return string string with added meta-data
      */
-    public function add_template_record_meta($html, $collection, $index, $is_subroot) {
+    public function addTemplateRecordMeta($html, $collection, $index, $is_subroot) {
         return $html;
     }
     
@@ -431,8 +431,8 @@ abstract class Entity implements \ArrayAccess {
      * @param string $field_keyword
      * @return array Meta info
      */
-    public function get_field_meta($field_keyword) {
-        if (!self::_is_template_var($field_keyword)) {
+    public function getFieldMeta($field_keyword) {
+        if (!self::isTemplateVar($field_keyword)) {
             return array();
         }
         $field_keyword = mb_substr($field_keyword, 1);
@@ -445,7 +445,7 @@ abstract class Entity implements \ArrayAccess {
         );
     }
     
-    public function is_modified($field = null) {
+    public function isModified($field = null) {
         if ($field === null) {
             return count($this->modified) > 0;
         }
@@ -455,14 +455,14 @@ abstract class Entity implements \ArrayAccess {
         return is_array($this->modified) && in_array($field, $this->modified);
     }
     
-    public function get_old($field) {
-        if (!$this->is_modified($field)) {
+    public function getOld($field) {
+        if (!$this->isModified($field)) {
             return null;
         }
         return $this->modified_data[$field];
     }
 
-    public function get_modified() {
+    public function getModified() {
         return $this->modified;
     }
 }

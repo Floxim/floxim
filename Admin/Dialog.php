@@ -6,11 +6,11 @@ class Dialog {
 
     protected $title;
 
-    public function set_title($title) {
+    public function setTitle($title) {
         $this->title = $title;
     }
 
-    public function to_array() {
+    public function toArray() {
         $result = array();
         if ($this->title) {
             $result['title'] = $this->title;

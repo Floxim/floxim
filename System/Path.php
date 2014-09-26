@@ -14,10 +14,10 @@ class Path {
     public function register($key, $path) {
         if (is_array($path)) {
             foreach ($path as &$p) {
-                $p = $this->to_http($p);
+                $p = $this->toHttp($p);
             }
         } else {
-            $path = $this->to_http($path);
+            $path = $this->toHttp($path);
         }
         if (isset($this->registry[$key]) && is_array($this->registry[$key])) {
             if (is_array($path)) {
@@ -47,7 +47,7 @@ class Path {
             return null;
         }
         
-        $res = $this->to_abs(join("/", $parts));
+        $res = $this->toAbs(join("/", $parts));
         return $res;
     }
     
@@ -61,10 +61,10 @@ class Path {
         }
         if (is_array($path)) {
             foreach ($path as &$p) {
-                $p = $this->to_abs($p.$tale);
+                $p = $this->toAbs($p.$tale);
             }
         } else {
-            $path = $this->to_abs($path.$tale);
+            $path = $this->toAbs($path.$tale);
         }
         return $path;
     }
@@ -77,11 +77,11 @@ class Path {
         if (!is_null($tale)) {
             $path .= '/'.$tale;
         }
-        $path = $this->to_http($path);
+        $path = $this->toHttp($path);
         return $path;
     }
     
-    public function to_http($path) {
+    public function toHttp($path) {
         if (preg_match("~^https?://~", $path)){
             return $path;
         }
@@ -96,7 +96,7 @@ class Path {
         return $path;
     }
     
-    public function to_abs($path) {
+    public function toAbs($path) {
         $path = str_replace("/", DIRECTORY_SEPARATOR, trim($path));
         $path = preg_replace("~^".preg_quote($this->root)."~", '', $path);
         $path = trim($path, DIRECTORY_SEPARATOR);
@@ -106,22 +106,22 @@ class Path {
     }
     
     public function exists($path) {
-        return file_exists($this->to_abs($path));
+        return file_exists($this->toAbs($path));
     }
     
-    public function is_file($path) {
-        $path = $this->to_abs($path);
+    public function isFile($path) {
+        $path = $this->toAbs($path);
         return file_exists($path) && is_file($path);
     }
     
-    public function is_inside($child, $parent) {
-        $child = $this->to_abs($child);
-        $parent = $this->to_abs($parent);
+    public function isInside($child, $parent) {
+        $child = $this->toAbs($child);
+        $parent = $this->toAbs($parent);
         return preg_match("~^".preg_quote($parent)."~", $child);
     }
     
-    public function file_name($path){
-        $path = $this->to_http($path);
+    public function fileName($path){
+        $path = $this->toHttp($path);
         preg_match("~[^/]+$~", $path, $file_name);
         if (!$file_name) {
             return '';
@@ -130,8 +130,8 @@ class Path {
         return $file_name;
     }
     
-    public function file_extension($path) {
-        $file_name = $this->file_name($path);
+    public function fileExtension($path) {
+        $file_name = $this->fileName($path);
         if (!$file_name) {
             return '';
         }

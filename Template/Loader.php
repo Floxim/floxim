@@ -18,18 +18,18 @@ class Loader {
         
     }
     
-    public function add_source_file($source_file) {
+    public function addSourceFile($source_file) {
         if (!file_exists($source_file)) {
             throw new \Exception('Source file '.$source_file.' does not exist');
         }
         if (is_dir($source_file)) {
-            $this->add_source_dir($source_file);
+            $this->addSourceDir($source_file);
             return;
         }
         $this->_source_files[]= realpath($source_file);
     }
     
-    public function add_source_dir($source_dir) {
+    public function addSourceDir($source_dir) {
         if (!file_exists($source_dir) || !is_dir($source_dir)) {
             throw new \Exception('Source dir '.$source_dir.' does not exist');
         }
@@ -43,17 +43,17 @@ class Loader {
             if (preg_match("~/_[^/]+$~", $tpl_file)) {
                 continue;
             }
-            $this->add_source_file($tpl_file);
+            $this->addSourceFile($tpl_file);
         }
     }
     
-    public function add_source($file_or_dir) {
+    public function addSource($file_or_dir) {
         if (!file_exists($file_or_dir)) {
             throw new \Exception('Source '.$file_or_dir.' does not exist');
         }
         is_dir($file_or_dir) 
-            ? $this->add_source_dir($file_or_dir) 
-            : $this->add_source_file($file_or_dir);
+            ? $this->addSourceDir($file_or_dir) 
+            : $this->addSourceFile($file_or_dir);
     }
     
     protected $_controller_type = null;
@@ -67,7 +67,7 @@ class Loader {
         return $this->template_name;
     }
 
-    public function add_default_source_dirs() {
+    public function addDefaultSourceDirs() {
         
         $template_name = $this->getTemplateName();
         
@@ -83,11 +83,11 @@ class Loader {
                 array_unshift($ns, 'module');
             }
 
-            $dirs = array( fx::path()->to_abs('/'.join("/", $ns)) );
+            $dirs = array( fx::path()->toAbs('/'.join("/", $ns)) );
             
             foreach ($dirs as $dir) {
                 try {
-                    $this->add_source_dir($dir);
+                    $this->addSourceDir($dir);
                 } catch (\Exception $e) {
 
                 }
@@ -98,7 +98,7 @@ class Loader {
         if (isset(self::$source_paths[$template_name])) {
             foreach (self::$source_paths[$template_name] as $sp) {
                 try {
-                    $this->add_source($sp);
+                    $this->addSource($sp);
                 } catch (\Exception $ex) {
 
                 }
@@ -110,15 +110,15 @@ class Loader {
     protected $_target_dir = null;
     protected $_target_file = null;
     
-    public function set_target_dir($dir) {
+    public function setTargetDir($dir) {
         $this->_target_dir = $dir;
     }
     
-    public function set_target_file($filename) {
+    public function setTargetFile($filename) {
         $this->_target_file = $filename;
     }
     
-    public function get_target_path() {
+    public function getTargetPath() {
         if (!$this->_target_dir) {
             $this->_target_dir = fx::config('templates.cache_dir');
         }
@@ -129,12 +129,12 @@ class Loader {
          * Calc prefix hash by sources files
          */
         if (!$this->_target_hash) {
-            $this->recalc_target_hash();
+            $this->recalcTargetHash();
         }
         return $this->_target_dir.'/'.preg_replace("~\.php$~", '.'.$this->_target_hash.'.php', $this->_target_file);
     }
 
-    public function recalc_target_hash() {
+    public function recalcTargetHash() {
         $this->_target_hash='';
         $files=(array)$this->_source_files;
         foreach($files as $sFile) {
@@ -143,8 +143,8 @@ class Loader {
         $this->_target_hash=md5($this->_target_hash);
     }
 
-    public function get_target_mask() {
-        $path=$this->get_target_path();
+    public function getTargetMask() {
+        $path=$this->getTargetPath();
         return str_replace($this->_target_hash, '*', $path);
     }
     
@@ -167,7 +167,7 @@ class Loader {
         $processor->setTemplateName($tpl_name);
         $classname = $processor->getCompiledClassName();
         if (!class_exists($classname)) {
-            $processor->add_default_source_dirs();
+            $processor->addDefaultSourceDirs();
             $processor->process();
         }
         $tpl = new $classname($action, $data);
@@ -181,7 +181,7 @@ class Loader {
     }
 
 
-    public function is_fresh($target_path) {
+    public function isFresh($target_path) {
         
         $cache = fx::config('templates.cache');
         
@@ -208,8 +208,8 @@ class Loader {
     }
     
     public function process() {
-        $target_path = $this->get_target_path();
-        if ($this->is_fresh($target_path)) {
+        $target_path = $this->getTargetPath();
+        if ($this->isFresh($target_path)) {
             require_once ($target_path);
             return;
         }
@@ -217,7 +217,7 @@ class Loader {
         if ($this->save($source)) {
             require_once ($target_path);
         } else {
-            $this->run_eval($source);
+            $this->runEval($source);
         }
     }
     
@@ -230,9 +230,9 @@ class Loader {
         }
         $count_virtual++;
         $this->setTemplateName('virtual_'.$count_virtual);
-        $src = $this->build_source(array('/dev/null/virtual.tpl' => $source));
+        $src = $this->buildSource(array('/dev/null/virtual.tpl' => $source));
         $php = $this->compile($src);
-        $this->run_eval($php);
+        $this->runEval($php);
         // todo: psr0 need verify
         //$classname = 'fx_template_virtual_'.$count_virtual;
         $classname = $this->getCompiledClassName();
@@ -242,7 +242,7 @@ class Loader {
         return $tpl;
     }
     
-    public function run_eval(&$source) {
+    public function runEval(&$source) {
         try {
             return eval(preg_replace("~^<\?(php)?~", '', $source));
         } catch (\Exception $e) {
@@ -253,7 +253,7 @@ class Loader {
 
     public function compile($source = null) {
         if (is_null($source)) {
-            $source = $this->build_source();
+            $source = $this->buildSource();
         }
         $parser = new Parser();
         $tree = $parser->parse($source);
@@ -267,16 +267,16 @@ class Loader {
     public function save($source) {
         try {
             // Remove old file
-            $this->remove_old_files();
-            fx::files()->writefile($this->get_target_path(), $source);
+            $this->removeOldFiles();
+            fx::files()->writefile($this->getTargetPath(), $source);
             return true;
         } catch (\Exception $e) {
             return false;
         }
     }
 
-    protected function remove_old_files() {
-        $mask=$this->get_target_mask();
+    protected function removeOldFiles() {
+        $mask=$this->getTargetMask();
         $files = glob($mask);
         if (is_array($files)) {
             foreach($files as $file) {
@@ -285,7 +285,7 @@ class Loader {
         }
     }
     
-    protected function _load_sources() {
+    protected function loadSources() {
         $sources = array();
         foreach ($this->_source_files as $sf) {
             $sources[$sf] = file_get_contents($sf);
@@ -297,9 +297,9 @@ class Loader {
      * Convert files-source code in one big
      * @return string
      */
-    public function build_source($sources = null) {
+    public function buildSource($sources = null) {
         if (is_null($sources)) {
-            $sources = $this->_load_sources();
+            $sources = $this->loadSources();
         }
         $res = '{templates name="'.$this->getTemplateName().'"';
         if (!empty($this->_controller_type)) {
@@ -312,23 +312,23 @@ class Loader {
         //foreach ($this->_source_files as $file) {
         foreach ($sources as $file => $source) {
             $res .= '{templates source="'.$file.'"}';
-            $res .= $this->_prepare_file_data($source, $file);
+            $res .= $this->prepareFileData($source, $file);
             $res .= '{/templates}';
         }
         $res .= '{/templates}';
         return $res;
     }
     
-    public function read_file($file) {
+    public function readFile($file) {
         $file_data = file_get_contents($file);
-        return $this->_prepare_file_data($file_data, $file);
+        return $this->prepareFileData($file_data, $file);
     }
     
-    protected function _prepare_file_data($file_data, $file) {
+    protected function prepareFileData($file_data, $file) {
         // convert fx::attributes to the canonical Smarty-syntax
         $T = new Html($file_data);
         try {
-            $file_data = $T->transform_to_floxim();
+            $file_data = $T->transformToFloxim();
         } catch (\Exception $e) {
             fx::debug('Floxim html parser error', $e->getMessage(), $file);
         }
@@ -337,13 +337,13 @@ class Loader {
         $file_data = preg_replace("~\{\*.*?\*\}~s", '', $file_data);
         $file_data = trim($file_data);
         if (!preg_match("~^{template~", $file_data)) {
-            $file_data = $this->wrap_file($file, $file_data);
+            $file_data = $this->wrapFile($file, $file_data);
         }
         return $file_data;
     }
 
 
-    public function wrap_file($file, $file_data) {
+    public function wrapFile($file, $file_data) {
         //$is_layout = $this->_controller_type == 'layout';
         $is_theme = preg_match("~^theme\.~", $this->getTemplateName());
         $tpl_of = 'false';

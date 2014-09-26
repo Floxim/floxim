@@ -16,12 +16,12 @@ class Fsm {
     const RULE_REGEXP = 2;
     const RULE_ARRAY = 3;
     
-    public function push_state($state) {
+    public function pushState($state) {
         $this->state_stack []= $this->state;
-        $this->set_state($state);
+        $this->setState($state);
     }
     
-    public function set_state($state) {
+    public function setState($state) {
         if ($state === $this->state) {
             return;
         }
@@ -29,18 +29,18 @@ class Fsm {
         $this->state = $state;
     }
     
-    public function pop_state() {
+    public function popState() {
         if (count($this->state_stack) == 0) {
             return null;
         }
-        $this->set_state(array_pop($this->state_stack));
+        $this->setState(array_pop($this->state_stack));
         return $this->state;
     }
     
     protected $any_rules = array();
 
 
-    public function add_rule($first_state, $char, $new_state, $callback = null) {
+    public function addRule($first_state, $char, $new_state, $callback = null) {
         if ($callback && !is_callable($callback)) {
             if (is_string($callback) && method_exists($this, $callback)) {
                 $callback = array($this, $callback);
@@ -49,7 +49,7 @@ class Fsm {
             }
         }
         if (!$callback) {
-            $callback = array($this, 'default_callback');
+            $callback = array($this, 'defaultCallback');
         }
         
         if (!is_array($first_state)){
@@ -91,7 +91,7 @@ class Fsm {
         $this->prev_state = null;
         $this->position = 0;
         $this->state = $this->init_state;
-        $this->parts = $this->split_string($string);
+        $this->parts = $this->splitString($string);
         if ($this->debug) {
             fx::debug($string, $this->parts);
         }
@@ -103,7 +103,7 @@ class Fsm {
         return $this->res;
     }
     
-    public function get_next($count = 1) {
+    public function getNext($count = 1) {
         $moved = 0;
         $res = array();
         for ($i = 0; $i < $count; $i++) {
@@ -121,7 +121,7 @@ class Fsm {
         return $res;
     }
     
-    public function get_prev($count = 1) {
+    public function getPrev($count = 1) {
         $moved = 0;
         $res = array();
         for ($i = 0; $i < $count; $i++) {
@@ -143,7 +143,7 @@ class Fsm {
     public function step($ch) {
         $callback_res = false;
         if (!isset($this->rules[$this->state])) {
-            $this->default_callback($ch);
+            $this->defaultCallback($ch);
             return false;
         }
         
@@ -161,18 +161,18 @@ class Fsm {
                 continue;
             }
             if ($new_state) {
-                $this->set_state($new_state);   
+                $this->setState($new_state);   
             }
             return;
         }
         // won't work no rule
-        $this->default_callback($ch);
+        $this->defaultCallback($ch);
         return $callback_res;
     }
     
-    public function split_string($string) {
+    public function splitString($string) {
         return preg_split(
-            $this->get_split_regexp(), 
+            $this->getSplitRegexp(), 
             $string, 
             -1, 
             PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY
@@ -180,11 +180,11 @@ class Fsm {
     }
     
     public $split_regexp = '~(.)~';
-    public function get_split_regexp() {
+    public function getSplitRegexp() {
         return $this->split_regexp;
     }
     
-    public function default_callback($ch) {
+    public function defaultCallback($ch) {
         
     }
 }

@@ -14,7 +14,7 @@ class Controller {
     protected $input = array();
     protected $action = null;
     
-    public function get_action() {
+    public function getAction() {
         return $this->action;
     }
     
@@ -24,8 +24,8 @@ class Controller {
      * @param string $action = 'null', the name of action
      */
     public function __construct($input = array(), $action = null) {
-    	$this->set_input($input);
-    	$this->set_action($action);
+    	$this->setInput($input);
+    	$this->setAction($action);
     }
     
     /**
@@ -33,15 +33,15 @@ class Controller {
      * @param string $name
      * @param mixed $default
      */
-    public function get_param($name, $default = null) {
+    public function getParam($name, $default = null) {
         return isset($this->input[$name]) ? $this->input[$name] : $default;
     }
     
-    public function set_param($name, $value) {
+    public function setParam($name, $value) {
         $this->input[$name] = $value;
     }
 
-    public function set_input($input) {
+    public function setInput($input) {
         if (!$input) {
             $input = array();
         }
@@ -49,11 +49,11 @@ class Controller {
         return $this;
     }
     
-    public function default_action() {
+    public function defaultAction() {
         return array();
     }
     
-    public function set_action($action) {
+    public function setAction($action) {
         if (is_null($action)) {
             return $this;
         }
@@ -62,7 +62,7 @@ class Controller {
     	return $this;
     }
 
-    public function after_save () {
+    public function afterSave () {
         
     }
 
@@ -72,23 +72,23 @@ class Controller {
      * $input = null, $action = null, $do_return = false
      */
     public function process() {
-        $this->_apply_forced_params();
+        $this->applyForcedParams();
         $this->trigger('before_action_run');
-        $action = $this->get_action_method();
+        $action = $this->getActionMethod();
         return $this->$action($this->input);
     }
     
     protected static $cfg_time = 0;
     
-    protected function _apply_forced_params() {
+    protected function applyForcedParams() {
         /*
         static $time = 0;
         $start = microtime(true);
         */
-        $cache_file = fx::path('files', 'cache/ctr_defaults_'.$this->get_signature().'.php');
+        $cache_file = fx::path('files', 'cache/ctr_defaults_'.$this->getSignature().'.php');
         if (!fx::path()->exists($cache_file)) {
             $forced = array();
-            $cfg = $this->get_config();
+            $cfg = $this->getConfig();
             if (isset($cfg['actions'][$this->action]['force'])) {
                 $forced = $cfg['actions'][$this->action]['force'];
             }
@@ -97,14 +97,14 @@ class Controller {
             $forced = include $cache_file;
         }
         foreach ($forced as $param => $value) {
-            $this->set_param($param, $value);
+            $this->setParam($param, $value);
         }
     }
     
     protected $_action_prefix = '';
 
 
-    static protected function _get_abbr($name) {
+    static protected function getAbbr($name) {
         $vowels = array('a', 'e', 'i', 'o', 'u', 'y');
         $head = mb_substr($name,0,1);
         $words = explode(" ", $name);
@@ -119,7 +119,7 @@ class Controller {
         return $head.$tail;
     }
 
-    public function get_action_method() {
+    public function getActionMethod() {
         $actions = explode('_', $this->action);
         while($actions){
             $action = $this->_action_prefix.implode('_', $actions);
@@ -132,14 +132,14 @@ class Controller {
     }
     
     // controller_name.action_name
-    public function get_signature() {
+    public function getSignature() {
         // todo: psr0 need fix
         return str_replace('fx_controller_', '', get_class($this)).'.'.$this->action;
     }
 
 
-    public function find_template() {
-        return fx::template($this->get_signature());
+    public function findTemplate() {
+        return fx::template($this->getSignature());
     }
     
     /*
@@ -147,7 +147,7 @@ class Controller {
      * Default - only controller itself,
      * For components overridden by adding inheritance chain
      */
-    protected function _get_controller_variants() {
+    protected function getControllerVariants() {
         // todo: psr0 need verify
         // \Floxim\Main\User\Controller
         // \Vendor\Module\Component\Controller
@@ -158,27 +158,27 @@ class Controller {
      * Returns an array of templates that can be used for controller-action games
      * Call after the controller is initialized (action)
      */
-    public function get_available_templates( $layout_name = null , $area_meta = null) {
-        $area_size = Template\Suitable::get_size($area_meta['size']);
+    public function getAvailableTemplates( $layout_name = null , $area_meta = null) {
+        $area_size = Template\Suitable::getSize($area_meta['size']);
         $layout_defined = !is_null($layout_name);
         if (is_numeric($layout_name)) {
             $layout_names = array(fx::data('layout', $layout_name)->get('keyword'));
         } elseif (is_null($layout_name)) {
-            $layout_names = fx::data('layout')->all()->get_values('keyword');
+            $layout_names = fx::data('layout')->all()->getValues('keyword');
         } elseif (is_string($layout_name)) {
             $layout_names = array($layout_name);
         } elseif (is_array($layout_name)) {
             $layout_names = $layout_name;
         }
         // get acceptable controller
-        $controller_variants = $this->_get_controller_variants();
+        $controller_variants = $this->getControllerVariants();
         $template_variants = array();
         // first we take out all the variants of layout templates
         foreach ($layout_names as $layout_name) {
             if (($layout_tpl = fx::template('layout_'.$layout_name)) ) {
                 $template_variants = array_merge(
                     $template_variants, 
-                    $layout_tpl->get_template_variants()
+                    $layout_tpl->getTemplateVariants()
                 );
             }
         }
@@ -188,7 +188,7 @@ class Controller {
             if (($controller_template = fx::template($controller_variant))) {
                 $template_variants = array_merge(
                     $template_variants, 
-                    $controller_template->get_template_variants()
+                    $controller_template->getTemplateVariants()
                 );
             }
         }
@@ -227,8 +227,8 @@ class Controller {
                 $tplv['layout_match_rate'] = $layout_defined && preg_match("~^layout_~", $tplv['full_id']) ? 1 : 0;
                 
                 if ($area_size && isset($tplv['size'])) {
-                    $size = Template\Suitable::get_size($tplv['size']);
-                    $size_rate = Template\Suitable::check_sizes($size, $area_size);
+                    $size = Template\Suitable::getSize($tplv['size']);
+                    $size_rate = Template\Suitable::checkSizes($size, $area_size);
                     if (!$size_rate) {
                         continue;
                     }
@@ -269,8 +269,8 @@ class Controller {
         return $output;
     }
     
-    public function get_action_settings($action) {
-        $cfg = $this->get_config();
+    public function getActionSettings($action) {
+        $cfg = $this->getConfig();
         if (!isset($cfg['actions'][$action])) {
             return;
         }
@@ -301,29 +301,29 @@ class Controller {
     }
     
     protected $_config_cache = null;
-    public function get_config($searched_action = null) {
+    public function getConfig($searched_action = null) {
         if ($searched_action === true) {
             $searched_action = $this->action;
         }
         if (!is_null($this->_config_cache)) {
             return $searched_action ? $this->_config_cache['actions'][$searched_action] : $this->_config_cache;
         }
-        $sources = $this->_get_config_sources();
-        $actions = $this->_get_real_actions();
+        $sources = $this->getConfigSources();
+        $actions = $this->getRealActions();
         $blocks = array();
         $meta = array();
-        $my_name = $this->get_controller_name();
+        $my_name = $this->getControllerName();
         foreach ($sources as $src) {
             $src_name = null;
             $src_hash = md5($src);
-            $src_abs = fx::path()->to_http($src);
+            $src_abs = fx::path()->toHttp($src);
             preg_match("~/([^/]+?)/[^/]+$~", $src_abs, $src_name);
             $is_own = $src_name && $my_name && $src_name[1] === $my_name;
             $src = include $src;
             if (!isset($src['actions'])) {
                 continue;
             }
-            $src_actions = $this->_prepare_action_config($src['actions']);
+            $src_actions = $this->prepareActionConfig($src['actions']);
             foreach ($src_actions as $k => $props) {
                 $action_codes = preg_split("~\s*,\s*~", $k);
                 foreach ($action_codes as $ak) {
@@ -375,7 +375,7 @@ class Controller {
         return $searched_action ? $actions[$searched_action] : $this->_config_cache;
     }
 
-    public function get_controller_name($with_type = false){
+    public function getControllerName($with_type = false){
         $name = preg_replace('~^[^\W_]+_[^\W_]+_~', '', get_class($this));
         if (!$with_type) {
             $name = preg_replace('~^[^\W_]+_~', '', $name);
@@ -383,7 +383,7 @@ class Controller {
         return $name;
     }
 
-    protected function _prepare_action_config($actions) {
+    protected function prepareActionConfig($actions) {
         foreach ($actions as &$params) {
             if(!isset($params['defaults'])) {
                 continue;
@@ -399,11 +399,11 @@ class Controller {
         return $actions;
     }
     
-    protected function _get_config_sources() {
+    protected function getConfigSources() {
         return array();
     }
     
-    protected static function _merge_actions($actions) {
+    protected static function mergeActions($actions) {
         ksort($actions);
         $key_stack = array();
         foreach ($actions as $key => $params) {
@@ -428,7 +428,7 @@ class Controller {
     }
     
 
-    public function _get_real_actions() {
+    public function getRealActions() {
         $class = new \ReflectionClass(get_class($this));
         $methods = $class->getMethods(\ReflectionMethod::IS_PUBLIC);
         $props = $class->getDefaultProperties();
@@ -469,8 +469,8 @@ class Controller {
         }
     }
     
-    public function get_actions() {
-        $cfg = $this->get_config();
+    public function getActions() {
+        $cfg = $this->getConfig();
         $res = array();
         foreach ($cfg['actions'] as $action => $info) {
             if (isset($info['disabled']) && $info['disabled']) {
@@ -481,9 +481,9 @@ class Controller {
         return $res;
     }
     
-    public function handle_infoblock($callback, $infoblock, $params = array()) {
+    public function handleInfoblock($callback, $infoblock, $params = array()) {
         
-        $full_config = $this->get_config();
+        $full_config = $this->getConfig();
         if (!isset($full_config['actions'][$this->action])) {
             return;
         }

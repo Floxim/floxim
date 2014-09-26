@@ -3,7 +3,7 @@
 namespace Floxim\Floxim\Field;
 
 class Bool extends Baze {
-    public function get_sql_type() {
+    public function getSqlType() {
         return "TINYINT";
     }
 }

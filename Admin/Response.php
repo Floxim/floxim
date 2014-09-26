@@ -25,10 +25,10 @@ class Response {
         $this->dialog = new Dialog();
     }
 
-    public function to_array() {
+    public function toArray() {
         $result = array();
 
-        $submenu = $this->submenu->to_array();
+        $submenu = $this->submenu->toArray();
         
         
         if ($this->reload) {
@@ -39,9 +39,9 @@ class Response {
             $result['submenu'] = $submenu;
         }
 
-        $result['main_menu']['active'] = $this->submenu->get_active_main_menu();
+        $result['main_menu']['active'] = $this->submenu->getActiveMainMenu();
 
-        $breadcrumb = $this->breadcrumb->to_array();
+        $breadcrumb = $this->breadcrumb->toArray();
         if ($breadcrumb) {
             $result['breadcrumb'] = $breadcrumb;
         }
@@ -69,7 +69,7 @@ class Response {
             $result['tabs'] = $this->tabs;
         }
         
-        $dialog = $this->dialog->to_array();
+        $dialog = $this->dialog->toArray();
         if ( $dialog ) {
             $result['dialog'] = $dialog;
         }
@@ -95,7 +95,7 @@ class Response {
         return $result;
     }
 
-    public function add_buttons($buttons) {
+    public function addButtons($buttons) {
         if (!is_array($buttons)) {
             $buttons = explode(",", $buttons);
         }
@@ -113,7 +113,7 @@ class Response {
         $this->buttons = array_merge($this->buttons, $buttons);
     }
     
-    public function add_pulldown_item($button, $name, $options) {
+    public function addPulldownItem($button, $name, $options) {
         if ( is_string($options) ) {
             parse_str($options, $options);
         }
@@ -122,29 +122,29 @@ class Response {
         
     }
     
-    public function add_button_options ( $button, $options ) {
+    public function addButtonOptions ( $button, $options ) {
         if ( is_string($options) ) {
             parse_str($options, $options);
         }
         $this->buttons_action[$button]['options'] = $options;
     }
     
-    public function add_form_button ( $button ) {
+    public function addFormButton ( $button ) {
         if (!is_array($button)) {
             $button = array('key' => trim($button));
         }
         $this->form_buttons[]= $button;
     }
-    public function add_field ( $field, $tab = null ) {
+    public function addField ( $field, $tab = null ) {
         if ( $tab ) {
             $field['tab'] = $tab;
         }
         $this->fields[] = $field;
     }
     
-    public function add_fields ( $fields, $tab = null, $prefix = null ) {
+    public function addFields ( $fields, $tab = null, $prefix = null ) {
         if ($fields instanceof System\Collection) {
-            $fields = $fields->get_data();
+            $fields = $fields->getData();
         }
         if (!is_array($fields) ) {
             return;
@@ -177,17 +177,17 @@ class Response {
     }
     
     
-    public function add_tab($tab, $name, $active = false) {
+    public function addTab($tab, $name, $active = false) {
         $item = array('name' => $name);
         if ($active) $item['active'] = 1;
         $this->tabs[$tab] = $item;
     }
     
-    public function set_entity ( $entity ) {
+    public function setEntity ( $entity ) {
         $this->entity = $entity;
     }
     
-    public function set_status_error ( $text = '' , $fields = array() ) {
+    public function setStatusError ( $text = '' , $fields = array() ) {
         $this->status = 'error';
         $this->status_text = $text;
         if ( !is_array($fields) ) {
@@ -198,16 +198,16 @@ class Response {
         }
     }
     
-    public function set_status_ok ( $text = '' ) {
+    public function setStatusOk ( $text = '' ) {
         $this->status = 'ok';
         $this->status_text = $text;
     }
     
-    public function set_reload($reload = true) {
+    public function setReload($reload = true) {
         $this->reload = $reload;
     }
     
-    public function set_prop($prop, $value) {
+    public function setProp($prop, $value) {
         $this->props[$prop] = $value;
     }
     

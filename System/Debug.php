@@ -23,44 +23,44 @@ class Debug {
         $this->disabled = true;
         if (!is_null($this->file)) {
             fclose($this->file);
-            fx::files()->rm($this->_get_file_name());
+            fx::files()->rm($this->getFileName());
             $this->file = null;
         }
     }
 
 
-    protected function _get_dir() {
+    protected function getDir() {
         if (is_null($this->dir)) {
             $this->dir = fx::path('log');
         }
         return $this->dir;
     }
     
-    protected function _get_file_name($log_id = null) {
+    protected function getFileName($log_id = null) {
         if (is_null($log_id)) {
             $log_id = $this->id;
         }
-        return $this->_get_dir().'/log_'.$log_id.".html";
+        return $this->getDir().'/log_'.$log_id.".html";
     }
     
-    protected function _get_index_file_name() {
-        return $this->_get_dir().'/index.txt';
+    protected function getIndexFileName() {
+        return $this->getDir().'/index.txt';
     }
 
     /**
      * Open log file and init index
      */
-    protected function _start_log() {
-        $this->file = fx::files()->open($this->_get_file_name(), 'w');
-        register_shutdown_function(array($this, '_stop_log'));
+    protected function startLog() {
+        $this->file = fx::files()->open($this->getFileName(), 'w');
+        register_shutdown_function(array($this, 'stopLog'));
     }
 
-    public function _stop_log() {
+    public function stopLog() {
         if (is_null($this->file)) {
             return;
         }
         fclose($this->file);
-        $this->_write_index();
+        $this->writeIndex();
     }
     
     /**
@@ -78,7 +78,7 @@ class Debug {
         foreach ($trace as $l) {
             $str = '';
             if ($l['file']) {
-                $file = fx::path()->to_http($l['file']);
+                $file = fx::path()->toHttp($l['file']);
                 $str .= $file.'@'.$l['line'];
             }
             if ($l['class']) {
@@ -96,14 +96,14 @@ class Debug {
      * Drop the first (oldest) log file
      * Used when there are too much files (more than $this->max_log_files)
      */
-    protected function _drop_first() {
-        $index_file = $this->_get_index_file_name();
+    protected function dropFirst() {
+        $index_file = $this->getIndexFileName();
         $ifh = fopen($index_file, "c+");
         $is_first = true;
         while (($line = fgets($ifh)) !== FALSE) { 
             if ($is_first) {
                 $item = unserialize(trim($line));
-                $first_file = $this->_get_file_name($item['id']);
+                $first_file = $this->getFileName($item['id']);
                 fx::files()->rm($first_file);
                 $write_offset = ftell($ifh);
                 $is_first = false;
@@ -123,17 +123,17 @@ class Debug {
     /**
      * Put log data into index
      */
-    protected function _write_index() {
+    protected function writeIndex() {
         if ($this->disabled) {
             return;
         }
-        $c_count = $this->_get_count();
+        $c_count = $this->getCount();
         if ($c_count >= $this->max_log_files) {
-            $this->_drop_first();
+            $this->dropFirst();
         } else {
             $c_count++;
         }
-        $fh_index = fx::files()->open($this->_get_index_file_name(), 'a');
+        $fh_index = fx::files()->open($this->getIndexFileName(), 'a');
         $log_header = array(
             'id' => $this->id,
             'start' => $this->start_time,
@@ -145,14 +145,14 @@ class Debug {
         );
         fputs($fh_index, serialize($log_header)."\n");
         fclose($fh_index);
-        $this->_set_count($c_count);
+        $this->setCount($c_count);
     }
     
-    protected function _get_counter_file_name() {
-        return $this->_get_dir().'/counter.txt';
+    protected function getCounterFileName() {
+        return $this->getDir().'/counter.txt';
     }
-    protected function _get_count() {
-        $counter_file = $this->_get_counter_file_name();
+    protected function getCount() {
+        $counter_file = $this->getCounterFileName();
         if (!file_exists($counter_file)) {
             $c_count = 0;
         } else {
@@ -161,49 +161,49 @@ class Debug {
         return $c_count;
     }
     
-    protected function _set_count($count) {
+    protected function setCount($count) {
         $count = (int) $count;
         if ($count < 0) {
             $count = 0;
         }
-        file_put_contents($this->_get_counter_file_name(), $count);
+        file_put_contents($this->getCounterFileName(), $count);
     }
     
-    public function drop_log($log_id) {
-        $f = $this->_get_file_name($log_id);
-        $index = $this->get_index();
+    public function dropLog($log_id) {
+        $f = $this->getFileName($log_id);
+        $index = $this->getIndex();
         if (file_exists($f)) {
             fx::files()->rm($f);
-            $ifh = fx::files()->open($this->_get_index_file_name(), 'w');
+            $ifh = fx::files()->open($this->getIndexFileName(), 'w');
             foreach ($index as $item) {
                 if ($item['id'] != $log_id) {
                     fputs($ifh, serialize($item)."\n");
                 }
             }
             fclose($ifh);
-            $this->_set_count( $this->_get_count() - 1);
+            $this->setCount( $this->getCount() - 1);
         }
     }
     
-    public function drop_all() {
-        $log_files = glob($this->_get_dir().'/log*');
-        $ifh = fx::files()->open($this->_get_index_file_name(), 'w');
+    public function dropAll() {
+        $log_files = glob($this->getDir().'/log*');
+        $ifh = fx::files()->open($this->getIndexFileName(), 'w');
         fputs($ifh, '');
         fclose($ifh);
-        $this->_set_count(0);
+        $this->setCount(0);
         if (!$log_files) {
             return;
         }
-        $own_file = fx::path()->to_abs($this->_get_file_name());
+        $own_file = fx::path()->toAbs($this->getFileName());
         foreach ($log_files as $lf) {
-            if (fx::path()->to_abs($lf) != $own_file) {
+            if (fx::path()->toAbs($lf) != $own_file) {
                 fx::files()->rm($lf);
             }
         }
     }
 
-    public function get_index($id =  null) {
-        $file = $this->_get_index_file_name();
+    public function getIndex($id =  null) {
+        $file = $this->getIndexFileName();
         if (!file_exists($file)) {
             return array();
         }
@@ -232,11 +232,11 @@ class Debug {
         return $res;
     }
     
-    public function show_item($item_id) {
+    public function showItem($item_id) {
         if (!$item_id) {
             return '';
         }
-        $file = $this->_get_dir().'/log_'.$item_id.'.html';
+        $file = $this->getDir().'/log_'.$item_id.'.html';
         if (!file_exists($file)) {
             return '';
         }
@@ -250,13 +250,13 @@ class Debug {
         while (!feof($fh)) {
             $s = fgets($fh);
             if (trim($s) == trim($this->separator)) {
-                $this->_print_entry(unserialize($entry));
+                $this->printEntry(unserialize($entry));
                 $entry = '';
             }else {
                 $entry .= $s;
             }
         }
-        $this->_print_entry(unserialize($entry));
+        $this->printEntry(unserialize($entry));
         fclose($fh);
         $res = ob_get_clean();
         return $res;
@@ -273,7 +273,7 @@ class Debug {
             return;
         }
         if (is_null($this->file)) {
-            $this->_start_log();
+            $this->startLog();
         } else {
             fputs($this->file, $this->separator);
         }
@@ -281,7 +281,7 @@ class Debug {
             $this->file, 
             serialize(
                 call_user_func_array(
-                    array($this, '_entry'), 
+                    array($this, 'entry'), 
                     func_get_args()
                 )
             )
@@ -294,13 +294,13 @@ class Debug {
      */
     public function debug() {
         $e = call_user_func_array(array($this, '_entry'), func_get_args());
-        $this->_print_entry($e);
+        $this->printEntry($e);
         static $head_files_added = false;
         if (!$head_files_added) {
-            fx::page()->add_css_file(fx::path('floxim', 'admin/style/debug.less'));
-            fx::page()->add_js_file(FX_JQUERY_PATH);
-            fx::page()->add_js_file(fx::path('floxim', 'admin/js/fxj.js'));
-            fx::page()->add_js_file(fx::path('floxim', 'admin/js/debug.js'));
+            fx::page()->addCssFile(fx::path('floxim', 'admin/style/debug.less'));
+            fx::page()->addJsFile(FX_JQUERY_PATH);
+            fx::page()->addJsFile(fx::path('floxim', 'admin/js/fxj.js'));
+            fx::page()->addJsFile(fx::path('floxim', 'admin/js/debug.js'));
             register_shutdown_function(function() {
                 if (!fx::env()->get('complete_ok')) {
                     echo fx::page()->getAssetsCode();
@@ -310,7 +310,7 @@ class Debug {
         }
     }
     
-    protected function _entry() {
+    protected function entry() {
         $c_time = microtime(true);
         $memory = memory_get_usage(true);
         
@@ -351,7 +351,7 @@ class Debug {
         return array($meta, $items);
     }
     
-    protected function _print_entry($e) {
+    protected function printEntry($e) {
         $meta = $e[0];
         $file = isset($meta['file']) ? $meta['file'] : false;
         $line = isset($meta['line']) ? $meta['line'] : false;
@@ -366,14 +366,14 @@ class Debug {
                     ' (+%.5f, %.5f s, %s)', 
                     $meta['passed'], 
                     $meta['time'], 
-                    self::convert_memory($meta['memory'])
+                    self::convertMemory($meta['memory'])
                 );
                 ?>
             </div>
             <?php foreach ($e[1] as $n => $item) { 
                 ob_start();
                 if (in_array($item[0], array('array', 'object'))) {
-                    echo $this->_print_format($item[1]);
+                    echo $this->printFormat($item[1]);
                 } else {
                     if (strstr($item[1], "\n")) {
                         echo '<pre>'.htmlspecialchars($item[1]).'</pre>';
@@ -397,7 +397,7 @@ class Debug {
         <?php
     }
     
-    public static function convert_memory($size, $round = 3) {
+    public static function convertMemory($size, $round = 3) {
         $sizes = array('B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB');
         $total = count($sizes);
         for ($i=0; $size > 1024 && $i < $total; $i++) {
@@ -407,7 +407,7 @@ class Debug {
         return $result;
     }
     
-    protected function _print_format($html) {
+    protected function printFormat($html) {
 	$strings = explode("\n", htmlspecialchars($html));
         unset($html);
 	$result = array();

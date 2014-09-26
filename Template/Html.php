@@ -17,13 +17,13 @@ class Html {
         return $tokens;
     }
     
-    public function add_meta($meta = array(), $skip_parsing = false) {
+    public function addMeta($meta = array(), $skip_parsing = false) {
         // add immediately wrap
         if ($skip_parsing) {
-            return $this->add_meta_wrapper($meta);
+            return $this->addMetaWrapper($meta);
         }
-        $tree = $this->make_tree($this->tokenize());
-        $children = $tree->get_children();
+        $tree = $this->makeTree($this->tokenize());
+        $children = $tree->getChildren();
         $not_empty_children = array();
         foreach ($children as $child) {
             if ($child->name == 'text' && preg_match("~^\s*$~", $child->source)) {
@@ -32,27 +32,27 @@ class Html {
             $not_empty_children []= $child;
         }
         if (count($not_empty_children) == 1 && $not_empty_children[0]->name != 'text') {
-            $not_empty_children[0]->add_meta($meta);
+            $not_empty_children[0]->addMeta($meta);
             return $tree->serialize();
         }
-        return $this->add_meta_wrapper($meta);
+        return $this->addMetaWrapper($meta);
     }
     
-    public function add_meta_wrapper($meta) {
-        $tag = self::get_wrapper_tag($this->_string);
-        $wrapper = HtmlToken::create_standalone('<'.$tag.' class="fx_wrapper">');
-        $wrapper->add_meta($meta);
+    public function addMetaWrapper($meta) {
+        $tag = self::getWrapperTag($this->_string);
+        $wrapper = HtmlToken::createStandalone('<'.$tag.' class="fx_wrapper">');
+        $wrapper->addMeta($meta);
         return $wrapper->serialize().$this->_string."</".$tag.">";
     }
 
 
-    public static function get_wrapper_tag($html) {
+    public static function getWrapperTag($html) {
         return preg_match("~<(?:div|ul|li|table|p|h\d)~i", $html) ? 'div' : 'span';
     }
     
-    public function transform_to_floxim() {
+    public function transformToFloxim() {
         $tokens = $this->tokenize();
-        $tree = $this->make_tree($tokens);
+        $tree = $this->makeTree($tokens);
         
         $unnamed_replaces = array();
         
@@ -61,25 +61,25 @@ class Html {
                 return;
             }
             if (preg_match('~\{[\%|\$]~', $n->source)) {
-                $n->source = Html::parse_floxim_vars_in_atts($n->source);
+                $n->source = Html::parseFloximVarsInAtts($n->source);
             }
-            $subroot = $n->has_attribute('fx:omit') ? '' : ' subroot="true"';
-            if ( ($n->name == 'script' || $n->name == 'style') && !$n->has_attribute('fx:raw')) {
-                $n->set_attribute('fx:raw', 'true');
+            $subroot = $n->hasAttribute('fx:omit') ? '' : ' subroot="true"';
+            if ( ($n->name == 'script' || $n->name == 'style') && !$n->hasAttribute('fx:raw')) {
+                $n->setAttribute('fx:raw', 'true');
             }
-            if ($n->has_attribute('fx:raw')) {
-                $raw_value = $n->get_attribute('fx:raw');
+            if ($n->hasAttribute('fx:raw')) {
+                $raw_value = $n->getAttribute('fx:raw');
                 if ($raw_value != 'false') {
-                    $n->add_child_first(HtmlToken::create('{raw}'));
-                    $n->add_child(HtmlToken::create('{/raw}'));
+                    $n->addChildFirst(HtmlToken::create('{raw}'));
+                    $n->addChild(HtmlToken::create('{/raw}'));
                 }
-                $n->remove_attribute('fx:raw');
+                $n->removeAttribute('fx:raw');
             }
-            if ($n->name == 'meta' && ($layout_id = $n->get_attribute('fx:layout'))) {
-                $layout_name = $n->get_attribute('fx:name');
+            if ($n->name == 'meta' && ($layout_id = $n->getAttribute('fx:layout'))) {
+                $layout_name = $n->getAttribute('fx:name');
                 $tpl_tag = '{template id="'.$layout_id.'" name="'.$layout_name.'" of="layout.show"}';
                 $tpl_tag .= '{apply id="_layout_body"}';
-                $content = $n->get_attribute('content');
+                $content = $n->getAttribute('content');
                 $vars = explode(",", $content);
                 foreach ($vars as $var) {
                     $var = trim($var);
@@ -91,11 +91,11 @@ class Html {
                     $tpl_tag .= '{$'.$var.' select="'.($negative ? 'false' : 'true').'" /}';
                 }
                 $tpl_tag .= '{/call}{/template}';
-                $n->parent->add_child_before(HtmlToken::create($tpl_tag), $n);
+                $n->parent->addChildBefore(HtmlToken::create($tpl_tag), $n);
                 $n->remove();
                 return;
             }
-            if ( ($fx_replace = $n->get_attribute('fx:replace')) ){
+            if ( ($fx_replace = $n->getAttribute('fx:replace')) ){
                 $replace_atts = explode(",", $fx_replace);
                 foreach ($replace_atts as $replace_att) {
                     if (!isset($unnamed_replaces[$replace_att])) {
@@ -103,7 +103,7 @@ class Html {
                     }
                     $var_name = 'replace_'.$replace_att.'_'.$unnamed_replaces[$replace_att];
                     $unnamed_replaces[$replace_att]++;
-                    $default_val = $n->get_attribute($replace_att);
+                    $default_val = $n->getAttribute($replace_att);
                     switch($replace_att) {
                         case 'src':
                             $var_title = fx::alang('Picture','system');
@@ -115,22 +115,22 @@ class Html {
                             $var_title = $replace_att;
                             break;
                     }
-                    $n->set_attribute($replace_att, '{%'.$var_name.' title="'.$var_title.'"}'.$default_val.'{/%'.$var_name.'}');
-                    $n->remove_attribute('fx:replace');
+                    $n->setAttribute($replace_att, '{%'.$var_name.' title="'.$var_title.'"}'.$default_val.'{/%'.$var_name.'}');
+                    $n->removeAttribute('fx:replace');
                 }
             }
-            if ( ($var_name = $n->get_attribute('fx:var')) ) {
+            if ( ($var_name = $n->getAttribute('fx:var')) ) {
                 if (!preg_match("~^[\$\%]~", $var_name)) {
                     $var_name = '%'.$var_name;
                 }
-                $n->add_child_first(HtmlToken::create('{'.$var_name.'}'));
-                $n->add_child(HtmlToken::create('{/'.$var_name.'}'));
-                $n->remove_attribute('fx:var');
+                $n->addChildFirst(HtmlToken::create('{'.$var_name.'}'));
+                $n->addChild(HtmlToken::create('{/'.$var_name.'}'));
+                $n->removeAttribute('fx:var');
             }
             
             
-            $tpl_id = $n->get_attribute('fx:template');
-            $macro_id = $n->get_attribute('fx:macro');
+            $tpl_id = $n->getAttribute('fx:template');
+            $macro_id = $n->getAttribute('fx:macro');
             if ( $tpl_id || $macro_id) {
                 if ($macro_id) {
                     $tpl_id = $macro_id;
@@ -148,104 +148,104 @@ class Html {
                 }
                 $tpl_macro_tag .= $subroot;
                 
-                if ( ($tpl_for = $n->get_attribute('fx:of')) ) {
+                if ( ($tpl_for = $n->getAttribute('fx:of')) ) {
                     $tpl_macro_tag .= ' of="'.$tpl_for.'"';
-                    $n->remove_attribute('fx:of');
+                    $n->removeAttribute('fx:of');
                 }
-                if ($tpl_test || ($tpl_test = $n->get_attribute('fx:test'))) {
+                if ($tpl_test || ($tpl_test = $n->getAttribute('fx:test'))) {
                     $tpl_macro_tag .= ' test="'.$tpl_test.'" ';
-                    $n->remove_attribute('fx:test');
+                    $n->removeAttribute('fx:test');
                 }
-                if ( ($tpl_name = $n->get_attribute('fx:name'))) {
+                if ( ($tpl_name = $n->getAttribute('fx:name'))) {
                     $tpl_macro_tag .= ' name="'.$tpl_name.'"';
-                    $n->remove_attribute('fx:name');
+                    $n->removeAttribute('fx:name');
                 }
                 if ( $n->offset && $n->end_offset) {
                     $tpl_macro_tag .= ' offset="'.$n->offset[0].','.$n->end_offset[1].'" ';
                 }
-                if ( ($tpl_size = $n->get_attribute('fx:size'))) {
+                if ( ($tpl_size = $n->getAttribute('fx:size'))) {
                     $tpl_macro_tag .= ' size="'.$tpl_size.'" ';
-                    $n->remove_attribute('fx:size');
+                    $n->removeAttribute('fx:size');
                 }
-                if ( ($tpl_suit = $n->get_attribute('fx:suit'))) {
+                if ( ($tpl_suit = $n->getAttribute('fx:suit'))) {
                     $tpl_macro_tag .= ' suit="'.$tpl_suit.'"';
-                    $n->remove_attribute('fx:suit');
+                    $n->removeAttribute('fx:suit');
                 }
                 $tpl_macro_tag .= '}';
                 $n->wrap($tpl_macro_tag, '{/template}');
-                $n->remove_attribute('fx:template');
-                $n->remove_attribute('fx:macro');
+                $n->removeAttribute('fx:template');
+                $n->removeAttribute('fx:macro');
             }
-            if ( $n->has_attribute('fx:each') ) {
-                $each_id = $n->get_attribute('fx:each');
+            if ( $n->hasAttribute('fx:each') ) {
+                $each_id = $n->getAttribute('fx:each');
                 $each_id = trim($each_id, '{}');
                 $each_id = str_replace('"', '\\"', $each_id);
                 $each_macro_tag = '{each ';
                 $each_macro_tag .= $subroot;
                 $each_macro_tag .= ' select="'.$each_id.'"';
 
-                if ( ($each_as = $n->get_attribute('fx:as'))) {
+                if ( ($each_as = $n->getAttribute('fx:as'))) {
                     $each_macro_tag .= ' as="'.$each_as.'"';
-                    $n->remove_attribute('fx:as');
+                    $n->removeAttribute('fx:as');
                 }
-                if (($each_key = $n->get_attribute('fx:key'))) {
+                if (($each_key = $n->getAttribute('fx:key'))) {
                     $each_macro_tag .= ' key="'.$each_key.'"';
-                    $n->remove_attribute('fx:key');
+                    $n->removeAttribute('fx:key');
                 }
-                if (( $prefix = $n->get_attribute('fx:prefix')) ) {
+                if (( $prefix = $n->getAttribute('fx:prefix')) ) {
                     $each_macro_tag .= ' prefix="'.$prefix.'"';
-                    $n->remove_attribute('fx:prefix');
+                    $n->removeAttribute('fx:prefix');
                 }
-                if ( ($extract = $n->get_attribute('fx:extract'))) {
+                if ( ($extract = $n->getAttribute('fx:extract'))) {
                     $each_macro_tag .= ' extract="'.$extract.'"';
-                    $n->remove_attribute('fx:extract');
+                    $n->removeAttribute('fx:extract');
                 }
-                if ( ($separator = $n->get_attribute('fx:separator'))) {
+                if ( ($separator = $n->getAttribute('fx:separator'))) {
                     $each_macro_tag .= ' separator="'.$separator.'"';
-                    $n->remove_attribute('fx:separator');
+                    $n->removeAttribute('fx:separator');
                 }
                 $each_macro_tag .= '}';
                 $n->wrap($each_macro_tag, '{/each}');
-                $n->remove_attribute('fx:each');
+                $n->removeAttribute('fx:each');
             }
-            if ( ($area_id = $n->get_attribute('fx:area'))) {
-                $n->remove_attribute('fx:area');
+            if ( ($area_id = $n->getAttribute('fx:area'))) {
+                $n->removeAttribute('fx:area');
                 $area = '{area id="'.$area_id.'" ';
-                if ( ($area_size = $n->get_attribute('fx:size')) ) {
+                if ( ($area_size = $n->getAttribute('fx:size')) ) {
                     $area .= 'size="'.$area_size.'" ';
-                    $n->remove_attribute('fx:size');
+                    $n->removeAttribute('fx:size');
                 }
-                if ( ($area_suit = $n->get_attribute('fx:suit'))) {
+                if ( ($area_suit = $n->getAttribute('fx:suit'))) {
                     $area .= 'suit="'.$area_suit.'" ';
-                    $n->remove_attribute('fx:suit');
+                    $n->removeAttribute('fx:suit');
                 }
-                if ( ($area_render = $n->get_attribute('fx:area-render'))) {
+                if ( ($area_render = $n->getAttribute('fx:area-render'))) {
                     $area .= 'render="'.$area_render.'" ';
-                    $n->remove_attribute('fx:area-render');
+                    $n->removeAttribute('fx:area-render');
                 }
-                if ( ($area_name = $n->get_attribute('fx:area-name'))) {
+                if ( ($area_name = $n->getAttribute('fx:area-name'))) {
                     $area .= 'name="'.$area_name.'" ';
-                    $n->remove_attribute('fx:area-name');
+                    $n->removeAttribute('fx:area-name');
                 }
                 $area .= '}';
-                $n->add_child_first(HtmlToken::create($area));
-                $n->add_child(HtmlToken::create('{/area}'));
+                $n->addChildFirst(HtmlToken::create($area));
+                $n->addChild(HtmlToken::create('{/area}'));
             }
-            if ( $n->has_attribute('fx:item') ) {
-                $item_att = $n->get_attribute('fx:item');
-                $n->remove_attribute('fx:item');
+            if ( $n->hasAttribute('fx:item') ) {
+                $item_att = $n->getAttribute('fx:item');
+                $n->removeAttribute('fx:item');
                 $n->wrap(
                     '{item'.($item_att ? ' test="'.$item_att.'"' : '').$subroot.'}',
                     '{/item}'
                 );
             }
-            if ($n->has_attribute('fx:aif')) {
-                $if_test = $n->get_attribute('fx:aif');
+            if ($n->hasAttribute('fx:aif')) {
+                $if_test = $n->getAttribute('fx:aif');
                 $ep = new ExpressionParser();
                 $empty_cond = $ep->build($if_test);
                 $class_code = '<?php echo ('.$empty_cond . ' ? "" : " fx_view_hidden ");?>';
-                $n->add_class($class_code);
-                $n->remove_attribute('fx:aif');
+                $n->addClass($class_code);
+                $n->removeAttribute('fx:aif');
                 $if_test .= ' || $_is_admin';
                 
                 $n->wrap(
@@ -254,59 +254,59 @@ class Html {
                 );
                 
             }
-            if ( $n->has_attribute('fx:if')) {
-                $if_test = $n->get_attribute('fx:if');
-                $n->remove_attribute('fx:if');
+            if ( $n->hasAttribute('fx:if')) {
+                $if_test = $n->getAttribute('fx:if');
+                $n->removeAttribute('fx:if');
                 $n->wrap(
                     '{if test="'.$if_test.'"}',
                     '{/if}'
                 );
             }
-            if ( ($with_each = $n->get_attribute('fx:with-each'))) {
-                $n->remove_attribute('fx:with-each');
+            if ( ($with_each = $n->getAttribute('fx:with-each'))) {
+                $n->removeAttribute('fx:with-each');
                 $weach_macro_tag = '{with-each '.$with_each.'}';
-                if ( ($separator = $n->get_attribute('fx:separator'))) {
+                if ( ($separator = $n->getAttribute('fx:separator'))) {
                     $weach_macro_tag .= '{separator}'.$separator.'{/separator}';
-                    $n->remove_attribute('fx:separator');
+                    $n->removeAttribute('fx:separator');
                 }
                 $n->wrap(
                     $weach_macro_tag,
                     '{/with-each}'
                 );
             }
-            if ( ($with = $n->get_attribute('fx:with'))) {
-                $n->remove_attribute('fx:with');
+            if ( ($with = $n->getAttribute('fx:with'))) {
+                $n->removeAttribute('fx:with');
                 $n->wrap(
                     '{with select="'.$with.'" '.$subroot.'}',
                     '{/with}'
                 );
             }
-            if ($n->has_attribute('fx:separator')) {
+            if ($n->hasAttribute('fx:separator')) {
                 $n->wrap('{separator}', '{/separator}');
-                $n->remove_attribute('fx:separator');
+                $n->removeAttribute('fx:separator');
             }
-            if ( ($elseif_test = $n->get_attribute('fx:elseif'))) {
-                $n->remove_attribute('fx:elseif');
+            if ( ($elseif_test = $n->getAttribute('fx:elseif'))) {
+                $n->removeAttribute('fx:elseif');
                 $n->wrap(
                     '{elseif test="'.$elseif_test.'"}',
                     '{/elseif}'
                 );
             }
-            if ( $n->has_attribute('fx:else') ) {
-                $n->remove_attribute('fx:else');
+            if ( $n->hasAttribute('fx:else') ) {
+                $n->removeAttribute('fx:else');
                 $n->wrap('{else}', '{/else}');
             }
-            if ($n->has_attribute('fx:add')) {
-                $add_mode = $n->get_attribute('fx:add');
+            if ($n->hasAttribute('fx:add')) {
+                $add_mode = $n->getAttribute('fx:add');
 
-                $n->remove_attribute('fx:add');
+                $n->removeAttribute('fx:add');
                 $n->wrap(
                     '<?php $this->push_mode("add", "'.$add_mode.'"); ?>',
                     '<?php $this->pop_mode("add"); ?>'
                 );
             }
-            if ( $n->has_attribute('fx:omit')) {
-                $omit = $n->get_attribute('fx:omit');
+            if ( $n->hasAttribute('fx:omit')) {
+                $omit = $n->getAttribute('fx:omit');
                 if (empty($omit) || $omit == 'true') {
                     $omit = true;
                 } else {
@@ -314,20 +314,20 @@ class Html {
                     $omit = $ep->compile($ep->parse($omit));
                 }
                 $n->omit = $omit;
-                $n->remove_attribute('fx:omit');
+                $n->removeAttribute('fx:omit');
             }
         });
         $res = $tree->serialize();
         return $res;
     }
     
-    public static function parse_floxim_vars_in_atts($input_source) {
+    public static function parseFloximVarsInAtts($input_source) {
         $ap = new AttrtypeParser();
         $res = $ap->parse($input_source);
         return $res;
     }
     
-    public function make_tree($tokens) {
+    public function makeTree($tokens) {
         $root = new HtmlToken();
         $root->name = 'root';
         $stack = array($root);
@@ -337,7 +337,7 @@ class Html {
             switch ($token->type) {
                 case 'open':
                     if (count($stack) > 0) {
-                        end($stack)->add_child($token);
+                        end($stack)->addChild($token);
                     }
                     $stack []= $token;
                     break;
@@ -374,7 +374,7 @@ class Html {
                         echo "<pre>" . htmlspecialchars(print_r($token, 1)) . "</pre>";
                         die();
                     }
-                    $stack_last->add_child($token);
+                    $stack_last->addChild($token);
                     break;
             }
         }
@@ -386,7 +386,7 @@ class Html {
         return $root;
     }
     
-    public static function add_class_to_tag($tag_html, $class) {
+    public static function addClassToTag($tag_html, $class) {
         if (preg_match("~class\s*=[\s\'\"]*[^\'\"\>]+~i", $tag_html, $class_att)) {
             $class_att_new = preg_replace(
                 "~class\s*=[\s\'\"]*~", 
@@ -395,12 +395,12 @@ class Html {
             );
             $tag_html = str_replace($class_att, $class_att_new, $tag_html);
         } else {
-            $tag_html = self::add_att_to_tag($tag_html, 'class', $class);
+            $tag_html = self::addAttToTag($tag_html, 'class', $class);
         }
         return $tag_html;
     }
     
-    public static function add_att_to_tag($tag_html, $att, $value) {
+    public static function addAttToTag($tag_html, $att, $value) {
         $tag_html = preg_replace("~^<[^\s>]+~", '$0 '.$att.'="'.htmlentities($value).'"', $tag_html);
         return $tag_html;
     }

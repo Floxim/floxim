@@ -38,8 +38,8 @@ class Entity extends System\Entity {
         return $res;
     }
     
-    protected function _after_insert() {
-        parent::_after_insert();
+    protected function afterInsert() {
+        parent::afterInsert();
         $this->scaffold();
     }
     

@@ -19,10 +19,10 @@ class Tokenizer extends Fsm {
         $this->init_state = self::HTML;
         $this->res = array();
         
-        $this->add_rule(self::HTML, '~^\{raw}$~s', self::RAW);
-        $this->add_rule(self::RAW, '~^\{/raw}$~s', self::HTML);
+        $this->addRule(self::HTML, '~^\{raw}$~s', self::RAW);
+        $this->addRule(self::RAW, '~^\{/raw}$~s', self::HTML);
         
-        $this->add_rule(self::HTML, '~^\{.+\}$~s', self::HTML, 'add_token');
+        $this->addRule(self::HTML, '~^\{.+\}$~s', self::HTML, 'add_token');
         
         //$this->add_rule(self::HTML, '~^<script~', self::JS);
         //$this->add_rule(self::JS, '~^</script~', self::HTML);
@@ -30,14 +30,14 @@ class Tokenizer extends Fsm {
         //$this->add_rule(self::HTML, '~^<style~', self::CSS);
         //$this->add_rule(self::CSS, '~^</style~', self::HTML);
         
-        $this->add_rule(self::HTML, '~^<\?~', self::PHP);
-        $this->add_rule(self::PHP, '~^\?>~', self::HTML);
+        $this->addRule(self::HTML, '~^<\?~', self::PHP);
+        $this->addRule(self::PHP, '~^\?>~', self::HTML);
         
-        $this->add_rule(self::HTML, '~^<\!--~', self::COMMENT);
-        $this->add_rule(self::COMMENT, '~^-->~', self::HTML);
+        $this->addRule(self::HTML, '~^<\!--~', self::COMMENT);
+        $this->addRule(self::COMMENT, '~^-->~', self::HTML);
     }
     
-    protected function add_token($ch) {
+    protected function addToken($ch) {
         if (!empty($this->stack)) {
             $this->res []= Token::create($this->stack);
             $this->stack = '';
@@ -45,7 +45,7 @@ class Tokenizer extends Fsm {
         $this->res []= Token::create($ch);
     }
     
-    public function default_callback($ch) {
+    public function defaultCallback($ch) {
         if (preg_match("~^\{/?raw\}$~", $ch)) {
             return;
         }

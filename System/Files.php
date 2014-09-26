@@ -16,7 +16,7 @@ class Files {
     protected $base_path;
     protected $tmp_files;
 
-    protected function mkdir_ftp($path, $recursive = true) {
+    protected function mkdirFtp($path, $recursive = true) {
         if (!$path) {
             return 1;
         }
@@ -53,7 +53,7 @@ class Files {
         }
     }
 
-    protected function ls_not_recursive($path) {
+    protected function lsNotRecursive($path) {
         if (!$path) {
             return null;
         }
@@ -82,7 +82,7 @@ class Files {
         return $result;
     }
 
-    protected function ls_recursive($path) {
+    protected function lsRecursive($path) {
         if (!$path) {
             return null;
         }
@@ -121,7 +121,7 @@ class Files {
         return $result;
     }
 
-    protected function chmod_not_recursive($filename, $perms) {
+    protected function chmodNotRecursive($filename, $perms) {
         if (!$filename) {
             return 1;
         }
@@ -138,7 +138,7 @@ class Files {
         }
 
         // in case of failure break ftp
-        return $this->chmod_ftp(dirname($filename), array(basename($filename)), $perms);
+        return $this->chmodFtp(dirname($filename), array(basename($filename)), $perms);
     }
 
     /**
@@ -148,7 +148,7 @@ class Files {
      * @param array $files new access rights (to remember about octal notation)
      * @return int 0 on success, otherwise, ftp error code
      */
-    protected function chmod_ftp($dir, $files, $perms) {
+    protected function chmodFtp($dir, $files, $perms) {
         if (!$files || empty($files)) {
             return 1;
         }
@@ -173,7 +173,7 @@ class Files {
         }
     }
 
-    protected function chmod_recursive($filename, $perms) {
+    protected function chmodRecursive($filename, $perms) {
         if (!$filename) {
             return 1;
         }
@@ -185,7 +185,7 @@ class Files {
         }
 
         if (!is_dir($local_filename)) {
-            return $this->chmod_not_recursive($filename, $perms);
+            return $this->chmodNotRecursive($filename, $perms);
         }
 
         $result = 0;
@@ -193,7 +193,7 @@ class Files {
         $dirs = array();
 
         if (!@chmod($local_filename, $perms)) {
-            $result |= $this->chmod_ftp(dirname($filename), array(basename($filename)), $perms);
+            $result |= $this->chmodFtp(dirname($filename), array(basename($filename)), $perms);
         }
 
         array_push($dirs, $filename.'/');
@@ -220,7 +220,7 @@ class Files {
                 closedir($handle);
 
                 if (!empty($chmod_failed)) {
-                    $result |= $this->chmod_ftp($dir, $chmod_failed, $perms);
+                    $result |= $this->chmodFtp($dir, $chmod_failed, $perms);
                 }
             }
         }
@@ -228,7 +228,7 @@ class Files {
         return $result;
     }
 
-    protected function _copy_file($local_old_filename, $local_new_filename) {
+    protected function copyFile($local_old_filename, $local_new_filename) {
         $res = @copy($local_old_filename, $local_new_filename);
 
         if ($res !== false) {
@@ -285,7 +285,7 @@ class Files {
     }
     
     public function open($filename, $mode = 'w') {
-        $filename = fx::path()->to_abs($filename);
+        $filename = fx::path()->toAbs($filename);
         $dir = dirname($filename);
         if (!file_exists($dir)) {
             $this->mkdir($dir);
@@ -379,9 +379,9 @@ class Files {
         }
 
         if ($recursive) {
-            return $this->chmod_recursive($filename, $perms);
+            return $this->chmodRecursive($filename, $perms);
         } else {
-            return $this->chmod_not_recursive($filename, $perms);
+            return $this->chmodNotRecursive($filename, $perms);
         }
     }
 
@@ -389,7 +389,7 @@ class Files {
         if (!$path) {
             return 1;
         }
-        $local_path = fx::path()->to_abs($path);
+        $local_path = fx::path()->toAbs($path);
         if (is_dir($local_path)) {
             return 0;
         }
@@ -405,7 +405,7 @@ class Files {
 
         return 1;
         // try to ftp
-        return $this->mkdir_ftp($path, $recursive);
+        return $this->mkdirFtp($path, $recursive);
     }
 
     /**
@@ -414,7 +414,7 @@ class Files {
      */
     public function readfile($filename) {
 
-    	$local_filename = $this->get_full_path($filename);
+    	$local_filename = $this->getFullPath($filename);
 
         // Check for the existence, the ability to read and is not a directory
         if (!file_exists($local_filename) || !is_readable($local_filename) || is_dir($local_filename)) {
@@ -440,9 +440,9 @@ class Files {
         }
 
         if (!$recursive) {
-            $result = $this->ls_not_recursive($path);
+            $result = $this->lsNotRecursive($path);
         } else {
-            $result = $this->ls_recursive($path);
+            $result = $this->lsRecursive($path);
         }
 
         if ($sort && !empty($result)) {
@@ -460,7 +460,7 @@ class Files {
         return $result;
     }
 
-    protected function rm_ftp($dir, $files) {  // only empty
+    protected function rmFtp($dir, $files) {  // only empty
         if (!$files || empty($files)) {
             return 1;
         }
@@ -498,7 +498,7 @@ class Files {
             return 1;
         }
 
-        $local_filename = fx::path()->to_abs($filename);
+        $local_filename = fx::path()->toAbs($filename);
 
         if (!file_exists($local_filename)) {
             return 1;
@@ -531,7 +531,7 @@ class Files {
                 closedir($handle);
 
                 if (!empty($failed_files)) {
-                    $result |= $this->rm_ftp($filename, $failed_files);
+                    $result |= $this->rmFtp($filename, $failed_files);
                 }
             }
 
@@ -564,11 +564,11 @@ class Files {
                 fx::trigger('unlink', array('file' => $local_filename));
                 return 0;
             }
-            return $this->rm_ftp(dirname($filename), array(basename($filename)));
+            return $this->rmFtp(dirname($filename), array(basename($filename)));
         }
     }
 
-    public function get_perm($filename, $ret_str = false) {
+    public function getPerm($filename, $ret_str = false) {
 
         if (!$filename) {
             return null;
@@ -632,7 +632,7 @@ class Files {
         }
     }
 
-    public function move_uploaded_file($tmp_file, $destination) {
+    public function moveUploadedFile($tmp_file, $destination) {
 
         if (!$tmp_file || !$destination) {
             return null;
@@ -671,7 +671,7 @@ class Files {
         $local_old_filename = $this->base_path.$old_filename;
          * 
          */
-        $local_old_filename = fx::path()->to_abs($old_filename);
+        $local_old_filename = fx::path()->toAbs($old_filename);
 
         /*
         if ($new_filename[0] != '/') {
@@ -680,7 +680,7 @@ class Files {
         $local_new_filename = $this->base_path.$new_filename;
          * 
          */
-        $local_new_filename = fx::path()->to_abs($new_filename);
+        $local_new_filename = fx::path()->toAbs($new_filename);
         
         $local_parent_dir = dirname($local_new_filename);
 
@@ -694,7 +694,7 @@ class Files {
 
 
         if (!is_dir($local_old_filename)) {  // copy 1 file
-            return $this->_copy_file($local_old_filename, $local_new_filename);
+            return $this->copyFile($local_old_filename, $local_new_filename);
         }
 
         // copy the directory
@@ -714,7 +714,7 @@ class Files {
             if ($v['dir']) {
                 $res = $this->copy($old_filename.$v['name'], $new_filename.$v['name'], true);
             } else {
-                $res = $this->_copy_file($v[path], $local_new_filename.$v['name']);
+                $res = $this->copyFile($v[path], $local_new_filename.$v['name']);
             }
         }
 
@@ -749,7 +749,7 @@ class Files {
     
     public static $format_sizes = array('B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB');
 	
-    public function readable_size($size, $round = 0) {
+    public function readableSize($size, $round = 0) {
         if (!is_numeric($size) && file_exists($size) && is_file($size))  {
             $size = filesize($size);
         }
@@ -762,7 +762,7 @@ class Files {
         return $res;
     }
 
-    public function file_exists($filename) {
+    public function fileExists($filename) {
         if ($filename[0] != '/') {
             $filename = '/'.$filename;
         }
@@ -770,7 +770,7 @@ class Files {
         return file_exists($local_filename);
     }
 
-     public function is_writable($filename) {
+     public function isWritable($filename) {
         if ($filename[0] != '/') {
             $filename = '/'.$filename;
         }
@@ -778,7 +778,7 @@ class Files {
         return is_writable($local_filename);
     }
 
-    public function file_include ( $filename, $vars = array() ) {
+    public function fileInclude ( $filename, $vars = array() ) {
         if ($filename[0] != '/') {
             $filename = '/'.$filename;
         }
@@ -789,7 +789,7 @@ class Files {
         include($local_filename);
     }
 
-    public function is_dir($filename) {
+    public function isDir($filename) {
         if ($filename[0] != '/') {
             $filename = '/'.$filename;
         }
@@ -799,15 +799,15 @@ class Files {
         return is_dir($local_filename);
     }
     
-    public function is_filename_allowed($filename) {
-        $ext = fx::path()->file_extension($filename);
+    public function isFilenameAllowed($filename) {
+        $ext = fx::path()->fileExtension($filename);
         if (!$ext) {
             return true;
         }
         return in_array($ext, $this->allowed_extensions);
     }
     
-    public function get_extension_by_mime($mime) {
+    public function getExtensionByMime($mime) {
         $map = array(
             'image/bmp' => 'bmp',
             'image/gif' => 'gif',
@@ -825,7 +825,7 @@ class Files {
      * Creates a temporary file (the file is automatically deleted in the destructor of the class)
      * @return mixed the file path relative to the site root
      */
-    public function create_tmp_file() {
+    public function createTmpFile() {
         do {  // generate a unique file name
             $local_filename = fx::config()->TMP_FOLDER.uniqid();
         } while (file_exists($local_filename));
@@ -847,7 +847,7 @@ class Files {
      * Creates a temporary directory (the file is automatically deleted in the destructor of the class)
      * @return mixed the directory path relative to the site root
      */
-    public function create_tmp_dir() {
+    public function createTmpDir() {
         do {  // generate a unique file name
             $local_filename = fx::config()->TMP_FOLDER.uniqid();
         } while (file_exists($local_filename));
@@ -869,7 +869,7 @@ class Files {
      * @todo: we should refactor this code to make it safer
      * it's better to fetch and check headers before getting file contents 
      */
-    public function save_remote_file($file, $dir = 'content', $name=null) {
+    public function saveRemoteFile($file, $dir = 'content', $name=null) {
         if (!preg_match("~^https?://~", $file)) {
             return;
         }
@@ -877,29 +877,29 @@ class Files {
         if (!$file_data) {
             return;
         }
-        $file_name = $name ? $name : fx::path()->file_name($file);
-        $extension = fx::path()->file_extension($file_name);
+        $file_name = $name ? $name : fx::path()->fileName($file);
+        $extension = fx::path()->fileExtension($file_name);
         if (!$extension) {
             foreach ($http_response_header as $header) {
                 if (preg_match("~^content-type: (.+)$~i", $header, $content_type)) {
                     $mime = $content_type[1];
-                    $extension = $this->get_extension_by_mime($mime);
+                    $extension = $this->getExtensionByMime($mime);
                     $file_name .= '.'.$extension;
                     break;
                 }
             }
         }
-        $put_file = $this->get_put_filename($dir, $file_name);
+        $put_file = $this->getPutFilename($dir, $file_name);
         $full_path = fx::path('files', $dir.'/'.$put_file);
         $this->writefile($full_path, $file_data);
         return $full_path;
     }
 
-    public function save_file($file, $dir = '', $name=null) {
+    public function saveFile($file, $dir = '', $name=null) {
         // normal $_FILES
         if (is_array($file)) {
             $filename = $file['name'];
-            $put_file = $this->get_put_filename($dir, $filename);
+            $put_file = $this->getPutFilename($dir, $filename);
             $full_path = fx::path('files', $dir.'/'.$put_file);
             $this->mkdir(fx::path('files', $dir));
             $res = move_uploaded_file($file['tmp_name'], $full_path);
@@ -909,25 +909,25 @@ class Files {
         } 
         // remote file
         else if (is_string($file) ) {
-            $full_path = $this->save_remote_file($file, $dir, $name);
+            $full_path = $this->saveRemoteFile($file, $dir, $name);
             if (!$full_path) {
                 return;
             }
-            $filename = fx::path()->file_name($full_path);
+            $filename = fx::path()->fileName($full_path);
         }
         
-        $http_path = fx::path()->to_http($full_path);
+        $http_path = fx::path()->toHttp($full_path);
         
         return array(
             'path' => $http_path,
             'filename' => $filename,
             'fullpath' => $full_path,
-            'size' => $this->readable_size(filesize($full_path))
+            'size' => $this->readableSize(filesize($full_path))
         );
     }
 
-    protected function get_put_filename($dir, $name) {
-        $name = fx::util()->str_to_latin($name);
+    protected function getPutFilename($dir, $name) {
+        $name = fx::util()->strToLatin($name);
         $name = preg_replace("~[^a-z0-9_\.-]~i", '_', $name);
         $name = trim($name, "_");
         $name = preg_replace("~_+~", "_", $name);
@@ -940,10 +940,10 @@ class Files {
             $try++;
             $path = fx::path('files', $dir.'/'.$c_name);
         }
-        return fx::path()->file_name($path);
+        return fx::path()->fileName($path);
     }
 
-    private function tar_check() {
+    private function tarCheck() {
         static $res;
         if ($res !== null) {
             return $res;
@@ -960,7 +960,7 @@ class Files {
         return $res;
     }
 
-    public function get_full_path($filename) {
+    public function getFullPath($filename) {
         if (!$filename) {
             return null;
         }
@@ -974,7 +974,7 @@ class Files {
         return $filename;
     }
 
-    public function mime_content_type($filename) {
+    public function mimeContentType($filename) {
         if (!$filename) {
             return null;
         }
@@ -1004,10 +1004,10 @@ class Files {
         }
 
         // Themselves mutim =((
-        return $this->my_mime_content_type($local_filename);
+        return $this->myMimeContentType($local_filename);
     }
 
-    private function my_mime_content_type($local_filename) {
+    private function myMimeContentType($local_filename) {
         preg_match("#\.([a-z0-9]{1,7})$#i", $local_filename, $fileSuffix);
 
         switch (strtolower($fileSuffix[1])) {
@@ -1104,11 +1104,11 @@ class Files {
         }
     }
 
-    public function is_image($filename) {
-        return (strpos($this->mime_content_type($filename), 'image/') !== false);
+    public function isImage($filename) {
+        return (strpos($this->mimeContentType($filename), 'image/') !== false);
     }
 
-    public function get_file_error($error_num) {
+    public function getFileError($error_num) {
         $text[UPLOAD_ERR_OK] = 'There is no error, the file uploaded with success.';
         $text[UPLOAD_ERR_INI_SIZE] = 'The uploaded file exceeds the upload_max_filesize directive in php.ini.';
         $text[UPLOAD_ERR_FORM_SIZE] = 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.';
@@ -1126,7 +1126,7 @@ class Files {
         $dir = fx::config()->DOCUMENT_ROOT.
                fx::config()->HTTP_FILES_PATH.
                $dir;
-        $this->zip_mkdir($dir);
+        $this->zipMkdir($dir);
         
         $zip_handle = zip_open($file);
         if (!is_resource($zip_handle)) {
@@ -1138,7 +1138,7 @@ class Files {
             $zip_size = zip_entry_filesize($zip_entry);
             if (preg_match("~/$~", $zip_name)) {
                 $new_dir_name = preg_replace("~/$~", '', $dir . $zip_name);
-                $this->zip_mkdir($new_dir_name);
+                $this->zipMkdir($new_dir_name);
                 chmod($new_dir_name, 0777);
             }
             else {
@@ -1158,7 +1158,7 @@ class Files {
         return true;
     }
 
-    function zip_mkdir($dir, $chmod = 0755) {
+    function zipMkdir($dir, $chmod = 0755) {
         $slash = "/";
         if (substr(php_uname(), 0, 7) == "Windows") {
             $slash = "\\";
@@ -1183,7 +1183,7 @@ class Files {
         }
     }
 
-    public function send_download_file($path,$name,$size=null) {
+    public function sendDownloadFile($path,$name,$size=null) {
         if (file_exists($path) and $file=fopen($path,"r")) {
             for ($i = 0; $i < ob_get_level(); $i++) {
                 ob_end_clean();

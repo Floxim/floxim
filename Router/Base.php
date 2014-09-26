@@ -3,7 +3,7 @@
 namespace Floxim\Floxim\Router;
 
 abstract class Base {
-	public function get_context() {
+	public function getContext() {
 		
 	}
     
