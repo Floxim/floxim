@@ -48,7 +48,7 @@ class Log extends Admin {
                 'label' => fx::alang('Delete all', 'system'),
                 'options' => array(
                     'action' => 'drop_all',
-                    'essence' => 'log',
+                    'entity' => 'log',
                     'fx_admin' => 'true'
                 )
             );
@@ -77,7 +77,7 @@ class Log extends Admin {
                     'label' => fx::alang('Delete', 'system'),
                     'options' => array(
                         'action' => 'drop_log',
-                        'essence' => 'log',
+                        'entity' => 'log',
                         'fx_admin' => 'true',
                         'log_id' => $log_id
                     )
@@ -87,7 +87,7 @@ class Log extends Admin {
                     'label' => fx::alang('Delete all', 'system'),
                     'options' => array(
                         'action' => 'drop_all',
-                        'essence' => 'log',
+                        'entity' => 'log',
                         'fx_admin' => 'true'
                     )
                 ),

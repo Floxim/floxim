@@ -21,7 +21,7 @@ class Site extends Admin {
         );
 
         $list['values'] = array();
-        $list['essence'] = 'site';
+        $list['entity'] = 'site';
         foreach ($sites as $v) {
             $r = array(
                 'id' => $v['id'],
@@ -54,7 +54,7 @@ class Site extends Admin {
     public function add() {
         $fields = $this->_get_fields(fx::data('site')->create());
         $fields[] = $this->ui->hidden('action', 'add_save');
-        $fields[] = $this->ui->hidden('essence', 'site');
+        $fields[] = $this->ui->hidden('entity', 'site');
         
         $this->response->add_fields($fields);
         $this->response->dialog->set_title( fx::alang('Create a new site','system') );
@@ -184,7 +184,7 @@ class Site extends Admin {
         $this->response->add_fields($main_fields);
 
         $fields = array();
-        $fields[] = $this->ui->hidden('essence', 'site');
+        $fields[] = $this->ui->hidden('entity', 'site');
         $fields[] = $this->ui->hidden('action', 'settings');
         $fields[] = $this->ui->hidden('posting');
         $fields [] = $this->ui->hidden('id', $site['id']);
@@ -246,7 +246,7 @@ class Site extends Admin {
                 'value' => $site_id
             )
         );
-        $fields[] = $this->ui->hidden('essence', 'site');
+        $fields[] = $this->ui->hidden('entity', 'site');
         $fields[] = $this->ui->hidden('action', 'design_save');
         $this->response->add_fields($fields);
         
@@ -272,7 +272,7 @@ class Site extends Admin {
         }
 
         $fields[] = $this->ui->hidden('action', 'download');
-        $fields[] = $this->ui->hidden('essence', 'site');
+        $fields[] = $this->ui->hidden('entity', 'site');
         $fields[] = $this->ui->hidden('posting');
 
         $result['fields'] = $fields;

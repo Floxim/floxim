@@ -10,8 +10,8 @@ class Component extends Admin {
      * A list of all components
      */
     public function all() {
-        $essence = $this->essence_type;
-        $finder = fx::data($essence);
+        $entity = $this->entity_type;
+        $finder = fx::data($entity);
         
         $tree = $finder->get_tree();
         
@@ -23,7 +23,7 @@ class Component extends Admin {
             'buttons' => array('type' => 'buttons')
         );
         $field['values'] = array();
-        $field['essence'] = $essence;
+        $field['entity'] = $entity;
         $append_coms = function($coll, $level) use (&$field, &$append_coms) {
             foreach ($coll as $v) {
                 $submenu = Component::get_component_submenu($v);
@@ -64,22 +64,22 @@ class Component extends Admin {
         $this->response->add_buttons(array(
             array(
                 'key' => "add", 
-                'title' => fx::alang('Add new '.$essence, 'system'),
-                'url' => '#admin.'.$essence.'.add'
+                'title' => fx::alang('Add new '.$entity, 'system'),
+                'url' => '#admin.'.$entity.'.add'
             ),
             "delete"
         ));
         
         $result = array('fields' => $fields);
 
-        $this->response->breadcrumb->add_item(self::_essence_types($essence), '#admin.'.$essence.'.all');
-        $this->response->submenu->set_menu($essence);
+        $this->response->breadcrumb->add_item(self::_entity_types($entity), '#admin.'.$entity.'.all');
+        $this->response->submenu->set_menu($entity);
         return $result;
     }
     
     public function get_component_submenu($component) {
     	// todo: psr0 need verify
-        $essence_code = fx::getComponentNameByClass(get_class($component));
+        $entity_code = fx::getComponentNameByClass(get_class($component));
     	
     	$titles = array(
             'component' => array(
@@ -95,11 +95,11 @@ class Component extends Admin {
         );
 		
         $res = array();
-        foreach($titles[$essence_code] as $code => $title) {
+        foreach($titles[$entity_code] as $code => $title) {
             $res[$code]= array(
                 'title' => $title,
                 'code' => $code,
-                'url' => $essence_code.'.edit('.$component['id'].','.$code.')',
+                'url' => $entity_code.'.edit('.$component['id'].','.$code.')',
                 'parent' => null
             );
             if ($code == 'fields') {
@@ -116,10 +116,10 @@ class Component extends Admin {
 	return $res;
     }
     
-    protected function _get_component_templates($ctr_essence) {
+    protected function _get_component_templates($ctr_entity) {
         // todo: psr0 need verify
-        $ctr_type = fx::getComponentNameByClass(get_class($ctr_essence));
-        $controller_name = ($ctr_type == 'widget' ? $ctr_type.'_' : '').$ctr_essence['keyword'];
+        $ctr_type = fx::getComponentNameByClass(get_class($ctr_entity));
+        $controller_name = ($ctr_type == 'widget' ? $ctr_type.'_' : '').$ctr_entity['keyword'];
         $controller = fx::controller($controller_name);
         $actions = $controller->get_actions();
         $templates = array();
@@ -160,18 +160,18 @@ class Component extends Admin {
         $fields[] = $this->ui->hidden('posting');
         $fields[] = $this->_get_parent_component_field();
         
-        $essence =$this->essence_type;
-        $fields[] = $this->ui->hidden('essence', $essence);
+        $entity =$this->entity_type;
+        $fields[] = $this->ui->hidden('entity', $entity);
         
         $this->response->breadcrumb->add_item(
-            self::_essence_types($essence), 
-            '#admin.'.$essence.'.all'
+            self::_entity_types($entity), 
+            '#admin.'.$entity.'.all'
         );
         $this->response->breadcrumb->add_item(
-            fx::alang('Add new '.$essence, 'system')
+            fx::alang('Add new '.$entity, 'system')
         );
         
-        $this->response->submenu->set_menu($essence);
+        $this->response->submenu->set_menu($entity);
         $this->response->add_form_button('save');
 
         return array('fields' => $fields);
@@ -195,9 +195,9 @@ class Component extends Admin {
 
     public function edit($input) {
         
-        $essence_code = $this->essence_type;
+        $entity_code = $this->entity_type;
 
-        $component = fx::data($essence_code)->get_by_id($input['params'][0]);
+        $component = fx::data($entity_code)->get_by_id($input['params'][0]);
         
         $action = isset($input['params'][1]) ? $input['params'][1] : 'settings';
         
@@ -206,13 +206,13 @@ class Component extends Admin {
         if (method_exists($this, $action)) {
             $result = call_user_func(array($this, $action), $component, $input);
         }
-        $result['tree']['mode'] = $essence_code.'-'.$component['id'];
-        $this->response->submenu->set_menu($essence_code.'-'.$component['id']);
+        $result['tree']['mode'] = $entity_code.'-'.$component['id'];
+        $this->response->submenu->set_menu($entity_code.'-'.$component['id']);
         
         return $result;
     }
     
-    protected static function _essence_types( $key = null ) {
+    protected static function _entity_types( $key = null ) {
         $arr = array (
             'widget' => fx::alang('Widgets','system'),
             'component' => fx::alang('Components','system')
@@ -222,10 +222,10 @@ class Component extends Admin {
     
     public static function make_breadcrumb($component, $action, $breadcrumb) {
         // todo: psr0 need verify
-        $essence_code = fx::getComponentNameByClass(get_class($component));
+        $entity_code = fx::getComponentNameByClass(get_class($component));
     	$submenu = self::get_component_submenu($component);
         $submenu_first = current($submenu);
-    	$breadcrumb->add_item(self::_essence_types($essence_code), '#admin.'.$essence_code.'.all');
+    	$breadcrumb->add_item(self::_entity_types($entity_code), '#admin.'.$entity_code.'.all');
         $breadcrumb->add_item($component['name'], $submenu_first['url']);
         if (isset($submenu[$action])) {
             $breadcrumb->add_item($submenu[$action]['title'], $submenu[$action]['url']);
@@ -303,7 +303,7 @@ class Component extends Admin {
     public function fields($component) {
         $controller = new Field(
              array(
-                 'essence' => $component,
+                 'entity' => $component,
                  'do_return' => true
             ),
             'items'
@@ -316,7 +316,7 @@ class Component extends Admin {
         $controller = new Field(
             array(
                 'to_id' => $component['id'],
-                'to_essence' => 'component',
+                'to_entity' => 'component',
                 'do_return' => true
             ),
             'add'
@@ -423,7 +423,7 @@ class Component extends Admin {
             return;
         }
         $fields = array(
-            $this->ui->hidden('essence', 'component'),
+            $this->ui->hidden('entity', 'component'),
             $this->ui->hidden('action', 'template'),
             $this->ui->hidden('data_sent', '1'),
             $this->ui->hidden('template_full_id', $template_full_id),
@@ -485,7 +485,7 @@ class Component extends Admin {
         $fields[] = array('type' => 'hidden', 'name' => 'id', 'value' => $component['id']);
         
         $this->response->submenu->set_subactive('settings');
-        $fields[] = $this->ui->hidden('essence', 'component');
+        $fields[] = $this->ui->hidden('entity', 'component');
         $fields[] = $this->ui->hidden('action', 'edit_save');
 
         return array('fields' => $fields, 'form_button' => array('save'));
@@ -576,7 +576,7 @@ class Component extends Admin {
 
     public function delete_save($input) {
 
-        $es = $this->essence_type;
+        $es = $this->entity_type;
         $result = array('status' => 'ok');
 
         $ids = $input['id'];

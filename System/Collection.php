@@ -253,7 +253,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable {
     
     public function unique($field = null) {
         $res = array();
-        if (is_null($field) && $this->first() instanceof Essence) {
+        if (is_null($field) && $this->first() instanceof Entity) {
             $field = 'id';
         }
         if (!is_null($field)) {
@@ -378,7 +378,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable {
                     }
                 }
                 
-                if ($key instanceof Essence) {
+                if ($key instanceof Entity) {
                     $key_index = $key['id'];
                 } else {
                     $key_index = $key;

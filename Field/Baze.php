@@ -7,7 +7,7 @@ use Floxim\Floxim\System\Fx as fx;
 /**
  * Base class for the various field types
  */
-class Baze extends Field\Essence {
+class Baze extends Field\Entity {
 
     protected $value, $error, $is_error = false;
     protected $_edit_jsdata;
@@ -43,11 +43,11 @@ class Baze extends Field\Essence {
     }
 
     protected function get_css_class() {
-        return "fx_form_field fx_form_field_".Field\Essence::get_type_by_id($this->type_id).($this->is_error ? " fx_form_field_error" : "");
+        return "fx_form_field fx_form_field_".Field\Entity::get_type_by_id($this->type_id).($this->is_error ? " fx_form_field_error" : "");
     }
 
     protected function get_wrap_css_class() {
-        return "fx_form_wrap fx_form_wrap_".Field\Essence::get_type_by_id($this->type_id);
+        return "fx_form_wrap fx_form_wrap_".Field\Entity::get_type_by_id($this->type_id);
     }
 
     public function set_value($value) {

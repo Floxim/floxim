@@ -626,12 +626,12 @@ class Compiler {
     
     protected function _get_item_code($token, $item_alias, $counter_id = null, $arr_id = 'array()') {
         $code = '';
-        $is_essence = '$'.$item_alias."_is_essence";
-        $code .=  $is_essence ." = \$".$item_alias." instanceof \\Floxim\\Floxim\\Template\\Essence;\n";
+        $is_entity = '$'.$item_alias."_is_entity";
+        $code .=  $is_entity ." = \$".$item_alias." instanceof \\Floxim\\Floxim\\Template\\Entity;\n";
         $is_complex = 'is_array($'.$item_alias.') || is_object($'.$item_alias.')';
         $code .= '$this->push_context( '.$is_complex.' ? $'.$item_alias." : array());\n";
         
-        $meta_test = "\tif (\$_is_admin && ".$is_essence." ) {\n";
+        $meta_test = "\tif (\$_is_admin && ".$is_entity." ) {\n";
         $code .= $meta_test;
         $code .= "\t\tob_start();\n";
         $code .= "\t}\n";

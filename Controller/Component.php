@@ -184,16 +184,16 @@ class Component extends Frontoffice {
         $searchable_fields =  
                 $com
                 ->all_fields()
-                ->find('type', Field\Essence::FIELD_IMAGE, '!=');
+                ->find('type', Field\Entity::FIELD_IMAGE, '!=');
         foreach ($searchable_fields as $field) {
             $res = array(
                 'description' => $field['name'],
-                'type' => Field\Essence::get_type_by_id($field['type'])
+                'type' => Field\Entity::get_type_by_id($field['type'])
             );
-            if ($field['type'] == Field\Essence::FIELD_LINK) {
+            if ($field['type'] == Field\Entity::FIELD_LINK) {
                 $res['content_type'] = $field->get_target_name();
             }
-            if ($field['type'] == Field\Essence::FIELD_MULTILINK) {
+            if ($field['type'] == Field\Entity::FIELD_MULTILINK) {
                 $relation = $field->get_relation();
                 $res['content_type'] = $relation[0] == System\Data::MANY_MANY ? $relation[4] : $relation[1] ;
             }
@@ -235,11 +235,11 @@ class Component extends Frontoffice {
         $link_fields = $this->
                             get_component()->
                             all_fields()->
-                            find('type', array(Field\Essence::FIELD_LINK, Field\Essence::FIELD_MULTILINK))->
-                            find('type_of_edit', Field\Essence::EDIT_NONE, System\Collection::FILTER_NEQ);
+                            find('type', array(Field\Entity::FIELD_LINK, Field\Entity::FIELD_MULTILINK))->
+                            find('type_of_edit', Field\Entity::EDIT_NONE, System\Collection::FILTER_NEQ);
         $fields = array();
         foreach ($link_fields as $lf) {
-            if ($lf['type'] == Field\Essence::FIELD_LINK) {
+            if ($lf['type'] == Field\Entity::FIELD_LINK) {
                 $target_com_id = $lf['format']['target'];
             } else {
                 $target_com_id = isset($lf['format']['mm_datatype']) 
@@ -391,20 +391,20 @@ class Component extends Frontoffice {
         return $res;
     }
     
-    public function accept_content($params,$essence = null) {
+    public function accept_content($params,$entity = null) {
         $params = array_merge(
             array(
                 'infoblock_id' => $this->get_param('infoblock_id'),
                 'type' => $this->get_content_type()
             ), $params
         );
-        if (!is_null($essence)) {
-            $meta = isset($essence['_meta'])?  $essence['_meta'] : array();
+        if (!is_null($entity)) {
+            $meta = isset($entity['_meta'])?  $entity['_meta'] : array();
             if (!isset($meta['accept_content'])) {
                 $meta['accept_content'] = array();
             }
             $meta['accept_content'][]= $params;
-            $essence['_meta'] = $meta;
+            $entity['_meta'] = $meta;
             return;
         }
         if (!isset($this->_meta['accept_content'])) {
@@ -642,7 +642,7 @@ class Component extends Frontoffice {
                         $condition['operator'] = 'RAW';
                         break;
                 }
-                if ($field['type'] == Field\Essence::FIELD_LINK){
+                if ($field['type'] == Field\Entity::FIELD_LINK){
                     if (!isset($condition['value'])) {
                         $error = true;
                     } else {
@@ -659,7 +659,7 @@ class Component extends Frontoffice {
                     }
                 }
 
-                if ($field['type'] == Field\Essence::FIELD_MULTILINK) {
+                if ($field['type'] == Field\Entity::FIELD_MULTILINK) {
 
                     if (!isset($condition['value']) || !is_array($condition['value'])) {
                         $error = true;

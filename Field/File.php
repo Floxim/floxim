@@ -27,7 +27,7 @@ class File extends Baze {
         return $this->_js_field;
     }
 
-    public function get_savestring(System\Essence $content = null) {
+    public function get_savestring(System\Entity $content = null) {
         $old_value = $content[$this['keyword']];
         if ($old_value != $this->value) {
             if (!empty($old_value)) {

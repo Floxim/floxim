@@ -9,7 +9,7 @@ class Lang extends Admin {
     public function all() {
         $langs = fx::data('lang')->all();
 
-        $list = array('type' => 'list', 'filter' => false, 'tpl' => 'imgh', 'essence'=> 'lang');
+        $list = array('type' => 'list', 'filter' => false, 'tpl' => 'imgh', 'entity'=> 'lang');
         $list['labels'] = array();
 
         $list['values'] = array();
@@ -50,7 +50,7 @@ class Lang extends Admin {
         $fields = array();
 
         $fields[] = $this->ui->hidden('action', 'add_save');
-        $fields[] = $this->ui->hidden('essence', 'lang');
+        $fields[] = $this->ui->hidden('entity', 'lang');
         $fields[] = $this->ui->input('en_name', fx::alang('Language name','system'));
         $fields[] = $this->ui->input('native_name', fx::alang('Native language name','system'));
         $fields[] = $this->ui->input('lang_code', fx::alang('Language code','system'));
@@ -107,7 +107,7 @@ class Lang extends Admin {
         $this->response->add_fields($main_fields);
 
         $fields = array();
-        $fields[] = $this->ui->hidden('essence', 'lang');
+        $fields[] = $this->ui->hidden('entity', 'lang');
         $fields[] = $this->ui->hidden('action', 'edit');
         $fields[] = $this->ui->hidden('posting');
         $fields [] = $this->ui->hidden('id', $lang['id']);
@@ -139,7 +139,7 @@ class Lang extends Admin {
         $lang_id = isset($input['id']) ? $input['id'] : isset($input['params'][0]) ? $input['params'][0] : null;
         $lang = fx::data('lang', $lang_id);
         
-        $list = array('type' => 'list', 'filter' => false, 'tpl' => 'imgh', 'essence'=> 'lang', 'values' => array());
+        $list = array('type' => 'list', 'filter' => false, 'tpl' => 'imgh', 'entity'=> 'lang', 'values' => array());
         $list['labels'] = array(
             'dict' => array(
                 'label' => fx::alang('Dictionary', 'system'),
@@ -153,7 +153,7 @@ class Lang extends Admin {
                 'label' => fx::alang('Value','system'),
                 'filter' => 'text',
                 'editable' => array(
-                    'essence' => 'lang',
+                    'entity' => 'lang',
                     'action' => 'string',
                     'lang' => $lang_id
                 )

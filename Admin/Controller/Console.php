@@ -16,7 +16,7 @@ class Console extends Admin {
                 'value' => isset($input['console_text']) ? $input['console_text'] : '<?php'."\n"
             )
         );
-        $fields []= $this->ui->hidden('essence', 'console');
+        $fields []= $this->ui->hidden('entity', 'console');
         $fields []= $this->ui->hidden('action', 'execute');
         $this->response->add_form_button(
             array(

@@ -603,8 +603,9 @@ class Files {
         }
     }
 
-    public function rename($filename, $new_filename) {
-
+    public function rename ($filename, $new_filename) {
+        return rename($filename, $new_filename);
+        
         $new_filename = trim($new_filename, "/");
 
         if (!$filename || !$new_filename) {
@@ -628,22 +629,6 @@ class Files {
 
         if (isset($success) && $success) {
             return 0;
-        }
-
-        $ftp_path = $this->base_url.'/'.dirname($filename).'/';
-
-        // try to rename ftp
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $ftp_path);
-        curl_setopt($ch, CURLOPT_POSTQUOTE, array("RNFR ".basename($filename), "RNTO ".$new_filename));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        if (curl_exec($ch) !== false) {
-            curl_close($ch);
-            return 0;
-        } else {
-            $info = curl_getinfo($ch);
-            curl_close($ch);
-            return $info["http_code"];
         }
     }
 

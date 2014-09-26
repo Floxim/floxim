@@ -86,13 +86,13 @@ abstract class Data {
      * @return \Floxim\Floxim\System\Collection
      */
     public function all() {
-        $data = $this->_get_essences();
+        $data = $this->_get_entitys();
         return $data;
     }
 
     public function one() {
         $this->limit = 1;
-        $data = $this->_get_essences();
+        $data = $this->_get_entitys();
         return isset($data[0]) ? $data[0] : false;
     }
     
@@ -440,7 +440,7 @@ abstract class Data {
         }
         if ($value instanceof Collection) {
             $value = $value->column(function($i) {
-                return $i instanceof Essence ? $i['id'] : (int) $i;
+                return $i instanceof Entity ? $i['id'] : (int) $i;
             })->unique()->get_data();
         }
         if (is_array($value)) {
@@ -503,14 +503,14 @@ abstract class Data {
     
     /*
      * Method call $this->get_data(),
-     * from the collection of the flat data collects essence
+     * from the collection of the flat data collects entity
      */
-    protected function _get_essences() {
+    protected function _get_entitys() {
         //fx::config('dev.on', fx::env('console'));
         $data = $this->get_data();
         //fx::debug('start filless', $data);
         foreach ($data as $dk => $dv) {
-            $data[$dk] = $this->essence($dv);
+            $data[$dk] = $this->entity($dv);
         }
         //fx::debug('start adrels');
         $this->_add_relations($data);
@@ -522,7 +522,7 @@ abstract class Data {
         return fx::data($rel[1]);
     }
     
-    public function add_related($rel_name, $essences, $rel_finder = null) {
+    public function add_related($rel_name, $entitys, $rel_finder = null) {
         
         $relations = $this->relations();
         if (!isset($relations[$rel_name])) {
@@ -538,13 +538,13 @@ abstract class Data {
         // e.g. $rel = array(fx_data::HAS_MANY, 'field', 'component_id');
         switch ($rel_type) {
             case self::BELONGS_TO:
-                $rel_items = $rel_finder->where('id', $essences->get_values($rel_field))->all();
-                $essences->attach($rel_items, $rel_field, $rel_name);
+                $rel_items = $rel_finder->where('id', $entitys->get_values($rel_field))->all();
+                $entitys->attach($rel_items, $rel_field, $rel_name);
                 break;
             case self::HAS_MANY:
                 //echo fx_debug('has manu', $rel_finder);
-                $rel_items = $rel_finder->where($rel_field, $essences->get_values('id'))->all();
-                $essences->attach_many($rel_items, $rel_field, $rel_name);
+                $rel_items = $rel_finder->where($rel_field, $entitys->get_values('id'))->all();
+                $entitys->attach_many($rel_items, $rel_field, $rel_name);
                 break;
             case self::HAS_ONE:
                 break;
@@ -565,12 +565,12 @@ abstract class Data {
                 
                 $rel_finder
                         ->with($end_rel, $end_finder)
-                        ->where($rel_field, $essences->get_values('id'));
+                        ->where($rel_field, $entitys->get_values('id'));
                 if ($end_rel_field) {
                     $rel_finder->where($end_rel_field, 0, '!=');
                 }
                 $rel_items = $rel_finder->all()->find($end_rel, null, '!=');
-                $essences->attach_many($rel_items, $rel_field, $rel_name, 'id', $end_rel);
+                $entitys->attach_many($rel_items, $rel_field, $rel_name, 'id', $end_rel);
                 break;
         }
     }
@@ -579,11 +579,11 @@ abstract class Data {
      * Method adds related-entity to the collection
      * uses $this->with & $this->relations
      */
-    protected function _add_relations(\Floxim\Floxim\System\Collection $essences) {
+    protected function _add_relations(\Floxim\Floxim\System\Collection $entitys) {
         if (count($this->with) == 0) {
             return;
         }
-        if (count($essences) == 0) {
+        if (count($entitys) == 0) {
             return;
         }
         $relations = $this->relations();
@@ -592,7 +592,7 @@ abstract class Data {
             if (!isset($relations[$rel_name])) {
                 continue;
             }
-            $this->add_related($rel_name, $essences, $rel_finder);
+            $this->add_related($rel_name, $entitys, $rel_finder);
         }
     }
     
@@ -656,7 +656,7 @@ abstract class Data {
     /**
      *
      * @param type $id
-     * @return \Floxim\Floxim\System\Essence
+     * @return \Floxim\Floxim\System\Entity
      */
     public function get_by_id($id) {
         return $this->where('id', $id)->one();
@@ -672,26 +672,26 @@ abstract class Data {
     }
     
     /**
-     * To create a new essence instance, to fill in default values
+     * To create a new entity instance, to fill in default values
      * @param array $data
-     * @return \Floxim\Floxim\System\Essence
+     * @return \Floxim\Floxim\System\Entity
      */
     public function create($data = array()) {
         if ($data instanceof Form\Form) {
-            $essence = $this->essence();
-            $essence->load_from_form($data);
+            $entity = $this->entity();
+            $entity->load_from_form($data);
         } else {
-            $essence = $this->essence($data);
+            $entity = $this->entity($data);
         }
-        return $essence;
+        return $entity;
     }
     
     /**
-     * To initialize essence
+     * To initialize entity
      * @param array $data
-     * @return \Floxim\Floxim\System\Essence
+     * @return \Floxim\Floxim\System\Entity
      */
-    public function essence($data = array()) {
+    public function entity($data = array()) {
         $classname = $this->get_class_name($data);
         if (!class_exists($classname)) {
             say($this);
@@ -754,7 +754,7 @@ abstract class Data {
 
     public function get_parent($item) {
         $id = $item;
-        if ($item instanceof Essence || is_array($item)) {
+        if ($item instanceof Entity || is_array($item)) {
             $id = $item['parent_id'];
         }
 
@@ -766,13 +766,13 @@ abstract class Data {
     }
     
     /**
-     * Get the name of the class to essence
-     * @param array $data data essence'and
+     * Get the name of the class to entity
+     * @param array $data data entity'and
      * @return string
      */
     public function get_class_name() {
         $class = explode("\\", get_class($this));
-        $class[count($class)-1]= 'Essence';
+        $class[count($class)-1]= 'Entity';
         $class = join("\\", $class);
         return $class;
         // todo: psr0 need fix

@@ -5,8 +5,8 @@ use Floxim\Floxim\System\Fx as fx;
 $sort_fields = $this
             ->get_component()
             ->all_fields()
-            ->find('type', \Floxim\Floxim\Component\Field\Essence::FIELD_MULTILINK, '!=')
-            ->find('type', \Floxim\Floxim\Component\Field\Essence::FIELD_MULTILINK, '!=')
+            ->find('type', \Floxim\Floxim\Component\Field\Entity::FIELD_MULTILINK, '!=')
+            ->find('type', \Floxim\Floxim\Component\Field\Entity::FIELD_MULTILINK, '!=')
             ->get_values(fx::is_admin() ? 'name' : 'id', 'keyword');
 
 $component = $this->get_component();

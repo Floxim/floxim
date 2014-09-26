@@ -18,7 +18,7 @@ class User extends Admin {
         foreach ($users as $v) {
             $r = array(
                 'id' => $v->get_id(),
-                'essence' => '',
+                'entity' => '',
                 'name' => array(
                     'name' => $v->get('name'),
                     'url' => '#admin.user.edit('.$v->get_id().')'
@@ -27,7 +27,7 @@ class User extends Admin {
             );
             $result['values'][] = $r;
         }
-        $result['essence'] = 'user';
+        $result['entity'] = 'user';
         $res = array('fields' => array( $result ));
         $this->response->add_buttons(
             array(
@@ -189,7 +189,7 @@ class User extends Admin {
         }
 
         $fields[] = $this->ui->hidden('posting');
-        $fields[] = $this->ui->hidden('essence', 'user');
+        $fields[] = $this->ui->hidden('entity', 'user');
 
         return $fields;
     }

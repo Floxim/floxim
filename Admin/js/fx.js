@@ -102,7 +102,7 @@ window.$fx = {
             }
             var len = $fx.hash.length;
             if ( len > 2 ) {
-                $fx.admin.set_essence($fx.hash[len-2]);
+                $fx.admin.set_entity($fx.hash[len-2]);
                 $fx.admin.set_action($fx.hash[len-1]);
             }
             $fx.admin.load();

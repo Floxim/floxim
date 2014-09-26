@@ -14,7 +14,7 @@ class Admin extends System\Controller {
     /** @var bool the process() method should return the result? */
     protected $process_do_return = false;
     
-    protected $essence_type;
+    protected $entity_type;
     protected $save_history = true;
 
     /** @var fx_admin_response */
@@ -25,7 +25,7 @@ class Admin extends System\Controller {
 
     public function __construct($input = array(), $action = null, $do_return = false) {
         parent::__construct($input, $action);
-        $this->essence_type = strtolower(fx::getClassNameFromNamespaceFull(get_class($this)));
+        $this->entity_type = strtolower(fx::getClassNameFromNamespaceFull(get_class($this)));
         $this->ui = new FxAdmin\Ui;
         
         $this->process_do_return = isset($input['do_return']) ? $input['do_return'] : $do_return;
@@ -168,13 +168,13 @@ class Admin extends System\Controller {
     
     public function move_save($input) {
         
-        $essence = $this->essence_type;
+        $entity = $this->entity_type;
 
         $positions = $input['positions'] ? $input['positions'] : $input['pos'];
         if ($positions) {
             $priority = 0;
             foreach ($positions as $id) {
-                $item = fx::data($essence)->get_by_id($id);
+                $item = fx::data($entity)->get_by_id($id);
                 if ($item) {
                     $item->set('priority', $priority++)->save();
                 }
@@ -186,7 +186,7 @@ class Admin extends System\Controller {
 
     public function on_save($input) {
 
-        $es = $this->essence_type;
+        $es = $this->entity_type;
         $result = array('status' => 'ok');
 
         $ids = $input['id'];
@@ -208,7 +208,7 @@ class Admin extends System\Controller {
 
     public function off_save($input) {
         
-        $es = $this->essence_type;
+        $es = $this->entity_type;
         $result = array('status' => 'ok');
 
         $ids = $input['id'];
@@ -230,7 +230,7 @@ class Admin extends System\Controller {
 
     public function delete_save($input) {
         
-        $es = $this->essence_type;
+        $es = $this->entity_type;
         $result = array('status' => 'ok');
 
         $ids = $input['id'];

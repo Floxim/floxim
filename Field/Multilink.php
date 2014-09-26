@@ -38,12 +38,12 @@ class Multilink extends Baze {
             }
         } elseif ($render_type == 'table') {
             $rel = $this->get_relation();
-            $essence = fx::data($rel[1])->create();
-            $essence_fields = $essence->get_form_fields();
+            $entity = fx::data($rel[1])->create();
+            $entity_fields = $entity->get_form_fields();
             $this->_js_field['tpl'] = array();
             $this->_js_field['labels'] = array();
             
-            foreach ($essence_fields as $ef) {
+            foreach ($entity_fields as $ef) {
                 if ($ef['name'] == $rel[2]) {
                     continue;
                 }
@@ -87,7 +87,7 @@ class Multilink extends Baze {
         $chain = new System\Collection($com->get_chain());
         $chain_ids = $chain->get_values('id');
         $link_fields = fx::data('field')
-                        ->where('type', Field\Essence::FIELD_LINK)
+                        ->where('type', Field\Entity::FIELD_LINK)
                         ->where('component_id', 0, '!=')
                         ->all();
         
@@ -128,7 +128,7 @@ class Multilink extends Baze {
                     // get the field-component links that point to other components
                     $linking_component_links = $linking_component->
                             all_fields()->
-                            find('type', Field\Essence::FIELD_LINK)->
+                            find('type', Field\Entity::FIELD_LINK)->
                             find('id', $lf['id'], '!=');
                     
                     // exclude fields, connected to the parent

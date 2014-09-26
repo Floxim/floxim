@@ -14,7 +14,7 @@ class Widget extends Component {
             'buttons' => array('type' => 'buttons')
         );
         $field['values'] = array();
-        $field['essence'] = 'widget';
+        $field['entity'] = 'widget';
         $widgets = fx::data('widget')->all();
         foreach ($widgets as $widget) {
             $submenu = Component::get_component_submenu($widget);
@@ -52,7 +52,7 @@ class Widget extends Component {
         
         $result = array('fields' => array($field));
 
-        $this->response->breadcrumb->add_item(self::_essence_types('widget'), '#admin.widget.all');
+        $this->response->breadcrumb->add_item(self::_entity_types('widget'), '#admin.widget.all');
         $this->response->submenu->set_menu('widget');
         return $result;
     }
@@ -71,10 +71,10 @@ class Widget extends Component {
 
         $fields[] = $this->ui->hidden('source', $input['source']);
         $fields[] = $this->ui->hidden('posting');
-        $fields[] = $this->ui->hidden('essence', 'widget');
+        $fields[] = $this->ui->hidden('entity', 'widget');
         
         $this->response->breadcrumb->add_item(
-            self::_essence_types('widget'), 
+            self::_entity_types('widget'), 
             '#admin.widget.all'
         );
         $this->response->breadcrumb->add_item(
@@ -153,7 +153,7 @@ class Widget extends Component {
         $fields[] = array('type' => 'hidden', 'name' => 'id', 'value' => $widget['id']);
         
         $this->response->submenu->set_subactive('settings');
-        $fields[] = $this->ui->hidden('essence', 'widget');
+        $fields[] = $this->ui->hidden('entity', 'widget');
         $fields[] = $this->ui->hidden('action', 'edit_save');
         
         return array('fields' => $fields, 'form_button' => array('save'));

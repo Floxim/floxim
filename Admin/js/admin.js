@@ -2,7 +2,7 @@
 fx_admin = function () {
     this.submenu = new fx_submenu();
     this.breadcrumb = new fx_breadcrumb();
-    this.essence = '';
+    this.entity = '';
     this.action = '';
     this.menu_id = '';
     this.last_post = {};
@@ -24,9 +24,9 @@ fx_admin.prototype.bind_actions = function () {
 fx_admin.prototype.load = function () {
     var self = this;
     
-    if ( this.essence && this.action ) {
+    if ( this.entity && this.action ) {
         var post = {
-            essence: this.essence,
+            entity: this.entity,
             action: this.action, 
             menu_id: this.menu_id,
             params: $fx.hash_param
@@ -70,11 +70,11 @@ fx_admin.prototype.load_page = function ( data ) {
 };
 
 
-fx_admin.prototype.set_essence = function ( essence ) {
-    this.essence = essence;
+fx_admin.prototype.set_entity = function ( entity ) {
+    this.entity = entity;
 };
-fx_admin.prototype.get_essence = function () {
-    return this.essence;
+fx_admin.prototype.get_entity = function () {
+    return this.entity;
 };
 
 fx_admin.prototype.set_action = function ( action ) {

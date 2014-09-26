@@ -42,7 +42,7 @@ class Store extends Floximsite {
 
     protected function get_base_post() {
         $post = parent::get_base_post();
-        $post['essence'] = 'module_store';
+        $post['entity'] = 'module_store';
         return $post;
     }
 

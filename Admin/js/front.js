@@ -233,10 +233,10 @@ fx_front.prototype.get_area_meta = function($area_node) {
 fx_front.prototype.get_placeholder_adder_closure = function ($placeholder) {
     // store node right before placeholder to place placeholder back on cancel
     var $placeholder_pre = $placeholder.prev().first(),
-        placeholder_meta = $placeholder.data('fx_essence_meta'),
+        placeholder_meta = $placeholder.data('fx_entity_meta'),
         $current_node = $($fx.front.get_selected_item());
     function switch_placeholder($placeholder, on) {
-        $placeholder.toggleClass('fx_essence_adder_placeholder_active', on);
+        $placeholder.toggleClass('fx_entity_adder_placeholder_active', on);
         // put placeholder back to it's place
         if (!on && $placeholder_pre.length) {
             $placeholder_pre.after($placeholder);
@@ -249,10 +249,10 @@ fx_front.prototype.get_placeholder_adder_closure = function ($placeholder) {
         if ($current_node) {
             if ($button.hasClass('fx_before')) {
                 $current_node.before($placeholder);
-                placeholder_meta.placeholder.__move_before = $current_node.data('fx_essence')[0];
+                placeholder_meta.placeholder.__move_before = $current_node.data('fx_entity')[0];
             } else if ($button.hasClass('fx_after')) {
                 $current_node.after($placeholder);
-                placeholder_meta.placeholder.__move_after = $current_node.data('fx_essence')[0];
+                placeholder_meta.placeholder.__move_after = $current_node.data('fx_entity')[0];
             }
         }
         
@@ -283,7 +283,7 @@ fx_front.prototype.get_placeholder_adder_closure = function ($placeholder) {
             setTimeout(function() {
                 var $c_selected_placeholder = 
                         $($fx.front.get_selected_item())
-                            .closest('.fx_essence_adder_placeholder');
+                            .closest('.fx_entity_adder_placeholder');
                 if (
                     $c_selected_placeholder.length 
                     && $c_selected_placeholder[0] === $placeholder[0]
@@ -303,7 +303,7 @@ fx_front.prototype.get_placeholder_adder_closure = function ($placeholder) {
 fx_front.prototype.get_panel_adder_closure = function(meta) {
     return function(e) {
         var form_data = {
-           essence:'content',
+           entity:'content',
            action:'add_edit',
            content_type:meta.type,
            infoblock_id:meta.infoblock_id,
@@ -311,10 +311,10 @@ fx_front.prototype.get_panel_adder_closure = function(meta) {
         };
         var $current_node = $($fx.front.get_selected_item());
         var $ib_node = $current_node.closest('.fx_infoblock');
-        var essence_meta = $current_node && $current_node.data('fx_essence');
-        if (essence_meta) {
+        var entity_meta = $current_node && $current_node.data('fx_entity');
+        if (entity_meta) {
             var $button = $(e.target);
-            var curr_node_id = essence_meta[0];
+            var curr_node_id = entity_meta[0];
             if ($button.hasClass('fx_before')) {
                 form_data.__move_before = curr_node_id;
             } else if ($button.hasClass('fx_after')) {
@@ -332,21 +332,21 @@ fx_front.prototype.get_panel_adder_closure = function(meta) {
     };
 };
 
-fx_front.prototype.is_top_essence = function($node) {
-    // let's check that there's no other essence 
+fx_front.prototype.is_top_entity = function($node) {
+    // let's check that there's no other entity 
     // between this one and the infoblock node   
-    var is_top_essence = $node.is('.fx_essence');
-    $node.parents('.fx_essence, .fx_infoblock').each(function() {
+    var is_top_entity = $node.is('.fx_entity');
+    $node.parents('.fx_entity, .fx_infoblock').each(function() {
         var $this = $(this);
-        if ($this.is('.fx_essence')) {
-            is_top_essence = false;
+        if ($this.is('.fx_entity')) {
+            is_top_entity = false;
             return false;
         }
         if ($this.is('.fx_infoblock')) {
             return false;
         }
     });
-    return is_top_essence;
+    return is_top_entity;
 };
 
 fx_front.prototype.find_placeholder_by_meta = function(meta, $placeholders) {
@@ -358,7 +358,7 @@ fx_front.prototype.find_placeholder_by_meta = function(meta, $placeholders) {
     var $found_placeholder = false;
     $placeholders.each(function (){ 
         var c_sign = meta_sign ( 
-            ($(this).data('fx_essence_meta') || {}).placeholder
+            ($(this).data('fx_entity_meta') || {}).placeholder
         );
         if (c_sign === needle_sign) {
             $found_placeholder = $(this);
@@ -369,11 +369,11 @@ fx_front.prototype.find_placeholder_by_meta = function(meta, $placeholders) {
 };
 
 fx_front.prototype.redraw_add_button = function($node) {
-    if (!$node || $node.is('.fx_essence_adder_placeholder') || !$node.is('.fx_infoblock, .fx_area, .fx_essence')) {
+    if (!$node || $node.is('.fx_entity_adder_placeholder') || !$node.is('.fx_infoblock, .fx_area, .fx_entity')) {
         return;
     }
     var get_neighbour_buttons = function(between_text) {
-        if (!$node.is('.fx_essence') || !$node.is('.fx_sortable')) {
+        if (!$node.is('.fx_entity') || !$node.is('.fx_sortable')) {
             return between_text;
         }
         var res = ' <a class="fx_button_extra fx_before" title="'+$fx.lang('Before')+'">&#9668;</a>';
@@ -388,18 +388,18 @@ fx_front.prototype.redraw_add_button = function($node) {
         $ib_node = $node.closest('.fx_infoblock'),
         ib_accept = ($ib_node.data('fx_controller_meta') || {}).accept_content;
     
-    if ($node.is('.fx_essence') && mode === 'edit') {
-        var is_top_essence = $fx.front.is_top_essence($node),
-            $placeholder = $('>.fx_essence_adder_placeholder', $node.parent());
+    if ($node.is('.fx_entity') && mode === 'edit') {
+        var is_top_entity = $fx.front.is_top_entity($node),
+            $placeholder = $('>.fx_entity_adder_placeholder', $node.parent());
         if ($placeholder.length) {
-            var placeholder_meta = $placeholder.data('fx_essence_meta') || {},
+            var placeholder_meta = $placeholder.data('fx_entity_meta') || {},
                 placeholder_name = placeholder_meta.placeholder_name;
             buttons.push({
                 name:  get_neighbour_buttons( $fx.lang('Add') + ' ' + placeholder_name ),
                 callback: $fx.front.get_placeholder_adder_closure($placeholder)
             });
         }
-        for (var i = 0; is_top_essence && ib_accept && i < ib_accept.length; i++) {
+        for (var i = 0; is_top_entity && ib_accept && i < ib_accept.length; i++) {
             var c_meta = ib_accept[i];
             if ($fx.front.find_placeholder_by_meta(c_meta, $placeholder)) {
                 continue;
@@ -411,7 +411,7 @@ fx_front.prototype.redraw_add_button = function($node) {
         };
 
         
-        var extra_accept = ($node.data('fx_essence_meta') || {}).accept_content || [];
+        var extra_accept = ($node.data('fx_entity_meta') || {}).accept_content || [];
         $.each(extra_accept, function () {
             buttons.push({
                 name: this.title,
@@ -420,7 +420,7 @@ fx_front.prototype.redraw_add_button = function($node) {
         });
     } else if (ib_accept && mode === 'edit') {
         $.each(ib_accept, function () {
-            var $placeholder  = $fx.front.find_placeholder_by_meta(this, $node.find('.fx_essence_adder_placeholder'));
+            var $placeholder  = $fx.front.find_placeholder_by_meta(this, $node.find('.fx_entity_adder_placeholder'));
             buttons.push({
                 name: this.title,
                 callback: $placeholder ? 
@@ -469,7 +469,7 @@ fx_front.prototype.add_infoblock_select_controller = function($node) {
     $fx.front.select_item($area_node.get(0));
 
     $fx.front_panel.load_form({
-        essence:'infoblock',
+        entity:'infoblock',
         action:'select_controller',
         page_id:$fx.front.get_page_id(),
         container_infoblock_id: container_infoblock ? container_infoblock.id : null,
@@ -643,7 +643,7 @@ fx_front.prototype.is_selectable = function(node) {
         case 'design':
             return n.hasClass('fx_area') || n.hasClass('fx_infoblock');
         case 'edit':
-            if (n.hasClass('fx_essence') || n.hasClass('fx_accept_content')) {
+            if (n.hasClass('fx_entity') || n.hasClass('fx_accept_content')) {
                 return true;
             }
             var c_meta = n.data('fx_controller_meta');
@@ -651,7 +651,7 @@ fx_front.prototype.is_selectable = function(node) {
                 return true;
             }
             if ( n.hasClass('fx_template_var') || n.hasClass('fx_template_var_in_att') ) {
-                if ($fx.front.is_var_bound_to_essence(n)) {
+                if ($fx.front.is_var_bound_to_entity(n)) {
                     return false;
                 }
                 return true;
@@ -660,18 +660,18 @@ fx_front.prototype.is_selectable = function(node) {
     }
 };
 
-fx_front.prototype.is_var_bound_to_essence = function($node) {
-    if ($node.hasClass('fx_var_bound_to_essence')) {
+fx_front.prototype.is_var_bound_to_entity = function($node) {
+    if ($node.hasClass('fx_var_bound_to_entity')) {
         return true;
     }
-    var $essence = $node.closest('.fx_essence');
+    var $entity = $node.closest('.fx_entity');
     
-    if ($essence.length === 0) {
+    if ($entity.length === 0) {
         return false;
     }
     
-    if ($('.fx_template_var, .fx_template_var_in_att', $essence).length === 1) {
-        $node.addClass('fx_var_bound_to_essence');
+    if ($('.fx_template_var, .fx_template_var_in_att', $entity).length === 1) {
+        $node.addClass('fx_var_bound_to_entity');
         return true;
     }
     
@@ -680,7 +680,7 @@ fx_front.prototype.is_var_bound_to_essence = function($node) {
     }
     
     var distance = 35;
-    var eo = $essence.offset();
+    var eo = $entity.offset();
     var no = $node.offset();
     
     if (Math.abs(eo.top - no.top) > distance) {
@@ -691,13 +691,13 @@ fx_front.prototype.is_var_bound_to_essence = function($node) {
     }
     
     // No Math.abs() here because if field is larger than container, we assume them to be bound
-    if ( $essence.outerWidth() - $node.outerWidth() > distance) {
+    if ( $entity.outerWidth() - $node.outerWidth() > distance) {
         return false;
     }
-    if ( $essence.outerHeight() - $node.outerHeight()  > distance) {
+    if ( $entity.outerHeight() - $node.outerHeight()  > distance) {
         return false;
     }
-    $node.addClass('fx_var_bound_to_essence');
+    $node.addClass('fx_var_bound_to_entity');
     return true;
 };
 
@@ -759,8 +759,8 @@ fx_front.prototype.select_item = function(node) {
     $node.addClass('fx_selected').trigger('fx_select');
     
     if ($fx.front.mode === 'edit') {
-        if ($node.is('.fx_essence')) {
-            $fx.front.select_content_essence($node);
+        if ($node.is('.fx_entity')) {
+            $fx.front.select_content_entity($node);
         }
         if ($node.is('.fx_template_var, .fx_template_var_in_att')) {
             $node.edit_in_place();
@@ -982,12 +982,12 @@ fx_front.prototype.node_is_empty = function($n){
 };
 
 fx_front.prototype.hilight = function() {
-    var items = $('.fx_template_var, .fx_area, .fx_template_var_in_att, .fx_essence, .fx_infoblock').not('.fx_unselectable');
+    var items = $('.fx_template_var, .fx_area, .fx_template_var_in_att, .fx_entity, .fx_infoblock').not('.fx_unselectable');
     items.
         removeClass('fx_hilight').
         removeClass('fx_hilight_empty').
         removeClass('fx_hilight_empty_inline').
-        removeClass('fx_var_bound_to_essence').
+        removeClass('fx_var_bound_to_entity').
         removeClass('fx_no_hilight').
         removeClass('fx_clearfix');
     $('.fx_hilight_hover').removeClass('fx_hilight_hover');
@@ -1026,7 +1026,7 @@ fx_front.prototype.hilight = function() {
         
         var is_selectable = $fx.front.is_selectable(item);
         
-        if (is_selectable || i.hasClass('fx_var_bound_to_essence')) {
+        if (is_selectable || i.hasClass('fx_var_bound_to_entity')) {
             i.addClass('fx_hilight');
             // we add .fx_clearfix class to the nodes which are not floated but have floated children
             // so forcing them to have real size
@@ -1151,18 +1151,18 @@ fx_front.prototype.load = function ( mode ) {
     $('html').trigger('fx_set_front_mode', this.mode);
 };
 
-fx_front.prototype.select_content_essence = function($essence) {
-    var essence_meta = $essence.data('fx_essence');
-    var ib_node = $essence.closest('.fx_infoblock').get(0);
-    var essence = $essence[0];
+fx_front.prototype.select_content_entity = function($entity) {
+    var entity_meta = $entity.data('fx_entity');
+    var ib_node = $entity.closest('.fx_infoblock').get(0);
+    var entity = $entity[0];
     $fx.front.add_panel_button('edit', function() {
-        $fx.front.select_item(essence);
+        $fx.front.select_item(entity);
         $fx.front_panel.load_form(
             {
-                essence:'content',
+                entity:'content',
                 action:'add_edit',
-                content_id: essence_meta[0],
-                content_type:essence_meta[1]
+                content_id: entity_meta[0],
+                content_type:entity_meta[1]
             }, 
             {
                 view:'cols',
@@ -1177,11 +1177,11 @@ fx_front.prototype.select_content_essence = function($essence) {
     });
     
     $fx.front.add_panel_button('delete', function() {
-        var ce_type = essence_meta[3] || essence_meta[1];
-        var ce_id = essence_meta[2] || essence_meta[0];
+        var ce_type = entity_meta[3] || entity_meta[1];
+        var ce_id = entity_meta[2] || entity_meta[0];
 
         $fx.front_panel.load_form({
-            essence:'content',
+            entity:'content',
             action:'delete_save',
             content_type:ce_type,
             content_id:ce_id,
@@ -1195,39 +1195,39 @@ fx_front.prototype.select_content_essence = function($essence) {
     });
     
     if (
-        $fx.front.get_sortable_essences(
-            $essence.parent()
+        $fx.front.get_sortable_entitys(
+            $entity.parent()
         )
     ) {
         $fx.front.add_panel_button('move', function() {
             var $b = $(this);
             if ($b.hasClass('fx_admin_button_move_active')) {
                 $b.removeClass('fx_admin_button_move_active');
-                $fx.front.stop_essences_sortable($essence.parent());
+                $fx.front.stop_entitys_sortable($entity.parent());
                 $fx.front.deselect_item();
-                $fx.front.select_item($essence);
+                $fx.front.select_item($entity);
             } else {
                 $b.addClass('fx_admin_button_move_active');
-                var eip = $essence.data('edit_in_place');
+                var eip = $entity.data('edit_in_place');
                 if (eip) {
                     eip.stop();
                     eip.restore();
                 }
-                $fx.front.start_essences_sortable($essence.parent());
+                $fx.front.start_entitys_sortable($entity.parent());
             }
         });
     }
     
     var $bound_to_edit = $([]);
-    $('.fx_var_bound_to_essence', $essence).each(function() {
+    $('.fx_var_bound_to_entity', $entity).each(function() {
         var $bound = $(this);
-        if ($bound.closest('.fx_essence')[0] === essence) {
+        if ($bound.closest('.fx_entity')[0] === entity) {
             $bound_to_edit = $bound_to_edit.add($bound);
         }
     });
     $bound_to_edit.edit_in_place();
     $('html').one('fx_deselect', function(e) {
-        $fx.front.stop_essences_sortable();
+        $fx.front.stop_entitys_sortable();
     });
 };
 
@@ -1253,7 +1253,7 @@ fx_front.prototype.select_infoblock = function(n) {
             ib_loader = null;
             
         $fx.front_panel.load_form({
-            essence:'infoblock',
+            entity:'infoblock',
             action:'select_settings',
             id:ib.id,
             visual_id:ib.visual_id,
@@ -1302,7 +1302,7 @@ fx_front.prototype.select_infoblock = function(n) {
             return;
         }
         $fx.front_panel.load_form({
-            essence:'infoblock',
+            entity:'infoblock',
             action:'delete_infoblock',
             id:ib.id,
             fx_admin:true
@@ -1326,33 +1326,33 @@ fx_front.prototype.set_mode_view = function () {
     
 };
 
-fx_front.prototype.get_sortable_essences = function($cp) {
-    var sortable_items_selector = ' > .fx_essence.fx_sortable.fx_hilight';
-    var $essences = $(sortable_items_selector, $cp);
-    if ($essences.length < 2 || $cp.hasClass('fx_not_sortable')) {
+fx_front.prototype.get_sortable_entitys = function($cp) {
+    var sortable_items_selector = ' > .fx_entity.fx_sortable.fx_hilight';
+    var $entitys = $(sortable_items_selector, $cp);
+    if ($entitys.length < 2 || $cp.hasClass('fx_not_sortable')) {
         return false;
     }
-    return $essences;
+    return $entitys;
 }
 
-fx_front.prototype.start_essences_sortable = function($cp) {
-    var $essences = $fx.front.get_sortable_essences($cp);
-    var placeholder_class = "fx_essence_placeholder";
-    if ($essences.first().css('display') === 'inline') {
-        placeholder_class += ' fx_essence_placeholder_inline';
+fx_front.prototype.start_entitys_sortable = function($cp) {
+    var $entitys = $fx.front.get_sortable_entitys($cp);
+    var placeholder_class = "fx_entity_placeholder";
+    if ($entitys.first().css('display') === 'inline') {
+        placeholder_class += ' fx_entity_placeholder_inline';
     }
-    $cp.addClass('fx_essence_container_sortable');
+    $cp.addClass('fx_entity_container_sortable');
     
     var is_x = true;
     var is_y = true;
     var c_x = null;
     var c_y = null;
-    $essences.each(function()  {
-        var $essence = $(this);
-        if (!$essence.is(':visible')) {
+    $entitys.each(function()  {
+        var $entity = $(this);
+        if (!$entity.is(':visible')) {
             return;
         }
-        var o  = $essence.offset();
+        var o  = $entity.offset();
         if (c_x === null){
             c_x = o.left;
         } else if (o.left !== c_x) {
@@ -1368,7 +1368,7 @@ fx_front.prototype.start_essences_sortable = function($cp) {
     
     var sort_params = {
         axis:axis,
-        items:$essences,
+        items:$entitys,
         placeholder: placeholder_class,
         forcePlaceholderSize : true,
         distance:3,
@@ -1406,20 +1406,20 @@ fx_front.prototype.start_essences_sortable = function($cp) {
             $fx.front.get_node_panel().hide();
         },
         stop:function(e, ui) {
-            var ce = ui.item.closest('.fx_essence');
-            var ce_data = ce.data('fx_essence');
+            var ce = ui.item.closest('.fx_entity');
+            var ce_data = ce.data('fx_entity');
             var ce_id = ce_data[2] || ce_data[0];
             var ce_type = ce_data[3] || ce_data[1];
 
-            var next_e = ce.nextAll('.fx_essence').first();
+            var next_e = ce.nextAll('.fx_entity').first();
             var next_id = null;
             if (next_e.length > 0) {
-                var next_data = next_e.data('fx_essence');
+                var next_data = next_e.data('fx_entity');
                 next_id = next_data[2] || next_data[0];
             }
             $fx.front.disable_infoblock($cp.closest('.fx_infoblock'));
             $fx.post({
-                essence:'content',
+                entity:'content',
                 action:'move',
                 content_id:ce_id,
                 content_type:ce_type,
@@ -1433,14 +1433,14 @@ fx_front.prototype.start_essences_sortable = function($cp) {
     $cp.sortable(sort_params);
 };
 
-fx_front.prototype.stop_essences_sortable = function(container) {
+fx_front.prototype.stop_entitys_sortable = function(container) {
     if (!container) {
-        container = $('.fx_essence_container_sortable');
+        container = $('.fx_entity_container_sortable');
     }
-    if (!container.hasClass('fx_essence_container_sortable')) {
+    if (!container.hasClass('fx_entity_container_sortable')) {
         return;
     }
-    container.removeClass('fx_essence_container_sortable');
+    container.removeClass('fx_entity_container_sortable');
     container.sortable('destroy');
 };
 
@@ -1503,7 +1503,7 @@ fx_front.prototype.start_areas_sortable = function() {
                 $fx.front.outline_block(ce, 'selected');
 
                 var params = {
-                    essence:'infoblock',
+                    entity:'infoblock',
                     action:'move',
                     area:ce.closest('.fx_area').data('fx_area').id
                 };

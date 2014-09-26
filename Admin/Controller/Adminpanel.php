@@ -21,7 +21,7 @@ class Adminpanel extends Admin {
         $more_menu[] = array(
             'name' => fx::alang('Edit current page', 'system'),
             'button' => array(
-                'essence' => 'content',
+                'entity' => 'content',
                 'action' => 'add_edit',
                 'content_type' => $c_page['type'],
                 'content_id' => $c_page['id']
@@ -31,7 +31,7 @@ class Adminpanel extends Admin {
         $more_menu[] = array(
             'name' => fx::alang('Layout settings','system'),
             'button' => array(
-                'essence' => 'infoblock',
+                'entity' => 'infoblock',
                 'action' => 'layout_settings',
                 'page_id' => fx::env('page_id')
             )
@@ -39,7 +39,7 @@ class Adminpanel extends Admin {
         $more_menu[]= array(
             'name' => fx::alang('Page infoblocks', 'system'),
             'button' => array(
-                'essence' => 'infoblock',
+                'entity' => 'infoblock',
                 'action' => 'list_for_page',
                 'page_id' => fx::env('page_id')
             )

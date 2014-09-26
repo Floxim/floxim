@@ -38,7 +38,7 @@ class Finder extends System\Data {
     }
     
     public function get_for_page($page_id) {
-        $page = $page_id instanceof System\Essence ? $page_id : fx::data('page', $page_id);
+        $page = $page_id instanceof System\Entity ? $page_id : fx::data('page', $page_id);
         if (!$page) {
             return;
         }

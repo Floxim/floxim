@@ -32,8 +32,8 @@ fx_form = {
         }
         $fx_form.draw_fields(settings, $form);
 
-        if (options.buttons_essence) {
-            $fx.admin.set_essence(options.buttons_essence);
+        if (options.buttons_entity) {
+            $fx.admin.set_entity(options.buttons_entity);
         }
 
         return $form;

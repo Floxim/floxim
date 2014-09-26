@@ -168,8 +168,8 @@ class Fx {
 
     public static function getComponentNameByClass($class) {
         // Floxim\Main\User\Controller
-        // Vendor\Module\Component\[Controller|Finder|Essence]
-        // Floxim\Floxim\Component\Component\[Essence|Finder]
+        // Vendor\Module\Component\[Controller|Finder|Entity]
+        // Floxim\Floxim\Component\Component\[Entity|Finder]
         $path = explode('\\',$class);
         array_pop($path);
         $path=array_map(function($a){
@@ -189,7 +189,7 @@ class Fx {
     public static function  data($datatype, $id = null) {
         
         // fx::data($page) instead of $page_id
-        if (is_object($id) && $id instanceof Essence) {
+        if (is_object($id) && $id instanceof Entity) {
             return $id;
         }
         
@@ -358,7 +358,7 @@ class Fx {
                     // todo: check type - admin/widget
                     // .....
                 } else {
-                    // Component essence
+                    // Component entity
                     $c_keyword = "{$c_vendor}.{$c_module}.{$c_component}";
                     $component = fx::data('component',$c_keyword);
 
@@ -663,8 +663,8 @@ class Fx {
     }
     
     /**
-     * Get current user or new empty essence (with no id) if not logged in
-     * @return \Floxim\User\Component\User\Essence
+     * Get current user or new empty entity (with no id) if not logged in
+     * @return \Floxim\User\Component\User\Entity
      */
     public static function user() {
         return self::env()->get_user();

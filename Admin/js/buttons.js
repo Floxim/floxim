@@ -172,7 +172,7 @@ fx_buttons.prototype.handle = function ( button ) {
             cid = cid.name;
         }
         var opts = {
-            essence:sel.data('essence'),
+            entity:sel.data('entity'),
             action:'delete',
             id:cid,
             posting:true

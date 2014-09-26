@@ -13,16 +13,16 @@ class Finder extends System\Data {
         $relations = array();
         $fields = fx::data('component', $this->component_id)->
                     all_fields()->
-                    find('type', array(Field\Essence::FIELD_LINK, Field\Essence::FIELD_MULTILINK));
+                    find('type', array(Field\Entity::FIELD_LINK, Field\Entity::FIELD_MULTILINK));
         foreach ($fields as $f) {
             if ( !($relation = $f->get_relation()) ) {
                 continue;
             }
             switch ($f['type']) {
-                case Field\Essence::FIELD_LINK:
+                case Field\Entity::FIELD_LINK:
                     $relations[$f->get_prop_name()] = $relation;
                     break;
-                case Field\Essence::FIELD_MULTILINK:
+                case Field\Entity::FIELD_MULTILINK:
                     $relations[$f['keyword']] = $relation;
                     break;
             }
@@ -142,9 +142,9 @@ class Finder extends System\Data {
     }
 
     /**
-     * Create new content essence
+     * Create new content entity
      * @param array $data Initial params
-     * @return fx_content New content essence (not saved yet, without ID)
+     * @return fx_content New content entity (not saved yet, without ID)
      */
     public function create($data = array()) {
         $obj = parent::create($data);
@@ -163,7 +163,7 @@ class Finder extends System\Data {
         $fields = $component->all_fields()->find('default', '', System\Collection::FILTER_NEQ);
         foreach ($fields as $f) {
             if (!isset($obj[$f['keyword']])) {
-                if ($f['type'] == Field\Essence::FIELD_DATETIME) {
+                if ($f['type'] == Field\Entity::FIELD_DATETIME) {
                     $obj[$f['keyword']] = date('Y-m-d H:i:s');
                 } else {
                     $obj[$f['keyword']] = $f['default'];
@@ -202,7 +202,7 @@ class Finder extends System\Data {
         while(!$exists && count($chain) > 0) {
             $c_level = array_shift($chain);
             $class_namespace = fx::getComponentNamespace($c_level['keyword']);
-            $class_name = $class_namespace . '\\Essence';
+            $class_name = $class_namespace . '\\Entity';
             try {
                 $exists = class_exists($class_name);
             } catch (\Exception $e) {}
@@ -212,11 +212,11 @@ class Finder extends System\Data {
     }
     
     /**
-     * Returns the essence installed component_id
+     * Returns the entity installed component_id
      * @param array $data
      * @return fx_content
      */
-    public function essence($data = array()) {
+    public function entity($data = array()) {
         $classname = $this->get_class_name($data);
         if (isset($data['type'])) {
             $component_id = fx::data('component', $data['type'])->get('id');
@@ -285,7 +285,7 @@ class Finder extends System\Data {
     
     public function insert($data) {
         if (!isset($data['type'])){
-            throw  new Exception('Can not save essence with no type specified');
+            throw  new Exception('Can not save entity with no type specified');
         }
         $set = $this->_set_statement($data);
         
@@ -463,14 +463,14 @@ class Finder extends System\Data {
     public function descendants_of($parent_ids, $include_parents = false) {
         if ($parent_ids instanceof System\Collection) {
             $non_content = $parent_ids->find(function($i) {
-                return !($i instanceof Essence);
+                return !($i instanceof Entity);
             });
             if (count($non_content) == 0) {
                 $parents = $parent_ids;
                 $parent_ids = $parents->get_values('id');
             }
         }
-        if ($parent_ids instanceof Essence) {
+        if ($parent_ids instanceof Entity) {
             $parents = array($parent_ids);
             $parent_ids = array($parent_ids['id']);
         } elseif (!isset($parents)) {

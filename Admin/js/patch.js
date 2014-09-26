@@ -24,7 +24,7 @@
         },
 
         get_next: function(callback) {
-            $fx.post({action: 'get_next_for_install',  essence: 'patch'},callback);
+            $fx.post({action: 'get_next_for_install',  entity: 'patch'},callback);
         },
 
         install: function(id,callback) {
@@ -32,7 +32,7 @@
             var row=$('#patch_id_'+id);
             row.addClass('fx_patch_row_installing');
 
-            $fx.post({action: 'install_silent',  essence: 'patch', params: [ id ] },function(res){
+            $fx.post({action: 'install_silent',  entity: 'patch', params: [ id ] },function(res){
                 row.removeClass('fx_patch_row_installing');
                 callback.call(fx_patch,res);
             });

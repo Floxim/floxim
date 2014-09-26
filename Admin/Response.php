@@ -14,7 +14,7 @@ class Response {
     public $dialog;
     
     protected $buttons = array(), $buttons_pulldown = array(), $fields = array(), $tabs = array(), $form_buttons = array();
-    protected $essence;
+    protected $entity;
     protected $props = array();
     
     protected $status, $status_text, $error_fields, $reload;
@@ -74,8 +74,8 @@ class Response {
             $result['dialog'] = $dialog;
         }
         
-        if ( $this->essence ) {
-            $result['essence'] = $this->essence;
+        if ( $this->entity ) {
+            $result['entity'] = $this->entity;
         }
         
         if ( $this->status ) {
@@ -183,8 +183,8 @@ class Response {
         $this->tabs[$tab] = $item;
     }
     
-    public function set_essence ( $essence ) {
-        $this->essence = $essence;
+    public function set_entity ( $entity ) {
+        $this->entity = $entity;
     }
     
     public function set_status_error ( $text = '' , $fields = array() ) {

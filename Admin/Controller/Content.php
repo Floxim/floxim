@@ -25,7 +25,7 @@ class Content extends Admin {
         $fields = array(
             $this->ui->hidden('content_type',$content_type),
             $this->ui->hidden('parent_id', $content['parent_id']),
-            $this->ui->hidden('essence', 'content'),
+            $this->ui->hidden('entity', 'content'),
             $this->ui->hidden('action', 'add_edit'),
             $this->ui->hidden('data_sent', true),
             $this->ui->hidden('fx_admin', true)
@@ -173,7 +173,7 @@ class Content extends Admin {
                 'name' => 'delete_confirm',
                 'type' => 'checkbox'
             ),
-            $this->ui->hidden('essence', 'content'),
+            $this->ui->hidden('entity', 'content'),
             $this->ui->hidden('action', 'delete_save'),
             $this->ui->hidden('content_id', $content['id']),
             $this->ui->hidden('fx_admin', true)
@@ -290,7 +290,7 @@ class Content extends Admin {
             'type' => 'list',
             'values' => array(),
             'labels' => array('id' => 'ID'),
-            'essence' => 'content'
+            'entity' => 'content'
         );
         
         if ($content_type === 'content') {
@@ -302,7 +302,7 @@ class Content extends Admin {
         $fields = $com->all_fields();
         
         $fields->find_remove(function($f) {
-            return $f['type_of_edit'] == Field\Essence::EDIT_NONE;
+            return $f['type_of_edit'] == Field\Entity::EDIT_NONE;
         });
         
         foreach ($fields as $f) {
@@ -319,21 +319,21 @@ class Content extends Admin {
             foreach ($fields as $f) {
                 $val = $item[$f['keyword']];
                 switch ($f['type']) {
-                    case Field\Essence::FIELD_LINK:
+                    case Field\Entity::FIELD_LINK:
                         if ($val) {
                             $linked = fx::data($f->get_related_type(), $val);
                             $val = $linked['name'];
                         }
                         break;
-                    case Field\Essence::FIELD_STRING: case Field\Essence::FIELD_TEXT:
+                    case Field\Entity::FIELD_STRING: case Field\Entity::FIELD_TEXT:
                         $val = strip_tags($val);
                         $val = mb_substr($val, 0, 150);
                         break;
-                    case Field\Essence::FIELD_IMAGE:
+                    case Field\Entity::FIELD_IMAGE:
                         $val = fx::image($val, 'max-width:100px,max-height:50px');
                         $val = '<img src="'.$val.'" alt="" />';
                         break;
-                    case Field\Essence::FIELD_MULTILINK:
+                    case Field\Entity::FIELD_MULTILINK:
                         $val = fx::alang('%d items', 'system', count($val));
                         break;
                 }

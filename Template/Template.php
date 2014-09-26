@@ -136,7 +136,7 @@ class Template {
     public function get_item_help($item, $level = 0, $c_path = array()) {
         $c_path []= $item;
         $item_type = is_array($item) ? 'Array' : get_class($item);
-        if ($item instanceof System\Essence || $item instanceof Form\Field\Field || $item instanceof Form\Form) {
+        if ($item instanceof System\Entity || $item instanceof Form\Field\Field || $item instanceof Form\Form) {
             $item = $item->get();
         }
         ob_start();
@@ -207,12 +207,12 @@ class Template {
         if ($var_name === null) {
             return array();
         }
-        if ($source && $source instanceof Essence) {
+        if ($source && $source instanceof Entity) {
             $meta = $source->get_field_meta($var_name);
             return is_array($meta) ? $meta : array();
         }
         for ($i = count($this->context_stack) - 1; $i >= 0; $i--) {
-            if ( !($this->context_stack[$i] instanceof Essence) ) {
+            if ( !($this->context_stack[$i] instanceof Entity) ) {
                 continue;
             }
             if ( ($meta = $this->context_stack[$i]->get_field_meta($var_name))) {

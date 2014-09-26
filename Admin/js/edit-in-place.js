@@ -112,9 +112,9 @@ fx_edit_in_place.prototype.start = function(meta) {
                 } else {
                     var $n = this.node;
                     this.is_content_editable = true;
-                    if (!$($fx.front.get_selected_item()).hasClass('fx_essence')) {
+                    if (!$($fx.front.get_selected_item()).hasClass('fx_entity')) {
                         setTimeout(function() {
-                            $fx.front.stop_essences_sortable();
+                            $fx.front.stop_entitys_sortable();
                         }, 50);
                     }
                     if ($n.hasClass('fx_hidden_placeholded')) {
@@ -416,23 +416,23 @@ fx_edit_in_place.prototype.save = function() {
         this.restore();
         return this;
     }
-    var new_essence_props = null;
-    var $adder_placeholder = $(this.node).closest('.fx_essence_adder_placeholder');
+    var new_entity_props = null;
+    var $adder_placeholder = $(this.node).closest('.fx_entity_adder_placeholder');
     if ($adder_placeholder.length > 0) {
-        var essence_meta = $adder_placeholder.data('fx_essence_meta');
-        new_essence_props = essence_meta ? essence_meta.placeholder : null;
+        var entity_meta = $adder_placeholder.data('fx_entity_meta');
+        new_entity_props = entity_meta ? entity_meta.placeholder : null;
     }
     
     var post_data = {
-        essence:'infoblock',
+        entity:'infoblock',
         action:'save_var',
         infoblock:this.ib_meta,
         vars: vars,
         fx_admin:true,
         page_id:$fx.front.get_page_id()
     };
-    if (new_essence_props) {
-        post_data.new_essence_props = new_essence_props;
+    if (new_entity_props) {
+        post_data.new_entity_props = new_entity_props;
     }
     
     var node = this.node;

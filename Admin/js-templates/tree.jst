@@ -94,7 +94,7 @@ function fx_tree_render(root) {
                     }
                     var options = {
                             fx_admin:1, 
-                            essence:'subdivision', 
+                            entity:'subdivision', 
                             posting:1, 
                             action:'move',
                             darged : ui.item.data('id')
@@ -141,7 +141,7 @@ function fx_tree_render(root) {
         root.find('.tree_value_input').val(c_row.data('id'));
         var props = c_row.closest('li').data('props');
         if (props) {
-            c_row.data('essence', props.essence);
+            c_row.data('entity', props.entity);
         }
         $fx.buttons.update_available_buttons();
     });

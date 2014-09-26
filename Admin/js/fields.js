@@ -172,7 +172,7 @@ $html.on('change.fx', '.fx_image_field input.file', function() {
         secureuri:false,
         fileElementId:inp_id,
         dataType: 'json',
-        data: { essence:'file', fx_admin:1, action:'upload_save' },
+        data: { entity:'file', fx_admin:1, action:'upload_save' },
         success: function ( data ) {
             handle_upload(data, $block);
         }
@@ -203,7 +203,7 @@ $html.on('paste.fx', '.fx_image_field .remote_file_location', function() {
         $.ajax({
             url:'/vendor/Floxim/Floxim/index.php',
             type:'post',
-            data: { essence:'file', fx_admin:1, action:'upload_save' , file:val},
+            data: { entity:'file', fx_admin:1, action:'upload_save' , file:val},
             dataType: 'json',
             success: function ( data ) {
                 handle_upload(data, $block);

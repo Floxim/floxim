@@ -42,7 +42,7 @@ window.fx_livesearch = function (node) {
         var params = {
             url: '/vendor/Floxim/Floxim/index.php',
             data:{
-                essence:'content',
+                entity:'content',
                 action:'livesearch',
                 content_type:this.datatype,
                 fx_admin:'true'

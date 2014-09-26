@@ -26,7 +26,7 @@ class Infoblock extends Admin {
     public function select_controller($input) {
         $fields = array(
             $this->ui->hidden('action', 'select_settings'),
-            $this->ui->hidden('essence', 'infoblock'),
+            $this->ui->hidden('entity', 'infoblock'),
             $this->ui->hidden('fx_admin', true),
             $this->ui->hidden('area', serialize($input['area'])),
             $this->ui->hidden('page_id', $input['page_id']),
@@ -50,7 +50,7 @@ class Infoblock extends Admin {
         $controllers->concat(fx::data('widget')->all());
         
         foreach ($controllers as $c) {
-            $controller_type = $c instanceof Component\Essence ? 'component' : 'widget';
+            $controller_type = $c instanceof Component\Entity ? 'component' : 'widget';
             // todo: psr0 need fix
             $controller_name = $controller_type.'_'.$c['keyword'];
             $c_item = array(
@@ -280,7 +280,7 @@ class Infoblock extends Admin {
         }
         
         $fields = array(
-            $this->ui->hidden('essence', 'infoblock'),
+            $this->ui->hidden('entity', 'infoblock'),
             $this->ui->hidden('action', 'select_settings'),
             $this->ui->hidden('fx_admin', true),
             $this->ui->hidden('settings_sent', 'true'),
@@ -322,7 +322,7 @@ class Infoblock extends Admin {
         
         $list = array(
             'type' => 'list',
-            'essence' => 'infoblock',
+            'entity' => 'infoblock',
             'values' => array(),
             'labels' => array(
                 'name' => fx::alang('Name','system'),
@@ -353,7 +353,7 @@ class Infoblock extends Admin {
             );
         }
         $fields['list'] = $list;
-        $fields[]= $this->ui->hidden('essence', 'infoblock');
+        $fields[]= $this->ui->hidden('entity', 'infoblock');
         $fields[]= $this->ui->hidden('action', 'list_for_page');
         $fields[]= $this->ui->hidden('page_id', $c_page['id']);
         $fields[]= $this->ui->hidden('data_sent', 1);
@@ -383,7 +383,7 @@ class Infoblock extends Admin {
         }
         
         $fields = array(
-            $this->ui->hidden('essence', 'infoblock'),
+            $this->ui->hidden('entity', 'infoblock'),
             $this->ui->hidden('action', 'layout_settings'),
             $this->ui->hidden('fx_admin', true),
             $this->ui->hidden('settings_sent', 'true'),
@@ -489,8 +489,8 @@ class Infoblock extends Admin {
      */
     
     protected function _get_scope_fields(
-                CompInfoblock\Essence $infoblock,
-                \Floxim\Main\Page\Essence $c_page
+                CompInfoblock\Entity $infoblock,
+                \Floxim\Main\Page\Entity $c_page
             ) {
         
         $fields = array();
@@ -602,7 +602,7 @@ class Infoblock extends Admin {
     /*
      * Receipt of the form fields for the tab "How to show"
      */
-    protected function _get_format_fields(CompInfoblock\Essence $infoblock, $area_meta = null) {
+    protected function _get_format_fields(CompInfoblock\Entity $infoblock, $area_meta = null) {
         $i2l = $infoblock->get_visual();
         $fields = array(
             array(
@@ -714,7 +714,7 @@ class Infoblock extends Admin {
         }
         
         // group vars by type to process content vars first
-        // because we need content id for 'content-visual' vars on adding a new essence
+        // because we need content id for 'content-visual' vars on adding a new entity
         $vars = fx::collection($input['vars'])->apply(function($v) {
             if ($v['var']['type'] == 'livesearch' && !$v['value']) {
                 $v['value'] = array();
@@ -730,8 +730,8 @@ class Infoblock extends Admin {
         
         $contents = fx::collection();
         
-        if (isset($input['new_essence_props'])) {
-            $new_props = $input['new_essence_props'];
+        if (isset($input['new_entity_props'])) {
+            $new_props = $input['new_entity_props'];
             $contents['new'] = fx::content($new_props['type'])->create($new_props);
         }
         
@@ -859,7 +859,7 @@ class Infoblock extends Admin {
             if ($content_id) {
                 $content = $finder->get_by_id($content_id);
             } else {
-                $content = $finder->create( isset($input['new_essence_props']) ? $input['new_essence_props'] : array());
+                $content = $finder->create( isset($input['new_entity_props']) ? $input['new_entity_props'] : array());
             }
             if ($content) {
                 $content->set_field_values($content_info['values'], array_keys($content_info['values']));
@@ -886,7 +886,7 @@ class Infoblock extends Admin {
                 'type' => 'checkbox'
             ),
             $this->ui->hidden('id', $input['id']),
-            $this->ui->hidden('essence', 'infoblock'),
+            $this->ui->hidden('entity', 'infoblock'),
             $this->ui->hidden('action', 'delete_infoblock'),
             $this->ui->hidden('fx_admin', true)
         );        

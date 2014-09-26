@@ -24,7 +24,7 @@ class Layout extends Admin {
                     '<a href="#admin.site.settings('.$site['id'].')">'.$site['name'].'</a>';
         }
 
-        $ar = array('type' => 'list', 'filter' => true, 'essence' => 'layout');
+        $ar = array('type' => 'list', 'filter' => true, 'entity' => 'layout');
         $ar['labels'] = array('name' => fx::alang('Name', 'system'), 'use' => fx::alang('Used on','system'), 'buttons' => array('type' => 'buttons'));
 
         foreach ($items as $item) {
@@ -73,7 +73,7 @@ class Layout extends Admin {
         $input['source'] = 'new';
         $fields = array(
             $this->ui->hidden('action', 'add'),
-            $this->ui->hidden('essence', 'layout'),
+            $this->ui->hidden('entity', 'layout'),
             array('name' => 'name', 'label' => fx::alang('Layout name','system')),
             array('name' => 'keyword', 'label' => fx::alang('Layout keyword','system')),
             $this->ui->hidden('source', $input['source']),
@@ -184,7 +184,7 @@ class Layout extends Admin {
         $fields[] = $ar;
         $buttons = array("add", "delete");
         $buttons_action['add']['options']['parent_id'] = $template['id'];
-        $result = array('fields' => $fields, 'buttons' => $buttons, 'buttons_action' => $buttons_action, 'essence' => 'layout');
+        $result = array('fields' => $fields, 'buttons' => $buttons, 'buttons_action' => $buttons_action, 'entity' => 'layout');
         return $result;
     }
     
@@ -223,7 +223,7 @@ class Layout extends Admin {
     		'breadcrumb_target' => $this->response->breadcrumb
 		);
     	$result = $filemanager->process();
-    	$result['buttons_essence'] = 'module_filemanager';
+    	$result['buttons_entity'] = 'module_filemanager';
     	return $result;
     }
     
@@ -289,7 +289,7 @@ class Layout extends Admin {
             );
         }
         $fields = array(
-            $this->ui->hidden('essence', 'layout'),
+            $this->ui->hidden('entity', 'layout'),
             $this->ui->hidden('action', 'source')
         );
         $this->response->submenu->set_menu('layout');

@@ -40,8 +40,8 @@ if (_c.labels !== undefined && _c.values ) {?>
 <?}
 if (_c.values) {
     $.each(_c.values, function(i, value) {
-        if (_c.essence) {
-            value.essence = _c.essence;
+        if (_c.entity) {
+            value.entity = _c.entity;
         }
         ?>
         <tr 
@@ -162,7 +162,7 @@ if (_c.is_sortable) {
                 pos.push ( $(this).data('id') );
             });
             var post = {
-                    'essence': _c.essence,
+                    'entity': _c.entity,
                     'action': 'move',
                     'positions': pos
             };

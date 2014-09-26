@@ -118,7 +118,7 @@ class Ui {
         } 
         else {
             $result['type'] = 'store';
-            $result['essence_type'] = $type;
+            $result['entity_type'] = $type;
             $result['items'] = $response['items'];
             $result['count'] = $response['count'];
             $result['filter_form'] = $response['filter_form'];
