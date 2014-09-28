@@ -747,7 +747,7 @@ class Compiler {
             $parts = explode('.', $var, 2);
             $var_name = trim($parts[0], '$');
             $var_path = $parts[1];
-            $code .= 'fx::dig_set($this->v("'.$var_name.'"), "'.$var_path.'", '.$value.");\n";
+            $code .= 'fx::digSet($this->v("'.$var_name.'"), "'.$var_path.'", '.$value.");\n";
             $code .= "?>\n";
             return $code;
         }

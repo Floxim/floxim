@@ -140,7 +140,7 @@ class Page {
         $file = preg_replace_callback(
             '~(url\([\'\"]?)([^/][^\)]+)~i', 
             function($matches) use ($http_base) {
-                if (pregMatch("~data\:~", $matches[0])) {
+                if (preg_match("~data\:~", $matches[0])) {
                     return $matches[0];
                 }
                 return $matches[1].$http_base.$matches[2];
