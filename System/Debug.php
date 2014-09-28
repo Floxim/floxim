@@ -293,7 +293,7 @@ class Debug {
      * Print args to the output
      */
     public function debug() {
-        $e = call_user_func_array(array($this, '_entry'), func_get_args());
+        $e = call_user_func_array(array($this, 'entry'), func_get_args());
         $this->printEntry($e);
         static $head_files_added = false;
         if (!$head_files_added) {

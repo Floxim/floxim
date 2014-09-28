@@ -924,8 +924,7 @@ class Compiler {
     }
 
     protected function getTokenCode($token, $parent) {
-        // todo: need verify
-        $method_name = '_token_'.$token->name.'_to_code';
+        $method_name = 'token'.fx::util()->underscoreToCamel($token->name).'ToCode';
         if (method_exists($this, $method_name)) {
             return call_user_func(array($this, $method_name), $token, $parent);
         }

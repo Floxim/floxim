@@ -48,7 +48,7 @@ class ExpressionParser extends Fsm {
             null, 
             'endVar'
         );
-        $this->addRule(self::ARR_INDEX, "~^[^a-z0-9\%_\.]~", null, 'endVarDot');
+        $this->addRule(self::ARR_INDEX, "~^[^a-z0-9\%_\.]~i", null, 'endVarDot');
         $this->addRule(self::ARR_INDEX, ']', null, 'endArr');
         $this->init_state = self::CODE;
     }
@@ -101,7 +101,7 @@ class ExpressionParser extends Fsm {
         // test for $loop.items.count()
         if ($is_dot) {
             list($method_name, $bracket) = $this->getNext(2);
-            $is_method = preg_match("~^[a-z0-9_]+$~", $method_name) && $bracket == '(';
+            $is_method = preg_match("~^[a-z0-9_]+$~i", $method_name) && $bracket == '(';
             if ($is_method) {
                 $this->endVar('->');
                 return;
@@ -225,7 +225,7 @@ class ExpressionParser extends Fsm {
             $cdata = $node->last_child->data;
             
             if (preg_match("~[\=\|]$~", $cdata)) {
-                $rex = "~(\||[a-z0-9_-]+\s?=)$~";
+                $rex = "~(\||[a-z0-9_-]+\s?=)$~i";
                 $str = mb_substr($this->string, 0, $this->position);
                 if (preg_match($rex, $str)) {
                     $str = preg_replace($rex, '', $str);
@@ -261,7 +261,7 @@ class ExpressionParser extends Fsm {
         $res = array();
         // helper to trim & clean parts
         $trim_esc = function($s) {
-            return strReplace('``', '', trim($s));
+            return str_replace('``', '', trim($s));
         };
         foreach ($parts as $p) {
             $value = null;
