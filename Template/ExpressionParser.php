@@ -38,18 +38,18 @@ class ExpressionParser extends Fsm {
     }
     
     public function __construct() {
-        $this->addRule(self::CODE, '`', null, 'start_esc');
-        $this->addRule(self::ESC, '`', null, 'end_esc');
-        $this->addRule(array(self::CODE, self::ARR_INDEX, self::VAR_NAME), '~^\$~', null, 'start_var');
-        $this->addRule(array(self::VAR_NAME, self::ARR_INDEX), array('[', '.'), null, 'start_arr');
+        $this->addRule(self::CODE, '`', null, 'startEsc');
+        $this->addRule(self::ESC, '`', null, 'endEsc');
+        $this->addRule(array(self::CODE, self::ARR_INDEX, self::VAR_NAME), '~^\$~', null, 'startVar');
+        $this->addRule(array(self::VAR_NAME, self::ARR_INDEX), array('[', '.'), null, 'startArr');
         $this->addRule(
             self::VAR_NAME, 
             "~^[^\%a-z0-9_]~i",
             null, 
-            'end_var'
+            'endVar'
         );
-        $this->addRule(self::ARR_INDEX, "~^[^a-z0-9\%_\.]~", null, 'end_var_dot');
-        $this->addRule(self::ARR_INDEX, ']', null, 'end_arr');
+        $this->addRule(self::ARR_INDEX, "~^[^a-z0-9\%_\.]~", null, 'endVarDot');
+        $this->addRule(self::ARR_INDEX, ']', null, 'endArr');
         $this->init_state = self::CODE;
     }
     

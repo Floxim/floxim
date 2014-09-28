@@ -301,8 +301,8 @@ class Html {
 
                 $n->removeAttribute('fx:add');
                 $n->wrap(
-                    '<?php $this->push_mode("add", "'.$add_mode.'"); ?>',
-                    '<?php $this->pop_mode("add"); ?>'
+                    '<?php $this->pushMode("add", "'.$add_mode.'"); ?>',
+                    '<?php $this->popMode("add"); ?>'
                 );
             }
             if ( $n->hasAttribute('fx:omit')) {

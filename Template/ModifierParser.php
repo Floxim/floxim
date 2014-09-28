@@ -18,10 +18,10 @@ class ModifierParser extends Fsm {
     public function __construct() {
         $this->debug = false;
         $this->init_state = self::INIT;
-        $this->addRule(array(self::INIT, self::MODIFIER, self::PARAM), "~^\|+~", false, 'start_modifier');
-        $this->addRule(array(self::MODIFIER, self::PARAM), ":", false, 'start_param');
-        $this->addRule(array(self::MODIFIER, self::PARAM), '~[\"\']~', false, 'start_string');
-        $this->addRule(array(self::QSTRING, self::DQSTRING), '~\\\?[\"\']~', false, 'end_string');
+        $this->addRule(array(self::INIT, self::MODIFIER, self::PARAM), "~^\|+~", false, 'startModifier');
+        $this->addRule(array(self::MODIFIER, self::PARAM), ":", false, 'startParam');
+        $this->addRule(array(self::MODIFIER, self::PARAM), '~[\"\']~', false, 'startString');
+        $this->addRule(array(self::QSTRING, self::DQSTRING), '~\\\?[\"\']~', false, 'endString');
     }
     
     protected $c_mod = null;

@@ -31,31 +31,31 @@ class AttrtypeParser extends Fsm {
         $this->addRule(self::TAG, '~^\s+$~', self::ATT_NAME, null);
 
         $this->addRule(self::ATT_NAME, '~^fx:$~', self::FX, null);
-        $this->addRule(self::FX, '~^=[\'\"]$~', self::FX_VAL, 'start_val');
+        $this->addRule(self::FX, '~^=[\'\"]$~', self::FX_VAL, 'startVal');
         $this->addRule(self::FX, '~^\s+$~', self::ATT_NAME, null);
 
-        $this->addRule(self::ATT_NAME, '~^=[\'\"]$~', self::ATT_VAL, 'start_val');
+        $this->addRule(self::ATT_NAME, '~^=[\'\"]$~', self::ATT_VAL, 'startVal');
 
         $this->addRule(self::ATT_NAME, '~^style$~', self::STYLE, null);
-        $this->addRule(self::STYLE, '~^=[\'\"]$~', self::STYLE_VAL, 'start_val');
+        $this->addRule(self::STYLE, '~^=[\'\"]$~', self::STYLE_VAL, 'startVal');
         $this->addRule(self::STYLE_VAL, '~^background$~', self::STYLE_BACKGROUND, null);
         $this->addRule(self::STYLE_VAL, '~^background-image$~', self::STYLE_BACKGROUND_URL, null);
         $this->addRule(self::STYLE_VAL, '~^background-color|color$~', self::STYLE_BACKGROUND, null);
         $this->addRule(self::STYLE_BACKGROUND, '~^url\([\'\"]?$~', self::STYLE_BACKGROUND_URL, null);
-        $this->addRule(self::STYLE_BACKGROUND_URL, '~^\{[\%\$]~', self::STYLE_VAL, 'set_image_var');
-        $this->addRule(self::STYLE_BACKGROUND, '~^\{[\%\$]~', self::STYLE_VAL, 'set_color_var');
+        $this->addRule(self::STYLE_BACKGROUND_URL, '~^\{[\%\$]~', self::STYLE_VAL, 'setImageVar');
+        $this->addRule(self::STYLE_BACKGROUND, '~^\{[\%\$]~', self::STYLE_VAL, 'setColorVar');
 
         $this->addRule(self::ATT_NAME, '~^src$~', self::SRC, null);
-        $this->addRule(self::SRC, '~^=[\'\"]$~', self::SRC_VAL, 'start_val');
-        $this->addRule(self::SRC_VAL, '~^\{[\%\$]~', null, 'set_image_var');
+        $this->addRule(self::SRC, '~^=[\'\"]$~', self::SRC_VAL, 'startVal');
+        $this->addRule(self::SRC_VAL, '~^\{[\%\$]~', null, 'setImageVar');
 
         $this->addRule(self::ATT_NAME, '~^href|title|alt$~', self::HREF, null);
-        $this->addRule(self::HREF, '~^=[\'\"]$~', self::HREF_VAL, 'start_val');
-        $this->addRule(self::HREF_VAL, '~^\{[\%\$]~', null, 'set_href_var');
+        $this->addRule(self::HREF, '~^=[\'\"]$~', self::HREF_VAL, 'startVal');
+        $this->addRule(self::HREF_VAL, '~^\{[\%\$]~', null, 'setHrefVar');
 
 
-        $this->addRule(self::ATT_VAL, '~^\{[\%\$]~', null, 'start_var');
-        $this->addRule(array(self::ATT_VAL, self::FX_VAL, self::STYLE_VAL, self::SRC_VAL, self::HREF_VAL), '~^\s+|[\'\"]$~', self::TAG, 'end_att');
+        $this->addRule(self::ATT_VAL, '~^\{[\%\$]~', null, 'startVar');
+        $this->addRule(array(self::ATT_VAL, self::FX_VAL, self::STYLE_VAL, self::SRC_VAL, self::HREF_VAL), '~^\s+|[\'\"]$~', self::TAG, 'endAtt');
         $this->init_state = self::TAG;
     }
 

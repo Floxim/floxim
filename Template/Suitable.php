@@ -188,11 +188,11 @@ class Suitable {
     protected function mapAreas($old_set, $new_set) {
         $total_relevance = 0;
         foreach ($old_set as &$old_area) {
-            $old_size = $this->getSize($old_area);
+            $old_size = $this->_getSize($old_area);
             $c_match = false;
             $c_match_index = 1;
             foreach ($new_set as $new_area_id => $new_area) {
-                $new_size = $this->getSize($new_area);
+                $new_size = $this->_getSize($new_area);
                 $area_match = 0;
                 
                 // if one of the areas arbitrary width - existent, 1
@@ -299,7 +299,7 @@ class Suitable {
         return $n;
     }
     
-    protected function getSize($block) {
+    protected function _getSize($block) {
         $res = array('width' => 'any', 'height' => 'any');
         if (!isset($block['size'])) {
             return $res;

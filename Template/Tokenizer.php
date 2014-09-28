@@ -22,7 +22,7 @@ class Tokenizer extends Fsm {
         $this->addRule(self::HTML, '~^\{raw}$~s', self::RAW);
         $this->addRule(self::RAW, '~^\{/raw}$~s', self::HTML);
         
-        $this->addRule(self::HTML, '~^\{.+\}$~s', self::HTML, 'add_token');
+        $this->addRule(self::HTML, '~^\{.+\}$~s', self::HTML, 'addToken');
         
         //$this->add_rule(self::HTML, '~^<script~', self::JS);
         //$this->add_rule(self::JS, '~^</script~', self::HTML);

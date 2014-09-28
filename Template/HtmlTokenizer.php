@@ -15,32 +15,32 @@ class HtmlTokenizer extends Fsm {
     public function __construct() {
         $this->init_state = self::TEXT;
         // fx comments
-        $this->addRule(self::STATE_ANY, '{*', self::FX_COMMENT, 'fx_comment_start');
-        $this->addRule(self::FX_COMMENT, '*}', false, 'fx_comment_end');
+        $this->addRule(self::STATE_ANY, '{*', self::FX_COMMENT, 'fxCommentStart');
+        $this->addRule(self::FX_COMMENT, '*}', false, 'fxCommentEnd');
         
         // html comments
         $this->addRule(self::TEXT, '<!--', self::HTML_COMMENT);
-        $this->addRule(self::HTML_COMMENT, '>', false, 'html_comment_check_end');
+        $this->addRule(self::HTML_COMMENT, '>', false, 'htmlCommentCheckEnd');
         $this->addRule(self::HTML_COMMENT, '-->', self::TEXT);
 
         // php
-        $this->addRule(self::STATE_ANY, '<?', self::PHP, 'php_start');
-        $this->addRule(self::PHP, '?>', false, 'php_end');
+        $this->addRule(self::STATE_ANY, '<?', self::PHP, 'phpStart');
+        $this->addRule(self::PHP, '?>', false, 'phpEnd');
 
-        $this->addRule(self::TAG, '{', self::FX, 'fx_start');
+        $this->addRule(self::TAG, '{', self::FX, 'fxStart');
         $this->addRule(
             array(self::TEXT,self::ATT_NAME,self::ATT_VAL), 
-            '{', self::FX, 'fx_start'
+            '{', self::FX, 'fxStart'
         );
-        $this->addRule(self::FX, '}', false, 'fx_end');
+        $this->addRule(self::FX, '}', false, 'fxEnd');
 
-        $this->addRule(self::TEXT, '~^<~', self::TAG, 'text_to_tag');
-        $this->addRule(array(self::TAG, self::ATT_NAME), '>', self::TEXT, 'tag_to_text');
-        $this->addRule(self::TAG, '~\s+~', self::ATT_NAME, 'att_name_start');
-        $this->addRule(self::ATT_NAME, "~\s*=\s*[\'\"]~", self::ATT_VAL, 'att_value_start');
-        $this->addRule(self::ATT_NAME, "~\s+~", false, 'att_name_start');
+        $this->addRule(self::TEXT, '~^<~', self::TAG, 'textToTag');
+        $this->addRule(array(self::TAG, self::ATT_NAME), '>', self::TEXT, 'tagToText');
+        $this->addRule(self::TAG, '~\s+~', self::ATT_NAME, 'attNameStart');
+        $this->addRule(self::ATT_NAME, "~\s*=\s*[\'\"]~", self::ATT_VAL, 'attValueStart');
+        $this->addRule(self::ATT_NAME, "~\s+~", false, 'attNameStart');
         
-        $this->addRule(self::ATT_VAL, array('"', "'", ' ', '>'), self::TAG, 'att_value_end');
+        $this->addRule(self::ATT_VAL, array('"', "'", ' ', '>'), self::TAG, 'attValueEnd');
     }
     
     protected $stack = '';

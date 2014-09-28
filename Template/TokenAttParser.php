@@ -22,9 +22,9 @@ class TokenAttParser extends Fsm {
     public function __construct() {
         //$this->debug = true;
         $this->init_state = self::INIT;
-        $this->addRule(self::INIT, '~.+=$~', self::ATT_NAME, 'read_att_name');
-        $this->addRule(self::ATT_NAME, array('"', "'"), self::ATT_VAL, 'start_att_val');
-        $this->addRule(self::ATT_VAL, array('"', "'"), self::INIT, 'end_att_val');
+        $this->addRule(self::INIT, '~.+=$~', self::ATT_NAME, 'readAttName');
+        $this->addRule(self::ATT_NAME, array('"', "'"), self::ATT_VAL, 'startAttVal');
+        $this->addRule(self::ATT_VAL, array('"', "'"), self::INIT, 'endAttVal');
         $this->addRule(self::INIT, '|', self::MODIFIERS);
     }
 

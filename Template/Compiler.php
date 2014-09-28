@@ -63,7 +63,7 @@ class Compiler {
     
     protected function tokenHelpToCode($token) {
         $code = "<?php\n";
-        $code .= "echo \$this->get_help();\n";
+        $code .= "echo \$this->getHelp();\n";
         $code .= "?>";
         return $code;
     }
@@ -96,7 +96,7 @@ class Compiler {
         $tpl = '$tpl_'.$this->varialize($tpl_name);
         $code .= $tpl.' = fx::template('.$tpl_name.");\n";
         $inherit = $token->getProp('apply') ? 'true' : 'false';
-        $code .= $tpl.'->set_parent($this, '.$inherit.");\n";
+        $code .= $tpl.'->setParent($this, '.$inherit.");\n";
         $call_children = $token->getChildren();
         /*
          * Converted:
@@ -129,15 +129,15 @@ class Compiler {
         }
         $switch_context = is_array($with_expr) && isset($with_expr['$']);
         if ($switch_context) {
-            $code .= '$this->push_context('.$this->parseExpression($with_expr['$']).");\n";
+            $code .= '$this->pushContext('.$this->parseExpression($with_expr['$']).");\n";
         }
-        $code .= $tpl."->push_context(array(), array('transparent' => false));\n";
+        $code .= $tpl."->pushContext(array(), array('transparent' => false));\n";
         if (is_array($with_expr)) {
             foreach ($with_expr as $alias => $var) {
                 if ($alias == '$') {
                     continue;
                 }
-                $code .= $tpl."->set_var(".
+                $code .= $tpl."->setVar(".
                     "'".trim($alias, '$')."', ".
                     $this->parseExpression($var).");\n";
             }
@@ -158,14 +158,14 @@ class Compiler {
                 // pass the result of executing the php code
                 $value_to_set = self::parseExpression($select_att);
             }
-            $code .= $tpl."->set_var(".
+            $code .= $tpl."->setVar(".
                 "'".$param_var_token->getProp('id')."', ".
                 $value_to_set.");\n";
         }
         
         if ($switch_context) {
-            $code .= "\$this->pop_context();\n";
-            $code .= $tpl."->push_context(".$this->parseExpression($with_expr['$']).");\n";
+            $code .= "\$this->popContext();\n";
+            $code .= $tpl."->pushContext(".$this->parseExpression($with_expr['$']).");\n";
         }
         $code .= 'echo '.$tpl."->render();\n";
         $code .= "\n?>";
@@ -267,7 +267,7 @@ class Compiler {
         $code .= $var . '= $template_dir.'.$var.";\n";
         $code .= "}\n";
         
-        $code .= 'if (!'.$var.' || ( !preg_match("~^https?://~", '.$var.') && !file_exists(fx::path()->to_abs(preg_replace("~\?.+$~", "", '.$var.'))) )) {'."\n";
+        $code .= 'if (!'.$var.' || ( !preg_match("~^https?://~", '.$var.') && !file_exists(fx::path()->toAbs(preg_replace("~\?.+$~", "", '.$var.'))) )) {'."\n";
         if ($use_stub) {
             $stub_image = fx::path()->http('floxim', '/admin/style/images/no.png');
             $code .= $var . "= \$_is_admin ? '".$stub_image."' : '';\n";
@@ -406,10 +406,10 @@ class Compiler {
                     $code .= $this->makeFileCheck($display_val_var, true);
                 }
                 if ($token_is_visual) {
-                    $code .= "\n".'$this->set_var('.$var_id.',  '.$display_val_var.");\n";
+                    $code .= "\n".'$this->setVar('.$var_id.',  '.$display_val_var.");\n";
                 }
             } elseif ($token_is_visual) {
-                $code .= "\n".'$this->set_var('.$var_id.',  '.$default.");\n";
+                $code .= "\n".'$this->setVar('.$var_id.',  '.$default.");\n";
             }
             $code .= "}\n";
         }
@@ -430,7 +430,7 @@ class Compiler {
         if ($token->getProp('editable') == 'false') {
             $code .= 'echo  '.$expr.";\n";
         } else {
-            $code .= 'echo !$_is_admin ? '.$expr.' : $this->print_var('."\n";
+            $code .= 'echo !$_is_admin ? '.$expr.' : $this->printVar('."\n";
             $code .= $expr;
             $code .= ", \n";
             $meta_parts = array();
@@ -476,7 +476,7 @@ class Compiler {
     
     protected function getVarMetaExpression($token, $var_token, $ep) {
         // Expression to get var meta
-        $var_meta_expr = '$this->get_var_meta(';
+        $var_meta_expr = '$this->getVarMeta(';
         // if var is smth like $item['parent']['url'], 
         // it should be get_var_meta('url', fx::dig( $this->v('item'), 'parent'))
         if ($var_token->last_child) {
@@ -629,7 +629,7 @@ class Compiler {
         $is_entity = '$'.$item_alias."_is_entity";
         $code .=  $is_entity ." = \$".$item_alias." instanceof \\Floxim\\Floxim\\Template\\Entity;\n";
         $is_complex = 'is_array($'.$item_alias.') || is_object($'.$item_alias.')';
-        $code .= '$this->push_context( '.$is_complex.' ? $'.$item_alias." : array());\n";
+        $code .= '$this->pushContext( '.$is_complex.' ? $'.$item_alias." : array());\n";
         
         $meta_test = "\tif (\$_is_admin && ".$is_entity." ) {\n";
         $code .= $meta_test;
@@ -637,14 +637,14 @@ class Compiler {
         $code .= "\t}\n";
         $code .= $this->childrenToCode($token)."\n";
         $code .= $meta_test;
-        $code .= "\t\techo \$".$item_alias."->add_template_record_meta(".
+        $code .= "\t\techo \$".$item_alias."->addTemplateRecordMeta(".
                     "ob_get_clean(), ".
                     $arr_id.", ".
                     ($counter_id ? '$'.$counter_id." - 1, " : '$this->v("position") - 1, ').
                     ($token->getProp('subroot') ? 'true' : 'false').
                 ");\n";
         $code .= "\t}\n";
-        $code .= "\$this->pop_context();\n";
+        $code .= "\$this->popContext();\n";
         return $code;
     }
 
@@ -692,28 +692,28 @@ class Compiler {
         // add-in-place settings
         
         $code .= 'if ($_is_admin && '.$arr_id.' instanceof \\Floxim\\Floxim\\System\\Collection && isset('.$arr_id.'->finder)';
-        $code .= ' && $this->get_mode("add") != "false" ';
+        $code .= ' && $this->getMode("add") != "false" ';
         $code .= ' && '.$arr_id.'->finder instanceof \\Floxim\\Floxim\\Component\\Content\\Finder) {'."\n";
-        $code .= $arr_id.'->finder->create_adder_placeholder('.$arr_id.');'."\n";
+        $code .= $arr_id.'->finder->createAdderPlaceholder('.$arr_id.');'."\n";
         $code .= "}\n";
         
         $loop_id = '$'.$item_alias.'_loop';
         $code .=  $loop_id.' = new \\Floxim\\Floxim\\Template\\Loop('.$arr_id.', '.$loop_key.', '.$loop_alias.");\n";
         //$code .= '$this->context_stack[]= '.$loop_id.";\n";
-        $code .= "\$this->push_context(".$loop_id.", array('transparent' => true));\n";
+        $code .= "\$this->pushContext(".$loop_id.", array('transparent' => true));\n";
         $code .= "\nforeach (".$arr_id." as \$".$item_key." => \$".$item_alias.") {\n";
-        $code .= $loop_id."->_move();\n";
+        $code .= $loop_id."->move();\n";
         // get code for step with scope & meta
         $code .= $this->getItemCode($token, $item_alias, $counter_id, $arr_id);
         
         if ($separator) {
-            $code .= 'if (!'.$loop_id.'->is_last()) {'."\n";
+            $code .= 'if (!'.$loop_id.'->isLast()) {'."\n";
             $code .= $this->childrenToCode($separator);
             $code .= "\n}\n";
         }
         $code .= "}\n"; // close foreach
         //$code .= 'array_pop($this->context_stack);'."\n"; // pop loop object
-        $code .= "\$this->pop_context();\n";
+        $code .= "\$this->popContext();\n";
         if ($check_traversable) {
             $code .= "}\n";  // close if
         }
@@ -758,7 +758,7 @@ class Compiler {
             $code .= "if (is_null(\$this->v('".$var."','local'))) {\n";
         }
         
-        $code .= '$this->set_var("'.$var.'", '.$value.');'."\n";
+        $code .= '$this->setVar("'.$var.'", '.$value.');'."\n";
         if ($is_default) {
             $code .= "}\n";
         }
@@ -809,7 +809,7 @@ class Compiler {
         }
         $token_props = 'array('.join(", ", $token_props_parts).')';
         $res = '';
-        $res = '<?php $this->push_context(array("area_infoblocks" => fx::page()->get_area_infoblocks('.$parsed_props['id'].")));\n?>";
+        $res = '<?php $this->pushContext(array("area_infoblocks" => fx::page()->getAreaInfoblocks('.$parsed_props['id'].")));\n?>";
         $render_called = false;
         foreach ($token->getChildren() as $child_num => $child) {
             if ($child->name == 'template') {
@@ -819,12 +819,12 @@ class Compiler {
                         $res = 
                             "<?php\n".
                             'if ($_is_admin) {'."\n".
-                            'echo $this->render_area('.$token_props.', \'marker\');'."\n".
+                            'echo $this->renderArea('.$token_props.', \'marker\');'."\n".
                             '}'."\n?>\n".
                             $res.
-                            '<?php echo $this->render_area('.$token_props.', \'data\');?>';
+                            '<?php echo $this->renderArea('.$token_props.', \'data\');?>';
                     } else {
-                        $res .= '<?php echo $this->render_area('.$token_props.');?>';
+                        $res .= '<?php echo $this->renderArea('.$token_props.');?>';
                     }
                     $render_called = true;
                 }
@@ -834,9 +834,9 @@ class Compiler {
             }
         }
         if (!$render_called) {
-            $res = '<?php echo $this->render_area('.$token_props.');?>'.$res;
+            $res = '<?php echo $this->renderArea('.$token_props.');?>'.$res;
         }
-        $res .= "<?php \$this->pop_context();\n?>";
+        $res .= "<?php \$this->popContext();\n?>";
         return $res;
     }
     
@@ -910,11 +910,11 @@ class Compiler {
                     $res_string = '"'.$file.'"';
                 }
                 if ($alias) {
-                    $code .= "if (!fx::page()->has_file_alias('".$alias."', '".$type."')) {\n";
+                    $code .= "if (!fx::page()->hasFileAlias('".$alias."', '".$type."')) {\n";
                 }
-                $code .= 'fx::page()->add_'.$type.'_file('.$res_string.");\n";
+                $code .= 'fx::page()->add'.fx::util()->underscoreToCamel($type).'File('.$res_string.");\n";
                 if ($alias) {
-                    $code .= "fx::page()->has_file_alias('".$alias."', '".$type."', true);\n";
+                    $code .= "fx::page()->hasFileAlias('".$alias."', '".$type."', true);\n";
                     $code .= "}\n";
                 }
             }
@@ -924,6 +924,7 @@ class Compiler {
     }
 
     protected function getTokenCode($token, $parent) {
+        // todo: need verify
         $method_name = '_token_'.$token->name.'_to_code';
         if (method_exists($this, $method_name)) {
             return call_user_func(array($this, $method_name), $token, $parent);
@@ -969,9 +970,9 @@ class Compiler {
         $code .= "fx::env()->addCurrentTemplate(\$this);\n";
         
         $code .= "\$template_dir = '".$template_dir."';\n";
-        $code .= "\$_is_admin = \$this->is_admin();\n";
+        $code .= "\$_is_admin = \$this->isAdmin();\n";
         $code .= 'if ($_is_admin) {'."\n";
-        $code .= "\$_is_wrapper_meta = \$this->is_wrapper() ? array('template_is_wrapper' => 1) : array();\n";
+        $code .= "\$_is_wrapper_meta = \$this->isWrapper() ? array('template_is_wrapper' => 1) : array();\n";
         $code .= "}\n";
         
         if (isset($tpl_props['_variants'])) {
@@ -1006,7 +1007,7 @@ class Compiler {
             $code .= "\t\$this->is_subroot = ".($is_subroot).";\n";
             $code .= $children_code;
         }
-        $code .= "fx::env()->pop_current_template();\n";
+        $code .= "fx::env()->popCurrentTemplate();\n";
         $code .= "\n}\n";
         return $code;
     }
