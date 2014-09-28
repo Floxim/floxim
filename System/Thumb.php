@@ -492,7 +492,7 @@ class Thumb
             $config
         );
         
-        $config = strReplace(";", ',', $config);
+        $config = str_replace(";", ',', $config);
         if (empty($config)) {
             return array();
         }
