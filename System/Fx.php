@@ -243,7 +243,7 @@ class Fx {
     public static function isAdmin() {
         static $is_admin = null;
         if (is_null($is_admin)) {
-            $is_admin = (bool) self::env('is_admin');
+            $is_admin = (bool) self::env()->isAdmin();
         }
         return $is_admin;
     }

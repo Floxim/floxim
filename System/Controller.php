@@ -123,7 +123,7 @@ class Controller {
         $actions = explode('_', $this->action);
         while($actions){
             $action = $this->_action_prefix.implode('_', $actions);
-            $action = fx::util()->underscoreToCamel($action);
+            $action = fx::util()->underscoreToCamel($action, false);
             array_pop($actions);
             if (is_callable(array($this, $action))) {
                 return $action;

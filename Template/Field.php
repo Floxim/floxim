@@ -75,7 +75,7 @@ class Field  {
             "~<[^>]+###fxf\d+###[^>]+?>~", 
             function($tag_matches) {
                 $att_fields = array();
-                $tag = pregReplaceCallback(
+                $tag = preg_replace_callback(
                     '~###fxf(\d+)###~', 
                     function($field_matches) use (&$att_fields) {
                         $replacement = Field::$replacements[$field_matches[1]];

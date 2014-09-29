@@ -18,7 +18,7 @@
         <div fx:if="$is_front" id="fx_admin_page_modes"></div>
         <div fx:if="$is_front" id="fx_admin_more_menu"></div>
         <div id="fx_admin_additional_menu">
-            <a class="fx_logout" data-url="<?php echo fx::user()->get_logout_url()?>">
+            <a class="fx_logout" data-url="<?php echo fx::user()->getLogoutUrl() ?>">
                 <?php echo fx::alang('Sign out','system')?>
             </a>
         </div>
