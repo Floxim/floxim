@@ -71,6 +71,11 @@ class Fx {
     public static $data_stat = array();
     
     public static function getComponentFullName($name) {
+        $action=null;
+        $c_parts = explode(':',$name);
+        if (count($c_parts) == 2) {
+            list($name, $action) = $c_parts;
+        }
         $path = explode(".", $name);
         if (count($path) === 1) {
             $lib_components = array(
@@ -112,7 +117,7 @@ class Fx {
         if (count($path) === 2) {
             array_unshift($path, 'floxim');
         }
-        return join(".", $path);
+        return join(".", $path) . ($action ? ':' . $action : '');
     }
 
     public static function getComponentParts($name) {

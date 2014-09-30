@@ -1036,33 +1036,23 @@ class Compiler {
         $tpl_props['full_id'] = $this->_template_set_name.':'.$tpl_props['id'];
         
         $of = $token->getProp('of');
+        // todo: psr0 need fix
         $of_map = array(
-            'menu' => 'section.list',
-            'wrapper' => 'widget_wrapper.show', // fake widget!
-            'blockset' => 'widget_blockset.show',
-            'grid' => 'widget_grid.show',
-            'block' => 'widget_block.show' // no implementation yet
+            'menu' => 'section:list',
+            'wrapper' => 'widget_wrapper:show', // fake widget!
+            'blockset' => 'widget_blockset:show',
+            'grid' => 'widget_grid:show',
+            'block' => 'widget_block:show' // no implementation yet
         );
 
         if (isset($of_map[$of])) {
             $of = $of_map[$of];
         }
-        
-        
-        if (!$of) {
-            if ($this->_controller_type != 'layout') {
-                $of = $this->_controller_type."_".$this->_controller_name.":".$token->getProp('id');
-            } else {
-                $of = false;
-            }
-        } elseif ($of === 'false') {
+
+        if (!$of || $of=='false') {
             $of = false;
-        } elseif (!preg_match("~\.~", $of ) ) {
-            $of = $this->_controller_type."_".$this->_controller_name.":".$of;
-        }
-        // todo: psr0 need verify
-        if ($of && !preg_match("~^(layout|component_|widget_)~", $of)) {
-            //$of = 'component_'.$of;
+        } else {
+            $of = fx::getComponentFullName($of);
         }
         
         $tpl_props += array(

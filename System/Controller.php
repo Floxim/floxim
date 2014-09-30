@@ -176,42 +176,40 @@ class Controller {
         $template_variants = array();
         // first we take out all the variants of layout templates
         foreach ($layout_names as $layout_name) {
-            if (($layout_tpl = fx::template('layout_'.$layout_name)) ) {
+            if (($layout_tpl = fx::template('theme.floxim.'.$layout_name)) ) {
                 $template_variants = array_merge(
                     $template_variants, 
                     $layout_tpl->getTemplateVariants()
                 );
             }
         }
-        
         // now - all the variants of templates from template from the controller
-        foreach ($controller_variants as $controller_variant) {
+        foreach ($controller_variants as $key => $controller_variant) {
             if (($controller_template = fx::template($controller_variant))) {
                 $template_variants = array_merge(
                     $template_variants, 
                     $controller_template->getTemplateVariants()
                 );
             }
+            $controller_variants[$key] = fx::getComponentFullName($controller_variant);
         }
         // now - filtered
         $result = array();
-        
         foreach ($template_variants as $k => $tplv) {
             foreach (explode(",", $tplv['of']) as $tpl_of) {
-                
-                $of_parts = explode(".", $tpl_of);
+                $of_parts = explode(":", $tpl_of);
                 if (count($of_parts) != 2) {
                     continue;
                 }
                 list($tpl_of_controller, $tpl_of_action) = $of_parts;
-                
-                $controller_match_rate = array_keys($controller_variants, $tpl_of_controller);
-                if (!isset($controller_match_rate[0])) {
+
+                $tpl_of_action=fx::util()->underscoreToCamel($tpl_of_action,false);
+                if (!in_array($tpl_of_controller,$controller_variants)) {
                     continue;
                 }
-                
+
                 // the first controller variant is the most precious
-                $tplv['controller_match_rate'] = $controller_match_rate[0]*-1;
+                //$tplv['controller_match_rate'] = $controller_match_rate[0]*-1; //todo: psr0 wtf?
                 if (strpos($this->action, $tpl_of_action) !== 0) {
                     continue;
                 }

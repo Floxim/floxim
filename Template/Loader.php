@@ -354,6 +354,7 @@ class Loader {
             preg_match('~([a-z0-9_]+)\.tpl$~', $file, $file_tpl_name);
             $tpl_id = $file_tpl_name[1];
             if ($this->_controller_type == 'component' && $this->_controller_name) {
+                // todo: psr0 need fix
                 $tpl_of = 'component_'.$this->_controller_name.'.'.$tpl_id;
             }
         }
