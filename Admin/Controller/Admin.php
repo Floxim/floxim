@@ -9,7 +9,7 @@ use Floxim\Floxim\System\Fx as fx;
 class Admin extends System\Controller {
 
     /** @var string the default action for the controller to return the html markup */
-    protected $action = 'admin_office';
+    protected $action = 'adminOffice';
     
     /** @var bool the process() method should return the result? */
     protected $process_do_return = false;

@@ -202,7 +202,7 @@ class Component extends Admin {
         $action = isset($input['params'][1]) ? $input['params'][1] : 'settings';
         
         self::makeBreadcrumb($component, $action, $this->response->breadcrumb);
-        
+        $action = fx::util()->underscoreToCamel($action, false);
         if (method_exists($this, $action)) {
             $result = call_user_func(array($this, $action), $component, $input);
         }

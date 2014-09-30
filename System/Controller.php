@@ -58,7 +58,7 @@ class Controller {
             return $this;
         }
     	
-    	$this->action = $action;
+    	$this->action = fx::util()->underscoreToCamel($action,false);
     	return $this;
     }
 

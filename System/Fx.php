@@ -517,7 +517,7 @@ class Fx {
         if (!in_array($superglobal, array('get', 'post', 'cookie','session'))) {
             return $input;
         }
-        $callback = array($input, 'fetch_'.$superglobal);
+        $callback = array($input, 'fetch'.fx::util()->underscoreToCamel($superglobal));
         if (func_num_args() === 1) {
             return call_user_func($callback);
         }
