@@ -359,7 +359,7 @@ class Component extends Admin {
                     'name' => $tpl['name'],
                     'url' => $ctr_type.'.edit('.$component['id'].',templates,'.$tpl['full_id'].')', 
                 ),
-                'action' => preg_replace("~^.+\.~", '', $tpl['of']),
+                'action' => preg_replace("~^.+\:~", '', $tpl['of']), // todo: psr0 verify with multiple fx:of
                 'used' => count($visuals->find('template', $tpl['full_id']))
             );
             $owner_ctr_match = null;
@@ -371,20 +371,18 @@ class Component extends Admin {
             } else {
                 $r['inherited'] = $owner_ctr;
             }
-            if (preg_match("~^layout_~", $tpl['full_id'])) {
-                $layout_code = 
-                    preg_replace('~\:.+$~', '',
-                        preg_replace('~layout_~', '', $tpl['full_id'])
-                    );
-                $r['source'] = 
-                            fx::data('layout')->
-                                where('keyword', $layout_code)->
-                                one()->
-                                get('name') . ' (layout)';
+            // example: theme.floxim.phototeam:featured_news_list
+            if (preg_match("#^theme\.(\w+)\.(\w+)\:.+$#i", $tpl['full_id'], $match)) {
+                // todo: psr0 need use $match[1] for define vendor template
+                $r['source'] =
+                    fx::data('layout')->
+                        where('keyword', $match[2])->
+                        one()->
+                        get('name') . ' (layout)';
             } else {
                 // todo: psr0 need verify
                 $c_parts = fx::getComponentParts($tpl['full_id']);
-                $r['source'] = 
+                $r['source'] =
                     fx::data($ctr_type, $c_parts['component'])->get('name');
             }
             $r['file'] = fx::path()->toHttp($tpl['file']);
