@@ -1045,14 +1045,20 @@ class Compiler {
             'block' => 'widget_block:show' // no implementation yet
         );
 
-        if (isset($of_map[$of])) {
-            $of = $of_map[$of];
-        }
-
-        if (!$of || $of=='false') {
-            $of = false;
+        if ($of and $of != 'false') {
+            $of_parts = explode(',', $of);
+            array_walk($of_parts, function(&$v) {
+                $v=trim($v);
+            });
+            foreach($of_parts as $key => $value){
+                if (isset($of_map[$value])) {
+                    $of_parts[$key] = $of_map[$value];
+                }
+                $of_parts[$key] = fx::getComponentFullName($value);
+            }
+            $of = join(',', $of_parts);
         } else {
-            $of = fx::getComponentFullName($of);
+            $of = false;
         }
         
         $tpl_props += array(
