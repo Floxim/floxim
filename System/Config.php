@@ -82,6 +82,10 @@ class Config {
         
         $this->config['templates.cache_dir'] = fx::path('files', 'compiled_templates');
         $this->config['HTTP_ACTION_LINK'] = fx::path()->http('floxim', 'index.php');
+
+        $this->config['console.commands'] = array(
+            'module' => '\\Floxim\\Floxim\\Console\\Command\\Module',
+        );
         /*
         $this->config['DOCUMENT_ROOT'] = DOCUMENT_ROOT;
         $this->config['HTTP_HOST'] = getenv("HTTP_HOST");
