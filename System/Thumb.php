@@ -12,13 +12,13 @@ class Thumb
     public function __construct($source_http_path, $config = '')
     {
         if (empty($source_http_path)) {
-            throw new Exception('Empty path');
+            throw new \Exception('Empty path');
         }
         $this->config = $this->readConfig($config);
         
         $source_path = fx::path()->toAbs($source_http_path);
         if (!file_exists($source_path) || !is_file($source_path)) {
-            throw new Exception('File not found: ' . $source_path);
+            throw new \Exception('File not found: ' . $source_path);
         }
         $source_path = realpath($source_path);
         
@@ -34,7 +34,7 @@ class Thumb
         $this->info = $info;
         if (!isset(self::$_types[$info['imagetype']])) {
             // incorrect/unknown type pictures
-            throw new Exception('Wrong image type');
+            throw new \Exception('Wrong image type');
         }
         $this->info += self::$_types[$info['imagetype']];
     }
