@@ -115,7 +115,6 @@ class Finder extends System\Data {
     public function setComponent($component_id_or_code) {
         $component = fx::data('component', $component_id_or_code);
         if (!$component) {
-            say($component_id_or_code,$component,debug_backtrace());
             die("Component not found: ".$component_id_or_code);
         }
         $this->component_id = $component['id'];

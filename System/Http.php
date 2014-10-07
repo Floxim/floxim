@@ -19,8 +19,7 @@ class Http {
     public function redirect($target_url, $status = 302) {
         $this->status($status);
         header("Location: ".$target_url);
-        fx::env()->set('complete_ok', true);
-        die();
+        fx::complete();
     }
     
     public function refresh() {

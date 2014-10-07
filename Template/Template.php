@@ -428,8 +428,8 @@ class Template {
                 fx::log('template exception', $e);
             }
         } else {
-            say(debug_backtrace());die();
-            fx::debug('No template: '.get_class($this).'.'.$this->action);
+            fx::debug('No template: '.get_class($this).'.'.$this->action, $this);
+            die();
         }
         $result = ob_get_clean();
         

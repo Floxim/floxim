@@ -597,10 +597,6 @@ abstract class Data {
     }
     
     public function __construct($table = null) {
-        if (get_class($this) == 'Floxim\\Floxim\\System\\Data') {
-            say(debug_backtrace());
-            die();
-        }
         if (!$table) {
             $class = get_class($this);
             if ($class[0] == '\\') {
@@ -693,9 +689,6 @@ abstract class Data {
      */
     public function entity($data = array()) {
         $classname = $this->getClassName($data);
-        if (!class_exists($classname)) {
-            say($this);
-        }
         $obj = new $classname(array('data' => $data));
         // todo: psr0 verify
         if ($classname == '\\Floxim\\Floxim\\System\\Simplerow') {

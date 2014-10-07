@@ -36,7 +36,7 @@ class Ajax extends Base {
         $template = null;
         if ($action_info && !empty($action_info[1])) {
             $action = $action_info[1];
-            $action = explode(":", $action);
+            $action = explode("@", $action);
             if (count($action) == 2) {
                 $template = $action[1];
                 $action = $action[0];
@@ -49,16 +49,14 @@ class Ajax extends Base {
             return null;
         }
         fx::env('ajax', true);
-        $action = explode(".", $action);
+        $action = explode(":", $action);
         $controller_name = $action[0];
         if (preg_match("~^widget_~", $controller_name) && !isset($action[1])) {
             $action[1] = 'show';
         }
         $action_name = $action[1];
         
-        $action = $controller_name.':'.$action_name;
-        
-        $controller = fx::controller($action);
+        $controller = fx::controller($controller_name.':'.$action_name);
         
         if (!$template) {
             $tpls = $controller->getAvailableTemplates();

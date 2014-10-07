@@ -1198,8 +1198,7 @@ class Files {
                 $content=fread($file ,1024*100);
                 echo $content;
             }
-            fx::env('complete_ok', true);
-            exit(0);
+            fx::complete();
         }
         return false;
     }

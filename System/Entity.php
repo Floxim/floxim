@@ -300,8 +300,9 @@ abstract class Entity implements \ArrayAccess {
             }
         }
         
-        if (method_exists($this, '_get_'.$offset)) {
-            return call_user_func(array($this, '_get_'.$offset));
+        $getter = '_get'.fx::util()->underscoreToCamel($offset);
+        if (method_exists($this, $getter)) {
+            return call_user_func(array($this, $getter));
         }
         
         if (array_key_exists($offset, $this->data)) {
@@ -396,7 +397,7 @@ abstract class Entity implements \ArrayAccess {
         if  (array_key_exists($offset, $this->data)) {
             return true;
         }
-        if (method_exists($this, '_get_'.$offset)) {
+        if (method_exists($this, '_get'.fx::util()->underscoreToCamel($offset))) {
             return true;
         }
         return isset(self::$_field_map[$this->getType()][$offset]);

@@ -202,7 +202,6 @@ class Fx {
         
         $class_name = $namespace.'\\Finder';
         if (!class_exists($class_name)) {
-            say($class_name, $datatype, self::getComponentFullName($datatype), debug_backtrace());
             throw new \Exception('Class not found: '.$class_name. ' for '.$datatype);
         }
         
@@ -343,7 +342,6 @@ class Fx {
          */
         if (count($c_parts) === 1) {
             $c_class = fx::getComponentNamespace($c_parts[0]) . '\\Controller';
-            //say(debug_backtrace());
             $controller_instance = new $c_class($input, $action);
             return $controller_instance;
         }
@@ -387,7 +385,6 @@ class Fx {
                 }
             }
         }
-        say(debug_backtrace());
         die("Failed loading class controller ".$controller);
     }
 
