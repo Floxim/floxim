@@ -9,13 +9,13 @@ use Floxim\Floxim\System\Fx as fx;
 class Component extends Frontoffice {
     
     protected function countParentId() {
-        if (preg_match("~^list_infoblock~", $this->action)) {
+        if (preg_match("~^listInfoblock~", fx::util()->underscoreToCamel($this->action, false))) {
             $this->setParam('parent_id', $this->getParentId());
         }
     }
     
     public function process() {
-        $this->listen('before_action_run', array($this, '_count_parent_id'));
+        $this->listen('before_action_run', array($this, 'countParentId'));
         $result = parent::process();
         return $result;
     }
@@ -766,7 +766,7 @@ class Component extends Frontoffice {
     
     protected $_finder = null;
     /**
-     * @return fx_data_content data finder
+     * @return \Floxim\Floxim\System\Data data finder
      */
     public function getFinder() {
         if (!is_null($this->_finder)) {
