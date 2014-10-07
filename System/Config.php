@@ -85,6 +85,7 @@ class Config {
 
         $this->config['console.commands'] = array(
             'module' => '\\Floxim\\Floxim\\Console\\Command\\Module',
+            'component' => '\\Floxim\\Floxim\\Console\\Command\\Component',
         );
         /*
         $this->config['DOCUMENT_ROOT'] = DOCUMENT_ROOT;

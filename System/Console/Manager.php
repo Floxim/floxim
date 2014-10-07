@@ -27,19 +27,19 @@ class Manager {
     }
 
     public function addPath($path) {
-        $this->paths[] = rtrim(realpath($path),'/') . '/';
+        $this->paths[] = rtrim(realpath($path), '/') . '/';
         array_unique($this->paths);
     }
 
     public function addCommands($commands) {
         if (is_array($commands)) {
             foreach ($commands as $name => $params) {
-                $this->addCommand($name,$params);
+                $this->addCommand($name, $params);
             }
         }
     }
 
-    public function addCommand($name,$params) {
+    public function addCommand($name, $params) {
         $this->commands[$name] = $params;
     }
 
@@ -59,9 +59,9 @@ class Manager {
         $name = strtolower($name);
 
         if ($command = $this->getCommand($name)) {
-            return new $command($name,$this);
+            return new $command($name, $this);
         } elseif ($name == 'help') {
-            return new CommandHelp($name,$this);
+            return new CommandHelp($name, $this);
         }
         return null;
     }
