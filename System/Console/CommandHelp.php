@@ -20,7 +20,7 @@ class CommandHelp extends Command {
             echo "\nThe following commands are available:\n";
             $commandNames = array_keys($commands);
             sort($commandNames);
-            echo ' - ' . implode("\n - ",$commandNames);
+            echo ' - ' . implode("\n - ", $commandNames);
             echo "\n\nTo see individual command help, use the following:\n";
             echo " " . $manager->getScriptName() . " help <command-name>\n";
         } else {
