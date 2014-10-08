@@ -2,7 +2,7 @@
 
 namespace Floxim\Floxim\System;
 
-use Floxim\Floxim\Helper\Form;
+use Floxim\Form;
 
 /**
  * Layer between the table and the object
@@ -471,7 +471,7 @@ abstract class Data {
         $res = fx::db()->getResults($query);
 
         if (fx::db()->isError()) {
-            throw new Exception("SQL ERROR");
+            throw new \Exception("SQL ERROR");
         }
         
         if ($this->calc_found_rows) {

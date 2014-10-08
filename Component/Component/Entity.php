@@ -47,7 +47,7 @@ class Entity extends System\Entity {
             $res = false;
         }
 
-        if ($this['keyword'] && !preg_match("/^[a-z][a-z0-9_-]*$/i", $this['keyword'])) {
+        if ($this['keyword'] && !preg_match("/^[a-z][\.a-z0-9_-]*$/i", $this['keyword'])) {
             $this->validate_errors[] = array('field' => 'keyword', 'text' => fx::alang('Keyword can only contain letters, numbers, symbols, "hyphen" and "underscore"','system'));
             $res = false;
         }

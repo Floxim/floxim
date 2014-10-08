@@ -154,7 +154,7 @@ abstract class Entity implements \ArrayAccess {
     }
 
     public function set($item, $value = '') {
-        if ( is_array($item) || $item instanceof Traversable) {
+        if ( is_array($item) || $item instanceof \Traversable) {
             foreach ( $item as $k => $v ) {
                 $this->set($k, $v);
             }
@@ -210,7 +210,7 @@ abstract class Entity implements \ArrayAccess {
         return $this;
     }
     
-    public function bindForm(\Floxim\Floxim\Helper\Form\Form $form) {
+    public function bindForm(\Floxim\Form\Form $form) {
         $this->_form = $form;
     }
     

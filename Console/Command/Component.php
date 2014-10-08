@@ -10,22 +10,40 @@ class Component extends Console\Command {
     protected $module_vendor;
     protected $module_name;
     protected $component_name;
+    protected $parent_entity;
+    protected $parent_finder;
+    protected $parent_controller;
 
     /**
      * Create new component
      *
-     * @param string $name
+     * @param string $keyword
+     * @param string|bool $name
+     * @param string|bool $itemName
      * @param bool   $overwrite Overwrite exists component
      * @param string $parent Parent component
      */
-    public function doNew($name, $overwrite = false, $parent = 'content') {
-        $name_parts = explode('.', $name);
-        if (count($name_parts) != 3) {
+    public function doNew($keyword, $name=false, $itemName=false, $parent = 'content', $overwrite = false) {
+        $keyword_parts = explode('.', $keyword);
+        if (count($keyword_parts) != 3) {
             $this->usageError('Name need format "vendor.module.name"');
         }
-        $this->module_vendor = ucfirst($name_parts[0]);
-        $this->module_name = ucfirst($name_parts[1]);
-        $this->component_name = ucfirst($name_parts[2]);
+        $this->module_vendor = ucfirst($keyword_parts[0]);
+        $this->module_name = ucfirst($keyword_parts[1]);
+        $this->component_name = ucfirst($keyword_parts[2]);
+        if (!$name) {
+            $name=$this->component_name;
+        }
+        if (!$itemName) {
+            $itemName=$this->component_name;
+        }
+        if (!$parentComponent=fx::data('component',$parent)) {
+            $this->usageError('Not found parent component');
+        }
+        $parentNamespace=fx::getComponentNamespace($parent);
+        $this->parent_entity=$parentNamespace.'\\Entity';
+        $this->parent_finder=$parentNamespace.'\\Finder';
+        $this->parent_controller=($parentNamespace=='\\Floxim\\Floxim\\Component\\Content') ? '\\Floxim\\Floxim\\Controller\\Component' :  $parentNamespace.'\\Controller';
         /**
          * Check for exists module
          */
@@ -71,6 +89,19 @@ class Component extends Console\Command {
          * Copy files
          */
         $this->copyFiles($file_list);
+        /**
+         * Create in database
+         */
+        $data=array(
+            'name' => $name,
+            'keyword' => $keyword,
+            'vendor' => strtolower($this->module_vendor),
+            'parent_id' => $parentComponent['id'],
+            'item_name' => $itemName,
+        );
+        $component=fx::data('component')->create($data);
+        $component->save();
+
         echo "\nYour component has been created successfully under {$component_path}.\n";
     }
 
@@ -78,6 +109,9 @@ class Component extends Console\Command {
         $content = str_replace('{Vendor}', $this->module_vendor, $content);
         $content = str_replace('{Module}', $this->module_name, $content);
         $content = str_replace('{Component}', $this->component_name, $content);
+        $content = str_replace('{ParentClassEntity}', $this->parent_entity, $content);
+        $content = str_replace('{ParentClassFinder}', $this->parent_finder, $content);
+        $content = str_replace('{ParentClassController}', $this->parent_controller, $content);
         return $content;
     }
 }

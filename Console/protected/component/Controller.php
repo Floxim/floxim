@@ -3,6 +3,6 @@ namespace {Vendor}\{Module}\{Component};
 
 use Floxim\Floxim\System\Fx as fx;
 
-class Controller extends \Floxim\Floxim\Controller\Component {
+class Controller extends {ParentClassController} {
 
 }
