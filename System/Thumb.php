@@ -140,8 +140,6 @@ class Thumb
         */
         
         
-        fx::log($params, $h.'*'. $w, $mih.'-'.$mah.' * '.$miw.'-'.$maw);
-        
         // is wider than it should
         if ($w > $maw) {
             // and above
@@ -215,7 +213,6 @@ class Thumb
             'width' => round($w),
             'height' => round($h)
         );
-        fx::log($res);
         return $res;
     }
     
