@@ -970,7 +970,8 @@ class fx_template_compiler {
         $code .= "}\n";
         
         if (isset($tpl_props['_variants'])) {
-            foreach ($tpl_props['_variants'] as &$v) {
+            $tpl_variants = $tpl_props['_variants'];
+            foreach ($tpl_variants as &$v) {
                 $t = $v['_token'];
                 if ( !($prior = $t->get_prop('priority')) ){ 
                     $prior = $t->get_prop('test') ? 0.5 : 0;
@@ -978,11 +979,14 @@ class fx_template_compiler {
                 $v['_priority'] = $prior;
             }
             
-            usort($tpl_props['_variants'], function($a, $b) {
-                return $a['_priority'] - $b['_priority'];
+            @ usort($tpl_variants, function($a, $b) {
+                $ap = $a['_priority'];
+                $bp = $b['_priority'];
+                $diff = round( ($bp - $ap) * 100);
+                return $diff;
             });
             
-            foreach ($tpl_props['_variants'] as $var_num => $var) {
+            foreach ($tpl_variants as $var_num => $var) {
                 $token = $var['_token'];
                 $test = $token->get_prop('test');
                 if (!$test) {
