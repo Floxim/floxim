@@ -171,12 +171,13 @@ class Controller {
         } elseif (is_array($layout_name)) {
             $layout_names = $layout_name;
         }
+        
         // get acceptable controller
         $controller_variants = $this->getControllerVariants();
         $template_variants = array();
         // first we take out all the variants of layout templates
         foreach ($layout_names as $layout_name) {
-            if (($layout_tpl = fx::template('theme.floxim.'.$layout_name)) ) {
+            if (($layout_tpl = fx::template('theme.'.$layout_name)) ) {
                 $template_variants = array_merge(
                     $template_variants, 
                     $layout_tpl->getTemplateVariants()
@@ -193,6 +194,9 @@ class Controller {
             }
             $controller_variants[$key] = fx::getComponentFullName($controller_variant);
         }
+        
+        fx::log($template_variants, $controller_variants);
+        
         // now - filtered
         $result = array();
         foreach ($template_variants as $k => $tplv) {

@@ -38,8 +38,4 @@ class Widget extends Frontoffice {
         }
         return parent::getControllerName($with_type);
     }
-    
-    protected function getControllerVariants() {
-        return array($this->getControllerName(true));
-    }
 }

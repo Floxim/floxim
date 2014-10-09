@@ -85,11 +85,12 @@ class Fx {
                 'comment', 
                 'company', 
                 'contact', 
+                'content',
                 'faq', 
-                'widget_grid',
+                'grid',
                 'widget_map',
                 'widget_custom_code',
-                'widget_blockset',
+                'blockset',
                 'news',
                 'page', 
                 'person', 
@@ -106,7 +107,8 @@ class Fx {
                 'vacancy', 
                 'video',
                 'message_template',
-                'mail_template'
+                'mail_template',
+                'wrapper'
             );
             if (in_array(strtolower($path[0]), $lib_components)) {
                 array_unshift($path, 'main');

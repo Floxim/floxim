@@ -27,7 +27,7 @@ class Compiler {
                 $lined = join("\n", $lines);
                 $error = $is_correct[0].': '.$is_correct[1][0].' (line '.$error_line.')';
                 fx::debug($error, $lined);
-                fx::log($error, $lined);
+                fx::log($error, $is_correct, $lined);
                 throw new \Exception('Syntax error');
             }
         }
@@ -1039,10 +1039,10 @@ class Compiler {
         // todo: psr0 need fix
         $of_map = array(
             'menu' => 'section:list',
-            'wrapper' => 'widget_wrapper:show', // fake widget!
-            'blockset' => 'widget_blockset:show',
-            'grid' => 'widget_grid:show',
-            'block' => 'widget_block:show' // no implementation yet
+            'wrapper' => 'wrapper:show', // fake widget!
+            'blockset' => 'blockset:show',
+            'grid' => 'grid:show',
+            'block' => 'block:show' // no implementation yet
         );
 
         if ($of and $of != 'false') {
@@ -1052,7 +1052,7 @@ class Compiler {
             });
             foreach($of_parts as $key => $value){
                 if (isset($of_map[$value])) {
-                    $of_parts[$key] = $of_map[$value];
+                    $value = $of_map[$value];
                 }
                 $of_parts[$key] = fx::getComponentFullName($value);
             }
@@ -1214,6 +1214,7 @@ class Compiler {
                     ? array_slice($error_data,1)
                     : array('unexpected $end' . substr($error_data[1], 14), $braces);
             }
+            $error_data['raw_output'] = $buffer_output;
             $result = array('syntax error', $error_data);
         } else {
             ob_end_clean();

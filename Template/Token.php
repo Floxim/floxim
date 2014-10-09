@@ -2,6 +2,8 @@
 
 namespace Floxim\Floxim\Template;
 
+use Floxim\Floxim\System\Fx as fx;
+
 /*
  * Class for a separate token fx-templating engine
  */

@@ -106,7 +106,7 @@ class HtmlToken {
             } else {
                 $omit_conditional = true;
                 $omit_var_name = '$omit_'.md5($this->omit);
-                $res .= '<?'.$omit_var_name.' = '.$this->omit.'; if (!'.$omit_var_name.') {?>';
+                $res .= '<?php '.$omit_var_name.' = '.$this->omit.'; if (!'.$omit_var_name.') {?>';
             }
         }
         $tag_start = '';
@@ -141,7 +141,7 @@ class HtmlToken {
         
         $res .= $tag_start;
         if ($omit_conditional) {
-            $res .= '<?}?>';
+            $res .= '<?php } ?>';
         }
         
         // is finished collecting the tag
@@ -152,12 +152,12 @@ class HtmlToken {
         }
         if ($this->type == 'open' && $this->name != 'root' && !$omit) {
             if ($omit_conditional) {
-                $res .= '<?if (!'.$omit_var_name.') {?>';
+                $res .= '<?php if (!'.$omit_var_name.') {?>';
             }
             $res .= "</".$this->original_name.">";
             
             if ($omit_conditional) {
-                $res .= '<?}?>';
+                $res .= '<?php } ?>';
             }
         }
         return $res;

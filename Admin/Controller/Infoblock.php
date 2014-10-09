@@ -181,7 +181,6 @@ class Infoblock extends Admin {
         }
         foreach ($infoblock['params'] as $ib_param => $ib_param_value) {
             if (isset($settings[$ib_param])) {
-                fx::log($settings, $ib_param, $ib_param_value);
                 $settings[$ib_param]['value'] = $ib_param_value;
             }
         }
@@ -610,11 +609,11 @@ class Infoblock extends Admin {
         $action_name = $infoblock->getPropInherited('action');
 
         // Collect available wrappers
-        $layout_tpl = fx::template('layout_'.$layout_name);
+        $layout_tpl = fx::template('theme.'.$layout_name);
         if ( $layout_tpl ) {
             $template_variants = $layout_tpl->getTemplateVariants();
             foreach ($template_variants  as $tplv) {
-                $full_id = 'layout_'.$layout_name.'.'.$tplv['id'];
+                $full_id = $tplv['full_id'];
                 if ($tplv['suit'] == 'local' && $area_meta['id'] != $tplv['area']) {
                     continue;
                 }
@@ -622,7 +621,7 @@ class Infoblock extends Admin {
                     continue;
                 }
                     
-                if ($tplv['of'] == 'widget_wrapper.show') {
+                if ($tplv['of'] == 'floxim.main.wrapper:show') {
                     $wrappers[$full_id] = $tplv['name'];
                     if ($force_wrapper && empty($c_wrapper)) {
                         $c_wrapper = $full_id;
