@@ -4,18 +4,7 @@ $(function(){
             change_pic($(this).attr("data-pic_id"));
         }
     });
-    /*
-    $('html').on('click', '.img-block.img-block-active', function() {
-    	var next = $(this).next(); 
-    	var id;
-    	if (next.length > 0) {
-    		id = next.attr("data-picid");
-    	} else {
-    		id = $(".img-block").eq(0).attr("data-picid");
-    	}
-		changepic(id)
-    })
-    */
+    
     function change_pic (id) {
     	var pic = $(".img-block.pic_"+id);
     	if (pic.length === 0 ) {

@@ -6,7 +6,7 @@ class fx_controller_widget_grid extends fx_controller_widget {
         if (isset($res['areas'])) {
             foreach ($res['areas'] as $i => &$area) {
                 if (!isset($area['id'])) {
-                    $area['id'] = (isset($area['keyword']) ? $area['keyword'] : $i).'_'.$this->get_param('infoblock_id');
+                    $area['id'] = 'grid_'.(isset($area['keyword']) ? $area['keyword'] : $i).'_'.$this->get_param('infoblock_id');
                 }
             }
         }

@@ -1,4 +1,4 @@
-<div
+<nav
     fx:template="listing_deep" 
     fx:of="component_section.list"
     fx:name="Deep menu"
@@ -11,4 +11,4 @@
                 {call recursive_menu with $items = $submenu, $lv = $lv+1 /}
             </li>
         </ul>
-</div>
+</nav>

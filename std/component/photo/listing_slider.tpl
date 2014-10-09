@@ -11,8 +11,8 @@
     <div class="images fx_not_sortable">
         <div 
             fx:each="$items" 
-            class="img-block {if $item_is_first}img-block-active{/if} pic_{$id}">
-            <img src="{$photo}" alt="{$description editable='false' | strip_tags}" />
+            class="img-block {if $position == 1}img-block-active{/if} pic_{$id}">
+            <img src="{$photo | 'max-width:800'}" alt="{$description editable='false' | strip_tags}" />
             <span class="left">{$description}</span>
             <span class="right" fx:if="$copy">&copy; {$copy}</span>
         </div>
