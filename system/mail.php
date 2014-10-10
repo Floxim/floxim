@@ -11,6 +11,8 @@ class fx_system_mail {
         $this->_data = $data;
         $this->mailer = new PHPMailer();
         
+        $this->mailer->CharSet = 'utf-8';
+        
         if (!is_array($params)) {
             $params = array();
         }
