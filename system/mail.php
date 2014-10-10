@@ -25,14 +25,10 @@ class fx_system_mail {
             $params['from'] = $from;
         }
         
-        if (!isset($params['smtp_host'])) {
-            $smtp_host = fx::config('mail.smtp_host');
-            if ($smtp_host) {
-                $params['smtp_host'] = $smtp_host;
-                $smtp_pass = fx::config('mail.smtp_password');
-                if ($smtp_pass) {
-                    $params['smtp_password'] = $smtp_pass;
-                }
+        
+        foreach (array('host', 'password', 'user', 'port') as $smtp_prop) {
+            if (!isset($params['smtp_'.$smtp_prop]) && ($conf_prop = fx::config('mail.smtp_'.$smtp_prop))) {
+                $params['smtp_'.$smtp_prop] = $conf_prop;
             }
         }
         
@@ -61,7 +57,9 @@ class fx_system_mail {
         if (isset($params['smtp_host'])) {
             $this->smtp(
                 $params['smtp_host'], 
-                isset($params['smtp_password']) ? $params['smtp_password'] : null
+                isset($params['smtp_user']) ? $params['smtp_user'] : null,
+                isset($params['smtp_password']) ? $params['smtp_password'] : null,
+                isset($params['smtp_port']) ? $params['smtp_port'] : null
             );
         }
         
@@ -107,15 +105,21 @@ class fx_system_mail {
      * @param string $password
      * @return \fx_system_mail
      */
-    public function smtp($host, $password = null) {
+    public function smtp($host, $user = null, $password = null, $port = null) {
         if ($host === false) {
             $this->mailer->isMail();
             return $this;
         }
         $this->mailer->isSMTP();
-        $this->mailer->Host = $host;
-        if ($password) {
+        if ($user && $password) {
+            $this->mailer->SMTPAuth = true;
             $this->mailer->Password = $password;
+            $this->mailer->Username = $user;
+        }
+        //$this->mailer->SMTPDebug = 1;
+        $this->mailer->Host = $host;
+        if ($port) {
+            $this->mailer->Port = $port;
         }
         return $this;
     }
