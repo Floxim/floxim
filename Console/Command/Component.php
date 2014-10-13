@@ -43,7 +43,7 @@ class Component extends Console\Command {
         $parentNamespace=fx::getComponentNamespace($parent);
         $this->parent_entity=$parentNamespace.'\\Entity';
         $this->parent_finder=$parentNamespace.'\\Finder';
-        $this->parent_controller=($parentNamespace=='\\Floxim\\Floxim\\Component\\Content') ? '\\Floxim\\Floxim\\Controller\\Component' :  $parentNamespace.'\\Controller';
+        $this->parent_controller=$parentNamespace.'\\Controller';
         /**
          * Check for exists module
          */

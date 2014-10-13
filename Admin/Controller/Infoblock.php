@@ -42,8 +42,8 @@ class Infoblock extends Admin {
         
         foreach ($controllers as $c) {
             $controller_type = $c instanceof Component\Entity ? 'component' : 'widget';
-            // todo: psr0 need fix
-            $controller_name = $controller_type.'_'.$c['keyword'];
+            // todo: psr0 need verify
+            $controller_name = $c['keyword'];
             $c_item = array(
                 'data' => $c['name'],
                 'metadata' => array('id' => $controller_name),
@@ -89,7 +89,8 @@ class Infoblock extends Admin {
                 $c_item['children'][]= array(
                     'data' => $action_name,
                     'metadata' => array(
-                        'id' => $controller_type.'_'.$c['keyword'].'.'.$action_code,
+                        // todo: psr0 need verify
+                        'id' => $c['keyword'].':'.$action_code,
                         'description' => $action_info['description'],
                         'type' => $action_type,
                         'icon' => $action_info['icon'],
@@ -143,7 +144,7 @@ class Infoblock extends Admin {
             $i2l = $infoblock->getVisual();
     	} else {
             // Create a new type and ID of the controller received from the previous step
-            list($controller, $action) = explode(".", $input['controller']);
+            list($controller, $action) = explode(":", $input['controller']);
             $site_id = fx::data('page', $input['page_id'])->get('site_id');
             $infoblock = fx::data("infoblock")->create(array(
                 'controller' => $controller,

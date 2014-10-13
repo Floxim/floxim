@@ -376,7 +376,7 @@ class Component extends Admin {
                 // todo: psr0 need use $match[1] for define vendor template
                 $r['source'] =
                     fx::data('layout')->
-                        where('keyword', $match[2])->
+                        where('keyword', $match[1] . '.' . $match[2])->
                         one()->
                         get('name') . ' (layout)';
             } else {

@@ -106,13 +106,14 @@ class Finder extends System\Data {
     
     public function __construct($table = null) {
         parent::__construct($table);
-        
-        $class = array_reverse(explode("\\", get_class($this)));
-        $com = fx::util()->camelToUnderscore($class[1]);
-        $this->setComponent($com);
+
+        $this->setComponent(fx::getComponentNameByClass(get_class($this))); // full component name, ex 'floxim.main.user'
     }
     
     public function setComponent($component_id_or_code) {
+        // todo: psr0 need remove after rename tables
+        $component_id_or_code = str_replace('floxim.main.','',$component_id_or_code);
+
         $component = fx::data('component', $component_id_or_code);
         if (!$component) {
             die("Component not found: ".$component_id_or_code);
