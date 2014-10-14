@@ -276,6 +276,9 @@ class Entity extends System\Entity  implements Template\Entity {
             $this['controller'] = $ctr[0];
             $this['action'] = $ctr[1];
         }
+        if (isset($data['name'])) {
+            $this['name'] = $data['name'];
+        }
     }
 
 
@@ -520,5 +523,23 @@ class Entity extends System\Entity  implements Template\Entity {
             }
         }
         return array_unique($result_pages);
+    }
+    
+    public function getAvailParentsFinder() {
+        $parent_type = $this['scope']['page_type'];
+        if (!$parent_type) {
+            $parent_type = 'page';
+        }
+        $root_id = $this['page_id'];
+        if (!$root_id) {
+            $root_id = fx::data('site', $this['site_id'])->get('index_page_id');
+        }
+        $finder = fx::content($parent_type);
+        if ($this['scope']['pages'] === 'this') {
+            $finder->where('id', $this['page_id']);
+        } else {
+            $finder->descendantsOf($root_id, $this['scope']['pages'] != 'children');
+        }
+        return $finder;
     }
 }

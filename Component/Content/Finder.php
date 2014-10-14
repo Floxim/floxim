@@ -469,6 +469,9 @@ class Finder extends System\Data {
                 $parent_ids = $parents->getValues('id');
             }
         }
+        if (is_scalar($parent_ids)) {
+            $parent_ids = fx::data('content', $parent_ids);
+        }
         if ($parent_ids instanceof Entity) {
             $parents = array($parent_ids);
             $parent_ids = array($parent_ids['id']);
@@ -478,6 +481,12 @@ class Finder extends System\Data {
             }
             $parents = fx::data('content', $parent_ids);
         }
+        
+        if (!is_array($parents) || count($parents) === 0) {
+            $this->where('FALSE');
+            return $this;
+        }
+        
         $conds = array();
         foreach ($parents as $p) {
             $conds []= array('materialized_path', $p['materialized_path'].$p['id'].'.%', 'like');

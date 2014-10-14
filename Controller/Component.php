@@ -199,7 +199,7 @@ class Component extends Frontoffice {
             }
             // Add allow values for select parent page
             if ($field['keyword'] == 'parent_id') {
-                $pages = $this->getAllowParentPages();
+                $pages = $this->getAllowedParents();
                 $values = $pages->getValues(array('id','name'));
                 $res['values'] = $values;
             }
@@ -838,7 +838,19 @@ class Component extends Frontoffice {
      *
      * @return fx_collection
      */
-    protected function getAllowParentPages() {
-        return fx::collection();
-    }
+    protected function getAllowedParents() {
+        $infoblocks = fx::data('infoblock')
+                        ->where('site_id', fx::env('site_id'))
+                        ->getContentInfoblocks(
+                            $this->getComponent()->get('keyword')
+                        );
+        $res = fx::collection();
+        foreach ($infoblocks as $ib) {
+            $ib_finder = $ib->getAvailParentsFinder();
+            if ($ib_finder) {
+                $res->concat($ib_finder->all());
+            }
+        }
+        return $res;
+        }
 }

@@ -218,22 +218,7 @@ class Entity extends System\Entity implements Template\Entity {
         if (!$ib) {
             return false;
         }
-        
-        $parent_type = $ib['scope']['page_type'];
-        if (!$parent_type) {
-            $parent_type = 'page';
-        }
-        $root_id = $ib['page_id'];
-        if (!$root_id) {
-            $root_id = fx::data('site', $ib['site_id'])->get('index_page_id');
-        }
-        $finder = fx::content($parent_type);
-        if ($ib['scope']['pages'] === 'this') {
-            $finder->where('id', $ib['page_id']);
-        } else {
-            $finder->descendantsOf($root_id, $ib['scope']['pages'] != 'children');
-        }
-        return $finder;
+        return $ib->getAvailParentsFinder();
     }
     
     public function getTemplateRecordAtts($collection, $index) {

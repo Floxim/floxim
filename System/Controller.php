@@ -195,8 +195,6 @@ class Controller {
             $controller_variants[$key] = fx::getComponentFullName($controller_variant);
         }
         
-        fx::log($template_variants, $controller_variants);
-        
         // now - filtered
         $result = array();
         foreach ($template_variants as $k => $tplv) {
@@ -221,8 +219,12 @@ class Controller {
                 // if template action exactly matches current controller action
                 $tplv['action_match_rate'] = $this->action == $tpl_of_action ? 1 : 0;
                 
-                if ($tplv['suit'] && $tplv['suit'] == 'local') {
-                    if ($tplv['area'] != $area_meta['id']) {
+                if ($tplv['suit'] && $area_meta) {
+                    $tplv_areas = explode(",", preg_replace("~\s+~", '', $tplv['suit']));
+                    if (in_array('local', $tplv_areas) ) {
+                        $tplv_areas []= $tplv['area'];
+                    }
+                    if (!in_array($area_meta['id'], $tplv_areas)) {
                         continue;
                     }
                 }

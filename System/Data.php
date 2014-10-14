@@ -153,6 +153,11 @@ abstract class Data {
     }
     
     public function where($field, $value, $type = '=') {
+        if (func_num_args() === 1 && strtolower($field) === 'false') {
+            $field = null;
+            $value = 'FALSE';
+            $type = 'RAW';
+        }
         $cond = $this->prepareCondition($field, $value, $type);
         $this->where []= $cond;
         return $this;

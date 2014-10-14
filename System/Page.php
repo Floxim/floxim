@@ -97,14 +97,24 @@ class Page {
         $http_path = fx::path()->http('files', 'asset_cache/'.$params['name']);
         $full_path = fx::path()->toAbs($http_path);
         
-        if (!file_exists($full_path)) {
-            $less_flag = false;
+        $last_modified = 0;
+        $less_flag = false;
+        foreach ($files as $file) {
+            if (preg_match("~\.less$~", $file)) {
+                $less_flag = true;
+            }
+            if (!preg_match("~^http://~i", $file)) {
+                $file_path = fx::path()->toAbs($file);
+                $c_modified = filemtime($file_path);
+                if ($c_modified > $last_modified) {
+                    $last_modified = $c_modified;
+                }
+            }
+        }
+        
+        if (!file_exists($full_path) || filemtime($full_path) < $last_modified) {
             $file_content = '';
             foreach ($files as $file) {
-                if (preg_match("~\.less$~", $file)) {
-                    $less_flag = true;
-                }
-                
                 if (preg_match("~^http://~i", $file)) {
                     $file_contents = file_get_contents($file);
                 } else {

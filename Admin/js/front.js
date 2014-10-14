@@ -443,10 +443,46 @@ fx_front.prototype.redraw_add_button = function($node) {
             });
         }
     }
-    for (var i = 0; i < buttons.length; i++) {
-        buttons[i].is_add = true;
-        $fx.front.add_panel_button(buttons[i]);
+    if (buttons.length === 0) {
+        return;
     }
+    if (buttons.length === 1) {
+        buttons[0].is_add = true;
+        $fx.front.add_panel_button(buttons[0]);
+        return;
+    }
+    $fx.front.add_panel_button({
+        name:$fx.lang('Add')+'...',
+        callback:function() {
+            var $expand_button = $(this);
+            function create_dropdown($expand_button) {
+                var $dropdown = $expand_button.data('dropdown');
+                if ($dropdown) {
+                    return $dropdown;
+                }
+                $dropdown = $('<div class="fx_buttons_dropdown"></div>');
+                $expand_button.after($dropdown);
+                for (var i = 0; i < buttons.length; i++){
+                    var button_info = buttons[i];
+                    button_info.name = button_info.name.replace(new RegExp( $fx.lang('Add')), '');
+                    var $button = $fx.front.create_button(buttons[i]);
+                    $dropdown.append($button);
+                }
+                var $panel_node = $expand_button.closest('.fx_node_panel');
+                var panel_offset = $panel_node.offset();
+                var button_offset = $expand_button.offset();
+                $dropdown.css({
+                    top:'29px',
+                    left: (button_offset.left - panel_offset.left - 5) + 'px'
+                });
+                $expand_button.data('dropdown', $dropdown);
+                return $dropdown;
+            }
+            
+            var $dropdown = create_dropdown($expand_button);
+            $dropdown.toggleClass('fx_buttons_dropdown_active');
+        }
+    });
 };
 
 fx_front.prototype.get_area_node = function($ib_node) {
@@ -860,7 +896,7 @@ fx_front.prototype.recount_node_panel = function() {
     if (!$p) {
         return;
     }
-    var $p_items = $p.children();
+    var $p_items = $p.children().not('.fx_buttons_dropdown');
     if ($p_items.length === 0) {
         return;
     }
@@ -1652,7 +1688,7 @@ fx_front.prototype.scrollTo = function($node, if_invisible, callback) {
         }
     }
     var body_offset = parseInt($('body').css('margin-top'));
-    var top_offset = $node.offset().top - body_offset - 40;
+    var top_offset = $node.offset().top - body_offset - 50;
     var move = true;
     var st = $(document).scrollTop();
     if (if_invisible){
@@ -1703,17 +1739,12 @@ fx_front.prototype.get_node_panel = function() {
     return $($($fx.front.get_selected_item()).data('fx_node_panel'));
 };
 
-fx_front.prototype.add_panel_button = function(button, callback) {
-    var $p = this.get_node_panel();
-    if (!$p || $p.length === 0) {
-        return;
-    }
+fx_front.prototype.create_button = function(button, callback) {
     if (typeof button !== 'string') {
         if (!callback) {
             callback = button.callback;
         }
         var $b = $('<div class="fx_admin_button_text fx_admin_button"><span>'+button.name+'</span></div>');
-        //return;
     } else {
         var button_code = button;
         var $b = $('<div class="fx_admin_button_'+button_code+' fx_admin_button"></div>');
@@ -1724,6 +1755,15 @@ fx_front.prototype.add_panel_button = function(button, callback) {
     }
     
     $b.click(callback);
+    return $b;
+};
+
+fx_front.prototype.add_panel_button = function(button, callback) {
+    var $p = this.get_node_panel();
+    if (!$p || $p.length === 0) {
+        return;
+    }
+    var $b = this.create_button(button, callback);
     $p.append($b).show();
     return $b;
 };
@@ -2003,6 +2043,9 @@ fx_front.prototype.freeze_events = function(frozen_node) {
         if (handler.namespace.match(/^fx/) || handler.type.match(/^fx/)) {
             return;
         }
+        if (!handler.type.match(/^(click|key|mouse)/)) {
+            return;
+        }
         if (handler._realHandler) {
             return;
         }
@@ -2013,8 +2056,8 @@ fx_front.prototype.freeze_events = function(frozen_node) {
             return;
         }
         handler.handler = function(e) {
-            if (frozen_node !== e.target && !$.contains(frozen_node, e.target)) {
-                return handler._realHandler(e);
+            if (false && frozen_node !== e.target && !$.contains(frozen_node, e.target)) {
+                return handler._realHandler.apply(this, [e]);
             }
         };
     }

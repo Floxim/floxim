@@ -188,11 +188,16 @@ class Content extends Admin {
          * check children
          */
         $descendants = fx::data('content')->descendantsOf($content)->all();
-        if ($count_descendants=$descendants->count()) {
-            $fields[]=array('type' => 'html', 'html' => fx::alang('The content contains some descendants','system') . ', <b>' . $count_descendants . '</b> '. fx::alang('items. These items are removed.','system'));
+        if ( ($count_descendants = $descendants->count()) )  {
+            $fields[]=array(
+                'type' => 'html', 
+                'html' => fx::alang('The content contains some descendants','system') . 
+                            ', <b>' . $count_descendants . '</b> '. fx::alang('items. These items will be removed.','system')
+            );
         }
 
         $this->response->addFields($fields);
+        $this->response->addFormButton(array('key' => 'save', 'label' => 'Delete'));
         if ($input['delete_confirm']) {
             $current_page_path = null;
             if ($input['page_id']) {
@@ -210,6 +215,14 @@ class Content extends Admin {
             $content->delete();
             return $response;
         }
+        $component = fx::data('component', $content['type']);
+        
+        $header = fx::alang("Delete").' '.$component['item_name'];
+        if ( ($content_name = $content['name']) ) {
+            $header .= ' "'.$content_name.'" ';
+        }
+        $res = array('header' => $header);
+        return $res;
     }
     
     public function livesearch($input) {
