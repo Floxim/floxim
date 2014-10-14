@@ -20,10 +20,10 @@ class Fx {
      */
     static public function complete($data=null) {
         fx::env('complete_ok',true);
-        for ($i = 0; $i < ob_get_level(); $i++) {
-            ob_end_clean();
-        }
         if (!is_null($data)) {
+            for ($i = 0; $i < ob_get_level(); $i++) {
+                ob_end_clean();
+            }
             if (is_scalar($data)) {
                 echo($data);
             } else {
@@ -88,8 +88,8 @@ class Fx {
                 'content',
                 'faq', 
                 'grid',
-                'widget_map',
-                'widget_custom_code',
+                'map',
+                'custom_code',
                 'blockset',
                 'news',
                 'page', 

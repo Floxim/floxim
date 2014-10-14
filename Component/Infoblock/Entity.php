@@ -272,7 +272,7 @@ class Entity extends System\Entity  implements Template\Entity {
             }
         }
         if (isset($data['controller']) && $data['controller'] && $data['controller'] !== 'null') {
-            $ctr = explode(".", $data['controller']);
+            $ctr = explode(":", $data['controller']);
             $this['controller'] = $ctr[0];
             $this['action'] = $ctr[1];
         }
@@ -316,7 +316,7 @@ class Entity extends System\Entity  implements Template\Entity {
         } else {
             try {
                 $res = $controller->process();
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 fx::log('controller exception', $controller, $e);
                 $res = '';
             }
@@ -331,7 +331,7 @@ class Entity extends System\Entity  implements Template\Entity {
      */
     protected function getResultMeta() {
         $res = $this->getResult();
-        if ( ! (is_array($res) || $res instanceof ArrayAccess)) {
+        if ( ! (is_array($res) || $res instanceof \ArrayAccess)) {
             return array();
         }
         return isset($res['_meta']) ? $res['_meta'] : array();
