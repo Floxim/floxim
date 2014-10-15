@@ -162,7 +162,7 @@ class Content extends Admin {
             }
             $content = fx::data('content', $input['id']);
         } else {
-            $content = fx::data('content_'.$input['content_type'], $input['content_id']);
+            $content = fx::data($input['content_type'], $input['content_id']);
         }
         if (!$content) {
             return;
@@ -171,7 +171,7 @@ class Content extends Admin {
             array(
                 'label' => fx::alang('I am REALLY sure','system'),
                 'name' => 'delete_confirm',
-                'type' => 'checkbox'
+                'type' => 'hidden'
             ),
             $this->ui->hidden('entity', 'content'),
             $this->ui->hidden('action', 'delete_save'),
