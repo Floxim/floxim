@@ -68,6 +68,7 @@ class Config {
         fx::path()->register('home', DOCUMENT_ROOT);
         
         fx::path()->register('floxim', '/vendor/Floxim/Floxim/');
+        fx::path()->register('module', '/module/');
         fx::path()->register('std', fx::path('floxim', '/std'));
         fx::path()->register('layouts', array('/layout', fx::path('std', '/layout')));
         fx::path()->register('files', '/floxim_files/');
