@@ -168,6 +168,10 @@ class Fx {
         return '\\'.join('\\', $path);
     }
 
+    public static function getComponentPath($name) {
+        return str_replace('\\', DIRECTORY_SEPARATOR, fx::getComponentNamespace($name));
+    }
+
     public static function getClassNameFromNamespaceFull($namespace) {
         $path = explode('\\',$namespace);
         return array_pop($path);
@@ -199,14 +203,14 @@ class Fx {
         if (is_object($id) && $id instanceof Entity) {
             return $id;
         }
-        
+
         $namespace = self::getComponentNamespace($datatype);
-        
+
         $class_name = $namespace.'\\Finder';
         if (!class_exists($class_name)) {
             throw new \Exception('Class not found: '.$class_name. ' for '.$datatype);
         }
-        
+
         $finder = new $class_name;
         
         if (func_num_args() === 1) {
@@ -302,13 +306,10 @@ class Fx {
         /**
          * vendor.module.component - front component controller
          * vendor.module.component:action - front component controller with action
-         * vendor.module.component.admin - component admin controller
-         * vendor.module.admin - module admin
-         * vendor.module.widget - widget controller
-         * com -> \Floxim\Floxim\Component\com
-         *     or \Floxim\Main\com
+         * todo: vendor.module.component.admin - component admin controller
+         * todo: vendor.module.admin - module admin
+         * todo: vendor.module.widget - widget controller
          * layout - layout controller
-         * content - base controller component
          * admin.controller - admin controller site
          */
 
@@ -320,10 +321,13 @@ class Fx {
 
         if ($controller=='layout') {
             return new Controller\Layout($input, $action);
-        } elseif($controller=='content') {
-            $controller_instance = new Controller\Component($input, $action);
-            $controller_instance->setContentType('content');
-            return $controller_instance;
+        }
+        /**
+         * Vendor component
+         */
+        $c_class = fx::getComponentNamespace($controller) . '\\Controller';
+        if (class_exists($c_class)) {
+            return new $c_class($input, $action);
         }
 
         $c_parts = explode(".", $controller);
@@ -338,54 +342,6 @@ class Fx {
                 return $controller_instance;
             }
             die("Failed loading controller class ".$c_class);
-        }
-        /**
-         * Sytem components
-         */
-        if (count($c_parts) === 1) {
-            $c_class = fx::getComponentNamespace($c_parts[0]) . '\\Controller';
-            $controller_instance = new $c_class($input, $action);
-            return $controller_instance;
-        }
-        /**
-         * Component controllers
-         */
-        
-        if (count($c_parts) >= 3) {
-            $c_vendor = $c_parts[0];
-            $c_module = $c_parts[1];
-            $c_component = $c_parts[2];
-            if (in_array($c_component,array('admin','widget'))) {
-                // todo: admin module controllers
-                // .....
-            } else {
-                if (isset($c_parts[3])) {
-                    // todo: check type - admin/widget
-                    // .....
-                } else {
-                    // Component entity
-                    $c_keyword = "{$c_vendor}.{$c_module}.{$c_component}";
-                    $component = fx::data('component',$c_keyword);
-
-                    if ($component) {
-                        foreach ($component->getAncestors() as $parent_com) {
-                            try {
-                                $c_class = fx::getComponentNamespace($parent_com['keyword']) . '\\Controller';
-                                if (!class_exists($c_class)) {
-                                    throw new \Exception();
-                                }
-                                $controller_instance = new $c_class($input, $action);
-                                $controller_instance->setContentType($c_keyword); // todo: psr0 need verify
-                                return $controller_instance;
-                            } catch (\Exception $ex) {
-
-                            }
-                        }
-                    } else {
-                        fx::log("no com", $c_keyword, debug_backtrace());
-                    }
-                }
-            }
         }
         die("Failed loading class controller ".$controller);
     }

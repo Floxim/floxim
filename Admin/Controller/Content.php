@@ -162,7 +162,7 @@ class Content extends Admin {
             }
             $content = fx::data('content', $input['id']);
         } else {
-            $content = fx::data('content_'.$input['content_type'], $input['content_id']);
+            $content = fx::data($input['content_type'], $input['content_id']);
         }
         if (!$content) {
             return;
