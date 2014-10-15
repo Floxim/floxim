@@ -113,7 +113,7 @@ class Entity extends System\Entity  implements Template\Entity {
     }
     
     protected $controller_cache = null;
-    protected function getIbController() {
+    public function getIbController() {
         if (!$this->controller_cache) {
             $this->controller_cache = $this->initController();
         }
@@ -287,7 +287,7 @@ class Entity extends System\Entity  implements Template\Entity {
         if (!$this->isAvailableForUser()) {
             return $output;
         }
-        if (fx::isAdmin() || (!$this->isDisabled() && !$this->isHidden() )) {   
+        if (fx::isAdmin() || (!$this->isDisabled() && !$this->isHidden() )) {
             $output = $this->getOutput();
             $output = $this->wrapOutput($output);
         }
@@ -371,10 +371,10 @@ class Entity extends System\Entity  implements Template\Entity {
             return false;
         }
         $meta = $this->getResultMeta();
-        
         if ($meta['disabled']) {
             return false;
         }
+        
         $tpl = $this->getTemplate();
         if (!$tpl) {
             return '';

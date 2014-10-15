@@ -47,6 +47,7 @@ class Infoblock extends Base {
             $infoblock->override($infoblock_overs);
         }
         $infoblock->overrideParam('ajax_mode', true);
-        return $infoblock->render();
+        $res = $infoblock->render();
+        return $res;
     }
 }
