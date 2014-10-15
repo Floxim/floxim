@@ -1211,29 +1211,33 @@ fx_front.prototype.select_content_entity = function($entity) {
             }
         );
     });
+    var ce_id = entity_meta[2] || entity_meta[0];
     
-    $fx.front.add_panel_button('delete', function() {
-        var ce_type = entity_meta[3] || entity_meta[1];
-        var ce_id = entity_meta[2] || entity_meta[0];
+    if (ce_id){
+        $fx.front.add_panel_button('delete', function() {
+            var ce_type = entity_meta[3] || entity_meta[1];
 
-        $fx.front_panel.load_form({
-            entity:'content',
-            action:'delete_save',
-            content_type:ce_type,
-            content_id:ce_id,
-            page_id:$fx.front.get_page_id(),
-            fx_admin:true
-        }, {
-            onfinish: function() {
-                $fx.front.reload_layout();
-            }
+
+            $fx.front_panel.load_form({
+                entity:'content',
+                action:'delete_save',
+                content_type:ce_type,
+                content_id:ce_id,
+                page_id:$fx.front.get_page_id(),
+                fx_admin:true
+            }, {
+                onfinish: function() {
+                    $fx.front.reload_layout();
+                }
+            });
         });
-    });
+    }
     
     if (
         $fx.front.get_sortable_entitys(
             $entity.parent()
         )
+        && ce_id
     ) {
         $fx.front.add_panel_button('move', function() {
             var $b = $(this);

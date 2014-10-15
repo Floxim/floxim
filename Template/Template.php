@@ -317,7 +317,7 @@ class Template {
             '~\s*?<(/?)([a-z0-9]+)[^>]*?(/?)>\s*?~', 
             function($matches) use (&$level) {
                 $is_closing = $matches[1] == '/';
-                $is_single = inArray(strtolower($matches[2]), array('img', 'br', 'link')) || $matches[3] == '/';
+                $is_single = in_array(strtolower($matches[2]), array('img', 'br', 'link')) || $matches[3] == '/';
                     
                 if ($is_closing) {
                     $level = $level == 0 ? $level : $level - 1;

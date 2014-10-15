@@ -693,7 +693,7 @@ class Compiler {
         
         $code .= 'if ($_is_admin && '.$arr_id.' instanceof \\Floxim\\Floxim\\System\\Collection && isset('.$arr_id.'->finder)';
         $code .= ' && $this->getMode("add") != "false" ';
-        $code .= ' && '.$arr_id.'->finder instanceof \\Floxim\\Floxim\\Component\\Content\\Finder) {'."\n";
+        $code .= ' && '.$arr_id.'->finder instanceof \\Floxim\\Main\\Content\\Finder) {'."\n";
         $code .= $arr_id.'->finder->createAdderPlaceholder('.$arr_id.');'."\n";
         $code .= "}\n";
         
