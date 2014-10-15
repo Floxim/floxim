@@ -114,7 +114,7 @@ fx_edit_in_place.prototype.start = function(meta) {
                     this.is_content_editable = true;
                     if (!$($fx.front.get_selected_item()).hasClass('fx_entity')) {
                         setTimeout(function() {
-                            $fx.front.stop_entitys_sortable();
+                            $fx.front.stop_entities_sortable();
                         }, 50);
                     }
                     if ($n.hasClass('fx_hidden_placeholded')) {
@@ -158,7 +158,7 @@ fx_edit_in_place.prototype.start = function(meta) {
                     
                     var handle_node_size = function () {
                         var text = $.trim($n.text());
-                        var is_empty = text.length === 0;
+                        var is_empty = text.length === 0 || (text.length === 1 && text.charCodeAt(0) === 8203);
                         if (is_empty && !edit_in_place.is_wysiwyg) {
                             $n.html('&#8203;');
                         }

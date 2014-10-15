@@ -24,14 +24,14 @@ class Entity extends System\Entity {
         return $res;
     }
     
-    protected function getMultilangEntitys() {
+    protected function getMultilangEntities() {
         return array('component', 'field', 'lang_string');
     }
     
     protected function beforeDelete() {
-        $entitys = $this->getMultilangEntitys();
+        $entities = $this->getMultilangEntities();
         
-        foreach ($entitys as $e) {
+        foreach ($entities as $e) {
             $fields = fx::data($e)->getMultiLangFields();
             if (count($fields) > 0) {
                 $q = 'ALTER TABLE `{{'.$e.'}}` ';
@@ -46,9 +46,9 @@ class Entity extends System\Entity {
     }
 
     protected function beforeInsert() {
-        $entitys = $this->getMultilangEntitys();
-        fx::log('ess', $entitys);
-        foreach ($entitys as $e) {
+        $entities = $this->getMultilangEntities();
+        fx::log('ess', $entities);
+        foreach ($entities as $e) {
             $fields = fx::data($e)->getMultiLangFields();
             fx::log('fld', $e, $fields);
             if (count($fields) > 0) {

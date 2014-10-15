@@ -85,12 +85,15 @@ class Controller {
         static $time = 0;
         $start = microtime(true);
         */
-        $cache_file = fx::path('files', 'cache/ctr_defaults_'.$this->getSignature().'.php');
+        $sig = str_replace(":", '__', $this->getSignature());
+        $cache_file = fx::path('files', 'cache/ctr_defaults_'.$sig.'.php');
+        
         if (!fx::path()->exists($cache_file)) {
+            $action = fx::util()->camelToUnderscore($this->action);
             $forced = array();
             $cfg = $this->getConfig();
-            if (isset($cfg['actions'][$this->action]['force'])) {
-                $forced = $cfg['actions'][$this->action]['force'];
+            if (isset($cfg['actions'][$action]['force'])) {
+                $forced = $cfg['actions'][$action]['force'];
             }
             fx::files()->writefile($cache_file, "<?php return ".var_export($forced, true).";");
         } else {
@@ -135,7 +138,8 @@ class Controller {
     // controller_name.action_name
     public function getSignature() {
         // todo: psr0 need fix
-        return str_replace('fx_controller_', '', get_class($this)).'.'.$this->action;
+        $com = fx::getComponentNameByClass(get_class($this));
+        return $com.':'.fx::util()->camelToUnderscore($this->action);
     }
 
 
@@ -459,10 +463,12 @@ class Controller {
     }
     
     public function __call($name, $arguments) {
-        if (!preg_match("~^on_(.+$)~", $name, $e)) {
+        if (!preg_match("~^on([A-Z].+$)~", $name, $e)) {
             return null;
         }
-        $this->listen($e[1], $arguments[0]);
+        $event_name = $e[1];
+        $event_name = fx::util()->camelToUnderscore($event_name);
+        $this->listen($event_name, $arguments[0]);
     }
 
 

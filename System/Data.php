@@ -86,13 +86,13 @@ abstract class Data {
      * @return \Floxim\Floxim\System\Collection
      */
     public function all() {
-        $data = $this->getEntitys();
+        $data = $this->getEntities();
         return $data;
     }
 
     public function one() {
         $this->limit = 1;
-        $data = $this->getEntitys();
+        $data = $this->getEntities();
         return isset($data[0]) ? $data[0] : false;
     }
     
@@ -510,7 +510,7 @@ abstract class Data {
      * Method call $this->get_data(),
      * from the collection of the flat data collects entity
      */
-    protected function getEntitys() {
+    protected function getEntities() {
         //fx::config('dev.on', fx::env('console'));
         $data = $this->getData();
         //fx::debug('start filless', $data);
@@ -527,7 +527,7 @@ abstract class Data {
         return fx::data($rel[1]);
     }
     
-    public function addRelated($rel_name, $entitys, $rel_finder = null) {
+    public function addRelated($rel_name, $entities, $rel_finder = null) {
         
         $relations = $this->relations();
         if (!isset($relations[$rel_name])) {
@@ -543,13 +543,13 @@ abstract class Data {
         // e.g. $rel = array(fx_data::HAS_MANY, 'field', 'component_id');
         switch ($rel_type) {
             case self::BELONGS_TO:
-                $rel_items = $rel_finder->where('id', $entitys->getValues($rel_field))->all();
-                $entitys->attach($rel_items, $rel_field, $rel_name);
+                $rel_items = $rel_finder->where('id', $entities->getValues($rel_field))->all();
+                $entities->attach($rel_items, $rel_field, $rel_name);
                 break;
             case self::HAS_MANY:
                 //echo fx_debug('has manu', $rel_finder);
-                $rel_items = $rel_finder->where($rel_field, $entitys->getValues('id'))->all();
-                $entitys->attachMany($rel_items, $rel_field, $rel_name);
+                $rel_items = $rel_finder->where($rel_field, $entities->getValues('id'))->all();
+                $entities->attachMany($rel_items, $rel_field, $rel_name);
                 break;
             case self::HAS_ONE:
                 break;
@@ -570,12 +570,12 @@ abstract class Data {
                 
                 $rel_finder
                         ->with($end_rel, $end_finder)
-                        ->where($rel_field, $entitys->getValues('id'));
+                        ->where($rel_field, $entities->getValues('id'));
                 if ($end_rel_field) {
                     $rel_finder->where($end_rel_field, 0, '!=');
                 }
                 $rel_items = $rel_finder->all()->find($end_rel, null, '!=');
-                $entitys->attachMany($rel_items, $rel_field, $rel_name, 'id', $end_rel);
+                $entities->attachMany($rel_items, $rel_field, $rel_name, 'id', $end_rel);
                 break;
         }
     }
@@ -584,11 +584,11 @@ abstract class Data {
      * Method adds related-entity to the collection
      * uses $this->with & $this->relations
      */
-    protected function addRelations(\Floxim\Floxim\System\Collection $entitys) {
+    protected function addRelations(\Floxim\Floxim\System\Collection $entities) {
         if (count($this->with) == 0) {
             return;
         }
-        if (count($entitys) == 0) {
+        if (count($entities) == 0) {
             return;
         }
         $relations = $this->relations();
@@ -597,7 +597,7 @@ abstract class Data {
             if (!isset($relations[$rel_name])) {
                 continue;
             }
-            $this->addRelated($rel_name, $entitys, $rel_finder);
+            $this->addRelated($rel_name, $entities, $rel_finder);
         }
     }
     
