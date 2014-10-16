@@ -119,7 +119,7 @@ class Component extends Admin {
     protected function getComponentTemplates($ctr_entity) {
         // todo: psr0 need verify
         $ctr_type = fx::getComponentNameByClass(get_class($ctr_entity));
-        $controller_name = ($ctr_type == 'widget' ? $ctr_type.'_' : '').$ctr_entity['keyword'];
+        $controller_name = $ctr_entity['keyword'];
         $controller = fx::controller($controller_name);
         $actions = $controller->getActions();
         $templates = array();

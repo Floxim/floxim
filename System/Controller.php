@@ -327,7 +327,7 @@ class Controller {
             $src_hash = md5($src);
             $src_abs = fx::path()->toHttp($src);
             preg_match("~/([^/]+?)/[^/]+$~", $src_abs, $src_name);
-            $is_own = $src_name && $my_name && $src_name[1] === $my_name;
+            $is_own = $src_name && $my_name && fx::getComponentFullName(strtolower($src_name[1])) === $my_name;
             $src = include $src;
             if (!isset($src['actions'])) {
                 continue;
@@ -384,12 +384,8 @@ class Controller {
         return $searched_action ? $actions[$searched_action] : $this->_config_cache;
     }
 
-    public function getControllerName($with_type = false){
-        $name = preg_replace('~^[^\W_]+_[^\W_]+_~', '', get_class($this));
-        if (!$with_type) {
-            $name = preg_replace('~^[^\W_]+_~', '', $name);
-        }
-        return $name;
+    public function getControllerName(){
+        return fx::getComponentNameByClass(get_class($this));
     }
 
     protected function prepareActionConfig($actions) {
