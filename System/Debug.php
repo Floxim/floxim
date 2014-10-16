@@ -297,10 +297,10 @@ class Debug {
         $this->printEntry($e);
         static $head_files_added = false;
         if (!$head_files_added) {
-            fx::page()->addCssFile(fx::path('floxim', 'admin/style/debug.less'));
+            fx::page()->addCssFile(fx::path('floxim', 'Admin/style/debug.less'));
             fx::page()->addJsFile(FX_JQUERY_PATH);
-            fx::page()->addJsFile(fx::path('floxim', 'admin/js/fxj.js'));
-            fx::page()->addJsFile(fx::path('floxim', 'admin/js/debug.js'));
+            fx::page()->addJsFile(fx::path('floxim', 'Admin/js/fxj.js'));
+            fx::page()->addJsFile(fx::path('floxim', 'Admin/js/debug.js'));
             register_shutdown_function(function() {
                 if (!fx::env()->get('complete_ok')) {
                     echo fx::page()->getAssetsCode();
