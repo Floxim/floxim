@@ -170,7 +170,6 @@ class Loader {
             $processor->addDefaultSourceDirs();
             $processor->process();
         }
-        fx::log($tpl_name.':'.$action, $processor);
         $tpl = new $classname($action, $data);
         return $tpl;
     }

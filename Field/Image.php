@@ -21,6 +21,6 @@ class Image extends File {
     public function fakeValue() {
         static $num = 1;
         $num = $num === 1 ? 2 : 1;
-        return '/vendor/floxim/floxim/admin/style/images/stub_'.$num.'.jpg';
+        return '/vendor/Floxim/Floxim/Admin/style/images/stub_'.$num.'.jpg';
     }
 }
