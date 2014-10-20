@@ -387,9 +387,10 @@ abstract class Entity implements \ArrayAccess {
             return;
         }
         
-        
-        $this->modified_data[$offset] = $this->data[$offset];
-        $this->modified[] = $offset;
+        if (!isset($this->modified_data[$offset])) {
+            $this->modified_data[$offset] = $this->data[$offset];
+            $this->modified[] = $offset;
+        }
         $this->data[$offset] = $value;
     }
 
