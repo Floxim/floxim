@@ -3,7 +3,7 @@
 namespace Floxim\Floxim\Controller;
 
 use Floxim\Floxim\System;
-use Floxim\Floxim\Helper;
+use Floxim\Form;
 use Floxim\Floxim\System\Fx as fx;
 
 /**
@@ -39,7 +39,7 @@ class Frontoffice extends System\Controller {
     
     public function ajaxForm($form = null) {
         if (!$form) {
-            $form = new Helper\Form\Form();
+            $form = new Form\Form();
         }
         $form['action'] = '/~ajax/';
         $form['method'] = 'POST';

@@ -137,7 +137,6 @@ class Controller {
     
     // controller_name.action_name
     public function getSignature() {
-        // todo: psr0 need fix
         $com = fx::getComponentNameByClass(get_class($this));
         return $com.':'.fx::util()->camelToUnderscore($this->action);
     }

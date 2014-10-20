@@ -206,6 +206,7 @@ class Layout extends Admin {
         return $items;
     }
 
+    // todo: not used method?
     public function files($template) {
     	$params = isset($this->input['params']) ? $this->input['params'] : array();
     	
@@ -267,7 +268,7 @@ class Layout extends Admin {
     
     
     public function source($layout) {
-        $template = fx::template('layout_'.$layout['keyword']);
+        $template = fx::template('theme.'.$layout['keyword']);
         $vars = $template->getTemplateVariants();
         $files = array();
         foreach ($vars as $var) {

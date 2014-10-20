@@ -77,7 +77,7 @@ class Html {
             }
             if ($n->name == 'meta' && ($layout_id = $n->getAttribute('fx:layout'))) {
                 $layout_name = $n->getAttribute('fx:name');
-                $tpl_tag = '{template id="'.$layout_id.'" name="'.$layout_name.'" of="layout.show"}';
+                $tpl_tag = '{template id="'.$layout_id.'" name="'.$layout_name.'" of="layout:show"}';
                 $tpl_tag .= '{apply id="_layout_body"}';
                 $content = $n->getAttribute('content');
                 $vars = explode(",", $content);

@@ -3,7 +3,7 @@
 namespace Floxim\Floxim\Template;
 
 use Floxim\Floxim\System;
-use Floxim\Floxim\Helper\Form;
+use Floxim\Form;
 use Floxim\Floxim\System\Fx as fx;
 
 class Template {
@@ -336,9 +336,8 @@ class Template {
     }
     
     protected function getTemplateSign() {
-        // todo: psr0 need fix
-        $template_name = preg_replace("~^fx_template_~", '', get_class($this));
-        return $template_name.'.'.$this->action;
+        $template_name = get_class($this);
+        return $template_name.':'.$this->action;
     }
     
     public static $area_replacements = array();

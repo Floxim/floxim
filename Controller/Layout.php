@@ -83,4 +83,13 @@ class Layout extends System\Controller {
         $p->addJsText("\$fx.init(".$js_config->getConfig().");");
         $p->setAfterBody(Admin\Controller\Adminpanel::panelHtml());
     }
+
+    /*
+     * Returns an array with options controller that you can use to find the template
+     * Default - only controller itself,
+     * For components overridden by adding inheritance chain
+     */
+    protected function getControllerVariants() {
+        return array('layout');
+    }
 }
