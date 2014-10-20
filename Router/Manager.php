@@ -17,13 +17,12 @@ class Manager {
             }
         }
     }
-    
+
     protected $routers = array();
 
     public function register(Base $router, $name = null, $priority = null) {
         if (is_null($name)) {
-            // todo: psr0 need fix
-            $name = preg_replace("~^fx_router_~", '', get_class($router)); 
+            $name = get_class($router);
         }
         $reorder_needed = false;
         if (is_null($priority)) {
@@ -53,7 +52,7 @@ class Manager {
         if (is_null($url)) {
             $url = getenv('REQUEST_URI');
         }
-        
+
         if (!isset($context['site_id'])) {
             $context['site_id'] = fx::env('site')->get('id');
         }
@@ -64,7 +63,7 @@ class Manager {
             }
         }
     }
-    
+
     /**
      * Get the option router by name
      * fx::router('front')

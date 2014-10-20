@@ -231,8 +231,7 @@ class Content extends Admin {
         }
         $content_type = $input['content_type'];
         $finder = fx::data($content_type);
-        // todo: psr0 need fix
-        if (preg_match("~^content_~", $content_type) && $content_type !== 'content_user'){
+        if (($finder instanceof \Floxim\Main\Content\Finder) and $content_type != 'user') {
             $finder->where('site_id', fx::env('site')->get('id'));
         }
         if (isset($input['skip_ids']) && is_array($input['skip_ids'])) {
