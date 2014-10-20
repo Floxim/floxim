@@ -243,6 +243,7 @@ fx_front.prototype.get_placeholder_adder_closure = function ($placeholder) {
             placeholder_meta.placeholder.__move_before = null;
             placeholder_meta.placeholder.__move_after = null;
         }
+        $fx.front.hilight($placeholder);
     }
     return function(event) {
         var $button = $(event.target);
@@ -679,6 +680,10 @@ fx_front.prototype.is_selectable = function(node) {
         case 'design':
             return n.hasClass('fx_area') || n.hasClass('fx_infoblock');
         case 'edit':
+            var $placeholder = n.closest('.fx_entity_adder_placeholder');
+            if ($placeholder.length > 0 && !$placeholder.hasClass('fx_entity_adder_placeholder_active')) {
+                return false;
+            }
             if (n.hasClass('fx_entity') || n.hasClass('fx_accept_content')) {
                 return true;
             }
@@ -1019,8 +1024,12 @@ fx_front.prototype.node_is_empty = function($n){
                 && $('img', $n).length === 0;
 };
 
-fx_front.prototype.hilight = function() {
-    var items = $('.fx_template_var, .fx_area, .fx_template_var_in_att, .fx_entity, .fx_infoblock').not('.fx_unselectable');
+fx_front.prototype.hilight = function(container) {
+    container = container || $('html');
+    var items = $(
+                '.fx_template_var, .fx_area, .fx_template_var_in_att, .fx_entity, .fx_infoblock',
+                container
+            ).not('.fx_unselectable');
     items.
         removeClass('fx_hilight').
         removeClass('fx_hilight_empty').
@@ -1030,7 +1039,6 @@ fx_front.prototype.hilight = function() {
         removeClass('fx_clearfix');
     $('.fx_hilight_hover').removeClass('fx_hilight_hover');
     items.filter('.fx_hidden_placeholded').removeClass('fx_hidden_placeholded').html('');
-    
     
     var is_view_mode = $fx.front.mode === 'view';
     
