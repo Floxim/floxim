@@ -505,41 +505,8 @@ class Fx {
 
         // load options from DB
         self::config()->loadFromDb();
-
-        if (fx::config('cache.meta')) {
-            self::loadMetaCache();
-        }
     }
     
-    protected static function loadMetaCache() {
-        // preload meta info
-        $cache_file = fx::path('files', 'cache/meta_cache.php');
-        
-        if (!file_exists($cache_file)) {
-            $coms = fx::data('component')->with('fields')->all();
-            $com_cache = array();
-            $field_cache = array();
-            foreach ($coms as $com) {
-                $com_cache[$com['keyword']] = $com;
-                $com_cache[$com['id']] = $com;
-                foreach ($com->fields() as $com_field) {
-                    $field_cache[$com_field['id']] = $com_field;
-                }
-            }
-            fx::files()->writefile(
-                $cache_file, serialize(array(
-                    'component' => $com_cache,
-                    'field' => $field_cache
-                ))
-            );
-        } else {
-            $cache = unserialize(fx::files()->readfile($cache_file));
-            $com_cache = $cache['component'];
-            $field_cache = $cache['field'];
-        }
-        self::$data_cache['component'] = $com_cache;
-    }
-
     public static function lang ( $string = null, $dict = null) {
         static $lang = null;
         if (!$lang) {

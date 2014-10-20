@@ -832,8 +832,9 @@ abstract class Data {
         return $set;
     }
     
+    protected static $isStaticCacheUsed = false;
     public static function isStaticCacheUsed() {
-        return false;
+        return static::$isStaticCacheUsed;
     }
     
     protected static $fullStaticCache = false;
@@ -850,7 +851,7 @@ abstract class Data {
             }
             $res = static::loadFullDataForCache();
             if (static::$storeStaticCache) {
-                file_put_contents($cache_file, serialize($res));
+                fx::files()->writefile($cache_file, serialize($res));
             }
             return $res;
         }
@@ -859,13 +860,14 @@ abstract class Data {
     
     public static function loadFullDataForCache() {
         $finder = new static();
-        $finder->setUseStaticCache(false);
+        static::$isStaticCacheUsed = false;
         static::prepareFullDataForCacheFinder($finder);
         $all = $finder->all();
         $res = array();
         foreach ($all as $item) {
             $res[$item['id']] = $item;
         }
+        static::$isStaticCacheUsed = true;
         return fx::collection($res);
     }
     

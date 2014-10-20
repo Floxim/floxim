@@ -101,12 +101,9 @@ class Finder extends System\Data {
         return $this->all();
     }
     
+    protected static $isStaticCacheUsed = true;
     protected static $fullStaticCache = true;
     protected static $storeStaticCache = true;
-    
-    public static function isStaticCacheUsed() {
-        return true;
-    }
     
     public static function prepareFullDataForCacheFinder($finder) {
         $finder->with('visuals');

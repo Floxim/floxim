@@ -33,10 +33,6 @@ class Finder extends System\Data {
         return 'keyword';
     }
     
-    public static function isStaticCacheUsed() {
-        return true;
-    }
-
     public function __construct() {
         $this->order = '`group`, `id`';
         parent::__construct();
@@ -141,6 +137,7 @@ class Finder extends System\Data {
     }
     
     
+    protected static $isStaticCacheUsed = true;
     protected static $fullStaticCache = true;
     protected static $storeStaticCache = true;
     
