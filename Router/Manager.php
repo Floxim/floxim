@@ -9,7 +9,7 @@ class Manager {
 
     public function __construct() {
         $namespace = 'Floxim\Floxim\Router';
-        foreach (array('Admin', 'Front', 'Infoblock', 'Ajax', 'Error') as $r_name) {
+        foreach (array('Admin', 'Infoblock', 'Ajax', 'Front', 'Error') as $r_name) {
             $classname = $namespace.'\\'.$r_name;
             if (class_exists($classname)) {
                 $router = new $classname;
