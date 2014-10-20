@@ -3,6 +3,7 @@
 namespace Floxim\Floxim\Template;
 
 use Floxim\Floxim\System;
+use Floxim\Floxim\System\Fx as fx;
 
 class Suitable {
     
@@ -174,7 +175,7 @@ class Suitable {
             $c_relevance = 0;
             $c_variant = null;
             foreach ($template_variants as $tplv) {
-                if ($tplv['of'] !== 'layout.show' && $tplv['id'] !== '_layout_body') {
+                if ($tplv['of'] !== 'layout:show' && $tplv['id'] !== '_layout_body') {
                     continue;
                 }
                 $test_layout_tpl = fx::template($tplv['full_id']);
@@ -195,13 +196,13 @@ class Suitable {
         
         if (!$source_layout_id || !$c_variant) {
             foreach ($template_variants as $tplv) {
-                if ($tplv['of'] == 'layout.show') {
+                if ($tplv['of'] == 'layout:show') {
                     $c_variant = $tplv;
                     break;
                 }
             }
             if (!$c_variant) {
-                $c_variant = array('full_id' => 'layout_'.$layout['keyword'].'._layout_body');
+                $c_variant = array('full_id' => 'layout_'.$layout['keyword'].':_layout_body');
             }
         }
         
