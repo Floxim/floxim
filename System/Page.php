@@ -92,7 +92,7 @@ class Page {
         if (!isset($params['name'])) {
             $params['name'] = md5(join($files));
         }
-        $params['name'] .= '.cssgz';
+        $params['name'] .= '.css.gz';
         
         $http_path = fx::path()->http('files', 'asset_cache/'.$params['name']);
         $full_path = fx::path()->toAbs($http_path);
@@ -131,7 +131,7 @@ class Page {
                 $file_content = $less->compile($file_content);
             }
             
-            $plain_path = preg_replace("~\.cssgz$~", ".css", $full_path);
+            $plain_path = preg_replace("~\.css\.gz$~", ".css", $full_path);
             // directory should be created here:
             fx::files()->writefile($plain_path, $file_content);
             
@@ -141,7 +141,7 @@ class Page {
         }
         
         if (!$this->acceptGzip()) {
-            $http_path = preg_replace("~\.cssgz$~", ".css", $http_path);
+            $http_path = preg_replace("~\.css\.gz$~", ".css", $http_path);
         }
         $this->_files_css[]= $http_path;
     }
@@ -193,7 +193,7 @@ class Page {
         if (!isset($params['name'])) {
             $params['name'] = md5(join($files));
         }
-        $params['name'] .= '.jsgz';
+        $params['name'] .= '.js.gz';
         
         $http_path = fx::path()->http('files', 'asset_cache/'.$params['name']);
         $full_path = fx::path()->toAbs($http_path);
@@ -201,7 +201,6 @@ class Page {
         $this->_all_js = array_merge($this->_all_js, $files);
         
         if (!file_exists($full_path)) {
-            require_once(fx::config()->INCLUDE_FOLDER.'JSMinPlus.php');
             $bundle_content = '';
             foreach ($files as $i => $f) {
                 if (!preg_match("~^http://~i", $f)) {
@@ -209,13 +208,13 @@ class Page {
                 }
                 $file_content = file_get_contents($f);
                 if (!preg_match("~\.min~", $f)) {
-                    $minified = JSMinPlus::minify($file_content);
+                    $minified = \JSMin::minify($file_content);
                     $file_content = $minified;
                 }
                 $bundle_content .= $file_content.";\n";
             }
             
-            $plain_path = preg_replace("~\.jsgz$~", ".js", $full_path);
+            $plain_path = preg_replace("~\.js\.gz$~", ".js", $full_path);
             fx::files()->writefile($plain_path, $bundle_content);
             
             $fh = gzopen($full_path, 'wb5');
@@ -224,7 +223,7 @@ class Page {
             
         }
         if (!$this->acceptGzip()) {
-            $http_path = preg_replace("~\.jsgz$~", ".js", $http_path);
+            $http_path = preg_replace("~\.js\.gz$~", ".js", $http_path);
         }
         $this->_files_js[]= $http_path;
     }
