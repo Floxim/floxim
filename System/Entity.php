@@ -29,6 +29,9 @@ abstract class Entity implements \ArrayAccess {
     const VIRTUAL_MULTILANG = 1;
     
     public function __construct($input = array()) {
+        static $ec = 0;
+        $ec++;
+        fx::log('E #'.$ec);
         
         $this->loadFieldMap();
         

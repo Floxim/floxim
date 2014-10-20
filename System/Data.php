@@ -687,18 +687,30 @@ abstract class Data {
         return $entity;
     }
     
+    protected $useStaticCache = true;
+    public function setUseStaticCache($value) {
+        $this->useStaticCache = (bool) $value;
+    }
+    
     /**
      * To initialize entity
      * @param array $data
      * @return \Floxim\Floxim\System\Entity
      */
     public function entity($data = array()) {
+        if (static::isStaticCacheUsed() && isset($data['id'])) {
+            $cached = static::getFromStaticCache($data['id']);
+            if ($cached) {
+                return $cached;
+            }
+        }
         $classname = $this->getClassName($data);
         $obj = new $classname(array('data' => $data));
         // todo: psr0 verify
         if ($classname == '\\Floxim\\Floxim\\System\\Simplerow') {
             $obj->table = $this->table;
         }
+        $this->addToStaticCache($obj);
         return $obj;
     }
 
@@ -818,5 +830,98 @@ abstract class Data {
         }
 
         return $set;
+    }
+    
+    public static function isStaticCacheUsed() {
+        return false;
+    }
+    
+    protected static $fullStaticCache = false;
+    protected static $storeStaticCache = false;
+    
+    public static function initStaticCache() {
+        if (static::$fullStaticCache) {
+            if (static::$storeStaticCache) {
+                $cache_file = fx::path('files', 'cache/'.preg_replace("~[^a-z0-9]~i", '.', get_called_class()).'.txt');
+                if (file_exists($cache_file)) {
+                    $res = unserialize(file_get_contents($cache_file));
+                    return $res;
+                }
+            }
+            $res = static::loadFullDataForCache();
+            if (static::$storeStaticCache) {
+                file_put_contents($cache_file, serialize($res));
+            }
+            return $res;
+        }
+        return new Collection();
+    }
+    
+    public static function loadFullDataForCache() {
+        $finder = new static();
+        $finder->setUseStaticCache(false);
+        static::prepareFullDataForCacheFinder($finder);
+        $all = $finder->all();
+        $res = array();
+        foreach ($all as $item) {
+            $res[$item['id']] = $item;
+        }
+        return fx::collection($res);
+    }
+    
+    public static function prepareFullDataForCacheFinder($finder) {
+        
+    }
+    
+    public static function getStaticCache() {
+        static $cache = null;
+        if ($cache === null) {
+            $cache = static::initStaticCache();
+        }
+        return $cache;
+    }
+    
+    /**
+     * Try to find item by id in static cache
+     * @param int|string $id numeric id or string keyword
+     */
+    public static function getFromStaticCache($id) {
+        $cache = static::getStaticCache();
+        if (!$cache) {
+            return false;
+        }
+        if (is_numeric($id) && ($item = $cache[$id])) {
+            return $item;
+        }
+        
+        if ( ($kf = static::getKeywordField()) ) {
+            return $cache->findOne($kf, $id);
+        }
+        return false;
+    }
+    
+    public static function getKeywordField() {
+        return false;
+    }
+    
+    public static function getStaticCachedAll($ids) {
+        
+    }
+    
+    public function addToStaticCache($entity) {
+        if (!static::isStaticCacheUsed()) {
+            return;
+        }
+        if (isset($this) && !$this->useStaticCache) {
+            return;
+        }
+        $cache = static::getStaticCache();
+        $entity_id = $entity['id'];
+        if (!$entity_id) {
+            return;
+        }
+        if (!static::getFromStaticCache($entity_id)) {
+            $cache[$entity_id] = $entity;
+        }
     }
 }

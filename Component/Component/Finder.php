@@ -28,6 +28,14 @@ class Finder extends System\Data {
             'item_name',
         );
     }
+    
+    public static function getKeywordField() {
+        return 'keyword';
+    }
+    
+    public static function isStaticCacheUsed() {
+        return true;
+    }
 
     public function __construct() {
         $this->order = '`group`, `id`';
@@ -130,5 +138,18 @@ class Finder extends System\Data {
             }
         }
         return $result;
+    }
+    
+    
+    protected static $fullStaticCache = true;
+    protected static $storeStaticCache = true;
+    
+    public static function prepareFullDataForCacheFinder($finder) {
+        $finder->with('fields');
+    }
+    
+    public static function initStaticCache() {
+        fx::log('coms init');
+        return parent::initStaticCache();
     }
 }

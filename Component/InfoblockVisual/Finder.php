@@ -22,4 +22,8 @@ class Finder extends System\Data {
         }
         return $this->all();
     }
+    
+    public static function isStaticCacheUsed() {
+        return true;
+    }
 }

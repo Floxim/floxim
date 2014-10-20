@@ -22,6 +22,10 @@ class Finder extends System\Data {
             'description'
         );
     }
+    
+    public static function isStaticCacheUsed() {
+        return true;
+    }
 
     public function __construct() {
         parent::__construct();

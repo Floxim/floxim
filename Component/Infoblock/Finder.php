@@ -100,4 +100,15 @@ class Finder extends System\Data {
         $this->where('action', 'list_infoblock');
         return $this->all();
     }
+    
+    protected static $fullStaticCache = true;
+    protected static $storeStaticCache = true;
+    
+    public static function isStaticCacheUsed() {
+        return true;
+    }
+    
+    public static function prepareFullDataForCacheFinder($finder) {
+        $finder->with('visuals');
+    }
 }

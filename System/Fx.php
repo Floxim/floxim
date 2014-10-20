@@ -210,10 +210,21 @@ class Fx {
         if (!class_exists($class_name)) {
             throw new \Exception('Class not found: '.$class_name. ' for '.$datatype);
         }
-
+        
+        $num_args = func_num_args();
+        
+        if ($num_args > 1 && $class_name::isStaticCacheUsed()) {
+            if (is_scalar($id)) {
+                $static_res = $class_name::getFromStaticCache($id);
+                if ($static_res) {
+                    return $static_res;
+                }
+            }
+        }
+        
         $finder = new $class_name;
         
-        if (func_num_args() === 1) {
+        if ($num_args === 1) {
             return $finder;
         }
         if (is_array($id) || $id instanceof \Traversable ) {
