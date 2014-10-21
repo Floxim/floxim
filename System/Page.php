@@ -198,7 +198,11 @@ class Page {
         $http_path = fx::path()->http('files', 'asset_cache/'.$params['name']);
         $full_path = fx::path()->toAbs($http_path);
         
-        $this->_all_js = array_merge($this->_all_js, $files);
+        $http_files = array();
+        foreach ($files as $f) {
+            $http_files[]= fx::path()->toHttp($f);
+        }
+        $this->_all_js = array_merge($this->_all_js, $http_files);
         
         if (!file_exists($full_path)) {
             $bundle_content = '';

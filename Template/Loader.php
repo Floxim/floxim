@@ -232,6 +232,7 @@ class Loader {
         $this->setTemplateName('virtual_'.$count_virtual);
         $src = $this->buildSource(array('/dev/null/virtual.tpl' => $source));
         $php = $this->compile($src);
+        
         $this->runEval($php);
         // todo: psr0 need verify
         //$classname = 'fx_template_virtual_'.$count_virtual;

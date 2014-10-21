@@ -36,6 +36,7 @@ class Console extends Admin {
             $code = $input['console_text'];
             $code = preg_replace("~^<\?(?:php)?~", '', $code);
             fx::env('console', true);
+            fx::config('dev.on', true);
             eval($code);
             $res = ob_get_clean();
             return array(
