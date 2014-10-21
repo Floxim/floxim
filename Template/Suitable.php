@@ -202,7 +202,7 @@ class Suitable {
                 }
             }
             if (!$c_variant) {
-                $c_variant = array('full_id' => 'layout_'.$layout['keyword'].':_layout_body');
+                $c_variant = array('full_id' => 'theme.'.$layout['keyword'].':_layout_body');
             }
         }
         
