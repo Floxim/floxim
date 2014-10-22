@@ -31,7 +31,6 @@ abstract class Entity implements \ArrayAccess {
     public function __construct($input = array()) {
         static $ec = 0;
         $ec++;
-        fx::log('E #'.$ec);
         
         $this->loadFieldMap();
         

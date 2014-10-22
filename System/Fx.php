@@ -771,4 +771,13 @@ class Fx {
         $mailer = new Mail($params, $data);
         return $mailer;
     }
+    
+    public static function console($command) {
+        ob_start();
+        $manager = new \Floxim\Floxim\System\Console\Manager();
+        $manager->addCommands(fx::config('console.commands'));
+        $manager->addPath( fx::path()->toAbs('/vendor/Floxim/Floxim/System/Console/Command') );
+        $manager->run($command);
+        return ob_get_clean();
+    }
 }

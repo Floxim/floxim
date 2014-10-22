@@ -15,7 +15,12 @@ $('.input_container', html).append($t.jQuery('input', _c));
 
 <!--[form_row ? (_c.type == 'select' || _c.type == 'radio') && _c.hidden_on_one_value && !_c.extendable && _c.values && fx_object_length(_c.values) == 1]-->
 <?
-    print($t.input({type:'hidden', name:_c.name,value:fx_object_get_first_key(_c.values)}));
+    var c_value = null;
+    $.each(_c.values, function() {
+        c_value = this[0];
+        return false;
+    });
+    print($t.input({type:'hidden', name:_c.name,value:c_value}));
 ?>
 
 <!--[form_row ? _c.type == 'hidden' || _c.type == 'button' || _c.type == 'list' || _c.type == 'tree']-->

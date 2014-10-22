@@ -127,7 +127,8 @@ class Entity extends System\Entity {
     }
 
     public function createContentTable() {
-        $table = str_replace('.', '_', $this['keyword']);
+        //$table = str_replace('.', '_', $this['keyword']);
+        $table = $this->getContentTable();
         $sql = "DROP TABLE IF  EXISTS `{{{$table}}}`;
             CREATE TABLE IF NOT EXISTS `{{{$table}}}` (
             `id` int(11) NOT NULL,
@@ -144,11 +145,7 @@ class Entity extends System\Entity {
         }
         $this->deleteFields();
         $this->deleteInfoblocks();
-        try { 
-            $this->deleteContentTable();
-        } catch (\Exception $e) {
-            fx::log('Delete content table error:', $e->getMessage());
-        }
+        $this->deleteContentTable();
         $this->deleteFiles();
     }
 
@@ -164,9 +161,13 @@ class Entity extends System\Entity {
     }
 
     protected function deleteContentTable() {
-        $contents = fx::data($this['keyword'])->all();
-        foreach ($contents as $content) {
-            $content->delete();
+        try { 
+            $contents = fx::data($this['keyword'])->all();
+            foreach ($contents as $content) {
+                $content->delete();
+            }
+        } catch (\Exception $e) {
+            fx::log('Delete content error:', $e->getMessage());
         }
         $sql = "DROP TABLE `{{" . $this->getContentTable() . "}}`";
         fx::db()->query($sql);

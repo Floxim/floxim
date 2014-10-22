@@ -135,28 +135,82 @@ class Component extends Admin {
         }
         return fx::collection($templates);
     }
+    
+    public function getModuleFields() {
+        $fields = array();
+        $vf = $this->getVendorField();
+        $fields []= $vf;
+        $vendors = $vf['values'];
+        foreach ($vendors as $v) {
+            $path = fx::path()->toAbs('/module/'.$v).'/*';
+            $module_dirs = glob($path);
+            $modules = array();
+            if ($module_dirs) {
+                foreach ($module_dirs as $md) {
+                    $md = fx::path()->fileName($md);
+                    $modules[]= array($v.'.'.$md, $md); 
+                }
+            }
+            $modules []= array('new', '-- New --');
+            $fields []= array(
+                'type' => 'select',
+                'label' => 'Module',
+                'name' => $v.'__module',
+                'parent' => array('vendor' => $v),
+                'values' => $modules,
+                'hidden_on_one_value' => true
+            );
+            $fields []= array(
+                'type' => 'string',
+                'label' => 'New module name',
+                'name' => $v.'__new_module',
+                'parent' => array($v.'__module' => 'new', 'vendor' => $v)
+            );
+        }
+        return $fields;
+    }
+    
+    protected function getFullKeyword($input) {
+        $keyword = trim($input['keyword']);
+        
+        if (!$keyword && $input['name']) {
+            $keyword = fx::util()->strToKeyword($input['name']);
+        }
+        
+        $vendor = $input['vendor'];
+        $module = $input[$vendor.'__module'];
+        if ($module === 'new') {
+            $module = $vendor.'.'.fx::util()->strToKeyword($input[$vendor.'__new_module']);
+        }
+        $keyword = $module.'.'.$keyword;
+        $parts = explode(".", $keyword);
+        foreach ($parts as &$p) {
+            $p = fx::util()->camelToUnderscore($p);
+        }
+        $keyword = join('.', $parts);
+        return $keyword;
+    }
 
     public function add($input) {
-        switch ($input['source']) {
-            default:
-                $input['source'] = 'new';
-                $fields = array(
-                    $this->ui->hidden('action', 'add'),
-                    array(
-                        'label' => fx::alang('Component name','system'), 
-                        'name' => 'name'
-                    ),
-                    array(
-                        'label' => fx::alang('Name of an entity created by the component','system'), 
-                        'name' => 'item_name'
-                    ),
-                    array(
-                        'label' => fx::alang('Keyword','system'), 
-                        'name' => 'keyword'
-                    ),
-                    $this->getVendorField()
-                );
-                break;
+
+        $fields = array(
+            $this->ui->hidden('action', 'add'),
+            array(
+                'label' => fx::alang('Component name','system'), 
+                'name' => 'name'
+            ),
+            array(
+                'label' => fx::alang('Name of an entity created by the component','system'), 
+                'name' => 'item_name'
+            ),
+            array(
+                'label' => fx::alang('Keyword','system'), 
+                'name' => 'keyword'
+            )
+        );
+        
+        foreach ( $this->getModuleFields() as $mf) {
+            $fields []= $mf;
         }
 
         $fields[] = $this->ui->hidden('source', $input['source']);
@@ -218,17 +272,15 @@ class Component extends Admin {
             $breadcrumb->addItem($submenu[$action]['title'], $submenu[$action]['url']);
         }
     }
-
+    
     public function addSave($input) {
         $result = array('status' => 'ok');
 
         $data['name'] = trim($input['name']);
-        $data['keyword'] = trim($input['keyword']);
         
-        if (!$data['keyword'] && $data['name']) {
-            $data['keyword'] = fx::util()->strToKeyword($data['name']);
-        }
-        $data['vendor'] = $input['vendor'] ? $input['vendor'] : 'local';
+        
+        $data['keyword'] = $this->getFullKeyword($input);
+        
         
         $data['parent_id'] = $input['parent_id'];
         $data['item_name'] = $input['item_name'];

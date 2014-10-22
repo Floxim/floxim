@@ -144,9 +144,4 @@ class Finder extends System\Data {
     public static function prepareFullDataForCacheFinder($finder) {
         $finder->with('fields');
     }
-    
-    public static function initStaticCache() {
-        fx::log('coms init');
-        return parent::initStaticCache();
-    }
 }

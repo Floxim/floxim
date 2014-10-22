@@ -306,7 +306,7 @@ fx_form = {
     },
 
     add_parent_condition: function(parent, _el, container) {
-        //console.log(parent, _el[0], container);
+        console.log(parent, _el[0], container);
         //return;
         if (parent instanceof Array) {
             parent = {};
@@ -343,7 +343,7 @@ fx_form = {
                 }
                 switch (pexp) {
                     case '==':
-                        do_show = (par_inp.is(':visible') && par_val == pval);
+                        do_show = (par_inp.css('display') !== 'none' && par_val === pval);
                         break;
                     case '!=':
                         if (
@@ -363,6 +363,9 @@ fx_form = {
                         var prex = new RegExp(pval);
                         do_show = !prex.test(par_val);
                         break;
+                }
+                if (!do_show) {
+                    return false;
                 }
             });
             var is_visible = _el.is(':visible');
