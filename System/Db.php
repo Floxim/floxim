@@ -59,18 +59,18 @@ class Db extends \PDO {
         // determine the type of request
         preg_match("/^([a-z]+)\s+/i", $statement, $match);
         $this->query_type = strtolower($match[1]);
-
         $this->last_result = parent::query($statement);
         $this->num_queries++;
         $this->last_query = $statement;
 
         if (!$this->last_result) {
+            
             $this->last_error = $this->errorInfo();
-            ob_start();
-            echo "Query: " . $statement . "\n";
-            echo "Error: " . $this->last_error[2];
-            throw new \Exception(ob_get_clean());
-            fx::log($statement, debug_backtrace());
+            
+            throw new \Exception(
+                "Query: " . $statement . "\n".
+                "Error: " . $this->last_error[2]
+            );
         }
         if (!fx::config('dev.log_sql')) {
             return $this->last_result;
@@ -182,11 +182,7 @@ class Db extends \PDO {
     public function getLastError() {
         return $this->last_error;
     }
-
-    public function errorInfo() {
-        return $this->errorInfo();
-    }
-
+    
     protected function replacePrefix($query) {
         if ( $this->prefix ) {
             $query = preg_replace('/{{(.*?)}}/', $this->prefix . '\1', $query);

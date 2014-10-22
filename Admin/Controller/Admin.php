@@ -84,6 +84,29 @@ class Admin extends System\Controller {
         return $this->input['params'][1];
     }
     
+    public function getVendorField() {
+        $field = array(
+            'name' => 'vendor',
+            'label' => fx::alang('Vendor', 'system'),
+            'type' => 'select',
+            'values' => array()
+        );
+        $vendor = fx::config('dev.vendor');
+        $vendor = explode(",", $vendor);
+        foreach ($vendor as $num => $part) {
+            $part = trim($part);
+            if (empty($part)) {
+                unset($vendor[$num]);
+            }
+        }
+        $vendor []= 'my';
+        foreach ($vendor as $v) {
+            $v = fx::util()->underscoreToCamel($v, true);
+            $field['values'][$v] = $v;
+        }
+        return $field;
+    }
+    
     public static function addAdminFiles() {
         $path_floxim = fx::path('floxim');
         $js_files = array(

@@ -75,6 +75,7 @@ class Layout extends Admin {
             $this->ui->hidden('action', 'add'),
             $this->ui->hidden('entity', 'layout'),
             array('name' => 'name', 'label' => fx::alang('Layout name','system')),
+            $this->getVendorField(),
             array('name' => 'keyword', 'label' => fx::alang('Layout keyword','system')),
             $this->ui->hidden('source', $input['source']),
             $this->ui->hidden('posting')
@@ -97,10 +98,14 @@ class Layout extends Admin {
         $result = array('status' => 'ok');
         $keyword = trim($input['keyword']);
         $name = trim($input['name']);
+        $vendor = trim($input['vendor']);
         
         if (empty($keyword)) {
             $keyword = fx::util()->strToKeyword($name);
         }
+        
+        //$keyword = $vendor.'.'.fx::util()->underscoreToCamel($keyword,true);
+        $keyword = fx::util()->camelToUnderscore($vendor).'.'.$keyword;
         
         $existing = fx::data('layout')->where('keyword', $keyword)->one();
         if ($existing) {

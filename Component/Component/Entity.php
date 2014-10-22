@@ -144,7 +144,11 @@ class Entity extends System\Entity {
         }
         $this->deleteFields();
         $this->deleteInfoblocks();
-        $this->deleteContentTable();
+        try { 
+            $this->deleteContentTable();
+        } catch (\Exception $e) {
+            fx::log('Delete content table error:', $e->getMessage());
+        }
         $this->deleteFiles();
     }
 

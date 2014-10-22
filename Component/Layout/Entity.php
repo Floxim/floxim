@@ -7,7 +7,11 @@ use Floxim\Floxim\System\Fx as fx;
 
 class Entity extends System\Entity {
     public function getPath() {
-        return fx::config()->HTTP_LAYOUT_PATH.$this['keyword'].'/';
+        $path = explode(".", $this['keyword']);
+        array_walk($path, function(&$item) {
+            $item = fx::util()->underscoreToCamel($item, true);
+        });
+        return fx::path()->toAbs('/theme/'.join('/', $path).'/');
     }
     
     protected function beforeInsert() {

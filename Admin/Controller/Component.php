@@ -24,21 +24,27 @@ class Component extends Admin {
         );
         $field['values'] = array();
         $field['entity'] = $entity;
+        
         $append_coms = function($coll, $level) use (&$field, &$append_coms) {
             foreach ($coll as $v) {
                 $submenu = Component::getComponentSubmenu($v);
                 $submenu_first = current($submenu);
+                try {
+                    $items_count = fx::db()->getCol("SELECT count(*) from  {{".$v->getContentTable()."}}");
+                } catch (\Exception $e) {
+                    $items_count = 0;
+                }
                 $r = array(
                     'id' => $v['id'],
                     'keyword' => $v['keyword'],
-                    'count' => fx::db()->getCol("SELECT count(*) from  {{".$v->getContentTable()."}}"),
+                    'count' => $items_count,
                     'name' => array(
                         'name' => $v['name'],
                         'url' => $submenu_first['url'],
                         'level' => $level
                     )
                 );
-
+                
                 $r['buttons'] = array();
                 foreach ($submenu as $submenu_item_key => $submenu_item) {
                     if (!$submenu_item['parent'] && $submenu_item_key != 'settings') {
@@ -49,7 +55,6 @@ class Component extends Admin {
                         );
                     }
                 }
-
                 $field['values'][] = $r;
                 if (isset($v['children']) && $v['children']) {
                     $append_coms($v['children'], $level+1);
@@ -175,22 +180,6 @@ class Component extends Admin {
         return array('fields' => $fields);
     }
     
-    protected function getVendorField() {
-        if (fx::config('dev.floxim_team')) {
-            return array(
-                'label' => 'Vendor',
-                'name' => 'vendor',
-                'type' => 'select',
-                'values' => array(
-                    'local' => fx::alang('Local', 'system'),
-                    'std' => fx::alang('Standard', 'system') 
-                ),
-                'value' => ''
-            );
-        }
-        return $this->ui->hidden('vendor', 'local');
-    }
-
     public function edit($input) {
         
         $entity_code = $this->entity_type;
@@ -587,7 +576,7 @@ class Component extends Admin {
                 if ($component['vendor']=='std') {
                     fx::hooks()->create(null,'component_delete',array('component'=>$component));
                 }
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 $result['status'] = 'error';
                 $result['text'][] = $e->getMessage();
             }
