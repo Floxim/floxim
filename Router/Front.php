@@ -9,25 +9,20 @@ class Front extends Base {
 
     public function route($url = null, $context = null) {
 
-        // get oldest urlAlias
-        $alias = fx::data('urlAlias')->getByUrl(urldecode($url));
-        if (!empty($alias) && !$alias->isCurrent()) {
-            // destinaton page
-            $page = fx::data('page')->getById($alias['page_id']);
-            if (
-                    !empty($page) &&
-                    $alias['url'] != $page['url'] // "redirect cycle" protection
-                ) {
-                header('Location: ' . $page['url'], true, 301);
-                exit;
-            }
-        }
-
         $page = fx::data('page')->getByUrl(urldecode($url), $context['site_id']);
-        
+
         if (!$page) {
             return null;
         }
+        else if (
+                $url != $page['url']
+            ) {
+            // oldest urlAlias
+            // @TODO: check site_id here
+            fx::http()->redirect($page['url'], 301);
+            exit;
+        }
+        
         fx::env('page', $page);
         fx::http()->status('200');
         $layout_ib = $this->getLayoutInfoblock($page);

@@ -64,30 +64,4 @@ class Finder extends System\Data {
             where('is_original', 1)->
             one();
     }
-
-    /**
-     * get UrlAlias by url string
-     * 
-     * @param string url string
-     * 
-     * @return object alias
-     */
-    public function getByUrl($url) {
-        $url_variants = array($url);
-        $url_with_no_params = preg_replace("~\?.+$~", '', $url);
-
-        $url_variants []=
-            preg_match("~/$~", $url_with_no_params) ?
-            preg_replace("~/$~", '', $url_with_no_params) :
-            $url_with_no_params . '/';
-
-        if ($url_with_no_params != $url) {
-            $url_variants []= $url_with_no_params;
-        }
-
-        $alias = $this->
-            where('url', $url_variants)->
-            one();
-        return $alias;
-    }
 }
