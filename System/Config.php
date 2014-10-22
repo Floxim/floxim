@@ -88,6 +88,18 @@ class Config {
             'module' => '\\Floxim\\Floxim\\Console\\Command\\Module',
             'component' => '\\Floxim\\Floxim\\Console\\Command\\Component',
         );
+
+        $this->config['cache.data.default_storage'] = 'array';
+        $this->config['cache.data.default_prefix'] = 'floxim_';
+        $this->config['cache.data.storages'] = array(
+            'array' => array(
+                'class' => '\\Floxim\\Cache\\Storage\\ArrayKeys',
+            ),
+            'file'  => array(
+                'class' => '\\Floxim\\Cache\\Storage\\File',
+                'cache_dir' => fx::path('files', '/cache'),
+            ),
+        );
         /*
         $this->config['DOCUMENT_ROOT'] = DOCUMENT_ROOT;
         $this->config['HTTP_HOST'] = getenv("HTTP_HOST");
