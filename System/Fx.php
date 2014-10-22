@@ -626,29 +626,22 @@ class Fx {
     public static function trigger($event, $params = null) {
         self::getEventManager()->trigger($event, $params);
     }
-    
-    
-    protected static $_cache = null;
-    /*
-     * until very blunt local cache,
-     * not to get from the database is the same for single execution
-     */
-    public static function cache($key = null, $value = null) {
-        if (!self::$_cache) {
-            self::$_cache = new Cache();
+
+
+    protected static $cache = null;
+    public static function cache($storageName=null) {
+        if (!self::$cache) {
+            self::$cache = new \Floxim\Cache\Manager();
+            $prefix=fx::config('cache.data.default_prefix');
+            self::$cache->setKeyPrefix($prefix);
         }
-        $count_args = func_num_args();
-        switch ($count_args) {
-            case 0:
-                return self::$_cache;
-                break;
-            case 1:
-                return self::$_cache->get($key);
-                break;
-            case 2:
-                self::$_cache->set($key, $value);
-                break;
+        if (is_null($storageName)) {
+            $storageName=fx::config('cache.data.default_storage');
         }
+        $params=fx::config('cache.data.storages');
+        $params=isset($params[$storageName]) ? $params[$storageName] : array();
+
+        return self::$cache->getStorage($storageName,$params);
     }
     
     public static function files() {
