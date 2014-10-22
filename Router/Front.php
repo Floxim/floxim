@@ -12,16 +12,16 @@ class Front extends Base {
         // get oldest urlAlias
         $alias = fx::data('urlAlias')->getByUrl(urldecode($url));
         if (!empty($alias) && !$alias->isCurrent()) {
-			// destinaton page
-			$page = fx::data('page')->getById($alias['page_id']);
-			if (
-					!empty($page) &&
-					$alias['url'] != $page['url'] // "redirect cycle" protection
-				) {
-				header('Location: ' . $page['url'], true, 301);
-				exit;
-			}
-		}
+            // destinaton page
+            $page = fx::data('page')->getById($alias['page_id']);
+            if (
+                    !empty($page) &&
+                    $alias['url'] != $page['url'] // "redirect cycle" protection
+                ) {
+                header('Location: ' . $page['url'], true, 301);
+                exit;
+            }
+        }
 
         $page = fx::data('page')->getByUrl(urldecode($url), $context['site_id']);
         
