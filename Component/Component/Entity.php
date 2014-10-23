@@ -25,8 +25,36 @@ class Entity extends System\Entity {
             $chain [] = $c_parent;
             $c_pid = $c_parent['parent_id'];
         }
-
         return $up_to_down ? array_reverse($chain) : $chain;
+    }
+    
+    public function getNamespace() {
+        return fx::getComponentNamespace($this['keyword']);
+    }
+    
+    protected $nsParts = null;
+    protected function getNamespacePart($number = null) {
+        if (is_null($this->nsParts)) {
+            $ns = $this->getNamespace();
+            $this->nsParts = explode("\\", trim($ns, "\\"));
+        }
+        return $this->nsParts[$number];
+    }
+    
+    public function getVendorName() {
+        return $this->getNamespacePart(0);
+    }
+    
+    public function getModuleName() {
+        return $this->getNamespacePart(1);
+    }
+    
+    public function getOwnName() {
+        return $this->getNamespacePart(2);
+    }
+    
+    public function getPath() {
+        return fx::path('module', fx::getComponentPath($this['keyword']));
     }
 
     public function getAncestors() {
@@ -156,8 +184,8 @@ class Entity extends System\Entity {
     }
 
     protected function deleteFiles() {
-        $base_path = fx::path(($this['vendor'] === 'std') ? 'std' : 'root', 'component/' . $this['keyword'] . '/') . '/';
-        fx::files()->rm($base_path);
+        $path = $this->getPath();
+        fx::files()->rm($path);
     }
 
     protected function deleteContentTable() {

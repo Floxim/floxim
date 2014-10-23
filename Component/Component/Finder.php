@@ -17,6 +17,11 @@ class Finder extends System\Data {
                 self::HAS_MANY,
                 'component',
                 'parent_id'
+            ),
+            'parent' => array(
+                self::BELONGS_TO,
+                'component',
+                'parent_id'
             )
         );
     }
@@ -120,7 +125,8 @@ class Finder extends System\Data {
         try {
             $component->save();
             $result['component']=$component;
-            $component->scaffold();
+            
+            fx::console('component scaffold --keyword='.$component['id']);
             // run creating hook
             if ($data['vendor']=='std') {
                 fx::hooks()->create(null,'component_create',array('data'=>$data));

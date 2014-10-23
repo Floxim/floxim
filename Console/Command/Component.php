@@ -7,111 +7,75 @@ use Floxim\Floxim\System\Fx as fx;
 
 class Component extends Console\Command {
 
-    protected $module_vendor;
-    protected $module_name;
-    protected $component_name;
-    protected $parent_entity;
-    protected $parent_finder;
-    protected $parent_controller;
-
     /**
-     * Create new component
-     *
-     * @param string $keyword
+     * Create / load component entity from passed args
+     * 
+     * @param string|int $keyword Keyword or id for existing component
      * @param string|bool $name
      * @param string|bool $itemName
-     * @param bool   $overwrite Overwrite exists component
-     * @param string $parent Parent component
+     * @param string $parent Parent component keyword
+     * @param bool $overwrite Overwrite existing component
+     * @return \Floxim\Floxim\Component\Component\Entity
      */
-    public function doNew($keyword, $name=false, $itemName=false, $parent = 'content', $overwrite = false) {
-        $keyword_parts = explode('.', $keyword);
-        if (count($keyword_parts) != 3) {
-            $this->usageError('Name need format "vendor.module.name"');
-        }
-        $this->module_vendor = ucfirst($keyword_parts[0]);
-        $this->module_name = ucfirst($keyword_parts[1]);
-        $this->component_name = ucfirst($keyword_parts[2]);
-        if (!$name) {
-            $name=$this->component_name;
-        }
-        if (!$itemName) {
-            $itemName=$this->component_name;
-        }
-        if (!$parentComponent=fx::data('component',$parent)) {
-            $this->usageError('Not found parent component');
-        }
-        $parentNamespace=fx::getComponentNamespace($parent);
-        $this->parent_entity=$parentNamespace.'\\Entity';
-        $this->parent_finder=$parentNamespace.'\\Finder';
-        $this->parent_controller=$parentNamespace.'\\Controller';
-        /**
-         * Check for exists module
-         */
-        $module_path = fx::path('root') . "module/{$this->module_vendor}/{$this->module_name}/";
-        if (!file_exists($module_path)) {
-            /**
-             * Create module
-             */
-            $command_module = $this->getManager()->createCommand('module');
-            if ($command_module) {
-                $command_module->doNew(strtolower("{$this->module_vendor}.{$this->module_name}"));
-            } else {
-                $this->usageError('Command "module" not found');
-            }
-        }
-        /**
-         * Check for exists component
-         */
-        $component_path = $module_path . $this->component_name . '/';
-        if (file_exists($component_path)) {
-            if (!$overwrite) {
-                $this->usageError('Component already exists');
-            }
+    public function loadComponent($keyword, $name=false, $itemName=false, $parent = 'content') {
+        if (is_numeric($keyword)) {
+            $com = fx::data('component', $keyword);
         } else {
-            /**
-             * Create dir
-             */
-            if (@mkdir($component_path, 0777, true)) {
-                echo "Create dir {$component_path}" . "\n";
-            } else {
-                $this->usageError('Can\'t create component dir - ' . $component_path);
+            $keyword_parts = explode('.', $keyword);
+            if (count($keyword_parts) != 3) {
+                $this->usageError('Name need format "vendor.module.name"');
             }
+            $name = $name ? $name : preg_replace("~^.+\..+\.~", '', $keyword);
+            $itemName = $itemName ? $itemName : $name;
+            $parent_id = fx::data('component', $parent)->get('id');
+            $com = fx::data('component')->create(array(
+                'keyword' => $keyword,
+                'name' => $name,
+                'item_name' => $itemName,
+                'parent_id' => $parent_id
+            ));
         }
-        $source_path = fx::path('floxim') . '/Console/protected/component/';
-        /**
-         * Build file list
-         */
+        return $com;
+    }
+    
+    public function doNew($keyword, $name=false, $itemName=false, $parent = 'content', $overwrite = false) {
+        $com = call_user_func_array(array($this, 'loadComponent'), func_get_args());
+        $this->scaffold($com);
+        $com->save();
+        echo "\nYour component has been created successfully under ".$com->getPath().".\n";
+    }
+    
+    public function doScaffold($keyword, $name=false, $itemName=false, $parent = 'content', $overwrite = false) {
+        $com = call_user_func_array(array($this, 'loadComponent'), func_get_args());
+        $this->scaffold($com);
+    }
+    
+    protected function scaffold(\Floxim\Floxim\Component\Component\Entity $com) {
+        $source_path = fx::path('floxim',  '/Console/protected/component');
+        $component_path = $com->getPath();
         $file_list = $this->buildFileList($source_path, $component_path);
-        foreach ($file_list as $file_name => $file_data) {
-            $file_list[$file_name]['callback_content'] = array($this, 'replacePlaceholder');
+        foreach ($file_list as &$file_data) {
+            $file_data['callback_content'] = function($content) use ($com) {
+                return Component::replacePlaceholder($content, $com);
+            };
         }
-        /**
-         * Copy files
-         */
         $this->copyFiles($file_list);
-        /**
-         * Create in database
-         */
-        $data=array(
-            'name' => $name,
-            'keyword' => $keyword,
-            'vendor' => strtolower($this->module_vendor),
-            'parent_id' => $parentComponent['id'],
-            'item_name' => $itemName,
-        );
-        $component=fx::data('component')->create($data);
-        $component->save();
-
-        echo "\nYour component has been created successfully under {$component_path}.\n";
     }
 
-    public function replacePlaceholder($content) {
-        $content = str_replace('{Vendor}', $this->module_vendor, $content);
-        $content = str_replace('{Module}', $this->module_name, $content);
-        $content = str_replace('{Component}', $this->component_name, $content);
-        $content = str_replace('{ParentClassEntity}', $this->parent_entity, $content);
-        $content = str_replace('{ParentClassFinder}', $this->parent_finder, $content);
-        $content = str_replace('{ParentClassController}', $this->parent_controller, $content);
+    protected static function replacePlaceholder($content, $com) {
+        $parent = $com['parent'];
+        $par_ns = $parent->getNamespace();
+        $map = array(
+            'Vendor' => $com->getVendorName(),
+            'Module' => $com->getModuleName(),
+            'Component' => $com->getOwnName(),
+            'ParentClassEntity' => $par_ns.'\\Entity',
+            'ParentClassFinder' => $par_ns.'\\Finder',
+            'ParentClassController' => $par_ns.'\\Controller'
+        );
+        foreach ($map as $prop => $val) {
+            $content = str_replace('{'.$prop.'}', $val, $content);
+        }
         return $content;
     }
 }
