@@ -40,19 +40,6 @@ class Finder extends System\Data {
     }
 
     /**
-     * Get alias by related page id and "is_current" flag
-     * 
-     * @param integer related page id
-     * 
-     * @return object alias
-     */
-    public function getCurrentByPageId($page_id) {
-        return $this->where('page_id', $page_id)->
-            where('is_current', 1)->
-            one();
-    }
-
-    /**
      * Get alias by related page id and "is_original" flag
      * 
      * @param integer related page id
