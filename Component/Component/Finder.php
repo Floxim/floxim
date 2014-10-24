@@ -79,28 +79,50 @@ class Finder extends System\Data {
     }
     
     public function getSelectValues($com_id = null) {
-        $items = $this->all();
-        $recursive_get = function($comp_coll, $result = array(), $level = 0) 
-                            use (&$recursive_get, $items) {
-            if (count($comp_coll) == 0) {
+        //$items = $this->all();
+        
+        static $tree = null;
+        static $items = null;
+        if (is_null($tree)) {
+            $items = static::getStaticCache();
+            $recursive_get = function($comp_coll, $result = array(), $level = 0) 
+                                use (&$recursive_get, $items) {
+                if (count($comp_coll) == 0) {
+                    return $result;
+                }
+                foreach ($comp_coll as $comp) {
+                    $result[] = array($comp['id'], str_repeat(" - ", $level).$comp['name'], $level);
+                    $result = $recursive_get($items->find('parent_id', $comp['id']), $result, $level+1);
+                }
                 return $result;
-            }
-            foreach ($comp_coll as $comp) {
-                $result[] = array($comp['id'], str_repeat(" - ", $level).$comp['name']);
-                $result = $recursive_get($items->find('parent_id', $comp['id']), $result, $level+1);
-            }
-            return $result;
-        };
-        if ($com_id ) {
-            if (!is_numeric($com_id)) {
-                $root = $items->find('keyword', $com_id);
-            } else {
-                $root = $items->find('id', $com_id); 
-            }
-        } else {
+            };
             $root = $items->find('parent_id', 0);
+            $tree = $recursive_get($root);
         }
-        $res = $recursive_get($root);
+        if (!$com_id) {
+            return $tree;
+        }
+        if (!is_numeric($com_id)) {
+            $com_id = $items->findOne('keyword', self::prepareSearchKeyword($com_id))->get('id');
+        }
+        $res = array();
+        $found = false;
+        $com_level = null;
+        foreach ($tree as $item) {
+            if ($item[0] === $com_id) {
+                $res []= $item;
+                $found = true;
+                $com_level = $item[2];
+                continue;
+            }
+            if (!$found) {
+                continue;
+            }
+            if ($found && $item[2] <= $com_level) {
+                break;
+            }
+            $res []= $item;
+        }
         return $res;
     }
     

@@ -437,11 +437,13 @@ class Controller {
         $methods = $class->getMethods(\ReflectionMethod::IS_PUBLIC);
         $props = $class->getDefaultProperties();
         $prefix = isset($props['_action_prefix']) ? $props['_action_prefix'] : '';
+        $prefix = fx::util()->underscoreToCamel($prefix, false);
         $actions = array();
         foreach ($methods as $method) {
             $action_name = null;
             if (preg_match("~^".$prefix."(.+)$~", $method->name, $action_name)) {
                 $action_name = $action_name[1];
+                $action_name = fx::util()->camelToUnderscore($action_name);
                 $actions[$action_name]= array();
             }
         }

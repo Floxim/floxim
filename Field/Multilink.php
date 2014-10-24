@@ -143,6 +143,11 @@ class Multilink extends Baze {
                     
                     $res_many_many_fields[$mmf_key] = array( array('', '--') );
                     foreach ($linking_component_links as $linking_component_link) {
+                        // skip pseudo-components
+                        // @todo needs a better workaround
+                        if (in_array($linking_component_link['format']['target'], array('lang', 'site', 'infoblock')) ) {
+                            continue;
+                        }
                         $res_many_many_fields[$mmf_key] []= array(
                             $linking_component_link['id'],
                             $linking_component_link['keyword'],

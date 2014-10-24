@@ -306,8 +306,6 @@ fx_form = {
     },
 
     add_parent_condition: function(parent, _el, container) {
-        console.log(parent, _el[0], container);
-        //return;
         if (parent instanceof Array) {
             parent = {};
             parent[parent[0]] = parent[1];
@@ -316,6 +314,9 @@ fx_form = {
         var check_parent_state = function() {
             var do_show = true;
             $.each(parent, function(pkey, pval) {
+                // convert checked value to string
+                // because input value is always returned as a string
+                pval = pval+'';
                 var pexp = '==';
                 if (/^!=/.test(pval)) {
                     pval = pval.replace(/^!=/, '');
@@ -343,7 +344,19 @@ fx_form = {
                 }
                 switch (pexp) {
                     case '==':
-                        do_show = (par_inp.css('display') !== 'none' && par_val === pval);
+                        do_show = par_val === pval;
+                        // check parent visibility
+                        // jquery 'is visible' magic doesn't work with input[type=hidden]
+                        // so we invent our own magic!
+                        if (do_show) {
+                            do_show = par_inp.css('display') !== 'none';
+                            if (do_show) {
+                                var $inp_field_block = par_inp.closest('.field');
+                                if ($inp_field_block.length) {
+                                    do_show = $inp_field_block.css('display') !== 'none';
+                                }
+                            }
+                        }
                         break;
                     case '!=':
                         if (

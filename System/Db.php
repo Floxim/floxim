@@ -79,11 +79,11 @@ class Db extends \PDO {
         $q_time = $end_time - $start_time;
         self::$q_time += $q_time;
         fx::log(
-                '#'.self::$q_count, 
-                'q_time: '.$q_time, 
-                'q_total: '.self::$q_time,
-                $statement//,
-                //fx_debug::backtrace(false)
+            '#'.self::$q_count, 
+            'q_time: '.$q_time, 
+            'q_total: '.self::$q_time,
+            $statement//,
+            //debug_backtrace()
         );
         return $this->last_result;
     }
