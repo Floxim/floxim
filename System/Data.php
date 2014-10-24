@@ -895,13 +895,17 @@ abstract class Data {
         }
 
         if ( ($kf = static::getKeywordField()) ) {
-            return $cache->findOne($kf, $id);
+            return $cache->findOne($kf, static::prepareSearchKeyword($id));
         }
         return false;
     }
 
     public static function getKeywordField() {
         return false;
+    }
+    
+    public static function prepareSearchKeyword($keyword) {
+        return $keyword;
     }
 
     public static function getStaticCachedAll($ids) {

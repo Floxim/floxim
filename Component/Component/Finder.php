@@ -63,11 +63,15 @@ class Finder extends System\Data {
     
     public function getById($id) {
         if (!is_numeric($id)) {
-            $this->where('keyword', $id);
+            $this->where('keyword', self::prepareSearchKeyword($id));
         } else {
             $this->where('id', $id);
         }
         return $this->one();
+    }
+    
+    public static function prepareSearchKeyword($keyword) {
+        return preg_replace("~^floxim\.main\.~", '', $keyword);
     }
     
     public function getByKeyword($keyword) {

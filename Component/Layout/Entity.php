@@ -16,6 +16,9 @@ class Entity extends System\Entity {
     
     protected function beforeInsert() {
         parent::beforeInsert();
+    }
+    
+    public function scaffold() {
         $path = $this->getPath();
         fx::files()->mkdir($path);
     }

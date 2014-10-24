@@ -161,7 +161,7 @@ class Suitable {
         $layout = fx::data('layout', $layout_id);
         
         
-        $layout_tpl = fx::template('layout_'.$layout['keyword']);
+        $layout_tpl = fx::template('theme.'.$layout['keyword']);
         $template_variants = $layout_tpl->getTemplateVariants();
         
         $source_template_params = null;

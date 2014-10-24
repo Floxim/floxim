@@ -74,7 +74,7 @@ class Loader {
         if (!preg_match("~@~", $template_name)) {
         
             $ns = fx::getComponentNamespace($this->getTemplateName());
-
+            
             $ns = explode("\\", trim($ns, "\\"));
 
             if ($ns[0] === 'Theme') {
@@ -89,7 +89,7 @@ class Loader {
                 try {
                     $this->addSourceDir($dir);
                 } catch (\Exception $e) {
-
+                    fx::log('Error while adding template source dir', $e, $ns);
                 }
             }
         }
