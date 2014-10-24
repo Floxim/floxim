@@ -97,7 +97,7 @@ class Config {
             ),
             'file'  => array(
                 'class' => '\\Floxim\\Cache\\Storage\\File',
-                'cache_dir' => fx::path('files', '/cache'),
+                'cachePath' => fx::path('files', '/cache/data'),
             ),
         );
         /*
