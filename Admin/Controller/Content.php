@@ -156,22 +156,21 @@ class Content extends Admin {
     }
 
     public function deleteSave($input) {
-        if (!isset($input['content_type']) || !isset($input['content_id'])) {
-            if (!isset($input['id']) || !is_numeric($input['id'])) {
-                return;
-            }
-            $content = fx::data('content', $input['id']);
-        } else {
-            $content = fx::data($input['content_type'], $input['content_id']);
+        fx::log($input);
+        $id = isset($input['content_id']) ? $input['content_id'] : 
+                (isset($input['id']) ? $input['id'] : false);
+        if (!$id) {
+            return;
         }
+        $content = fx::data('content', $id);
         if (!$content) {
             return;
         }
         $fields = array(
             array(
-                'label' => fx::alang('I am REALLY sure','system'),
                 'name' => 'delete_confirm',
-                'type' => 'hidden'
+                'type' => 'hidden',
+                'value' => 1
             ),
             $this->ui->hidden('entity', 'content'),
             $this->ui->hidden('action', 'delete_save'),
@@ -204,6 +203,7 @@ class Content extends Admin {
                 $current_page_path = fx::data('page' , $input['page_id'])->getPath()->getValues('id');
             }
             $response = array('status'=>'ok');
+            /*
             if ($content->isInstanceof('page') && is_array($current_page_path) && in_array($content['id'], $current_page_path) ) {
                 if ($content['parent_id'] == 0){
                     $response['reload'] = '/';
@@ -212,7 +212,11 @@ class Content extends Admin {
                     $response['reload'] = $parent_page['url'];
                 }
             }
+             * 
+             */
+            fx::log('killing', $content);
             $content->delete();
+            fx::log('kld', $response);
             return $response;
         }
         $component = fx::data('component', $content['type']);

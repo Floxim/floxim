@@ -35,6 +35,9 @@ window.fx_controller_tree = function (html) {
             if (filter_value === '') {
                 return;
             }
+            if (filter === 'controller') {
+                filter_value = filter_value.replace(/\./g, '__');
+            }
             has_filters = true;
             var selector = '.'+filter+'_'+filter_value;
             subs.not(selector).hide();

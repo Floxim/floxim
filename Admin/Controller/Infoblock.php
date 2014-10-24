@@ -333,7 +333,6 @@ class Infoblock extends Admin {
         $fields[]= $this->ui->hidden('action', 'list_for_page');
         $fields[]= $this->ui->hidden('page_id', $c_page['id']);
         $fields[]= $this->ui->hidden('data_sent', 1);
-        fx::log($input);
         $res = array(
             'fields' => $fields,
             'id' => 'page_infoblocks'
@@ -699,10 +698,6 @@ class Infoblock extends Admin {
             return $v['var']['var_type'];
         });
         
-        fx::log($vars, $input);
-        
-        //$vars = array_merge(array('content' => array(), 'visual' => array(), 'ib_param' => array()), $vars);
-        
         
         $contents = fx::collection();
         
@@ -772,7 +767,6 @@ class Infoblock extends Admin {
             foreach ($vars['ib_param'] as $c_var) {
                 $var = $c_var['var'];
                 $value = $c_var['value'];
-                fx::log('ibp', $var, $value);
                 if (!isset($var['stored']) || ($var['stored'] && $var['stored'] != 'false')) {
                     $ib->digSet('params.'.$var['name'], $value);      
                 }
@@ -784,68 +778,6 @@ class Infoblock extends Admin {
                 $controller->handleInfoblock('save', $ib, array('params' => $modified_params));
             }
         }
-        return;
-        
-        foreach ($input['vars'] as $c_var) {
-            $var = $c_var['var'];
-            $value = $c_var['value'];
-            if ($var['type'] == 'livesearch' && !$value) {
-                $value = array();
-            }
-            if ($var['var_type'] == 'visual' && $ib_visual) {
-                $visual_set = $var['template_is_wrapper'] ? 'wrapper_visual' : 'template_visual';
-                $c_visual = $ib_visual[$visual_set];
-                if (!is_array($c_visual)) {
-                    $c_visual = array();
-                }
-                if ($value == 'null') {
-                    unset($c_visual[$var['id']]);
-                } else {
-                    $c_visual[$var['id']] = $value;
-                }
-                //$ib_visual->set($visual_set, $c_visual)->save();
-                //$ib_visual->dig_set($visual_set)
-            } elseif ($var['var_type'] == 'content') {
-
-                if (!isset($contents[$var['content_id']])) {
-                    $contents[$var['content_id']] = array(
-                        'content_type_id' => $var['content_type_id'],
-                        'values' => array($var['name'] => $value)
-                    );
-                } else {
-                    $contents[$var['content_id']]['values'][$var['name']] = $value;
-                }
-            } elseif ($var['var_type'] == 'ib_param') {
-                $controller = $ib->initController();
-                $ib_params = $ib['params'];
-                $ib_params[$var['name']] = $value;
-                $ib['params'] = $ib_params;
-                if (!isset($var['stored']) || ($var['stored'] && $var['stored'] != 'false')) {
-                    $ib->save();
-                }
-                $controller->handleInfoblock('save', $ib, array('params' => array($var['name'] => $value)));
-            }
-        }
-        fx::log($contents, count($contents), $input);
-        foreach ($contents as $content_id => $content_info) {
-            fx::log($content_id, $content_info);
-            $finder = fx::data(
-                fx::data('component', $content_info['content_type_id'])->get('keyword')
-            );
-            if ($content_id) {
-                $content = $finder->getById($content_id);
-            } else {
-                $content = $finder->create( isset($input['new_entity_props']) ? $input['new_entity_props'] : array());
-            }
-            if ($content) {
-                $content->setFieldValues($content_info['values'], array_keys($content_info['values']));
-                fx::log('saving', $content);
-                return;
-                $content->save();
-            }
-        }
-
-
     }
     
     

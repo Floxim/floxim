@@ -492,10 +492,11 @@ class Controller {
     public function handleInfoblock($callback, $infoblock, $params = array()) {
         
         $full_config = $this->getConfig();
-        if (!isset($full_config['actions'][$this->action])) {
+        $action = fx::util()->camelToUnderscore($this->action);
+        if (!isset($full_config['actions'][$action])) {
             return;
         }
-        $config = $full_config['actions'][$this->action];
+        $config = $full_config['actions'][$action];
         if (!isset($config[$callback])) {
             return;
         }

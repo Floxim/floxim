@@ -105,7 +105,7 @@ fx_controller_tree(html);
     class="
         sub 
         <?=_c.is_group ? ' group': ''?>
-        controller_<?=_c.controller?> 
+        controller_<?=_c.controller.replace(/\./g, '__')?> 
         <?=_c.is_hidden ? ' fx_group_hidden' : ''?>
         type_<?=_c.type?>" data-id="<?=_c.id?>"
     >
