@@ -179,8 +179,12 @@ fx_buttons.prototype.handle = function ( button ) {
         };
         $fx.post(
             opts, 
-            function() {
-                $(window).hashchange();
+            function(res) {
+                if (res.fields) {
+                    $fx.admin.load_page(res);
+                } else {
+                    $(window).hashchange();
+                }
             }
         );
         return false;
