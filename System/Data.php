@@ -791,7 +791,7 @@ abstract class Data {
             if (class_exists($classname)) {
                 return $classname;
             }
-        } catch (Exception $e) {}
+        } catch (\Exception $e) {}
         return '\\Floxim\\Floxim\\System\\Simplerow';
     }
 
@@ -840,18 +840,9 @@ abstract class Data {
 
     public static function initStaticCache() {
         if (static::$fullStaticCache) {
-            if (static::$storeStaticCache) {
-                $cache_file = fx::path('files', 'cache/'.preg_replace("~[^a-z0-9]~i", '.', get_called_class()).'.txt');
-                if (file_exists($cache_file)) {
-                    $res = unserialize(file_get_contents($cache_file));
-                    return $res;
-                }
-            }
-            $res = static::loadFullDataForCache();
-            if (static::$storeStaticCache) {
-                fx::files()->writefile($cache_file, serialize($res));
-            }
-            return $res;
+            return fx::cache('meta')->remember('data-meta-' . get_called_class(), 60 * 60, function () {
+                return static::loadFullDataForCache(); // todo: need check for PHP 5.3
+            }, array(), static::$storeStaticCache);
         }
         return new Collection();
     }

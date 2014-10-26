@@ -99,6 +99,10 @@ class Config {
                 'class' => '\\Floxim\\Cache\\Storage\\File',
                 'cachePath' => fx::path('files', '/cache/data'),
             ),
+            'meta'  => array(
+                'class' => '\\Floxim\\Cache\\Storage\\File',
+                'cachePath' => fx::path('files', '/cache/meta'),
+            ),
         );
         /*
         $this->config['DOCUMENT_ROOT'] = DOCUMENT_ROOT;
