@@ -5,14 +5,16 @@ namespace Floxim\Floxim\Template;
 /*
  * Class breaks the template into tokens and builds a tree
  */
-class Parser {
-    
+class Parser
+{
+
     /**
      * Convert template to token tree
      * @param string $source source code of the template
      * @return array token tree
      */
-    public function parse($source) {
+    public function parse($source)
+    {
         //fx::log($source);
         $tokenizer = new Tokenizer();
         $tokens = $tokenizer->parse($source);
@@ -20,15 +22,16 @@ class Parser {
         $tree = $this->makeTree($tokens);
         return $tree;
     }
-    
+
     /**
      * To determine the type of the token (opening/unit) on the basis of the following tokens
      * @param fx_template_token $token the token with an unknown type
      * @param array $tokens following tokens
      * @return null
      */
-    protected  function solveUnclosed($token, $tokens) {
-        if (!$token  || $token->type != 'unknown') {
+    protected function solveUnclosed($token, $tokens)
+    {
+        if (!$token || $token->type != 'unknown') {
             return;
         }
         $token_info = Token::getTokenInfo($token->name);
@@ -45,7 +48,7 @@ class Parser {
                             return;
                         }
                     }
-                    $stack[]= $token;
+                    $stack[] = $token;
                     break;
                 case 'close':
                     if (count($stack) == 0) {
@@ -64,11 +67,12 @@ class Parser {
     }
 
 
-    protected function makeTree($tokens) {
+    protected function makeTree($tokens)
+    {
         $stack = array();
         $root = $tokens[0];
         while ($token = array_shift($tokens)) {
-            
+
             if ($token->type == 'unknown') {
                 $this->solveUnclosed($token, $tokens);
             }
@@ -80,7 +84,7 @@ class Parser {
                     if (count($stack) > 0) {
                         end($stack)->addChild($token);
                     }
-                    $stack []= $token;
+                    $stack [] = $token;
                     break;
                 case 'close':
                     if ($token->name == 'if') {
@@ -93,7 +97,7 @@ class Parser {
                             fx::log('Wrong template node nesting', $token->dump(), $closed_token->dump());
                         }
                     }
-                    
+
                     if ($token->name == 'if' || $token->name == 'elseif') {
                         // reading forward to check if there is nearby {elseif} / {else} tag
                         $count_skipped = 0;
@@ -104,11 +108,11 @@ class Parser {
                                 continue;
                             }
                             if (
-                                $next_token->type != 'close' && 
+                                $next_token->type != 'close' &&
                                 ($next_token->name == 'elseif' || $next_token->name == 'else')
                             ) {
                                 $next_token->stack_extra = true;
-                                $stack []= $closed_token;
+                                $stack [] = $closed_token;
                                 foreach (range(1, $count_skipped) as $skip) {
                                     array_shift($tokens);
                                 }
@@ -123,7 +127,8 @@ class Parser {
                         array_pop($stack);
                     }
                     break;
-                case 'single': default:
+                case 'single':
+                default:
                     $stack_last = end($stack);
                     if (!$stack_last) {
                         echo "Template error: stack empty, trying to add: ";
@@ -136,8 +141,9 @@ class Parser {
         }
         return $root;
     }
-    
-    protected function templateToEach(Token $token) {
+
+    protected function templateToEach(Token $token)
+    {
         $children = $token->getChildren();
         $has_items = false;
         foreach ($children as $child) {

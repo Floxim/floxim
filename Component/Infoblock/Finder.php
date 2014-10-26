@@ -5,9 +5,11 @@ namespace Floxim\Floxim\Component\Infoblock;
 use Floxim\Floxim\System;
 use Floxim\Floxim\System\Fx as fx;
 
-class Finder extends System\Data {
-    
-    public function relations() {
+class Finder extends System\Data
+{
+
+    public function relations()
+    {
         return array(
             'visuals' => array(
                 self::HAS_MANY,
@@ -17,18 +19,21 @@ class Finder extends System\Data {
         );
     }
 
-    public function __construct() {
+    public function __construct()
+    {
         parent::__construct();
         // todo: psr0 need verify
         $this->classname = 'fx_infoblock';
         $this->serialized = array('params', 'scope');
     }
-    
-    public function isLayout() {
+
+    public function isLayout()
+    {
         return $this->where('controller', 'layout')->where('action', 'show');
     }
-    
-    public function getById($id) {
+
+    public function getById($id)
+    {
         if (is_numeric($id)) {
             return parent::getById($id);
         }
@@ -36,28 +41,26 @@ class Finder extends System\Data {
             return $this->create(array('id' => $id));
         }
     }
-    
-    public function getForPage($page_id) {
+
+    public function getForPage($page_id)
+    {
         $page = $page_id instanceof System\Entity ? $page_id : fx::data('page', $page_id);
         if (!$page) {
             return;
         }
         $ids = $page->getParentIds();
-        $ids []= $page['id'];
-        $ids []= 0; // root
-        $infoblocks = $this->
-            where('page_id', $ids)->
-            where('site_id', $page['site_id'])->
-            all();
+        $ids [] = $page['id'];
+        $ids [] = 0; // root
+        $infoblocks = $this->where('page_id', $ids)->where('site_id', $page['site_id'])->all();
         foreach ($infoblocks as $ib) {
             if (!$ib->isAvailableOnPage($page)) {
                 $infoblocks->remove($ib);
             }
         }
-        
+
         return $infoblocks;
     }
-    
+
     /**
      * Sort collection of infoblocks by scope "strength":
      * 1. "this page only" - the best
@@ -67,10 +70,12 @@ class Finder extends System\Data {
      * 5. "page and children"
      * If blocks have same expression type, the strongest is one bound to the deeper page
      * If mount page is the same, the newer is stronger
+     *
      * @param fx_collection $infoblocks
      */
-    public function sortInfoblocks($infoblocks) {
-        $infoblocks->sort(function($a, $b) {
+    public function sortInfoblocks($infoblocks)
+    {
+        $infoblocks->sort(function ($a, $b) {
             $a_scope = $a->getScopeWeight();
             $b_scope = $b->getScopeWeight();
             if ($a_scope > $b_scope) {
@@ -93,19 +98,21 @@ class Finder extends System\Data {
         return $infoblocks;
     }
 
-    public function getContentInfoblocks($content_type = null) {
+    public function getContentInfoblocks($content_type = null)
+    {
         if ($content_type) {
-            $this->where('controller', 'component_'.$content_type);
+            $this->where('controller', 'component_' . $content_type);
         }
         $this->where('action', 'list_infoblock');
         return $this->all();
     }
-    
+
     protected static $isStaticCacheUsed = true;
     protected static $fullStaticCache = true;
     protected static $storeStaticCache = true;
-    
-    public static function prepareFullDataForCacheFinder($finder) {
+
+    public static function prepareFullDataForCacheFinder($finder)
+    {
         $finder->with('visuals');
     }
 }

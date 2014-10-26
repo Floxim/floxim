@@ -2,9 +2,11 @@
 
 namespace Floxim\Floxim\Template;
 
-class AttrParser extends HtmlTokenizer {
-    
-    public function parseAtts(HtmlToken $token) {
+class AttrParser extends HtmlTokenizer
+{
+
+    public function parseAtts(HtmlToken $token)
+    {
         $token->attributes = array();
         $s = $token->source;
         if (!$s || !preg_match("~\s~", $s)) {
@@ -15,9 +17,11 @@ class AttrParser extends HtmlTokenizer {
         $this->c_att = array('name' => null, 'value' => null);
         $this->parse($s);
     }
-    
+
     protected $_count_injections = 0;
-    protected function addAtt() {
+
+    protected function addAtt()
+    {
         if (!$this->c_att['name'] && !preg_match("~^<~", $this->stack)) {
             $this->c_att['name'] = $this->stack;
         }
@@ -33,28 +37,31 @@ class AttrParser extends HtmlTokenizer {
                 if (preg_match("~\{.+~", $att_name) && !$att_val) {
                     $this->_count_injections++;
                     $att_val = $att_name;
-                    $att_name = '#inj'.$this->_count_injections;
+                    $att_name = '#inj' . $this->_count_injections;
                 }
                 $this->token->attributes[$att_name] = $att_val;
             }
         }
         $this->c_att = array('name' => null, 'value' => null);
     }
-    
-    public function attNameStart($ch) {
+
+    public function attNameStart($ch)
+    {
         $this->addAtt();
         $this->stack = '';
         parent::attNameStart($ch);
         $this->c_att = array('name' => '', 'value' => null);
     }
-    
-    public function attValueStart($ch) {
+
+    public function attValueStart($ch)
+    {
         $this->c_att['name'] = $this->stack;
         parent::attValueStart($ch);
         $this->stack = '';
     }
-    
-    public function attValueEnd($ch) {
+
+    public function attValueEnd($ch)
+    {
         $this->c_quote = $this->att_quote;
         $c_val = $this->stack;
         $res = parent::attValueEnd($ch);
@@ -69,8 +76,9 @@ class AttrParser extends HtmlTokenizer {
         $this->c_quote = null;
         return $res;
     }
-    
-    public function tagToText($ch) {
+
+    public function tagToText($ch)
+    {
         if (!empty($this->stack)) {
             $this->c_att['name'] = $this->stack;
             $this->addAtt();

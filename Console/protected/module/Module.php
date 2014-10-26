@@ -1,9 +1,12 @@
 <?php
 
-namespace {Vendor}\{Module};
+namespace {
+    Vendor}
+\{Module};
 
 use Floxim\Floxim\System\Fx as fx;
 
-class Module {
+class Module
+{
 
 }

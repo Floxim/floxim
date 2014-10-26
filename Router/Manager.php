@@ -5,12 +5,14 @@ namespace Floxim\Floxim\Router;
 use Floxim\Floxim\System\Fx as fx;
 
 
-class Manager {
+class Manager
+{
 
-    public function __construct() {
+    public function __construct()
+    {
         $namespace = 'Floxim\Floxim\Router';
         foreach (array('Admin', 'Infoblock', 'Ajax', 'Front', 'Error') as $r_name) {
-            $classname = $namespace.'\\'.$r_name;
+            $classname = $namespace . '\\' . $r_name;
             if (class_exists($classname)) {
                 $router = new $classname;
                 $this->register($router);
@@ -20,7 +22,8 @@ class Manager {
 
     protected $routers = array();
 
-    public function register(Base $router, $name = null, $priority = null) {
+    public function register(Base $router, $name = null, $priority = null)
+    {
         if (is_null($name)) {
             $name = get_class($router);
         }
@@ -36,8 +39,9 @@ class Manager {
         }
     }
 
-    protected function reorderRouters() {
-        uasort($this->routers, function($a, $b) {
+    protected function reorderRouters()
+    {
+        uasort($this->routers, function ($a, $b) {
             return $a['priority'] - $b['priority'];
         });
     }
@@ -48,7 +52,8 @@ class Manager {
      * @param array $context
      * @return fx_controller
      */
-    public function route($url = null, $context = array()) {
+    public function route($url = null, $context = array())
+    {
         if (is_null($url)) {
             $url = getenv('REQUEST_URI');
         }
@@ -68,8 +73,9 @@ class Manager {
      * Get the option router by name
      * fx::router('front')
      */
-    public function getRouter($router_name) {
+    public function getRouter($router_name)
+    {
         $class = 'Floxim\\Floxim\\Router\\' . ucfirst($router_name);
-        return fx::dig($this->routers, $class.'.router');
+        return fx::dig($this->routers, $class . '.router');
     }
 }

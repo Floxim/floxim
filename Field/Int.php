@@ -2,9 +2,11 @@
 
 namespace Floxim\Floxim\Field;
 
-class Int extends Baze {
+class Int extends Baze
+{
 
-    public function validateValue($value) {
+    public function validateValue($value)
+    {
         if (!parent::validateValue($value)) {
             return false;
         }
@@ -15,7 +17,8 @@ class Int extends Baze {
         return true;
     }
 
-    public function getSqlType (){
+    public function getSqlType()
+    {
         return "INT";
     }
 }

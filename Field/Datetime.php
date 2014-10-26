@@ -2,11 +2,13 @@
 
 namespace Floxim\Floxim\Field;
 
-class Datetime extends Baze {
+class Datetime extends Baze
+{
 
     protected $day = '', $month = '', $year = '', $hours = '', $minutes = '', $seconds = '';
 
-    public function getJsField($content) {
+    public function getJsField($content)
+    {
         parent::getJsField($content);
 
         $this->loadValuesByStr($content[$this['keyword']]);
@@ -20,7 +22,8 @@ class Datetime extends Baze {
         return $this->_js_field;
     }
 
-    public function setValue($value) {
+    public function setValue($value)
+    {
         if (is_array($value)) {
             $this->day = $value['day'];
             $this->month = $value['month'];
@@ -29,21 +32,25 @@ class Datetime extends Baze {
             $this->minutes = $value['minutes'];
             $this->seconds = $value['seconds'];
 
-            $this->value = $this->year.'-'.$this->month.'-'.$this->day.' ';
-            $this->value .= $this->hours.':'.$this->minutes.':'.$this->seconds;
-        } else if ($value) {
-            $this->value = $value;
-            $this->loadValuesByStr($this->value);
+            $this->value = $this->year . '-' . $this->month . '-' . $this->day . ' ';
+            $this->value .= $this->hours . ':' . $this->minutes . ':' . $this->seconds;
         } else {
-            $this->value = '';
+            if ($value) {
+                $this->value = $value;
+                $this->loadValuesByStr($this->value);
+            } else {
+                $this->value = '';
+            }
         }
     }
 
-    public function getSqlType() {
+    public function getSqlType()
+    {
         return "DATETIME";
     }
 
-    protected function loadValuesByStr($str) {
+    protected function loadValuesByStr($str)
+    {
         if ($str) {
             $timestamp = strtotime($str);
             $this->day = date('d', $timestamp);
@@ -54,8 +61,9 @@ class Datetime extends Baze {
             $this->seconds = date('s', $timestamp);
         }
     }
-    
-    public function getSavestring() {
+
+    public function getSavestring()
+    {
         $v = $this->value;
         if (empty($v)) {
             return null;

@@ -5,9 +5,11 @@ namespace Floxim\Floxim\Field;
 use Floxim\Floxim\System;
 use Floxim\Floxim\System\Fx as fx;
 
-class Link extends Baze {
+class Link extends Baze
+{
 
-    public function validateValue($value) {
+    public function validateValue($value)
+    {
         if (!parent::validateValue($value)) {
             return false;
         }
@@ -21,59 +23,58 @@ class Link extends Baze {
         return true;
     }
 
-    public function getSqlType (){
+    public function getSqlType()
+    {
         return "INT";
     }
-    
-    public function formatSettings() {
+
+    public function formatSettings()
+    {
         $fields = array();
-        
-        $comp_values = array_merge(
-            fx::data('component')->getSelectValues(), 
-            array(
-                array('site', 'Site'),
-                array('component', 'Component'),
-                array('infoblock', 'Infoblock'),
-                array('lang', 'Language')
-            )
-        );
+
+        $comp_values = array_merge(fx::data('component')->getSelectValues(), array(
+            array('site', 'Site'),
+            array('component', 'Component'),
+            array('infoblock', 'Infoblock'),
+            array('lang', 'Language')
+        ));
         $fields[] = array(
-            'id' => 'format[target]',
-            'name' => 'format[target]',
-            'label' => fx::alang('Links to','system'),
-            'type' => 'select',
+            'id'     => 'format[target]',
+            'name'   => 'format[target]',
+            'label'  => fx::alang('Links to', 'system'),
+            'type'   => 'select',
             'values' => $comp_values,
-            'value' => $this['format']['target'] ? $this['format']['target'] : ''
+            'value'  => $this['format']['target'] ? $this['format']['target'] : ''
         );
         $fields[] = array(
-            'id' => 'format[prop_name]',
-            'name' => 'format[prop_name]',
-            'label' => fx::alang('Key name for the property','system'),
+            'id'    => 'format[prop_name]',
+            'name'  => 'format[prop_name]',
+            'label' => fx::alang('Key name for the property', 'system'),
             'value' => $this->getPropName()
         );
-        $fields[]= array(
-            'id' => 'format[is_parent]',
-            'name' => 'format[is_parent]',
-            'label' => fx::alang('Bind value to the parent','system'),
-            'type' => 'checkbox',
+        $fields[] = array(
+            'id'    => 'format[is_parent]',
+            'name'  => 'format[is_parent]',
+            'label' => fx::alang('Bind value to the parent', 'system'),
+            'type'  => 'checkbox',
             'value' => $this['format']['is_parent']
         );
-        $fields[]= array(
-            'id' => 'format[render_type]',
-            'name' => 'format[render_type]',
-
-            'label' => fx::alang('Render type','system'),
-            'type' => 'select',
+        $fields[] = array(
+            'id'     => 'format[render_type]',
+            'name'   => 'format[render_type]',
+            'label'  => fx::alang('Render type', 'system'),
+            'type'   => 'select',
             'values' => array(
-                'livesearch' => fx::alang('Live search','system'),
-                'select' => fx::alang('Simple select','system')
+                'livesearch' => fx::alang('Live search', 'system'),
+                'select'     => fx::alang('Simple select', 'system')
             ),
-            'value' => $this['format']['render_type']
+            'value'  => $this['format']['render_type']
         );
         return $fields;
     }
-    
-    public function getPropName() {
+
+    public function getPropName()
+    {
         if ($this['format']['prop_name']) {
             return $this['format']['prop_name'];
         }
@@ -82,29 +83,30 @@ class Link extends Baze {
         }
         return '';
     }
-    
-    public function getJsField($content) {
+
+    public function getJsField($content)
+    {
         parent::getJsField($content);
         //$target_component = fx::data('component', $this['format']['target']);
         //$target_content = 'content_'.$target_component['keyword'];
         $target_content = $this->getTargetName();
         $finder = fx::data($target_content);
-        
+
         if ($this['format']['render_type'] == 'livesearch') {
             $this->_js_field['type'] = 'livesearch';
             $this->_js_field['params'] = array('content_type' => $target_content);
-            if ( ($c_val = $content[$this['keyword']])) {
+            if (($c_val = $content[$this['keyword']])) {
                 $c_val_obj = $finder->where('id', $c_val)->one();
                 if ($c_val_obj) {
                     $this->_js_field['value'] = array(
-                        'id' => $c_val_obj['id'],
+                        'id'   => $c_val_obj['id'],
                         'name' => $c_val_obj['name']
                     );
                 }
             }
             return $this->_js_field;
         }
-        
+
         $this->_js_field['type'] = 'select';
         if ($target_content !== 'lang') {
             $finder->where('site_id', $content['site_id']);
@@ -116,8 +118,9 @@ class Link extends Baze {
         $this->_js_field['values'] = $val_items->getValues($name_prop, 'id');
         return $this->_js_field;
     }
-    
-   public function getTargetName () {
+
+    public function getTargetName()
+    {
         $rel_target_id = $this['format']['target'];
         if (!is_numeric($rel_target_id)) {
             $rel_target = $rel_target_id;
@@ -127,7 +130,8 @@ class Link extends Baze {
         return $rel_target;
     }
 
-    public function getRelation() {
+    public function getRelation()
+    {
         if (!$this['format']['target']) {
             return false;
         }
@@ -138,29 +142,29 @@ class Link extends Baze {
             $this['keyword']
         );
     }
-    
+
     /*
      * Get the referenced component field
      */
-    public function getRelatedComponent() {
+    public function getRelatedComponent()
+    {
         $rel = $this->getRelation();
         return fx::data('component', $rel[1]);
     }
-    
-    public function getRelatedType() {
+
+    public function getRelatedType()
+    {
         $rel = $this->getRelation();
         return $rel[1];
     }
 
 
-    public function getSavestring($content) {
+    public function getSavestring($content)
+    {
         if (is_array($this->value) && isset($this->value['title'])) {
             $title = $this->value['title'];
-            $entity_infoblock_id = 
-                    isset($this->value['infoblock_id']) 
-                    ? $this->value['infoblock_id']
-                    : $content->getLinkFieldInfoblock($this['id']);
-            
+            $entity_infoblock_id = isset($this->value['infoblock_id']) ? $this->value['infoblock_id'] : $content->getLinkFieldInfoblock($this['id']);
+
             $entity_params = array(
                 'name' => $title
             );
@@ -170,7 +174,7 @@ class Link extends Baze {
                 if ($entity_infoblock) {
                     $entity_params += array(
                         'infoblock_id' => $entity_infoblock_id,
-                        'parent_id' => $entity_infoblock['page_id']
+                        'parent_id'    => $entity_infoblock['page_id']
                     );
                 }
             }

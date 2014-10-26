@@ -5,27 +5,25 @@ namespace Floxim\Floxim\Component\Patch;
 use Floxim\Floxim\System;
 use Floxim\Floxim\System\Fx as fx;
 
-class Entity extends System\Entity {
-    public function install() {
+class Entity extends System\Entity
+{
+    public function install()
+    {
         if ($this['status'] != 'ready') {
             return false;
         }
         if (!$this['url']) {
             return false;
         }
-        
-        $dir = fx::path('files', 'patches/'.$this['from'].'-'.$this['to']);
-        
+
+        $dir = fx::path('files', 'patches/' . $this['from'] . '-' . $this['to']);
+
         if (!file_exists($dir)) {
-            $saved = fx::files()->saveFile(
-                $this['url'],
-                'patches/',
-                $this['from'].'-'.$this['to'].'.zip'
-            );
-            fx::files()->unzip($saved['fullpath'], 'patches/'.$this['from'].'-'.$this['to']);
+            $saved = fx::files()->saveFile($this['url'], 'patches/', $this['from'] . '-' . $this['to'] . '.zip');
+            fx::files()->unzip($saved['fullpath'], 'patches/' . $this['from'] . '-' . $this['to']);
             unlink($saved['fullpath']);
         }
-        
+
         if (!file_exists($dir) || !is_dir($dir)) {
             return false;
         }
@@ -33,7 +31,7 @@ class Entity extends System\Entity {
         /**
          * Load patch info
          */
-        $info_file=@json_decode(file_get_contents($dir.'/_patch_generator/patch.json'),true);
+        $info_file = @json_decode(file_get_contents($dir . '/_patch_generator/patch.json'), true);
         if (!$info_file) {
             return false;
         }
@@ -41,22 +39,22 @@ class Entity extends System\Entity {
         /**
          * Load hooks list
          */
-        $hook_objects=array();
+        $hook_objects = array();
         if (isset($info_file['hooks'])) {
-            foreach($info_file['hooks'] as $hook_file) {
-                require_once($dir.'/'.$hook_file);
-                $hook_info=pathinfo($hook_file);
+            foreach ($info_file['hooks'] as $hook_file) {
+                require_once($dir . '/' . $hook_file);
+                $hook_info = pathinfo($hook_file);
                 if (class_exists($hook_info['filename'])) {
-                    $hook_objects[]=new $hook_info['filename'];
+                    $hook_objects[] = new $hook_info['filename'];
                 }
             }
         }
         /**
          * Run before hooks
          */
-        foreach($hook_objects as $hook) {
-            if (method_exists($hook,'before')) {
-                call_user_func(array($hook,'before'));
+        foreach ($hook_objects as $hook) {
+            if (method_exists($hook, 'before')) {
+                call_user_func(array($hook, 'before'));
             }
         }
         /**
@@ -74,27 +72,27 @@ class Entity extends System\Entity {
         /**
          * Run migrations
          */
-        $migration_objects=array();
+        $migration_objects = array();
         if (isset($info_file['migrations'])) {
-            foreach($info_file['migrations'] as $migration_file) {
-                require_once($dir.'/'.$migration_file);
-                $migration_info=pathinfo($migration_file);
+            foreach ($info_file['migrations'] as $migration_file) {
+                require_once($dir . '/' . $migration_file);
+                $migration_info = pathinfo($migration_file);
                 if (class_exists($migration_info['filename'])) {
-                    $migration_objects[]=new $migration_info['filename'];
+                    $migration_objects[] = new $migration_info['filename'];
                 }
             }
         }
-        foreach($migration_objects as $migration) {
-            if (method_exists($migration,'exec_up')) {
-                call_user_func(array($migration,'exec_up'));
+        foreach ($migration_objects as $migration) {
+            if (method_exists($migration, 'exec_up')) {
+                call_user_func(array($migration, 'exec_up'));
             }
         }
         /**
          * Run after hooks
          */
-        foreach($hook_objects as $hook) {
-            if (method_exists($hook,'after')) {
-                call_user_func(array($hook,'after'));
+        foreach ($hook_objects as $hook) {
+            if (method_exists($hook, 'after')) {
+                call_user_func(array($hook, 'after'));
             }
         }
 
@@ -109,25 +107,27 @@ class Entity extends System\Entity {
         return true;
     }
 
-    protected function removeFiles($files) {
-        foreach($files as $file) {
-            $path=fx::config('ROOT_FOLDER').$file;
+    protected function removeFiles($files)
+    {
+        foreach ($files as $file) {
+            $path = fx::config('ROOT_FOLDER') . $file;
             fx::files()->rm($path);
         }
     }
 
-    protected function updateFiles($dir, $base) {
-        $items = glob($dir."/*");
+    protected function updateFiles($dir, $base)
+    {
+        $items = glob($dir . "/*");
         if (!$items) {
             return;
         }
-        
+
         foreach ($items as $item) {
-            $item_target = fx::config('ROOT_FOLDER').str_replace($base, '', $item);
+            $item_target = fx::config('ROOT_FOLDER') . str_replace($base, '', $item);
             if (is_dir($item)) {
-                $item_info=pathinfo($item);
+                $item_info = pathinfo($item);
                 // skip specific dirs
-                if (in_array($item_info['basename'],array('_patch_generator'))) {
+                if (in_array($item_info['basename'], array('_patch_generator'))) {
                     continue;
                 }
                 fx::files()->mkdir($item_target);
@@ -137,9 +137,10 @@ class Entity extends System\Entity {
             }
         }
     }
-    
-    protected function updateVersionNumber($new_version) {
-        fx::config('fx.version',$new_version);
+
+    protected function updateVersionNumber($new_version)
+    {
+        fx::config('fx.version', $new_version);
         fx::config()->store('fx.version');
     }
 }

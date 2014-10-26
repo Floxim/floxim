@@ -2,7 +2,8 @@
 
 namespace Floxim\Floxim\Template;
 
-class HtmlTokenizer extends Fsm {
+class HtmlTokenizer extends Fsm
+{
     const TEXT = 1;
     const TAG = 2;
     const PHP = 3;
@@ -11,13 +12,14 @@ class HtmlTokenizer extends Fsm {
     const FX = 7;
     const FX_COMMENT = 8;
     const HTML_COMMENT = 9;
-    
-    public function __construct() {
+
+    public function __construct()
+    {
         $this->init_state = self::TEXT;
         // fx comments
         $this->addRule(self::STATE_ANY, '{*', self::FX_COMMENT, 'fxCommentStart');
         $this->addRule(self::FX_COMMENT, '*}', false, 'fxCommentEnd');
-        
+
         // html comments
         $this->addRule(self::TEXT, '<!--', self::HTML_COMMENT);
         $this->addRule(self::HTML_COMMENT, '>', false, 'htmlCommentCheckEnd');
@@ -29,7 +31,7 @@ class HtmlTokenizer extends Fsm {
 
         $this->addRule(self::TAG, '{', self::FX, 'fxStart');
         $this->addRule(
-            array(self::TEXT,self::ATT_NAME,self::ATT_VAL), 
+            array(self::TEXT, self::ATT_NAME, self::ATT_VAL),
             '{', self::FX, 'fxStart'
         );
         $this->addRule(self::FX, '}', false, 'fxEnd');
@@ -39,111 +41,129 @@ class HtmlTokenizer extends Fsm {
         $this->addRule(self::TAG, '~\s+~', self::ATT_NAME, 'attNameStart');
         $this->addRule(self::ATT_NAME, "~\s*=\s*[\'\"]~", self::ATT_VAL, 'attValueStart');
         $this->addRule(self::ATT_NAME, "~\s+~", false, 'attNameStart');
-        
+
         $this->addRule(self::ATT_VAL, array('"', "'", ' ', '>'), self::TAG, 'attValueEnd');
     }
-    
+
     protected $stack = '';
-    
-    public function getSplitRegexp() {
+
+    public function getSplitRegexp()
+    {
         return "~(\-\->|<!\-\-|<[a-z0-9\/]+|>|\{\*|\*\}|<\?|\?>|[\{\}]|[\'\"]|\s*=\s*[\'\"]?|\s+)~";
     }
 
-    public function parse($string) {
+    public function parse($string)
+    {
         parent::parse($string);
         if (!empty($this->stack)) {
             $this->textToTag('');
         }
         return $this->res;
     }
-    
+
     /**
      * Handle case like "<!--[if gt IE 8]><!-->"
      * Here the end of comment will not be caught by splitter because "<!--" goes first
      * So on every ">" inside html comment, we check if it's preceded by "--"
      * @param type $ch
      */
-    protected function htmlCommentCheckEnd($ch) {
+    protected function htmlCommentCheckEnd($ch)
+    {
         $is_comment_end = mb_substr($this->stack, -2) === '--';
         $this->stack .= $ch;
         if ($is_comment_end) {
             $this->state = self::TEXT;
         }
     }
-    
-    public function defaultCallback($ch) {
+
+    public function defaultCallback($ch)
+    {
         $this->stack .= $ch;
     }
 
     protected $res = array();
-    
-    protected function addToken($source, $end) {
-    	$start = $end - mb_strlen($source);
+
+    protected function addToken($source, $end)
+    {
+        $start = $end - mb_strlen($source);
         $token = HtmlToken::create($source);
         $token->offset = array($start, $end);
-        $this->res []= $token;
+        $this->res [] = $token;
     }
-    
-    protected function textToTag($ch) {
+
+    protected function textToTag($ch)
+    {
         if ($this->stack !== '') {
-            $this->addToken($this->stack, $this->position- mb_strlen($ch));
+            $this->addToken($this->stack, $this->position - mb_strlen($ch));
         }
         $this->stack = $ch;
     }
-	
-    protected function tagToText($ch) {
-        $this->addToken($this->stack.$ch, $this->position);
+
+    protected function tagToText($ch)
+    {
+        $this->addToken($this->stack . $ch, $this->position);
         $this->stack = '';
     }
-    
-    protected function fxCommentStart($ch) {
+
+    protected function fxCommentStart($ch)
+    {
         if ($this->state == self::PHP) {
             return false;
         }
         $this->prev_stack = $this->stack;
     }
-    
-    protected function fxCommentEnd($ch) {
+
+    protected function fxCommentEnd($ch)
+    {
         $this->stack = $this->prev_stack;
         $this->setState($this->prev_state);
     }
-	
-    protected function phpStart($ch) {
+
+    protected function phpStart($ch)
+    {
         if ($this->state == self::FX_COMMENT) {
             return false;
         }
         $this->stack .= $ch;
     }
-	
-    protected function phpEnd($ch) {
+
+    protected function phpEnd($ch)
+    {
         $this->stack .= $ch;
         $this->setState($this->prev_state);
     }
-    
-    protected  function fxStart($ch) {
+
+    protected function fxStart($ch)
+    {
         $this->stack .= $ch;
     }
-    
-    protected function fxEnd($ch) {
+
+    protected function fxEnd($ch)
+    {
         $this->stack .= $ch;
         $this->setState($this->prev_state);
     }
-    
-    protected function attNameStart($ch) {
+
+    protected function attNameStart($ch)
+    {
         $this->stack .= $ch;
     }
 
     protected $att_quote = null;
-    protected function attValueStart($ch) {
+
+    protected function attValueStart($ch)
+    {
         if (preg_match("~[\'\"]$~", $ch, $att_quote)) {
             $this->att_quote = $att_quote[0];
         }
         $this->stack .= $ch;
     }
-	
-    protected function attValueEnd($ch) {
+
+    protected function attValueEnd($ch)
+    {
         switch ($ch) {
-            case '"': case "'":
+            case '"':
+            case "'":
                 if ($this->att_quote !== $ch) {
                     return false;
                 }

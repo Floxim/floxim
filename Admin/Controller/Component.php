@@ -4,130 +4,134 @@ namespace Floxim\Floxim\Admin\Controller;
 
 use Floxim\Floxim\System\Fx as fx;
 
-class Component extends Admin {
+class Component extends Admin
+{
 
     /**
      * A list of all components
      */
-    public function all() {
+    public function all()
+    {
         $entity = $this->entity_type;
         $finder = fx::data($entity);
-        
+
         $tree = $finder->getTree();
-        
+
         $field = array('type' => 'list', 'filter' => true);
         $field['labels'] = array(
-            'name' => fx::alang('Name', 'system'),
+            'name'    => fx::alang('Name', 'system'),
             'keyword' => fx::alang('Keyword'),
-            'count' => fx::alang('Count', 'system'),
+            'count'   => fx::alang('Count', 'system'),
             'buttons' => array('type' => 'buttons')
         );
         $field['values'] = array();
         $field['entity'] = $entity;
-        
-        $append_coms = function($coll, $level) use (&$field, &$append_coms) {
+
+        $append_coms = function ($coll, $level) use (&$field, &$append_coms) {
             foreach ($coll as $v) {
                 $submenu = Component::getComponentSubmenu($v);
                 $submenu_first = current($submenu);
                 try {
-                    $items_count = fx::db()->getCol("SELECT count(*) from  {{".$v->getContentTable()."}}");
+                    $items_count = fx::db()->getCol("SELECT count(*) from  {{" . $v->getContentTable() . "}}");
                 } catch (\Exception $e) {
                     $items_count = 0;
                 }
                 $r = array(
-                    'id' => $v['id'],
+                    'id'      => $v['id'],
                     'keyword' => $v['keyword'],
-                    'count' => $items_count,
-                    'name' => array(
-                        'name' => $v['name'],
-                        'url' => $submenu_first['url'],
+                    'count'   => $items_count,
+                    'name'    => array(
+                        'name'  => $v['name'],
+                        'url'   => $submenu_first['url'],
                         'level' => $level
                     )
                 );
-                
+
                 $r['buttons'] = array();
                 foreach ($submenu as $submenu_item_key => $submenu_item) {
                     if (!$submenu_item['parent'] && $submenu_item_key != 'settings') {
-                        $r['buttons'] []= array(
-                            'type' => 'button', 
-                            'label' => $submenu_item['title'], 
-                            'url' => $submenu_item['url']
+                        $r['buttons'] [] = array(
+                            'type'  => 'button',
+                            'label' => $submenu_item['title'],
+                            'url'   => $submenu_item['url']
                         );
                     }
                 }
                 $field['values'][] = $r;
                 if (isset($v['children']) && $v['children']) {
-                    $append_coms($v['children'], $level+1);
+                    $append_coms($v['children'], $level + 1);
                 }
             }
         };
-        
+
         $append_coms($tree, 0);
-        
+
         $fields[] = $field;
 
         $this->response->addButtons(array(
             array(
-                'key' => "add", 
-                'title' => fx::alang('Add new '.$entity, 'system'),
-                'url' => '#admin.'.$entity.'.add'
+                'key'   => "add",
+                'title' => fx::alang('Add new ' . $entity, 'system'),
+                'url'   => '#admin.' . $entity . '.add'
             ),
             "delete"
         ));
-        
+
         $result = array('fields' => $fields);
 
-        $this->response->breadcrumb->addItem(self::entityTypes($entity), '#admin.'.$entity.'.all');
+        $this->response->breadcrumb->addItem(self::entityTypes($entity), '#admin.' . $entity . '.all');
         $this->response->submenu->setMenu($entity);
         return $result;
     }
-    
-    public function getComponentSubmenu($component) {
-    	// todo: psr0 need verify
+
+    public function getComponentSubmenu($component)
+    {
+        // todo: psr0 need verify
         $entity_code = fx::getComponentNameByClass(get_class($component));
-    	
-    	$titles = array(
+
+        $titles = array(
             'component' => array(
-                'settings' => fx::alang('Settings','system'),
-                'fields' => fx::alang('Fields','system'),
-                'items' => fx::alang('Items', 'system'),
+                'settings'  => fx::alang('Settings', 'system'),
+                'fields'    => fx::alang('Fields', 'system'),
+                'items'     => fx::alang('Items', 'system'),
                 'templates' => fx::alang('Templates', 'system'),
-            ), 
-            'widget' => array(
-                'settings' => fx::alang('Settings','system'),
+            ),
+            'widget'    => array(
+                'settings'  => fx::alang('Settings', 'system'),
                 'templates' => fx::alang('Templates', 'system')
             )
         );
-		
+
         $res = array();
-        foreach($titles[$entity_code] as $code => $title) {
-            $res[$code]= array(
-                'title' => $title,
-                'code' => $code,
-                'url' => $entity_code.'.edit('.$component['id'].','.$code.')',
+        foreach ($titles[$entity_code] as $code => $title) {
+            $res[$code] = array(
+                'title'  => $title,
+                'code'   => $code,
+                'url'    => $entity_code . '.edit(' . $component['id'] . ',' . $code . ')',
                 'parent' => null
             );
             if ($code == 'fields') {
                 foreach ($component->fields() as $v) {
-                    $res['field-'.$v['id']] = array(
-                        'title' => $v['name'], 
-                        'code' => 'field-'.$v['id'],
-                        'url' => 'component.edit('.$component['id'].',edit_field,'.$v['id'].')', 
+                    $res['field-' . $v['id']] = array(
+                        'title'  => $v['name'],
+                        'code'   => 'field-' . $v['id'],
+                        'url'    => 'component.edit(' . $component['id'] . ',edit_field,' . $v['id'] . ')',
                         'parent' => 'fields'
                     );
                 }
             }
         }
-	return $res;
+        return $res;
     }
-    
-    protected function getComponentTemplates($ctr_entity) {
+
+    protected function getComponentTemplates($ctr_entity)
+    {
         $controller_name = $ctr_entity['keyword'];
         $controller = fx::controller($controller_name);
         $actions = $controller->getActions();
         $templates = array();
         foreach (array_keys($actions) as $action_code) {
-            $action_controller = fx::controller($controller_name.':'.$action_code);
+            $action_controller = fx::controller($controller_name . ':' . $action_code);
             $action_templates = $action_controller->getAvailableTemplates();
             foreach ($action_templates as $atpl) {
                 $templates[$atpl['full_id']] = $atpl;
@@ -135,54 +139,56 @@ class Component extends Admin {
         }
         return fx::collection($templates);
     }
-    
-    public function getModuleFields() {
+
+    public function getModuleFields()
+    {
         $fields = array();
         $vf = $this->getVendorField();
-        $fields []= $vf;
+        $fields [] = $vf;
         $vendors = $vf['values'];
         foreach ($vendors as $v) {
-            $path = fx::path()->toAbs('/module/'.$v).'/*';
+            $path = fx::path()->toAbs('/module/' . $v) . '/*';
             $module_dirs = glob($path);
             $modules = array();
             if ($module_dirs) {
                 foreach ($module_dirs as $md) {
                     $md = fx::path()->fileName($md);
-                    $modules[]= array($v.'.'.$md, $md); 
+                    $modules[] = array($v . '.' . $md, $md);
                 }
             }
-            $modules []= array('new', '-- New --');
-            $fields []= array(
-                'type' => 'select',
-                'label' => 'Module',
-                'name' => $v.'__module',
-                'parent' => array('vendor' => $v),
-                'values' => $modules,
+            $modules [] = array('new', '-- New --');
+            $fields [] = array(
+                'type'                => 'select',
+                'label'               => 'Module',
+                'name'                => $v . '__module',
+                'parent'              => array('vendor' => $v),
+                'values'              => $modules,
                 'hidden_on_one_value' => true
             );
-            $fields []= array(
-                'type' => 'string',
-                'label' => 'New module name',
-                'name' => $v.'__new_module',
-                'parent' => array($v.'__module' => 'new', 'vendor' => $v)
+            $fields [] = array(
+                'type'   => 'string',
+                'label'  => 'New module name',
+                'name'   => $v . '__new_module',
+                'parent' => array($v . '__module' => 'new', 'vendor' => $v)
             );
         }
         return $fields;
     }
-    
-    protected function getFullKeyword($input) {
+
+    protected function getFullKeyword($input)
+    {
         $keyword = trim($input['keyword']);
-        
+
         if (!$keyword && $input['name']) {
             $keyword = fx::util()->strToKeyword($input['name']);
         }
-        
+
         $vendor = $input['vendor'];
-        $module = $input[$vendor.'__module'];
+        $module = $input[$vendor . '__module'];
         if ($module === 'new') {
-            $module = $vendor.'.'.fx::util()->strToKeyword($input[$vendor.'__new_module']);
+            $module = $vendor . '.' . fx::util()->strToKeyword($input[$vendor . '__new_module']);
         }
-        $keyword = $module.'.'.$keyword;
+        $keyword = $module . '.' . $keyword;
         $parts = explode(".", $keyword);
         foreach ($parts as &$p) {
             $p = fx::util()->camelToUnderscore($p);
@@ -191,109 +197,109 @@ class Component extends Admin {
         return $keyword;
     }
 
-    public function add($input) {
+    public function add($input)
+    {
 
         $fields = array(
             $this->ui->hidden('action', 'add'),
             array(
-                'label' => fx::alang('Component name','system'), 
-                'name' => 'name'
+                'label' => fx::alang('Component name', 'system'),
+                'name'  => 'name'
             ),
             array(
-                'label' => fx::alang('Name of an entity created by the component','system'), 
-                'name' => 'item_name'
+                'label' => fx::alang('Name of an entity created by the component', 'system'),
+                'name'  => 'item_name'
             ),
             array(
-                'label' => fx::alang('Keyword','system'), 
-                'name' => 'keyword'
+                'label' => fx::alang('Keyword', 'system'),
+                'name'  => 'keyword'
             )
         );
-        
-        foreach ( $this->getModuleFields() as $mf) {
-            $fields []= $mf;
+
+        foreach ($this->getModuleFields() as $mf) {
+            $fields [] = $mf;
         }
 
         $fields[] = $this->ui->hidden('source', $input['source']);
         $fields[] = $this->ui->hidden('posting');
         $fields[] = $this->getParentComponentField();
-        
-        $entity =$this->entity_type;
+
+        $entity = $this->entity_type;
         $fields[] = $this->ui->hidden('entity', $entity);
-        
-        $this->response->breadcrumb->addItem(
-            self::entityTypes($entity), 
-            '#admin.'.$entity.'.all'
-        );
-        $this->response->breadcrumb->addItem(
-            fx::alang('Add new '.$entity, 'system')
-        );
-        
+
+        $this->response->breadcrumb->addItem(self::entityTypes($entity), '#admin.' . $entity . '.all');
+        $this->response->breadcrumb->addItem(fx::alang('Add new ' . $entity, 'system'));
+
         $this->response->submenu->setMenu($entity);
         $this->response->addFormButton('save');
 
         return array('fields' => $fields);
     }
-    
-    public function edit($input) {
-        
+
+    public function edit($input)
+    {
+
         $entity_code = $this->entity_type;
 
         $component = fx::data($entity_code)->getById($input['params'][0]);
-        
+
         $action = isset($input['params'][1]) ? $input['params'][1] : 'settings';
-        
+
         self::makeBreadcrumb($component, $action, $this->response->breadcrumb);
         $action = fx::util()->underscoreToCamel($action, false);
         if (method_exists($this, $action)) {
             $result = call_user_func(array($this, $action), $component, $input);
         }
-        $result['tree']['mode'] = $entity_code.'-'.$component['id'];
-        $this->response->submenu->setMenu($entity_code.'-'.$component['id']);
-        
+        $result['tree']['mode'] = $entity_code . '-' . $component['id'];
+        $this->response->submenu->setMenu($entity_code . '-' . $component['id']);
+
         return $result;
     }
-    
-    protected static function entityTypes( $key = null ) {
-        $arr = array (
-            'widget' => fx::alang('Widgets','system'),
-            'component' => fx::alang('Components','system')
+
+    protected static function entityTypes($key = null)
+    {
+        $arr = array(
+            'widget'    => fx::alang('Widgets', 'system'),
+            'component' => fx::alang('Components', 'system')
         );
-        return ( empty($key) ? $arr : $arr[$key] );
+        return (empty($key) ? $arr : $arr[$key]);
     }
-    
-    public static function makeBreadcrumb($component, $action, $breadcrumb) {
+
+    public static function makeBreadcrumb($component, $action, $breadcrumb)
+    {
         // todo: psr0 need verify
         $entity_code = fx::getComponentNameByClass(get_class($component));
-    	$submenu = self::getComponentSubmenu($component);
+        $submenu = self::getComponentSubmenu($component);
         $submenu_first = current($submenu);
-    	$breadcrumb->addItem(self::entityTypes($entity_code), '#admin.'.$entity_code.'.all');
+        $breadcrumb->addItem(self::entityTypes($entity_code), '#admin.' . $entity_code . '.all');
         $breadcrumb->addItem($component['name'], $submenu_first['url']);
         if (isset($submenu[$action])) {
             $breadcrumb->addItem($submenu[$action]['title'], $submenu[$action]['url']);
         }
     }
-    
-    public function addSave($input) {
+
+    public function addSave($input)
+    {
         $result = array('status' => 'ok');
 
         $data['name'] = trim($input['name']);
-        
-        
+
+
         $data['keyword'] = $this->getFullKeyword($input);
-        
-        
+
+
         $data['parent_id'] = $input['parent_id'];
         $data['item_name'] = $input['item_name'];
-        
-        $res_create=fx::data('component')->createFull($data);
+
+        $res_create = fx::data('component')->createFull($data);
         if (!$res_create['validate_result']) {
             $result['status'] = 'error';
             $result['errors'] = $res_create['validate_errors'];
             return $result;
         }
-        if ($res_create['status']=='successful') {
-            $component=$res_create['component'];
-            $result['reload'] = '#admin.component.edit('.$component['id'].',settings)';
+        if ($res_create['status'] == 'successful') {
+            $component = $res_create['component'];
+            $result['reload'] = '#admin.component.edit(' . $component['id'] . ',settings)';
         } else {
             $result['status'] = 'error';
             $result['text'][] = $res_create['error'];
@@ -301,9 +307,10 @@ class Component extends Admin {
 
         return $result;
     }
-    
-    public function editSave($input){
-        if (! ($component = fx::data('component', $input['id'])) ) {
+
+    public function editSave($input)
+    {
+        if (!($component = fx::data('component', $input['id']))) {
             return;
         }
         if (!empty($input['name'])) {
@@ -313,17 +320,18 @@ class Component extends Admin {
         $component['description'] = $input['description'];
         $component['item_name'] = $input['item_name'];
         $component->save();
-        if ($component['vendor']=='std') {
-            fx::hooks()->create(null,'component_update',array('component'=>$component));
+        if ($component['vendor'] == 'std') {
+            fx::hooks()->create(null, 'component_update', array('component' => $component));
         }
         return array('status' => 'ok');
     }
 
-    public function importSave($input) {
+    public function importSave($input)
+    {
         $file = $input['importfile'];
         if (!$file) {
             $result = array('status' => 'error');
-            $result['text'][] = fx::alang('Error creating a temporary file','system');
+            $result['text'][] = fx::alang('Error creating a temporary file', 'system');
         }
 
         $result = array('status' => 'ok');
@@ -339,38 +347,31 @@ class Component extends Admin {
         return $result;
     }
 
-    public function fields($component) {
-        $controller = new Field(
-             array(
-                 'entity' => $component,
-                 'do_return' => true
-            ),
-            'items'
-        );
+    public function fields($component)
+    {
+        $controller = new Field(array(
+            'entity'    => $component,
+            'do_return' => true
+        ), 'items');
         $this->response->submenu->setSubactive('fields');
         return $controller->process();
     }
-    
-    public function addField($component) {
-        $controller = new Field(
-            array(
-                'to_id' => $component['id'],
-                'to_entity' => 'component',
-                'do_return' => true
-            ),
-            'add'
-        );
-        $this->response->breadcrumb->addItem(
-            fx::alang('Fields', 'system'),
-            '#admin.component.edit('.$component['id'].',fields)'
-        );
-        $this->response->breadcrumb->addItem(
-            fx::alang('Add new field', 'system')
-        );
+
+    public function addField($component)
+    {
+        $controller = new Field(array(
+            'to_id'     => $component['id'],
+            'to_entity' => 'component',
+            'do_return' => true
+        ), 'add');
+        $this->response->breadcrumb->addItem(fx::alang('Fields', 'system'),
+            '#admin.component.edit(' . $component['id'] . ',fields)');
+        $this->response->breadcrumb->addItem(fx::alang('Add new field', 'system'));
         return $controller->process();
     }
-    
-    public function templates($component, $input) {
+
+    public function templates($component, $input)
+    {
         // todo: psr0 need verify
         $ctr_type = fx::getComponentNameByClass(get_class($component));
         $this->response->submenu->setSubactive('templates');
@@ -378,33 +379,31 @@ class Component extends Admin {
             return $this->template(array('template_full_id' => $input['params'][2]));
         }
         $templates = $this->getComponentTemplates($component);
-        $visuals = fx::data('infoblock_visual')->
-                where('template', $templates->getValues('full_id'))->
-                all();
+        $visuals = fx::data('infoblock_visual')->where('template', $templates->getValues('full_id'))->all();
         $field = array('type' => 'list', 'filter' => true);
         $field['labels'] = array(
-            'name' => fx::alang('Name', 'system'),
-            'action' => fx::alang('Action', 'system'),
+            'name'      => fx::alang('Name', 'system'),
+            'action'    => fx::alang('Action', 'system'),
             'inherited' => fx::alang('Inherited', 'system'),
-            'source' => fx::alang('Source', 'system'),
-            'file' => fx::alang('File', 'system'),
-            'used' => fx::alang('Used', 'system')
+            'source'    => fx::alang('Source', 'system'),
+            'file'      => fx::alang('File', 'system'),
+            'used'      => fx::alang('Used', 'system')
         );
         $field['values'] = array();
         foreach ($templates as $tpl) {
             $r = array(
-                'id' => $tpl['full_id'],
-                'name' => array(
+                'id'     => $tpl['full_id'],
+                'name'   => array(
                     'name' => $tpl['name'],
-                    'url' => $ctr_type.'.edit('.$component['id'].',templates,'.$tpl['full_id'].')', 
+                    'url'  => $ctr_type . '.edit(' . $component['id'] . ',templates,' . $tpl['full_id'] . ')',
                 ),
                 'action' => preg_replace("~^.+\:~", '', $tpl['of']), // todo: psr0 verify with multiple fx:of
-                'used' => count($visuals->find('template', $tpl['full_id']))
+                'used'   => count($visuals->find('template', $tpl['full_id']))
             );
             $owner_ctr_match = null;
             preg_match("~^(component_|widget_)?(.+?)\..+$~", $tpl['of'], $owner_ctr_match);
             $owner_ctr = $owner_ctr_match ? $owner_ctr_match[2] : null;
-            
+
             if ($owner_ctr == $component['keyword']) {
                 $r['inherited'] = ' ';
             } else {
@@ -413,24 +412,21 @@ class Component extends Admin {
             // example: theme.floxim.phototeam:featured_news_list
             if (preg_match("#^theme\.(\w+)\.(\w+)\:.+$#i", $tpl['full_id'], $match)) {
                 // todo: psr0 need use $match[1] for define vendor template
-                $r['source'] =
-                    fx::data('layout')->
-                        where('keyword', $match[1] . '.' . $match[2])->
-                        one()->
-                        get('name') . ' (layout)';
+                $r['source'] = fx::data('layout')->where('keyword',
+                        $match[1] . '.' . $match[2])->one()->get('name') . ' (layout)';
             } else {
                 // todo: psr0 need verify
                 $c_parts = fx::getComponentParts($tpl['full_id']);
-                $r['source'] =
-                    fx::data($ctr_type, $c_parts['component'])->get('name');
+                $r['source'] = fx::data($ctr_type, $c_parts['component'])->get('name');
             }
             $r['file'] = fx::path()->toHttp($tpl['file']);
             $field['values'][] = $r;
         }
         return array('fields' => array('templates' => $field));
-    } 
-    
-    protected function getTemplateInfo($full_id) {
+    }
+
+    protected function getTemplateInfo($full_id)
+    {
         $tpl = fx::template($full_id);
         if (!$tpl) {
             return;
@@ -445,18 +441,19 @@ class Component extends Admin {
         $res['hash'] = md5($source);
         $res['full'] = $source;
         $offset = explode(',', $info['offset']);
-        $length = $offset[1]-$offset[0];
+        $length = $offset[1] - $offset[0];
         $res['source'] = mb_substr($source, $offset[0], $length);
         $res['start'] = $offset[0];
         $res['length'] = $length;
         return $res;
     }
-    
-    public function template($input) {
+
+    public function template($input)
+    {
         $template_full_id = $input['template_full_id'];
         $this->response->breadcrumb->addItem($template_full_id);
         $info = $this->getTemplateInfo($template_full_id);
-        if (!$info){
+        if (!$info) {
             return;
         }
         $fields = array(
@@ -466,10 +463,10 @@ class Component extends Admin {
             $this->ui->hidden('template_full_id', $template_full_id),
             $this->ui->hidden('hash', $info['hash']),
             'source' => array(
-                'type' => 'text',
+                'type'  => 'text',
                 'value' => $info['source'],
-                'name' => 'source',
-                'code' => 'htmlmixed'
+                'name'  => 'source',
+                'code'  => 'htmlmixed'
             )
         );
         $this->response->addFields($fields);
@@ -478,8 +475,9 @@ class Component extends Admin {
             return $this->templateSave($input);
         }
     }
-    
-    public function templateSave($input) {
+
+    public function templateSave($input)
+    {
         $info = $this->getTemplateInfo($input['template_full_id']);
         if (!$info) {
             return;
@@ -489,16 +487,17 @@ class Component extends Admin {
         }
         $res = mb_substr($info['full'], 0, $info['start']);
         $res .= $input['source'];
-        $res .= mb_substr($info['full'], $info['start']+$info['length']);
+        $res .= mb_substr($info['full'], $info['start'] + $info['length']);
         fx::files()->writefile($info['file'], $res);
         return array('status' => 'ok');
     }
-    
-    protected function getParentComponentField($component = null) {
+
+    protected function getParentComponentField($component = null)
+    {
         $field = array(
-            'label' => fx::alang('Parent component','system'),
-            'name' => 'parent_id',
-            'type' => 'select',
+            'label'  => fx::alang('Parent component', 'system'),
+            'name'   => 'parent_id',
+            'type'   => 'select',
             'values' => array() //array('' => fx::alang('--no--','system'))
         );
         $c_finder = fx::data('component');
@@ -510,108 +509,122 @@ class Component extends Admin {
         return $field;
     }
 
-    public function settings($component) {
-        $fields[] = array('label' => fx::alang('Keyword:','system'), 'disabled' => 'disabled', 'value' => $component['keyword']);
-        $fields[] = array('label' => fx::alang('Component name','system'), 'name' => 'name', 'value' => $component['name']);
-        $fields[] = array('label' => fx::alang('Name of entity created by the component','system'), 'name' => 'item_name', 'value' => $component['item_name']);
-        $fields[] = array('label' => fx::alang('Description','system'), 'name' => 'description', 'value' => $component['description'], 'type' => 'text');
-        
+    public function settings($component)
+    {
+        $fields[] = array(
+            'label'    => fx::alang('Keyword:', 'system'),
+            'disabled' => 'disabled',
+            'value'    => $component['keyword']
+        );
+        $fields[] = array(
+            'label' => fx::alang('Component name', 'system'),
+            'name'  => 'name',
+            'value' => $component['name']
+        );
+        $fields[] = array(
+            'label' => fx::alang('Name of entity created by the component', 'system'),
+            'name'  => 'item_name',
+            'value' => $component['item_name']
+        );
+        $fields[] = array(
+            'label' => fx::alang('Description', 'system'),
+            'name'  => 'description',
+            'value' => $component['description'],
+            'type'  => 'text'
+        );
+
         //$fields []= $this->_get_parent_component_field($component);
 
         $fields[] = array('type' => 'hidden', 'name' => 'phase', 'value' => 'settings');
         $fields[] = array('type' => 'hidden', 'name' => 'id', 'value' => $component['id']);
-        
+
         $this->response->submenu->setSubactive('settings');
         $fields[] = $this->ui->hidden('entity', 'component');
         $fields[] = $this->ui->hidden('action', 'edit_save');
 
         return array('fields' => $fields, 'form_button' => array('save'));
     }
-    
-    public function editField($component) {
-    	$controller = new Field();
-    	$field_id = $this->input['params'][2];
-    	
-    	$field = fx::data('field', $field_id);
-    	
-    	$result = $controller->edit(array('id' => $field_id));
-    	$result['form_button'] = array('save');
-    	
-    	$submenu = self::getComponentSubmenu($component);
-    	$this->response->breadcrumb->addItem($submenu['fields']['title'], $submenu['fields']['url']);
-    	
-    	$this->response->breadcrumb->addItem($field['name']);
-    	
-    	$this->response->submenu->setSubactive('field-'.$field_id);
-    	
-    	return $result;
+
+    public function editField($component)
+    {
+        $controller = new Field();
+        $field_id = $this->input['params'][2];
+
+        $field = fx::data('field', $field_id);
+
+        $result = $controller->edit(array('id' => $field_id));
+        $result['form_button'] = array('save');
+
+        $submenu = self::getComponentSubmenu($component);
+        $this->response->breadcrumb->addItem($submenu['fields']['title'], $submenu['fields']['url']);
+
+        $this->response->breadcrumb->addItem($field['name']);
+
+        $this->response->submenu->setSubactive('field-' . $field_id);
+
+        return $result;
     }
-    
-    public function items($component, $input) {
+
+    public function items($component, $input)
+    {
         $this->response->submenu->setSubactive('items');
         //$this->response->breadcrumb->add_item(fx::alang('Items'));
-        $ctr = new Content(
-                array(
-                    'content_type' => $component['keyword'],
-                    'do_return' => true
-                ),
-                'all'
-        );
+        $ctr = new Content(array(
+            'content_type' => $component['keyword'],
+            'do_return'    => true
+        ), 'all');
         $res = $ctr->process();
         $this->response->addButtons(array(
             array(
-                'key' => "add", 
-                'title' => 'Add new '.$component['keyword'],
-                'url' => '#admin.component.edit('.$component['id'].',add_item)'
+                'key'   => "add",
+                'title' => 'Add new ' . $component['keyword'],
+                'url'   => '#admin.component.edit(' . $component['id'] . ',add_item)'
             ),
             "delete"
         ));
         foreach ($res['fields'][0]['values'] as &$item) {
-            $url = '#admin.component.edit('.$component['id'].',edit_item,'.$item['id'].')';
+            $url = '#admin.component.edit(' . $component['id'] . ',edit_item,' . $item['id'] . ')';
             $item['id'] = array('url' => $url, 'name' => $item['id']);
             //$item['id'] = '<a href="">'.$item['id'].'</a>';
         }
         return $res;
     }
-    
-    public function addItem($component, $input) {
-        $items_url = '#admin.component.edit('.$component['id'].',items)';
+
+    public function addItem($component, $input)
+    {
+        $items_url = '#admin.component.edit(' . $component['id'] . ',items)';
         $this->response->submenu->setSubactive('items');
         $this->response->breadcrumb->addItem(fx::alang('Items'), $items_url);
         $this->response->breadcrumb->addItem(fx::alang('Add'));
-        $ctr = new Content(
-                array(
-                    'content_type' => $component['keyword'],
-                    'mode' => 'backoffice',
-                    'reload_url' => $items_url,
-                    'do_return' => true
-                ),
-                'add_edit'
-        );
-        $res = $ctr->process();
-        return $res;
-    }
-    
-    public function editItem($component, $input) {
-        $this->response->submenu->setSubactive('items');
-        $items_url = '#admin.component.edit('.$component['id'].',items)';
-        $this->response->breadcrumb->addItem(fx::alang('Items'), $items_url);
-        $this->response->breadcrumb->addItem(fx::alang('Edit'));
-        $ctr = new Content(
-                array(
-                    'content_type' => $component['keyword'],
-                    'content_id' => $input['params'][2],
-                    'reload_url' => $items_url,
-                    'mode' => 'backoffice',
-                    'do_return' => true
-                ),
-                'add_edit'
-        );
+        $ctr = new Content(array(
+            'content_type' => $component['keyword'],
+            'mode'         => 'backoffice',
+            'reload_url'   => $items_url,
+            'do_return'    => true
+        ), 'add_edit');
         $res = $ctr->process();
         return $res;
     }
 
-    public function deleteSave($input) {
+    public function editItem($component, $input)
+    {
+        $this->response->submenu->setSubactive('items');
+        $items_url = '#admin.component.edit(' . $component['id'] . ',items)';
+        $this->response->breadcrumb->addItem(fx::alang('Items'), $items_url);
+        $this->response->breadcrumb->addItem(fx::alang('Edit'));
+        $ctr = new Content(array(
+            'content_type' => $component['keyword'],
+            'content_id'   => $input['params'][2],
+            'reload_url'   => $items_url,
+            'mode'         => 'backoffice',
+            'do_return'    => true
+        ), 'add_edit');
+        $res = $ctr->process();
+        return $res;
+    }
+
+    public function deleteSave($input)
+    {
 
         $es = $this->entity_type;
         $result = array('status' => 'ok');
@@ -623,10 +636,10 @@ class Component extends Admin {
 
         foreach ($ids as $id) {
             try {
-                $component=fx::data($es, $id);
+                $component = fx::data($es, $id);
                 $component->delete();
-                if ($component['vendor']=='std') {
-                    fx::hooks()->create(null,'component_delete',array('component'=>$component));
+                if ($component['vendor'] == 'std') {
+                    fx::hooks()->create(null, 'component_delete', array('component' => $component));
                 }
             } catch (\Exception $e) {
                 $result['status'] = 'error';

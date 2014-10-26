@@ -2,25 +2,29 @@
 
 namespace Floxim\Floxim\Field;
 
-class Image extends File {
+class Image extends File
+{
 
-    public function getJsField($content) {
+    public function getJsField($content)
+    {
         parent::getJsField($content);
         $this->_js_field['type'] = 'image';
 
         return $this->_js_field;
     }
 
-    public function getEditJsdata($content) {
+    public function getEditJsdata($content)
+    {
         parent::getEditJsdata($content);
 
         $this->_edit_jsdata['type'] = 'image';
         return $this->_edit_jsdata;
     }
-    
-    public function fakeValue() {
+
+    public function fakeValue()
+    {
         static $num = 1;
         $num = $num === 1 ? 2 : 1;
-        return '/vendor/Floxim/Floxim/Admin/style/images/stub_'.$num.'.jpg';
+        return '/vendor/Floxim/Floxim/Admin/style/images/stub_' . $num . '.jpg';
     }
 }

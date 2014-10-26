@@ -2,11 +2,13 @@
 
 namespace Floxim\Floxim\Template;
 
-class TokenAttParser extends Fsm {
-    public static function getAtts(&$source) {
+class TokenAttParser extends Fsm
+{
+    public static function getAtts(&$source)
+    {
         $p = new self();
         $res = $p->parse($source);
-        $source = !empty($p->modifiers) ? ' |'.$p->modifiers : '';
+        $source = !empty($p->modifiers) ? ' |' . $p->modifiers : '';
         return $res;
     }
 
@@ -19,7 +21,8 @@ class TokenAttParser extends Fsm {
 
     public $modifiers = '';
 
-    public function __construct() {
+    public function __construct()
+    {
         //$this->debug = true;
         $this->init_state = self::INIT;
         $this->addRule(self::INIT, '~.+=$~', self::ATT_NAME, 'readAttName');
@@ -28,27 +31,31 @@ class TokenAttParser extends Fsm {
         $this->addRule(self::INIT, '|', self::MODIFIERS);
     }
 
-    public function readAttName($ch) {
+    public function readAttName($ch)
+    {
         $this->c_att = array(
-            'name' => trim($ch, '='),
+            'name'  => trim($ch, '='),
             'value' => ''
         );
     }
 
-    public function startAttVal($ch) {
+    public function startAttVal($ch)
+    {
         $this->c_att['quot'] = $ch;
     }
 
-    public function endAttVal($ch) {
+    public function endAttVal($ch)
+    {
         if ($ch !== $this->c_att['quot']) {
             return false;
         }
-        $this->c_att['value'] = str_replace("\\".$this->c_att['quot'], $this->c_att['quot'], $this->c_att['value']);
+        $this->c_att['value'] = str_replace("\\" . $this->c_att['quot'], $this->c_att['quot'], $this->c_att['value']);
         $this->res [$this->c_att['name']] = $this->c_att['value'];
     }
 
-    public function defaultCallback($ch) {
-        switch($this->state) {
+    public function defaultCallback($ch)
+    {
+        switch ($this->state) {
             case self::ATT_VAL:
                 $this->c_att['value'] .= $ch;
                 break;

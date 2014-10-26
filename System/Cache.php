@@ -2,18 +2,22 @@
 
 namespace Floxim\Floxim\System;
 
-class Cache {
+class Cache
+{
     protected $_local_cache = array();
-    
-    public function get($key) {
+
+    public function get($key)
+    {
         return isset($this->_local_cache[$key]) ? $this->_local_cache[$key] : null;
     }
-    
-    public function set($key, $value) {
+
+    public function set($key, $value)
+    {
         $this->_local_cache[$key] = $value;
     }
-    
-    public function drop($key) {
+
+    public function drop($key)
+    {
         unset($this->_local_cache[$key]);
     }
 }

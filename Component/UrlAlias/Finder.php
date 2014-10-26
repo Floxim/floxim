@@ -15,40 +15,41 @@ use Floxim\Floxim\System\Fx as fx;
  * @access   public
  * @see      http://floxim.org
  */
-class Finder extends System\Data {
+class Finder extends System\Data
+{
     /**
      * Get alias by id
-     * 
+     *
      * @param integer alias id
-     * 
+     *
      * @return object alias
      */
-    public function getById($id) {
+    public function getById($id)
+    {
         return $this->where('id', $id)->one();
     }
 
     /**
      * Get all aliases by related page id
-     * 
+     *
      * @param integer related page id
-     * 
+     *
      * @return object aliases
      */
-    public function getAllByPageId($page_id) {
-        return $this->where('page_id', $page_id)->
-            all();
+    public function getAllByPageId($page_id)
+    {
+        return $this->where('page_id', $page_id)->all();
     }
 
     /**
      * Get alias by related page id and "is_original" flag
-     * 
+     *
      * @param integer related page id
-     * 
+     *
      * @return object alias
      */
-    public function getOriginalByPageId($page_id) {
-        return $this->where('page_id', $page_id)->
-            where('is_original', 1)->
-            one();
+    public function getOriginalByPageId($page_id)
+    {
+        return $this->where('page_id', $page_id)->where('is_original', 1)->one();
     }
 }

@@ -2,21 +2,23 @@
 
 namespace Floxim\Floxim\System\Console;
 
-class Manager {
+class Manager
+{
 
     protected $scriptName;
     protected $paths = array();
     protected $commands = array();
 
-    public function run($args = null) {
+    public function run($args = null)
+    {
         if (!$args) {
             $args = isset($_SERVER['argv']) ? $_SERVER['argv'] : array(__FILE__);
         } elseif (is_scalar($args)) {
             $arg_string = $args;
             $args = array(\Floxim\Floxim\System\Fx::path()->fileName(__FILE__));
-            
+
             foreach (self::parseArgs($arg_string) as $arg) {
-                $args []= $arg;
+                $args [] = $arg;
             }
         }
         $this->scriptName = $args[0];
@@ -34,8 +36,9 @@ class Manager {
         }
         return $command->run($args);
     }
-    
-    protected static function parseArgs($s) {
+
+    protected static function parseArgs($s)
+    {
         $parts = preg_split('~([\"\\\'])(.+?)(\1)~', $s, -1, PREG_SPLIT_DELIM_CAPTURE);
         $res = array();
         $c_quot = null;
@@ -50,26 +53,28 @@ class Manager {
                 continue;
             }
             if ($c_quot) {
-                $res []= $p;
+                $res [] = $p;
                 continue;
             }
             $sub_parts = explode(" ", $p);
             foreach ($sub_parts as $sp) {
                 $sp = trim($sp);
                 if (!empty($sp)) {
-                    $res []= trim($sp);
+                    $res [] = trim($sp);
                 }
             }
         }
         return $res;
     }
 
-    public function addPath($path) {
+    public function addPath($path)
+    {
         $this->paths[] = rtrim(realpath($path), '/') . '/';
         array_unique($this->paths);
     }
 
-    public function addCommands($commands) {
+    public function addCommands($commands)
+    {
         if (is_array($commands)) {
             foreach ($commands as $name => $params) {
                 $this->addCommand($name, $params);
@@ -77,23 +82,28 @@ class Manager {
         }
     }
 
-    public function addCommand($name, $params) {
+    public function addCommand($name, $params)
+    {
         $this->commands[$name] = $params;
     }
 
-    public function getCommand($name) {
+    public function getCommand($name)
+    {
         return isset($this->commands[$name]) ? $this->commands[$name] : null;
     }
 
-    public function getCommands() {
+    public function getCommands()
+    {
         return $this->commands;
     }
 
-    public function getScriptName() {
+    public function getScriptName()
+    {
         return $this->scriptName;
     }
 
-    public function createCommand($name) {
+    public function createCommand($name)
+    {
         $name = strtolower($name);
 
         if ($command = $this->getCommand($name)) {

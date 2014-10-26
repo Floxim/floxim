@@ -2,10 +2,12 @@
 
 namespace Floxim\Floxim\System;
 
-class Eventmanager {
+class Eventmanager
+{
     protected $_listeners = array();
 
-    public function listen($event_name, $callback) {
+    public function listen($event_name, $callback)
+    {
         if (preg_match("~,~", $event_name)) {
             $event_name = explode(",", $event_name);
         }
@@ -18,14 +20,15 @@ class Eventmanager {
         if ($event['name'] == '*') {
             return;
         }
-        $this->_listeners[]= array(
-            'event_name' => $event['name'],
+        $this->_listeners[] = array(
+            'event_name'  => $event['name'],
             'event_scope' => $event['scope'],
-            'callback' => $callback
+            'callback'    => $callback
         );
     }
-    
-    protected function parseEventName($event_name) {
+
+    protected function parseEventName($event_name)
+    {
         $parts = explode(".", $event_name);
         if (!isset($parts[1])) {
             $parts[1] = 'global';
@@ -36,8 +39,9 @@ class Eventmanager {
         }
         return array('name' => $event_name, 'scope' => $event_scope);
     }
-    
-    public function unlisten($event_name) {
+
+    public function unlisten($event_name)
+    {
         $event = $this->parseEventName($event_name);
         foreach ($this->_listeners as $lst_num => $lst) {
             if ($event['name'] == '*' || $event['name'] == $lst['event_name']) {
@@ -47,15 +51,16 @@ class Eventmanager {
             }
         }
     }
-    
-    public function trigger($e, $params = null) {
+
+    public function trigger($e, $params = null)
+    {
         if (is_string($e)) {
             $e = new Event($e, $params);
         }
         foreach ($this->_listeners as $lst) {
             if ($lst['event_name'] == $e->name) {
                 $callback_res = $lst['callback']($e);
-                if ($callback_res === false){
+                if ($callback_res === false) {
                     return;
                 }
             }

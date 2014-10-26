@@ -2,7 +2,8 @@
 
 namespace Floxim\Floxim\System;
 
-class Db extends \PDO {
+class Db extends \PDO
+{
 
     // information about the last error
     protected $last_error;
@@ -16,17 +17,19 @@ class Db extends \PDO {
     // the total number of requests
     protected $num_queries;
 
-    public function __construct() {
+    public function __construct()
+    {
         try {
             parent::__construct(fx::config('db.dsn'), fx::config('db.user'), fx::config('db.password'));
         } catch (\Exception $e) {
             echo $e->getMessage();
         }
         $prefix = fx::config('db.prefix');
-        $this->prefix = $prefix ? $prefix.'_' : '';
+        $this->prefix = $prefix ? $prefix . '_' : '';
     }
 
-    public function escape($str) {
+    public function escape($str)
+    {
         return addslashes($str);
         //$str = $this->quote($str);
         // hack! what for???
@@ -34,14 +37,16 @@ class Db extends \PDO {
         return $str;
     }
 
-    public function prepare($str) {
+    public function prepare($str)
+    {
         return $this->escape($str);
     }
 
     protected static $q_time = 0;
     protected static $q_count = 0;
-    
-    public function prepareQuery($statement) {
+
+    public function prepareQuery($statement)
+    {
         if (is_array($statement)) {
             $query = call_user_func_array('sprintf', $statement);
         } else {
@@ -49,10 +54,11 @@ class Db extends \PDO {
         }
         return trim($this->replacePrefix($query));
     }
-    
-    public function query($statement) {
+
+    public function query($statement)
+    {
         self::$q_count++;
-    	$start_time = microtime(true);
+        $start_time = microtime(true);
 
         $statement = $this->prepareQuery($statement);
 
@@ -64,11 +70,11 @@ class Db extends \PDO {
         $this->last_query = $statement;
 
         if (!$this->last_result) {
-            
+
             $this->last_error = $this->errorInfo();
-            
+
             throw new \Exception(
-                "Query: " . $statement . "\n".
+                "Query: " . $statement . "\n" .
                 "Error: " . $this->last_error[2]
             );
         }
@@ -79,16 +85,17 @@ class Db extends \PDO {
         $q_time = $end_time - $start_time;
         self::$q_time += $q_time;
         fx::log(
-            '#'.self::$q_count, 
-            'q_time: '.$q_time, 
-            'q_total: '.self::$q_time,
+            '#' . self::$q_count,
+            'q_time: ' . $q_time,
+            'q_total: ' . self::$q_time,
             $statement//,
-            //debug_backtrace()
+        //debug_backtrace()
         );
         return $this->last_result;
     }
 
-    public function getRow($query = null) {
+    public function getRow($query = null)
+    {
         $res = array();
 
         if (!$query) {
@@ -103,7 +110,8 @@ class Db extends \PDO {
         return $res;
     }
 
-    public function getResults($query = null, $result_type = \PDO::FETCH_ASSOC) {
+    public function getResults($query = null, $result_type = \PDO::FETCH_ASSOC)
+    {
         $res = array();
 
         if (!$query) {
@@ -116,23 +124,26 @@ class Db extends \PDO {
         }
         return $res;
     }
-    
-    public function getIndexedResults($query, $index = 'id') {
+
+    public function getIndexedResults($query, $index = 'id')
+    {
         $res = array();
-        if ( ($result = $this->query($query))) {
-            while ( ($row = $result->fetch(\PDO::FETCH_ASSOC))) {
-                $res[ $row[$index] ] = $row;
+        if (($result = $this->query($query))) {
+            while (($row = $result->fetch(\PDO::FETCH_ASSOC))) {
+                $res[$row[$index]] = $row;
             }
         }
         return $res;
     }
-    
-    public function getCollection($query = null) {
+
+    public function getCollection($query = null)
+    {
         $res = $this->getResults($query, \PDO::FETCH_ASSOC);
         return new Collection($res);
     }
 
-    public function getCol ( $query = null, $col_num = 0 ) {
+    public function getCol($query = null, $col_num = 0)
+    {
         $res = array();
 
         if (!$query) {
@@ -140,7 +151,7 @@ class Db extends \PDO {
         } else {
             if (($result = $this->query($query))) {
                 while ($row = $result->fetch(\PDO::FETCH_NUM)) {
-                    $res[] = $row[ $col_num];
+                    $res[] = $row[$col_num];
                 }
                 $this->last_result_array = $result->fetchAll(\PDO::FETCH_ASSOC);
             }
@@ -149,9 +160,10 @@ class Db extends \PDO {
         return $res;
     }
 
-    public function getVar($query = null) {
+    public function getVar($query = null)
+    {
         $res = array();
-        
+
         if (!$query) {
             $res = $this->last_result_array;
         } elseif (($result = $this->query($query))) {
@@ -167,31 +179,37 @@ class Db extends \PDO {
         return $res;
     }
 
-    public function rowCount() {
+    public function rowCount()
+    {
         return $this->last_result ? $this->last_result->rowCount() : 0;
     }
 
-    public function insertId() {
+    public function insertId()
+    {
         return $this->lastInsertId();
     }
 
-    public function isError() {
-        return!(bool) $this->last_result;
+    public function isError()
+    {
+        return !(bool)$this->last_result;
     }
 
-    public function getLastError() {
+    public function getLastError()
+    {
         return $this->last_error;
     }
-    
-    protected function replacePrefix($query) {
-        if ( $this->prefix ) {
+
+    protected function replacePrefix($query)
+    {
+        if ($this->prefix) {
             $query = preg_replace('/{{(.*?)}}/', $this->prefix . '\1', $query);
         }
         return $query;
     }
 
-    public function columnExists($table2check, $column) {
-        $sql = "SHOW COLUMNS FROM {{".$table2check."}}";
+    public function columnExists($table2check, $column)
+    {
+        $sql = "SHOW COLUMNS FROM {{" . $table2check . "}}";
         foreach ($this->getCol($sql) as $column_name) {
             if ($column_name == $column) {
                 return true;
@@ -199,12 +217,13 @@ class Db extends \PDO {
         }
         return false;
     }
-    
+
     /**
      * get the sql code of the last executed query
      * @return string
      */
-    public function getLastQuery() {
+    public function getLastQuery()
+    {
         return $this->last_query;
     }
 

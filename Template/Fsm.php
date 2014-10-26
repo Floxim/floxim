@@ -2,45 +2,50 @@
 
 namespace Floxim\Floxim\Template;
 
-class Fsm {
+class Fsm
+{
     protected $rules = array();
     protected $res = array();
     public $debug = false;
-    
+
     const STATE_ANY = 0;
     public $state = null;
     public $prev_state = null;
     public $state_stack = array();
-    
+
     const RULE_CHAR = 1;
     const RULE_REGEXP = 2;
     const RULE_ARRAY = 3;
-    
-    public function pushState($state) {
-        $this->state_stack []= $this->state;
+
+    public function pushState($state)
+    {
+        $this->state_stack [] = $this->state;
         $this->setState($state);
     }
-    
-    public function setState($state) {
+
+    public function setState($state)
+    {
         if ($state === $this->state) {
             return;
         }
         $this->prev_state = $this->state;
         $this->state = $state;
     }
-    
-    public function popState() {
+
+    public function popState()
+    {
         if (count($this->state_stack) == 0) {
             return null;
         }
         $this->setState(array_pop($this->state_stack));
         return $this->state;
     }
-    
+
     protected $any_rules = array();
 
 
-    public function addRule($first_state, $char, $new_state, $callback = null) {
+    public function addRule($first_state, $char, $new_state, $callback = null)
+    {
         if ($callback && !is_callable($callback)) {
             if (is_string($callback) && method_exists($this, $callback)) {
                 $callback = array($this, $callback);
@@ -51,11 +56,11 @@ class Fsm {
         if (!$callback) {
             $callback = array($this, 'defaultCallback');
         }
-        
-        if (!is_array($first_state)){
+
+        if (!is_array($first_state)) {
             $first_state = array($first_state);
         }
-        
+
         if (is_array($char)) {
             $rule_type = self::RULE_ARRAY;
         } elseif (preg_match('~^\~.+\~[ismgu]*$~', $char)) {
@@ -63,30 +68,31 @@ class Fsm {
         } else {
             $rule_type = self::RULE_CHAR;
         }
-        
+
         foreach ($first_state as $c_first_state) {
             $rule = array(
-                $char, 
-                $new_state, 
-                $callback, 
+                $char,
+                $new_state,
+                $callback,
                 $rule_type
             );
             if ($c_first_state === self::STATE_ANY) {
-                $this->any_rules []= $rule;
+                $this->any_rules [] = $rule;
                 foreach (array_keys($this->rules) as $existing_state) {
-                    $this->rules[$existing_state][]= $rule;
+                    $this->rules[$existing_state][] = $rule;
                 }
                 continue;
             }
-            
+
             if (!isset($this->rules[$c_first_state])) {
                 $this->rules[$c_first_state] = $this->any_rules;
             }
-            $this->rules [$c_first_state] []= $rule;
+            $this->rules [$c_first_state] [] = $rule;
         }
     }
-    
-    public function parse($string) {
+
+    public function parse($string)
+    {
         $this->state_stack = array();
         $this->prev_state = null;
         $this->position = 0;
@@ -95,15 +101,16 @@ class Fsm {
         if ($this->debug) {
             fx::debug($string, $this->parts);
         }
-        while ( ($ch = current($this->parts)) !== false) {
+        while (($ch = current($this->parts)) !== false) {
             $this->position += mb_strlen($ch);
             $this->step($ch);
             next($this->parts);
         }
         return $this->res;
     }
-    
-    public function getNext($count = 1) {
+
+    public function getNext($count = 1)
+    {
         $moved = 0;
         $res = array();
         for ($i = 0; $i < $count; $i++) {
@@ -112,7 +119,7 @@ class Fsm {
                 end($this->parts);
                 break;
             }
-            $res[]= $item;
+            $res[] = $item;
             $moved++;
         }
         for ($i = 0; $i < $moved; $i++) {
@@ -120,8 +127,9 @@ class Fsm {
         }
         return $res;
     }
-    
-    public function getPrev($count = 1) {
+
+    public function getPrev($count = 1)
+    {
         $moved = 0;
         $res = array();
         for ($i = 0; $i < $count; $i++) {
@@ -130,7 +138,7 @@ class Fsm {
                 reset($this->parts);
                 break;
             }
-            $res[]= $item;
+            $res[] = $item;
             $moved++;
         }
         for ($i = 0; $i < $moved; $i++) {
@@ -140,14 +148,15 @@ class Fsm {
     }
 
 
-    public function step($ch) {
+    public function step($ch)
+    {
         $callback_res = false;
         if (!isset($this->rules[$this->state])) {
             $this->defaultCallback($ch);
             return false;
         }
-        
-        foreach($this->rules[$this->state] as $rule) {
+
+        foreach ($this->rules[$this->state] as $rule) {
             list($rule_val, $new_state, $callback, $rule_type) = $rule;
             if (
                 ($rule_type == self::RULE_CHAR && $ch != $rule_val) ||
@@ -161,7 +170,7 @@ class Fsm {
                 continue;
             }
             if ($new_state) {
-                $this->setState($new_state);   
+                $this->setState($new_state);
             }
             return;
         }
@@ -169,22 +178,26 @@ class Fsm {
         $this->defaultCallback($ch);
         return $callback_res;
     }
-    
-    public function splitString($string) {
+
+    public function splitString($string)
+    {
         return preg_split(
-            $this->getSplitRegexp(), 
-            $string, 
-            -1, 
+            $this->getSplitRegexp(),
+            $string,
+            -1,
             PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY
         );
     }
-    
+
     public $split_regexp = '~(.)~';
-    public function getSplitRegexp() {
+
+    public function getSplitRegexp()
+    {
         return $this->split_regexp;
     }
-    
-    public function defaultCallback($ch) {
-        
+
+    public function defaultCallback($ch)
+    {
+
     }
 }

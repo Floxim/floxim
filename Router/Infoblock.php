@@ -4,8 +4,10 @@ namespace Floxim\Floxim\Router;
 
 use Floxim\Floxim\System\Fx as fx;
 
-class Infoblock extends Base {
-    public function route($url = null, $context = null) {
+class Infoblock extends Base
+{
+    public function route($url = null, $context = null)
+    {
         if (!preg_match("~^/\~ib/(\d+|fake(?:\-\d+)?)@(\d+)$~", $url, $ib_info)) {
             return null;
         }
@@ -21,26 +23,26 @@ class Infoblock extends Base {
         $page_id = $ib_info[2];
         fx::env('page', $page_id);
         fx::env('ajax', true);
-        
+
         $page_infoblocks = fx::router('front')->getPageInfoblocks(
-            $page_id, 
+            $page_id,
             fx::env('layout')
         );
         fx::page()->setInfoblocks($page_infoblocks);
-        
-        
+
+
         // front end can try to reload the layout which is out of date
         // when updating from "layout settings" panel
         $infoblock = fx::data('infoblock', $ib_id);
         if ((!$infoblock && isset($_POST['infoblock_is_layout'])) || $infoblock->isLayout()) {
             $infoblock = fx::data('page', $page_id)->getLayoutInfoblock();
         }
-        
+
         fx::http()->status('200');
         $infoblock_overs = null;
         if (fx::isAdmin() && isset($_POST['override_infoblock'])) {
             $infoblock_overs = fx::input('post', 'override_infoblock');
-            if (is_string($infoblock_overs)){
+            if (is_string($infoblock_overs)) {
                 parse_str($infoblock_overs, $infoblock_overs);
                 $infoblock_overs = fx::input()->prepareSuperglobal($infoblock_overs);
             }

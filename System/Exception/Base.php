@@ -2,6 +2,7 @@
 
 namespace Floxim\Floxim\System\Exception;
 
-class Base extends \Exception {
+class Base extends \Exception
+{
 
 }

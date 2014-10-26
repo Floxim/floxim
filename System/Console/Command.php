@@ -2,23 +2,27 @@
 
 namespace Floxim\Floxim\System\Console;
 
-class Command {
+class Command
+{
 
     protected $defaultAction = 'index';
 
     private $name;
     private $manager;
 
-    public function __construct($name, $manager) {
+    public function __construct($name, $manager)
+    {
         $this->name = $name;
         $this->manager = $manager;
     }
 
-    public function init() {
+    public function init()
+    {
 
     }
 
-    public function run($args) {
+    public function run($args)
+    {
         list($action, $options, $args) = $this->resolveRequest($args);
         $methodName = 'do' . $action;
         if (!preg_match('/^\w+$/', $action) || !method_exists($this, $methodName)) {
@@ -51,15 +55,18 @@ class Command {
         return $method->invokeArgs($this, $params);
     }
 
-    public function getName() {
+    public function getName()
+    {
         return $this->name;
     }
 
-    public function getManager() {
+    public function getManager()
+    {
         return $this->manager;
     }
 
-    public function getHelp() {
+    public function getHelp()
+    {
         $help = 'Usage: ' . $this->getManager()->getScriptName() . ' ' . $this->getName();
         $options = $this->getOptionHelp();
         if (empty($options)) {
@@ -75,7 +82,8 @@ class Command {
         return $help;
     }
 
-    public function getOptionHelp() {
+    public function getOptionHelp()
+    {
         $options = array();
         $class = new \ReflectionClass(get_class($this));
         foreach ($class->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
@@ -106,7 +114,8 @@ class Command {
         return $options;
     }
 
-    protected function resolveRequest($args) {
+    protected function resolveRequest($args)
+    {
         $options = array(); // named parameters
         $params = array(); // unnamed parameters
         foreach ($args as $arg) {
@@ -133,12 +142,14 @@ class Command {
         return array($action, $options, $params);
     }
 
-    public function usageError($message) {
+    public function usageError($message)
+    {
         echo "Error: $message\n\n" . $this->getHelp() . "\n";
         exit(1);
     }
 
-    public function buildFileList($source_dir, $target_dir, $base_dir = '') {
+    public function buildFileList($source_dir, $target_dir, $base_dir = '')
+    {
         $list = array();
         $handle = opendir($source_dir);
         while (($file = readdir($handle)) !== false) {
@@ -151,7 +162,8 @@ class Command {
 
             $name = ($base_dir === '') ? $file : $base_dir . '/' . $file;
             $list[$name] = array(
-                'source' => $source_path, 'target' => $target_path
+                'source' => $source_path,
+                'target' => $target_path
             );
             if (is_dir($source_path)) {
                 $list = array_merge($list, $this->buildFileList($source_path, $target_path, $name));
@@ -161,7 +173,8 @@ class Command {
         return $list;
     }
 
-    public function copyFiles($fileList) {
+    public function copyFiles($fileList)
+    {
         $overwriteAll = false;
         foreach ($fileList as $name => $file) {
             $source = strtr($file['source'], '/\\', DIRECTORY_SEPARATOR . DIRECTORY_SEPARATOR);
@@ -212,7 +225,8 @@ class Command {
         }
     }
 
-    public function ensureDirectory($directory) {
+    public function ensureDirectory($directory)
+    {
         if (!is_dir($directory)) {
             $this->ensureDirectory(dirname($directory));
             echo " mkdir " . strtr($directory, '\\', '/') . "\n";

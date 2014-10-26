@@ -2,28 +2,32 @@
 
 namespace Floxim\Floxim\System;
 
-class Env {
+class Env
+{
     protected $current = array();
 
-  
-    public function set($var, $val) {
-        $setter = 'set'.fx::util()->underscoreToCamel($var);
+
+    public function set($var, $val)
+    {
+        $setter = 'set' . fx::util()->underscoreToCamel($var);
         if (method_exists($this, $setter)) {
             call_user_func(array($this, $setter), $val);
         } else {
             $this->current[$var] = $val;
         }
     }
-  
-    public function get($var) {
-        $getter = 'get'.fx::util()->underscoreToCamel($var);
+
+    public function get($var)
+    {
+        $getter = 'get' . fx::util()->underscoreToCamel($var);
         if (method_exists($this, $getter)) {
             return call_user_func(array($this, $getter));
         }
         return isset($this->current[$var]) ? $this->current[$var] : null;
     }
 
-    public function setSite ( $env ) {
+    public function setSite($env)
+    {
         $this->current['site'] = $env;
     }
 
@@ -31,74 +35,87 @@ class Env {
     /**
      * @return \Floxim\Floxim\System\Site
      */
-    public function getSite () {
+    public function getSite()
+    {
         if (!isset($this->current['site'])) {
             $this->current['site'] = fx::data('site')->getByHostName($_SERVER['HTTP_HOST'], 1);
         }
         return $this->current['site'];
     }
-    
-    public function getHost() {
+
+    public function getHost()
+    {
         if (!isset($this->current['host'])) {
             $this->current['host'] = $_SERVER['HTTP_HOST'];
         }
         return $this->current['host'];
     }
 
-    public function setAction ( $action ) {
+    public function setAction($action)
+    {
         $this->current['action'] = $action;
     }
 
-    public function getAction ( ) {
+    public function getAction()
+    {
         return $this->current['action'];
     }
 
-    public function setPage ( $page ) {
+    public function setPage($page)
+    {
         if (is_numeric($page)) {
             $page = fx::data('page', $page);
         }
         $this->current['page'] = $page;
     }
 
-    public function getPage ( ) {
+    public function getPage()
+    {
         return $this->current['page'];
     }
 
-    public function getPageId () {
+    public function getPageId()
+    {
         if (isset($this->current['page']) && is_object($this->current['page'])) {
-           return $this->current['page']->get('id');
+            return $this->current['page']->get('id');
         }
         if (isset($this->current['page_id'])) {
             $this->current['page'] = fx::data('page', $this->current['page_id']);
             return $this->current['page_id'];
         }
-        return NULL;
+        return null;
     }
 
-    public function getSiteId() {
+    public function getSiteId()
+    {
         return $this->getSite()->get('id');
     }
 
-    public function setUser ( $user ) {
+    public function setUser($user)
+    {
         $this->current['user'] = $user;
     }
 
-    public function getUser () {
+    public function getUser()
+    {
         if (!isset($this->current['user'])) {
             $this->current['user'] = \Floxim\Main\User\Entity::load();
         }
         return $this->current['user'];
     }
 
-    public function setMainContent ( $str ) {
+    public function setMainContent($str)
+    {
         $this->current['main_content'] = $str;
     }
 
-    public function getMainContent () {
+    public function getMainContent()
+    {
         return $this->current['main_content'];
     }
-  
-    public function getHomeId() {
+
+    public function getHomeId()
+    {
         if (!isset($this->current['home_id'])) {
             $site = $this->getSite();
             $home_page = fx::data('page')
@@ -109,12 +126,14 @@ class Env {
         }
         return $this->current['home_id'];
     }
-  
-    public function isAdmin() {
+
+    public function isAdmin()
+    {
         return ($user = $this->getUser()) ? $user->isAdmin() : false;
     }
-  
-    public function getLayout() {
+
+    public function getLayout()
+    {
         if (!$this->current['layout']) {
             $page_id = $this->getPageId();
             if ($page_id) {
@@ -132,32 +151,36 @@ class Env {
         }
         return $this->current['layout'];
     }
-    
-    public function getLayoutId() {
+
+    public function getLayoutId()
+    {
         return $this->getLayout();
     }
-    
+
     protected $current_template_stack = array();
-    
+
     /**
      * Add template object to global stack
      * @param Template $template
      */
-    public function addCurrentTemplate($template) {
-        $this->current_template_stack[]= $template;
+    public function addCurrentTemplate($template)
+    {
+        $this->current_template_stack[] = $template;
     }
-    
+
     /**
      * Remove the last running template from stack
      */
-    public function popCurrentTemplate() {
+    public function popCurrentTemplate()
+    {
         array_pop($this->current_template_stack);
     }
-    
+
     /**
      * Get currently runnnig template
      */
-    public function getCurrentTemplate() {
+    public function getCurrentTemplate()
+    {
         if (count($this->current_template_stack) === 0) {
             return null;
         }

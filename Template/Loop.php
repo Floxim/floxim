@@ -5,19 +5,21 @@ namespace Floxim\Floxim\Template;
 use Floxim\Floxim\System;
 use Floxim\Floxim\System\Fx as fx;
 
-class Loop implements \ArrayAccess {
-    
+class Loop implements \ArrayAccess
+{
+
     public $loop;
-    
-    public function __construct($items, $key = null, $alias = null) {
-        if (is_null($key)){
+
+    public function __construct($items, $key = null, $alias = null)
+    {
+        if (is_null($key)) {
             $key = 'key';
         }
         if (is_null($alias)) {
             $alias = 'item';
         }
         $this->_is_collection = $items instanceof System\Collection;
-        
+
         $this->loop = $this;
         $this->looped = $items;
         $this->total = count($items);
@@ -26,8 +28,9 @@ class Loop implements \ArrayAccess {
         $this->current_alias = $alias;
         $this->current = null;
     }
-    
-    public function move() {
+
+    public function move()
+    {
         $this->position++;
         if ($this->current === null) {
             $this->current = $this->_is_collection ? $this->looped->first() : current($this->looped);
@@ -36,24 +39,29 @@ class Loop implements \ArrayAccess {
         }
         $this->key = $this->_is_collection ? $this->looped->key() : key($this->looped);
     }
-    
-    public function isLast() {
+
+    public function isLast()
+    {
         return $this->position == $this->total;
     }
-    
-    public function isFirst() {
+
+    public function isFirst()
+    {
         return $this->position == 1;
     }
-    
-    public function isEven() {
+
+    public function isEven()
+    {
         return $this->position % 2 == 0;
     }
-    
-    public function isOdd() {
+
+    public function isOdd()
+    {
         return $this->position % 2 != 0;
     }
-    
-    public function offsetGet($offset) {
+
+    public function offsetGet($offset)
+    {
         if (isset($this->$offset)) {
             return $this->$offset;
         }
@@ -67,14 +75,20 @@ class Loop implements \ArrayAccess {
             return $this->current;
         }
     }
-    public function offsetSet($offset, $value) {
+
+    public function offsetSet($offset, $value)
+    {
         ;
     }
-    public function offsetExists($offset) {
-        return isset($this->$offset) || method_exists($this, $offset)  || 
-                $offset == $this->current_key || $offset == $this->current_alias;
+
+    public function offsetExists($offset)
+    {
+        return isset($this->$offset) || method_exists($this, $offset) ||
+        $offset == $this->current_key || $offset == $this->current_alias;
     }
-    public function offsetUnset($offset) {
+
+    public function offsetUnset($offset)
+    {
         ;
     }
 }

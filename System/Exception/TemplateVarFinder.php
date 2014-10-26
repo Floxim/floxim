@@ -2,6 +2,7 @@
 
 namespace Floxim\Floxim\System\Exception;
 
-class TemplateVarFinder extends \Exception {
+class TemplateVarFinder extends \Exception
+{
 
 }

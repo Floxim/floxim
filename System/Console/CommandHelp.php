@@ -2,9 +2,11 @@
 
 namespace Floxim\Floxim\System\Console;
 
-class CommandHelp extends Command {
+class CommandHelp extends Command
+{
 
-    public function run($args) {
+    public function run($args)
+    {
         $manager = $this->getManager();
         $commands = $manager->getCommands();
 

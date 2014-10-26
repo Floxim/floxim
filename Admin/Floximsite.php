@@ -2,21 +2,23 @@
 
 namespace Floxim\Floxim\Admin;
 
-class Floximsite {
+class Floximsite
+{
 
     protected $url = 'http://floxim.org/';
 
-    
-    protected function send($post) {
+
+    protected function send($post)
+    {
         $data = http_build_query($post, null, '&');
 
-        $opts = array('http' =>
-                array(
-                        'method' => 'POST',
-                        'header' => 'Content-type: application/x-www-form-urlencoded',
-                        'content' => $data,
-                        'timeout' => 10,
-                )
+        $opts = array(
+            'http' => array(
+                'method'  => 'POST',
+                'header'  => 'Content-type: application/x-www-form-urlencoded',
+                'content' => $data,
+                'timeout' => 10,
+            )
         );
 
         $context = stream_context_create($opts);
@@ -25,13 +27,15 @@ class Floximsite {
         return $response;
     }
 
-    protected function getBasePost() {
+    protected function getBasePost()
+    {
         $post = array();
         $post['userinfo'] = $this->getUserinfo();
         return $post;
     }
 
-    protected function getUserinfo() {
+    protected function getUserinfo()
+    {
         $info = array();
         $info['host'] = $_SERVER['HTTP_HOST'];
         return $info;

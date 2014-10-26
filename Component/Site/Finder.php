@@ -5,27 +5,31 @@ namespace Floxim\Floxim\Component\Site;
 use Floxim\Floxim\System;
 use Floxim\Floxim\System\Fx as fx;
 
-class Finder extends System\Data {
+class Finder extends System\Data
+{
 
-    public function __construct() {
+    public function __construct()
+    {
         parent::__construct();
         $this->order = 'priority';
     }
-    
-    public function getById($id) {
+
+    public function getById($id)
+    {
         if (is_numeric($id)) {
             return parent::getById($id);
         }
         return $this->getByHostName($id);
     }
 
-    public function getByHostName($host = '') {
+    public function getByHostName($host = '')
+    {
         if (!$host) {
             $host = fx::config()->HTTP_HOST;
         }
         $host = preg_replace("~^https?://~i", '', $host);
         $host = preg_replace("~/$~", '', $host);
-        
+
         $sites = $this->all();
         if (count($sites) === 1) {
             return $sites->first();
@@ -39,7 +43,8 @@ class Finder extends System\Data {
         return $sites->first();
     }
 
-    public function create($data = array()) {
+    public function create($data = array())
+    {
         $obj = parent::create($data);
         $obj['created'] = date("Y-m-d H:i:s");
         $obj['priority'] = $this->nextPriority();

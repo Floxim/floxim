@@ -2,9 +2,11 @@
 
 namespace Floxim\Floxim\System;
 
-class Modules {
+class Modules
+{
 
-    public function getData() {
+    public function getData()
+    {
         static $all_modules_data = false;
         if ($all_modules_data === false) {
             $all_modules_data = fx::db()->getResults("SELECT * FROM `{{module}}`");
@@ -20,7 +22,8 @@ class Modules {
      *
      * @return array module data or false
      */
-    public function getByKeyword($keyword) {
+    public function getByKeyword($keyword)
+    {
         $all_modules_data = $this->getData();
 
         foreach ($all_modules_data AS $module_data) {
@@ -32,7 +35,8 @@ class Modules {
         return false;
     }
 
-    public function isInstalled($keyword) {
-        return (bool) $this->getByKeyword($keyword);
+    public function isInstalled($keyword)
+    {
+        return (bool)$this->getByKeyword($keyword);
     }
 }

@@ -2,7 +2,8 @@
 
 namespace Floxim\Floxim\Template;
 
-class AttrtypeParser extends Fsm {
+class AttrtypeParser extends Fsm
+{
 
     public $split_regexp = "~(\s|=[\'\"]|fx:|:|\"|<\?.+?\?>|\{[^\}]+?\})~";
 
@@ -27,7 +28,8 @@ class AttrtypeParser extends Fsm {
 
     protected $att_quot;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->addRule(self::TAG, '~^\s+$~', self::ATT_NAME, null);
 
         $this->addRule(self::ATT_NAME, '~^fx:$~', self::FX, null);
@@ -55,16 +57,19 @@ class AttrtypeParser extends Fsm {
 
 
         $this->addRule(self::ATT_VAL, '~^\{[\%\$]~', null, 'startVar');
-        $this->addRule(array(self::ATT_VAL, self::FX_VAL, self::STYLE_VAL, self::SRC_VAL, self::HREF_VAL), '~^\s+|[\'\"]$~', self::TAG, 'endAtt');
+        $this->addRule(array(self::ATT_VAL, self::FX_VAL, self::STYLE_VAL, self::SRC_VAL, self::HREF_VAL),
+            '~^\s+|[\'\"]$~', self::TAG, 'endAtt');
         $this->init_state = self::TAG;
     }
 
 
-    public function startAtt($ch) {
+    public function startAtt($ch)
+    {
         $this->res .= $ch;
     }
 
-    public function startVal($ch) {
+    public function startVal($ch)
+    {
         $this->res .= $ch;
         if (preg_match("~[\'\"]$~", $ch, $att_quote)) {
             $this->att_quote = $att_quote[0];
@@ -72,49 +77,56 @@ class AttrtypeParser extends Fsm {
     }
 
 
-    public function startVar ($ch) {
-        $this->res .= $this->setPropVal(array('inatt'=>'true'), $ch);
+    public function startVar($ch)
+    {
+        $this->res .= $this->setPropVal(array('inatt' => 'true'), $ch);
     }
 
 
-    protected  function  setPropVal ($props = array(), $ch) {
-        foreach($props as $prop => $value) {
+    protected function  setPropVal($props = array(), $ch)
+    {
+        foreach ($props as $prop => $value) {
             $c_type = '';
-            if (!preg_match('~'.$prop.'=[\'\"]?\w+[\'\"]?~', $ch)) {
-                $c_type = ' '.$prop.'="'.$value.'"';
+            if (!preg_match('~' . $prop . '=[\'\"]?\w+[\'\"]?~', $ch)) {
+                $c_type = ' ' . $prop . '="' . $value . '"';
             }
 
-            $ch = preg_replace("~^([^\s\|\}]+)~", '\1 '.$c_type, $ch);
+            $ch = preg_replace("~^([^\s\|\}]+)~", '\1 ' . $c_type, $ch);
         }
         return $ch;
     }
 
-    public function setImageVar ($ch) {
-        $this->res .= $this->setPropVal(array('inatt'=>'true', 'type'=> 'image'), $ch);
+    public function setImageVar($ch)
+    {
+        $this->res .= $this->setPropVal(array('inatt' => 'true', 'type' => 'image'), $ch);
     }
 
-    public function setHrefVar ($ch) {
+    public function setHrefVar($ch)
+    {
         $c_editable = 'true';
         if (
-            !preg_match("~^\{\%~", $ch)
+        !preg_match("~^\{\%~", $ch)
         ) {
             $c_editable = 'false';
         }
 
-        $this->res .= $this->setPropVal(array('inatt'=>'true', 'editable'=> $c_editable), $ch);
+        $this->res .= $this->setPropVal(array('inatt' => 'true', 'editable' => $c_editable), $ch);
     }
 
-    public function setColorVar ($ch) {
-        $this->res .= $this->setPropVal(array('inatt'=>'true', 'type'=> 'color'), $ch);
+    public function setColorVar($ch)
+    {
+        $this->res .= $this->setPropVal(array('inatt' => 'true', 'type' => 'color'), $ch);
     }
 
-    public function endAtt ($ch) {
+    public function endAtt($ch)
+    {
         switch ($ch) {
-            case '"': case "'":
-            if ($this->att_quote !== $ch) {
-                return false;
-            }
-            break;
+            case '"':
+            case "'":
+                if ($this->att_quote !== $ch) {
+                    return false;
+                }
+                break;
             case ' ':
                 if ($this->att_quote) {
                     return false;
@@ -131,7 +143,8 @@ class AttrtypeParser extends Fsm {
 
     }
 
-    public function defaultCallback($ch) {
+    public function defaultCallback($ch)
+    {
         $this->res .= $ch;
     }
 } 

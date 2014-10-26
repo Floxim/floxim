@@ -9,17 +9,20 @@ use Floxim\Floxim\System\Fx as fx;
 /**
  * Front office controller - common base for widgets and components
  */
-class Frontoffice extends System\Controller {
+class Frontoffice extends System\Controller
+{
     protected $_meta = array();
     protected $_action_prefix = 'do_';
-    
+
     protected $_result = array();
-    
-    public function assign($key, $value) {
+
+    public function assign($key, $value)
+    {
         $this->_result[$key] = $value;
     }
-    
-    public function process() {
+
+    public function process()
+    {
         $result = parent::process();
         if (is_string($result) || is_bool($result)) {
             return $result;
@@ -36,8 +39,9 @@ class Frontoffice extends System\Controller {
         }
         return $result;
     }
-    
-    public function ajaxForm($form = null) {
+
+    public function ajaxForm($form = null)
+    {
         if (!$form) {
             $form = new Form\Form();
         }
@@ -45,8 +49,8 @@ class Frontoffice extends System\Controller {
         $form['method'] = 'POST';
         $form['ajax'] = true;
         $form->addField(array(
-            'type' => 'hidden',
-            'name' => '_ajax_infoblock_id',
+            'type'  => 'hidden',
+            'name'  => '_ajax_infoblock_id',
             'value' => $this->getParam('infoblock_id')
         ));
         $this->_meta['ajax_access'] = true;

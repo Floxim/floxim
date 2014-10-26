@@ -4,11 +4,13 @@ namespace Floxim\Floxim\Controller;
 
 use Floxim\Floxim\System\Fx as fx;
 
-class Widget extends Frontoffice {
+class Widget extends Frontoffice
+{
     protected $_action_prefix = 'do_';
     protected $_meta = array();
-    
-    protected function getConfigSources() {
+
+    protected function getConfigSources()
+    {
         $sources = array();
         $c_name = $this->getControllerName();
 
@@ -18,8 +20,9 @@ class Widget extends Frontoffice {
         }
         return $sources;
     }
-    
-    public function doShow() {
+
+    public function doShow()
+    {
         return $this->input;
     }
 }

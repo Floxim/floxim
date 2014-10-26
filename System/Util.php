@@ -2,19 +2,26 @@
 
 namespace Floxim\Floxim\System;
 
-class Util {
+class Util
+{
 
-    public function isEven($input) {
-        return (bool) ( round($input / 2) == $input / 2 );
+    public function isEven($input)
+    {
+        return (bool)(round($input / 2) == $input / 2);
     }
 
     /*
      * @todo curl
      */
 
-    public function httpRequest($url, $params = '') {
-        if (is_array($params)) $params = http_build_query($params, null, '&');
-        if ($params) $url .='?'.$params;
+    public function httpRequest($url, $params = '')
+    {
+        if (is_array($params)) {
+            $params = http_build_query($params, null, '&');
+        }
+        if ($params) {
+            $url .= '?' . $params;
+        }
         return @file_get_contents($url);
     }
 
@@ -24,10 +31,13 @@ class Util {
      * @param string the url of the page
      * @return array
      */
-    public function getMetaTags($url) {
+    public function getMetaTags($url)
+    {
         $result = array();
         $contents = @file_get_contents($url);
-        if (!$contents) return false;
+        if (!$contents) {
+            return false;
+        }
 
         // title
         preg_match('/<title>([^>]*)<\/title>/si', $contents, $match);
@@ -41,7 +51,8 @@ class Util {
             $result['h1'] = strip_tags($match[2]);
         }
 
-        preg_match_all('/<[\s]*meta[\s]*name=["\']?'.'([^>\'"]*)["\']?[\s]*'.'content=["\']?([^>"\']*)["\']?[\s]*[\/]?[\s]*>/si', $contents, $match);
+        preg_match_all('/<[\s]*meta[\s]*name=["\']?' . '([^>\'"]*)["\']?[\s]*' . 'content=["\']?([^>"\']*)["\']?[\s]*[\/]?[\s]*>/si',
+            $contents, $match);
 
         if (isset($match) && is_array($match) && count($match) == 3) {
             $originals = $match[0];
@@ -58,7 +69,8 @@ class Util {
         return $result;
     }
 
-    public function checkGzip() {
+    public function checkGzip()
+    {
         // check "ob_gzhandler" existion
         $gzip_exist = false;
         if (ob_list_handlers()) {
@@ -82,28 +94,30 @@ class Util {
         return $result;
     }
 
-    public function conv($from, $to, $text) {
+    public function conv($from, $to, $text)
+    {
         return iconv($from, $to, $text);
     }
 
     /**
      * Generates UUIDs
      */
-    public function genUuid() {
+    public function genUuid()
+    {
         return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-                        // 32 bits for "time_low"
-                        mt_rand(0, 0xffff), mt_rand(0, 0xffff),
-                        // 16 bits for "time_mid"
-                        mt_rand(0, 0xffff),
-                        // 16 bits for "time_hi_and_version",
-                        // four most significant bits holds version number 4
-                        mt_rand(0, 0x0fff) | 0x4000,
-                        // 16 bits, 8 bits for "clk_seq_hi_res",
-                        // 8 bits for "clk_seq_low",
-                        // two most significant bits holds zero and one for variant DCE1.1
-                        mt_rand(0, 0x3fff) | 0x8000,
-                        // 48 bits for "node"
-                        mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+            // 32 bits for "time_low"
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+            // 16 bits for "time_mid"
+            mt_rand(0, 0xffff),
+            // 16 bits for "time_hi_and_version",
+            // four most significant bits holds version number 4
+            mt_rand(0, 0x0fff) | 0x4000,
+            // 16 bits, 8 bits for "clk_seq_hi_res",
+            // 8 bits for "clk_seq_low",
+            // two most significant bits holds zero and one for variant DCE1.1
+            mt_rand(0, 0x3fff) | 0x8000,
+            // 48 bits for "node"
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
         );
     }
 
@@ -111,8 +125,10 @@ class Util {
      * Validates your e-mail
      * @param string $email
      */
-    public function validateEmail($email) {
-        $res = preg_match("#^[-a-z0-9!\\#\$%&'*+/=?^_`{|}~]+(?:\\.[-a-z0-9!\\#\$%&'*+/=?^_`{|}~]+)*@(?:[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?\\.)*(?:[a-z]{2,})\$#", $email);
+    public function validateEmail($email)
+    {
+        $res = preg_match("#^[-a-z0-9!\\#\$%&'*+/=?^_`{|}~]+(?:\\.[-a-z0-9!\\#\$%&'*+/=?^_`{|}~]+)*@(?:[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?\\.)*(?:[a-z]{2,})\$#",
+            $email);
         return $res ? true : false;
     }
 
@@ -121,11 +137,14 @@ class Util {
      * @param string parameters in a line, for example, 'keyword="center" repeat="yes"'
      * @return array an array with parameters, for example, array('keyword'=>'center', 'repeat'=>'yes')
      */
-    public function parseAttr($attr = "") {
-        if (!$attr) return array();
+    public function parseAttr($attr = "")
+    {
+        if (!$attr) {
+            return array();
+        }
         //$re = "/([a-z0-9_-]+)\s*=\s*(['\"])([^\\2]+)\\2\s+/iu";
         $re = "/([a-z0-9_-]+)\s*=\s*\"([^\"]+)\"\s+/iu";
-        if (preg_match_all($re, trim($attr).' ', $match, PREG_SET_ORDER)) {
+        if (preg_match_all($re, trim($attr) . ' ', $match, PREG_SET_ORDER)) {
             foreach ($match as $param) {
                 $result[$param[1]] = $param[2];
             }
@@ -136,16 +155,20 @@ class Util {
 
     /**
      * Do previews long text
-     * @param type $text, long text, previews and which do
+     * @param type $text , long text, previews and which do
      * @param type $max_length how many maximum Simonov in the thumbnail
      */
-    public function getTextPreview($text, $max_length = 150) {
-        if (strlen($text) <= $max_length) return $text;
+    public function getTextPreview($text, $max_length = 150)
+    {
+        if (strlen($text) <= $max_length) {
+            return $text;
+        }
 
-        $text = substr($text, 0, $max_length - strlen(strrchr(substr($text, 0, $max_length), ' ')))."&hellip;";
+        $text = substr($text, 0, $max_length - strlen(strrchr(substr($text, 0, $max_length), ' '))) . "&hellip;";
     }
 
-    public function isMysqlKeyword($name) {
+    public function isMysqlKeyword($name)
+    {
         return in_array(strtolower($name), preg_split("/\s+/", "accessible add all alter analyze and as asc asensitive
                   before between bigint binary blob both by call cascade
                   case change char character check collate column condition connection
@@ -176,47 +199,104 @@ class Util {
                   varchar varcharacter varying when where while with write x509
                   xor year_month zerofill"));
     }
-    
-    public function strToLatin($str) {
-        $tr = array("А"=>"A", "а"=>"a", "Б"=>"B", "б"=>"b",
-        "В"=>"V", "в"=>"v", "Г"=>"G", "г"=>"g",
-        "Д"=>"D", "д"=>"d", "Е"=>"E", "е"=>"e",
-        "Ё"=>"E", "ё"=>"e", "Ж"=>"Zh", "ж"=>"zh",
-        "З"=>"Z", "з"=>"z", "И"=>"I", "и"=>"i",
-        "Й"=>"Y", "й"=>"y", "КС"=>"X", "кс"=>"x",
-        "К"=>"K", "к"=>"k", "Л"=>"L", "л"=>"l",
-        "М"=>"M", "м"=>"m", "Н"=>"N", "н"=>"n",
-        "О"=>"O", "о"=>"o", "П"=>"P", "п"=>"p",
-        "Р"=>"R", "р"=>"r", "С"=>"S", "с"=>"s",
-        "Т"=>"T", "т"=>"t", "У"=>"U", "у"=>"u",
-        "Ф"=>"F", "ф"=>"f", "Х"=>"H", "х"=>"h",
-        "Ц"=>"Ts", "ц"=>"ts", "Ч"=>"Ch", "ч"=>"ch",
-        "Ш"=>"Sh", "ш"=>"sh", "Щ"=>"Sch", "щ"=>"sch",
-        "Ы"=>"Y", "ы"=>"y", "Ь"=>"'", "ь"=>"'",
-        "Э"=>"E", "э"=>"e", "Ъ"=>"'", "ъ"=>"'",
-        "Ю"=>"Yu", "ю"=>"yu", "Я"=>"Ya", "я"=>"ya");
+
+    public function strToLatin($str)
+    {
+        $tr = array(
+            "А"  => "A",
+            "а"  => "a",
+            "Б"  => "B",
+            "б"  => "b",
+            "В"  => "V",
+            "в"  => "v",
+            "Г"  => "G",
+            "г"  => "g",
+            "Д"  => "D",
+            "д"  => "d",
+            "Е"  => "E",
+            "е"  => "e",
+            "Ё"  => "E",
+            "ё"  => "e",
+            "Ж"  => "Zh",
+            "ж"  => "zh",
+            "З"  => "Z",
+            "з"  => "z",
+            "И"  => "I",
+            "и"  => "i",
+            "Й"  => "Y",
+            "й"  => "y",
+            "КС" => "X",
+            "кс" => "x",
+            "К"  => "K",
+            "к"  => "k",
+            "Л"  => "L",
+            "л"  => "l",
+            "М"  => "M",
+            "м"  => "m",
+            "Н"  => "N",
+            "н"  => "n",
+            "О"  => "O",
+            "о"  => "o",
+            "П"  => "P",
+            "п"  => "p",
+            "Р"  => "R",
+            "р"  => "r",
+            "С"  => "S",
+            "с"  => "s",
+            "Т"  => "T",
+            "т"  => "t",
+            "У"  => "U",
+            "у"  => "u",
+            "Ф"  => "F",
+            "ф"  => "f",
+            "Х"  => "H",
+            "х"  => "h",
+            "Ц"  => "Ts",
+            "ц"  => "ts",
+            "Ч"  => "Ch",
+            "ч"  => "ch",
+            "Ш"  => "Sh",
+            "ш"  => "sh",
+            "Щ"  => "Sch",
+            "щ"  => "sch",
+            "Ы"  => "Y",
+            "ы"  => "y",
+            "Ь"  => "'",
+            "ь"  => "'",
+            "Э"  => "E",
+            "э"  => "e",
+            "Ъ"  => "'",
+            "ъ"  => "'",
+            "Ю"  => "Yu",
+            "ю"  => "yu",
+            "Я"  => "Ya",
+            "я"  => "ya"
+        );
 
         $tr_text = strtr($str, $tr);
 
         return $tr_text;
     }
-    
-    public function strToKeyword($str) {
+
+    public function strToKeyword($str)
+    {
         $str = $this->strToLatin($str);
         $str = strtolower($str);
         $str = preg_replace("~[^a-z0-9_-]+~", '_', $str);
         return $str;
     }
-    
-    public function camelToUnderscore($string) {
+
+    public function camelToUnderscore($string)
+    {
         return strtolower(preg_replace('/([a-z])([A-Z])/', '$1_$2', $string));
     }
 
-    public function underscoreToCamel($string, $first_upper = true) {
+    public function underscoreToCamel($string, $first_upper = true)
+    {
         $string = trim($string, '_');
         $parts = explode('_', $string);
         $camelized = '';
-        foreach($parts as $part_num => $part) {
+        foreach ($parts as $part_num => $part) {
             if ($part_num === 0 && $first_upper === false) {
                 $camelized .= $part;
             } elseif ($part === '') {

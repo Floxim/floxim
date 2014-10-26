@@ -4,21 +4,23 @@ namespace Floxim\Floxim\Router;
 
 use Floxim\Floxim\System\Fx as fx;
 
-class Ajax extends Base {
-    public function route($url = null, $context = null) {
+class Ajax extends Base
+{
+    public function route($url = null, $context = null)
+    {
         $action_info = null;
         if (!preg_match("~^/\~ajax/([a-z0-9_\.\:-]+)?~", $url, $action_info)) {
             return null;
         }
-        
+
         $c_url = fx::input()->fetchGetPost('_ajax_base_url');
-        
+
         if ($c_url) {
             $_SERVER['REQUEST_URI'] = $c_url;
-            
+
             $page = fx::data('page')->getByUrl($c_url, $context['site_id']);
             fx::env('page', $page);
-            
+
             $c_url = parse_url($c_url);
             if (isset($c_url['query'])) {
                 parse_str($c_url['query'], $_GET);
@@ -32,7 +34,7 @@ class Ajax extends Base {
                 return $res;
             }
         }
-        
+
         $template = null;
         if ($action_info && !empty($action_info[1])) {
             $action = $action_info[1];
@@ -55,9 +57,9 @@ class Ajax extends Base {
             $action[1] = 'show';
         }
         $action_name = $action[1];
-        
-        $controller = fx::controller($controller_name.':'.$action_name);
-        
+
+        $controller = fx::controller($controller_name . ':' . $action_name);
+
         if (!$template) {
             $tpls = $controller->getAvailableTemplates();
             if (count($tpls) > 0) {

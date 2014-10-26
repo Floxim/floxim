@@ -9,61 +9,70 @@ use Floxim\Floxim\Template;
  * The constructor accepts parameters and action
  * Development - through the process()method
  */
-class Controller {
-    
+class Controller
+{
+
     protected $input = array();
     protected $action = null;
-    
-    public function getAction() {
+
+    public function getAction()
+    {
         return $this->action;
     }
-    
+
     /**
      * Designer controllers. It is better to use fx::controller('controller.action', $params).
      * @param array $input = 'array ('controller options
      * @param string $action = 'null', the name of action
      */
-    public function __construct($input = array(), $action = null) {
-    	$this->setInput($input);
-    	$this->setAction($action);
+    public function __construct($input = array(), $action = null)
+    {
+        $this->setInput($input);
+        $this->setAction($action);
     }
-    
+
     /**
      * Get one of the parameters by name
      * @param string $name
      * @param mixed $default
      */
-    public function getParam($name, $default = null) {
+    public function getParam($name, $default = null)
+    {
         return isset($this->input[$name]) ? $this->input[$name] : $default;
     }
-    
-    public function setParam($name, $value) {
+
+    public function setParam($name, $value)
+    {
         $this->input[$name] = $value;
     }
 
-    public function setInput($input) {
+    public function setInput($input)
+    {
         if (!$input) {
             $input = array();
         }
         $this->input = array_merge($this->input, $input);
         return $this;
     }
-    
-    public function defaultAction() {
+
+    public function defaultAction()
+    {
         return array();
     }
-    
-    public function setAction($action) {
+
+    public function setAction($action)
+    {
         if (is_null($action)) {
             return $this;
         }
-    	
-    	$this->action = fx::util()->underscoreToCamel($action,false);
-    	return $this;
+
+        $this->action = fx::util()->underscoreToCamel($action, false);
+        return $this;
     }
 
-    public function afterSave () {
-        
+    public function afterSave()
+    {
+
     }
 
     /**
@@ -71,23 +80,25 @@ class Controller {
      * @return array|string array with the results of a controller
      * $input = null, $action = null, $do_return = false
      */
-    public function process() {
+    public function process()
+    {
         $this->applyForcedParams();
         $this->trigger('before_action_run');
         $action = $this->getActionMethod();
         return $this->$action($this->input);
     }
-    
+
     protected static $cfg_time = 0;
-    
-    protected function applyForcedParams() {
+
+    protected function applyForcedParams()
+    {
         /*
         static $time = 0;
         $start = microtime(true);
         */
         $sig = str_replace(":", '__', $this->getSignature());
-        $cache_file = fx::path('files', 'cache/ctr_defaults_'.$sig.'.php');
-        
+        $cache_file = fx::path('files', 'cache/ctr_defaults_' . $sig . '.php');
+
         if (!fx::path()->exists($cache_file)) {
             $action = fx::util()->camelToUnderscore($this->action);
             $forced = array();
@@ -95,7 +106,7 @@ class Controller {
             if (isset($cfg['actions'][$action]['force'])) {
                 $forced = $cfg['actions'][$action]['force'];
             }
-            fx::files()->writefile($cache_file, "<?php return ".var_export($forced, true).";");
+            fx::files()->writefile($cache_file, "<?php return " . var_export($forced, true) . ";");
         } else {
             $forced = include $cache_file;
         }
@@ -103,66 +114,72 @@ class Controller {
             $this->setParam($param, $value);
         }
     }
-    
+
     protected $_action_prefix = '';
 
 
-    static protected function getAbbr($name) {
+    static protected function getAbbr($name)
+    {
         $vowels = array('a', 'e', 'i', 'o', 'u', 'y');
-        $head = mb_substr($name,0,1);
+        $head = mb_substr($name, 0, 1);
         $words = explode(" ", $name);
         if (count($words) > 1) {
-            $tail = mb_substr($name, 1, 1).'.'.mb_substr($words[1], 0, 1);
+            $tail = mb_substr($name, 1, 1) . '.' . mb_substr($words[1], 0, 1);
         } else {
-            $tail = mb_substr(str_replace($vowels, '', mb_strtolower(mb_substr($name,1))), 0, 2);
+            $tail = mb_substr(str_replace($vowels, '', mb_strtolower(mb_substr($name, 1))), 0, 2);
             if (mb_strlen($name) > 2 && mb_strlen($tail) < 2) {
                 $tail = mb_substr($name, 1, 2);
             }
         }
-        return $head.$tail;
+        return $head . $tail;
     }
 
-    public function getActionMethod() {
+    public function getActionMethod()
+    {
         $actions = explode('_', $this->action);
-        while($actions){
-            $action = $this->_action_prefix.implode('_', $actions);
+        while ($actions) {
+            $action = $this->_action_prefix . implode('_', $actions);
             $action = fx::util()->underscoreToCamel($action, false);
             array_pop($actions);
             if (is_callable(array($this, $action))) {
                 return $action;
             }
         }
-        return  'default_action';
+        return 'default_action';
     }
-    
+
     // controller_name.action_name
-    public function getSignature() {
+    public function getSignature()
+    {
         $com = fx::getComponentNameByClass(get_class($this));
-        return $com.':'.fx::util()->camelToUnderscore($this->action);
+        return $com . ':' . fx::util()->camelToUnderscore($this->action);
     }
 
 
-    public function findTemplate() {
+    public function findTemplate()
+    {
         return fx::template($this->getSignature());
     }
-    
+
     /*
      * Returns an array with options controller that you can use to find the template
      * Default - only controller itself,
      * For components overridden by adding inheritance chain
      */
-    protected function getControllerVariants() {
+    protected function getControllerVariants()
+    {
         // todo: psr0 need verify
         // \Floxim\Main\User\Controller
         // \Vendor\Module\Component\Controller
         return array(fx::getComponentNameByClass(get_class($this)));
     }
-    
+
     /*
      * Returns an array of templates that can be used for controller-action games
      * Call after the controller is initialized (action)
      */
-    public function getAvailableTemplates( $layout_name = null , $area_meta = null) {
+    public function getAvailableTemplates($layout_name = null, $area_meta = null)
+    {
         $area_size = Template\Suitable::getSize($area_meta['size']);
         $layout_defined = !is_null($layout_name);
         if (is_numeric($layout_name)) {
@@ -174,15 +191,15 @@ class Controller {
         } elseif (is_array($layout_name)) {
             $layout_names = $layout_name;
         }
-        
+
         // get acceptable controller
         $controller_variants = $this->getControllerVariants();
         $template_variants = array();
         // first we take out all the variants of layout templates
         foreach ($layout_names as $layout_name) {
-            if (($layout_tpl = fx::template('theme.'.$layout_name)) ) {
+            if (($layout_tpl = fx::template('theme.' . $layout_name))) {
                 $template_variants = array_merge(
-                    $template_variants, 
+                    $template_variants,
                     $layout_tpl->getTemplateVariants()
                 );
             }
@@ -191,13 +208,13 @@ class Controller {
         foreach ($controller_variants as $key => $controller_variant) {
             if (($controller_template = fx::template($controller_variant))) {
                 $template_variants = array_merge(
-                    $template_variants, 
+                    $template_variants,
                     $controller_template->getTemplateVariants()
                 );
             }
             $controller_variants[$key] = fx::getComponentFullName($controller_variant);
         }
-        
+
         // now - filtered
         $result = array();
         foreach ($template_variants as $k => $tplv) {
@@ -208,8 +225,8 @@ class Controller {
                 }
                 list($tpl_of_controller, $tpl_of_action) = $of_parts;
 
-                $tpl_of_action=fx::util()->underscoreToCamel($tpl_of_action,false);
-                if (!in_array($tpl_of_controller,$controller_variants)) {
+                $tpl_of_action = fx::util()->underscoreToCamel($tpl_of_action, false);
+                if (!in_array($tpl_of_controller, $controller_variants)) {
                     continue;
                 }
 
@@ -218,14 +235,14 @@ class Controller {
                 if (strpos($this->action, $tpl_of_action) !== 0) {
                     continue;
                 }
-                
+
                 // if template action exactly matches current controller action
                 $tplv['action_match_rate'] = $this->action == $tpl_of_action ? 1 : 0;
-                
+
                 if ($tplv['suit'] && $area_meta) {
                     $tplv_areas = explode(",", preg_replace("~\s+~", '', $tplv['suit']));
-                    if (in_array('local', $tplv_areas) ) {
-                        $tplv_areas []= $tplv['area'];
+                    if (in_array('local', $tplv_areas)) {
+                        $tplv_areas [] = $tplv['area'];
                     }
                     if (!in_array($area_meta['id'], $tplv_areas)) {
                         continue;
@@ -233,7 +250,7 @@ class Controller {
                 }
                 // if current layout is defined, we should rate layout templates greater than standard ones
                 $tplv['layout_match_rate'] = $layout_defined && preg_match("~^layout_~", $tplv['full_id']) ? 1 : 0;
-                
+
                 if ($area_size && isset($tplv['size'])) {
                     $size = Template\Suitable::getSize($tplv['size']);
                     $size_rate = Template\Suitable::checkSizes($size, $area_size);
@@ -242,10 +259,10 @@ class Controller {
                     }
                     $tplv['size_rate'] = $size_rate;
                 }
-                $result []= $tplv;
+                $result [] = $tplv;
             }
         }
-        usort($result, function($a, $b) {
+        usort($result, function ($a, $b) {
             $controller_diff = $b['controller_match_rate'] - $a['controller_match_rate'];
             if ($controller_diff != 0) {
                 return $controller_diff;
@@ -263,11 +280,13 @@ class Controller {
         return $result;
     }
 
-    public function postprocess($html) {
+    public function postprocess($html)
+    {
         return $html;
     }
-    
-    public function render($template) {
+
+    public function render($template)
+    {
         if (is_string($template)) {
             $template = fx::template($template);
         }
@@ -276,8 +295,9 @@ class Controller {
         $output = $this->postprocess($output);
         return $output;
     }
-    
-    public function getActionSettings($action) {
+
+    public function getActionSettings($action)
+    {
         $cfg = $this->getConfig();
         if (!isset($cfg['actions'][$action])) {
             return;
@@ -293,7 +313,7 @@ class Controller {
                 $settings[$prop] = call_user_func($value, $this);
             }
         }
-        
+
         if (isset($params['defaults']) && is_array($params['defaults'])) {
             foreach ($params['defaults'] as $param => $val) {
                 $settings[$param]['value'] = $val;
@@ -307,9 +327,11 @@ class Controller {
         }
         return $settings;
     }
-    
+
     protected $_config_cache = null;
-    public function getConfig($searched_action = null) {
+
+    public function getConfig($searched_action = null)
+    {
         if ($searched_action === true) {
             $searched_action = $this->action;
         }
@@ -349,8 +371,8 @@ class Controller {
                             }
                         }
                     }
-                    $blocks []= $props;
-                    $meta []= array($inherit_horizontal, $action_code);
+                    $blocks [] = $props;
+                    $meta [] = array($inherit_horizontal, $action_code);
                     if (!isset($actions[$action_code])) {
                         $actions[$action_code] = array();
                     }
@@ -361,11 +383,11 @@ class Controller {
             list($inherit, $bk) = $meta[$bn];
             foreach ($actions as $ak => &$action_props) {
                 if (
-                        $ak === $bk || 
-                        (
-                            $inherit && 
-                            ($bk === '.' || substr($ak, 0, strlen($bk)) === $bk)
-                        )
+                    $ak === $bk ||
+                    (
+                        $inherit &&
+                        ($bk === '.' || substr($ak, 0, strlen($bk)) === $bk)
+                    )
                 ) {
                     $action_props = array_replace_recursive($action_props, $block);
                     if (isset($action_props['settings'])) {
@@ -383,37 +405,41 @@ class Controller {
         return $searched_action ? $actions[$searched_action] : $this->_config_cache;
     }
 
-    public function getControllerName(){
+    public function getControllerName()
+    {
         return fx::getComponentNameByClass(get_class($this));
     }
 
-    protected function prepareActionConfig($actions) {
+    protected function prepareActionConfig($actions)
+    {
         foreach ($actions as &$params) {
-            if(!isset($params['defaults'])) {
+            if (!isset($params['defaults'])) {
                 continue;
             }
             foreach ($params['defaults'] as $key => $value) {
                 if (preg_match('~^!~', $key) !== 0) {
-                    $params['force'][substr($key, 1)] =$value;
-                    $params['defaults'][substr($key, 1)] =$value;
+                    $params['force'][substr($key, 1)] = $value;
+                    $params['defaults'][substr($key, 1)] = $value;
                     unset($params['defaults'][$key]);
                 }
             }
         }
         return $actions;
     }
-    
-    protected function getConfigSources() {
+
+    protected function getConfigSources()
+    {
         return array();
     }
-    
-    protected static function mergeActions($actions) {
+
+    protected static function mergeActions($actions)
+    {
         ksort($actions);
         $key_stack = array();
         foreach ($actions as $key => $params) {
             // do not inherit flag horizontally disabled
             $no_disabled = !isset($params['disabled']);
-            
+
             foreach ($key_stack as $prev_key_index => $prev_key) {
                 if (substr($key, 0, strlen($prev_key)) === $prev_key) {
                     $actions[$key] = array_replace_recursive(
@@ -430,9 +456,10 @@ class Controller {
         }
         return $actions;
     }
-    
 
-    public function getRealActions() {
+
+    public function getRealActions()
+    {
         $class = new \ReflectionClass(get_class($this));
         $methods = $class->getMethods(\ReflectionMethod::IS_PUBLIC);
         $props = $class->getDefaultProperties();
@@ -441,25 +468,28 @@ class Controller {
         $actions = array();
         foreach ($methods as $method) {
             $action_name = null;
-            if (preg_match("~^".$prefix."(.+)$~", $method->name, $action_name)) {
+            if (preg_match("~^" . $prefix . "(.+)$~", $method->name, $action_name)) {
                 $action_name = $action_name[1];
                 $action_name = fx::util()->camelToUnderscore($action_name);
-                $actions[$action_name]= array();
+                $actions[$action_name] = array();
             }
         }
         return $actions;
     }
-    
-    
+
+
     protected $_bound = array();
-    public function listen($event, $callback) {
+
+    public function listen($event, $callback)
+    {
         if (!isset($this->_bound[$event])) {
             $this->_bound[$event] = array();
         }
-        $this->_bound[$event][]= $callback;
+        $this->_bound[$event][] = $callback;
     }
-    
-    public function __call($name, $arguments) {
+
+    public function __call($name, $arguments)
+    {
         if (!preg_match("~^on([A-Z].+$)~", $name, $e)) {
             return null;
         }
@@ -469,15 +499,17 @@ class Controller {
     }
 
 
-    public function trigger($event, $data = null) {
+    public function trigger($event, $data = null)
+    {
         if (isset($this->_bound[$event]) && is_array($this->_bound[$event])) {
-            foreach ( $this->_bound[$event] as $cb) {
+            foreach ($this->_bound[$event] as $cb) {
                 call_user_func($cb, $data, $this);
             }
         }
     }
-    
-    public function getActions() {
+
+    public function getActions()
+    {
         $cfg = $this->getConfig();
         $res = array();
         foreach ($cfg['actions'] as $action => $info) {
@@ -488,9 +520,10 @@ class Controller {
         }
         return $res;
     }
-    
-    public function handleInfoblock($callback, $infoblock, $params = array()) {
-        
+
+    public function handleInfoblock($callback, $infoblock, $params = array())
+    {
+
         $full_config = $this->getConfig();
         $action = fx::util()->camelToUnderscore($this->action);
         if (!isset($full_config['actions'][$action])) {
