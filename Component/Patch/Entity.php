@@ -16,7 +16,7 @@ class Entity extends System\Entity
             return false;
         }
 
-        $dir = fx::path('files', 'patches/' . $this['from'] . '-' . $this['to']);
+        $dir = fx::path('@files/patches/' . $this['from'] . '-' . $this['to']);
 
         if (!file_exists($dir)) {
             $saved = fx::files()->saveFile($this['url'], 'patches/', $this['from'] . '-' . $this['to'] . '.zip');

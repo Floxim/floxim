@@ -67,20 +67,19 @@ class Config
 
         fx::path()->register('floxim', '/vendor/Floxim/Floxim/');
         fx::path()->register('module', '/module/');
-        fx::path()->register('std', fx::path('floxim', '/std'));
-        fx::path()->register('layouts', array('/layout', fx::path('std', '/layout')));
+        fx::path()->register('std', fx::path('@floxim/std'));
+        fx::path()->register('layouts', array('/layout', fx::path('@std/layout')));
         fx::path()->register('files', '/floxim_files/');
-        fx::path()->register('log', fx::path('files', '/log'));
-        fx::path()->register('thumbs', fx::path('files', '/fx_thumbs'));
-        fx::path()->register('content_files', fx::path('files', '/content'));
+        fx::path()->register('log', fx::path('@files/log'));
+        fx::path()->register('thumbs', fx::path('@files/fx_thumbs'));
+        fx::path()->register('content_files', fx::path('@files/content'));
 
+        $this->config['path.jquery'] = fx::path('@floxim/lib/js/jquery-1.9.1.min.js');
+        $this->config['path.jquery.http'] = fx::path()->http('@floxim/lib/js/jquery-1.9.1.min.js');
+        $this->config['path.jquery-ui'] = fx::path('@floxim/lib/js/jquery-ui-1.10.3.custom.min.js');
 
-        $this->config['path.jquery'] = fx::path('floxim', 'lib/js/jquery-1.9.1.min.js');
-        $this->config['path.jquery.http'] = fx::path()->http('floxim', 'lib/js/jquery-1.9.1.min.js');
-        $this->config['path.jquery-ui'] = fx::path('floxim', 'lib/js/jquery-ui-1.10.3.custom.min.js');
-
-        $this->config['templates.cache_dir'] = fx::path('files', 'compiled_templates');
-        $this->config['HTTP_ACTION_LINK'] = fx::path()->http('floxim', 'index.php');
+        $this->config['templates.cache_dir'] = fx::path('@files/compiled_templates');
+        $this->config['HTTP_ACTION_LINK'] = fx::path()->http('@floxim/index.php');
 
         $this->config['console.commands'] = array(
             'module'    => '\\Floxim\\Floxim\\Console\\Command\\Module',
@@ -95,11 +94,11 @@ class Config
             ),
             'file'  => array(
                 'class'     => '\\Floxim\\Cache\\Storage\\File',
-                'cachePath' => fx::path('files', '/cache/data'),
+                'cachePath' => fx::path('@files/cache/data'),
             ),
             'meta'  => array(
                 'class'     => '\\Floxim\\Cache\\Storage\\File',
-                'cachePath' => fx::path('files', '/cache/meta'),
+                'cachePath' => fx::path('@files/cache/meta'),
             ),
         );
         /*
@@ -141,7 +140,7 @@ class Config
             define('FX_JQUERY_UI_PATH', $this->config['path.jquery-ui']);
         }
         ini_set('date.timezone', $this->config['date.timezone']);
-        fx::template()->registerSource('admin', fx::path('floxim', '/Admin/templates'));
+        fx::template()->registerSource('admin', fx::path('@floxim/Admin/templates'));
         $loaded = true;
         return $this;
     }

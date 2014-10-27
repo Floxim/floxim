@@ -26,7 +26,7 @@ class Console extends Admin
             'class'     => 'execute'
         ));
         $this->response->addFields($fields);
-        fx::page()->addJsFile(fx::path('floxim') . '/Admin/js/console.js');
+        fx::page()->addJsFile(fx::path('@floxim') . '/Admin/js/console.js');
         return array('show_result' => 1);
     }
 

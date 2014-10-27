@@ -39,7 +39,7 @@ class Entity extends System\Entity
         if (!$params) {
             $params = fx::collection($this['template_visual'])->concat($this['wrapper_visual']);
         }
-        $files_path = fx::path('files');
+        $files_path = fx::path('@files');
         $res = array();
         $path = fx::path();
         foreach ($params as $p) {

@@ -13,7 +13,7 @@ class Entity extends System\Entity
         array_walk($path, function (&$item) {
             $item = fx::util()->underscoreToCamel($item, true);
         });
-        return fx::path()->toAbs('/theme/' . join('/', $path) . '/');
+        return fx::path()->abs('/theme/' . join('/', $path) . '/');
     }
 
     protected function beforeInsert()
@@ -30,7 +30,7 @@ class Entity extends System\Entity
     protected function afterDelete()
     {
         parent::afterDelete();
-        $path = fx::path()->toAbs($this->getPath());
+        $path = fx::path()->abs($this->getPath());
         fx::files()->rm($path);
     }
 }

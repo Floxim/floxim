@@ -147,7 +147,7 @@ class Component extends Admin
         $fields [] = $vf;
         $vendors = $vf['values'];
         foreach ($vendors as $v) {
-            $path = fx::path()->toAbs('/module/' . $v) . '/*';
+            $path = fx::path()->abs('/module/' . $v) . '/*';
             $module_dirs = glob($path);
             $modules = array();
             if ($module_dirs) {
@@ -419,7 +419,7 @@ class Component extends Admin
                 $c_parts = fx::getComponentParts($tpl['full_id']);
                 $r['source'] = fx::data($ctr_type, $c_parts['component'])->get('name');
             }
-            $r['file'] = fx::path()->toHttp($tpl['file']);
+            $r['file'] = fx::path()->http($tpl['file']);
             $field['values'][] = $r;
         }
         return array('fields' => array('templates' => $field));

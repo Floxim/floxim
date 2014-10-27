@@ -282,7 +282,7 @@ class Files
         $this->ftp_host = $host ? $host : $_SERVER['HTTP_HOST'];
         $this->base_url = "ftp://" . $this->ftp_user . ":" . $this->ftp_password . "@" .
             $this->ftp_host . ":" . $this->ftp_port . "/" . $this->ftp_path;
-        $this->base_path = fx::path('root');
+        $this->base_path = fx::path('@root');
         $this->new_file_mods = 0666;
         $this->new_dir_mods = 0777;
 
@@ -298,7 +298,7 @@ class Files
 
     public function open($filename, $mode = 'w')
     {
-        $filename = fx::path()->toAbs($filename);
+        $filename = fx::path()->abs($filename);
         $dir = dirname($filename);
         if (!file_exists($dir)) {
             $this->mkdir($dir);
@@ -340,7 +340,7 @@ class Files
         if (!$path) {
             return 1;
         }
-        $local_path = fx::path()->toAbs($path);
+        $local_path = fx::path()->abs($path);
         if (is_dir($local_path)) {
             return 0;
         }
@@ -452,7 +452,7 @@ class Files
             return 1;
         }
 
-        $local_filename = fx::path()->toAbs($filename);
+        $local_filename = fx::path()->abs($filename);
 
         if (!file_exists($local_filename)) {
             return 1;
@@ -629,7 +629,7 @@ class Files
         $local_old_filename = $this->base_path.$old_filename;
          * 
          */
-        $local_old_filename = fx::path()->toAbs($old_filename);
+        $local_old_filename = fx::path()->abs($old_filename);
 
         /*
         if ($new_filename[0] != '/') {
@@ -638,7 +638,7 @@ class Files
         $local_new_filename = $this->base_path.$new_filename;
          * 
          */
-        $local_new_filename = fx::path()->toAbs($new_filename);
+        $local_new_filename = fx::path()->abs($new_filename);
 
         $local_parent_dir = dirname($local_new_filename);
 
@@ -860,7 +860,7 @@ class Files
             }
         }
         $put_file = $this->getPutFilename($dir, $file_name);
-        $full_path = fx::path('files', $dir . '/' . $put_file);
+        $full_path = fx::path('@files/' . $dir . '/' . $put_file);
         $this->writefile($full_path, $file_data);
         return $full_path;
     }
@@ -871,8 +871,8 @@ class Files
         if (is_array($file)) {
             $filename = $file['name'];
             $put_file = $this->getPutFilename($dir, $filename);
-            $full_path = fx::path('files', $dir . '/' . $put_file);
-            $this->mkdir(fx::path('files', $dir));
+            $full_path = fx::path('@files/' . $dir . '/' . $put_file);
+            $this->mkdir(fx::path('@files/' . $dir));
             $res = move_uploaded_file($file['tmp_name'], $full_path);
             if (!$res) {
                 return;
@@ -888,7 +888,7 @@ class Files
             }
         }
 
-        $http_path = fx::path()->toHttp($full_path);
+        $http_path = fx::path()->http($full_path);
 
         return array(
             'path'     => $http_path,
@@ -905,13 +905,13 @@ class Files
         $name = trim($name, "_");
         $name = preg_replace("~_+~", "_", $name);
 
-        $path = fx::path('files', $dir . '/' . $name);
+        $path = fx::path('@files/' . $dir . '/' . $name);
 
         $try = 0;
         while (fx::path()->exists($path)) {
             $c_name = preg_replace("~(\.[^\.]+)$~", "_" . $try . "\$1", $name);
             $try++;
-            $path = fx::path('files', $dir . '/' . $c_name);
+            $path = fx::path('@files/' . $dir . '/' . $c_name);
         }
         return fx::path()->fileName($path);
     }

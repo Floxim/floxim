@@ -28,7 +28,7 @@ class Module extends Console\Command
         /**
          * Check for exists
          */
-        $module_path = fx::path('root') . "module/{$this->module_vendor}/{$this->module_name}/";
+        $module_path = fx::path('@root') . "module/{$this->module_vendor}/{$this->module_name}/";
         if (file_exists($module_path)) {
             if (!$overwrite) {
                 $this->usageError('Module already exists');
@@ -43,7 +43,7 @@ class Module extends Console\Command
                 $this->usageError('Can\'t create module dir - ' . $module_path);
             }
         }
-        $source_path = fx::path('floxim') . '/Console/protected/module/';
+        $source_path = fx::path('@floxim') . '/Console/protected/module/';
         /**
          * Build file list
          */

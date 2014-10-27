@@ -52,11 +52,11 @@ class Page
     {
         if (preg_match("~\.less$~", $file)) {
 
-            $file_hash = trim(preg_replace("~[^a-z0-9_-]+~", '_', fx::path()->toHttp($file)), '_');
+            $file_hash = trim(preg_replace("~[^a-z0-9_-]+~", '_', fx::path()->http($file)), '_');
 
-            $target_path = fx::path()->http('files', 'asset_cache/' . $file_hash . '.css');
-            $full_target_path = fx::path()->toAbs($target_path);
-            $full_source_path = fx::path()->toAbs($file);
+            $target_path = fx::path()->http('@files/asset_cache/' . $file_hash . '.css');
+            $full_target_path = fx::path()->abs($target_path);
+            $full_source_path = fx::path()->abs($file);
 
 
             if (!file_exists($full_source_path)) {
@@ -65,7 +65,7 @@ class Page
 
             if (!file_exists($full_target_path) || filemtime($full_source_path) > filemtime($full_target_path)) {
                 fx::profiler()->block('compile less ' . $file);
-                $http_base = fx::path()->toHttp(preg_replace("~[^/]+$~", '', $file));
+                $http_base = fx::path()->http(preg_replace("~[^/]+$~", '', $file));
 
                 $less = new \lessc();
 
@@ -81,7 +81,7 @@ class Page
             return;
         }
         if (!preg_match("~^https?://~", $file)) {
-            $file = fx::path()->toHttp($file);
+            $file = fx::path()->http($file);
         }
         $this->_files_css[] = $file;
     }
@@ -101,8 +101,8 @@ class Page
         }
         $params['name'] .= '.css.gz';
 
-        $http_path = fx::path()->http('files', 'asset_cache/' . $params['name']);
-        $full_path = fx::path()->toAbs($http_path);
+        $http_path = fx::path()->http('@files/asset_cache/' . $params['name']);
+        $full_path = fx::path()->abs($http_path);
 
         $last_modified = 0;
         $less_flag = false;
@@ -111,7 +111,7 @@ class Page
                 $less_flag = true;
             }
             if (!preg_match("~^http://~i", $file)) {
-                $file_path = fx::path()->toAbs($file);
+                $file_path = fx::path()->abs($file);
                 $c_modified = filemtime($file_path);
                 if ($c_modified > $last_modified) {
                     $last_modified = $c_modified;
@@ -125,9 +125,9 @@ class Page
                 if (preg_match("~^http://~i", $file)) {
                     $file_contents = file_get_contents($file);
                 } else {
-                    $http_base = fx::path()->toHttp($file);
+                    $http_base = fx::path()->http($file);
                     $http_base = preg_replace("~[^/]+$~", '', $http_base);
-                    $file_contents = file_get_contents(fx::path()->toAbs($file));
+                    $file_contents = file_get_contents(fx::path()->abs($file));
                     $file_contents = $this->cssUrlReplace($file_contents, $http_base);
                 }
                 $file_content .= $file_contents . "\n";
@@ -174,7 +174,7 @@ class Page
     public function addJsFile($file)
     {
         if (!preg_match("~^https?://~", $file)) {
-            $file = fx::path()->toHttp($file);
+            $file = fx::path()->http($file);
         }
         if (!in_array($file, $this->_all_js)) {
             $this->_files_js[] = $file;
@@ -207,12 +207,12 @@ class Page
         }
         $params['name'] .= '.js.gz';
 
-        $http_path = fx::path()->http('files', 'asset_cache/' . $params['name']);
-        $full_path = fx::path()->toAbs($http_path);
+        $http_path = fx::path()->http('@files/asset_cache/' . $params['name']);
+        $full_path = fx::path()->abs($http_path);
 
         $http_files = array();
         foreach ($files as $f) {
-            $http_files[] = fx::path()->toHttp($f);
+            $http_files[] = fx::path()->http($f);
         }
         $this->_all_js = array_merge($this->_all_js, $http_files);
 
@@ -220,7 +220,7 @@ class Page
             $bundle_content = '';
             foreach ($files as $i => $f) {
                 if (!preg_match("~^http://~i", $f)) {
-                    $f = fx::path()->toAbs($f);
+                    $f = fx::path()->abs($f);
                 }
                 $file_content = file_get_contents($f);
                 if (!preg_match("~\.min~", $f)) {

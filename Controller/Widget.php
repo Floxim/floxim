@@ -14,7 +14,7 @@ class Widget extends Frontoffice
         $sources = array();
         $c_name = $this->getControllerName();
 
-        $com_file = fx::path('module', fx::getComponentPath($c_name) . '/cfg.php');
+        $com_file = fx::path('@module/' . fx::getComponentPath($c_name) . '/cfg.php');
         if (file_exists($com_file)) {
             $sources[] = $com_file;
         }

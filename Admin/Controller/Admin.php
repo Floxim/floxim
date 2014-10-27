@@ -112,7 +112,7 @@ class Admin extends System\Controller
 
     public static function addAdminFiles()
     {
-        $path_floxim = fx::path('floxim');
+        $path_floxim = fx::path('@floxim');
         $js_files = array(
             FX_JQUERY_PATH,
             $path_floxim . '/Admin/js/fxj.js',

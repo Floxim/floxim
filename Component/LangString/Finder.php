@@ -67,12 +67,12 @@ class Finder extends System\Data
         if (!isset($this->lang)) {
             $this->setLang();
         }
-        return fx::path('files', '/php_dictionaries/' . $this->lang . '.' . $dict . '.php');
+        return fx::path('@files/php_dictionaries/' . $this->lang . '.' . $dict . '.php');
     }
 
     public function dropDictFiles($dict)
     {
-        $files = glob(fx::path('files', '/php_dictionaries/*.' . $dict . '.php'));
+        $files = glob(fx::path('@files/php_dictionaries/*.' . $dict . '.php'));
         if (!$files) {
             return;
         }

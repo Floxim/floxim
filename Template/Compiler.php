@@ -276,9 +276,9 @@ class Compiler
         $code .= $var . '= $template_dir.' . $var . ";\n";
         $code .= "}\n";
 
-        $code .= 'if (!' . $var . ' || ( !preg_match("~^https?://~", ' . $var . ') && !file_exists(fx::path()->toAbs(preg_replace("~\?.+$~", "", ' . $var . '))) )) {' . "\n";
+        $code .= 'if (!' . $var . ' || ( !preg_match("~^https?://~", ' . $var . ') && !file_exists(fx::path()->abs(preg_replace("~\?.+$~", "", ' . $var . '))) )) {' . "\n";
         if ($use_stub) {
-            $stub_image = fx::path()->http('floxim', '/Admin/style/images/no.png');
+            $stub_image = fx::path()->http('@floxim/Admin/style/images/no.png');
             $code .= $var . "= \$_is_admin ? '" . $stub_image . "' : '';\n";
         } else {
             $code .= $var . "= '';\n";

@@ -97,7 +97,7 @@ class Controller
         $start = microtime(true);
         */
         $sig = str_replace(":", '__', $this->getSignature());
-        $cache_file = fx::path('files', 'cache/ctr_defaults_' . $sig . '.php');
+        $cache_file = fx::path('@files/cache/ctr_defaults_' . $sig . '.php');
 
         if (!fx::path()->exists($cache_file)) {
             $action = fx::util()->camelToUnderscore($this->action);
@@ -346,7 +346,7 @@ class Controller
         foreach ($sources as $src) {
             $src_name = null;
             $src_hash = md5($src);
-            $src_abs = fx::path()->toHttp($src);
+            $src_abs = fx::path()->http($src);
             preg_match("~/([^/]+?)/[^/]+$~", $src_abs, $src_name);
             $is_own = $src_name && $my_name && fx::getComponentFullName(strtolower($src_name[1])) === $my_name;
             $src = include $src;

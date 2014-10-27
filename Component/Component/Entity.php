@@ -64,7 +64,7 @@ class Entity extends System\Entity
 
     public function getPath()
     {
-        return fx::path('module', fx::getComponentPath($this['keyword']));
+        return fx::path('@module/' . fx::getComponentPath($this['keyword']));
     }
 
     public function getAncestors()
@@ -274,7 +274,7 @@ class Entity extends System\Entity
     public function scaffold()
     {
         $keyword = $this['keyword'];
-        $base_path = fx::path(($this['vendor'] === 'std') ? 'std' : 'root', 'component/' . $keyword . '/') . '/';
+        $base_path = fx::path((($this['vendor'] === 'std') ? '@std' : '@root') . 'component/' . $keyword . '/') . '/';
 
         $controller_file = $base_path . $keyword . '.php';
 

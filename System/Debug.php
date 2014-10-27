@@ -35,7 +35,7 @@ class Debug
     protected function getDir()
     {
         if (is_null($this->dir)) {
-            $this->dir = fx::path('log');
+            $this->dir = fx::path('@log');
         }
         return $this->dir;
     }
@@ -87,7 +87,7 @@ class Debug
         foreach ($trace as $l) {
             $str = '';
             if ($l['file']) {
-                $file = fx::path()->toHttp($l['file']);
+                $file = fx::path()->http($l['file']);
                 $str .= $file . '@' . $l['line'];
             }
             if ($l['class']) {
@@ -211,9 +211,9 @@ class Debug
         if (!$log_files) {
             return;
         }
-        $own_file = fx::path()->toAbs($this->getFileName());
+        $own_file = fx::path()->abs($this->getFileName());
         foreach ($log_files as $lf) {
-            if (fx::path()->toAbs($lf) != $own_file) {
+            if (fx::path()->abs($lf) != $own_file) {
                 fx::files()->rm($lf);
             }
         }
@@ -318,10 +318,10 @@ class Debug
         $this->printEntry($e);
         static $head_files_added = false;
         if (!$head_files_added) {
-            fx::page()->addCssFile(fx::path('floxim', 'Admin/style/debug.less'));
+            fx::page()->addCssFile(fx::path('@floxim/Admin/style/debug.less'));
             fx::page()->addJsFile(FX_JQUERY_PATH);
-            fx::page()->addJsFile(fx::path('floxim', 'Admin/js/fxj.js'));
-            fx::page()->addJsFile(fx::path('floxim', 'Admin/js/debug.js'));
+            fx::page()->addJsFile(fx::path('@floxim/Admin/js/fxj.js'));
+            fx::page()->addJsFile(fx::path('@floxim/Admin/js/debug.js'));
             register_shutdown_function(function () {
                 if (!fx::env()->get('complete_ok')) {
                     echo fx::page()->getAssetsCode();

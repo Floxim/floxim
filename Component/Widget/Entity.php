@@ -61,7 +61,7 @@ class Entity extends System\Entity
     public function scaffold()
     {
         $keyword = $this['keyword'];
-        $controller_file = fx::path(($this['vendor'] === 'std') ? 'std' : 'root',
+        $controller_file = fx::path((($this['vendor'] === 'std') ? '@std' : '@root') .
             'widget/' . $keyword . '/' . $keyword . '.php');
         ob_start();
         // todo: psr0 need fix

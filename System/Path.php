@@ -16,13 +16,6 @@ class Path
 
     public function register($key, $path)
     {
-        if (is_array($path)) {
-            foreach ($path as &$p) {
-                $p = $this->toHttp($p);
-            }
-        } else {
-            $path = $this->toHttp($path);
-        }
         if (isset($this->registry[$key]) && is_array($this->registry[$key])) {
             if (is_array($path)) {
                 $this->registry[$key] = array_merge($this->registry[$key], $path);
@@ -32,109 +25,110 @@ class Path
         } else {
             $this->registry[$key] = $path;
         }
+        
+        $this->registry = array_map(array($this, "http"), $this->registry);
     }
 
     /**
-     * Resolve path aliases, e.g. @floxim/js/olo.js => /vendor/Floxim/Floxim/js/olo.js
-     * Not ready yet =(
+     * Resolve path aliases,
+     * e.g. @floxim/js/olo.js => /vendor/Floxim/Floxim/js/olo.js
      */
     public function resolve($path)
     {
-
         $parts = preg_split("~^(@[^\\\\/]+)~", $path, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
-        if (count($parts) === 1) {
-            array_unshift($parts, '@root');
-        }
-        $parts[0] = preg_replace("~^@~", '', $parts[0]);
+        
+        $parts = array_map( function($value) {
+                preg_match("~@([^\\\\/]+)~", $value, $matches);
+                return (
+                    isset($matches[1])
+                        && $matches[1]
+                        && isset($this->registry[$matches[1]])
+                    ? $this->registry[$matches[1]]
+                    : $value
+                );
+            },
+            $parts
+        );
 
+        $res = preg_replace("~/{2,}~", '/', join("", $parts));
+        
+        // TODO: process this situation /floxim_files/compiled_templates/@admin.ab7b57ab1b28aeb6c198892e05e4c6bf.php
+        //if ( strpos($res, "@") ) {
+        //    return null;
+        //}
 
-        if (!isset($this->registry[$parts[0]])) {
-            return null;
-        }
-
-        $res = $this->toAbs(join("/", $parts));
         return $res;
     }
 
-    public function abs($key, $tale = null)
+    public function abs($path)
     {
-        if (!isset($this->registry[$key])) {
-            return null;
-        }
-        $path = $this->registry[$key];
-        if (!is_null($tale)) {
-            $tale = '/' . $tale;
-        }
+        $do = function ($value) {
+            $value = str_replace("/", DIRECTORY_SEPARATOR, trim($value));
+            $value = preg_replace("~^" . preg_quote($this->root) . "~", '', $value);
+            $value = trim($value, DIRECTORY_SEPARATOR);
+            $value = $this->root . DIRECTORY_SEPARATOR . $value;
+            $value = preg_replace("~" . preg_quote(DIRECTORY_SEPARATOR) . "+~", DIRECTORY_SEPARATOR, $value);
+            return $value;
+        };
+        
         if (is_array($path)) {
-            foreach ($path as &$p) {
-                $p = $this->toAbs($p . $tale);
-            }
+            $path = array_map(array($this, "resolve"), $path);
+            $path = array_map($do, $path);
         } else {
-            $path = $this->toAbs($path . $tale);
+            $path = $do( $this->resolve($path) );
         }
+        
         return $path;
     }
 
-    public function http($key, $tale = null)
+    public function http($path)
     {
-        if (!isset($this->registry[$key])) {
-            return null;
+        $do = function ($value) {
+            if (preg_match("~^https?://~", $value)) {
+                return $value;
+            }
+            $ds = "[" . preg_quote('\/') . "]";
+            $value = preg_replace("~" . $ds . "~", DIRECTORY_SEPARATOR, $value);
+            $value = preg_replace("~^" . preg_quote($this->root) . "~", '', $value);
+            $value = preg_replace("~" . $ds . "~", '/', $value);
+            if (!preg_match("~^/~", $value)) {
+                $value = '/' . $value;
+            }
+            $value = preg_replace("~/+~", '/', $value);
+            return $value;
+        };
+        
+        if (is_array($path)) {
+            $path = array_map(array($this, "resolve"), $path);
+            $path = array_map($do, $path);
+        } else {
+            $path = $do( $this->resolve($path) );
         }
-        $path = $this->registry[$key];
-        if (!is_null($tale)) {
-            $path .= '/' . $tale;
-        }
-        $path = $this->toHttp($path);
-        return $path;
-    }
-
-    public function toHttp($path)
-    {
-        if (preg_match("~^https?://~", $path)) {
-            return $path;
-        }
-        $ds = "[" . preg_quote('\/') . "]";
-        $path = preg_replace("~" . $ds . "~", DIRECTORY_SEPARATOR, $path);
-        $path = preg_replace("~^" . preg_quote($this->root) . "~", '', $path);
-        $path = preg_replace("~" . $ds . "~", '/', $path);
-        if (!preg_match("~^/~", $path)) {
-            $path = '/' . $path;
-        }
-        $path = preg_replace("~/+~", '/', $path);
-        return $path;
-    }
-
-    public function toAbs($path)
-    {
-        $path = str_replace("/", DIRECTORY_SEPARATOR, trim($path));
-        $path = preg_replace("~^" . preg_quote($this->root) . "~", '', $path);
-        $path = trim($path, DIRECTORY_SEPARATOR);
-        $path = $this->root . DIRECTORY_SEPARATOR . $path;
-        $path = preg_replace("~" . preg_quote(DIRECTORY_SEPARATOR) . "+~", DIRECTORY_SEPARATOR, $path);
+        
         return $path;
     }
 
     public function exists($path)
     {
-        return file_exists($this->toAbs($path));
+        return file_exists($this->abs($path));
     }
 
     public function isFile($path)
     {
-        $path = $this->toAbs($path);
+        $path = $this->abs($path);
         return file_exists($path) && is_file($path);
     }
 
     public function isInside($child, $parent)
     {
-        $child = $this->toAbs($child);
-        $parent = $this->toAbs($parent);
+        $child = $this->abs($child);
+        $parent = $this->abs($parent);
         return preg_match("~^" . preg_quote($parent) . "~", $child);
     }
 
     public function fileName($path)
     {
-        $path = $this->toHttp($path);
+        $path = $this->http($path);
         preg_match("~[^/]+$~", $path, $file_name);
         if (!$file_name) {
             return '';

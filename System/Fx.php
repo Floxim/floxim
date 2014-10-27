@@ -696,7 +696,7 @@ class Fx
         $args = func_get_args();
         switch ($args[1]) {
             case 'size':
-                $path = fx::path()->toAbs($args[0]);
+                $path = fx::path()->abs($args[0]);
                 return $files->readableSize($path);
             case 'name':
                 return fx::path()->fileName($args[0]);
@@ -828,7 +828,7 @@ class Fx
         ob_start();
         $manager = new \Floxim\Floxim\System\Console\Manager();
         $manager->addCommands(fx::config('console.commands'));
-        $manager->addPath(fx::path()->toAbs('/vendor/Floxim/Floxim/System/Console/Command'));
+        $manager->addPath(fx::path()->abs('/vendor/Floxim/Floxim/System/Console/Command'));
         $manager->run($command);
         return ob_get_clean();
     }

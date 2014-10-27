@@ -36,7 +36,7 @@ class MigrationManager
 
         }";
 
-        $dir = fx::path('floxim', '/update/migration');
+        $dir = fx::path('@floxim/update/migration');
         try {
             if (file_exists($dir)) {
                 fx::files()->mkdir($dir);
@@ -56,7 +56,7 @@ class MigrationManager
 
     public function up()
     {
-        $dir = fx::path('floxim', '/update/migration');
+        $dir = fx::path('@floxim/update/migration');
         // get migrations
         $migration_files = glob($dir . '/*.php');
         if (!$migration_files) {

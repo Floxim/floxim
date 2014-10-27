@@ -92,7 +92,7 @@ class Loader
                 array_unshift($ns, 'module');
             }
 
-            $dirs = array(fx::path()->toAbs('/' . join("/", $ns)));
+            $dirs = array(fx::path()->abs('/' . join("/", $ns)));
 
             foreach ($dirs as $dir) {
                 try {

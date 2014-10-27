@@ -16,7 +16,7 @@ class Thumb
         }
         $this->config = $this->readConfig($config);
 
-        $source_path = fx::path()->toAbs($source_http_path);
+        $source_path = fx::path()->abs($source_http_path);
         if (!file_exists($source_path) || !is_file($source_path)) {
             throw new \Exception('File not found: ' . $source_path);
         }
@@ -432,7 +432,7 @@ class Thumb
 
     public function getResultPath()
     {
-        $rel_path = fx::path()->toHttp($this->source_path);
+        $rel_path = fx::path()->http($this->source_path);
 
         $folder_name = array();
         foreach ($this->config as $key => $value) {
@@ -443,19 +443,19 @@ class Thumb
         $folder_name = join('.', $folder_name);
 
         $rel_path = $folder_name . '/' . $rel_path;
-        $full_path = fx::path('thumbs', $rel_path);
+        $full_path = fx::path('@thumbs/' . $rel_path);
         if (!file_exists($full_path)) {
             $this->process($full_path);
         }
-        $path = fx::path()->toHttp($full_path);
+        $path = fx::path()->http($full_path);
         return $path;
     }
 
     public static function findThumbs($source_path)
     {
         $res = array();
-        $rel_path = fx::path()->toHttp($source_path);
-        $dir = glob(fx::path('thumbs') . '/*');
+        $rel_path = fx::path()->http($source_path);
+        $dir = glob(fx::path('@thumbs') . '/*');
 
 
         if (!$dir) {
@@ -463,7 +463,7 @@ class Thumb
         }
         foreach ($dir as $sub) {
             if (is_dir($sub)) {
-                $check_path = fx::path()->toAbs($sub . $rel_path);
+                $check_path = fx::path()->abs($sub . $rel_path);
                 if (fx::path()->isFile($check_path)) {
                     $res [] = $check_path;
                 }

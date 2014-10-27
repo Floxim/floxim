@@ -57,7 +57,7 @@ class Component extends Console\Command
 
     protected function scaffold(\Floxim\Floxim\Component\Component\Entity $com)
     {
-        $source_path = fx::path('floxim', '/Console/protected/component');
+        $source_path = fx::path('@floxim/Console/protected/component');
         $component_path = $com->getPath();
         $file_list = $this->buildFileList($source_path, $component_path);
         foreach ($file_list as &$file_data) {
