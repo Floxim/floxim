@@ -151,7 +151,8 @@ abstract class Entity implements \ArrayAccess
 
     protected function afterSave()
     {
-
+        $finder_class = get_class($this->getFinder());
+        $finder_class::dropStoredStaticCache();
     }
 
     /**
@@ -311,6 +312,8 @@ abstract class Entity implements \ArrayAccess
 
     protected function afterDelete()
     {
+        $finder_class = get_class($this->getFinder());
+        $finder_class::dropStoredStaticCache();
         return false;
     }
 

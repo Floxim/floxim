@@ -2,9 +2,8 @@
 //todo: psr0 need fix - move code to exists controller or create new
 require_once '../../../../../boot.php';
 
-use Floxim\Floxim\System\Fx as fx;
+$ctr = new \Floxim\Floxim\Admin\Controller\File($_FILES + array('do_return' => true), 'upload_save');
 
-$ctr = fx::controller('admin_file:upload_save', $_FILES + array('do_return' => true));
 $res = $ctr->process();
 $path = $res['path'];
 if (!$path) {

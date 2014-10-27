@@ -50,4 +50,9 @@ class Finder extends System\Data
         }
         return $class_name;
     }
+    
+    public static function dropStoredStaticCache() {
+        \Floxim\Floxim\Component\Component\Finder::dropStoredStaticCache();
+        parent::dropStoredStaticCache();
+    }
 }

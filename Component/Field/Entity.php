@@ -138,7 +138,6 @@ class Entity extends System\Entity
 
     protected function afterInsert()
     {
-        $this->dropMetaCache();
         if (!$this['component_id']) {
             return;
         }
@@ -167,7 +166,6 @@ class Entity extends System\Entity
                 }
             }
         }
-        $this->dropMetaCache();
     }
 
     protected function afterDelete()
@@ -177,7 +175,7 @@ class Entity extends System\Entity
                 fx::db()->query("ALTER TABLE `{{" . $this->getTable() . "}}` DROP COLUMN `" . $this['keyword'] . "`");
             }
         }
-        $this->dropMetaCache();
+        parent::afterDelete();
     }
 
     /* -- for admin interface -- */
@@ -235,10 +233,4 @@ class Entity extends System\Entity
         }
         return $val;
     }
-
-    protected function dropMetaCache()
-    {
-        fx::files()->rm(fx::path('files', 'cache/meta_cache.php'));
-    }
-
 }

@@ -891,13 +891,17 @@ abstract class Data
 
     protected static $fullStaticCache = false;
     protected static $storeStaticCache = false;
+    
+    protected static function getStaticCacheKey() {
+        return 'data-meta-' . get_called_class();
+    }
 
     public static function initStaticCache()
     {
         if (static::$fullStaticCache) {
             $class_name = get_called_class();
             return fx::cache('meta')->remember(
-                'data-meta-' . get_called_class(), 
+                static::getStaticCacheKey(), 
                 60 * 60, 
                 function () use ($class_name) {
                     return $class_name::loadFullDataForCache();
@@ -907,6 +911,13 @@ abstract class Data
             );
         }
         return new Collection();
+    }
+    
+    public static function dropStoredStaticCache() {
+        if (static::isStaticCacheUsed()) {
+            fx::log('droping cache', get_called_class());
+            fx::cache('meta')->delete(static::getStaticCacheKey());
+        }
     }
 
     public static function loadFullDataForCache()

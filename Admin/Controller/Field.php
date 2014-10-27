@@ -283,6 +283,9 @@ class Field extends Admin
         foreach ($ids as $id) {
             try {
                 $field = fx::data($es, $id);
+                if (!$field) {
+                    continue;
+                }
                 $field->delete();
                 if ($field['component_id']) {
                     $com = fx::data('component', $field['component_id']);
