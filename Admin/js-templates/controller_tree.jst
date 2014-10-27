@@ -103,20 +103,20 @@ fx_controller_tree(html);
 <!--[controller_pane]-->
 <div 
     class="
-        sub 
-        <?=_c.is_group ? ' group': ''?>
+        fx_sub 
+        <?=_c.is_group ? ' fx_sub_group': ''?>
         controller_<?=_c.controller.replace(/\./g, '__')?> 
         <?=_c.is_hidden ? ' fx_group_hidden' : ''?>
         type_<?=_c.type?>" data-id="<?=_c.id?>"
     >
-    <div class="sub_data">
-        <div class="pic" style="background-color: <?=_c.bg_color?>; color:<?=_c.text_color?>;">
-            <div class="icon"><?=_c.icon?></div>
-            <div class="sign"><?=_c.sign?></div>
+    <div class="fx_sub_data">
+        <div class="fx_sub_pic" style="background-color: <?=_c.bg_color?>; color:<?=_c.text_color?>;">
+            <div class="fx_sub_icon"><?=_c.icon?></div>
+            <div class="fx_sub_sign"><?=_c.sign?></div>
         </div>
-        <div class="body">
-            <div class="title"><?=_c.title?></div>
-            <div class="description"><?=_c.description?></div>
+        <div class="fx_sub_body">
+            <div class="fx_sub_title"><?=_c.title?></div>
+            <div class="fx_sub_description"><?=_c.description?></div>
         </div>
     </div>
 </div>

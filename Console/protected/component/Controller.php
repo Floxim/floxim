@@ -1,13 +1,9 @@
 <?php
-namespace {
-    Vendor}
-\{Module}\{Component};
+namespace {Vendor}\{Module}\{Component};
 
 use Floxim\Floxim\System\Fx as fx;
 
-class Controller extends
+class Controller extends {ParentClassController} 
 {
-ParentClassController
-} {
 
 }

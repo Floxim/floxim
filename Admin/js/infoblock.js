@@ -25,7 +25,7 @@ window.fx_controller_tree = function (html) {
     });
     
     function filter_controllers() {
-        var subs = $('.sub', html);
+        var subs = $('.fx_sub', html);
         var term = $('.filter_search input', html).val();
         var has_filters = term.length > 0;
         subs.show();
@@ -46,7 +46,7 @@ window.fx_controller_tree = function (html) {
             subs.filter('.fx_group_hidden').hide();
             $filter_dropper.hide();
         } else {
-            subs.filter('.group').hide();
+            subs.filter('.fx_sub_group').hide();
             $filter_dropper.show();
         }
         
@@ -79,10 +79,10 @@ window.fx_controller_tree = function (html) {
     });
 
 
-    $('.fx_controller_list', html).on('click', '.sub', function() {
+    $('.fx_controller_list', html).on('click', '.fx_sub', function() {
         var sub = $(this);
         
-        if (sub.hasClass('group')) {
+        if (sub.hasClass('fx_sub_group')) {
             var group_id = sub.data('id');
             $('.filter_controller').val(group_id);
             filter_controllers();
