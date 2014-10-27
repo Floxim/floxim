@@ -895,9 +895,16 @@ abstract class Data
     public static function initStaticCache()
     {
         if (static::$fullStaticCache) {
-            return fx::cache('meta')->remember('data-meta-' . get_called_class(), 60 * 60, function () {
-                return static::loadFullDataForCache(); // todo: need check for PHP 5.3
-            }, array(), static::$storeStaticCache);
+            $class_name = get_called_class();
+            return fx::cache('meta')->remember(
+                'data-meta-' . get_called_class(), 
+                60 * 60, 
+                function () use ($class_name) {
+                    return $class_name::loadFullDataForCache();
+                }, 
+                array(), 
+                static::$storeStaticCache
+            );
         }
         return new Collection();
     }
