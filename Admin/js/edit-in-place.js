@@ -318,8 +318,8 @@ fx_edit_in_place.prototype.get_vars = function() {
             var new_val = $.trim(node.text());
             
             // handle zero-width space
-            if (new_val.length === 1 && new_val.charCodeAt(0) === 8203) {
-                new_val = '';
+            if (new_val.charCodeAt(new_val.length - 1) === 8203) {
+                new_val = new_val.substring(0, new_val.length - 1);
             }
             // put empty val instead of zero-width space
             if (!new_val) {
