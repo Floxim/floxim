@@ -9,7 +9,7 @@ class Config
         'db.charset'                 => 'utf8',
         'dev.on'                     => false,
         'CHARSET'                    => 'utf-8',
-        'ADMIN_LANG'                 => 'en',
+        'lang.admin'                 => 'en',
         'auth.login_field'           => 'email',
         'auth.remember_ttl'          => 604800, // 86400 * 7
         'FILECHMOD'                  => 0644,

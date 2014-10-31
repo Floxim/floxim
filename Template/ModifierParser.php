@@ -72,7 +72,7 @@ class ModifierParser extends Fsm
         if (count($m['args']) == 0 && preg_match("~^[\'\"]~", $m['name'])) {
             $m['args'] = array($m['name']);
             $m['name'] = '';
-        } elseif (preg_match("~\:[a-z0-9]+~", $m['name'])) {
+        } elseif (preg_match("~\:[a-z0-9]+~", $m['name']) && !preg_match("~\:\:~", $m['name'])) {
             $m['name'] = preg_replace("~^\:~", '', $m['name']);
             $m['is_template'] = true;
             $parts = explode(' with ', $m['name'], 2);

@@ -459,6 +459,12 @@ class Compiler
                     $token_prop_entry .= $var_id;
                 } elseif (preg_match("~^\`.+\`$~s", $tpval)) {
                     $token_prop_entry .= trim($tpval, '`');
+                } elseif (preg_match("~\{.+\}~", $tpval)) {
+                    $ep = new \Floxim\Floxim\Template\ExpressionParser;
+                    $tpval = preg_replace_callback("~\{([^\}]+)\}~", function($m) use($ep) {
+                        return "'.".$ep->build($m[1]).".'";
+                    }, $tpval);
+                    $token_prop_entry .= "'".$tpval."'";
                 } else {
                     $token_prop_entry .= "'" . addslashes($tpval) . "'";
                 }

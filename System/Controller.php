@@ -333,7 +333,7 @@ class Controller
     public function getConfig($searched_action = null)
     {
         if ($searched_action === true) {
-            $searched_action = $this->action;
+            $searched_action = fx::util()->camelToUnderscore($this->action);
         }
         if (!is_null($this->_config_cache)) {
             return $searched_action ? $this->_config_cache['actions'][$searched_action] : $this->_config_cache;

@@ -16,7 +16,7 @@ class Finder extends System\Data
     public function setLang($lang = null)
     {
         if (!$lang) {
-            $this->lang = fx::config()->ADMIN_LANG;
+            $this->lang = fx::config('lang.admin');
         } else {
             $this->lang = $lang;
         }

@@ -2,10 +2,11 @@
 
 namespace Floxim\Floxim\Template;
 
+use Floxim\Floxim\System\Fx as fx;
+
 class Tokenizer extends Fsm
 {
-    /*public $split_regexp = '~(\{[\$\%\/a-z0-9]+[^\{]*?\}|</?(?:script|style)[^>]*?>|<\?(?:php)?|\?>|<\!--|-->)~';*/
-    public $split_regexp = '~(\\\\{|\\\\}|\{[\$\%\/a-z0-9]+[^\{]*?\}|<\?(?:php)?|\?>|<\!--|-->)~';
+    public $split_regexp = '~(\\\\{|\\\\}|\{/?raw}|\{|\}|<\?(?:php)?|\?>|<\!--|-->)~';
 
     const JS = 1;
     const CSS = 2;
@@ -13,8 +14,10 @@ class Tokenizer extends Fsm
     const HTML = 4;
     const COMMENT = 5;
     const RAW = 6;
+    const FX = 7;
 
     protected $stack = '';
+    protected $fx_level = 0;
 
     public function __construct()
     {
@@ -24,14 +27,9 @@ class Tokenizer extends Fsm
         $this->addRule(self::HTML, '~^\{raw}$~s', self::RAW);
         $this->addRule(self::RAW, '~^\{/raw}$~s', self::HTML);
 
-        $this->addRule(self::HTML, '~^\{.+\}$~s', self::HTML, 'addToken');
-
-        //$this->add_rule(self::HTML, '~^<script~', self::JS);
-        //$this->add_rule(self::JS, '~^</script~', self::HTML);
-
-        //$this->add_rule(self::HTML, '~^<style~', self::CSS);
-        //$this->add_rule(self::CSS, '~^</style~', self::HTML);
-
+        $this->addRule(array(self::HTML, self::FX), '{', self::FX, 'startFx');
+        $this->addRule(self::FX, '}', self::HTML, 'stopFx');
+        
         $this->addRule(self::HTML, '~^<\?~', self::PHP);
         $this->addRule(self::PHP, '~^\?>~', self::HTML);
 
@@ -39,13 +37,46 @@ class Tokenizer extends Fsm
         $this->addRule(self::COMMENT, '~^-->~', self::HTML);
     }
 
-    protected function addToken($ch)
+    public function parse($string) 
     {
-        if (!empty($this->stack)) {
-            $this->res [] = Token::create($this->stack);
-            $this->stack = '';
+        parent::parse($string);
+        $this->popToken();
+        return $this->res;
+    }
+    
+    protected function startFx($ch) 
+    {
+        if ($this->fx_level === 0) {
+            $this->popToken();
         }
-        $this->res [] = Token::create($ch);
+        $this->fx_level++;
+        $this->defaultCallback($ch);
+    }
+    
+    protected function stopFx($ch) 
+    {
+        $this->fx_level--;
+        if ($this->fx_level === 0) {
+            $this->defaultCallback($ch);
+            $this->popToken();
+        } else {
+            return false;
+        }
+    }
+    
+    protected function popToken() 
+    {
+        $src = $this->stack;
+        $this->stack = '';
+        if (!empty($src)) {
+            $this->addToken($src);
+        }
+    }
+
+
+    protected function addToken($source) 
+    {
+        $this->res []= Token::create($source);
     }
 
     public function defaultCallback($ch)

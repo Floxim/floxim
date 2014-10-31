@@ -101,7 +101,14 @@ class Finder extends System\Data
     public function getContentInfoblocks($content_type = null)
     {
         if ($content_type) {
-            $this->where('controller', 'component_' . $content_type);
+            // @todo: always store full component keyword
+            $this->where(
+                'controller', 
+                array_unique(array(
+                    preg_replace("~^floxim\.main\.~", '', $content_type), 
+                    fx::getComponentFullName($content_type)
+                ))
+            );
         }
         $this->where('action', 'list_infoblock');
         return $this->all();
@@ -109,7 +116,7 @@ class Finder extends System\Data
 
     protected static $isStaticCacheUsed = true;
     protected static $fullStaticCache = true;
-    protected static $storeStaticCache = true;
+    protected static $storeStaticCache = false;
 
     public static function prepareFullDataForCacheFinder($finder)
     {

@@ -54,9 +54,9 @@ class Front extends Base
             });
         $areas = fx::collection();
         $visual = fx::data('infoblock_visual')->
-        where('infoblock_id', $infoblocks->getValues('id'))->
-        where('layout_id', $layout_id)->
-        all();
+                    where('infoblock_id', $infoblocks->getValues('id'))->
+                    where('layout_id', $layout_id)->
+                    all();
 
         foreach ($infoblocks as $ib) {
             if (!$ib->isAvailableForUser()) {

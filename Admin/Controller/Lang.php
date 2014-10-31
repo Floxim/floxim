@@ -171,7 +171,7 @@ class Lang extends Admin
         $fields = array('strings' => $list);
         $this->response->addFields($fields);
 
-        $lang_name = fx::config('ADMIN_LANG') == $lang['lang_code'] ? $lang['native_name'] : $lang['en_name'];
+        $lang_name = fx::config('lang.admin') == $lang['lang_code'] ? $lang['native_name'] : $lang['en_name'];
 
         $this->response->breadcrumb->addItem(fx::alang('Languages', 'system'), '#admin.lang.all');
         $this->response->breadcrumb->addItem($lang_name, '#admin.lang.edit(' . $lang['id'] . ')');

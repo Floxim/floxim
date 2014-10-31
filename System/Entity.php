@@ -359,7 +359,7 @@ abstract class Entity implements \ArrayAccess
         }
 
         if ($c_field[0] == self::VIRTUAL_MULTILANG) {
-            $lang_offset = $offset . '_' . fx::config('ADMIN_LANG');
+            $lang_offset = $offset . '_' . fx::config('lang.admin');
             if (!empty($this->data[$lang_offset])) {
                 return $this->data[$lang_offset];
             }
@@ -392,7 +392,7 @@ abstract class Entity implements \ArrayAccess
             if ($c_field) {
                 switch ($c_field[0]) {
                     case self::VIRTUAL_MULTILANG:
-                        $offset = $offset . '_' . fx::config('ADMIN_LANG');
+                        $offset = $offset . '_' . fx::config('lang.admin');
                         break;
                     case self::VIRTUAL_RELATION:
                         /**

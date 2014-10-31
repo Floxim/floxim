@@ -541,16 +541,19 @@ fx_front.prototype.add_infoblock_select_settings = function(data) {
                         return;
                     }
                     
-                    var adders = new_ib_node.data('content_adders');
-                    if (!adders || adders.length === 0 ){
+                    var new_cm = new_ib_node.data('fx_controller_meta');
+                    if (new_cm && new_cm.accept_content) {
+                        var first_meta = new_cm.accept_content[0];
+                        var adder_closure = $fx.front.get_panel_adder_closure(first_meta);
+                        $fx.front.load('edit');
                         $fx.front.select_item(new_ib_node.get(0));
+                        adder_closure();
                         return;
+                    } else {
+                        setTimeout(function() {
+                            $fx.front.select_item(new_ib_node.get(0));
+                        },100);
                     }
-                    $fx.front.load('edit');
-                    adders[0]();
-                    setTimeout(function() {
-                        $fx.front.select_item(new_ib_node.get(0));
-                    },100);
                 }
             );
         },

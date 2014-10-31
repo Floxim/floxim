@@ -192,7 +192,7 @@ class Entity extends System\Entity implements Template\Entity
         }
         // check for compliance with the filter type page
         $scope_page_type = fx::dig($this, 'scope.page_type');
-        if ($scope_page_type && $scope_page_type != $page['type']) {
+        if ($scope_page_type && fx::getComponentFullName($scope_page_type) != fx::getComponentFullName($page['type'])) {
             return false;
         }
         return true;
