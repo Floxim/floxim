@@ -23,6 +23,15 @@ class Admin extends Base
         if (!$entity || !$action) {
             return new Controller\Admin();
         }
+        
+        $base_url = fx::input()->fetchPost('_base_url');
+        
+        if ($base_url) {
+            $base_path = fx::router()->getPath($base_url);
+            if ($base_path) {
+                fx::env('page', $base_path->last());
+            }
+        }
 
         fx::env('ajax', true);
 

@@ -90,6 +90,10 @@ window.$fx_fields = {
     colorbasic: function (json) {
         return $t.jQuery('form_row', json);
     },
+    
+    password: function(json){
+        return $t.jQuery('form_row', json);
+    },
     map: function (json) {
         var $field = $t.jQuery('form_row', json);
         new fx_google_map_field($field);

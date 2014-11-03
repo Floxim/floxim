@@ -21,7 +21,8 @@ class Layout extends System\Controller
         }
         $page_infoblocks = fx::router('front')->getPageInfoblocks($page_id, $layout_id);
         fx::page()->setInfoblocks($page_infoblocks);
-        $path = fx::data('page', $page_id)->getPath();
+        //$path = fx::data('page', $page_id)->getPath();
+        $path = fx::env('page')->getPath();
         $current_page = $path->last();
         $res = array(
             'page_id'      => $page_id,

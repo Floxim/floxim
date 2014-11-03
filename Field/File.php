@@ -58,8 +58,8 @@ class File extends Baze
                 }
             }
         }
-
-        return isset($path) ? $path : $this->value;
+        $res = isset($path) ? $path : $this->value;
+        return $res;
     }
 
     public function getSqlType()

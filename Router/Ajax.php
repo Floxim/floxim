@@ -14,12 +14,15 @@ class Ajax extends Base
         }
 
         $c_url = fx::input()->fetchGetPost('_ajax_base_url');
-
+        
         if ($c_url) {
             $_SERVER['REQUEST_URI'] = $c_url;
-
-            $page = fx::data('page')->getByUrl($c_url, $context['site_id']);
-            fx::env('page', $page);
+            
+            $base_path = fx::router()->getPath($c_url);
+            if ($base_path) {
+                $page = $base_path->last();
+                fx::env('page', $page);
+            }
 
             $c_url = parse_url($c_url);
             if (isset($c_url['query'])) {

@@ -10,6 +10,8 @@ window.fx_livesearch = function (node) {
         this.count_show = data_params.count_show;
         this.conditions = data_params.conditions;
         this.preset_values = data_params.preset_values;
+        this.ajax_preload = data_params.ajax_preload;
+        this.plain_values = data_params.plain_values || [];
     } else {
         this.datatype = n.data('content_type');
         this.count_show = n.data('count_show');
@@ -20,7 +22,7 @@ window.fx_livesearch = function (node) {
     }
     this.inputNameTpl = n.data('prototype_name');
     
-    this.inputContainer = n.find('.livesearch_input');
+    this.inputContainer = n.find('li.livesearch_input');
     this.input = this.inputContainer.find('input');
     this.isMultiple = n.data('is_multiple') === 'Y';
     
@@ -47,7 +49,7 @@ window.fx_livesearch = function (node) {
                 content_type:this.datatype,
                 fx_admin:'true'
             },
-			count_show:this.count_show
+            count_show:this.count_show
         };
         if (this.conditions) {
             params.data.conditions = this.conditions;
@@ -286,7 +288,7 @@ window.fx_livesearch = function (node) {
     
     this.Init = function() {
         this.Suggest = new fx_suggest({
-            input:n.find('input[name="livesearch_input"]'),
+            input:n.find('input.livesearch_input'),
             requestParams:this.getSuggestParams(),
             resultType:'json',
             onSelect:this.Select,
@@ -325,7 +327,7 @@ window.fx_livesearch = function (node) {
         this.n.on('click', '.killer', function() {
             livesearch.removeValue($(this).closest('.livesearch_item'));
         });
-        this.n.on('keydown', '.livesearch_input input', function(e) {
+        this.n.on('keydown', 'li.livesearch_input input', function(e) {
             var v = $(this).val();
             if (e.which === 8 && v === '') {
                 n.find('.killer').last().click();
@@ -341,7 +343,7 @@ window.fx_livesearch = function (node) {
                 livesearch.Suggest.hideBox();
             }
         });
-        this.n.on('keyup', '.livesearch_input input', function(e) {
+        this.n.on('keyup', 'li.livesearch_input input', function(e) {
             var v = $(this).val();
             if (v === $(this).data('last_counted_val')) {
                 return;
@@ -369,7 +371,7 @@ window.fx_livesearch = function (node) {
             // @todo
         }
 
-        this.n.on('focus', '.livesearch_input input', function() {
+        this.n.on('focus', 'li.livesearch_input input', function() {
             if (livesearch.isMultiple) {
                 return;
             }
@@ -398,7 +400,7 @@ window.fx_livesearch = function (node) {
             }
         });
 
-        this.n.on('suggest_blur', '.livesearch_input input', function() {
+        this.n.on('suggest_blur', 'li.livesearch_input input', function() {
             var c_val = $(this).val();
             if (c_val === '') {
                 livesearch.showValue();
@@ -617,6 +619,9 @@ window.fx_suggest = function(params) {
     };
 
     this.skipByIds = function(results,ids) {
+        if (!results) {
+            return [];
+        }
         var resReturn=[];
         var $in_array=function(needle, haystack){
             for (key in haystack) {
@@ -649,7 +654,13 @@ window.fx_suggest = function(params) {
     };
 
     this.getCacheData = function(requestParams,term) {
-        var cache_key_data = $.param($.extend({},requestParams,{ skip_ids: []})), // clear skip ids
+        var cache_key_data = $.param(
+                $.extend(
+                    {},
+                    requestParams//,
+                    //{ skip_ids: []}
+                )
+            ), // clear skip ids
             cache_key_term = term.toLowerCase(),
             $this=this,
             resReturn=null;

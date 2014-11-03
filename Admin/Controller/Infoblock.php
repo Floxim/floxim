@@ -27,8 +27,9 @@ class Infoblock extends Admin
             $this->ui->hidden('container_infoblock_id', $input['container_infoblock_id'])
         );
 
-        fx::env('page', $input['page_id']);
-        $page = fx::data('page', $input['page_id']);
+        //fx::env('page', $input['page_id']);
+        //$page = fx::data('page', $input['page_id']);
+        $page = fx::env('page');
 
         $area_meta = $input['area'];
 
@@ -130,12 +131,15 @@ class Infoblock extends Admin
     {
         // The current, editable) InfoBlock
         $infoblock = null;
-
+        
+        /*
         if (isset($input['page_id'])) {
             // set into the environment of the current page
             // it is possible to get the layout
             fx::env('page', $input['page_id']);
         }
+         * 
+         */
 
         $area_meta = is_string($input['area']) ? unserialize($input['area']) : $input['area'];
 
@@ -148,7 +152,8 @@ class Infoblock extends Admin
         } else {
             // Create a new type and ID of the controller received from the previous step
             list($controller, $action) = explode(":", $input['controller']);
-            $site_id = fx::data('page', $input['page_id'])->get('site_id');
+            //$site_id = fx::data('page', $input['page_id'])->get('site_id');
+            $site_id = fx::env('site_id');
             $infoblock = fx::data("infoblock")->create(array(
                 'controller'             => $controller,
                 'action'                 => $action,
@@ -197,7 +202,7 @@ class Infoblock extends Admin
         $format_fields = $this->getFormatFields($infoblock, $area_meta);
         $this->response->addFields($format_fields, false, 'visual');
 
-        $c_page = fx::data('page', $input['page_id']);
+        $c_page = fx::env('page');
         $scope_fields = $this->getScopeFields($infoblock, $c_page);
         $this->response->addFields($scope_fields, false, 'scope');
 
@@ -464,7 +469,7 @@ class Infoblock extends Admin
      * @param fx_content_page $c_page - page, where he opened the window settings
      */
 
-    protected function getScopeFields(CompInfoblock\Entity $infoblock, \Floxim\Main\Page\Entity $c_page)
+    protected function getScopeFields(CompInfoblock\Entity $infoblock, \Floxim\Main\Content\Entity $c_page)
     {
 
         $fields = array();

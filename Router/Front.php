@@ -10,14 +10,18 @@ class Front extends Base
 
     public function route($url = null, $context = null)
     {
-
-        $page = fx::data('page')->getByUrl(urldecode($url), $context['site_id']);
-
+        $path = fx::router()->getPath($url, $context['site_id']);
+        if (!$path) {
+            return;
+        }
+        
+        $page = $path->last();
+        
         if (!$page) {
             return null;
         } else {
             if (
-                $url != $page['url']
+                $url && $url != $page['url']
             ) {
                 // oldest urlAlias
                 // @TODO: check site_id here
@@ -25,12 +29,19 @@ class Front extends Base
                 exit;
             }
         }
-
         fx::env('page', $page);
         fx::http()->status('200');
         $layout_ib = $this->getLayoutInfoblock($page);
         $res = $layout_ib->render();
         return $res;
+    }
+    
+    public function getPath($url, $site_id) {
+        $page = fx::data('page')->getByUrl(urldecode($url), $site_id);
+        if (!$page) {
+            return false;
+        }
+        return $page->getPath();
     }
 
     protected $_ib_cache = array();
@@ -47,8 +58,10 @@ class Front extends Base
 
         $c_page = $page_id === fx::env('page_id') ? fx::env('page') : fx::data('page', $page_id);
 
-        $infoblocks = $c_page
-            ->getPageInfoblocks()
+        //$infoblocks = $c_page
+        //    ->getPageInfoblocks()
+        $infoblocks = fx::data('infoblock')
+            ->getForPage($c_page)
             ->find(function ($ib) {
                 return !$ib->isLayout();
             });
@@ -86,10 +99,18 @@ class Front extends Base
 
     public function getLayoutInfoblock($page)
     {
-        $layout_ib = $page->getLayoutInfoblock();
+        $path = $page->getPath()->copy()->reverse();
+        foreach ($path as $c_page){
+            if (method_exists($c_page, 'getLayoutInfoblock')) {
+                $layout_ib = $c_page->getLayoutInfoblock();
+                break;
+            }
+        }
+        //$layout_ib = $page->getLayoutInfoblock();
         if ($layout_ib->getVisual()->get('is_stub')) {
             $suitable = new Template\Suitable();
-            $infoblocks = $page->getPageInfoblocks();
+            //$infoblocks = $page->getPageInfoblocks();
+            $infoblocks = fx::data('infoblock')->getForPage($page);
 
             // delete all parent layouts from collection
             $infoblocks->findRemove(function ($ib) use ($layout_ib) {

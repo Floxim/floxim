@@ -14,14 +14,19 @@ class Infoblock extends Base
         $c_url = fx::input('post', 'c_url');
         if ($c_url) {
             $_SERVER['REQUEST_URI'] = $c_url;
+            $path = fx::router()->getPath($c_url);
+            if ($path) {
+                fx::env('page', $path->last());
+            }
             $c_url = parse_url($c_url);
             if (isset($c_url['query'])) {
                 parse_str($c_url['query'], $_GET);
             }
+            
         }
         $ib_id = $ib_info[1];
         $page_id = $ib_info[2];
-        fx::env('page', $page_id);
+        //fx::env('page', $page_id);
         fx::env('ajax', true);
 
         $page_infoblocks = fx::router('front')->getPageInfoblocks(

@@ -9,6 +9,14 @@ abstract class Base
 
     }
 
-    abstract function route($url = null, $context = null);
+    public function route($url = null, $context = null) 
+    {
+        return false;
+    }
+    
+    public function getPath($url) 
+    {
+        return false;
+    }
 
 }

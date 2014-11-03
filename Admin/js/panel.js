@@ -22,6 +22,12 @@
             
             $body.css({height:'1px', 'visibility':'hidden'}).removeClass('fx_admin_panel_body_overflow_hidden').show();
             
+            if (!data.fields) {
+                data.fields = [];
+            }
+            
+            data.fields.push({type:'hidden', name:'_base_url', value:document.location.href});
+            
             if (params.view === 'horizontal') {
                 $.each(data.fields, function(key, field) {
                     field.context = 'panel';
@@ -34,6 +40,7 @@
             data.form_button.unshift('cancel');
             data.class_name = 'fx_form_'+params.view;
             data.button_container = $footer;
+            
             
             var $form = $fx.form.create(data, $body);
             
@@ -135,6 +142,9 @@
             this.is_moving =  false;
         };
         this.load_form = function(form_options, params) {
+            if (form_options._base_url === undefined) {
+                form_options._base_url = document.location.href;
+            }
             $fx.post(
                 form_options, 
                 function(json) {

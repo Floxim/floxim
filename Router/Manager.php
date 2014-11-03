@@ -68,6 +68,20 @@ class Manager
             }
         }
     }
+    
+    public function getPath($url, $site_id = null) {
+        if (is_null($site_id)) {
+            $site_id = fx::env('site_id');
+        }
+        // @todo check if url contains another host name
+        $url = preg_replace("~^https?://.+?/~", '/', $url);
+        foreach ($this->routers as $r) {
+            $result = $r['router']->getPath($url, $site_id);
+            if ($result) {
+                return $result;
+            }
+        }
+    }
 
     /**
      * Get the option router by name

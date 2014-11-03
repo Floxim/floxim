@@ -38,6 +38,11 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         $collection->finder = $this->finder;
         return $collection;
     }
+    
+    public function copy() 
+    {
+        return clone $this;
+    }
 
     protected function load($data)
     {
