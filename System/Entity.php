@@ -349,6 +349,11 @@ abstract class Entity implements \ArrayAccess
         if ($offset == 'id') {
             return null;
         }
+        
+        $event_result = fx::trigger('offsetGet', array('target' => $this, 'offset' => $offset));
+        if ($event_result) {
+            return $event_result;
+        }
 
 
         $c_type = $this->getType();
@@ -438,6 +443,10 @@ abstract class Entity implements \ArrayAccess
             return true;
         }
         if (method_exists($this, '_get' . fx::util()->underscoreToCamel($offset))) {
+            return true;
+        }
+        $event_res = fx::trigger('offsetExists', array('target' => $this, 'offset' => $offset));
+        if ($event_res === true) {
             return true;
         }
         return isset(self::$_field_map[$this->getType()][$offset]);

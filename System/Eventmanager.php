@@ -57,13 +57,17 @@ class Eventmanager
         if (is_string($e)) {
             $e = new Event($e, $params);
         }
+        $callback_res = null;
         foreach ($this->_listeners as $lst) {
             if ($lst['event_name'] == $e->name) {
                 $callback_res = $lst['callback']($e);
-                if ($callback_res === false) {
-                    return;
+                if ($e->isStopped()) {
+                    $event_res = $e->getResult();
+                    return $event_res ? $event_res : $callback_res;
                 }
             }
         }
+        $event_res = $e->getResult();
+        return $event_res ? $event_res : $callback_res;
     }
 }

@@ -106,7 +106,6 @@ class Front extends Base
                 break;
             }
         }
-        //$layout_ib = $page->getLayoutInfoblock();
         if ($layout_ib->getVisual()->get('is_stub')) {
             $suitable = new Template\Suitable();
             //$infoblocks = $page->getPageInfoblocks();

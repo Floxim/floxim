@@ -529,6 +529,14 @@ class Fx
 
         // load options from DB
         self::config()->loadFromDb();
+        
+        $moduleManager = new Modules();
+        $modules = $moduleManager->getAll();
+        foreach ($modules as $m) {
+            if (isset($m['object'])) {
+                $m['object']->init();
+            }
+        }
     }
 
     public static function lang($string = null, $dict = null)
@@ -661,7 +669,7 @@ class Fx
 
     public static function trigger($event, $params = null)
     {
-        self::getEventManager()->trigger($event, $params);
+        return self::getEventManager()->trigger($event, $params);
     }
 
 

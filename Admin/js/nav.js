@@ -207,6 +207,7 @@ fx_more_menu.prototype.load_items = function () {
         element.click( function(){
             self.hide();
             if (item.button && typeof item.button == 'object') {
+                item.button._base_url = document.location.href;
                 $fx.post(item.button,
                 function(json) {
                     $fx.front_panel.show_form(json, {

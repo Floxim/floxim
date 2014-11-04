@@ -299,7 +299,7 @@ class Component extends Admin
         }
         if ($res_create['status'] == 'successful') {
             $component = $res_create['component'];
-            $result['reload'] = '#admin.component.edit(' . $component['id'] . ',settings)';
+            $result['reload'] = '#admin.component.edit(' . $component['id'] . ',fields)';
         } else {
             $result['status'] = 'error';
             $result['text'][] = $res_create['error'];

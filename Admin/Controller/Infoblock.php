@@ -347,10 +347,11 @@ class Infoblock extends Admin
 
     public function layoutSettings($input)
     {
-        $c_page = fx::data('page', $input['page_id']);
-        $infoblock = $c_page->getLayoutInfoblock();
+        //$c_page = fx::data('page', $input['page_id']);
+        //$infoblock = $c_page->getLayoutInfoblock();
+        $c_page = fx::env('page');
+        $infoblock = fx::router('front')->getLayoutInfoblock($c_page);
 
-        $c_page = fx::data('page', $input['page_id']);
         $scope_fields = $this->getScopeFields($infoblock, $c_page);
         unset($scope_fields['visibility']);
         $this->response->addFields($scope_fields, false, 'scope');

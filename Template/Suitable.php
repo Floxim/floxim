@@ -67,7 +67,7 @@ class Suitable
         $source_layout_id = $c_layout_id;
 
         if (!$layout_ib) {
-            $layout_ib = fx::env('page')->getLayoutInfoblock();
+            $layout_ib = fx::router('front')->getLayoutInfoblock(fx::env('page'));
         }
 
         if ($layout_ib->getVisual()->get('is_stub')) {
