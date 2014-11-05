@@ -72,7 +72,6 @@ class Db extends \PDO
         if (!$this->last_result) {
 
             $this->last_error = $this->errorInfo();
-
             throw new \Exception(
                 "Query: " . $statement . "\n" .
                 "Error: " . $this->last_error[2]

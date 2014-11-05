@@ -150,6 +150,10 @@ fx_form = {
                 status_block.writeOk( data.text ? data.text : 'Ok');
                 $form.trigger('fx_form_ok');
             }
+            else if (data.status === 'error') {
+                status_block.writeError( data );
+                return;
+            }
             else if (data.text) {
                 status_block.show();
                 status_block.writeError(data['text']);
@@ -344,6 +348,8 @@ fx_form = {
                 }
                 switch (pexp) {
                     case '==':
+                        var test_name = 'format[linking_mm_type_294_77_196]',
+                            c_name = _el.find(':input').attr('name');
                         do_show = par_val === pval;
                         // check parent visibility
                         // jquery 'is visible' magic doesn't work with input[type=hidden]
@@ -356,6 +362,10 @@ fx_form = {
                                     do_show = $inp_field_block.css('display') !== 'none';
                                 }
                             }
+                        }
+                        if (false && c_name === test_name) {
+                            console.log(_el, par_inp, par_inp.css('display'));
+                            alert('qq');
                         }
                         break;
                     case '!=':
@@ -387,8 +397,8 @@ fx_form = {
                 _el.show();
                 $el_inp.trigger('change');
             } else if (!do_show && is_visible) {
-                $el_inp.trigger('change');
                 _el.hide();
+                $el_inp.trigger('change');
             }
         };
         _el.hide();
@@ -416,6 +426,13 @@ $fx.form = window.fx_form = window.$fx_form = fx_form;
     };
 
     $.fn.writeError = function(message){
+        if (message.errors) {
+            var errors = [];
+            $.each(message.errors, function(i, e) {
+                errors.push(e.text);
+            });
+            message = errors.join("<br />");
+        }
         if ( ! (message instanceof Array) ) {
             message = [message];
         }

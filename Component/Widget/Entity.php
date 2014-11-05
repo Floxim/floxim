@@ -28,10 +28,10 @@ class Entity extends System\Entity
             $res = false;
         }
 
-        if ($this['keyword'] && !preg_match("/^[a-z][a-z0-9_-]*$/i", $this['keyword'])) {
+        if ($this['keyword'] && !preg_match("/^[a-z0-9_\.]+$/i", $this['keyword'])) {
             $this->validate_errors[] = array(
                 'field' => 'keyword',
-                'text'  => fx::alang('Keyword can contain only letters and numbers', 'system')
+                'text'  => fx::alang('Keyword can contain only letters and numbers', 'system').' / '.$this['keyword']
             );
             $res = false;
         }
@@ -60,21 +60,6 @@ class Entity extends System\Entity
 
     public function scaffold()
     {
-        $keyword = $this['keyword'];
-        $controller_file = fx::path((($this['vendor'] === 'std') ? '@std' : '@root') .
-            'widget/' . $keyword . '/' . $keyword . '.php');
-        ob_start();
-        // todo: psr0 need fix
-        echo "<?php\n";?>
-        class fx_controller_widget_<?= $keyword ?> extends fx_controller_widget {
-        /*
-        //uncomment this to create widget action logic
-        public function do_show() {
-
-        }
-        */
-        }<?php
-        $code = ob_get_clean();
-        fx::files()->writefile($controller_file, $code);
+        
     }
 }

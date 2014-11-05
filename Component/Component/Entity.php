@@ -7,16 +7,14 @@ use Floxim\Floxim\System\Fx as fx;
 class Entity extends System\Entity
 {
 
+    protected $content_table = null;
+    
     public function getContentTable()
     {
-        $parts = explode('.', $this['keyword']);
-        if ($this['keyword'] == 'content') {
-            return $this['keyword'];
-        } elseif (count($parts) == 3) {
-            return join('_', $parts);
-        } else {
-            return 'content_' . $this['keyword'];
+        if (is_null($this->content_table)) {
+            $this->content_table = str_replace(".", "_", $this['keyword']);
         }
+        return $this->content_table;
     }
 
     public function getChain($up_to_down = true)

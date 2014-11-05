@@ -921,29 +921,5 @@ class Infoblock extends Admin
             WHERE id = '" . $vis['id'] . "'");
 
         return array('status' => 'ok');
-
-        $next_vis = null;
-        if ($input['next_visual_id']) {
-            $next_vis = fx::data('infoblock_visual', $input['next_visual_id']);
-        }
-
-        if ($next_vis) {
-            $new_priority = $next_vis['priority'] - 1;
-        } else {
-            $last_priority = fx::db()->getCol('SELECT MAX(priority) FROM {{infoblock_visual}}
-                 WHERE layout_id = ' . $vis['layout_id'] . ' AND area = "' . $input['area'] . '"');
-            $new_priority = isset($last_priority[0]) ? $last_priority[0] : 1;
-        }
-
-        $q = "UPDATE {{content_" . $ctype . '}}
-                SET priority = priority' . ($new_priority > $old_priority ? '-1' : '+1') . ' WHERE
-                    parent_id = ' . $parent_id . ' AND
-                    infoblock_id = ' . $ib_id . ' AND
-                    priority >= ' . min($old_priority, $new_priority) . ' AND
-                    priority <=' . max($old_priority, $new_priority);
-        fx::db()->query($q);
-        fx::db()->query('UPDATE {{content_' . $ctype . '}}
-                    SET priority = ' . $new_priority . '
-                    WHERE id = ' . $content['id']);
     }
 }

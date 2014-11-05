@@ -83,12 +83,10 @@ class Finder extends System\Finder
 
     public static function prepareSearchKeyword($keyword)
     {
-        return preg_replace("~^floxim\.main\.~", '', $keyword);
-    }
-
-    public function getByKeyword($keyword)
-    {
-        return $this->get('keyword', $keyword);
+        if (!strstr($keyword, '.')) {
+            $keyword = 'floxim.main.'.$keyword;
+        }
+        return $keyword;
     }
 
     public function getSelectValues($com_id = null)
@@ -104,7 +102,11 @@ class Finder extends System\Finder
                     return $result;
                 }
                 foreach ($comp_coll as $comp) {
-                    $result[] = array($comp['id'], str_repeat(" - ", $level) . $comp['name'], $level);
+                    $result[] = array(
+                        $comp['id'], 
+                        str_repeat(" - ", $level) . $comp['name']. ' ('.$comp['keyword'].')', 
+                        $level
+                    );
                     $result = $recursive_get($items->find('parent_id', $comp['id']), $result, $level + 1);
                 }
                 return $result;
@@ -168,10 +170,6 @@ class Finder extends System\Finder
             $result['component'] = $component;
 
             fx::console('component scaffold --keyword=' . $component['id']);
-            // run creating hook
-            if ($data['vendor'] == 'std') {
-                fx::hooks()->create(null, 'component_create', array('data' => $data));
-            }
             return $result;
         } catch (\Exception $e) {
             $result['status'] = 'error';

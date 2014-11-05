@@ -93,12 +93,12 @@ class Component extends Admin
             'component' => array(
                 'settings'  => fx::alang('Settings', 'system'),
                 'fields'    => fx::alang('Fields', 'system'),
-                'items'     => fx::alang('Items', 'system'),
-                'templates' => fx::alang('Templates', 'system'),
+                'items'     => fx::alang('Items', 'system')//,
+                //'templates' => fx::alang('Templates', 'system'),
             ),
             'widget'    => array(
-                'settings'  => fx::alang('Settings', 'system'),
-                'templates' => fx::alang('Templates', 'system')
+                'settings'  => fx::alang('Settings', 'system')//,
+                //'templates' => fx::alang('Templates', 'system')
             )
         );
 

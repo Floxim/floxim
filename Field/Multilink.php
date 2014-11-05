@@ -199,7 +199,8 @@ class Multilink extends Baze
                 'type'   => 'select',
                 'label'  => 'Many-many field',
                 'parent' => array(
-                    'format[linking_field_' . $check_field . '_datatype]' => $check_type
+                    'format[linking_field_' . $check_field . '_datatype]' => $check_type,
+                    'format[linking_field]' => $check_field
                 ),
                 'values' => $mm_fields,
                 'value'  => $this['format']['mm_field']
@@ -231,6 +232,7 @@ class Multilink extends Baze
             ),
             'value'  => $this['format']['render_type']
         );
+        fx::log($fields);
         return $fields;
     }
 

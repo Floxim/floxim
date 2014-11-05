@@ -246,7 +246,6 @@ class Field extends Admin
             $field = fx::data('field')->create(array('type' => $input['type']));
             $field[$to_key] = $to_val;
         }
-
         if ($input['type'] === CompField\Entity::FIELD_DATETIME) {
             $fields[] = array(
                 'name'           => 'default',
@@ -257,7 +256,12 @@ class Field extends Admin
                 'selected_first' => true
             );
         } else {
-            $fields[] = $this->ui->input('default', fx::alang('Default value', 'system'), $field['default']);
+            $fields []= array(
+                'name'  => 'default',
+                'label' => fx::alang('Default value', 'system'),
+                'type'  => $field['type'] == CompField\Entity::FIELD_MULTILINK ? 'hidden' : 'string',
+                'value' => $field['default']
+            );
         }
 
         $format_settings = $field->formatSettings();

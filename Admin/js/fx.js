@@ -178,13 +178,22 @@ window.$fx = {
     },
 
     show_status_text: function ( text, status ) { 
-        $("#fx_admin_statustext").removeClass();
-        $("#fx_admin_statustext").html("<span>"+text+"</span>").addClass(status).fadeIn('slow');
-        if ( status !== 'wait') {
-            //window.setTimeout(function() {
-                //$("#fx_admin_statustext").fadeOut('slow');
-            //}, 10000);
+        console.trace();
+        console.log('sst', text, status);
+        $("#fx_admin_status_block").attr('class', '');
+        $("#fx_admin_status_block").html("<span>"+text+"</span>").addClass(status).fadeIn('slow');
+    },
+    
+    show_error: function(json) {
+        var errors = [];
+        if (!json.errors) {
+            errors.push("unknown error");
+        } else {
+            $.each(json.errors, function(i, e) {
+                errors.push(e.text);
+            });
         }
+        $fx.show_status_text(errors.join("<br />"), 'error');
     },
     
     reload: function(new_location) {
@@ -222,6 +231,10 @@ window.$fx = {
                 function(json) {
                     if (json.reload) {
                         $fx.reload(json.reload);
+                        return;
+                    }
+                    if (json.status === 'error') {
+                        $fx.show_error(json);
                         return;
                     }
                 },

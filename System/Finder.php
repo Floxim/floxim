@@ -133,8 +133,11 @@ abstract class Finder
         $this->with($rel, null, $with_type);
         $c_with = $this->with[$rel];
         $with_name = $c_with[0];
-        $with_finder = $c_with[1];
-
+        if ($relation[0] === self::MANY_MANY) {
+            $with_finder = fx::data($relation[4]);
+        } else {
+            $with_finder = $c_with[1];
+        }
 
         $table = $with_finder->getColTable($field_name, false);
         $field = $with_name . '__' . $table . '.' . $field_name;
@@ -307,7 +310,7 @@ abstract class Finder
         foreach ($this->joins as $join) {
             $q .= $join['type'] . ' ';
             $q .= 'JOIN ';
-            $q .= $join['table'] . ' ON ' . $join['on'] . ' ';
+            $q .= $join['table'] . ' ON ' . $join['on'] . "\n ";
         }
         if (count($this->where) > 0) {
             $conds = array();
@@ -328,7 +331,6 @@ abstract class Finder
         if ($this->limit) {
             $q .= "\n LIMIT " . $this->limit;
         }
-        //fx::debug(fx::db()->prepare_query($q));
         return $q;
     }
 
@@ -358,7 +360,7 @@ abstract class Finder
 
         // column-link
         $link_col = $rel[2];
-
+        
         switch ($rel[0]) {
             case Finder::BELONGS_TO:
                 $joined_table = array_shift($finder_tables);
@@ -503,11 +505,7 @@ abstract class Finder
     {
         $query = $this->buildQuery();
         $res = fx::db()->getResults($query);
-
-        if (fx::db()->isError()) {
-            throw new \Exception("SQL ERROR");
-        }
-
+        
         if ($this->calc_found_rows) {
             $this->found_rows = fx::db()->getVar('SELECT FOUND_ROWS()');
         }
@@ -541,15 +539,11 @@ abstract class Finder
      */
     protected function getEntities()
     {
-        //fx::config('dev.on', fx::env('console'));
         $data = $this->getData();
-        //fx::debug('start filless', $data);
         foreach ($data as $dk => $dv) {
             $data[$dk] = $this->entity($dv);
         }
-        //fx::debug('start adrels');
         $this->addRelations($data);
-        //fx::debug('ready');
         return $data;
     }
 
@@ -567,7 +561,6 @@ abstract class Finder
         }
         $rel = $relations[$rel_name];
         list($rel_type, $rel_datatype, $rel_field) = $rel;
-        //fx::debug('arel', $rel);
         if (!$rel_finder) {
             $rel_finder = $this->getDefaultRelationFinder($rel);
         }
@@ -579,7 +572,6 @@ abstract class Finder
                 $entities->attach($rel_items, $rel_field, $rel_name);
                 break;
             case self::HAS_MANY:
-                //echo fx_debug('has manu', $rel_finder);
                 $rel_items = $rel_finder->where($rel_field, $entities->getValues('id'))->all();
                 $entities->attachMany($rel_items, $rel_field, $rel_name);
                 break;

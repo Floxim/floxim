@@ -63,15 +63,16 @@ class Widget extends Component
     {
         $fields = array();
 
-        switch ($input['source']) {
-            default:
-                $input['source'] = 'new';
-                $fields[] = $this->ui->hidden('action', 'add');
-                $fields[] = array('label' => fx::alang('Name', 'system'), 'name' => 'name');
-                $fields[] = array('label' => fx::alang('Keyword', 'system'), 'name' => 'keyword');
-                $fields[] = $this->getVendorField();
+        
+        $input['source'] = 'new';
+        $fields[] = $this->ui->hidden('action', 'add');
+        $fields[] = array('label' => fx::alang('Name', 'system'), 'name' => 'name');
+        $fields[] = array('label' => fx::alang('Keyword', 'system'), 'name' => 'keyword');
+        //$fields[] = $this->getVendorField();
+        foreach ($this->getModuleFields() as $mf) {
+            $fields [] = $mf;
         }
-
+        
         $fields[] = $this->ui->hidden('source', $input['source']);
         $fields[] = $this->ui->hidden('posting');
         $fields[] = $this->ui->hidden('entity', 'widget');
@@ -89,22 +90,20 @@ class Widget extends Component
         $result = array('status' => 'ok');
 
         $data['name'] = trim($input['name']);
-        $data['keyword'] = trim($input['keyword']);
+        $data['keyword'] = $this->getFullKeyword($input);
 
-        if (!$data['keyword'] && $data['name']) {
-            $data['keyword'] = fx::util()->strToKeyword($data['name']);
-        }
-        $data['vendor'] = $input['vendor'] ? $input['vendor'] : 'local';
-
-
+        fx::log('saving...', $data);
         $widget = fx::data('widget')->create($data);
 
         if (!$widget->validate()) {
             $result['status'] = 'error';
             $result['errors'] = $widget->getValidateErrors();
+            $result['text'] = 'Error';
+            fx::log('invald', $result);
             return $result;
         }
         $widget->save();
+        fx::log('savd', $widget);
         $result['reload'] = '#admin.widget.all';
         return $result;
     }

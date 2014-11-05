@@ -304,10 +304,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
 
     public function slice($offset, $length = null)
     {
-        $collection = fx::collection(array_slice($this->data, $offset, $length));
-        if ($this->is_sortable) {
-            $collection->is_sortable = true;
-        }
+        $collection = $this->fork(array_slice($this->data, $offset, $length));
         return $collection;
     }
 
