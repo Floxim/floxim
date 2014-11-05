@@ -405,7 +405,7 @@ abstract class Entity implements \ArrayAccess
                          * $item['parent'] = $parent_obj;
                          * we add parent_id right now
                          */
-                        if ($c_field[1][0] === Data::BELONGS_TO && $value instanceof Entity) {
+                        if ($c_field[1][0] === Finder::BELONGS_TO && $value instanceof Entity) {
                             $c_rel_field = $c_field[1][2];
                             $value_id = $value['id'];
                             if ($c_rel_field && $value_id) {

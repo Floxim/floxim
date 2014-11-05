@@ -7,7 +7,7 @@ use Floxim\Form;
 /**
  * Layer between the table and the object
  */
-abstract class Data
+abstract class Finder
 {
 
     protected $table;
@@ -360,7 +360,7 @@ abstract class Data
         $link_col = $rel[2];
 
         switch ($rel[0]) {
-            case Data::BELONGS_TO:
+            case Finder::BELONGS_TO:
                 $joined_table = array_shift($finder_tables);
                 $joined_alias = $rel_name . '__' . $joined_table;
                 // table of current finder containing the page, link
@@ -379,7 +379,7 @@ abstract class Data
                     );
                 }
                 break;
-            case Data::HAS_MANY:
+            case Finder::HAS_MANY:
                 $their_table = $finder->getColTable($link_col, false);
                 $joined_alias = $rel_name . '__' . $their_table;
                 $their_table_key = array_keys($finder_tables, $their_table);
@@ -399,7 +399,7 @@ abstract class Data
                     );
                 }
                 break;
-            case Data::MANY_MANY:
+            case Finder::MANY_MANY:
                 $linker_table = $finder->getColTable($link_col, false);
                 $joined_alias = $rel_name . '_linker__' . $linker_table;
                 $linker_table_key = array_keys($finder_tables, $linker_table);

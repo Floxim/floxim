@@ -5,7 +5,7 @@ namespace Floxim\Floxim\Component\Infoblock;
 use Floxim\Floxim\System;
 use Floxim\Floxim\System\Fx as fx;
 
-class Finder extends System\Data
+class Finder extends System\Finder
 {
 
     public function relations()

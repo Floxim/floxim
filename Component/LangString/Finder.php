@@ -5,7 +5,7 @@ namespace Floxim\Floxim\Component\LangString;
 use Floxim\Floxim\System;
 use Floxim\Floxim\System\Fx as fx;
 
-class Finder extends System\Data
+class Finder extends System\Finder
 {
     protected $loaded = array();
     protected $lang = null;

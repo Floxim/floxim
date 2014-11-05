@@ -17,6 +17,8 @@ class Infoblock extends Base
             $path = fx::router()->getPath($c_url);
             if ($path) {
                 fx::env('page', $path->last());
+            } else {
+                fx::env('page', fx::router('error')->getErrorPage());
             }
             $c_url = parse_url($c_url);
             if (isset($c_url['query'])) {

@@ -15,7 +15,7 @@ use Floxim\Floxim\System\Fx as fx;
  * @access   public
  * @see      http://floxim.org
  */
-class Finder extends System\Data
+class Finder extends System\Finder
 {
     /**
      * Get alias by id

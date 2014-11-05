@@ -137,7 +137,7 @@ class Link extends Baze
         }
         $rel_target = $this->getTargetName();
         return array(
-            System\Data::BELONGS_TO,
+            System\Finder::BELONGS_TO,
             $rel_target,
             $this['keyword']
         );

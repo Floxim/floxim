@@ -5,7 +5,7 @@ namespace Floxim\Floxim\Component\Session;
 use Floxim\Floxim\System;
 use Floxim\Floxim\System\Fx as fx;
 
-class Finder extends System\Data
+class Finder extends System\Finder
 {
 
     protected $cookie_name = 'fx_sid';

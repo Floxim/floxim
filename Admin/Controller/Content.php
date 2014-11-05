@@ -161,7 +161,6 @@ class Content extends Admin
 
     public function deleteSave($input)
     {
-        fx::log($input);
         $id = isset($input['content_id']) ? $input['content_id'] : (isset($input['id']) ? $input['id'] : false);
         if (!$id) {
             return;
@@ -201,35 +200,27 @@ class Content extends Admin
         }
 
         $this->response->addFields($fields);
-        $this->response->addFormButton(array('key' => 'save', 'label' => 'Delete'));
+        $this->response->addFormButton(array('key' => 'save', 'label' => fx::alang('Delete')));
         if ($input['delete_confirm']) {
-            $current_page_path = null;
-            if ($input['page_id']) {
-                $current_page_path = fx::data('page', $input['page_id'])->getPath()->getValues('id');
-            }
             $response = array('status' => 'ok');
-            /*
-            if ($content->isInstanceof('page') && is_array($current_page_path) && in_array($content['id'], $current_page_path) ) {
-                if ($content['parent_id'] == 0){
-                    $response['reload'] = '/';
-                } else {
-                    $parent_page = fx::data('page', $content['parent_id']);
-                    $response['reload'] = $parent_page['url'];
+            $c_page = fx::env('page');
+            if ($c_page) {
+                $c_path = $c_page->getPath();
+                $content_in_path = $c_path->findOne('id', $content['id']);
+                if ($content_in_path) {
+                    $response['reload'] = $content_in_path['parent'] ? $content_in_path['parent']['url'] : '/';
                 }
             }
-             * 
-             */
-            fx::log('killing', $content);
             $content->delete();
-            fx::log('kld', $response);
             return $response;
         }
         $component = fx::data('component', $content['type']);
 
         $header = fx::alang("Delete") . ' ' . $component['item_name'];
         if (($content_name = $content['name'])) {
-            $header .= ' "' . $content_name . '" ';
+            $header .= ' "' . $content_name . '"';
         }
+        $header .= "?";
         $res = array('header' => $header);
         return $res;
     }

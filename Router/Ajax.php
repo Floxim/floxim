@@ -22,6 +22,8 @@ class Ajax extends Base
             if ($base_path) {
                 $page = $base_path->last();
                 fx::env('page', $page);
+            } else {
+                fx::env('page', fx::router('error')->getErrorPage());
             }
 
             $c_url = parse_url($c_url);

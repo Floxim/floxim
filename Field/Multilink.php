@@ -55,7 +55,7 @@ class Multilink extends Baze
             }
             $this->_js_field['values'] = array();
             if (isset($content[$this['keyword']])) {
-                if ($rel[0] === System\Data::HAS_MANY) {
+                if ($rel[0] === System\Finder::HAS_MANY) {
                     $linkers = $content[$this['keyword']];
                 } else {
                     $linkers = $content[$this['keyword']]->linker_map;
@@ -270,7 +270,7 @@ class Multilink extends Baze
     public function getSavestring($content)
     {
         $rel = $this->getRelation();
-        $is_mm = $rel[0] == System\Data::MANY_MANY;
+        $is_mm = $rel[0] == System\Finder::MANY_MANY;
         if ($is_mm) {
             $res = $this->appendManyMany($content);
         } else {
@@ -395,10 +395,10 @@ class Multilink extends Baze
     {
         $rel = $this->getRelation();
         switch ($rel[0]) {
-            case System\Data::HAS_MANY:
+            case System\Finder::HAS_MANY:
                 $content_type = $rel[1];
                 break;
-            case System\Data::MANY_MANY:
+            case System\Finder::MANY_MANY:
                 $content_type = $rel[4];
                 break;
         }
@@ -417,7 +417,7 @@ class Multilink extends Baze
 
         if (!$this['format']['mm_field']) {
             $res_rel = array(
-                System\Data::HAS_MANY,
+                System\Finder::HAS_MANY,
                 $first_type,
                 $direct_target_field['keyword']
             );
@@ -430,7 +430,7 @@ class Multilink extends Baze
         $end_type = $end_datatype['keyword'];
 
         return array(
-            System\Data::MANY_MANY,
+            System\Finder::MANY_MANY,
             $first_type,
             $direct_target_field['keyword'],
             $end_target_field->getPropName(),
