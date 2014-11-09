@@ -169,7 +169,7 @@ class Controller
     protected function getControllerVariants()
     {
         // todo: psr0 need verify
-        // \Floxim\Main\User\Controller
+        // \Floxim\User\User\Controller
         // \Vendor\Module\Component\Controller
         return array(fx::getComponentNameByClass(get_class($this)));
     }

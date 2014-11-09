@@ -68,63 +68,91 @@ class Fx
     }
 
     protected static $data_cache = array();
-    /* Get data finder for the specified type content_id data or the object(s) by id
-     * @param string $datatype name of a data type 'component', 'content_news'
-     * @param mixed [$id] IDs or ids array
-     */
     public static $data_stat = array();
+    
+    protected static $floxim_components = array(
+        'main' => array(
+            'content',
+            'linker',
+            'page',
+            'text',
+            'mail_template',
+            'message_template'
+        ),
+        'user' => array(
+            'user'
+        ),
+        'nav' => array(
+            'section',
+            'tag',
+            'classifier'
+        ),
+        'layout' => array(
+            'grid',
+            'block_set',
+            'custom_code'
+        ),
+        'shop' => array(
+            'product'
+        ),
+        'corporate' => array(
+            'person',
+            'vacancy',
+            'project',
+            'contact',
+            'map'
+        ),
+        'media' => array(
+            'photo',
+            'video'
+        ),
+        'blog' => array(
+            'publication',
+            'news',
+            'comment'
+        )
+    );
 
     public static function getComponentFullName($name)
     {
-        $action = null;
-        $c_parts = explode(':', $name);
-        if (count($c_parts) == 2) {
-            list($name, $action) = $c_parts;
-        }
-        $path = explode(".", $name);
-        if (count($path) === 1) {
-            $lib_components = array(
-                'award',
-                'classifier',
-                'classifier_linker',
-                'comment',
-                'company',
-                'contact',
-                'content',
-                'faq',
-                'grid',
-                'map',
-                'custom_code',
-                'blockset',
-                'news',
-                'page',
-                'person',
-                'photo',
-                'product',
-                'project',
-                'publication',
-                'section',
-                'social_icon',
-                'linker',
-                'tag',
-                'text',
-                'user',
-                'vacancy',
-                'video',
-                'message_template',
-                'mail_template',
-                'wrapper'
-            );
-            if (in_array(strtolower($path[0]), $lib_components)) {
-                array_unshift($path, 'main');
-            } else {
-                array_unshift($path, 'component');
+        return fx::cache('meta')->remember(
+            'component_fullname_'.strtolower($name),
+            60*60,
+            function() use ($name) {
+                $action = null;
+                $c_parts = explode(':', $name);
+                if (count($c_parts) == 2) {
+                    list($name, $action) = $c_parts;
+                }
+                $path = explode(".", $name);
+                if (count($path) === 1) {
+                    static $coms_by_module = null;
+                    if (is_null($coms_by_module)) {
+                        $coms_by_module = array();
+                        foreach (self::$floxim_components as $module => $coms) {
+                            foreach ($coms as $com) {
+                                $coms_by_module[$com] = $module;
+                            }
+                        }
+                    }
+
+                    $short_com_name = fx::util()->camelToUnderscore($path[0]);
+
+                    // one of floxim default modules
+                    if (isset($coms_by_module[$short_com_name])) {
+                        array_unshift($path, $coms_by_module[$short_com_name]);
+                    } else 
+                    // system component such as 'site', 'session' etc.
+                    {
+                        array_unshift($path, 'component');
+                    }
+                }
+                if (count($path) === 2) {
+                    array_unshift($path, 'floxim');
+                }
+                return join(".", $path) . ($action ? ':' . $action : '');
             }
-        }
-        if (count($path) === 2) {
-            array_unshift($path, 'floxim');
-        }
-        return join(".", $path) . ($action ? ':' . $action : '');
+        );
     }
 
     public static function getComponentParts($name)
@@ -147,7 +175,6 @@ class Fx
         if (isset($act_path[1])) {
             $parts['action'] = $act_path[1];
         }
-
         return $parts;
     }
 
@@ -158,21 +185,25 @@ class Fx
      */
     public static function getComponentNamespace($name)
     {
-
-        $name = self::getComponentFullName($name);
-
-        $path = explode(".", $name);
-        if ($path[0] === 'floxim' && $path[1] === 'component') {
-            array_unshift($path, "floxim");
-        }
-        foreach ($path as &$part) {
-            $chunks = explode("_", $part);
-            foreach ($chunks as &$chunk) {
-                $chunk = ucfirst($chunk);
-            }
-            $part = join('', $chunks);
-        }
-        return '\\' . join('\\', $path);
+        return fx::cache('meta')->remember( 
+            'component_namespace_'.strtolower($name), 
+            60*60, 
+            function() use ($name) {
+                $name = fx::getComponentFullName($name);
+                $path = explode(".", $name);
+                if ($path[0] === 'floxim' && $path[1] === 'component') {
+                    array_unshift($path, "floxim");
+                }
+                foreach ($path as &$part) {
+                    $chunks = explode("_", $part);
+                    foreach ($chunks as &$chunk) {
+                        $chunk = ucfirst($chunk);
+                    }
+                    $part = join('', $chunks);
+                }
+                return '\\' . join('\\', $path);
+            } 
+        );
     }
 
     public static function getComponentPath($name)
@@ -188,7 +219,7 @@ class Fx
 
     public static function getComponentNameByClass($class)
     {
-        // Floxim\Main\User\Controller
+        // Floxim\User\User\Controller
         // Vendor\Module\Component\[Controller|Finder|Entity]
         // Floxim\Floxim\Component\Component\[Entity|Finder]
         $path = explode('\\', $class);
@@ -202,11 +233,7 @@ class Fx
         }
         return $name;
     }
-    // todo: psr0 need verify - recursive request finder class
-    /**
-     * vendor.module.component - component finder
-     * component - system component finder
-     */
+    
     public static function  data($datatype, $id = null)
     {
 
@@ -219,6 +246,7 @@ class Fx
 
         $class_name = $namespace . '\\Finder';
         if (!class_exists($class_name)) {
+            fx::debug(debug_backtrace());
             throw new \Exception('Class not found: ' . $class_name . ' for ' . $datatype);
         }
 
@@ -641,7 +669,7 @@ class Fx
 
     /**
      * Get current user or new empty entity (with no id) if not logged in
-     * @return \Floxim\User\Component\User\Entity
+     * @return \Floxim\User\User\Entity
      */
     public static function user()
     {
