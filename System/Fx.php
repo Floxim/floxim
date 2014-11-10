@@ -70,7 +70,7 @@ class Fx
     protected static $data_cache = array();
     public static $data_stat = array();
     
-    protected static $floxim_components = array(
+    public static $floxim_components = array(
         'main' => array(
             'content',
             'linker',
@@ -129,7 +129,7 @@ class Fx
                     static $coms_by_module = null;
                     if (is_null($coms_by_module)) {
                         $coms_by_module = array();
-                        foreach (self::$floxim_components as $module => $coms) {
+                        foreach (Fx::$floxim_components as $module => $coms) {
                             foreach ($coms as $com) {
                                 $coms_by_module[$com] = $module;
                             }
