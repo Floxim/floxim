@@ -627,6 +627,15 @@ class Infoblock extends Admin
                 if ($force_wrapper && !in_array($tplv['full_id'], $force_wrapper)) {
                     continue;
                 }
+                if (is_string($tplv['suit']) && $tplv['suit']) {
+                    $tplv_suit = preg_split("~\,\s*~", $tplv['suit']);
+                    if (in_array('local', $tplv_suit)) {
+                        $tplv_suit []= $tplv['area'];
+                    }
+                    if (!in_array($area_meta['id'], $tplv_suit)) {
+                        continue;
+                    }
+                }
 
                 if ($tplv['of'] == 'floxim.layout.wrapper:show') {
                     $wrappers[$full_id] = $tplv['name'];
