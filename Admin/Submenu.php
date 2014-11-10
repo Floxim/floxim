@@ -119,9 +119,9 @@ class Submenu
         }
 
         if ($match[1] == 'patch') {
-            $this->initManage();
+            $this->initDevelop();
             $this->active = 'patch';
-            $this->active_main_menu = 'manage';
+            $this->active_main_menu = 'develop';
         }
 
         if ($match[1] == 'lang') {
@@ -147,13 +147,13 @@ class Submenu
         $this->menu[] = $node_widget = $this->addNode('widget', fx::alang('Widgets', 'system'), 'widget.all');
         $this->menu[] = $node_log = $this->addNode('log', fx::alang('Logs', 'system'), 'log.all');
         $this->menu[] = $node_console = $this->addNode('console', fx::alang('Console', 'system'), 'console.show');
+        $this->menu[] = $this->addNode('patch', fx::alang('Patches', 'system'), 'patch.all');
     }
 
     protected function initManage()
     {
 
         $this->menu[] = $this->addNode('site', fx::alang('All sites', 'system'), 'site.all');
-        $this->menu[] = $this->addNode('patch', fx::alang('Patches', 'system'), 'patch.all');
         $this->menu[] = $this->addNode('user', fx::alang('Users', 'system'), 'user.all');
         $this->menu[] = $this->addNode('lang', fx::alang('Languages', 'system'), 'lang.all');
     }

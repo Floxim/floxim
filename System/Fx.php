@@ -554,10 +554,11 @@ class Fx
         if ($config !== null) {
             self::config()->load($config);
         }
-
+        
         // load options from DB
         self::config()->loadFromDb();
         
+        // init modules
         $moduleManager = new Modules();
         $modules = $moduleManager->getAll();
         foreach ($modules as $m) {

@@ -10,7 +10,7 @@ class Finder extends System\Finder
     public function __construct()
     {
         parent::__construct();
-        $this->serialized = array('value');
+        //$this->serialized = array('value');
     }
 
 }

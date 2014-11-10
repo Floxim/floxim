@@ -35,7 +35,7 @@ class Config
         'ADMIN_FOLDER'               => '',
         'COMPONENT_FOLDER'           => '',
         'WIDGET_FOLDER'              => '',
-        'fx.update_url'              => 'http://floxim-builder/get-update/',
+        'fx.update_url'              => 'http://floxim.org/getfloxim/update/',
         'FLOXIM_SITE_PROTOCOL'       => 'http',
         'FLOXIM_SITE_HOST'           => 'floxim.org',
         'templates.ttl'              => 0,
@@ -181,7 +181,7 @@ class Config
                 $this->set($option['keyword'], $option['value']);
             }
         } catch (\Exception $e) {
-
+            fx::log('Error while loading options: ', $e);
         }
     }
 
