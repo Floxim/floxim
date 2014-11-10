@@ -83,13 +83,14 @@ class Path
 
     public function http($path)
     {
-        $do = function ($value) {
+        $root = $this->root;
+        $do = function ($value) use ($root) {
             if (preg_match("~^https?://~", $value)) {
                 return $value;
             }
             $ds = "[" . preg_quote('\/') . "]";
             $value = preg_replace("~" . $ds . "~", DIRECTORY_SEPARATOR, $value);
-            $value = preg_replace("~^" . preg_quote($this->root) . "~", '', $value);
+            $value = preg_replace("~^" . preg_quote($root) . "~", '', $value);
             $value = preg_replace("~" . $ds . "~", '/', $value);
             if (!preg_match("~^/~", $value)) {
                 $value = '/' . $value;
