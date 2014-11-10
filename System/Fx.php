@@ -59,10 +59,17 @@ class Fx
      */
     public static function db()
     {
-        static $db = false;
-        if ($db === false) {
+        static $db = null;
+        if ($db === null) {
             $db = new Db();
-            $db->query("SET NAMES '" . fx::config('db.charset') . "'");
+            if ($db) {
+                $db->query("SET NAMES '" . fx::config('db.charset') . "'");
+            } else {
+                $db = false;
+            }
+        }
+        if ($db === false) {
+            throw new \Exception("Database is not available");
         }
         return $db;
     }

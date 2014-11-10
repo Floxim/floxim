@@ -21,11 +21,11 @@ class Db extends \PDO
     {
         try {
             parent::__construct(fx::config('db.dsn'), fx::config('db.user'), fx::config('db.password'));
+            $prefix = fx::config('db.prefix');
+            $this->prefix = $prefix ? $prefix . '_'  : '';
         } catch (\Exception $e) {
             echo $e->getMessage();
         }
-        $prefix = fx::config('db.prefix');
-        $this->prefix = $prefix ? $prefix . '_' : '';
     }
 
     public function escape($str)
