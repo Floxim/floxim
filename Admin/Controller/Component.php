@@ -91,8 +91,8 @@ class Component extends Admin
 
         $titles = array(
             'component' => array(
-                'settings'  => fx::alang('Settings', 'system'),
                 'fields'    => fx::alang('Fields', 'system'),
+                'settings'  => fx::alang('Settings', 'system'),
                 'items'     => fx::alang('Items', 'system')//,
                 //'templates' => fx::alang('Templates', 'system'),
             ),
