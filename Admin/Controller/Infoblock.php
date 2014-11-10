@@ -628,7 +628,7 @@ class Infoblock extends Admin
                     continue;
                 }
 
-                if ($tplv['of'] == 'floxim.main.wrapper:show') {
+                if ($tplv['of'] == 'floxim.layout.wrapper:show') {
                     $wrappers[$full_id] = $tplv['name'];
                     if ($force_wrapper && empty($c_wrapper)) {
                         $c_wrapper = $full_id;

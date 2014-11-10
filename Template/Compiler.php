@@ -1082,7 +1082,7 @@ class Compiler
         // todo: psr0 need fix
         $of_map = array(
             'menu'     => 'section:list',
-            'wrapper'  => 'wrapper:show', // fake widget!
+            'wrapper'  => 'floxim.layout.wrapper:show', // fake widget!
             'blockset' => 'blockset:show',
             'grid'     => 'grid:show',
             'block'    => 'block:show' // no implementation yet
