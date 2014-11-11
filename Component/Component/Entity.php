@@ -268,6 +268,11 @@ class Entity extends System\Entity
         $res->concat($this->getAllChildren());
         return $res;
     }
+    
+    public function getItemName() {
+        $item_name = $this[$item_name];
+        return empty($item_name) ? $this['name'] : $item_name;
+    }
 
     public function scaffold()
     {

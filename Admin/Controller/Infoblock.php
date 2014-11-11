@@ -179,6 +179,7 @@ class Infoblock extends Admin
         $controller = fx::controller($controller . ':' . $action,
             array('infoblock_id' => $infoblock['id']) + $infoblock['params']);
         $settings = $controller->getActionSettings($action);
+        
         if (!$infoblock['id']) {
             $cfg = $controller->getConfig();
             $infoblock['name'] = $cfg['actions'][$action]['name'];
@@ -483,7 +484,7 @@ class Infoblock extends Admin
         $path_count = count($path);
         $c_type = $c_page['type'];
         $page_com = fx::data('component', $c_page['type']);
-        $c_type_name = $page_com['item_name'];
+        $c_type_name = $page_com->getItemName();
 
         $container_infoblock = null;
         if ($infoblock['container_infoblock_id']) {

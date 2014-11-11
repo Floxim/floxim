@@ -1057,7 +1057,7 @@ class Compiler
     {
         $tpl_props = array(
             'id'   => $token->getProp('id'),
-            'file' => $this->_current_source_file
+            'file' => fx::path()->http($this->_current_source_file)
         );
         if (($offset = $token->getProp('offset'))) {
             $tpl_props['offset'] = $offset;

@@ -42,12 +42,6 @@ class Finder extends System\Finder
         return 'keyword';
     }
 
-    public function __construct()
-    {
-        $this->order = '`group`, `id`';
-        parent::__construct();
-    }
-
     public function getAllGroups()
     {
         $result = array();

@@ -49,7 +49,7 @@ class Component extends Admin
 
                 $r['buttons'] = array();
                 foreach ($submenu as $submenu_item_key => $submenu_item) {
-                    if (!$submenu_item['parent'] && $submenu_item_key != 'settings') {
+                    if (!$submenu_item['parent']) { // && $submenu_item_key != 'fields') {
                         $r['buttons'] [] = array(
                             'type'  => 'button',
                             'label' => $submenu_item['title'],
@@ -206,10 +206,11 @@ class Component extends Admin
                 'label' => fx::alang('Component name', 'system'),
                 'name'  => 'name'
             ),
+            /*
             array(
                 'label' => fx::alang('Name of an entity created by the component', 'system'),
                 'name'  => 'item_name'
-            ),
+            ),*/
             array(
                 'label' => fx::alang('Keyword', 'system'),
                 'name'  => 'keyword'
@@ -289,7 +290,7 @@ class Component extends Admin
 
 
         $data['parent_id'] = $input['parent_id'];
-        $data['item_name'] = $input['item_name'];
+        //$data['item_name'] = $input['item_name'];
 
         $res_create = fx::data('component')->createFull($data);
         if (!$res_create['validate_result']) {
@@ -317,12 +318,9 @@ class Component extends Admin
             $component['name'] = $input['name'];
         }
         //$component['parent_id'] = $input['parent_id'];
-        $component['description'] = $input['description'];
-        $component['item_name'] = $input['item_name'];
+        //$component['description'] = $input['description'];
+        //$component['item_name'] = $input['item_name'];
         $component->save();
-        if ($component['vendor'] == 'std') {
-            fx::hooks()->create(null, 'component_update', array('component' => $component));
-        }
         return array('status' => 'ok');
     }
 
@@ -521,17 +519,23 @@ class Component extends Admin
             'name'  => 'name',
             'value' => $component['name']
         );
+        /*
         $fields[] = array(
             'label' => fx::alang('Name of entity created by the component', 'system'),
             'name'  => 'item_name',
             'value' => $component['item_name']
         );
+         * 
+         */
+        /*
         $fields[] = array(
             'label' => fx::alang('Description', 'system'),
             'name'  => 'description',
             'value' => $component['description'],
             'type'  => 'text'
         );
+         * 
+         */
 
         //$fields []= $this->_get_parent_component_field($component);
 
