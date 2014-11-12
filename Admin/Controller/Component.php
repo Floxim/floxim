@@ -93,8 +93,8 @@ class Component extends Admin
             'component' => array(
                 'fields'    => fx::alang('Fields', 'system'),
                 'settings'  => fx::alang('Settings', 'system'),
-                'items'     => fx::alang('Items', 'system')//,
-                //'templates' => fx::alang('Templates', 'system'),
+                'items'     => fx::alang('Items', 'system'),
+                'templates' => fx::alang('Templates', 'system')
             ),
             'widget'    => array(
                 'settings'  => fx::alang('Settings', 'system')//,
@@ -374,7 +374,11 @@ class Component extends Admin
         $ctr_type = fx::getComponentNameByClass(get_class($component));
         $this->response->submenu->setSubactive('templates');
         if (isset($input['params'][2])) {
-            return $this->template(array('template_full_id' => $input['params'][2]));
+            $res = $this->template(array('template_full_id' => $input['params'][2]));
+            if ($res === false) {
+                return array('reload' => '#admin.'.$ctr_type.'.edit('. $input['params'][0].',templates)');
+            } 
+            return $res;
         }
         $templates = $this->getComponentTemplates($component);
         $visuals = fx::data('infoblock_visual')->where('template', $templates->getValues('full_id'))->all();
@@ -415,7 +419,7 @@ class Component extends Admin
             } else {
                 // todo: psr0 need verify
                 $c_parts = fx::getComponentParts($tpl['full_id']);
-                $r['source'] = fx::data($ctr_type, $c_parts['component'])->get('name');
+                $r['source'] = fx::data($ctr_type, $c_parts['vendor'].'.'.$c_parts['module'].'.'.$c_parts['component'])->get('name');
             }
             $r['file'] = fx::path()->http($tpl['file']);
             $field['values'][] = $r;
@@ -423,7 +427,7 @@ class Component extends Admin
         return array('fields' => array('templates' => $field));
     }
 
-    protected function getTemplateInfo($full_id)
+    public function getTemplateInfo($full_id)
     {
         $tpl = fx::template($full_id);
         if (!$tpl) {
@@ -434,15 +438,38 @@ class Component extends Admin
             return;
         }
         $res = array();
-        $source = file_get_contents($info['file']);
+        $source = file_get_contents(fx::path()->abs($info['file']));
         $res['file'] = $info['file'];
         $res['hash'] = md5($source);
         $res['full'] = $source;
         $offset = explode(',', $info['offset']);
         $length = $offset[1] - $offset[0];
-        $res['source'] = mb_substr($source, $offset[0], $length);
+        
+        
         $res['start'] = $offset[0];
         $res['length'] = $length;
+        
+        $source_part = $res['source'] = mb_substr($source, $offset[0], $length);
+        
+        $first_part = mb_substr($source, 0, $res['start']);
+        
+        $res['first_line'] = count(explode("\n", $first_part));
+        
+        $space_tale = '';
+        if (preg_match("~[ \t]+$~", $first_part, $space_tale)) {
+            $space_tale = $space_tale[0];
+            $tale_length = strlen($space_tale);
+            $lines = explode("\n", $source_part);
+            foreach ($lines as &$l) {
+                if (substr($l, 0, $tale_length) === $space_tale) {
+                    $l = substr($l, $tale_length);
+                }
+            }
+            $source_part = join("\n", $lines);
+        }
+        $res['common_spaces'] = $space_tale;
+        $res['source'] = $source_part;
+        
         return $res;
     }
 
@@ -452,7 +479,7 @@ class Component extends Admin
         $this->response->breadcrumb->addItem($template_full_id);
         $info = $this->getTemplateInfo($template_full_id);
         if (!$info) {
-            return;
+            return false;
         }
         $fields = array(
             $this->ui->hidden('entity', 'component'),
@@ -460,6 +487,12 @@ class Component extends Admin
             $this->ui->hidden('data_sent', '1'),
             $this->ui->hidden('template_full_id', $template_full_id),
             $this->ui->hidden('hash', $info['hash']),
+            $this->ui->hidden('common_spaces', $info['common_spaces']),
+            'file_path' => array(
+                'type' => 'html',
+                'html' => fx::alang('File').' <b>'.$info['file'].'</b>'.
+                          '<br />'.fx::alang('Starting from line').' <b>'.$info['first_line'].'</b>'
+            ),
             'source' => array(
                 'type'  => 'text',
                 'value' => $info['source'],
@@ -484,7 +517,19 @@ class Component extends Admin
             die("Hash error");
         }
         $res = mb_substr($info['full'], 0, $info['start']);
-        $res .= $input['source'];
+        $input_source = $input['source'];
+        $spaces = $input['common_spaces'];
+        if (!empty($spaces)) {
+            $lines = explode("\n", $input_source);
+            foreach ($lines as $num => &$line) {
+                if ($num === 0) {
+                    continue;
+                }
+                $line = $spaces.$line;
+            }
+            $input_source = join("\n", $lines);
+        }
+        $res .= $input_source;
         $res .= mb_substr($info['full'], $info['start'] + $info['length']);
         fx::files()->writefile($info['file'], $res);
         return array('status' => 'ok');
