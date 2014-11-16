@@ -37,7 +37,13 @@ window.$fx = {
                 $fx.front.load(c_mode);
             }
             
-            $('html').on('click.fx', '.fx_button', $fx.buttons.form_button_click);
+            $('html')
+                .on('click.fx', '.fx_button', $fx.buttons.form_button_click)
+                .on('click.fx', 'a[href]', function() {
+                    if (this.getAttribute('href') === document.location.hash) {
+                        $(window).trigger('hashchange');
+                    }
+                });
             $(document).ajaxComplete(function(e, jqXHR) {
                 ajax_counter--;
                 if (ajax_counter === 0) {
