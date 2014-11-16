@@ -141,6 +141,20 @@ class Entity extends System\Entity
         }
         return $fields;
     }
+    
+    public function allFieldsWithChildren($types = null)
+    {
+        $all_variants = $this->getAllVariants();
+        if ($types) {
+            $all_variants = $all_variants->find('keyword', $types);
+        }
+        $fields = fx::collection();
+        foreach ($all_variants as $com) {
+            $fields->concat($com->allFields());
+        }
+        $fields->unique('id');
+        return $fields;
+    }
 
     public function getFieldByKeyword($keyword, $use_chain = false)
     {
