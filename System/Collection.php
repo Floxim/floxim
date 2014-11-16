@@ -470,6 +470,20 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
     {
         return $this->getValues($field, $key_field, $as_collection);
     }
+    
+    /**
+     * Extract values ready to use for select input: array( array(id, name), array(id1, name1) )
+     * @param string $id_prop
+     * @param string $name_prop
+     */
+    public function getSelectValues($id_prop, $name_prop) 
+    {
+        $vals = $this->getValues(array($id_prop, $name_prop));
+        foreach ($vals as &$set) {
+            $set = array_values($set);
+        }
+        return $vals;
+    }
 
     public function getValues($field, $key_field = null, $as_collection = false)
     {
