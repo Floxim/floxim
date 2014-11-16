@@ -174,6 +174,10 @@ fx_edit_in_place.prototype.start = function(meta) {
                         }
                     }; 
                     $n.attr('contenteditable', 'true').focus();
+                    this.$closest_button = $n.closest('button');
+                    if (this.$closest_button.length > 0) {
+                        this.$closest_button.on('click.edit_in_place', function() {return false;});
+                    }
                     if (!this.is_wysiwyg) {
                         handle_node_size();
                         $n.on(
