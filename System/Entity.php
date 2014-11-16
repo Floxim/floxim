@@ -18,10 +18,24 @@ abstract class Entity implements \ArrayAccess
     protected $validate_errors = array();
 
     protected $_form = null;
+    
+    // Extra data from forms etc.
+    protected $payload = array();
 
     protected function getFinder()
     {
         return fx::data($this->getType());
+    }
+    
+    public function getPayload($key = null) 
+    {
+        return is_null($key) ? $this->payload : (isset($this->payload[$key]) ? $this->payload[$key] : null);
+    }
+    
+    public function setPayload($key, $value)
+    {
+        $this->payload[$key] = $value;
+        return $this;
     }
 
     protected static $_field_map = array();
@@ -117,8 +131,9 @@ abstract class Entity implements \ArrayAccess
             fx::lang("Unable to save entity \"" . $this->getType() . "\"")
         );
         $exception->addErrors($this->validate_errors);
-        if ($this->_form) {
-            $exception->toForm($this->_form);
+        $form = $this->getBoundForm();
+        if ($form) {
+            $exception->toForm($form);
         } else {
             throw $exception;
         }
@@ -222,10 +237,10 @@ abstract class Entity implements \ArrayAccess
 
     public function validate()
     {
-        return true;
+        return count($this->validate_errors) == 0;
     }
 
-    public function loadFromForm($form, $fields = true)
+    public function loadFromForm($form, $fields = null)
     {
         $vals = $this->getFromForm($form, $fields);
         $this->set($vals);
@@ -237,9 +252,14 @@ abstract class Entity implements \ArrayAccess
     {
         $this->_form = $form;
     }
+    
+    public function getBoundForm()
+    {
+        return isset($this->_form) ? $this->_form : null;
+    }
 
 
-    protected function getFromForm($form, $fields)
+    protected function getFromForm($form, $fields = null)
     {
         if (is_array($fields)) {
             $vals = array();
@@ -252,13 +272,17 @@ abstract class Entity implements \ArrayAccess
         return $vals;
     }
 
-    public function validateWithForm($form, $fields = true)
+    public function validateWithForm($form = null, $fields = null)
     {
-        if ($fields !== false) {
-            $vals = $this->getFromForm($form, $fields);
-            $this->set($vals);
+        if ($form === null) {
+            $form = $this->getBoundForm();
+        } elseif ($form) {
+            $this->bindForm($form);
         }
-        $this->bindForm($form);
+        if (!$form) {
+            throw \Exception ('No form to validate with');
+        }
+        $this->loadFromForm($form, $fields);
         if (!$this->validate()) {
             $this->throwInvalid();
             return false;
@@ -321,6 +345,8 @@ abstract class Entity implements \ArrayAccess
     {
         return mb_substr($var, 0, 1) === '%';
     }
+    
+    protected $allowTemplateOverride = true;
 
     /* Array access */
     public function offsetGet($offset)
@@ -329,11 +355,13 @@ abstract class Entity implements \ArrayAccess
         // handle template-content vars like $item['%description']
         if (self::isTemplateVar($offset)) {
             $offset = mb_substr($offset, 1);
-            $template = fx::env('current_template');
-            if ($template && $template instanceof Template\Template) {
-                $template_value = $template->v($offset . "_" . $this['id']);
-                if ($template_value) {
-                    return $template_value;
+            if (!isset($this[$offset]) || $this->allowTemplateOverride) {
+                $template = fx::env('current_template');
+                if ($template && $template instanceof Template\Template) {
+                    $template_value = $template->v($offset . "_" . $this['id']);
+                    if ($template_value) {
+                        return $template_value;
+                    }
                 }
             }
         }
@@ -509,6 +537,15 @@ abstract class Entity implements \ArrayAccess
             return true;
         }
         return is_array($this->modified) && in_array($field, $this->modified);
+    }
+    
+    public function setNotModified($field)
+    {
+        if (!$this->isModified($field)) {
+            return $this;
+        }
+        unset ( $this->modified [array_search($field, $this->modified)]);
+        return $this;
     }
 
     public function getOld($field)
