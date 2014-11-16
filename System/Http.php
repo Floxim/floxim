@@ -18,11 +18,12 @@ class Http
         header("HTTP/1.1 " . $code . " " . $this->status_values[$code]);
     }
 
-    public function redirect($target_url, $status = 302)
+    public function redirect($target_url, $status = 301)
     {
         $this->status($status);
         header("Location: " . $target_url);
         fx::complete();
+        die();
     }
 
     public function refresh()

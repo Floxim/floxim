@@ -39,7 +39,6 @@ class Ajax extends Base
                 return $res;
             }
         }
-
         $template = null;
         if ($action_info && !empty($action_info[1])) {
             $action = $action_info[1];

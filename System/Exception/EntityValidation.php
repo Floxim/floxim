@@ -11,7 +11,7 @@ class EntityValidation extends \Exception
 
     public $validate_errors = array();
 
-    public function toForm(fx_form $form)
+    public function toForm(\Floxim\Form\Form $form)
     {
         foreach ($this->validate_errors as $e) {
             $form->addError($e['text'], isset($e['field']) ? $e['field'] : false);

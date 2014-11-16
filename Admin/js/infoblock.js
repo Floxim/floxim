@@ -2,6 +2,7 @@
  * misc scripts related to infoblock management
  */
 
+
 (function ($) {
 
 function init_ib_fields() {

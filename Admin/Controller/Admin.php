@@ -119,7 +119,7 @@ class Admin extends System\Controller
             $path_floxim . '/Admin/js/fx.js',
             $path_floxim . '/Admin/js/js-dictionary-' . fx::config('lang.admin'). '.js',
             FX_JQUERY_UI_PATH,
-            $path_floxim . '/lib/js/jquery.nestedSortable.js',
+            //$path_floxim . '/lib/js/jquery.nestedSortable.js',
             $path_floxim . '/lib/js/jquery.ba-hashchange.min.js',
             $path_floxim . '/lib/js/jquery.json-2.3.js',
             $path_floxim . '/lib/js/ajaxfileupload.js',

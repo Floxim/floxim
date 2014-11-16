@@ -211,7 +211,9 @@ abstract class Finder
             $this->order [] = $this->prepareComplexField($field, 'order') . ' ' . $direction;
         } else {
             $table = $this->getColTable($field);
-            $this->order [] = "{{" . $table . "}}.`" . $field . "` " . $direction;
+            if ($table) {
+                $this->order [] = "{{" . $table . "}}.`" . $field . "` " . $direction;
+            }
         }
         return $this;
     }
@@ -560,7 +562,7 @@ abstract class Finder
             return;
         }
         $rel = $relations[$rel_name];
-        list($rel_type, $rel_datatype, $rel_field) = $rel;
+        list($rel_type, $rel_datatype, $rel_field, $rel_target_field) = $rel;
         if (!$rel_finder) {
             $rel_finder = $this->getDefaultRelationFinder($rel);
         }
@@ -568,8 +570,11 @@ abstract class Finder
         // e.g. $rel = array(fx_data::HAS_MANY, 'field', 'component_id');
         switch ($rel_type) {
             case self::BELONGS_TO:
-                $rel_items = $rel_finder->where('id', $entities->getValues($rel_field))->all();
-                $entities->attach($rel_items, $rel_field, $rel_name);
+                if (!$rel_target_field) {
+                    $rel_target_field = 'id';
+                }
+                $rel_items = $rel_finder->where($rel_target_field, $entities->getValues($rel_field))->all();
+                $entities->attach($rel_items, $rel_field, $rel_name, $rel_target_field);
                 break;
             case self::HAS_MANY:
                 $rel_items = $rel_finder->where($rel_field, $entities->getValues('id'))->all();
