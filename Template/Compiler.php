@@ -1055,10 +1055,24 @@ class Compiler
 
     protected function getTemplateProps(Token $token)
     {
-        $tpl_props = array(
-            'id'   => $token->getProp('id'),
-            'file' => fx::path()->http($this->_current_source_file)
-        );
+        $tpl_props = array();
+        
+        $com_name = $this->_template_set_name;
+        
+        $tpl_id = $token->getProp('id');
+        if (preg_match("~(^.+?)\:(.+)~", $tpl_id, $id_parts)) {
+            $external_com_name = $id_parts[1];
+            $own_name = $id_parts[2];
+            if ($external_com_name == $com_name) {
+                $tpl_id = $own_name;
+            } else {
+                $tpl_props['overrides'] = $tpl_id;
+                $tpl_id = str_replace(".", '_', $external_com_name) . '__'.$own_name;
+            }
+        }
+        $tpl_props['id'] =  $tpl_id;
+        $tpl_props['file'] = fx::path()->http($this->_current_source_file);
+        
         if (($offset = $token->getProp('offset'))) {
             $tpl_props['offset'] = $offset;
         }
@@ -1076,7 +1090,7 @@ class Compiler
             $name = $token->getProp('id');
         }
 
-        $tpl_props['full_id'] = $this->_template_set_name . ':' . $tpl_props['id'];
+        $tpl_props['full_id'] = $com_name . ':' . $tpl_props['id'];
 
         $of = $token->getProp('of');
         // todo: psr0 need fix
