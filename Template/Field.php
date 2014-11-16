@@ -2,6 +2,8 @@
 
 namespace Floxim\Floxim\Template;
 
+use Floxim\Floxim\System\Fx as fx;
+
 class Field
 {
     protected $_value = null;

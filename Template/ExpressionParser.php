@@ -379,7 +379,7 @@ class ExpressionParser extends Fsm
                         if (!is_numeric($var_name)) {
                             $var_name = '"' . $var_name . '"';
                         }
-                        $var = '$this->v(' . $var_name . $context_level . ')';
+                        $var = '$context->get(' . $var_name . $context_level . ')';
                     }
                 } // complex var such as $image_$id
                 else {
@@ -398,7 +398,7 @@ class ExpressionParser extends Fsm
                     if (empty($var_name)) {
                         $var_name = 'null';
                     }
-                    $var = '$this->v(' . $var_name . $context_level . ')';
+                    $var = '$context->get(' . $var_name . $context_level . ')';
                 }
 
                 if ($node->last_child) {

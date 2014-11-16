@@ -100,9 +100,8 @@ class Compiler
             $tpl_name = '"' . $tpl_name . '"';
         }
         $tpl = '$tpl_' . $this->varialize($tpl_name);
-        $code .= $tpl . ' = fx::template(' . $tpl_name . ");\n";
-        $inherit = $token->getProp('apply') ? 'true' : 'false';
-        $code .= $tpl . '->setParent($this, ' . $inherit . ");\n";
+        $is_apply = $token->getProp('apply');
+        //$code .= $tpl . '->setParent($this, ' . $inherit . ");\n";
         $call_children = $token->getChildren();
         /*
          * Converted:
@@ -135,17 +134,16 @@ class Compiler
         }
         $switch_context = is_array($with_expr) && isset($with_expr['$']);
         if ($switch_context) {
-            $code .= '$this->pushContext(' . $this->parseExpression($with_expr['$']) . ");\n";
+            $new_context_expression = $this->parseExpression($with_expr['$']);
         }
-        $code .= $tpl . "->pushContext(array(), array('transparent' => false));\n";
+        
         if (is_array($with_expr)) {
+            $passed_vars = array();
             foreach ($with_expr as $alias => $var) {
                 if ($alias == '$') {
                     continue;
                 }
-                $code .= $tpl . "->setVar(" .
-                    "'" . trim($alias, '$') . "', " .
-                    $this->parseExpression($var) . ");\n";
+                $passed_vars [trim($alias, '$')] = array('string', $this->parseExpression($var));
             }
         }
         foreach ($token->getChildren() as $param_var_token) {
@@ -153,27 +151,59 @@ class Compiler
             if ($param_var_token->name != 'var') {
                 continue;
             }
-            $value_to_set = 'null';
+            $value_to_set = '';
             if ($param_var_token->hasChildren()) {
                 // pass the inner html code
-                $code .= "ob_start();\n";
-                $code .= $this->childrenToCode($param_var_token);
-                $code .= "\n";
-                $value_to_set = 'ob_get_clean()';
+                $value_to_set .= "ob_start();\n";
+                $value_to_set .= $this->childrenToCode($param_var_token);
+                $value_to_set .= "\n";
+                $passed_value_type = 'buffer';
             } elseif (($select_att = $param_var_token->getProp('select'))) {
                 // pass the result of executing the php code
                 $value_to_set = self::parseExpression($select_att);
+                $passed_value_type = 'string';
             }
-            $code .= $tpl . "->setVar(" .
-                "'" . $param_var_token->getProp('id') . "', " .
-                $value_to_set . ");\n";
+            $passed_vars[$param_var_token->getProp('id')] = array($passed_value_type, $value_to_set);
         }
-
+        $switch_context_local = $switch_context && count($passed_vars) > 0;
+        if ($is_apply) {
+            $context_var = '$context';
+        } else {
+            if (count($passed_vars) > 0 || $switch_context) {
+                $context_var = $tpl.'_context';
+                $code .= $context_var. " = new \\Floxim\\Floxim\\Template\\Context();\n";
+            } else {
+                $context_var = 'new \\Floxim\\Floxim\\Template\\Context()';
+            }
+        }
         if ($switch_context) {
-            $code .= "\$this->popContext();\n";
-            $code .= $tpl . "->pushContext(" . $this->parseExpression($with_expr['$']) . ");\n";
+            if ($switch_context_local) {
+                $code .= '$context->push(' . $new_context_expression . ");\n";
+            }
         }
-        $code .= 'echo ' . $tpl . "->render();\n";
+        if (count($passed_vars) > 0) {
+            $tpl_passed = $tpl."_passed";
+            $code .=  $tpl_passed ." = array();\n";
+            foreach ($passed_vars as $passed_var_key => $passed_var) {
+                switch ($passed_var[0]) {
+                    case 'string': default:
+                        $code .= $tpl_passed."['".$passed_var_key."'] = ".$passed_var[1].";\n";
+                        break;
+                    case 'buffer':
+                        $code .= $passed_var[1];
+                        $code .= $tpl_passed."['".$passed_var_key."'] = ob_get_clean();\n";
+                }
+            }
+            $code .= $context_var."->push(".$tpl_passed.");\n";
+        }
+        if ($switch_context) {
+            $code .= $context_var . "->push(" . $new_context_expression . ");\n";
+        }
+        $code .= 'echo fx::template(' . $tpl_name .  ', ' .$context_var . ")->setParent(\$this)->render();\n";
+        if ($switch_context_local) {
+            $code .= "\$context->pop();\n";
+        }
+        //$code .= 'echo ' . $tpl . "->render();\n";
         $code .= "\n?>";
         return $code;
     }
@@ -329,7 +359,7 @@ class Compiler
         }
 
         // e.g. "name" or "image_".$this->v('id')
-        $var_id = preg_replace('~^\$this->v\(~', '', preg_replace("~\)$~", '', $expr));
+        $var_id = preg_replace('~^\$context->get\(~', '', preg_replace("~\)$~", '', $expr));
 
         $has_default = $token->getProp('default') || count($token->getChildren()) > 0;
 
@@ -416,10 +446,10 @@ class Compiler
                     $code .= $this->makeFileCheck($display_val_var, true);
                 }
                 if ($token_is_visual) {
-                    $code .= "\n" . '$this->setVar(' . $var_id . ',  ' . $display_val_var . ");\n";
+                    $code .= "\n" . '$context->set(' . $var_id . ',  ' . $display_val_var . ");\n";
                 }
             } elseif ($token_is_visual) {
-                $code .= "\n" . '$this->setVar(' . $var_id . ',  ' . $default . ");\n";
+                $code .= "\n" . '$context->set(' . $var_id . ',  ' . $default . ");\n";
             }
             $code .= "}\n";
         }
@@ -491,7 +521,7 @@ class Compiler
     protected function getVarMetaExpression($token, $var_token, $ep)
     {
         // Expression to get var meta
-        $var_meta_expr = '$this->getVarMeta(';
+        $var_meta_expr = '$context->getVarMeta(';
         // if var is smth like $item['parent']['url'], 
         // it should be get_var_meta('url', fx::dig( $this->v('item'), 'parent'))
         if ($var_token->last_child) {
@@ -649,7 +679,7 @@ class Compiler
         $is_entity = '$' . $item_alias . "_is_entity";
         $code .= $is_entity . " = \$" . $item_alias . " instanceof \\Floxim\\Floxim\\Template\\Entity;\n";
         $is_complex = 'is_array($' . $item_alias . ') || is_object($' . $item_alias . ')';
-        $code .= '$this->pushContext( ' . $is_complex . ' ? $' . $item_alias . " : array());\n";
+        $code .= '$context->push( ' . $is_complex . ' ? $' . $item_alias . " : array());\n";
 
         $meta_test = "\tif (\$_is_admin && " . $is_entity . " ) {\n";
         $code .= $meta_test;
@@ -660,11 +690,11 @@ class Compiler
         $code .= "\t\techo \$" . $item_alias . "->addTemplateRecordMeta(" .
             "ob_get_clean(), " .
             $arr_id . ", " .
-            ($counter_id ? '$' . $counter_id . " - 1, " : '$this->v("position") - 1, ') .
+            (!is_null($counter_id) ? $counter_id . " - 1, " : '0, ') .
             ($token->getProp('subroot') ? 'true' : 'false') .
             ");\n";
         $code .= "\t}\n";
-        $code .= "\$this->popContext();\n";
+        $code .= "\$context->pop();\n";
         return $code;
     }
 
@@ -722,8 +752,11 @@ class Compiler
 
         $loop_id = '$' . $item_alias . '_loop';
         $code .= $loop_id . ' = new \\Floxim\\Floxim\\Template\\Loop(' . $arr_id . ', ' . $loop_key . ', ' . $loop_alias . ");\n";
-        //$code .= '$this->context_stack[]= '.$loop_id.";\n";
-        $code .= "\$this->pushContext(" . $loop_id . ", array('transparent' => true));\n";
+        
+        $counter_id = $loop_id.'_counter';
+        $code .= $counter_id." = 1;\n";
+        
+        $code .= "\$context->push(" . $loop_id . ", array('transparent' => true));\n";
         $code .= "\nforeach (" . $arr_id . " as \$" . $item_key . " => \$" . $item_alias . ") {\n";
         $code .= $loop_id . "->move();\n";
         // get code for step with scope & meta
@@ -734,9 +767,10 @@ class Compiler
             $code .= $this->childrenToCode($separator);
             $code .= "\n}\n";
         }
+        $code .= $counter_id."++;\n";
         $code .= "}\n"; // close foreach
         //$code .= 'array_pop($this->context_stack);'."\n"; // pop loop object
-        $code .= "\$this->popContext();\n";
+        $code .= "\$context->pop();\n";
         if ($check_traversable) {
             $code .= "}\n";  // close if
         }
@@ -751,7 +785,7 @@ class Compiler
         $item_name = $this->varialize($expr) . '_with_item';
         $code .= '$' . $item_name . ' = ' . $expr . ";\n";
         $code .= "if ($" . $item_name . ") {\n";
-        $code .= $this->getItemCode($token, $item_name);
+        $code .= $this->getItemCode($token, $item_name, 0);
         $code .= "}\n";
         $code .= "?>";
         return $code;
@@ -773,7 +807,7 @@ class Compiler
             $parts = explode('.', $var, 2);
             $var_name = trim($parts[0], '$');
             $var_path = $parts[1];
-            $code .= 'fx::digSet($this->v("' . $var_name . '"), "' . $var_path . '", ' . $value . ");\n";
+            $code .= 'fx::digSet($context->get("' . $var_name . '"), "' . $var_path . '", ' . $value . ");\n";
             $code .= "?>\n";
             return $code;
         }
@@ -781,10 +815,10 @@ class Compiler
         $var = $this->varialize($var);
 
         if ($is_default) {
-            $code .= "if (is_null(\$this->v('" . $var . "','local'))) {\n";
+            $code .= "if (is_null(\$context->get('" . $var . "','local'))) {\n";
         }
 
-        $code .= '$this->setVar("' . $var . '", ' . $value . ');' . "\n";
+        $code .= '$context->set("' . $var . '", ' . $value . ');' . "\n";
         if ($is_default) {
             $code .= "}\n";
         }
@@ -837,7 +871,7 @@ class Compiler
         }
         $token_props = 'array(' . join(", ", $token_props_parts) . ')';
         $res = '';
-        $res = '<?php $this->pushContext(array("area_infoblocks" => fx::page()->getAreaInfoblocks(' . $parsed_props['id'] . ")));\n?>";
+        $res = '<?php $context->push(array("area_infoblocks" => fx::page()->getAreaInfoblocks(' . $parsed_props['id'] . ")));\n?>";
         $render_called = false;
         foreach ($token->getChildren() as $child_num => $child) {
             if ($child->name == 'template') {
@@ -847,12 +881,12 @@ class Compiler
                         $res =
                             "<?php\n" .
                             'if ($_is_admin) {' . "\n" .
-                            'echo $this->renderArea(' . $token_props . ', \'marker\');' . "\n" .
+                            'echo self::renderArea(' . $token_props . ', $context, \'marker\');' . "\n" .
                             '}' . "\n?>\n" .
                             $res .
-                            '<?php echo $this->renderArea(' . $token_props . ', \'data\');?>';
+                            '<?php echo self::renderArea(' . $token_props . ', $context, \'data\');?>';
                     } else {
-                        $res .= '<?php echo $this->renderArea(' . $token_props . ');?>';
+                        $res .= '<?php echo self::renderArea(' . $token_props . ', $context);?>';
                     }
                     $render_called = true;
                 }
@@ -862,9 +896,9 @@ class Compiler
             }
         }
         if (!$render_called) {
-            $res = '<?php echo $this->renderArea(' . $token_props . ');?>' . $res;
+            $res = '<?php echo self::renderArea(' . $token_props . ', $context);?>' . $res;
         }
-        $res .= "<?php \$this->popContext();\n?>";
+        $res .= "<?php \$context->pop();\n?>";
         return $res;
     }
 
@@ -998,7 +1032,7 @@ class Compiler
 
         $children_code = $tpl_props['_code'];
 
-        $code = "public function tpl_" . $tpl_id . '() {' . "\n";
+        $code = "public function tpl_" . $tpl_id . '($context) {' . "\n";
 
         $template_path = str_replace(realpath($_SERVER['DOCUMENT_ROOT']), '', $this->_current_source_file);
         $template_path = str_replace('\\', '/', $template_path);

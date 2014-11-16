@@ -14,12 +14,20 @@ class Template
     protected $_inherit_context = false;
     protected $_level = 0;
     protected $_admin_disabled = false;
+    
+    public $context;
 
     public function __construct($action, $data = array())
     {
-        if (count($data) > 0) {
-            $this->pushContext($data);
+        if ($data instanceof Context) {
+            $context = $data;
+        } else {
+            $context = new Context();
+            if (count($data) > 0) {
+                $context->push($data);
+            }
         }
+        $this->context = $context;
         $this->action = $action;
     }
 
@@ -44,29 +52,7 @@ class Template
     {
         return $this->_level;
     }
-
-    protected $context_stack_meta = array();
-
-    public function pushContext($data = array(), $meta = array())
-    {
-        $this->context_stack [] = $data;
-        $meta = array_merge(array(
-            'transparent' => false,
-            'autopop'     => false
-        ), $meta);
-        $this->context_stack_meta[] = $meta;
-    }
-
-    public function popContext()
-    {
-        array_pop($this->context_stack);
-        $meta = array_pop($this->context_stack_meta);
-        if ($meta['autopop']) {
-            array_pop($this->context_stack);
-            array_pop($this->context_stack_meta);
-        }
-    }
-
+    
     protected $mode_stack = array();
 
     public function pushMode($mode, $value)
@@ -92,19 +78,6 @@ class Template
         if ($this->_parent) {
             return $this->_parent->getMode($mode);
         }
-    }
-
-    public function setVar($var, $val)
-    {
-        $stack_count = count($this->context_stack);
-        if ($stack_count == 0) {
-            $this->pushContext(array(), array('transparent' => true));
-        }
-        if (!is_array($this->context_stack[$stack_count - 1])) {
-            $this->pushContext(array(), array('transparent' => true, 'autopop' => true));
-            $stack_count++;
-        }
-        $this->context_stack[$stack_count - 1][$var] = $val;
     }
 
     protected function printVar($val, $meta = null)
@@ -225,25 +198,11 @@ class Template
 
     protected function getVarMeta($var_name = null, $source = null)
     {
-        if ($var_name === null) {
-            return array();
-        }
-        if ($source && $source instanceof Entity) {
-            $meta = $source->getFieldMeta($var_name);
-            return is_array($meta) ? $meta : array();
-        }
-        for ($i = count($this->context_stack) - 1; $i >= 0; $i--) {
-            if (!($this->context_stack[$i] instanceof Entity)) {
-                continue;
-            }
-            if (($meta = $this->context_stack[$i]->getFieldMeta($var_name))) {
-                return $meta;
-            }
-        }
-        if ($this->_parent && $this->_inherit_context) {
-            return $this->_parent->getVarMeta($var_name);
-        }
-        return array();
+        return $this->context->getVarMeta($var_name, $source);
+    }
+    
+    public function v($v = null, $l = null) {
+        return $this->context->get($v, $l);
     }
 
     protected $is_wrapper = false;
@@ -261,6 +220,7 @@ class Template
 
     public static $v_count = 0;
 
+    /*
     public function v($name = null, $context_offset = null)
     {
         $need_local = false;
@@ -335,7 +295,8 @@ class Template
         }
         return null;
     }
-
+    */
+    
     public static function beautifyHtml($html)
     {
         $level = 0;
@@ -372,12 +333,13 @@ class Template
     /*
      * @param $mode - marker | data | both
      */
-    public function renderArea($area, $mode = 'both')
+    public static function renderArea($area, $context, $mode = 'both')
     {
         $is_admin = fx::isAdmin();
+        fx::log('ia', $is_admin);
         if ($mode != 'marker') {
             fx::trigger('render_area', array('area' => $area));
-            if ($this->v('_idle')) {
+            if ($context->get('_idle')) {
                 return;
             }
         }
@@ -448,13 +410,14 @@ class Template
             return '<div class="fx_template_error">bad recursion?</div>';
         }
         if (count($data) > 0) {
-            $this->pushContext($data);
+            $this->context->push($data);
         }
+        //fx::debug('rendring', $this);
         ob_start();
         $method = self::getActionMethod($this->action);
         if ($this->hasAction()) {
             try {
-                $this->$method();
+                $this->$method($this->context);
             } catch (\Exception $e) {
                 fx::log('template exception', $e);
             }
@@ -464,7 +427,7 @@ class Template
         }
         $result = ob_get_clean();
 
-        if ($this->v('_idle')) {
+        if ($this->context->get('_idle')) {
             return $result;
         }
         if (fx::isAdmin() && !$this->_parent) {

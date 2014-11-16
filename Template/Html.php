@@ -364,8 +364,10 @@ class Html
                             "start tag " . $closed_tag->source .
                             " (line " . $start_line . ") " .
                             "doesn't match end tag </" . $token->name . '> (line ' . $end_line . ')';
-
-                        throw new \Exception($msg);
+                        
+                        $e = new \Exception($msg);
+                        $e->html = $this->_string;
+                        throw $e;
                     }
                     if ($token->offset) {
                         $closed_tag->end_offset = $token->offset;
