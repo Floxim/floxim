@@ -21,10 +21,8 @@ class Front extends Base
             return null;
         } else {
             if (
-                $url && $url != $page['url']
+                $url && !$page->hasVirtualPath() && $url != $page['url']
             ) {
-                // oldest urlAlias
-                // @TODO: check site_id here
                 fx::http()->redirect($page['url'], 301);
                 exit;
             }
