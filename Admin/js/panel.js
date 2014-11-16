@@ -55,9 +55,13 @@
                     return false;
                 }
             }).on('fx_form_sent', function(e, data) {
-                $fx.front_panel.hide();
-                if (params.onfinish) {
-                    params.onfinish(data);
+                if (data.status === 'error') {
+                    
+                } else {
+                    $fx.front_panel.hide();
+                    if (params.onfinish) {
+                        params.onfinish(data);
+                    }
                 }
             });
             setTimeout(function() {
