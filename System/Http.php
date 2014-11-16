@@ -15,6 +15,9 @@ class Http
 
     public function status($code)
     {
+        if (headers_sent()) {
+            return false;
+        }
         header("HTTP/1.1 " . $code . " " . $this->status_values[$code]);
     }
 
@@ -33,6 +36,9 @@ class Http
 
     public function header($name, $value = null)
     {
+        if (headers_sent()) {
+            return false;
+        }
         if (is_array($value) || is_object($value)) {
             $value = json_encode($value);
         }

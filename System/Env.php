@@ -127,7 +127,7 @@ class Env
         return $this->current['home_id'];
     }
 
-    public function isAdmin()
+    public function getIsAdmin()
     {
         return ($user = $this->getUser()) ? $user->isAdmin() : false;
     }

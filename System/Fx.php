@@ -314,7 +314,7 @@ class Fx
     {
         static $is_admin = null;
         if (is_null($is_admin)) {
-            $is_admin = (bool)self::env()->isAdmin();
+            $is_admin = (bool)self::env()->getIsAdmin();
         }
         return $is_admin;
     }
@@ -330,12 +330,14 @@ class Fx
         if ($env === false) {
             $env = new Env();
         }
-
-        $args = func_get_args();
-        if (count($args) == 0) {
+        $num_args = func_num_args();
+        
+        if ($num_args === 0) {
             return $env;
         }
-        if (count($args) == 1) {
+        $args = func_get_args();
+        if ($num_args === 1) {
+            /*
             if ($args[0] == 'is_admin') {
                 $method = array($env, 'is_admin');
             } else {
@@ -344,6 +346,8 @@ class Fx
             if (is_callable($method)) {
                 return call_user_func($method);
             }
+             * 
+             */
             return $env->get($args[0]);
         }
         if (count($args) == 2) {

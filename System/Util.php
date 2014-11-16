@@ -293,8 +293,8 @@ class Util
 
     public function underscoreToCamel($string, $first_upper = true)
     {
-        $string = trim($string, '_');
-        $parts = explode('_', $string);
+        $t_string = trim($string, '_');
+        $parts = explode('_', $t_string);
         $camelized = '';
         foreach ($parts as $part_num => $part) {
             if ($part_num === 0 && $first_upper === false) {

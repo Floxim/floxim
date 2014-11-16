@@ -356,7 +356,7 @@ abstract class Entity implements \ArrayAccess
         if (self::isTemplateVar($offset)) {
             $offset = mb_substr($offset, 1);
             if (!isset($this[$offset]) || $this->allowTemplateOverride) {
-                $template = fx::env('current_template');
+                $template = fx::env()->getCurrentTemplate();
                 if ($template && $template instanceof Template\Template) {
                     $template_value = $template->v($offset . "_" . $this['id']);
                     if ($template_value) {
