@@ -55,7 +55,7 @@ name="<?=_c.name?>" id="<?=_c.name?>"
 
 <!--[input]-->
 	<input 
-		type="<?=_c.password ? 'password' : 'text'?>" 
+		type="<?=_c.type === 'password' ? 'password' : 'text'?>" 
                 <?= _c.disabled ? ' disabled="disabled"' : ''?>
         class="fx_input fx_input_<?=_c.type?>" 
 		<?=$t.field_id_name(_c)?> 
