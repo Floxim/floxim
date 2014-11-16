@@ -87,13 +87,18 @@ class Content extends Admin
                     $content[$rel_prop] = $input[$rel_prop];
                 }
             }
-            $content->save();
-            $res['saved_id'] = $content['id'];
-            if ($is_backoffice) {
-                $res['reload'] = str_replace("%d", $content['id'], $input['reload_url']);
+            try {
+                $content->save();
+                $res['saved_id'] = $content['id'];
+                if ($is_backoffice) {
+                    $res['reload'] = str_replace("%d", $content['id'], $input['reload_url']);
+                }
+            }  catch (\Exception $e) {
+                fx::log('Exceptn', $e);
+                $res['status'] = 'error';
             }
         }
-        $com_item_name = fx::data('component', $content_type)->get('item_name');
+        $com_item_name = fx::data('component', $content_type)->getItemName();
 
         if ($input['content_id']) {
             $res['header'] = fx::alang('Editing ',
@@ -101,7 +106,7 @@ class Content extends Admin
         } else {
             $res['header'] = fx::alang('Adding new ', 'system') . ' ' . $com_item_name;
             if ($move_meta) {
-                $res['header'] .= ' <span class="fx_header_notice">' . $move_meta['type'] . ' ' . $move_meta['item']['name'] . '</span>';
+                $res['header'] .= ' <span class="fx_header_notice">' . fx::alang($move_meta['type']) . ' ' . $move_meta['item']['name'] . '</span>';
             }
         }
         $res['view'] = 'cols';
@@ -225,35 +230,8 @@ class Content extends Admin
         return $res;
     }
 
-    public function livesearch($input)
-    {
-        if (!isset($input['content_type'])) {
-            return;
-        }
-        $content_type = $input['content_type'];
-        $finder = fx::data($content_type);
-        if (($finder instanceof \Floxim\Main\Content\Finder) and $content_type != 'user') {
-            $finder->where('site_id', fx::env('site')->get('id'));
-        }
-        if (isset($input['skip_ids']) && is_array($input['skip_ids'])) {
-            $finder->where('id', $input['skip_ids'], 'NOT IN');
-        }
-        if (isset($input['ids'])) {
-            $finder->where('id', $input['ids']);
-        }
-        if (isset($input['conditions'])) {
-            foreach ($input['conditions'] as $cond_field => $cond_val) {
-                if (is_array($cond_val)) {
-                    $finder->where($cond_field, $cond_val[0], $cond_val[1]);
-                } else {
-                    $finder->where($cond_field, $cond_val);
-                }
-            }
-        }
-        $res = $finder->livesearch($_POST['term'], (isset($_POST['limit']) && $_POST['limit']) ? $_POST['limit'] : 20);
-        fx::complete($res);
-    }
 
+    
     /*
      * Move content among neighbors inside one parent and one InfoBlock
      * Input should be content_type and content_id

@@ -42,12 +42,13 @@ window.fx_livesearch = function (node) {
     
     this.getSuggestParams = function() {
         var params = {
-            url: '/vendor/Floxim/Floxim/index.php',
+            //url: '/vendor/Floxim/Floxim/index.php',
+            url:'/~ajax/floxim.main.content:livesearch/',
             data:{
-                entity:'content',
-                action:'livesearch',
+                //entity:'content',
+                //action:'livesearch',
                 content_type:this.datatype,
-                fx_admin:'true'
+                //fx_admin:'true'
             },
             count_show:this.count_show
         };
@@ -874,4 +875,4 @@ window.fx_suggest = function(params) {
     this.Init();
 };
 
-})($fxj);
+})(jQuery);
