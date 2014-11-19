@@ -27,6 +27,7 @@ class Front extends Base
                 exit;
             }
         }
+        fx::log('front');
         fx::env('page', $page);
         fx::http()->status('200');
         $layout_ib = $this->getLayoutInfoblock($page);
@@ -56,8 +57,6 @@ class Front extends Base
 
         $c_page = $page_id === fx::env('page_id') ? fx::env('page') : fx::data('page', $page_id);
 
-        //$infoblocks = $c_page
-        //    ->getPageInfoblocks()
         $infoblocks = fx::data('infoblock')
             ->getForPage($c_page)
             ->find(function ($ib) {

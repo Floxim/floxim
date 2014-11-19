@@ -2,22 +2,19 @@
 
 namespace Floxim\Floxim\Template;
 
-use Floxim\Floxim\System;
-use Floxim\Form;
 use Floxim\Floxim\System\Fx as fx;
 
 class Template
 {
 
     public $action = null;
-    protected $_parent = null;
-    protected $_inherit_context = false;
-    protected $_level = 0;
-    protected $_admin_disabled = false;
+    protected $parent = null;
+    protected $level = 0;
+    protected $admin_disabled = false;
     
     public $context;
 
-    public function __construct($action, $data = array())
+    public function __construct($action = null, $data = array())
     {
         if ($data instanceof Context) {
             $context = $data;
@@ -31,26 +28,25 @@ class Template
         $this->action = $action;
     }
 
-    public function setParent($parent_template, $inherit = false)
+    public function setParent($parent_template)
     {
-        $this->_parent = $parent_template;
-        $this->_inherit_context = $inherit;
-        $this->_level = $parent_template->getLevel() + 1;
+        $this->parent = $parent_template;
+        $this->level = $parent_template->getLevel() + 1;
         return $this;
     }
 
     public function isAdmin($set = null)
     {
         if ($set === null) {
-            return !$this->_admin_disabled && fx::isAdmin();
+            return !$this->admin_disabled && fx::isAdmin();
         }
-        $this->_admin_disabled = !$set;
+        $this->admin_disabled = !$set;
         return $this;
     }
 
     public function getLevel()
     {
-        return $this->_level;
+        return $this->level;
     }
     
     protected $mode_stack = array();
@@ -75,8 +71,8 @@ class Template
         if (isset($this->mode_stack[$mode])) {
             return end($this->mode_stack[$mode]);
         }
-        if ($this->_parent) {
-            return $this->_parent->getMode($mode);
+        if ($this->parent) {
+            return $this->parent->getMode($mode);
         }
     }
 
@@ -92,110 +88,10 @@ class Template
 
     public function getHelp()
     {
-        ini_set('memory_limit', '1G');
-        ob_start();
-        ?>
-        <div class="fx_help">
-            <a class="fx_help_expander">?</a>
-
-            <div class="fx_help_data" style="display:none;">
-                <?php
-                $this->printStackHelp();
-                ?>
-            </div>
-        </div>
-        <?php
-        return ob_get_clean();
+        //ini_set('memory_limit', '1G');
+        return $this->context->getHelp();
     }
-
-    public function printStackHelp()
-    {
-        $context_stack = array_reverse($this->context_stack);
-        echo "<div class='fx_help_template_title'>" . $this->getTemplateSign() . "</div>";
-        foreach ($context_stack as $level => $stack) {
-            echo $this->getItemHelp($stack, 0);
-        }
-        if ($this->_parent && $this->_inherit_context) {
-            echo "<hr />";
-            $this->_parent->printStackHelp();
-        }
-    }
-
-    public function getItemHelp($item, $level = 0, $c_path = array())
-    {
-        $c_path [] = $item;
-        $item_type = is_array($item) ? 'Array' : get_class($item);
-        if ($item instanceof System\Entity || $item instanceof Form\Field\Field || $item instanceof Form\Form) {
-            $item = $item->get();
-        }
-        ob_start();
-        if ($level === 0) {
-            ?>
-            <div class="fx_item_help_block">
-            <table>
-            <tr class="header">
-                <td colspan="2"><?= $item_type ?></td>
-            </tr>
-            <tr class="header">
-                <td>Prop</td>
-                <td class="value_cell">Value</td>
-            </tr>
-        <?php
-        }
-        foreach ($item as $prop => $value) {
-            $is_complex = is_object($value) || is_array($value);
-            $is_recursion = false;
-            if ($is_complex) {
-                foreach ($c_path as $c_path_item) {
-                    if ($value === $c_path_item) {
-                        $is_recursion = true;
-                        break;
-                    }
-                }
-            }
-            ?>
-            <tr class="help_level_<?= $level ?>"
-                <?php if ($level > 0) {
-                    echo ' style="display:none;" ';
-                } ?>>
-                <td style="padding-left:<?= (2 + 10 * $level) ?>px !important;" class="prop_cell">
-                    <?php
-                    if ($is_complex) {
-                        ?><a class="level_expander">
-                        <b><?= $prop ?></b>
-                        <span class="item_type"><?= is_array($value) ? 'Array' : get_class($value) ?></span>
-                        </a>
-                    <?php
-                    } else {
-                        echo $prop;
-                    }
-                    ?>
-                </td>
-                <td class="value_cell">
-                    <?php
-                    if (!$is_complex) {
-                        echo htmlspecialchars($value);
-                    } elseif ($is_recursion) {
-                        ?><span class="fx_help_recursion">* recursion *</span><?php
-                    }
-                    ?>
-                </td>
-            </tr>
-            <?php
-            if ($is_complex && !$is_recursion) {
-                if (!($value instanceof Loop)) {
-                    echo $this->getItemHelp($value, $level + 1, $c_path);
-                }
-            }
-        }
-        if ($level === 0) {
-            ?></table>
-            </div>
-        <?php
-        }
-        return ob_get_clean();
-    }
-
+    
     protected function getVarMeta($var_name = null, $source = null)
     {
         return $this->context->getVarMeta($var_name, $source);
@@ -209,94 +105,16 @@ class Template
 
     public function isWrapper($set = null)
     {
-        if (func_num_args() == 0) {
-            return $this->is_wrapper ? true : ($this->_parent ? $this->_parent->isWrapper() : false);
+        if (func_num_args() === 0) {
+            return $this->is_wrapper ? true : ($this->parent ? $this->parent->isWrapper() : false);
         }
         $this->is_wrapper = (bool)$set;
     }
 
     protected $context_stack = array();
 
-
     public static $v_count = 0;
 
-    /*
-    public function v($name = null, $context_offset = null)
-    {
-        $need_local = false;
-        if ($context_offset === 'local') {
-            $need_local = true;
-            $context_offset = null;
-        }
-        // neither var name nor context offset - return current context
-        if (!$name && !$context_offset) {
-            for ($i = count($this->context_stack) - 1; $i >= 0; $i--) {
-                $c_meta = $this->context_stack_meta[$i];
-                if (!$c_meta['transparent']) {
-                    return $this->context_stack[$i];
-                }
-            }
-            return end($this->context_stack);
-        }
-
-        if (!is_null($context_offset)) {
-            $context_position = -1;
-            for ($i = count($this->context_stack) - 1; $i >= 0; $i--) {
-                $cc = $this->context_stack[$i];
-                $c_meta = $this->context_stack_meta[$i];
-                //if ( ! $cc instanceof fx_template_loop) {
-                if (!$c_meta['transparent']) {
-                    $context_position++;
-                }
-                if ($context_position == $context_offset) {
-                    if (!$name) {
-                        return $cc;
-                    }
-
-                    if (is_array($cc)) {
-                        if (array_key_exists($name, $cc)) {
-                            return $cc[$name];
-                        }
-                    } elseif ($cc instanceof \ArrayAccess) {
-                        if (isset($cc[$name])) {
-                            return $cc[$name];
-                        }
-                    } elseif (is_object($cc) && isset($cc->$name)) {
-                        return $cc->$name;
-                    }
-                    continue;
-                }
-                if ($context_position > $context_offset) {
-                    return null;
-                }
-            }
-            if ($this->_parent) {
-                return $this->_parent->v($name, $context_offset - $context_position - 1);
-            }
-            return null;
-        }
-
-        for ($i = count($this->context_stack) - 1; $i >= 0; $i--) {
-            $cc = $this->context_stack[$i];
-            if (is_array($cc)) {
-                if (array_key_exists($name, $cc)) {
-                    return $cc[$name];
-                }
-            } elseif ($cc instanceof \ArrayAccess) {
-                if (isset($cc[$name])) {
-                    return $cc[$name];
-                }
-            } elseif (is_object($cc) && isset($cc->$name)) {
-                return $cc->$name;
-            }
-        }
-        if ($this->_parent && $this->_inherit_context && !$need_local) {
-            return $this->_parent->v($name);
-        }
-        return null;
-    }
-    */
-    
     public static function beautifyHtml($html)
     {
         $level = 0;
@@ -336,10 +154,9 @@ class Template
     public static function renderArea($area, $context, $mode = 'both')
     {
         $is_admin = fx::isAdmin();
-        fx::log('ia', $is_admin);
         if ($mode != 'marker') {
             fx::trigger('render_area', array('area' => $area));
-            if ($context->get('_idle')) {
+            if ($is_admin && $context->get('_idle')) {
                 return;
             }
         }
@@ -397,43 +214,63 @@ class Template
         }
         return method_exists($this, self::getActionMethod($action));
     }
+    
+    protected $forced_method = null;
+    
+    public function forceMethod($method) {
+        $this->forced_method = $method;
+    }
 
-    protected static function getActionMethod($action)
+    public static function getActionMethod($action, $context, $tags = null, $with_priority = false)
     {
-        return 'tpl_' . $action;
+        if (!isset(static::$action_map[$action])) {
+            return false;
+        }
+        $method = static::$action_map[$action];
+        if (is_string($method)) {
+            return !$with_priority ? $method : array($method, 0.5);
+        }
+        //$res = call_user_func( array($this, 'solve_'.$action), $context, $tags);
+        $res = call_user_func(get_called_class().'::solve_'.$action, $context, $tags);
+        return !$with_priority ? $res[0] : $res;
     }
 
 
     public function render($data = array())
     {
-        if ($this->_level > 10) {
+        if ($this->level > 10) {
             return '<div class="fx_template_error">bad recursion?</div>';
         }
         if (count($data) > 0) {
             $this->context->push($data);
         }
-        //fx::debug('rendring', $this);
+        
         ob_start();
-        $method = self::getActionMethod($this->action);
-        if ($this->hasAction()) {
-            try {
-                $this->$method($this->context);
-            } catch (\Exception $e) {
-                fx::log('template exception', $e);
-            }
+        if (!is_null($this->forced_method)){
+            $method = $this->forced_method;
         } else {
-            fx::debug('No template: ' . get_class($this) . '.' . $this->action, $this);
-            die();
+            $method = self::getActionMethod($this->action, $this->context);
+            if (!$method) {
+                throw new \Exception('No template: ' . get_class($this) . '.' . $this->action);
+            }
+        }
+        try {
+            $this->$method($this->context);
+        } catch (\Exception $e) {
+            fx::log('template exception', $e);
         }
         $result = ob_get_clean();
 
-        if ($this->context->get('_idle')) {
-            return $result;
-        }
-        if (fx::isAdmin() && !$this->_parent) {
-            self::$count_replaces++;
-            $result = Template::replaceAreas($result);
-            $result = Field::replaceFields($result);
+        
+        if (fx::isAdmin()) {
+            if ($this->context->get('_idle')) {
+                return $result;
+            }
+            if (!$this->parent) {
+                self::$count_replaces++;
+                $result = Template::replaceAreas($result);
+                $result = Field::replaceFields($result);
+            }
         }
         return $result;
     }
@@ -441,12 +278,12 @@ class Template
     public static $count_replaces = 0;
 
     // is populated when compiling
-    protected $_templates = array();
+    protected static $templates = array();
 
 
     public function getTemplateVariants()
     {
-        return $this->_templates;
+        return static::$templates;
     }
 
     public function getInfo()
@@ -454,7 +291,7 @@ class Template
         if (!$this->action) {
             throw new \Exception('Specify template action/variant before getting info');
         }
-        foreach ($this->_templates as $tpl) {
+        foreach (static::$templates as $tpl) {
             if ($tpl['id'] == $this->action) {
                 return $tpl;
             }

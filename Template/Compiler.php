@@ -82,8 +82,6 @@ class Compiler
 
             $item = '$' . $this->varialize($each) . '_item';
             $each_token->setProp('as', $item);
-            $c_with = $token->getProp('with');
-            $token->setProp('with', $item . ($c_with ? ', ' . $c_with : ''));
             $token->setProp('each', '');
             $each_token->addChild($token);
             return $this->tokenEachToCode($each_token);
@@ -91,14 +89,15 @@ class Compiler
         $code = "<?php\n";
         $tpl_name = $token->getProp('id');
         // not a plain name
-        if (!preg_match("~^[a-z0-9_\.\:]+$~", $tpl_name)) {
+        if (!preg_match("~^[a-z0-9_\,\.\:\@\#]+$~", $tpl_name)) {
             $tpl_name = self::parseExpression($tpl_name);
-        } else {
-            if (!preg_match("~\:~", $tpl_name)) {
-                $tpl_name = $this->_template_set_name . ":" . $tpl_name;
-            }
-            $tpl_name = '"' . $tpl_name . '"';
         }
+        
+        if (!preg_match("~[\:\@]~", $tpl_name)) {
+           $tpl_name = $this->_template_set_name . ":" . $tpl_name;
+        }
+        //$tpl_name = '"' . $tpl_name . '"';
+        
         $tpl = '$tpl_' . $this->varialize($tpl_name);
         $is_apply = $token->getProp('apply');
         //$code .= $tpl . '->setParent($this, ' . $inherit . ");\n";
@@ -176,11 +175,12 @@ class Compiler
                 $context_var = 'new \\Floxim\\Floxim\\Template\\Context()';
             }
         }
-        if ($switch_context) {
-            if ($switch_context_local) {
-                $code .= '$context->push(' . $new_context_expression . ");\n";
-            }
+        
+        // switch context to calculate passed vars inside it
+        if ($switch_context_local) {
+            $code .= '$context->push(' . $new_context_expression . ");\n";
         }
+        
         if (count($passed_vars) > 0) {
             $tpl_passed = $tpl."_passed";
             $code .=  $tpl_passed ." = array();\n";
@@ -194,16 +194,56 @@ class Compiler
                         $code .= $tpl_passed."['".$passed_var_key."'] = ob_get_clean();\n";
                 }
             }
+            // passed vars calculated, clear context
+            if ($switch_context_local) {
+                $code .= "\$context->pop();\n";
+            }
             $code .= $context_var."->push(".$tpl_passed.");\n";
         }
         if ($switch_context) {
             $code .= $context_var . "->push(" . $new_context_expression . ");\n";
         }
-        $code .= 'echo fx::template(' . $tpl_name .  ', ' .$context_var . ")->setParent(\$this)->render();\n";
-        if ($switch_context_local) {
+        
+        // ------------
+        
+        $tpl_at_parts = explode("@", $tpl_name);
+        if (count($tpl_at_parts) === 1) {
+            $forced_group = 'null';
+            list($set_name, $action_name) = explode(":", $tpl_name);
+        } else {
+            $forced_group = !empty($tpl_at_parts[0]) ? $tpl_at_parts[0] : $this->_template_set_name;
+            $action_parts = explode(":", $tpl_at_parts[1]);
+            if (count($action_parts) === 1) {
+                    array_unshift($action_parts, $forced_group);
+            }
+            list($set_name, $action_name) = $action_parts;
+            $forced_group = "'".$forced_group."'";
+        }
+        $tag_parts = explode("#", $action_name);
+        if (count($tag_parts) > 1) {
+            $action_name = $tag_parts[0];
+            $tags = "array('".join("', '", explode(",", $tag_parts[1]))."')";
+        } else {
+            $tags = 'null';
+        }
+        $code .= "if ( (".$tpl." = ";
+	$code .= "\\Floxim\\Floxim\\Template\\Loader";
+        $code .= "::loadTemplateVariant('".$set_name."', '".$action_name."', ".$context_var.", ".$forced_group.", ".$tags.")";
+        $code .= " ) ) {\n";
+        $code .= "echo ".$tpl."->setParent(\$this)->render();\n";
+        $code .= "}\n";
+        // ------------
+        
+        //$code .= 'echo fx::template(' . $tpl_name .  ', ' .$context_var . ")->setParent(\$this)->render();\n";
+        
+        // clear vars passed into child template from current context
+        if ($is_apply && count($passed_vars) > 0) {
             $code .= "\$context->pop();\n";
         }
-        //$code .= 'echo ' . $tpl . "->render();\n";
+        // clear context object
+        if ($is_apply && $switch_context) {
+            $code .= "\$context->pop();\n";
+        }
         $code .= "\n?>";
         return $code;
     }
@@ -237,8 +277,8 @@ class Compiler
             }
 
             if ($mod['is_each'] && $mod['is_template']) {
-                $c_with = $call_token->getProp('with');
-                $call_token->setProp('with', "`" . $display_var . '`_item' . ($c_with ? ', ' . $c_with : ''));
+                //$c_with = $call_token->getProp('with');
+                //$call_token->setProp('with', "`" . $display_var . '`_item' . ($c_with ? ', ' . $c_with : ''));
                 $each_token = new Token('each', 'single', array('select' => "`" . $display_var . "`"));
                 $each_token->addChild($call_token);
                 $code = "ob_start();\n?>";
@@ -266,8 +306,6 @@ class Compiler
                 }
             } elseif ($mod['is_template']) {
                 $code .= "ob_start();\n?>";
-                $c_with = $call_token->getProp('with');
-                $call_token->setProp('with', "`" . $display_var . '`' . ($c_with ? ', ' . $c_with : ''));
                 $call_token->setProp('apply', true);
                 $code .= $this->tokenCallToCode($call_token);
                 $code .= "<?php\n" . $display_var_item . " = ob_get_clean();\n";
@@ -1025,65 +1063,134 @@ class Compiler
         }
         return $code;
     }
-
-    protected function makeTemplateCode($tpl_props)
+    
+    protected static $func_counter = 0;
+    protected function makeTemplateCode(&$tpl_props, &$registry)
     {
+        self::$func_counter++;
+        if (self::$func_counter > 100) {
+            return;
+        }
+        $code  = '';
+        $token = $tpl_props['_token'];
+        if (!$token) {
+            fx::debug($tpl_props, debug_backtrace());
+            die();
+        }
+        $predicate = $token->getProp('test');
+        $tags = isset($tpl_props['tags']) ? $tpl_props['tags'] : null;
+        
+        if ($predicate && !isset($tpl_props['_variants']) && !isset($tpl_props['_is_variant'])) {
+            $tpl_props = array(
+                'id' => $tpl_props['id'],
+                '_token' => $token,
+                '_variants' => array($tpl_props)
+            );
+        }
+        
+        if (isset($tpl_props['_variants'])) {
+            foreach ($tpl_props['_variants'] as &$v) {
+                if (!$v['_token']->getProp('test')) {
+                    $v['_token']->setProp('test', 'true');
+                }
+                $v['_is_variant'] = true;
+                $code .= $this->makeTemplateCode($v, $registry);
+            }
+            $code .= $this->makeSolveCode($tpl_props['_variants'], $tpl_props['id']);
+            return $code;
+        }
         $tpl_id = $tpl_props['id'];
-
+        $method_name = 'tpl_'.$tpl_id;
+        $hash = '';
+        if ($predicate) {
+            $hash .= $predicate;
+            $code .= '// predicate: '.$predicate."\n";
+        }
+        if ($tags) {
+            $hash .= join(", ", $tags);
+            $code .= '// tags: '.join(", ", $tags)."\n";
+        }
+        if ($hash) {
+            $method_name .= '_'. md5($hash);
+        }
+        $tpl_props['method'] = $method_name;
         $children_code = $tpl_props['_code'];
 
-        $code = "public function tpl_" . $tpl_id . '($context) {' . "\n";
-
-        $template_path = str_replace(realpath($_SERVER['DOCUMENT_ROOT']), '', $this->_current_source_file);
-        $template_path = str_replace('\\', '/', $template_path);
-        $template_dir = preg_replace("~/[^/]+$~", '', $template_path) . '/';
-
+        $code .= "public function " . $method_name . '($context) {' . "\n";
         $code .= "fx::env()->addCurrentTemplate(\$this);\n";
 
-        $code .= "\$template_dir = '" . $template_dir . "';\n";
-        $code .= "\$_is_admin = \$this->isAdmin();\n";
-        $code .= 'if ($_is_admin) {' . "\n";
-        $code .= "\$_is_wrapper_meta = \$this->isWrapper() ? array('template_is_wrapper' => 1) : array();\n";
-        $code .= "}\n";
-
-        if (isset($tpl_props['_variants'])) {
-            $tpl_variants = $tpl_props['_variants'];
-            foreach ($tpl_variants as &$v) {
-                $t = $v['_token'];
-                if (!($prior = $t->getProp('priority'))) {
-                    $prior = $t->getProp('test') ? 0.5 : 0;
-                }
-                $v['_priority'] = $prior;
-            }
-
-            @ usort($tpl_variants, function ($a, $b) {
-                $ap = $a['_priority'];
-                $bp = $b['_priority'];
-                $diff = round(($bp - $ap) * 100);
-                return $diff;
-            });
-
-            foreach ($tpl_variants as $var_num => $var) {
-                $token = $var['_token'];
-                $test = $token->getProp('test');
-                if (!$test) {
-                    $test = 'true';
-                }
-                $code .= $var_num == 0 ? 'if' : 'elseif';
-                $code .= '(' . self::parseExpression($test) . ") {\n";
-                $is_subroot = $token->getProp('subroot') ? 'true' : 'false';
-                $code .= "\t\$this->is_subroot = " . ($is_subroot) . ";\n";
-                $code .= $var['_code'] . "\n"; //$this->_children_to_code($token)."\n";
-                $code .= "}\n";
-            }
-        } else {
-            $token = $tpl_props['_token'];
-            $is_subroot = $token->getProp('subroot') ? 'true' : 'false';
-            $code .= "\t\$this->is_subroot = " . ($is_subroot) . ";\n";
-            $code .= $children_code;
+        if (strstr($children_code, "\$template_dir")) {
+            $template_path = str_replace(realpath($_SERVER['DOCUMENT_ROOT']), '', $this->_current_source_file);
+            $template_path = str_replace('\\', '/', $template_path);
+            $template_dir = preg_replace("~/[^/]+$~", '', $template_path) . '/';
+            $code .= "\$template_dir = '" . $template_dir . "';\n";
         }
+        $has_meta_var = strstr($children_code, "\$_is_wrapper_meta");
+        $has_admin_var = strstr($children_code, "\$_is_admin") || $has_meta_var;
+        if ($has_admin_var) {
+            $code .= "\$_is_admin = \$this->isAdmin();\n";
+        }
+        if ($has_meta_var) {
+            $code .= 'if ($_is_admin) {' . "\n";
+            $code .= "\$_is_wrapper_meta = \$this->isWrapper() ? array('template_is_wrapper' => 1) : array();\n";
+            $code .= "}\n";
+        }
+        
+        $token = $tpl_props['_token'];
+        $is_subroot = $token->getProp('subroot') ? 'true' : 'false';
+        $code .= "\t\$this->is_subroot = " . ($is_subroot) . ";\n";
+        $code .= $children_code;
+        
         $code .= "fx::env()->popCurrentTemplate();\n";
         $code .= "\n}\n";
+        /*
+        unset($tpl_props['_token']);
+        unset($tpl_props['_variants']);
+        unset($tpl_props['_code']);
+         * 
+         */
+        $tpl_props['method'] = $method_name;
+        $registry []= array_diff_key($tpl_props, array_flip(array('_token', '_variants', '_code')));
+        return $code;
+    }
+    
+    protected function makeSolveCode($variants, $variant_id) {
+        $code = '';
+        $code .= 'public function solve_'.$variant_id."(\$context, \$tags = null) {\n";
+        $code .= "\$count_tags = \$tags ? count(\$tags) : null;\n";
+        foreach ($variants as &$v) {
+            $t = $v['_token'];
+            if (!($prior = $t->getProp('priority'))) {
+                $prior = $t->getProp('test') ? 0.5 : 0;
+            }
+            $v['_priority'] = $prior;
+        }
+
+        @ usort($variants, function ($a, $b) {
+            $ap = $a['_priority'];
+            $bp = $b['_priority'];
+            $diff = round(($bp - $ap) * 100);
+            return $diff;
+        });
+
+        foreach ($variants as $var_num => $var) {
+            $token = $var['_token'];
+            $test = $token->getProp('test');
+            if (!$test) {
+                $test = 'true';
+            }
+            $code .= $var_num == 0 ? 'if' : 'elseif';
+            $code .= "( (!\$tags ";
+            if ($var['tags'] && count($var['tags'])) {
+                $code .= " || count(array_intersect(\$tags, array('".join("', '", $var['tags'])."'))) == \$count_tags";
+            }
+            $code .= ") && ";
+            $code .= '(' . self::parseExpression($test) . ") )";
+            $code .= "{\n";
+            $code .= "return array('".$var['method']."', ".$var['_priority'].");\n";
+            $code .= "}\n";
+        }
+        $code .= "}\n";
         return $code;
     }
 
@@ -1094,6 +1201,13 @@ class Compiler
         $com_name = $this->_template_set_name;
         
         $tpl_id = $token->getProp('id');
+        if (preg_match("~#(.+)$~", $tpl_id, $tpl_tags)) {
+            $tpl_id = preg_replace("~#.+$~", '', $tpl_id);
+            $tags = preg_split("~\,\s*~", $tpl_tags[1]);
+            if (count($tags) > 0) {
+                $tpl_props['tags'] = $tags;
+            }
+        }
         if (preg_match("~(^.+?)\:(.+)~", $tpl_id, $id_parts)) {
             $external_com_name = $id_parts[1];
             $own_name = $id_parts[2];
@@ -1104,6 +1218,7 @@ class Compiler
                 $tpl_id = str_replace(".", '_', $external_com_name) . '__'.$own_name;
             }
         }
+        
         $tpl_props['id'] =  $tpl_id;
         $tpl_props['file'] = fx::path()->http($this->_current_source_file);
         
@@ -1165,9 +1280,11 @@ class Compiler
         if ($token->name != 'template') {
             return;
         }
-        $tpl_id = $token->getProp('id');
-
+        
         $tpl_props = $this->getTemplateProps($token);
+        
+        $tpl_id = $tpl_props['id'];
+        
         $tpl_props['_code'] = $this->childrenToCode($token);
 
         if (isset($this->templates[$tpl_id])) {
@@ -1201,29 +1318,51 @@ class Compiler
     {
         // Name of the class/template group
         $this->_template_set_name = $tree->getProp('name');
-        if (($ct = $tree->getProp('controller_type'))) {
-            $this->_controller_type = $ct;
-        }
-        if (($cn = $tree->getProp('controller_name'))) {
-            $this->_controller_name = $cn;
-        }
         $this->collectTemplates($tree);
-        ob_start();
-        echo "<?php\n";
-        // todo: psr0 need fix
-        echo 'class ' . $class_name . " extends \\Floxim\\Floxim\\Template\\Template {\n";
+        //ob_start();
+        $code = '';
+        $code .= "<?php\n";
+        $code .= 'class ' . $class_name . " extends \\Floxim\\Floxim\\Template\\Template {\n";
 
-        $tpl_var = array();
-        foreach ($this->templates as $tpl_props) {
-            echo $this->makeTemplateCode($tpl_props);
-            unset($tpl_props['_token']);
-            unset($tpl_props['_variants']);
-            unset($tpl_props['_code']);
-            $tpl_var [] = $tpl_props;
+        $registry = array();
+        foreach ($this->templates as $meta) {
+            $code .= $this->makeTemplateCode($meta, $registry);
         }
-        echo 'protected $_templates = ' . var_export($tpl_var, 1) . ";\n";
-        echo "}";
-        $code = ob_get_clean();
+        $action_map = array();
+        $overrides = array();
+        foreach ($registry as $t) {
+            $id = $t['id'];
+            if (!isset($action_map[$id])) {
+                $action_map[$id] = $t['method'];
+            } else {
+                if (!is_array($action_map[$id])) {
+                    $action_map[$id] = array($action_map[$id]);
+                }
+                $action_map[$id] []= $t['method'];
+            }
+            if (isset($t['overrides']) && !isset($overrides[$t['overrides']])) {
+                $overrides[$t['overrides']]= $t['id'];
+            }
+        }
+        $code .= 'protected static $templates = ' . var_export($registry, 1) . ";\n";
+        $code .= 'protected static $action_map = '. var_export($action_map,1).";\n";
+        $code .= "public static function init() {\n";
+        if (count($overrides) > 0) {
+            $code .= "fx::listen('loadTemplate', function(\$e) {\n";
+                $code .= "switch (\$e['full_name']) {\n";
+                foreach ($overrides as $remote => $local) {
+                    $code .= "case '".$remote."':\n";
+                    $code .= "if ( (\$solved = ".$class_name."::solve_".$local."(\$e['context'], \$e['tags']) ) ) {\n";
+                    $code .= "\$e->pushResult(\$solved + array(2 => '".$class_name."'));\n";
+                    $code .= "return;\n";
+                    $code .= "}\n";
+                    $code .= "break;\n";
+                }
+                $code .= "}\n";
+                $code .= "});\n";
+        }
+        $code .= "}\n";
+        $code .= "}";
         return $code;
     }
 

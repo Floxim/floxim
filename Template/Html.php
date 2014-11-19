@@ -180,6 +180,11 @@ class Html
                     $tpl_macro_tag .= ' suit="' . $tpl_suit . '"';
                     $n->removeAttribute('fx:suit');
                 }
+                if (($tpl_priority = $n->getAttribute('fx:priority'))) {
+                    $tpl_macro_tag .= ' priority="'.$tpl_priority.'" ';
+                    $n->removeAttribute('fx:priority');
+                }
+                
                 $tpl_macro_tag .= '}';
                 $n->wrap($tpl_macro_tag, '{/template}');
                 $n->removeAttribute('fx:template');

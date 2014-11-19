@@ -58,4 +58,11 @@ class Event implements \ArrayAccess
     {
         return $this->result;
     }
+    
+    public function pushResult($value) {
+        if (!is_array($this->result)) {
+            $this->result = array();
+        }
+        $this->result []= $value;
+    }
 }

@@ -173,6 +173,103 @@ class Loader
         }
         self::$source_paths[$tpl_name][] = $path;
     }
+    
+    public static function import($tpl_name)
+    {
+        static $imported = array();
+        if (isset ($imported[$tpl_name])) {
+            return $imported[$tpl_name];
+        }
+        $processor = new self();
+        $processor->setTemplateName($tpl_name);
+        $classname = $processor->getCompiledClassName();
+        //if (!class_exists($classname)) {
+            $processor->addDefaultSourceDirs();
+            $processor->process();
+        //}
+        $imported[$tpl_name] = $classname;
+        $classname::init();
+        return $classname;
+    }
+    
+    public static function loadTemplateVariant(
+        $name,
+        $action = null,
+        $context = null,
+        $force_group = false,
+        $tags = null
+    ) 
+    {
+        // just return new template instance
+        if (!$action) {
+            $tpl_class = self::import($name);
+            return new $tpl_class(null, $context);
+        }
+        
+        // if group is forced
+        if ($force_group) {
+            $tpl_class = self::import($force_group);
+            // recount action name for external group
+            if ($force_group !== $name) {
+                $action = str_replace(".", "_", $name)."__".$action;
+            }
+            $method = $tpl_class::getActionMethod($action, $context, $tags);
+            if (!$method) {
+                return false;
+            }
+            $tpl = new $tpl_class(null, $context);
+            $tpl->forceMethod($method);
+            return $tpl;
+        }
+        // run full process - trigger event and collect external implementations
+        $base_class = self::import($name);
+        
+        $found_variants = fx::trigger('loadTemplate', array(
+            'name' => $name,
+            'action' => $action,
+            'context' => $context,
+            'full_name' => $name.':'.$action,
+            'tags' => $tags
+        ));
+        // no external implementation, quickly return base one
+        if (!$found_variants) {
+            $method = $base_class::getActionMethod($action, $context, $tags);
+            if (!$method) {
+                return false;
+            }
+            $tpl = new $base_class(null, $context);
+            $tpl->forceMethod($method);
+            return $tpl;
+        }
+        if ( ($local_method = $base_class::getActionMethod($action, $context, $tags, true) ) ) {
+            $local_method[2] = $base_class;
+            $found_variants []= $local_method;
+        }
+        usort($found_variants, function($a, $b) use ($base_class) {
+            $ap = $a[0];
+            $bp = $b[0];
+            if ($ap > $bp) {
+                return 1;
+            }
+            if ($ap < $bp) {
+                return -1;
+            }
+            $a_loc = $a[2] === $base_class;
+            $b_loc = $b[2] === $base_class;
+            if ($a_loc) {
+                return -1;
+            }
+            if ($b_loc) {
+                return 1;
+            }
+            return 0;
+        });
+        $winner = $found_variants[0];
+        $winner_class = $winner[2];
+        $tpl = new $winner_class(null, $context);
+        $tpl->forceMethod($winner[0]);
+        return $tpl;
+    }
 
     /*
      * Automatically load the template by name
@@ -180,13 +277,25 @@ class Loader
      */
     public static function loadByName($tpl_name, $action = null, $data = null)
     {
-        $processor = new self();
-        $processor->setTemplateName($tpl_name);
-        $classname = $processor->getCompiledClassName();
-        if (!class_exists($classname)) {
-            $processor->addDefaultSourceDirs();
-            $processor->process();
+        $classname = self::import($tpl_name);
+        /*
+        if ($action && $data) {
+            $event_res = fx::trigger('loadTemplate', array(
+                'name' => $tpl_name, 
+                'action' => $action, 
+                'context' => $data,
+                'full_name' => $tpl_name.':'.$action
+            ));
+            if ($event_res) {
+                $classname = $event_res[0][2];
+                $tpl = new $classname(null, $data);
+                $tpl->forceMethod($event_res[0][0]);
+                fx::log('overd', $tpl_name);
+                return $tpl;
+            }
         }
+         * 
+         */
         $tpl = new $classname($action, $data);
         return $tpl;
     }
@@ -194,6 +303,7 @@ class Loader
     protected function getCompiledClassName()
     {
         $tpl_name = $this->getTemplateName();
+        $tpl_name = preg_replace("~^@~", '', $tpl_name);
         $tpl_name = preg_replace("~[^a-z0-9]+~i", '_', $tpl_name);
         return 'fx_template_' . $tpl_name;
     }
@@ -228,6 +338,7 @@ class Loader
 
     public function process()
     {
+        $this->template_name = preg_replace("~^@~", '', $this->template_name);
         $target_path = $this->getTargetPath();
         if ($this->isFresh($target_path)) {
             require_once($target_path);

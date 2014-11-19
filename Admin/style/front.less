@@ -383,7 +383,13 @@ img.fx_hilight {
     line-height: 9px !important;
     font-family: arial !important;
     cursor:pointer !important;
+    box-sizing:content-box !important;
+    opacity:0.3 !important;
     z-index:9999;
+    &:hover {
+        text-decoration:none !important;
+        opacity:1 !important;
+    }
 }
 
 .fx_help_data {
