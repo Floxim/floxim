@@ -207,14 +207,6 @@ class Template
         ob_get_clean();
         return $areas;
     }
-
-    public function hasAction($action = null)
-    {
-        if (is_null($action)) {
-            $action = $this->action;
-        }
-        return method_exists($this, self::getActionMethod($action));
-    }
     
     protected $forced_method = null;
     

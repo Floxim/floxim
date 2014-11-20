@@ -434,7 +434,7 @@ class Entity extends System\Entity implements Template\Entity
             return $output;
         }
         $tpl_wrap = fx::template($wrapper);
-        if (!$tpl_wrap->hasAction()) {
+        if (!$tpl_wrap) {
             return $output;
         }
         $tpl_wrap->isWrapper(true);
