@@ -12,9 +12,9 @@ use Floxim\Floxim\System\Fx as fx;
 
 class Loader
 {
-    protected $_source_files = array();
+    protected $source_files = array();
     protected $template_name = null;
-    protected $_target_hash = null;
+    protected $target_hash = null;
 
     public function __construct()
     {
@@ -30,7 +30,7 @@ class Loader
             $this->addSourceDir($source_file);
             return;
         }
-        $this->_source_files[] = realpath($source_file);
+        $this->source_files[] = realpath($source_file);
     }
 
     public function addSourceDir($source_dir)
@@ -62,9 +62,6 @@ class Loader
             : $this->addSourceFile($file_or_dir);
     }
 
-    protected $_controller_type = null;
-    protected $_controller_name = null;
-
     public function setTemplateName($tpl_name)
     {
         $this->template_name = $tpl_name;
@@ -74,14 +71,28 @@ class Loader
     {
         return $this->template_name;
     }
+    
+    // set for special template groups like @admin
+    // with source dirs bound directly
+    protected $is_aliased = false;
+    
+    public function isAliased($set = null)
+    {
+        if (func_num_args() === 1) {
+            $this->is_aliased = (bool) $set;
+        }
+        return $this->is_aliased;
+    }
 
     public function addDefaultSourceDirs()
     {
 
         $template_name = $this->getTemplateName();
 
-        if (!preg_match("~@~", $template_name)) {
-
+        if (!$this->isAliased()) {
+            if ($template_name === 'admin') {
+                fx::log('not aliased', $this, debug_backtrace());
+            }
             $ns = fx::getComponentNamespace($this->getTemplateName());
 
             $ns = explode("\\", trim($ns, "\\"));
@@ -103,7 +114,6 @@ class Loader
             }
         }
 
-        $template_name = preg_replace("~^@~", '', $template_name);
         if (isset(self::$source_paths[$template_name])) {
             foreach (self::$source_paths[$template_name] as $sp) {
                 try {
@@ -116,51 +126,51 @@ class Loader
 
     }
 
-    protected $_target_dir = null;
-    protected $_target_file = null;
+    protected $target_dir = null;
+    protected $target_file = null;
 
     public function setTargetDir($dir)
     {
-        $this->_target_dir = $dir;
+        $this->target_dir = $dir;
     }
 
     public function setTargetFile($filename)
     {
-        $this->_target_file = $filename;
+        $this->target_file = $filename;
     }
 
     public function getTargetPath()
     {
-        if (!$this->_target_dir) {
-            $this->_target_dir = fx::config('templates.cache_dir');
+        if (!$this->target_dir) {
+            $this->target_dir = fx::config('templates.cache_dir');
         }
-        if (!$this->_target_file) {
-            $this->_target_file = $this->getTemplateName() . '.php';
+        if (!$this->target_file) {
+            $this->target_file = $this->getTemplateName() . '.php';
         }
         /**
          * Calc prefix hash by sources files
          */
-        if (!$this->_target_hash) {
+        if (!$this->target_hash) {
             $this->recalcTargetHash();
         }
-        return $this->_target_dir . '/' . preg_replace("~\.php$~", '.' . $this->_target_hash . '.php',
-            $this->_target_file);
+        return $this->target_dir . '/' . preg_replace("~\.php$~", '.' . $this->target_hash . '.php',
+            $this->target_file);
     }
 
     public function recalcTargetHash()
     {
-        $this->_target_hash = '';
-        $files = (array)$this->_source_files;
+        $this->target_hash = '';
+        $files = (array)$this->source_files;
         foreach ($files as $sFile) {
-            $this->_target_hash .= filemtime($sFile);
+            $this->target_hash .= filemtime($sFile);
         }
-        $this->_target_hash = md5($this->_target_hash);
+        $this->target_hash = md5($this->target_hash);
     }
 
     public function getTargetMask()
     {
         $path = $this->getTargetPath();
-        return str_replace($this->_target_hash, '*', $path);
+        return str_replace($this->target_hash, '*', $path);
     }
 
 
@@ -177,16 +187,29 @@ class Loader
     public static function import($tpl_name)
     {
         static $imported = array();
+        
+        $is_aliased = preg_match("~^\@(.+)~", $tpl_name, $real_name);
+        if ($is_aliased) {
+            $tpl_name = $real_name[1];
+        }
+        
         if (isset ($imported[$tpl_name])) {
             return $imported[$tpl_name];
         }
         $processor = new self();
+        
         $processor->setTemplateName($tpl_name);
+        if ($is_aliased) {
+            $processor->isAliased(true);
+        }
         $classname = $processor->getCompiledClassName();
-        //if (!class_exists($classname)) {
-            $processor->addDefaultSourceDirs();
+        $processor->addDefaultSourceDirs();
+        try {
             $processor->process();
-        //}
+        } catch (\Exception $e) {
+            $imported[$tpl_name] = false;
+            return false;
+        }
         $imported[$tpl_name] = $classname;
         $classname::init();
         return $classname;
@@ -278,24 +301,6 @@ class Loader
     public static function loadByName($tpl_name, $action = null, $data = null)
     {
         $classname = self::import($tpl_name);
-        /*
-        if ($action && $data) {
-            $event_res = fx::trigger('loadTemplate', array(
-                'name' => $tpl_name, 
-                'action' => $action, 
-                'context' => $data,
-                'full_name' => $tpl_name.':'.$action
-            ));
-            if ($event_res) {
-                $classname = $event_res[0][2];
-                $tpl = new $classname(null, $data);
-                $tpl->forceMethod($event_res[0][0]);
-                fx::log('overd', $tpl_name);
-                return $tpl;
-            }
-        }
-         * 
-         */
         $tpl = new $classname($action, $data);
         return $tpl;
     }
@@ -303,7 +308,6 @@ class Loader
     protected function getCompiledClassName()
     {
         $tpl_name = $this->getTemplateName();
-        $tpl_name = preg_replace("~^@~", '', $tpl_name);
         $tpl_name = preg_replace("~[^a-z0-9]+~i", '_', $tpl_name);
         return 'fx_template_' . $tpl_name;
     }
@@ -338,7 +342,6 @@ class Loader
 
     public function process()
     {
-        $this->template_name = preg_replace("~^@~", '', $this->template_name);
         $target_path = $this->getTargetPath();
         if ($this->isFresh($target_path)) {
             require_once($target_path);
@@ -366,8 +369,6 @@ class Loader
         $php = $this->compile($src);
 
         $this->runEval($php);
-        // todo: psr0 need verify
-        //$classname = 'fx_template_virtual_'.$count_virtual;
         $classname = $this->getCompiledClassName();
         $tpl = new $classname(is_null($action) ? 'virtual' : $action);
         $tpl->source = $src;
@@ -425,8 +426,11 @@ class Loader
     protected function loadSources()
     {
         $sources = array();
-        foreach ($this->_source_files as $sf) {
-            $sources[$sf] = file_get_contents($sf);
+        foreach ($this->source_files as $sf) {
+            $file_data = file_get_contents($sf);
+            if (!preg_match("~^\s*$~", $file_data)) {
+                $sources[$sf] = $file_data;
+            }
         }
         return $sources;
     }
@@ -440,15 +444,10 @@ class Loader
         if (is_null($sources)) {
             $sources = $this->loadSources();
         }
-        $res = '{templates name="' . $this->getTemplateName() . '"';
-        if (!empty($this->_controller_type)) {
-            $res .= ' controller_type="' . $this->_controller_type . '"';
+        if (count($sources) === 0) {
+            throw new \Exception('No template sources found');
         }
-        if (!empty($this->_controller_name)) {
-            $res .= ' controller_name="' . $this->_controller_name . '"';
-        }
-        $res .= "}";
-        //foreach ($this->_source_files as $file) {
+        $res = '{templates name="' . $this->getTemplateName() . '"}';
         foreach ($sources as $file => $source) {
             $res .= '{templates source="' . $file . '"}';
             $res .= $this->prepareFileData($source, $file);
@@ -456,12 +455,6 @@ class Loader
         }
         $res .= '{/templates}';
         return $res;
-    }
-
-    public function readFile($file)
-    {
-        $file_data = file_get_contents($file);
-        return $this->prepareFileData($file_data, $file);
     }
 
     protected function prepareFileData($file_data, $file)
@@ -486,7 +479,6 @@ class Loader
 
     public function wrapFile($file, $file_data)
     {
-        //$is_layout = $this->_controller_type == 'layout';
         $is_theme = preg_match("~^theme\.~", $this->getTemplateName());
         $tpl_of = 'false';
         if ($is_theme) {
@@ -495,10 +487,6 @@ class Loader
             $file_tpl_name = null;
             preg_match('~([a-z0-9_]+)\.tpl$~', $file, $file_tpl_name);
             $tpl_id = $file_tpl_name[1];
-            if ($this->_controller_type == 'component' && $this->_controller_name) {
-                // todo: psr0 need fix
-                $tpl_of = 'component_' . $this->_controller_name . '.' . $tpl_id;
-            }
         }
         $file_data =
             '{template id="' . $tpl_id . '" of="' . $tpl_of . '"}' .

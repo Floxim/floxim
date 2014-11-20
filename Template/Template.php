@@ -26,6 +26,7 @@ class Template
         }
         $this->context = $context;
         $this->action = $action;
+        //fx::trigger('initTemplate', array('template' => $this));
     }
 
     public function setParent($parent_template)

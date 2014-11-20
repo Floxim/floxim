@@ -2,6 +2,8 @@
 
 namespace Floxim\Floxim\Template;
 
+use Floxim\Floxim\System\Fx as fx;
+
 /*
  * Class breaks the template into tokens and builds a tree
  */

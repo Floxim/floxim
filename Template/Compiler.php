@@ -277,8 +277,8 @@ class Compiler
             }
 
             if ($mod['is_each'] && $mod['is_template']) {
-                //$c_with = $call_token->getProp('with');
-                //$call_token->setProp('with', "`" . $display_var . '`_item' . ($c_with ? ', ' . $c_with : ''));
+                $c_with = $call_token->getProp('with');
+                $call_token->setProp('with', "`" . $display_var . '`_item' . ($c_with ? ', ' . $c_with : ''));
                 $each_token = new Token('each', 'single', array('select' => "`" . $display_var . "`"));
                 $each_token->addChild($call_token);
                 $code = "ob_start();\n?>";
@@ -307,6 +307,8 @@ class Compiler
             } elseif ($mod['is_template']) {
                 $code .= "ob_start();\n?>";
                 $call_token->setProp('apply', true);
+                $c_with = $call_token->getProp('with');
+                $call_token->setProp('with', "`" . $display_var . '`' . ($c_with ? ', ' . $c_with : ''));
                 $code .= $this->tokenCallToCode($call_token);
                 $code .= "<?php\n" . $display_var_item . " = ob_get_clean();\n";
             } else {

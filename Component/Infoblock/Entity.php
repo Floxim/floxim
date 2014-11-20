@@ -377,7 +377,9 @@ class Entity extends System\Entity implements Template\Entity
         if (!$tpl_name) {
             return false;
         }
-        $tpl = fx::template($tpl_name);
+        $parts = explode(":", $tpl_name);
+        //$tpl = fx::template($tpl_name);
+        $tpl = \Floxim\Floxim\Template\Loader::loadTemplateVariant($parts[0], $parts[1]);
         return $tpl;
     }
 

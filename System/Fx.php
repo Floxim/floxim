@@ -310,11 +310,18 @@ class Fx
         return self::$router;
     }
 
-    public static function isAdmin()
+    public static function isAdmin($set = null)
     {
         static $is_admin = null;
+        static $was_admin = null;
         if (is_null($is_admin)) {
             $is_admin = (bool)self::env()->getIsAdmin();
+        }
+        if (func_num_args() === 1) {
+            if (is_null($was_admin)) {
+                $was_admin = $is_admin;
+            }
+            $is_admin = is_null($set) ? $was_admin : (bool) $set;
         }
         return $is_admin;
     }

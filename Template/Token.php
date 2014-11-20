@@ -193,7 +193,7 @@ class Token
         ),
         'call'      => array(
             'type'     => 'both',
-            'contains' => array('var', 'each', 'if', 'apply', 'call', 'with_each')
+            'contains' => array('var', 'each', 'if', 'apply', 'call', 'with_each', 'with')
         ),
         'templates' => array(
             'type'     => 'double',
