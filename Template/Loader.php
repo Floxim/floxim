@@ -301,8 +301,12 @@ class Loader
     public static function loadByName($tpl_name, $action = null, $data = null)
     {
         $classname = self::import($tpl_name);
-        $tpl = new $classname($action, $data);
-        return $tpl;
+        if ($classname) {
+            $tpl = new $classname($action, $data);
+            return $tpl;
+        }
+        fx::log('template not found', $tpl_name);
+        return false;
     }
 
     protected function getCompiledClassName()
