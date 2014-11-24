@@ -226,12 +226,18 @@ class Loader
         // just return new template instance
         if (!$action) {
             $tpl_class = self::import($name);
+            if (!$tpl_class) {
+                return false;
+            }
             return new $tpl_class(null, $context);
         }
         
         // if group is forced
         if ($force_group) {
             $tpl_class = self::import($force_group);
+            if (!$tpl_class) {
+                return false;
+            }
             // recount action name for external group
             if ($force_group !== $name) {
                 $action = str_replace(".", "_", $name)."__".$action;
@@ -256,6 +262,9 @@ class Loader
         ));
         // no external implementation, quickly return base one
         if (!$found_variants) {
+            if (!$base_class) {
+                return false;
+            }
             $method = $base_class::getActionMethod($action, $context, $tags);
             if (!$method) {
                 return false;

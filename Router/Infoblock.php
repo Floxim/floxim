@@ -11,7 +11,7 @@ class Infoblock extends Base
         if (!preg_match("~^/\~ib/(\d+|fake(?:\-\d+)?)@(\d+)$~", $url, $ib_info)) {
             return null;
         }
-        $c_url = fx::input('post', 'c_url');
+        $c_url = fx::input('post', '_ajax_base_url');
         if ($c_url) {
             $_SERVER['REQUEST_URI'] = $c_url;
             $path = fx::router()->getPath($c_url);

@@ -44,6 +44,8 @@ class Frontoffice extends System\Controller
     {
         if (!$form) {
             $form = new Form\Form();
+        } elseif (is_array($form)) {
+            $form = new Form\Form($form);
         }
         $form['action'] = '/~ajax/';
         $form['method'] = 'POST';
@@ -53,6 +55,13 @@ class Frontoffice extends System\Controller
             'name'  => '_ajax_infoblock_id',
             'value' => $this->getParam('infoblock_id')
         ));
+        if (isset($_POST['_ajax_base_url'])) {
+            $form->addField(array(
+                'type' => 'hidden',
+                'name' => '_ajax_base_url',
+                'value' => $_POST['_ajax_base_url']
+            ));
+        }
         $this->_meta['ajax_access'] = true;
         return $form;
     }

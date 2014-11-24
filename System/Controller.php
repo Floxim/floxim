@@ -478,15 +478,14 @@ class Controller
         return $actions;
     }
 
-
-    protected $_bound = array();
-
     public function listen($event, $callback)
     {
-        if (!isset($this->_bound[$event])) {
-            $this->_bound[$event] = array();
-        }
-        $this->_bound[$event][] = $callback;
+        $ctr = $this;
+        fx::listen($event, function($e) use ($ctr, $callback) {
+            if ($e['controller'] === $ctr) {
+                return $callback($e);
+            }
+        });
     }
 
     public function __call($name, $arguments)
@@ -500,13 +499,17 @@ class Controller
     }
 
 
-    public function trigger($event, $data = null)
+    public function trigger($event, $params = array())
     {
-        if (isset($this->_bound[$event]) && is_array($this->_bound[$event])) {
-            foreach ($this->_bound[$event] as $cb) {
-                call_user_func($cb, $data, $this);
-            }
+        if (is_string($event)) {
+            $event = new \Floxim\Floxim\System\Event($event, $params);
         }
+        $event['controller'] = $this;
+        $sig = explode(":", $this->getSignature());
+        $event['controller_name'] = $sig[0];
+        $event['action_name'] = $sig[1];
+        $event_res = fx::trigger($event);
+        return $event_res;
     }
 
     public function getActions()

@@ -159,7 +159,7 @@ class Entity extends System\Entity
                     fx::db()->query("ALTER TABLE `{{" . $this->getTable() . "}}`
                     CHANGE `" . $this->modified_data['keyword'] . "` `" . $this->data['keyword'] . "` " . $type);
                 } else {
-                    if ($this->modified_data['keyword'] && $this->modified_data['keyword'] != $this->data['keyword']) {
+                    if ($this->modified_data['type'] && $this->modified_data['type'] != $this->data['type']) {
                         fx::db()->query("ALTER TABLE `{{" . $this->getTable() . "}}`
                     MODIFY `" . $this->data['keyword'] . "` " . $type);
                     }

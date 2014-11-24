@@ -458,6 +458,7 @@ class Entity extends System\Entity implements Template\Entity
     protected function addInfoblockMeta($html_result)
     {
         $controller_meta = $this->getResultMeta();
+
         if (!fx::isAdmin() && !$controller_meta['ajax_access']) {
             return $html_result;
         }
@@ -472,6 +473,10 @@ class Entity extends System\Entity implements Template\Entity
             'data-fx_infoblock' => $ib_info, // todo: psr0 need fix
             'class'             => 'fx_infoblock fx_infoblock_' . $this['id']
         );
+        
+        if (isset($_POST['_ajax_base_url'])) {
+            $meta['data-fx_ajax_base_url'] = $_POST['_ajax_base_url'];
+        }
 
         if ($this->isFake()) {
             $meta['class'] .= ' fx_infoblock_fake';
