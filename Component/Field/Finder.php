@@ -31,7 +31,7 @@ class Finder extends System\Finder
     public function __construct()
     {
         parent::__construct();
-        $this->serialized = array('format', 'parent');
+        $this->json_encode = array('format');
         $this->order = 'priority';
     }
 

@@ -12,7 +12,7 @@ class Finder extends System\Finder
         parent::__construct();
         // todo: psr0 need verify
         $this->classname = 'fx_infoblock_visual';
-        $this->serialized = array('wrapper_visual', 'template_visual');
+        $this->json_encode = array('wrapper_visual', 'template_visual');
         $this->order('priority');
     }
 
