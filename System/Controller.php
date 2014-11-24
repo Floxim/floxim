@@ -483,7 +483,7 @@ class Controller
         $ctr = $this;
         fx::listen($event, function($e) use ($ctr, $callback) {
             if ($e['controller'] === $ctr) {
-                return $callback($e);
+                return call_user_func($callback, $e);
             }
         });
     }
