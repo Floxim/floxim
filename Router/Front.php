@@ -93,6 +93,19 @@ class Front extends Base
         $this->_ib_cache[$cache_key] = $areas;
         return $areas;
     }
+    
+    public function importLayoutTemplate()
+    {
+        $c_page = fx::env('page');
+        if (!$c_page) {
+            return false;
+        }
+        $layout_infoblock = $this->getLayoutInfoblock($c_page);
+        if (!$layout_infoblock) {
+            return false;
+        }
+        return fx::template()->import(preg_replace('~\:.*$~', '', $layout_infoblock->getVisual()->get('template')));
+    }
 
     public function getLayoutInfoblock($page)
     {

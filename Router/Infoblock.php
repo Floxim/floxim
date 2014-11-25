@@ -36,8 +36,7 @@ class Infoblock extends Base
         fx::page()->setInfoblocks($page_infoblocks);
         
         // import layout template to recreate real env
-        $layout_infoblock = fx::router('front')->getLayoutInfoblock(fx::env('page'));
-        fx::template()->import(preg_replace('~\:.*$~', '', $layout_infoblock->getVisual()->get('template')));
+        fx::router('front')->importLayoutTemplate();
         
 
 
