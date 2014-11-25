@@ -278,8 +278,8 @@ class Loader
             $found_variants []= $local_method;
         }
         usort($found_variants, function($a, $b) use ($base_class) {
-            $ap = $a[0];
-            $bp = $b[0];
+            $ap = $a[1];
+            $bp = $b[1];
             if ($ap > $bp) {
                 return 1;
             }
@@ -289,10 +289,10 @@ class Loader
             $a_loc = $a[2] === $base_class;
             $b_loc = $b[2] === $base_class;
             if ($a_loc) {
-                return -1;
+                return 1;
             }
             if ($b_loc) {
-                return 1;
+                return -1;
             }
             return 0;
         });

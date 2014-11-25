@@ -24,11 +24,9 @@ class Infoblock extends Base
             if (isset($c_url['query'])) {
                 parse_str($c_url['query'], $_GET);
             }
-            
         }
         $ib_id = $ib_info[1];
         $page_id = $ib_info[2];
-        //fx::env('page', $page_id);
         fx::env('ajax', true);
 
         $page_infoblocks = fx::router('front')->getPageInfoblocks(
@@ -36,13 +34,18 @@ class Infoblock extends Base
             fx::env('layout')
         );
         fx::page()->setInfoblocks($page_infoblocks);
+        
+        // import layout template to recreate real env
+        $layout_infoblock = fx::router('front')->getLayoutInfoblock(fx::env('page'));
+        fx::template()->import(preg_replace('~\:.*$~', '', $layout_infoblock->getVisual()->get('template')));
+        
 
 
         // front end can try to reload the layout which is out of date
         // when updating from "layout settings" panel
         $infoblock = fx::data('infoblock', $ib_id);
         if ((!$infoblock && isset($_POST['infoblock_is_layout'])) || $infoblock->isLayout()) {
-            $infoblock = fx::router('front')->getLayoutInfoblock(fx::env('page'));
+            $infoblock = $layout_infoblock;
         }
 
         fx::http()->status('200');

@@ -1082,7 +1082,7 @@ class Compiler
         $predicate = $token->getProp('test');
         $tags = isset($tpl_props['tags']) ? $tpl_props['tags'] : null;
         
-        if ($predicate && !isset($tpl_props['_variants']) && !isset($tpl_props['_is_variant'])) {
+        if ($predicate && !isset($tpl_props['_variants']) && !isset($tpl_props['is_variant'])) {
             $tpl_props = array(
                 'id' => $tpl_props['id'],
                 '_token' => $token,
@@ -1095,7 +1095,7 @@ class Compiler
                 if (!$v['_token']->getProp('test')) {
                     $v['_token']->setProp('test', 'true');
                 }
-                $v['_is_variant'] = true;
+                $v['is_variant'] = true;
                 $code .= $this->makeTemplateCode($v, $registry);
             }
             $code .= $this->makeSolveCode($tpl_props['_variants'], $tpl_props['id']);
@@ -1343,7 +1343,7 @@ class Compiler
                 $action_map[$id] []= $t['method'];
             }
             if (isset($t['overrides']) && !isset($overrides[$t['overrides']])) {
-                $overrides[$t['overrides']]= $t['id'];
+                $overrides[$t['overrides']]= array($t['id'], isset($t['is_variant']) && $t['is_variant']);
             }
         }
         $code .= 'protected static $templates = ' . var_export($registry, 1) . ";\n";
@@ -1352,12 +1352,18 @@ class Compiler
         if (count($overrides) > 0) {
             $code .= "fx::listen('loadTemplate', function(\$e) {\n";
                 $code .= "switch (\$e['full_name']) {\n";
-                foreach ($overrides as $remote => $local) {
+                foreach ($overrides as $remote => $local_info) {
+                    list($local, $is_variant) = $local_info;
                     $code .= "case '".$remote."':\n";
-                    $code .= "if ( (\$solved = ".$class_name."::solve_".$local."(\$e['context'], \$e['tags']) ) ) {\n";
-                    $code .= "\$e->pushResult(\$solved + array(2 => '".$class_name."'));\n";
-                    $code .= "return;\n";
-                    $code .= "}\n";
+                    if ($is_variant) {
+                        $code .= "if ( (\$solved = ".$class_name."::solve_".$local."(\$e['context'], \$e['tags']) ) ) {\n";
+                        $code .= "\$e->pushResult(\$solved + array(2 => '".$class_name."'));\n";
+                        $code .= "return;\n";
+                        $code .= "}\n";
+                    } else {
+                        $code .= "\$e->pushResult(array('tpl_".$local."', 0.5, '".$class_name."'));\n";
+                        $code .= "return;\n";
+                    }
                     $code .= "break;\n";
                 }
                 $code .= "}\n";

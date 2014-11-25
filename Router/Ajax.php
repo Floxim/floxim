@@ -31,6 +31,11 @@ class Ajax extends Base
                 parse_str($c_url['query'], $_GET);
             }
         }
+        
+        // import layout template to recreate real env
+        $layout_infoblock = fx::router('front')->getLayoutInfoblock(fx::env('page'));
+        fx::template()->import(preg_replace('~\:.*$~', '', $layout_infoblock->getVisual()->get('template')));
+        
         $c_infoblock_id = fx::input()->fetchGetPost('_ajax_infoblock_id');
         if ($c_infoblock_id) {
             $infoblock = fx::data('infoblock', $c_infoblock_id);
