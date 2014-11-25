@@ -54,6 +54,36 @@ class Db extends \PDO
         }
         return trim($this->replacePrefix($query));
     }
+    
+    /**
+     * Dummy method for quick and dirty updates not using API
+     * @param string $table Table to update (with no prefix)
+     * @param array $values Array of fields to update (key - field, value - new value)
+     * @param mixed $where id or array of field-value pairs (will be joined with "and") or raw condition string
+     */
+    public function update($table, $values, $where)
+    {
+        $q = 'update {{'.$table.'}} set ';
+        $parts = array();
+        foreach ($values as $field => $value) {
+            $parts []= '`'.$field.'` = "'.$this->escape($value).'" ';
+        }
+        $q .= join(", ", $parts);
+        if (is_numeric($where)) {
+            $where = array('id' => $where);
+        }
+        if (is_array($where) && count($where) > 0) {
+            $q .= ' where ';
+            $where_parts = array();
+            foreach ($where as $field => $value) {
+                $where_parts []= '`'.$field.'` = "'.$this->escape($value).'"';
+            }
+            $q .= join(" AND ", $where_parts);
+        } elseif (is_string($where)) {
+            $q .= ' where '.$where;
+        }
+        $this->query($q);
+    }
 
     public function query($statement)
     {
