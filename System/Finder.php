@@ -15,6 +15,7 @@ abstract class Finder
     protected $order = array();
     //protected $classname;
     protected $serialized = array();
+    protected $json_encode = array();
     protected $sql_function = array();
 
     protected $limit;
@@ -362,7 +363,7 @@ abstract class Finder
 
         // column-link
         $link_col = $rel[2];
-        
+
         switch ($rel[0]) {
             case Finder::BELONGS_TO:
                 $joined_table = array_shift($finder_tables);
@@ -507,7 +508,7 @@ abstract class Finder
     {
         $query = $this->buildQuery();
         $res = fx::db()->getResults($query);
-        
+
         if ($this->calc_found_rows) {
             $this->found_rows = fx::db()->getVar('SELECT FOUND_ROWS()');
         }
@@ -518,6 +519,13 @@ abstract class Finder
             foreach ($this->serialized as $serialized_field_name) {
                 if (isset($v[$serialized_field_name])) {
                     $v[$serialized_field_name] = unserialize($v[$serialized_field_name]);
+                }
+            }
+            // don't forget json decode
+            foreach ($this->json_encode as $json_field_name) {
+                if (isset($v[$json_field_name])) {
+                    $v_decode = @json_decode($v[$json_field_name], true);
+                    $v[$json_field_name] = $v_decode ? $v_decode : array();
                 }
             }
             $objs[] = $v;
@@ -856,8 +864,11 @@ abstract class Finder
             if (!in_array($k, $cols)) {
                 continue;
             }
-            if (in_array($k, $this->serialized) && is_array($v)) {
+            if (in_array($k, $this->serialized)) {
                 $v = serialize($v);
+            }
+            if (in_array($k, $this->json_encode)) {
+                $v = json_encode($v);
             }
             $str = "'" . fx::db()->escape($v) . "' ";
             if (isset($this->sql_function[$k])) {
@@ -879,8 +890,9 @@ abstract class Finder
 
     protected static $fullStaticCache = false;
     protected static $storeStaticCache = false;
-    
-    protected static function getStaticCacheKey() {
+
+    protected static function getStaticCacheKey()
+    {
         return 'data-meta-' . get_called_class();
     }
 
@@ -889,19 +901,20 @@ abstract class Finder
         if (static::$fullStaticCache) {
             $class_name = get_called_class();
             return fx::cache('meta')->remember(
-                static::getStaticCacheKey(), 
-                60 * 60, 
+                static::getStaticCacheKey(),
+                60 * 60,
                 function () use ($class_name) {
                     return $class_name::loadFullDataForCache();
-                }, 
-                array(), 
+                },
+                array(),
                 static::$storeStaticCache
             );
         }
         return new Collection();
     }
-    
-    public static function dropStoredStaticCache() {
+
+    public static function dropStoredStaticCache()
+    {
         if (static::isStaticCacheUsed()) {
             fx::log('droping cache', get_called_class());
             fx::cache('meta')->delete(static::getStaticCacheKey());

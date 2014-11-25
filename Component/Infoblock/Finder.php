@@ -24,7 +24,7 @@ class Finder extends System\Finder
         parent::__construct();
         // todo: psr0 need verify
         $this->classname = 'fx_infoblock';
-        $this->serialized = array('params', 'scope');
+        $this->json_encode = array('params', 'scope');
     }
 
     public function isLayout()
