@@ -92,7 +92,7 @@ abstract class Entity implements \ArrayAccess
         $this->beforeSave();
         $pk = $this->getPk();
         // update
-        if ($this->data[$pk]) {
+        if (isset($this->data[$pk]) && $this->data[$pk]) {
             $this->beforeUpdate();
             if ($this->validate() === false) {
                 $this->throwInvalid();

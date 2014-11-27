@@ -213,6 +213,10 @@ fx_edit_in_place.prototype.add_panel_field = function(meta) {
         meta.type = 'string';
     }
     
+    if (!meta.label) {
+        meta.label = meta.id;
+    }
+    
     var $field_container = $fx.front.get_node_panel();
     $field_container.show();
     var field_node = $fx_form.draw_field(meta, $field_container);

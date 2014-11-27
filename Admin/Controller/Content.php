@@ -10,7 +10,7 @@ class Content extends Admin
     public function addEdit($input)
     {
         // get the edited object
-        if ($input['content_id']) {
+        if (isset($input['content_id']) && $input['content_id']) {
             $content = fx::data('content', $input['content_id']);
             $content_type = $content['type'];
         } else {
@@ -36,7 +36,7 @@ class Content extends Admin
         $move_meta = null;
         $move_variants = array('__move_before', '__move_after');
         foreach ($move_variants as $rel_prop) {
-            if (isset($input[$rel_prop])) {
+            if (isset($input[$rel_prop]) && $input[$rel_prop]) {
                 $rel_item = fx::content($input[$rel_prop]);
                 if ($rel_item) {
                     $fields [] = $this->ui->hidden($rel_prop, $input[$rel_prop]);
@@ -100,7 +100,7 @@ class Content extends Admin
         }
         $com_item_name = fx::data('component', $content_type)->getItemName();
 
-        if ($input['content_id']) {
+        if (isset($input['content_id']) && $input['content_id']) {
             $res['header'] = fx::alang('Editing ',
                     'system') . ' <span title="#' . $input['content_id'] . '">' . $com_item_name . '</span>';
         } else {
@@ -206,7 +206,7 @@ class Content extends Admin
 
         $this->response->addFields($fields);
         $this->response->addFormButton(array('key' => 'save', 'label' => fx::alang('Delete')));
-        if ($input['delete_confirm']) {
+        if (isset($input['delete_confirm']) && $input['delete_confirm']) {
             $response = array('status' => 'ok');
             $c_page = fx::env('page');
             if ($c_page) {

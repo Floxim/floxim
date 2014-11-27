@@ -172,6 +172,17 @@
     box-shadow: 0px 0px 6px rgba(50, 50, 50, 0.2);
     height: 31px;
     display:none;
+    .fx_node_panel_separator {
+        height:31px;
+        border-right:1px solid #CCC;
+        margin-right:5px;
+    }
+    .fx_node_panel_label {
+        font-size: 13px;
+        margin-top: 8px;
+        margin-right: 5px;
+        margin-left:5px;
+    }
 }
 
 .fx_node_panel .redactor_toolbar {
@@ -217,8 +228,15 @@
 }
 
 .fx_node_panel .form_label {
-    padding:5px 5px 5px 0;
+    padding:6px 0 5px 0;
     float:left;
+    margin-right:5px;
+    &:after {
+        content:':';
+        font-size: 13px;
+        position:relative;
+        left:-4px;
+    }
 }
 
 .fx_node_panel .input_container {

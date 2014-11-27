@@ -810,6 +810,10 @@ fx_front.prototype.select_item = function(node) {
         }
         if ($node.is('.fx_template_var, .fx_template_var_in_att')) {
             $node.edit_in_place();
+            var $closest_entity = $node.closest('.fx_entity');
+            if ($closest_entity.length && $closest_entity[0] !== $node[0]) {
+                $fx.front.select_content_entity($closest_entity, true);
+            }
         }
     }
     if ($node.is('.fx_infoblock')) {
@@ -1071,6 +1075,7 @@ fx_front.prototype.hilight = function(container) {
 
         if (meta.accept_content) {
             i.addClass('fx_accept_content');
+            
         }
         
         var is_selectable = $fx.front.is_selectable(item);
@@ -1200,19 +1205,38 @@ fx_front.prototype.load = function ( mode ) {
     $('html').trigger('fx_set_front_mode', this.mode);
 };
 
-fx_front.prototype.select_content_entity = function($entity) {
+fx_front.prototype.select_content_entity = function($entity, from_field) {
+    // if true, child field is actually selected
+    from_field = from_field || false;
+    
     var entity_meta = $entity.data('fx_entity');
     var ib_node = $entity.closest('.fx_infoblock').get(0);
     var entity = $entity[0];
+    var $node_panel = $fx.front.get_node_panel();
+    if ($node_panel.children().length) {
+        $node_panel.append('<div class="fx_node_panel_separator"></div>');
+    }
+    $node_panel.append('<div class="fx_node_panel_label">'+$entity.data('fx_entity_name')+':</div>');
+    
+    var ce_id = entity_meta[2] || entity_meta[0];
+    
+    var edit_action_params = {
+        entity:'content',
+        action:'add_edit',
+        content_type:entity_meta[1]
+    }
+    
+    if (ce_id) {
+        edit_action_params.content_id = entity_meta[0];
+    } else {
+        var placeholder_data = $entity.data('fx_entity_meta').placeholder;
+        edit_action_params = $.extend(edit_action_params, placeholder_data);
+    }
+    console.log(edit_action_params);
     $fx.front.add_panel_button('edit', function() {
         $fx.front.select_item(entity);
         $fx.front_panel.load_form(
-            {
-                entity:'content',
-                action:'add_edit',
-                content_id: entity_meta[0],
-                content_type:entity_meta[1]
-            }, 
+            edit_action_params, 
             {
                 view:'cols',
                 onfinish: function() {
@@ -1224,7 +1248,7 @@ fx_front.prototype.select_content_entity = function($entity) {
             }
         );
     });
-    var ce_id = entity_meta[2] || entity_meta[0];
+    
     
     if (ce_id){
         $fx.front.add_panel_button('delete', function() {
@@ -1271,14 +1295,16 @@ fx_front.prototype.select_content_entity = function($entity) {
         });
     }
     
-    var $bound_to_edit = $([]);
-    $('.fx_var_bound_to_entity', $entity).each(function() {
-        var $bound = $(this);
-        if ($bound.closest('.fx_entity')[0] === entity) {
-            $bound_to_edit = $bound_to_edit.add($bound);
-        }
-    });
-    $bound_to_edit.edit_in_place();
+    if (!from_field) {
+        var $bound_to_edit = $([]);
+        $('.fx_var_bound_to_entity', $entity).each(function() {
+            var $bound = $(this);
+            if ($bound.closest('.fx_entity')[0] === entity) {
+                $bound_to_edit = $bound_to_edit.add($bound);
+            }
+        });
+        $bound_to_edit.edit_in_place();
+    }
     $('html').one('fx_deselect', function(e) {
         $fx.front.stop_entities_sortable();
     });
