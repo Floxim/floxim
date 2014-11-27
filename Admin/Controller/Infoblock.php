@@ -23,7 +23,7 @@ class Infoblock extends Admin
             $this->ui->hidden('fx_admin', true),
             $this->ui->hidden('area', serialize($input['area'])),
             $this->ui->hidden('page_id', $input['page_id']),
-            $this->ui->hidden('admin_mode', $input['admin_mode']),
+            $this->ui->hidden('admin_mode', isset($input['admin_mode']) ? $input['admin_mode'] : ''),
             $this->ui->hidden('container_infoblock_id', $input['container_infoblock_id'])
         );
 
@@ -55,6 +55,12 @@ class Infoblock extends Admin
             $ctrl = fx::controller($controller_name);
             $actions = $ctrl->getActions();
             foreach ($actions as $action_code => $action_info) {
+                $action_info = array_merge(array(
+                        'icon'=>'',
+                        'icon_extra' => '',
+                        'description' => ''
+                    ), $action_info
+                );
                 // do not show actions starting with "_"
                 if (preg_match("~^_~", $action_code)) {
                     continue;
@@ -207,7 +213,7 @@ class Infoblock extends Admin
         $scope_fields = $this->getScopeFields($infoblock, $c_page);
         $this->response->addFields($scope_fields, false, 'scope');
 
-        if ($input['settings_sent'] == 'true') {
+        if (isset($input['settings_sent']) && $input['settings_sent'] == 'true') {
             $infoblock['name'] = $input['name'];
             $action_params = array();
             if ($settings && is_array($settings)) {
@@ -268,8 +274,8 @@ class Infoblock extends Admin
             $this->ui->hidden('controller', $input['controller']),
             $this->ui->hidden('page_id', $input['page_id']),
             $this->ui->hidden('area', serialize($area_meta)),
-            $this->ui->hidden('id', $input['id']),
-            $this->ui->hidden('mode', $input['mode'])
+            $this->ui->hidden('id', isset($input['id']) ? $input['id'] : ''),
+            $this->ui->hidden('mode', isset($input['mode']) ? $input['mode'] : '')
         );
 
         $this->response->addFields($fields);
@@ -595,7 +601,8 @@ class Infoblock extends Admin
                 'type'  => 'hidden'
             )
         );
-        $area_suit = Template\Suitable::parseAreaSuitProp($area_meta['suit']);
+        $area_suit = isset($area_meta['suit']) ? $area_meta['suit'] : '';
+        $area_suit = Template\Suitable::parseAreaSuitProp($area_suit);
 
         $force_wrapper = $area_suit['force_wrapper'];
         $default_wrapper = $area_suit['default_wrapper'];
@@ -622,6 +629,9 @@ class Infoblock extends Admin
             $template_variants = $layout_tpl->getTemplateVariants();
             foreach ($template_variants as $tplv) {
                 $full_id = $tplv['full_id'];
+                if (!isset($tplv['suit'])) {
+                    $tplv['suit'] = '';
+                }
                 if ($tplv['suit'] == 'local' && $area_meta['id'] != $tplv['area']) {
                     continue;
                 }

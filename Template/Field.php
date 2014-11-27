@@ -48,10 +48,13 @@ class Field
         ) {
             return (string)$val;
         }
-        if (!$this->_meta['real_value'] && $this->_meta['var_type'] == 'visual' && $this->_meta['inatt']) {
+        if (
+            (!isset($this->_meta['real_value']) || !$this->_meta['real_value']) && 
+            $this->_meta['var_type'] == 'visual' && (isset($this->_meta['inatt']) && $this->_meta['inatt'])
+        ) {
             $this->_meta['value'] = $val;
         }
-        if ($this->_meta['in_att'] && !isset($this->_meta['value'])) {
+        if (isset($this->_meta['in_att']) && $this->_meta['in_att'] && !isset($this->_meta['value'])) {
             $this->_meta['value'] = $val;
         }
         //$this->_meta['value'] = $this->_value;

@@ -13,6 +13,9 @@ class Token
     public $name = null;
     public $type = null;
     public $props = array();
+    
+    public $stack_extra = null;
+    public $need_type = null;
 
 
     /**
@@ -60,6 +63,7 @@ class Token
 
 
         $type_info = self::getTokenInfo($name);
+        $token_close_type = isset($type_info['type']) ? $type_info['type'] : null;
         //if (preg_match("~^[\\\$%]~", $name, $var_marker)) {
         if ($is_var) {
             $props['id'] = preg_replace("~^[\\\$%]~", '', $name);
@@ -74,9 +78,9 @@ class Token
             $source = preg_replace("~/$~", '', $source);
         } elseif ($is_close) {
             $type = 'close';
-        } elseif ($type_info['type'] == 'single') {
+        } elseif ($token_close_type == 'single') {
             $type = 'single';
-        } elseif ($type_info['type'] == 'double') {
+        } elseif ($token_close_type == 'double') {
             $type = 'open';
         } else {
             $type = 'unknown';
@@ -113,7 +117,7 @@ class Token
             $arr_id_parts = null;
             $item_key = null;
             $item_alias = null;
-            $arr_id = $props['select'];
+            $arr_id = isset($props['select']) ? $props['select'] : null;
             if (preg_match("~(.+?)\sas\s(.+)$~", $arr_id, $arr_id_parts)) {
                 $arr_id = trim($arr_id_parts[1]);
                 $as_parts = explode("=>", $arr_id_parts[2]);

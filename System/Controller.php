@@ -231,7 +231,6 @@ class Controller
                 }
 
                 // the first controller variant is the most precious
-                //$tplv['controller_match_rate'] = $controller_match_rate[0]*-1; //todo: psr0 wtf?
                 if (strpos($this->action, $tpl_of_action) !== 0) {
                     continue;
                 }
@@ -239,7 +238,7 @@ class Controller
                 // if template action exactly matches current controller action
                 $tplv['action_match_rate'] = $this->action == $tpl_of_action ? 1 : 0;
 
-                if ($tplv['suit'] && $area_meta) {
+                if (isset($tplv['suit']) && $area_meta) {
                     $tplv_areas = explode(",", preg_replace("~\s+~", '', $tplv['suit']));
                     if (in_array('local', $tplv_areas)) {
                         $tplv_areas [] = $tplv['area'];
@@ -263,10 +262,6 @@ class Controller
             }
         }
         usort($result, function ($a, $b) {
-            $controller_diff = $b['controller_match_rate'] - $a['controller_match_rate'];
-            if ($controller_diff != 0) {
-                return $controller_diff;
-            }
             $action_diff = $b['action_match_rate'] - $a['action_match_rate'];
             if ($action_diff != 0) {
                 return $action_diff;

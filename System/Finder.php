@@ -570,6 +570,9 @@ abstract class Finder
             return;
         }
         $rel = $relations[$rel_name];
+        if (!isset($rel[3])) {
+            $rel[3] = null;
+        }
         list($rel_type, $rel_datatype, $rel_field, $rel_target_field) = $rel;
         if (!$rel_finder) {
             $rel_finder = $this->getDefaultRelationFinder($rel);

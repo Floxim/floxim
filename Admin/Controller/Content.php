@@ -58,7 +58,7 @@ class Content extends Admin
         $this->response->addFields($fields);
         $content_fields = fx::collection($content->getFormFields());
 
-        $is_backoffice = $input['mode'] == 'backoffice';
+        $is_backoffice = isset($input['mode']) && $input['mode'] == 'backoffice';
 
         if (!$is_backoffice) {
             $tabbed = $content_fields->group('tab');
@@ -79,7 +79,7 @@ class Content extends Admin
 
         $res = array('status' => 'ok');
 
-        if ($input['data_sent']) {
+        if (isset($input['data_sent']) && $input['data_sent']) {
             $res['is_new'] = !$content['id'];
             $content->setFieldValues($input['content']);
             foreach ($move_variants as $rel_prop) {

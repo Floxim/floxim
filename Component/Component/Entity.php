@@ -284,52 +284,7 @@ class Entity extends System\Entity
     }
     
     public function getItemName() {
-        $item_name = $this[$item_name];
+        $item_name = $this['item_name'];
         return empty($item_name) ? $this['name'] : $item_name;
-    }
-
-    public function scaffold()
-    {
-        $keyword = $this['keyword'];
-        $base_path = fx::path((($this['vendor'] === 'std') ? '@std' : '@root') . 'component/' . $keyword . '/') . '/';
-
-        $controller_file = $base_path . $keyword . '.php';
-
-        $parent_com = fx::data('component', $this['parent_id']);
-        $parent_ctr = fx::controller($parent_com['keyword']);
-        $parent_ctr_class = get_class($parent_ctr);
-
-        $parent_finder = fx::content($parent_com['keyword']);
-        $parent_finder_class = get_class($parent_finder);
-
-        $parent_entity = $parent_finder->create();
-
-        $parent_entity_class = get_class($parent_entity);
-        ob_start();
-        // todo: psr0 need fix
-        echo "<?php\n";?>
-        class fx_controller_component_<?php echo $keyword; ?> extends <?php echo $parent_ctr_class; ?> {
-        // create component controller logic
-        }<?php
-        $code = ob_get_clean();
-        fx::files()->writefile($controller_file, $code);
-
-        $finder_file = $base_path . $keyword . '.data.php';
-        ob_start();
-        echo "<?php\n";?>
-        class fx_data_content_<?php echo $keyword; ?> extends <?php echo $parent_finder_class; ?> {
-        // create component finder logic
-        }<?php
-        $code = ob_get_clean();
-        fx::files()->writefile($finder_file, $code);
-
-        $entity_file = $base_path . $keyword . '.entity.php';
-        ob_start();
-        echo "<?php\n";?>
-        class fx_content_<?php echo $keyword; ?> extends <?php echo $parent_entity_class; ?> {
-        // create component finder logic
-        }<?php
-        $code = ob_get_clean();
-        fx::files()->writefile($entity_file, $code);
     }
 }

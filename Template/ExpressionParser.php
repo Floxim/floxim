@@ -109,7 +109,9 @@ class ExpressionParser extends Fsm
 
         // test for $loop.items.count()
         if ($is_dot) {
-            list($method_name, $bracket) = $this->getNext(2);
+            $next_two = $this->getNext(2);
+            $method_name = $next_two[0];
+            $bracket = isset($next_two[1]) ? $next_two[1] : null;
             $is_method = preg_match("~^[a-z0-9_]+$~i", $method_name) && $bracket == '(';
             if ($is_method) {
                 $this->endVar('->');

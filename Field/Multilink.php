@@ -417,7 +417,7 @@ class Multilink extends Baze
 
         $first_type = $direct_target_component['keyword'];
 
-        if (!$this['format']['mm_field']) {
+        if (!isset($this['format']['mm_field']) || !$this['format']['mm_field']) {
             $res_rel = array(
                 System\Finder::HAS_MANY,
                 $first_type,

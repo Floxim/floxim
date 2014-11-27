@@ -151,13 +151,6 @@ class Field extends Admin
         } else {
             $result = array('status' => 'ok');
             $field->save();
-            // run creating hook
-            if ($input['to_entity'] == 'component') {
-                $com = fx::data('component', $input['to_id']);
-                if ($com['vendor'] == 'std') {
-                    fx::hooks()->create(null, 'field_create', array('data' => $data));
-                }
-            }
             $result['reload'] = '#admin.' . $input['to_entity'] . '.edit(' . $input['to_id'] . ',fields)';
         }
 
@@ -208,12 +201,6 @@ class Field extends Admin
         } else {
             $result = array('status' => 'ok');
             $field->save();
-            if ($field['component_id']) {
-                $com = fx::data('component', $field['component_id']);
-                if ($com['vendor'] == 'std') {
-                    fx::hooks()->create(null, 'field_update', array('field' => $field));
-                }
-            }
         }
 
         return $result;
@@ -291,12 +278,6 @@ class Field extends Admin
                     continue;
                 }
                 $field->delete();
-                if ($field['component_id']) {
-                    $com = fx::data('component', $field['component_id']);
-                    if ($com['vendor'] == 'std') {
-                        fx::hooks()->create(null, 'field_delete', array('field' => $field));
-                    }
-                }
             } catch (Exception $e) {
                 $result['status'] = 'error';
                 $result['text'][] = $e->getMessage();

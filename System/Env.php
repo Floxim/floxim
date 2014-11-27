@@ -71,7 +71,7 @@ class Env
 
     public function getPage()
     {
-        return $this->current['page'];
+        return isset($this->current['page']) ? $this->current['page'] : null;
     }
 
     public function getPageId()
@@ -134,7 +134,7 @@ class Env
 
     public function getLayout()
     {
-        if (!$this->current['layout']) {
+        if (!isset($this->current['layout'])) {
             $page_id = $this->getPageId();
             if ($page_id) {
                 $page = fx::data('page', $page_id);
@@ -142,10 +142,10 @@ class Env
                     $this->current['layout'] = $page['layout_id'];
                 }
             }
-            if (!$this->current['layout']) {
+            if (!isset($this->current['layout'])) {
                 $this->current['layout'] = $this->getSite()->get('layout_id');
             }
-            if (!$this->current['layout']) {
+            if (!isset($this->current['layout'])) {
                 $this->current['layout'] = fx::data('layout')->one()->get('id');
             }
         }

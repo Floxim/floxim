@@ -31,6 +31,9 @@ class Submenu
         }
 
         preg_match("/^([a-z]+)(-([a-z0-9]+))?$/i", $type, $match);
+        if (!isset($match[3])) {
+            $match[3] = null;
+        }
         if ($match[1] == 'component' && !$match[3]) {
             $this->initDevelop();
             $this->active = 'component';
@@ -257,6 +260,8 @@ class Submenu
             $this->menu[] = $this->addNode('profile', fx::alang('Profile', 'system'), 'user.full(' . $user['id'] . ')');
         }
     }
+    
+    public $title = null;
 
     public function toArray()
     {

@@ -7,6 +7,12 @@ class Page
 
     // title, keywords, description
     protected $metatags = array();
+    
+    protected $all_css;
+    
+    protected $files_js;
+    
+    protected $files_css;
 
 
     /**
@@ -76,21 +82,21 @@ class Page
                 fx::files()->writefile($full_target_path, $file_content);
                 fx::profiler()->stop();
             }
-            $this->_files_css[] = $target_path;
-            $this->_all_css[] = $target_path;
+            $this->files_css[] = $target_path;
+            $this->all_css[] = $target_path;
             return;
         }
         if (!preg_match("~^https?://~", $file)) {
             $file = fx::path()->http($file);
         }
-        $this->_files_css[] = $file;
+        $this->files_css[] = $file;
     }
 
     public function clearFiles()
     {
-        $this->_files_css = array();
-        $this->_files_js = array();
-        $this->_all_js = array();
+        $this->files_css = array();
+        $this->files_js = array();
+        $this->all_js = array();
     }
 
     public function addCssBundle($files, $params = array())
@@ -150,7 +156,7 @@ class Page
         if (!$this->acceptGzip()) {
             $http_path = preg_replace("~\.css\.gz$~", ".css", $http_path);
         }
-        $this->_files_css[] = $http_path;
+        $this->files_css[] = $http_path;
     }
 
     protected function cssUrlReplace($file, $http_base)
@@ -169,16 +175,16 @@ class Page
     }
 
     // both simple scripts & scripts from bundles
-    protected $_all_js = array();
+    protected $all_js = array();
 
     public function addJsFile($file)
     {
         if (!preg_match("~^https?://~", $file)) {
             $file = fx::path()->http($file);
         }
-        if (!in_array($file, $this->_all_js)) {
-            $this->_files_js[] = $file;
-            $this->_all_js[] = $file;
+        if (!in_array($file, $this->all_js)) {
+            $this->files_js[] = $file;
+            $this->all_js[] = $file;
         }
     }
 
@@ -214,7 +220,7 @@ class Page
         foreach ($files as $f) {
             $http_files[] = fx::path()->http($f);
         }
-        $this->_all_js = array_merge($this->_all_js, $http_files);
+        $this->all_js = array_merge($this->all_js, $http_files);
 
         if (!file_exists($full_path)) {
             $bundle_content = '';
@@ -241,7 +247,7 @@ class Page
         if (!$this->acceptGzip()) {
             $http_path = preg_replace("~\.js\.gz$~", ".js", $http_path);
         }
-        $this->_files_js[] = $http_path;
+        $this->files_js[] = $http_path;
     }
 
     protected function acceptGzip()
@@ -281,9 +287,10 @@ class Page
         $this->field_number = intval($field_number);
     }
 
+    protected $after_body = array();
     public function setAfterBody($txt)
     {
-        $this->_after_body[] = $txt;
+        $this->after_body[] = $txt;
     }
 
     /**
@@ -291,36 +298,36 @@ class Page
      */
     public function addAssetsAjax()
     {
-        fx::http()->header('fx_assets_js', $this->_files_js);
-        fx::http()->header('fx_assets_css', $this->_files_css);
+        fx::http()->header('fx_assets_js', $this->files_js);
+        fx::http()->header('fx_assets_css', $this->files_css);
     }
 
     public function getAssetsCode()
     {
         $r = '';
-        if ($this->_files_css) {
-            $files_css = array_unique($this->_files_css);
+        if ($this->files_css) {
+            $files_css = array_unique($this->files_css);
             foreach ($files_css as $v) {
                 $r .= '<link rel="stylesheet" type="text/css" href="' . $v . '" />' . PHP_EOL;
             }
         }
-        if ($this->_files_js) {
-            $files_js = array_unique($this->_files_js);
+        if ($this->files_js) {
+            $files_js = array_unique($this->files_js);
 
             foreach ($files_js as $v) {
                 $r .= '<script type="text/javascript" src="' . $v . '" ></script>' . PHP_EOL;
             }
         }
-        if ($this->_all_js || $this->_all_css) {
+        if ($this->all_js || $this->all_css) {
             $r .= "<script type='text/javascript'>\n";
-            if ($this->_all_js) {
+            if ($this->all_js) {
                 $r .= "window.fx_assets_js = [\n";
-                $r .= "'" . join("', \n'", $this->_all_js) . "'\n";
+                $r .= "'" . join("', \n'", $this->all_js) . "'\n";
                 $r .= "];\n";
             }
-            if ($this->_all_css) {
+            if ($this->all_css) {
                 $r .= "window.fx_assets_css = [\n";
-                $r .= "'" . join("', \n'", $this->_all_css) . "'\n";
+                $r .= "'" . join("', \n'", $this->all_css) . "'\n";
                 $r .= "];\n";
             }
             $r .= '</script>';
@@ -330,14 +337,15 @@ class Page
 
     public function postProcess($buffer)
     {
-        if ($this->metatags['seo_title']) {
+        $r = '';
+        if (isset($this->metatags['seo_title'])) {
             $r = "<title>" . strip_tags($this->metatags['seo_title']) . "</title>" . PHP_EOL;
         }
-        if ($this->metatags['seo_description']) {
+        if (isset($this->metatags['seo_description'])) {
             $r .= '<meta name="description" content="'
                 . strip_tags($this->metatags['seo_description']) . '" />' . PHP_EOL;
         }
-        if ($this->metatags['seo_keywords']) {
+        if (isset($this->metatags['seo_keywords'])) {
             $r .= '<meta name="keywords" content="'
                 . strip_tags($this->metatags['seo_keywords']) . '" />' . PHP_EOL;
         }
@@ -356,8 +364,8 @@ class Page
         $buffer = preg_replace("~<title>.+</title>~i", '', $buffer);
         $buffer = preg_replace("~</head\s*?>~i", $r . '$0', $buffer);
 
-        if ($this->_after_body) {
-            $after_body = $this->_after_body;
+        if (count($this->after_body)) {
+            $after_body = $this->after_body;
             $buffer = preg_replace_callback(
                 '~<body[^>]*?>~i',
                 function ($body) use ($after_body) {

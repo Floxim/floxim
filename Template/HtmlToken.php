@@ -7,6 +7,10 @@ class HtmlToken
     public $type;
     public $name;
     public $source;
+    
+    public $offset;
+    
+    public $end_offset;
 
     /*
      * Create html-token from source

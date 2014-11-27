@@ -22,10 +22,12 @@ class Response
 
     public function __construct($input)
     {
-        $this->submenu = new Submenu($input['menu_id']);
+        $this->submenu = new Submenu(isset($input['menu_id']) ? $input['menu_id'] : null);
         $this->breadcrumb = new Breadcrumb();
         $this->dialog = new Dialog();
     }
+    
+    protected $buttons_action;
 
     public function toArray()
     {
@@ -167,7 +169,7 @@ class Response
         if ($prefix) {
             foreach ($fields as &$field) {
                 $field['name'] = $prefix . '[' . $field['name'] . ']';
-                if ($field['parent'] && is_array($field['parent'])) {
+                if (isset($field['parent']) && is_array($field['parent'])) {
                     $np = array();
                     foreach ($field['parent'] as $pkey => $pval) {
                         if (preg_match("~\[~", $pkey)) {
@@ -178,7 +180,7 @@ class Response
                     }
                     $field['parent'] = $np;
                 }
-                if ($field['join_with'] && !preg_match("~\[~", $field['join_with'])) {
+                if (isset($field['join_with']) && !preg_match("~\[~", $field['join_with'])) {
                     $field['join_with'] = $prefix . '[' . $field['join_with'] . ']';
                 }
             }

@@ -687,9 +687,6 @@ class Component extends Admin
             try {
                 $component = fx::data($es, $id);
                 $component->delete();
-                if ($component['vendor'] == 'std') {
-                    fx::hooks()->create(null, 'component_delete', array('component' => $component));
-                }
             } catch (\Exception $e) {
                 $result['status'] = 'error';
                 $result['text'][] = $e->getMessage();

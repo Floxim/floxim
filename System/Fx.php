@@ -7,7 +7,7 @@ use Floxim\Floxim\Template;
 use Floxim\Floxim\Controller;
 
 /**
- * "Static" class, just a helpers collection
+ * "Static" class, provides access to main system services
  */
 class Fx
 {
@@ -74,9 +74,6 @@ class Fx
         return $db;
     }
 
-    protected static $data_cache = array();
-    public static $data_stat = array();
-    
     public static $floxim_components = array(
         'main' => array(
             'content',
@@ -122,7 +119,7 @@ class Fx
 
     public static function getComponentFullName($name)
     {
-        return fx::cache('meta')->remember(
+        return fx::cache('array')->remember(
             'component_fullname_'.strtolower($name),
             60*60,
             function() use ($name) {
@@ -192,7 +189,7 @@ class Fx
      */
     public static function getComponentNamespace($name)
     {
-        return fx::cache('meta')->remember( 
+        return fx::cache('array')->remember( 
             'component_namespace_'.strtolower($name), 
             60*60, 
             function() use ($name) {
@@ -208,8 +205,9 @@ class Fx
                     }
                     $part = join('', $chunks);
                 }
-                return '\\' . join('\\', $path);
-            } 
+                $res = '\\' . join('\\', $path);
+                return $res;
+            }
         );
     }
 
@@ -724,16 +722,26 @@ class Fx
 
     public static function cache($storageName = null)
     {
-        if (!self::$cache) {
+        static $cacheSettings = null;
+        static $defaultStorageName = null;
+        
+        if (is_null(self::$cache)) {
+            $cacheSettings = fx::config('cache.data.storages');
+            $defaultStorageName = fx::config('cache.data.default_storage');
+            
             self::$cache = new \Floxim\Cache\Manager();
-            $prefix = fx::config('cache.data.default_prefix');
-            self::$cache->setKeyPrefix($prefix);
+            self::$cache->setKeyPrefix(fx::config('cache.data.default_prefix'));
+            
+            // setup default storage
+            $defaultStorage = self::$cache->getStorage($defaultStorageName, $cacheSettings[$defaultStorageName]);
+            self::$cache->setDefaultStorage($defaultStorage);
         }
+        
         if (is_null($storageName)) {
-            $storageName = fx::config('cache.data.default_storage');
+            $storageName = $defaultStorageName;
         }
-        $params = fx::config('cache.data.storages');
-        $params = isset($params[$storageName]) ? $params[$storageName] : array();
+        
+        $params = isset($cacheSettings[$storageName]) ? $cacheSettings[$storageName] : array();
 
         return self::$cache->getStorage($storageName, $params);
     }

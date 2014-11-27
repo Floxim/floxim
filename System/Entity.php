@@ -43,6 +43,8 @@ abstract class Entity implements \ArrayAccess
     // virtual field types
     const VIRTUAL_RELATION = 0;
     const VIRTUAL_MULTILANG = 1;
+    
+    protected $is_loaded = false;
 
     public function __construct($input = array())
     {
@@ -54,13 +56,13 @@ abstract class Entity implements \ArrayAccess
         if (isset($input['data']) && $input['data']) {
             $data = $input['data'];
             if (isset($data['id'])) {
-                $this->_loaded = false;
+                $this->is_loaded = false;
             }
             foreach ($data as $k => $v) {
                 $this[$k] = $v;
             }
         }
-        $this->_loaded = true;
+        $this->is_loaded = true;
     }
 
     protected function loadFieldMap()
@@ -385,7 +387,7 @@ abstract class Entity implements \ArrayAccess
 
 
         $c_type = $this->getType();
-        $c_field = self::$_field_map[$c_type][$offset];
+        $c_field = isset(self::$_field_map[$c_type][$offset]) ? self::$_field_map[$c_type][$offset] : null;
 
         if (!$c_field) {
             return null;
@@ -421,8 +423,9 @@ abstract class Entity implements \ArrayAccess
 
         if (!$offset_exists) {
             $c_type = $this->getType();
-            $c_field = self::$_field_map[$c_type][$offset];
-            if ($c_field) {
+            
+            if (isset(self::$_field_map[$c_type]) && isset(self::$_field_map[$c_type][$offset])) {
+                $c_field = self::$_field_map[$c_type][$offset];
                 switch ($c_field[0]) {
                     case self::VIRTUAL_MULTILANG:
                         $offset = $offset . '_' . fx::config('lang.admin');
@@ -445,7 +448,7 @@ abstract class Entity implements \ArrayAccess
             }
         }
 
-        if (!$this->_loaded) {
+        if (!$this->is_loaded) {
             $this->data[$offset] = $value;
             return;
         }
@@ -456,7 +459,7 @@ abstract class Entity implements \ArrayAccess
         }
 
         if (!isset($this->modified_data[$offset])) {
-            $this->modified_data[$offset] = $this->data[$offset];
+            $this->modified_data[$offset] = isset($this->data[$offset]) ? $this->data[$offset] : null;
             $this->modified[] = $offset;
         }
         $this->data[$offset] = $value;

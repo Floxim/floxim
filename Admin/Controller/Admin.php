@@ -56,7 +56,7 @@ class Admin extends System\Controller
             return $result;
         }
 
-        if ($input['posting']) {
+        if (isset($input['posting']) && $input['posting']) {
             if (!$result['text']) {
                 $result['text'] = $this->getStatusText();
             }

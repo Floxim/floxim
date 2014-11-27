@@ -32,7 +32,7 @@ class Entity extends System\Entity
 
         static $res = array();
         if (empty($res)) {
-            $reflection = new \ReflectionClass(get_class($this));
+            $reflection = new \ReflectionClass(get_called_class());
             $constants = $reflection->getConstants();
             foreach ($constants as $name => $value) {
                 if (preg_match("~^FIELD_~", $name)) {

@@ -136,8 +136,8 @@ class Compiler
             $new_context_expression = $this->parseExpression($with_expr['$']);
         }
         
+        $passed_vars = array();
         if (is_array($with_expr)) {
-            $passed_vars = array();
             foreach ($with_expr as $alias => $var) {
                 if ($alias == '$') {
                     continue;
@@ -269,7 +269,7 @@ class Compiler
         foreach ($modifiers as $mod) {
             $mod_callback = $mod['name'];
 
-            if ($mod['is_template']) {
+            if (isset($mod['is_template']) && $mod['is_template']) {
                 $call_token = new Token('call', 'single', array('id' => $mod['name'], 'apply' => true));
                 if (isset($mod['with'])) {
                     $call_token->setProp('with', $mod['with']);
@@ -299,12 +299,12 @@ class Compiler
                     $mod_callback = $token_type == 'image' ? 'fx::image' : 'fx::date';
                     $mod_callback .= '(';
                 } else {
-                    $token->_need_type = true;
+                    $token->need_type = true;
                     $mod_callback = 'call_user_func(';
                     $mod_callback .= '($var_type == "image" ? "fx::image" : ';
                     $mod_callback .= '($var_type == "datetime" ? "fx::date" : "fx::cb")), ';
                 }
-            } elseif ($mod['is_template']) {
+            } elseif (isset($mod['is_template']) && $mod['is_template']) {
                 $code .= "ob_start();\n?>";
                 $call_token->setProp('apply', true);
                 $c_with = $call_token->getProp('with');
@@ -314,7 +314,7 @@ class Compiler
             } else {
                 $mod_callback .= '(';
             }
-            if (!$mod['is_template']) {
+            if (!isset($mod['is_template']) || !$mod['is_template']) {
                 $args = array();
                 $self_used = false;
                 foreach ($mod['args'] as $arg) {
@@ -367,6 +367,8 @@ class Compiler
         $expr_token = $ep->parse('$' . $token->getProp('id'));
         $expr = $ep->compile($expr_token);
         $var_token = $expr_token->last_child;
+        
+        $var_meta_defined = false;
 
         $modifiers = $token->getProp('modifiers');
         $token->setProp('modifiers', null);
@@ -498,7 +500,7 @@ class Compiler
         if ($modifiers) {
 
             $modifiers_code = $this->applyModifiers($display_val_var, $modifiers, $token);
-            if ($token->_need_type) {
+            if ($token->need_type) {
                 $code .= '$var_meta = ' . $var_meta_expr . ";\n";
                 $code .= '$var_type = $var_meta["type"]' . ";\n";
                 $var_meta_defined = true;
@@ -612,7 +614,7 @@ class Compiler
         }
 
 
-        $code .= "<?php\n";
+        $code = "<?php\n";
         $code .= $arr_id . ' = ' . $expr . ";\n";
         $code .= "if (" . $arr_id . " && (is_array(" . $arr_id . ") || " . $arr_id . " instanceof Traversable) && count(" . $arr_id . ")) {\n?>";
 
@@ -841,7 +843,7 @@ class Compiler
         $var = $token->getProp('var');
         $value = self::parseExpression($token->getProp('value'));
         $is_default = $token->getProp('default');
-        $code .= "<?php\n";
+        $code = "<?php\n";
 
         if (preg_match("~\.~", $var)) {
             $parts = explode('.', $var, 2);
@@ -961,7 +963,7 @@ class Compiler
 
     protected function tokenElseToCode($token)
     {
-        $code .= " else {\n";
+        $code = " else {\n";
         $code .= $this->childrenToCode($token) . "\n";
         $code .= "}\n";
         return $code;
@@ -994,7 +996,7 @@ class Compiler
 
     protected function tokenHeadfileToCode($token, $type)
     {
-        $code .= "<?php\n";
+        $code = "<?php\n";
         foreach ($token->getChildren() as $set) {
             $set = preg_split("~[\n]~", $set->getProp('value'));
             foreach ($set as $file) {
@@ -1183,7 +1185,7 @@ class Compiler
             }
             $code .= $var_num == 0 ? 'if' : 'elseif';
             $code .= "( (!\$tags ";
-            if ($var['tags'] && count($var['tags'])) {
+            if (isset($var['tags']) && $var['tags'] && count($var['tags'])) {
                 $code .= " || count(array_intersect(\$tags, array('".join("', '", $var['tags'])."'))) == \$count_tags";
             }
             $code .= ") && ";

@@ -7,6 +7,9 @@ class ExpressionNode
     public $type;
 
     public $context_offset = null;
+    public $is_separator = false;
+    public $starter = null;
+    public $is_escaped = null;
 
     public function __construct($type = ExpressionParser::T_CODE)
     {

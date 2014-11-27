@@ -146,7 +146,7 @@ class Entity extends System\Entity implements Template\Entity
     public function isAvailableForUser()
     {
         $c_user = fx::user();
-        $ib_visibility = $this['scope']['visibility'];
+        $ib_visibility = isset($this['scope']['visibility']) ? $this['scope']['visibility'] : null;
         if (!$ib_visibility || $ib_visibility === 'all') {
             return true;
         }
@@ -400,7 +400,7 @@ class Entity extends System\Entity implements Template\Entity
             return false;
         }
         $meta = $this->getResultMeta();
-        if ($meta['disabled']) {
+        if (isset($meta['disabled']) && $meta['disabled']) {
             return false;
         }
 
@@ -459,7 +459,7 @@ class Entity extends System\Entity implements Template\Entity
     {
         $controller_meta = $this->getResultMeta();
 
-        if (!fx::isAdmin() && !$controller_meta['ajax_access']) {
+        if (!fx::isAdmin() && (!isset($controller_meta['ajax_access']) || !$controller_meta['ajax_access'])) {
             return $html_result;
         }
         $ib_info = array('id' => $this['id']);
@@ -485,7 +485,7 @@ class Entity extends System\Entity implements Template\Entity
             }
         }
 
-        if ($controller_meta['hidden']) {
+        if (isset($controller_meta['hidden']) && $controller_meta['hidden']) {
             $meta['class'] .= ' fx_infoblock_hidden';
         }
         if (count($controller_meta) > 0 && fx::isAdmin()) {
