@@ -58,7 +58,7 @@ class Page
     {
         if (preg_match("~\.less$~", $file)) {
 
-            $file_hash = trim(preg_replace("~[^a-z0-9_-]+~", '_', fx::path()->http($file)), '_');
+            $file_hash = strtolower(trim(preg_replace("~[^a-z0-9_-]+~i", '_', fx::path()->http($file)), '_'));
 
             $target_path = fx::path()->http('@files/asset_cache/' . $file_hash . '.css');
             $full_target_path = fx::path()->abs($target_path);
