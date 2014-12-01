@@ -374,6 +374,12 @@ class Multilink extends Baze
                     continue;
                 }
                 $linked_item = $linked_finder->create();
+                
+                // @todo: need more accurate check
+                $content_ib = fx::data('infoblock')->where('site_id', $content['site_id'])->getContentInfoblocks($linked_item['type']);
+                if (count($content_ib) > 0) {
+                    $linked_item['infoblock_id'] = $content_ib->first()->get('id');
+                }
             }
             $linked_item->setFieldValues($item_props);
             $new_value[] = $linked_item;

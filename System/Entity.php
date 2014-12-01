@@ -282,7 +282,7 @@ abstract class Entity implements \ArrayAccess
             $this->bindForm($form);
         }
         if (!$form) {
-            throw \Exception ('No form to validate with');
+            throw new \Exception('No form to validate with');
         }
         $this->loadFromForm($form, $fields);
         if (!$this->validate()) {

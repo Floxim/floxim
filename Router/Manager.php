@@ -70,6 +70,7 @@ class Manager
     }
     
     public function getPath($url, $site_id = null) {
+        $url = preg_replace("~\#.*$~", '', $url);
         if (is_null($site_id)) {
             $site_id = fx::env('site_id');
         }
