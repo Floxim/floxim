@@ -11,6 +11,7 @@ use Floxim\Floxim\System\Fx as fx;
 class Compiler
 {
     protected $template_set_name = null;
+    protected $is_aliased = false;
 
     /**
      * Convert the tree of tokens in the php code
@@ -94,9 +95,9 @@ class Compiler
         }
         
         if (!preg_match("~[\:\@]~", $tpl_name)) {
-           $tpl_name = $this->_template_set_name . ":" . $tpl_name;
+           $tpl_name = $this->template_set_name . ":" . $tpl_name;
         }
-        //$tpl_name = '"' . $tpl_name . '"';
+        
         
         $tpl = '$tpl_' . $this->varialize($tpl_name);
         $is_apply = $token->getProp('apply');
@@ -210,8 +211,12 @@ class Compiler
         if (count($tpl_at_parts) === 1) {
             $forced_group = 'null';
             list($set_name, $action_name) = explode(":", $tpl_name);
+            // save @ for named ("aliased") template groups (like "@admin")
+            if ($set_name === $this->template_set_name && $this->is_aliased) {
+                $set_name = '@'.$set_name;
+            }
         } else {
-            $forced_group = !empty($tpl_at_parts[0]) ? $tpl_at_parts[0] : $this->_template_set_name;
+            $forced_group = !empty($tpl_at_parts[0]) ? $tpl_at_parts[0] : $this->template_set_name;
             $action_parts = explode(":", $tpl_at_parts[1]);
             if (count($action_parts) === 1) {
                     array_unshift($action_parts, $forced_group);
@@ -898,7 +903,7 @@ class Compiler
                 $res_suit = Suitable::compileAreaSuitProp(
                     $tpval,
                     $local_templates,
-                    $this->_template_set_name
+                    $this->template_set_name
                 );
                 $c_val = "'" . $res_suit . "'";
             } elseif (preg_match("~^`.+`$~s", $tpval)) {
@@ -1084,6 +1089,11 @@ class Compiler
         $predicate = $token->getProp('test');
         $tags = isset($tpl_props['tags']) ? $tpl_props['tags'] : null;
         
+        $priority = $token->getProp('priority');
+        if (!is_null($priority)) {
+            $tpl_props['priority'] = $priority;
+        }
+        
         if ($predicate && !isset($tpl_props['_variants']) && !isset($tpl_props['is_variant'])) {
             $tpl_props = array(
                 'id' => $tpl_props['id'],
@@ -1202,7 +1212,7 @@ class Compiler
     {
         $tpl_props = array();
         
-        $com_name = $this->_template_set_name;
+        $com_name = $this->template_set_name;
         
         $tpl_id = $token->getProp('id');
         if (preg_match("~#(.+)$~", $tpl_id, $tpl_tags)) {
@@ -1321,7 +1331,8 @@ class Compiler
     protected function  makeCode(Token $tree, $class_name)
     {
         // Name of the class/template group
-        $this->_template_set_name = $tree->getProp('name');
+        $this->template_set_name = $tree->getProp('name');
+        $this->is_aliased = $tree->getProp('is_aliased') == 'true';
         $this->collectTemplates($tree);
         //ob_start();
         $code = '';
@@ -1345,7 +1356,11 @@ class Compiler
                 $action_map[$id] []= $t['method'];
             }
             if (isset($t['overrides']) && !isset($overrides[$t['overrides']])) {
-                $overrides[$t['overrides']]= array($t['id'], isset($t['is_variant']) && $t['is_variant']);
+                $overrides[$t['overrides']]= array(
+                    $t['id'], 
+                    isset($t['is_variant']) && $t['is_variant'],
+                    isset($t['priority']) ? $t['priority'] : 0.5
+                );
             }
         }
         $code .= 'protected static $templates = ' . var_export($registry, 1) . ";\n";
@@ -1355,7 +1370,7 @@ class Compiler
             $code .= "fx::listen('loadTemplate', function(\$e) {\n";
                 $code .= "switch (\$e['full_name']) {\n";
                 foreach ($overrides as $remote => $local_info) {
-                    list($local, $is_variant) = $local_info;
+                    list($local, $is_variant, $priority) = $local_info;
                     $code .= "case '".$remote."':\n";
                     if ($is_variant) {
                         $code .= "if ( (\$solved = ".$class_name."::solve_".$local."(\$e['context'], \$e['tags']) ) ) {\n";
@@ -1363,7 +1378,7 @@ class Compiler
                         $code .= "return;\n";
                         $code .= "}\n";
                     } else {
-                        $code .= "\$e->pushResult(array('tpl_".$local."', 0.5, '".$class_name."'));\n";
+                        $code .= "\$e->pushResult(array('tpl_".$local."', ".$priority.", '".$class_name."'));\n";
                         $code .= "return;\n";
                     }
                     $code .= "break;\n";

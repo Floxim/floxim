@@ -145,9 +145,9 @@ class Html
                     $tpl_id = $macro_id;
                 }
 
-                if (preg_match("~\[(.+?)\]~", $tpl_id, $tpl_test)) {
-                    $tpl_test = $tpl_test[1];
-                    $tpl_id = preg_replace("~\[.+?\]~", '', $tpl_id);
+                if (preg_match("~\[(.+?)\]~s", $tpl_id, $tpl_test)) {
+                    $tpl_test = preg_replace("~[\r\n]~", ' ', $tpl_test[1]);
+                    $tpl_id = preg_replace("~\[.+?\]~s", '', $tpl_id);
                 }
 
 

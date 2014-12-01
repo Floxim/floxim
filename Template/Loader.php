@@ -90,9 +90,6 @@ class Loader
         $template_name = $this->getTemplateName();
 
         if (!$this->isAliased()) {
-            if ($template_name === 'admin') {
-                fx::log('not aliased', $this, debug_backtrace());
-            }
             $ns = fx::getComponentNamespace($this->getTemplateName());
 
             $ns = explode("\\", trim($ns, "\\"));
@@ -191,6 +188,8 @@ class Loader
         $is_aliased = preg_match("~^\@(.+)~", $tpl_name, $real_name);
         if ($is_aliased) {
             $tpl_name = $real_name[1];
+        } else {
+            $tpl_name = fx::getComponentFullName($tpl_name);
         }
         
         if (isset ($imported[$tpl_name])) {
@@ -281,10 +280,10 @@ class Loader
             $ap = $a[1];
             $bp = $b[1];
             if ($ap > $bp) {
-                return 1;
+                return -1;
             }
             if ($ap < $bp) {
-                return -1;
+                return 1;
             }
             $a_loc = $a[2] === $base_class;
             $b_loc = $b[2] === $base_class;
@@ -460,7 +459,7 @@ class Loader
         if (count($sources) === 0) {
             throw new \Exception('No template sources found');
         }
-        $res = '{templates name="' . $this->getTemplateName() . '"}';
+        $res = '{templates name="' . $this->getTemplateName() . '" is_aliased="'.($this->isAliased() ? 'true': 'false').'"}';
         foreach ($sources as $file => $source) {
             $res .= '{templates source="' . $file . '"}';
             $res .= $this->prepareFileData($source, $file);
