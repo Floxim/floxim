@@ -244,8 +244,12 @@ class Content extends Admin
         $content = fx::data($content_type)->where('id', $input['content_id'])->one();
         $next_id = isset($input['next_id']) ? $input['next_id'] : false;
 
-        $neighbours = fx::data('content')->where('parent_id', $content['parent_id'])->where('infoblock_id',
-            $content['infoblock_id'])->where('id', $content['id'], '!=')->order('priority')->all();
+        $neighbours = fx::data('content')
+                        ->where('parent_id', $content['parent_id'])
+                        ->where('infoblock_id', $content['infoblock_id'])
+                        ->where('id', $content['id'], '!=')
+                        ->order('priority')
+                        ->all();
         $nn = $neighbours->find('id', $next_id);
 
         $c_priority = 1;

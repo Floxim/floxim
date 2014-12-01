@@ -121,10 +121,16 @@
                 }
             );
             
+            // animate body within a named queue to avoid stopping other animations 
+            // (mainly, opacity when layout is reloaded)
             $('body').animate(
                 {'margin-top':body_offset + 'px'},
-                duration
-            );
+                {
+                    duration:duration,
+                    queue:'fx_panel_queue'
+                }
+            ).dequeue('fx_panel_queue');
+    
             height_delta = (height_delta > 0 ? '+=' : '-=')+ Math.abs(height_delta);
             $('.fx_top_fixed').animate(
                 {'top': height_delta}, 
@@ -140,7 +146,7 @@
         
         this.stop = function() {
             $body.stop(true,false);
-            $('body').stop(true,false);
+            $('body').stop('fx_panel_queue', true,false);
             $fx.front.get_front_overlay().stop(true,false);
             $('.fx_top_fixed').stop(true,false);
             this.is_moving =  false;
