@@ -8,11 +8,12 @@ namespace Floxim\Floxim\System;
 class Mail
 {
     public $mailer = null;
-    protected $_data = null;
+    protected $data = array();
+    protected $mail_template = null;
 
-    public function __construct($params = null, $data = null)
+    public function __construct($params = null, $data = array())
     {
-        $this->_data = $data;
+        $this->data = $data;
         $this->mailer = new \PHPMailer();
 
         $this->mailer->CharSet = 'utf-8';
@@ -173,6 +174,7 @@ class Mail
      */
     public function send()
     {
+        $this->processTemplate();
         return $this->mailer->send();
     }
 
@@ -180,21 +182,17 @@ class Mail
      * Load message template
      * @param string $template template code
      */
-    public function template($template)
+    public function template($template, $data = null)
     {
         $tpl = fx::content('mail_template')
             ->where('keyword', $template)
             ->one();
         if ($tpl) {
-            $this->_mail_template = $tpl;
-            if ($tpl['from']) {
-                $this->from($tpl['from']);
-            }
-            if ($tpl['bcc']) {
-                $this->bcc($tpl['bcc']);
-            }
+            $this->mail_template = $tpl;
         }
-        $this->processTemplate();
+        if (!is_null($data)) {
+            $this->data($data);
+        }
         return $this;
     }
 
@@ -207,30 +205,37 @@ class Mail
     public function data($key, $value = null)
     {
         if (func_num_args() == 2 && is_string($key)) {
-            $this->_data[$key] = $value;
+            $this->data[$key] = $value;
             return $this;
         }
         if (func_num_args() == 1 && is_array($key)) {
-            $this->_data = array_merge_recursive($this->_data, $key);
+            $this->data = array_merge_recursive($this->data, $key);
         }
         return $this;
     }
 
     protected function processTemplate()
     {
-        if (!$this->_mail_template) {
+        if (!$this->mail_template) {
             return;
         }
+        $tpl = $this->mail_template;
         $props = array('subject', 'message');
         $res = array();
         foreach ($props as $prop) {
-            $prop_tpl = $this->_mail_template[$prop];
+            $prop_tpl = $tpl[$prop];
             $tpl = fx::template()->virtual($prop_tpl);
             $tpl->isAdmin(false);
-            $res[$prop] = $tpl->render($this->_data);
+            $res[$prop] = $tpl->render($this->data);
         }
         $this->subject($res['subject']);
         $this->message($res['message']);
+        if ($tpl['from']) {
+            $this->from($tpl['from']);
+        }
+        if ($tpl['bcc']) {
+            $this->bcc($tpl['bcc']);
+        }
     }
 
     public function bcc($recievers)
