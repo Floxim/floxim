@@ -102,6 +102,8 @@ class Db extends \PDO
         if (!$this->last_result) {
 
             $this->last_error = $this->errorInfo();
+            //fx::log($statement, debug_backtrace());
+            fx::debug('sql error', $statement, debug_backtrace());
             throw new \Exception(
                 "Query: " . $statement . "\n" .
                 "Error: " . $this->last_error[2]
@@ -121,6 +123,23 @@ class Db extends \PDO
         //debug_backtrace()
         );
         return $this->last_result;
+    }
+    
+    public function getSchema() {
+        $db = $this;
+        return fx::cache('meta')->remember(
+            'schema', 
+            function() use ($db) {
+                $tables = $db->getCol('show tables');
+                $res = array();
+                foreach ($tables as $t) {
+                    $table_name = preg_replace("~^".$db->prefix."~", '', $t);
+                    $res[$table_name] = $db->getIndexedResults('show columns from `'.$t.'`', 'Field');
+                }
+                return $res;
+            },
+            60*60
+        );
     }
 
     public function getRow($query = null)

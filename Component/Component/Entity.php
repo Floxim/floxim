@@ -17,16 +17,71 @@ class Entity extends System\Entity
         return $this->content_table;
     }
 
-    public function getChain($up_to_down = true)
+    protected $chain = null;
+    /**
+     * 
+     * @return \Floxim\Floxim\System\Collection
+     */
+    public function getChain()
     {
-        $chain = array($this);
-        $c_pid = $this->get('parent_id');
-        while ($c_pid != 0) {
-            $c_parent = fx::data('component', $c_pid);
-            $chain [] = $c_parent;
-            $c_pid = $c_parent['parent_id'];
+        if (is_null($this->chain)) {
+            $parent_id = $this['parent_id'];
+            if ($parent_id) {
+                $parent = fx::component($parent_id);
+                $parent_chain = $parent->getChain()->copy();
+                $parent_chain[]= $this;
+                $this->chain = $parent_chain;
+            } else {
+                $this->chain = fx::collection(array($this));
+            }
         }
-        return $up_to_down ? array_reverse($chain) : $chain;
+        return $this->chain;
+    }
+    
+    
+    protected $entity_offsets = null;
+    /**
+     * Get list of offsets available for the entity belongs to this component
+     * @return array
+     */
+    public function getAvailableEntityOffsets()
+    {
+        if (is_null($this->entity_offsets)) {
+            $fields = $this->getAllFields();
+
+            $offsets = array();
+            foreach ($fields as $f) {
+                $keyword = $f['keyword'];
+                $offsets[$keyword] = array(
+                    'type' => self::OFFSET_FIELD
+                );
+            }
+
+            $finder = fx::data($this['keyword']);
+            $relations = $finder->relations();
+
+            foreach ($relations as $rel_code => $rel) {
+                $offsets[$rel_code] = array(
+                    'type' => self::OFFSET_RELATION,
+                    'relation' => $rel
+                );
+            }
+
+            $entity_class = $finder->getEntityClassName();
+            $reflection = new \ReflectionClass($entity_class);
+            $methods = $reflection->getMethods();
+            foreach ($methods as $method) {
+                if ($method::IS_PUBLIC && preg_match("~^_get(.+)$~", $method->name, $getter_offset)) {
+                    $getter_offset = fx::util()->camelToUnderscore($getter_offset[1]);
+                    $offsets[ $getter_offset ] = array(
+                        'type' => self::OFFSET_GETTER,
+                        'method' => $method->name
+                    );
+                }
+            }
+            $this->entity_offsets = fx::collection($offsets);
+        }
+        return $this->entity_offsets;
     }
 
     public function getNamespace()
@@ -63,20 +118,6 @@ class Entity extends System\Entity
     public function getPath()
     {
         return fx::path('@module/' . fx::getComponentPath($this['keyword']));
-    }
-
-    public function getAncestors()
-    {
-        return array_slice($this->getChain(false), 1);
-    }
-
-    protected $_class_id;
-
-    public function __construct($input = array())
-    {
-        parent::__construct($input);
-
-        $this->_class_id = $this->data['id'];
     }
 
     public function validate()
@@ -126,23 +167,26 @@ class Entity extends System\Entity
         return $res;
     }
 
-    protected $_stored_fields = null;
-
     public function fields()
     {
         return $this['fields'];
     }
 
-    public function allFields()
+    protected $all_fields = null;
+    public function getAllFields()
     {
-        $fields = new System\Collection();
-        foreach ($this->getChain() as $component) {
-            $fields->concat($component->fields());
+        if (is_null($this->all_fields)) {
+            $fields = new System\Collection();
+            foreach ($this->getChain() as $component) {
+                $fields->concat($component->fields());
+            }
+            $fields->indexUnique('keyword');
+            $this->all_fields = $fields;
         }
-        return $fields;
+        return $this->all_fields;
     }
     
-    public function allFieldsWithChildren($types = null)
+    public function getAllFieldsWithChildren($types = null)
     {
         $all_variants = $this->getAllVariants();
         if ($types) {
@@ -150,7 +194,7 @@ class Entity extends System\Entity
         }
         $fields = fx::collection();
         foreach ($all_variants as $com) {
-            $fields->concat($com->allFields());
+            $fields->concat($com->getAllFields());
         }
         $fields->unique('id');
         return $fields;
@@ -159,7 +203,7 @@ class Entity extends System\Entity
     public function getFieldByKeyword($keyword, $use_chain = false)
     {
         if ($use_chain) {
-            $fields = $this->allFields();
+            $fields = $this->getAllFields();
         } else {
             $fields = $this->fields();
         }

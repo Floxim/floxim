@@ -120,8 +120,7 @@ class Fx
     public static function getComponentFullName($name)
     {
         return fx::cache('array')->remember(
-            'component_fullname_'.strtolower($name),
-            60*60,
+            'component_fullname_'.$name,
             function() use ($name) {
                 $action = null;
                 $c_parts = explode(':', $name);
@@ -191,7 +190,6 @@ class Fx
     {
         return fx::cache('array')->remember( 
             'component_namespace_'.strtolower($name), 
-            60*60, 
             function() use ($name) {
                 $name = fx::getComponentFullName($name);
                 $path = explode(".", $name);
@@ -239,6 +237,34 @@ class Fx
         return $name;
     }
     
+    /**
+     * 
+     * @staticvar null $components
+     * @staticvar null $components_by_keyword
+     * @param type $id_or_keyword
+     * @return \Floxim\Floxim\Component\Component\Entity;
+     */
+    public static function component($id_or_keyword = null) {
+        static $components = null;
+        static $components_by_keyword = null;
+        if (is_null($components)) {
+            $finder = new \Floxim\Floxim\Component\Component\Finder();
+            $components = $finder->all();
+            foreach ($components as $com) {
+                $components_by_keyword[$com['keyword']] = $com;
+            }
+        }
+        if (func_num_args() === 0) {
+            return $components;
+        }
+        if (is_numeric($id_or_keyword)) {
+            return isset($components[$id_or_keyword]) ? $components[$id_or_keyword] : null;
+        }
+        $id_or_keyword = self::getComponentFullName($id_or_keyword);
+        return isset($components_by_keyword[$id_or_keyword]) ? $components_by_keyword[$id_or_keyword] : null;
+        //return $components->findOne('keyword', $id_or_keyword, Collection::FILTER_EQ);
+    }
+    
     public static function  data($datatype, $id = null)
     {
 
@@ -250,8 +276,9 @@ class Fx
         $namespace = self::getComponentNamespace($datatype);
 
         $class_name = $namespace . '\\Finder';
+        
         if (!class_exists($class_name)) {
-            fx::log('no data class', $class_name, debug_backtrace());
+            fx::debug('no data class', $class_name, debug_backtrace());
             throw new \Exception('Class not found: ' . $class_name . ' for ' . $datatype);
         }
 
@@ -720,6 +747,13 @@ class Fx
 
     protected static $cache = null;
 
+    /**
+     * 
+     * @staticvar null $cacheSettings
+     * @staticvar null $defaultStorageName
+     * @param type $storageName
+     * @return \Floxim\Cache\Storage\AbstractStorage;
+     */
     public static function cache($storageName = null)
     {
         static $cacheSettings = null;
@@ -744,6 +778,24 @@ class Fx
         $params = isset($cacheSettings[$storageName]) ? $cacheSettings[$storageName] : array();
 
         return self::$cache->getStorage($storageName, $params);
+    }
+    
+    /**
+     * Get database schema
+     * @param type $table
+     */
+    public static function schema($table = null)
+    {
+        static $schema = null;
+        if (is_null($schema)) {
+            $schema = fx::db()->getSchema();
+        }
+        if (func_num_args() === 0) {
+            return $schema;
+        }
+        if (isset($schema[$table])) {
+            return $schema[$table];
+        }
     }
 
     public static function files()

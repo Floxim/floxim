@@ -22,6 +22,7 @@ abstract class Finder
     protected $where = array();
 
     protected $with = array();
+    protected $name_field = null;
 
     const BELONGS_TO = 0;
     const HAS_MANY = 1;
@@ -88,12 +89,20 @@ abstract class Finder
     {
         return array();
     }
+    
+    public function getTable()
+    {
+        return $this->table;
+    }
 
     /*
      * @return \Floxim\Floxim\System\Collection
      */
     public function all()
     {
+        if (static::isStaticCacheUsed() && static::$fullStaticCache && count($this->where) === 0 && count($this->order) === 0) {
+            return static::getStaticCache();
+        }
         $data = $this->getEntities();
         return $data;
     }
@@ -167,7 +176,7 @@ abstract class Finder
         return array($field, $value, $type, $original_field);
     }
 
-    public function where($field, $value, $type = '=')
+    public function where($field, $value = null, $type = '=')
     {
         if (func_num_args() === 1 && strtolower($field) === 'false') {
             $field = null;
@@ -584,8 +593,14 @@ abstract class Finder
                 if (!$rel_target_field) {
                     $rel_target_field = 'id';
                 }
-                $rel_items = $rel_finder->where($rel_target_field, $entities->getValues($rel_field))->all();
-                $entities->attach($rel_items, $rel_field, $rel_name, $rel_target_field);
+                if (count($entities) === 1) {
+                    $entity = $entities->first();
+                    $rel_item = $rel_finder->where($rel_target_field, $entity[$rel_field])->one();
+                    $entity[$rel_name] = $rel_item;
+                } else {
+                    $rel_items = $rel_finder->where($rel_target_field, $entities->getValues($rel_field))->all();
+                    $entities->attach($rel_items, $rel_field, $rel_name, $rel_target_field);
+                }
                 break;
             case self::HAS_MANY:
                 $rel_items = $rel_finder->where($rel_field, $entities->getValues('id'))->all();
@@ -755,7 +770,7 @@ abstract class Finder
                 return $cached;
             }
         }
-        $classname = $this->getClassName($data);
+        $classname = $this->getEntityClassName($data);
         $obj = new $classname(array('data' => $data));
         // todo: psr0 verify
         if ($classname == '\\Floxim\\Floxim\\System\\Simplerow') {
@@ -836,7 +851,7 @@ abstract class Finder
      * @param array $data data entity'and
      * @return string
      */
-    public function getClassName()
+    public function getEntityClassName()
     {
         $class = explode("\\", get_class($this));
         $class[count($class) - 1] = 'Entity';
@@ -849,11 +864,8 @@ abstract class Finder
         if (!$table) {
             $table = $this->table;
         }
-
-        $columns = fx::cache('array')->remember('table_columns_' . $table, 0, function () use ($table) {
-            return fx::db()->getCol('SHOW COLUMNS FROM {{' . $table . '}}', 0);
-        });
-        return $columns;
+        $schema = fx::schema($table);
+        return $schema ? array_keys($schema) : null;
     }
 
     protected function setStatement($data)
@@ -905,12 +917,13 @@ abstract class Finder
             $class_name = get_called_class();
             return fx::cache('meta')->remember(
                 static::getStaticCacheKey(),
-                60 * 60,
                 function () use ($class_name) {
-                    return $class_name::loadFullDataForCache();
+                    $class_name::$isStaticCacheUsed = false;
+                    $res = $class_name::loadFullDataForCache();
+                    $class_name::$isStaticCacheUsed = true;
+                    return $res;
                 },
-                array(),
-                static::$storeStaticCache
+                static::$storeStaticCache ? 60 * 60 : false
             );
         }
         return new Collection();
@@ -927,14 +940,12 @@ abstract class Finder
     public static function loadFullDataForCache()
     {
         $finder = new static();
-        static::$isStaticCacheUsed = false;
         static::prepareFullDataForCacheFinder($finder);
         $all = $finder->all();
         $res = array();
         foreach ($all as $item) {
             $res[$item['id']] = $item;
         }
-        static::$isStaticCacheUsed = true;
         return fx::collection($res);
     }
 
@@ -943,13 +954,18 @@ abstract class Finder
 
     }
 
+    protected static $cache = array();
     public static function getStaticCache()
     {
-        static $cache = null;
-        if ($cache === null) {
-            $cache = static::initStaticCache();
+        $class = get_called_class();
+        if (!isset(self::$cache[$class])) {
+            self::$cache[$class] = static::initStaticCache();
         }
-        return $cache;
+        return self::$cache[$class];
+    }
+    
+    public static function setStaticCache($data) {
+        self::$cache[get_called_class()] = $data;
     }
 
     /**
@@ -967,7 +983,7 @@ abstract class Finder
         }
 
         if (($kf = static::getKeywordField())) {
-            return $cache->findOne($kf, static::prepareSearchKeyword($id));
+            return $cache->findOne($kf, static::prepareSearchKeyword($id), Collection::FILTER_EQ);
         }
         return false;
     }
@@ -1003,5 +1019,21 @@ abstract class Finder
         if (!static::getFromStaticCache($entity_id)) {
             $cache[$entity_id] = $entity;
         }
+    }
+    
+    public function getNameField()
+    {
+        return $this->getColTable('name') ? 'name' : false;
+    }
+    
+    public function named($name)
+    {
+        $name_field = $this->getNameField();
+        if ($name_field) {
+            $this->where($name_field, '%' . $name . '%', 'like');
+        } else {
+            $this->where('false');
+        }
+        return $this;
     }
 }

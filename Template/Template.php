@@ -250,7 +250,11 @@ class Template
         try {
             $this->$method($this->context);
         } catch (\Exception $e) {
-            fx::log('template exception', $e);
+            fx::log(
+                'template exception', 
+                $e
+                //debug_backtrace(null,6)
+            );
         }
         $result = ob_get_clean();
 

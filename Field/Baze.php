@@ -12,16 +12,7 @@ class Baze extends Field\Entity
 {
 
     protected $value, $error, $is_error = false;
-    protected $_edit_jsdata;
     protected $_js_field = array();
-    protected $_wrap_tag = 'span';
-
-    public function getEditJsdata($content)
-    {
-        $data = $this->getJsField($content);
-        unset($data['label'], $data['id'], $data['parent'], $data['name']);
-        return $data;
-    }
 
     public function getJsField($content)
     {

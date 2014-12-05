@@ -42,29 +42,6 @@ class Finder extends System\Finder
         return 'keyword';
     }
 
-    public function getAllGroups()
-    {
-        $result = array();
-        $groups = fx::db()->getCol("SELECT DISTINCT `group` FROM `{{component}}` ORDER BY `group`");
-        if ($groups) {
-            foreach ($groups as $v) {
-                $result[$v] = $v;
-            }
-        }
-
-        return $result;
-    }
-
-    public function getAllStoreIds()
-    {
-        $result = fx::db()->getCol("SELECT `store_id` FROM `{{component}}` WHERE `store_id` IS NOT NULL");
-        if (!$result) {
-            $result = array();
-        }
-
-        return $result;
-    }
-
     public function getById($id)
     {
         if (!is_numeric($id)) {
@@ -183,5 +160,24 @@ class Finder extends System\Finder
     public static function prepareFullDataForCacheFinder($finder)
     {
         $finder->with('fields');
+    }
+    
+    public static function loadFullDataForCache()
+    {
+        // get all components
+        $collection = parent::loadFullDataForCache();
+        
+        // set it as current finder cache
+        // to avoid sql queries from Component\Entity::getChain()
+        static::setStaticCache($collection);
+        
+        // enable static cache manually
+        static::$isStaticCacheUsed = true;
+        $collection->indexUnique('keyword')->apply(function($com) {
+            $com->getChain();
+            $com->getAllFields();
+            $com->getAvailableEntityOffsets();
+        });
+        return $collection;
     }
 }

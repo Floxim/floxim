@@ -13,7 +13,7 @@ class Field extends Admin
     {
         $entity = $input['entity'];
 
-        $items = $entity->allFields();
+        $items = $entity->getAllFields();
         $ar = array('type' => 'list', 'filter' => true, 'is_sortable' => true);
 
         // todo: psr0 need verify

@@ -88,7 +88,7 @@ class Multilink extends Baze
         }
 
         $com = fx::data('component', $this['component_id']);
-        $chain = new System\Collection($com->getChain());
+        $chain = $com->getChain();
         $chain_ids = $chain->getValues('id');
         $link_fields = fx::data('field')->where('type', Field\Entity::FIELD_LINK)->where('component_id', 0,
             '!=')->all();
@@ -128,7 +128,7 @@ class Multilink extends Baze
 
                     // For links many_many relations
                     // get the field-component links that point to other components
-                    $linking_component_links = $linking_component->allFields()->find('type',
+                    $linking_component_links = $linking_component->getAllFields()->find('type',
                         Field\Entity::FIELD_LINK)->find('id', $lf['id'], '!=');
 
                     // exclude fields, connected to the parent
@@ -304,7 +304,7 @@ class Multilink extends Baze
         // something strashnenko...
         //$linker_com_name = preg_replace('~^content_~', '', $linker_data_type);
         $linker_com_name = $linker_data_type;
-        $end_link_field_name = fx::data('component', $linker_com_name)->allFields()->findOne(function ($i) use (
+        $end_link_field_name = fx::data('component', $linker_com_name)->getAllFields()->findOne(function ($i) use (
             $linker_prop_name
         ) {
             //!!! some tin
@@ -419,7 +419,7 @@ class Multilink extends Baze
             return false;
         }
         $direct_target_field = fx::data('field', $this['format']['linking_field']);
-        $direct_target_component = fx::data('component', $this['format']['linking_datatype']);
+        $direct_target_component = fx::component($this['format']['linking_datatype']);
 
         $first_type = $direct_target_component['keyword'];
 
@@ -433,7 +433,7 @@ class Multilink extends Baze
         }
 
         $end_target_field = fx::data('field', $this['format']['mm_field']);
-        $end_datatype = fx::data('component', $this['format']['mm_datatype']);
+        $end_datatype = fx::component($this['format']['mm_datatype']);
 
         $end_type = $end_datatype['keyword'];
 

@@ -212,7 +212,13 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
             }
         }
         $initial_key = key($this->data);
-        if ($compare_type == self::FILTER_EQ) {
+        if ($compare_type === self::FILTER_EQ) {
+            if (isset($this->unique_indexes[$field])) {
+                if (!isset($this->unique_indexes[$field][$prop])) {
+                    return false;
+                }
+                return $this->unique_indexes[$field][$prop];
+            }
             foreach ($this->data as $item) {
                 if ($item[$field] == $prop) {
                     $this->setPosition($initial_key);
@@ -264,6 +270,20 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         }
         $this->setPosition($initial_key);
         return false;
+    }
+    
+    protected $unique_indexes = array();
+    public function indexUnique($field, $use_first = true)
+    {
+        $index = array();
+        foreach ($this->data as $item) {
+            $val = $item[$field];
+            if (!$use_first || !isset($index[$val])) {
+                $index[$val] = $item;
+            }
+        }
+        $this->unique_indexes[$field] = $index;
+        return $this;
     }
 
     const FILTER_EQ = 1;
