@@ -52,7 +52,6 @@ class Entity extends System\Entity
         $this->type_id = $this['type'];
 
         $this->type = self::getTypeById($this->type_id);
-        $this->_edit_jsdata = array('type' => 'input');
     }
 
     public function getTypeKeyword()

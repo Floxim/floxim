@@ -915,7 +915,7 @@ fx_front.prototype.recount_node_panel = function() {
         return;
     }
     $p.css({
-        width: $(window).width() - 10,
+        width: $(window).width() * 10,
         left:0,
         visibility:'hidden'
     });

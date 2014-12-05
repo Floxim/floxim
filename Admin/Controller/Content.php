@@ -292,7 +292,7 @@ class Content extends Admin
 
         $com = fx::data('component', $content_type);
 
-        $fields = $com->allFields();
+        $fields = $com->getAllFields();
 
         $fields->findRemove(function ($f) {
             return $f['type_of_edit'] == Field\Entity::EDIT_NONE;

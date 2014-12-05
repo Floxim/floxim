@@ -40,7 +40,7 @@ class Finder extends System\Finder
         return $this->where('component_id', $component_id)->all();
     }
 
-    public function getClassName($data = array())
+    public function getEntityClassName($data = array())
     {
         if (isset($data['type'])) {
             // todo: psr0 need verify

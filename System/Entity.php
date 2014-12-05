@@ -22,8 +22,12 @@ abstract class Entity implements \ArrayAccess
     // Extra data from forms etc.
     protected $payload = array();
 
-    protected function getFinder()
+    public function getFinder()
     {
+        if ($this->getType() === 'link') {
+            fx::log(debug_backtrace(null, 10), $this);
+            die();
+        }
         return fx::data($this->getType());
     }
     
@@ -38,21 +42,20 @@ abstract class Entity implements \ArrayAccess
         return $this;
     }
 
-    protected static $_field_map = array();
-
     // virtual field types
     const VIRTUAL_RELATION = 0;
     const VIRTUAL_MULTILANG = 1;
     
+    const OFFSET_FIELD = 0;
+    const OFFSET_RELATION = 1;
+    const OFFSET_LANG = 2;
+    const OFFSET_GETTER = 3;
+
+
     protected $is_loaded = false;
 
     public function __construct($input = array())
     {
-        static $ec = 0;
-        $ec++;
-
-        $this->loadFieldMap();
-
         if (isset($input['data']) && $input['data']) {
             $data = $input['data'];
             if (isset($data['id'])) {
@@ -65,26 +68,35 @@ abstract class Entity implements \ArrayAccess
         $this->is_loaded = true;
     }
 
-    protected function loadFieldMap()
+    
+    
+    protected static $offset_meta = array();
+    public function getAvailableOffsets()
     {
-        // cache relations & ml on first use
-        // to increase offsetExists() speed (for isset($n[$val]) in templates)
-        $c_type = $this->getType();
-        if (!isset(self::$_field_map[$c_type])) {
+        $c_class = get_called_class();
+        if (!isset(self::$offset_meta[$c_class])) {
+            $res = array();
             $finder = $this->getFinder();
-            self::$_field_map[$c_type] = array();
+            $db_fields = array_keys(fx::schema($finder->getTable()));
+            foreach ($db_fields as $field) {
+                $res[$field] = array(
+                    'type' => self::OFFSET_FIELD
+                );
+            }
             foreach ($finder->relations() as $rel_name => $rel) {
-                self::$_field_map[$c_type][$rel_name] = array(self::VIRTUAL_RELATION, $rel);
+                $res[$rel_name] = array(
+                    'type' => self::OFFSET_RELATION, 
+                    'relation' => $rel
+                );
             }
             foreach ($finder->getMultiLangFields() as $f) {
-                self::$_field_map[$c_type][$f] = array(self::VIRTUAL_MULTILANG);
+                $res[$f] = array(
+                    'type' => self::OFFSET_LANG
+                );
             }
+            self::$offset_meta[$c_class] = $res;
         }
-    }
-
-    public function __wakeup()
-    {
-        $this->loadFieldMap();
+        return self::$offset_meta[$c_class];
     }
 
     public function save()
@@ -367,87 +379,83 @@ abstract class Entity implements \ArrayAccess
                 }
             }
         }
-
-        $getter = '_get' . fx::util()->underscoreToCamel($offset);
-        if (method_exists($this, $getter)) {
-            return call_user_func(array($this, $getter));
+        
+        $offset_type = null;
+        $offsets = $this->getAvailableOffsets();
+        if (isset($offsets[$offset])) {
+            $offset_meta = $offsets[$offset];
+            $offset_type = $offset_meta['type'];
         }
-
+        
+        // execute getter everytime
+        if ($offset_type === self::OFFSET_GETTER) {
+            return call_user_func(array($this, $offset_meta['method']));
+        }
+        
+        // we have stored value, so return it
         if (array_key_exists($offset, $this->data)) {
             return $this->data[$offset];
         }
-        if ($offset == 'id') {
+        
+        // no override for non-existing id!
+        if ($offset === 'id') {
             return null;
         }
         
-        $event_result = fx::trigger('offsetGet', array('target' => $this, 'offset' => $offset));
-        if ($event_result) {
-            return $event_result;
-        }
-
-
-        $c_type = $this->getType();
-        $c_field = isset(self::$_field_map[$c_type][$offset]) ? self::$_field_map[$c_type][$offset] : null;
-
-        if (!$c_field) {
-            return null;
-        }
-
-        if ($c_field[0] == self::VIRTUAL_MULTILANG) {
+        // multi-lang value
+        if ($offset_type === self::OFFSET_LANG) {
             $lang_offset = $offset . '_' . fx::config('lang.admin');
             if (!empty($this->data[$lang_offset])) {
                 return $this->data[$lang_offset];
             }
             return $this->data[$offset . '_en'];
         }
-
-        /**
-         * For example, for $post['tags'], where tags - field-multiphase
-         * If connected not loaded, ask finder download
-         */
-
-        $finder = $this->getFinder();
-        $finder->addRelated($offset, new Collection(array($this)));
-        if (!isset($this->data[$offset])) {
-            return null;
+        
+        // relation lazy-loading
+        if ($offset_type === self::OFFSET_RELATION) {
+            $finder = $this->getFinder();
+            $finder->addRelated($offset, new Collection(array($this)));
+            if (!isset($this->data[$offset])) {
+                return null;
+            }
+            return $this->data[$offset];
         }
-        //$this->modified_data[$offset] = clone $this->data[$offset];
-        return $this->data[$offset];
+        
+        // trigger event to get value from outside
+        $event_result = fx::trigger('offsetGet', array('target' => $this, 'offset' => $offset));
+        if ($event_result) {
+            return $event_result;
+        }
     }
 
     public function offsetSet($offset, $value)
     {
-        // put modified | modified_data only if there was a key
-        // so when you first fill fields-ties they will not be marked as updated
+        
         $offset_exists = array_key_exists($offset, $this->data);
-
-        if (!$offset_exists) {
-            $c_type = $this->getType();
-            
-            if (isset(self::$_field_map[$c_type]) && isset(self::$_field_map[$c_type][$offset])) {
-                $c_field = self::$_field_map[$c_type][$offset];
-                switch ($c_field[0]) {
-                    case self::VIRTUAL_MULTILANG:
-                        $offset = $offset . '_' . fx::config('lang.admin');
-                        break;
-                    case self::VIRTUAL_RELATION:
-                        /**
-                         * I.e. when the whole parent is set instead of parent_id:
-                         * $item['parent'] = $parent_obj;
-                         * we add parent_id right now
-                         */
-                        if ($c_field[1][0] === Finder::BELONGS_TO && $value instanceof Entity) {
-                            $c_rel_field = $c_field[1][2];
-                            $value_id = $value['id'];
-                            if ($c_rel_field && $value_id) {
-                                $this[$c_rel_field] = $value_id;
-                            }
-                        }
-                        break;
-                }
-            }
+        
+        $offsets = $this->getAvailableOffsets();
+        $offset_type = null;
+        if (isset($offsets[$offset])) {
+            $offset_meta = $offsets[$offset];
+            $offset_type = $offset_meta['type'];
         }
-
+        
+        switch($offset_type) {
+            case self::OFFSET_LANG:
+                $offset = $offset.'_'.fx::config('lang.admin');
+                break;
+            case self::OFFSET_RELATION:
+                $relation = $offset_meta['relation'];
+                if ($relation[0] === Finder::BELONGS_TO && $value instanceof Entity) {
+                    $c_rel_field = $relation[2];
+                    $value_id = $value['id'];
+                    if ($c_rel_field && $value_id) {
+                        $this[$c_rel_field] = $value_id;
+                    }
+                }
+                break;
+        }
+        
         if (!$this->is_loaded) {
             $this->data[$offset] = $value;
             return;
@@ -464,7 +472,7 @@ abstract class Entity implements \ArrayAccess
         }
         $this->data[$offset] = $value;
     }
-
+    
     public function offsetExists($offset)
     {
         if (self::isTemplateVar($offset)) {
@@ -473,14 +481,15 @@ abstract class Entity implements \ArrayAccess
         if (array_key_exists($offset, $this->data)) {
             return true;
         }
-        if (method_exists($this, '_get' . fx::util()->underscoreToCamel($offset))) {
+        $offsets = $this->getAvailableOffsets();
+        if (isset($offsets[$offset])) {
             return true;
         }
         $event_res = fx::trigger('offsetExists', array('target' => $this, 'offset' => $offset));
         if ($event_res === true) {
             return true;
         }
-        return isset(self::$_field_map[$this->getType()][$offset]);
+        return false;
     }
 
     public function offsetUnset($offset)
@@ -488,16 +497,16 @@ abstract class Entity implements \ArrayAccess
         unset($this->data[$offset]);
     }
 
-    protected $_type = null;
+    protected $type_keyword = null;
 
     public function getType()
     {
-        if (is_null($this->_type)) {
+        if (is_null($this->type_keyword)) {
             $class = array_reverse(explode("\\", get_class($this)));
             $type = $class[1];
-            $this->_type = $type;
+            $this->type_keyword = strtolower($type);
         }
-        return $this->_type;
+        return $this->type_keyword;
     }
 
     /*

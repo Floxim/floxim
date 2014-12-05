@@ -125,7 +125,7 @@ class Link extends Baze
         if (!is_numeric($rel_target_id)) {
             $rel_target = $rel_target_id;
         } else {
-            $rel_target = fx::data('component', $rel_target_id)->get('keyword');
+            $rel_target = fx::component($rel_target_id)->get('keyword');
         }
         return $rel_target;
     }

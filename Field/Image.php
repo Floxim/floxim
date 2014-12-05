@@ -13,14 +13,6 @@ class Image extends File
         return $this->_js_field;
     }
 
-    public function getEditJsdata($content)
-    {
-        parent::getEditJsdata($content);
-
-        $this->_edit_jsdata['type'] = 'image';
-        return $this->_edit_jsdata;
-    }
-
     public function fakeValue()
     {
         static $num = 1;
