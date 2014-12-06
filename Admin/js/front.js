@@ -98,7 +98,8 @@ fx_front.prototype.handle_mouseover = function(e) {
     var $editable = $(e.target).closest('.fx_template_var'),
         field_type = ($editable.data('fx_var') || {}).type,
         make_content_editable = $editable.length > 0 
-                                && field_type !== 'datetime' && field_type !== 'file' && field_type !== 'image'
+                                && field_type !== 'datetime' && field_type !== 'file' 
+                                && field_type !== 'image' && field_type !== 'select'
                                 && $fx.front.mode === 'edit' 
                                 && !($editable.get(0).nodeName === 'A' && e.ctrlKey);
     var is_hover_parent = $fx.front.last_hover_node 
@@ -1232,7 +1233,6 @@ fx_front.prototype.select_content_entity = function($entity, from_field) {
         var placeholder_data = $entity.data('fx_entity_meta').placeholder;
         edit_action_params = $.extend(edit_action_params, placeholder_data);
     }
-    console.log(edit_action_params);
     $fx.front.add_panel_button('edit', function() {
         $fx.front.select_item(entity);
         $fx.front_panel.load_form(

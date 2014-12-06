@@ -55,6 +55,18 @@ class Entity extends System\Entity
                 $offsets[$keyword] = array(
                     'type' => self::OFFSET_FIELD
                 );
+                if ( $f->getTypeKeyword() === 'select') {
+                    $vals = array();
+                    foreach ($f['format']['values'] as $val) {
+                        $vals[$val['id']] = $val['value'];
+                    }
+                    fx::log($f, $vals);
+                    $offsets[$keyword.'_name'] = array(
+                        'type' => self::OFFSET_SELECT,
+                        'values' => $vals,
+                        'real_offset' => $keyword
+                    );
+                }
             }
 
             $finder = fx::data($this['keyword']);

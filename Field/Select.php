@@ -12,11 +12,7 @@ class Select extends Baze
 
         parent::getJsField($content);
 
-        $values = $this->getOptions();
-        if (!$this->isNotNull() && is_array($values)) {
-            $values = array_merge(array(array('', fx::alang('-- choose something --', 'system'))), $values);
-        }
-        $this->_js_field['values'] = $values;
+        $this->_js_field['values'] = $this->getSelectValues();
 
         if ($this->format['show'] == 'radio') {
             $this->_js_field['type'] = 'radio';
@@ -24,6 +20,15 @@ class Select extends Baze
 
         $this->_js_field['value'] = $content[$this['keyword']];
         return $this->_js_field;
+    }
+    
+    public function getSelectValues()
+    {
+        $values = $this->getOptions();
+        if (!$this->isNotNull() && is_array($values)) {
+            $values = array_merge(array(array('', fx::alang('-- choose something --', 'system'))), $values);
+        }
+        return $values;
     }
 
     public function formatSettings()
