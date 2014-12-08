@@ -50,6 +50,7 @@ abstract class Entity implements \ArrayAccess
     const OFFSET_RELATION = 1;
     const OFFSET_LANG = 2;
     const OFFSET_GETTER = 3;
+    const OFFSET_SELECT = 4;
 
 
     protected $is_loaded = false;
@@ -409,6 +410,11 @@ abstract class Entity implements \ArrayAccess
                 return null;
             }
             return $this->data[$offset];
+        }
+        
+        if ($offset_type === self::OFFSET_SELECT) {
+            $real_value = $this->data[$offset_meta['real_offset']];
+            return $offset_meta['values'][$real_value];
         }
         
         // trigger event to get value from outside
