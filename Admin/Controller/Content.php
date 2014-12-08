@@ -19,7 +19,6 @@ class Content extends Admin
             $content = fx::data($content_type)->create(array(
                 'parent_id'    => $input['parent_id'],
                 'infoblock_id' => $input['infoblock_id'],
-                'checked'      => 1,
                 'site_id'      => $parent_page['site_id']
             ));
         }
@@ -112,56 +111,6 @@ class Content extends Admin
         $res['view'] = 'cols';
         $this->response->addFormButton('save');
         return $res;
-    }
-
-    public function checkedSave($input)
-    {
-
-        $ids = $input['id'];
-        if (!is_array($ids)) {
-            $ids = array($ids);
-        }
-
-        foreach ($ids as $id) {
-            if (preg_match("/(\d+)-(\d+)/", $id, $match)) {
-                $class_id = $match[1];
-                $content_id = $match[2];
-            }
-
-            $content = fx::data('content')->getById($class_id, $content_id);
-            $content->checked();
-        }
-
-        $result['status'] = 'ok';
-        return $result;
-    }
-
-    public function onSave($input)
-    {
-        return $this->checkedSave($input);
-    }
-
-    public function uncheckedSave($input)
-    {
-        $ids = $input['id'];
-        if (!is_array($ids)) {
-            $ids = array($ids);
-        }
-        foreach ($ids as $id) {
-            if (preg_match("/(\d+)-(\d+)/", $id, $match)) {
-                $class_id = $match[1];
-                $content_id = $match[2];
-            }
-            $content = fx::data('content')->getById($class_id, $content_id);
-            $content->unchecked();
-        }
-        $result['status'] = 'ok';
-        return $result;
-    }
-
-    public function offSave($input)
-    {
-        return $this->uncheckedSave($input);
     }
 
     public function deleteSave($input)

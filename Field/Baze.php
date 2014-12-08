@@ -25,7 +25,7 @@ class Baze extends Field\Entity
             'type'  => $this->getTypeKeyword()
         );
         $this->_js_field['value'] = $this['default'];
-        if ($content[$name]) {
+        if ( isset($content[$name]) ) {
             $this->_js_field['value'] = $content[$name];
         }
         return $this->_js_field;

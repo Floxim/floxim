@@ -239,16 +239,6 @@ abstract class Entity implements \ArrayAccess
         $this->afterDelete();
     }
 
-    public function unchecked()
-    {
-        return $this->set('checked', 0)->save();
-    }
-
-    public function checked()
-    {
-        return $this->set('checked', 1)->save();
-    }
-
     public function validate()
     {
         return count($this->validate_errors) == 0;

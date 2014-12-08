@@ -306,17 +306,23 @@ font-family:Arial;
     top: 34px;
     z-index: 2675;
     &.fx_admin_control_admin {
-        position: relative !important;
-        left: auto;
-        top: auto;
+        //position: relative !important;
+        //left: auto;
+        //top: auto;
         //height: 31px;
+        position:absolute !important;
+        top:0;
+        right:0;
+        left:auto;
+        width:auto !important;
     }
     #fx_admin_buttons {
         //margin: 6px 0 0 10px;
         overflow:hidden;
         margin-left:20px;
         &>div {
-            margin-top:20px;
+            float:right;
+            margin-top:10px;
         }
     }
 
@@ -383,6 +389,7 @@ font-family:Arial;
 #fx_admin_right {
     display: inline-block;
     width: 80%;
+    position:relative;
 }
 
 
@@ -705,6 +712,26 @@ font-family:Arial;
 
 .fx_list {
     clear:both;
+    .fx_admin_button_text {
+        height: auto;
+        //background: #3fb7de url('images/button_bg.gif') repeat-x 100% 0;
+        background:none;
+        float: left;
+        cursor: pointer;
+        margin: 0 20px 0 0;
+        border:none;
+        text-decoration: none !important;
+        white-space: nowrap;
+        box-sizing:border-box;
+        span {
+            .fx_admin_button_text_style();
+            margin: 0 10px;
+            color:#3fb7de;
+        }
+    }
+    td:first-child a {
+        text-decoration:none;
+    }
 }
 
 .fx_list .fx_list_separator {
@@ -713,7 +740,8 @@ font-family:Arial;
 }
 
 .fx_list_table .fx_list_cell_buttons {
-    padding:5px;
+    padding-top:0;
+    padding-bottom:0;
 }
 
 .fx_list_buttons {
@@ -769,7 +797,7 @@ font-family:Arial;
 
 .fx_list_table td {
     vertical-align: top;
-    padding: 10px;
+    padding: 5px 10px;
     font-size:13px;
 }
 

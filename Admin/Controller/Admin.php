@@ -211,52 +211,6 @@ class Admin extends System\Controller
         return array('status' => 'ok');
     }
 
-    public function onSave($input)
-    {
-
-        $es = $this->entity_type;
-        $result = array('status' => 'ok');
-
-        $ids = $input['id'];
-        if (!is_array($ids)) {
-            $ids = array($ids);
-        }
-
-        foreach ($ids as $id) {
-            try {
-                fx::data($es)->getById($id)->checked();
-            } catch (\Exception $e) {
-                $result['status'] = 'error';
-                $result['text'][] = $e->getMessage();
-            }
-        }
-
-        return $result;
-    }
-
-    public function offSave($input)
-    {
-
-        $es = $this->entity_type;
-        $result = array('status' => 'ok');
-
-        $ids = $input['id'];
-        if (!is_array($ids)) {
-            $ids = array($ids);
-        }
-
-        foreach ($ids as $id) {
-            try {
-                fx::data($es)->getById($id)->unchecked();
-            } catch (\Exception $e) {
-                $result['status'] = 'error';
-                $result['text'][] = $e->getMessage();
-            }
-        }
-
-        return $result;
-    }
-
     public function deleteSave($input)
     {
 
