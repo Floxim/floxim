@@ -11,6 +11,12 @@ class Float extends Baze
 
         return $this->_js_field;
     }
+    
+    public function getSavestring() {
+        $val = parent::getSavestring();
+        $val = (float) str_replace(",", '.', $val);
+        return $val;
+    }
 
     public function getSqlType()
     {
