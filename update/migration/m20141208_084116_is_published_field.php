@@ -38,6 +38,8 @@ class m20141208_084116_is_published_field extends \Floxim\Floxim\System\Migratio
             $field->save();
             fx::log('add field', $field);
         }
+        fx::data('component')->dropStoredStaticCache();
+        fx::db()->query('update {{floxim_main_content}} set is_published = 1, is_branch_published = 1');
     }
 
     // Run for down migration
