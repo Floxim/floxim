@@ -180,4 +180,11 @@ class Finder extends System\Finder
         });
         return $collection;
     }
+    
+    public static function dropStoredStaticCache()
+    {
+        parent::dropStoredStaticCache();
+        fx::cache('meta')->delete('schema');
+    }
+
 }

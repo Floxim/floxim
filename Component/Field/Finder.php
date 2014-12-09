@@ -52,7 +52,7 @@ class Finder extends System\Finder
     }
     
     public static function dropStoredStaticCache() {
-        \Floxim\Floxim\Component\Component\Finder::dropStoredStaticCache();
+        fx::data('component')->dropStoredStaticCache();
         parent::dropStoredStaticCache();
     }
 }

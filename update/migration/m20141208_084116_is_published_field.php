@@ -1,4 +1,7 @@
 <?php
+
+use \Floxim\Floxim\System\Fx as fx;
+
 class m20141208_084116_is_published_field extends \Floxim\Floxim\System\Migration {
 
     // Run for up migration
@@ -40,6 +43,7 @@ class m20141208_084116_is_published_field extends \Floxim\Floxim\System\Migratio
         }
         fx::data('component')->dropStoredStaticCache();
         fx::db()->query('update {{floxim_main_content}} set is_published = 1, is_branch_published = 1');
+        fx::cache('meta')->delete('schema');
     }
 
     // Run for down migration

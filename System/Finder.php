@@ -932,7 +932,6 @@ abstract class Finder
     public static function dropStoredStaticCache()
     {
         if (static::isStaticCacheUsed()) {
-            fx::log('droping cache', get_called_class());
             fx::cache('meta')->delete(static::getStaticCacheKey());
         }
     }
