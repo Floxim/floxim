@@ -1039,6 +1039,7 @@ fx_front.prototype.hilight = function(container) {
                 container
             ).not('.fx_unselectable');
     items.
+        off('.fx_recount_outlines').
         removeClass('fx_hilight').
         removeClass('fx_hilight_empty').
         removeClass('fx_hilight_empty_inline').
@@ -1063,9 +1064,12 @@ fx_front.prototype.hilight = function(container) {
             $img.addClass('fx_image_placeholded');
         }
     });
-    
+        
     if (is_view_mode) {
         $('.fx_infoblock_hidden').hide();
+        $('.fx_entity_hidden').each(function() {
+            $fx.front.outline_block_off($(this));
+        });
         return;
     }
     $('.fx_infoblock_hidden').show();
@@ -1073,6 +1077,10 @@ fx_front.prototype.hilight = function(container) {
     items.each(function(index, item) {
         var i = $(item);
         var meta = i.data('fx_controller_meta') || {};
+        
+        if (i.hasClass('fx_entity_hidden')) {
+            $fx.front.outline_block(i, 'hidden');
+        }
 
         if (meta.accept_content) {
             i.addClass('fx_accept_content');
@@ -1868,15 +1876,26 @@ fx_front.prototype.outline_block = function(n, style, speed) {
     if (n.hasClass('fx_hilight_outline')) {
         return;
     }
+    if (n.hasClass('fx_entity_hidden') && style === 'hover') {
+        return;
+    }
     var panes = n.data('fx_outline_panes') || {};
     
-    if (style === 'selected') {
-        var recount_outlines = function() {
-            $fx.front.outline_block(n, 'selected');
+    if (style === 'selected' || style === 'hidden') {
+        var recount_outlines = function(e) {
+            $fx.front.outline_block(n, style);
             $fx.front.recount_node_panel();
         };
         n.off('.fx_recount_outlines').on('resize.fx_recount_outlines keydown.fx_recount_outlines', recount_outlines);
     }
+    
+    if (!n.is(':visible')) {
+        $.each(panes, function() {
+            $(this).css('left', '-100000px');
+        });
+        return;
+    }
+    
     var o = n.offset();
     var overlay_offset = parseInt(this.get_front_overlay().css('top'));
     o.top -= overlay_offset > 0 ? overlay_offset : 0 ;
@@ -2004,6 +2023,10 @@ fx_front.prototype.outline_block = function(n, style, speed) {
 fx_front.prototype.outline_block_off = function(n, speed) {
     n.off('.fx_hide_hover_outlines');
     if (n.hasClass('fx_hilight_outline')) {
+        return;
+    }
+    if (n.hasClass('fx_entity_hidden') && $fx.front.mode === 'edit') {
+        $fx.front.outline_block(n, 'hidden');
         return;
     }
     var panes = n.data('fx_outline_panes');

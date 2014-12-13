@@ -163,11 +163,11 @@
             );
         };
         this.hide = function() {
+            $fx.front.enable_select();
+            $fx.front.enable_node_panel();
             this.animate_panel_height(0, function () {
                 $body.hide().html('');
                 $footer.hide();
-                $fx.front.enable_select();
-                $fx.front.enable_node_panel();
                 if (!$fx.front.get_selected_item()) {
                     $fx.front.enable_hilight();
                 }

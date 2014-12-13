@@ -1,14 +1,14 @@
 .fx_chess_background(@dark: rgba(0,0,0,0.3); @light: #FFF; @size: 6px; @transparent: rgba(0,0,0,0);) {
-  background: -webkit-linear-gradient(45deg, @dark 25%, @transparent 25%, @transparent 75%, @dark 75%, @dark 0), -webkit-linear-gradient(45deg, @dark 25%, @transparent 25%, @transparent 75%, @dark 75%, @dark 0), @light;
-  background: -moz-linear-gradient(45deg, @dark 25%, @transparent 25%, @transparent 75%, @dark 75%, @dark 0), -moz-linear-gradient(45deg, @dark 25%, @transparent 25%, @transparent 75%, @dark 75%, @dark 0), @light;
-  background: linear-gradient(45deg, @dark 25%, @transparent 25%, @transparent 75%, @dark 75%, @dark 0), linear-gradient(45deg, @dark 25%, @transparent 25%, @transparent 75%, @dark 75%, @dark 0), @light;
-  background-position: 0 0, @size @size;
-  -webkit-background-origin: padding-box;
-  background-origin: padding-box;
-  -webkit-background-clip: border-box;
-  background-clip: border-box;
-  -webkit-background-size: @size*2 @size*2;
-  background-size: @size*2 @size*2;
+  background: -webkit-linear-gradient(45deg, @dark 25%, @transparent 25%, @transparent 75%, @dark 75%, @dark 0), -webkit-linear-gradient(45deg, @dark 25%, @transparent 25%, @transparent 75%, @dark 75%, @dark 0), @light !important;
+  background: -moz-linear-gradient(45deg, @dark 25%, @transparent 25%, @transparent 75%, @dark 75%, @dark 0), -moz-linear-gradient(45deg, @dark 25%, @transparent 25%, @transparent 75%, @dark 75%, @dark 0), @light  !important;
+  background: linear-gradient(45deg, @dark 25%, @transparent 25%, @transparent 75%, @dark 75%, @dark 0), linear-gradient(45deg, @dark 25%, @transparent 25%, @transparent 75%, @dark 75%, @dark 0), @light !important;
+  background-position: 0 0, @size @size  !important;
+  -webkit-background-origin: padding-box  !important;
+  background-origin: padding-box  !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-background-size: @size*2 @size*2 !important;
+  background-size: @size*2 @size*2 !important;
 }
 /*
 .featured-list-item {
@@ -72,82 +72,54 @@
 
 .fx_outline_pane {
     position:absolute;
-    background-color:@pane_color_hover_dark;
+    //background-color:@pane_color_hover_dark;
 }
 
-.fx_outline_pane_top, .fx_outline_pane_bottom {
-    background-image: -webkit-linear-gradient(left, transparent 50%, @pane_color_hover_light 50%);
-    background-image: -moz-linear-gradient(left, transparent 50%, @pane_color_hover_light 50%);
-    background-image: -ms-linear-gradient(left, transparent 50%, @pane_color_hover_light 50%);
-    background-image: -o-linear-gradient(left, transparent 50%, @pane_color_hover_light 50%);
-    background-image: linear-gradient(left, transparent 50%, @pane_color_hover_light 50%);
-    background-size: 9px 3px;
+.fx_outliner (@light:transparent; @dark; @size:3px; @shadow:6px; @shadow-color:rgba(50, 50, 50, 0.6);) {
+    &.fx_outline_pane_top, &.fx_outline_pane_bottom {
+        background-image: -webkit-linear-gradient(left, @light 50%, @dark 50%);
+        background-image:    -moz-linear-gradient(left, @light 50%, @dark 50%);
+        background-image:     -ms-linear-gradient(left, @light 50%, @dark 50%);
+        background-image:      -o-linear-gradient(left, @light 50%, @dark 50%);
+        background-image:         linear-gradient(left, @light 50%, @dark 50%);
+        background-size: @size*3 @size;
+    }
+    &.fx_outline_pane_left, &.fx_outline_pane_right {
+        background-image: -webkit-linear-gradient(@light 50%, @dark 50%);
+        background-image:    -moz-linear-gradient(@light 50%, @dark 50%);
+        background-image:     -ms-linear-gradient(@light 50%, @dark 50%);
+        background-image:      -o-linear-gradient(@light 50%, @dark 50%);
+        background-image:         linear-gradient(@light 50%, @dark 50%);
+        background-size: @size @size*3;
+    }
+    &.fx_outline_pane_top {
+        box-shadow: 0px -@shadow @shadow*3 @shadow-color;
+    }
+
+    &.fx_outline_pane_right {
+        box-shadow: @shadow 0px @shadow*3 @shadow-color;
+    }
+
+    &.fx_outline_pane_bottom {
+        box-shadow: 0px @shadow @shadow*3 @shadow-color;
+    }
+
+    &.fx_outline_pane_left {
+        box-shadow: -@shadow 0px @shadow*3 @shadow-color;
+    }
 }
 
-.fx_outline_pane_left, .fx_outline_pane_right {
-    background-image: -webkit-linear-gradient(transparent 50%, @pane_color_hover_light 50%);
-    background-image: -moz-linear-gradient(transparent 50%, @pane_color_hover_light 50%);
-    background-image: -ms-linear-gradient(transparent 50%, @pane_color_hover_light 50%);
-    background-image: -o-linear-gradient(transparent 50%, @pane_color_hover_light 50%);
-    background-image: linear-gradient(transparent 50%, @pane_color_hover_light 50%);
-    background-size: 3px 9px;
+.fx_outline_style_hidden {
+    .fx_outliner(@light:#FCC; @dark:#E00; @size:3px; @shadow:3px);
 }
-
-/* styles for selected element */
 
 .fx_outline_style_selected {
-    background-color: #000;
+    .fx_outliner(@light:#FF0; @dark:#000; @size:3px; @shadow:3px);
 }
 
-.fx_outline_pane_top.fx_outline_style_selected, .fx_outline_pane_bottom.fx_outline_style_selected {
-    background-image: -webkit-linear-gradient(left, transparent 50%, #FF0 50%);
-    background-image: -moz-linear-gradient(left, transparent 50%, #FF0 50%);
-    background-image: -ms-linear-gradient(left, transparent 50%, #FF0 50%);
-    background-image: -o-linear-gradient(left, transparent 50%, #FF0 50%);
-    background-image: linear-gradient(left, transparent 50%, #FF0 50%);
+.fx_outline_style_hover {
+    .fx_outliner(@light:#EEE; @dark:#000; @size:3px; @shadow:2px; @shadow-color:rgba(50, 50, 50, 0.35));
 }
-
-.fx_outline_pane_left.fx_outline_style_selected, .fx_outline_pane_right.fx_outline_style_selected {
-    background-image: -webkit-linear-gradient(transparent 50%, #FF0 50%);
-    background-image: -moz-linear-gradient(transparent 50%, #FF0 50%);
-    background-image: -ms-linear-gradient(transparent 50%, #FF0 50%);
-    background-image: -o-linear-gradient(transparent 50%, #FF0 50%);
-    background-image: linear-gradient(transparent 50%, #FF0 50%);
-}
-
-.fx_outline_pane_top {
-    box-shadow: 0px -3px 6px rgba(50, 50, 50, 0.6);
-}
-
-.fx_outline_pane_right {
-    box-shadow: 3px 0px 6px rgba(50, 50, 50, 0.6);
-}
-
-.fx_outline_pane_bottom {
-    box-shadow: 0px 3px 6px rgba(50, 50, 50, 0.6);
-}
-
-.fx_outline_pane_left {
-    box-shadow: -3px 0px 6px rgba(50, 50, 50, 0.6);
-}
-
-// HOVER PANES SHADOW:
-.fx_outline_pane_top.fx_outline_style_hover {
-    box-shadow: 0px -2px 6px rgba(50, 50, 50, 0.35);
-}
-
-.fx_outline_pane_right.fx_outline_style_hover {
-    box-shadow: 0px -2px 6px rgba(50, 50, 50, 0.35);
-}
-
-.fx_outline_pane_bottom.fx_outline_style_hover {
-    box-shadow: 0px 2px 6px rgba(50, 50, 50, 0.35);
-}
-
-.fx_outline_pane_left.fx_outline_style_hover {
-    box-shadow: -2px 0px 6px rgba(50, 50, 50, 0.35);
-}
-// ENDOF HOVER PANES SHADOW;
 
 .fx_panel_text_expander {
     cursor:pointer;
@@ -338,6 +310,16 @@ img.fx_hilight {
     opacity:1;
 }
 
+body:not(.fx_mode_edit) .fx_entity_hidden {
+    display:none !important;
+}
+
+.fx_entity_hidden {
+    //.fx_chess_background(@dark: #FAA; @light: #FEE; @size:10px;);
+    &, & * {
+        //text-shadow:1px 1px 1px #000;
+    }
+}
 
 
 .fx_hidden_placeholded {

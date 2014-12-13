@@ -173,7 +173,6 @@ fx_edit_in_place.prototype.start = function(meta) {
                             );
                         }
                     }; 
-                    console.log('eip', meta);
                     $n.attr('contenteditable', 'true').focus();
                     this.$closest_button = $n.closest('button');
                     if (this.$closest_button.length > 0) {
