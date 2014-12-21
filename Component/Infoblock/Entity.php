@@ -507,7 +507,7 @@ class Entity extends System\Entity implements Template\Entity
         } else {
             $html_proc = new Template\Html($html_result);
             $html_result = $html_proc->addMeta($meta,
-                mb_strlen($html_result) > 1000 // auto wrap long html blocks without parsing
+                mb_strlen($html_result) > 10000 // auto wrap long html blocks without parsing
             );
         }
         return $html_result;

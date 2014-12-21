@@ -617,6 +617,7 @@ class Infoblock extends Admin
                 $c_wrapper = $default_wrapper[0];
             }
         }
+        
         $layout_name = fx::data('layout', $i2l['layout_id'])->get('keyword');
 
         $controller_name = $infoblock->getPropInherited('controller');
@@ -818,9 +819,9 @@ class Infoblock extends Admin
         $controller = $infoblock->initController();
         $fields = array(
             array(
-                'label' => fx::alang('I am REALLY sure', 'system'),
+                //'label' => fx::alang('I am REALLY sure', 'system'),
                 'name'  => 'delete_confirm',
-                'type'  => 'checkbox'
+                'type'  => 'hidden'
             ),
             $this->ui->hidden('id', $input['id']),
             $this->ui->hidden('entity', 'infoblock'),
@@ -848,6 +849,7 @@ class Infoblock extends Admin
             $fields [] = array('type' => 'html', 'html' => fx::alang('Layouts can not be deleted', 'system'));
         }
         $this->response->addFields($fields);
+        $this->response->addFormButton(array('key' => 'save', 'label' => fx::alang('Delete')));
         if ($input['delete_confirm']) {
             $this->response->setStatusOk();
             if ($ib_content) {
@@ -864,6 +866,10 @@ class Infoblock extends Admin
             $controller->handleInfoblock('delete', $infoblock, $input);
             $infoblock->delete();
         }
+        return array(
+            'header' => fx::alang('Delete infoblock', 'system').' '.$infoblock['name']
+                        .' ('.$infoblock['controller'].':'.$infoblock['action'].')?'
+        );
     }
 
     protected function getAreaVisual($area, $layout_id, $site_id)

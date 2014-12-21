@@ -21,7 +21,7 @@ class Front extends Base
             return null;
         } else {
             if (
-                $url && !$page->hasVirtualPath() && $url != $page['url']
+                $url && !$page->hasVirtualPath() && urldecode($url) != $page['url']
             ) {
                 fx::http()->redirect($page['url'], 301);
                 exit;

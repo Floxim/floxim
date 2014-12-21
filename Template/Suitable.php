@@ -381,7 +381,7 @@ class Suitable
             if (empty($v)) {
                 continue;
             }
-            $v = explode(':', $v);
+            $v = explode(':', $v, 2);
             if (count($v) == 1) {
                 $res[trim($v[0])] = true;
             } else {
@@ -421,9 +421,9 @@ class Suitable
                 unset($suit[$local_key[0]]);
             }
             foreach ($suit[$prop] as &$tpl_name) {
-                $tpl_name = trim($tpl_name, '.');
-                if (!strstr($tpl_name, '.')) {
-                    $tpl_name = $set_name . '.' . $tpl_name;
+                $tpl_name = trim($tpl_name, ':');
+                if (!strstr($tpl_name, ':')) {
+                    $tpl_name = $set_name . ':' . $tpl_name;
                 }
             }
         }
@@ -439,6 +439,7 @@ class Suitable
             }
             $res_suit .= '; ';
         }
+        fx::log('res suit', $res_suit);
         return $res_suit;
     }
 

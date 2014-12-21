@@ -234,6 +234,8 @@ class Content extends Admin
             'labels' => array('id' => 'ID'),
             'entity' => 'content'
         );
+        
+        $list['labels']['infoblock'] = 'Infoblock';
 
         if ($content_type === 'content') {
             $list['labels']['type'] = 'Type';
@@ -254,10 +256,15 @@ class Content extends Admin
         $finder = fx::content($content_type);
 
         $items = $finder->all();
+        
+        $ib_ids = $items->getValues('infoblock_id');
+        $infoblocks = fx::data('infoblock', $ib_ids)->indexUnique('id');
 
         foreach ($items as $item) {
             $r = array('id' => $item['id']);
             $r['type'] = $item['type'];
+            $c_ib = $infoblocks->findOne('id', $item['infoblock_id']);
+            $r['infoblock'] = $c_ib ? $c_ib['name'] : '-';
             foreach ($fields as $f) {
                 $val = $item[$f['keyword']];
                 switch ($f['type']) {

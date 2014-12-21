@@ -74,6 +74,7 @@ class Page
                 $http_base = fx::path()->http(preg_replace("~[^/]+$~", '', $file));
 
                 $less = new \lessc();
+                $less->setImportDir(dirname($full_source_path));
 
                 $file_content = file_get_contents($full_source_path);
                 $file_content = $this->cssUrlReplace($file_content, $http_base);
