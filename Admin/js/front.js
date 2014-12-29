@@ -1482,7 +1482,8 @@ fx_front.prototype.start_entities_sortable = function($cp) {
             item.parent().append(item);
             
             ph.css({
-                width:helper.outerWidth()+'px',
+                // -1px to fix sub-pixel size (like 33.333% of 100px)
+                width: (helper.outerWidth() - 1) +'px',
                 height:helper.outerHeight()+'px',
                 'box-sizing':'border-box'
             });

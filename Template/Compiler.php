@@ -255,13 +255,19 @@ class Compiler
 
     public function parseExpression($str)
     {
-        static $expression_parser = null;
-        // todo: need verify name $expession_parser
-        if ($expression_parser === null) {
-            $expression_parser = new ExpressionParser();
-            $expression_parser->local_vars [] = '_is_admin';
+
+        static $parser = null;
+        if (is_null($parser)) {
+            $parser = self::getExpressionParser();
         }
-        return $expression_parser->compile($expression_parser->parse($str));
+        return $parser->compile($parser->parse($str));
+    }
+    
+    public static function getExpressionParser() {
+        $parser = new ExpressionParser();
+        $parser->local_vars [] = '_is_admin';
+        $parser->local_vars []= 'context';
+        return $parser;
     }
 
     protected function applyModifiers($display_var, $modifiers, $token)
@@ -368,7 +374,8 @@ class Compiler
         $code = "<?php\n";
         // parse var expression and store token 
         // to create correct expression for get_var_meta()
-        $ep = new ExpressionParser();
+        //$ep = new ExpressionParser();
+        $ep = self::getExpressionParser();
         $expr_token = $ep->parse('$' . $token->getProp('id'));
         $expr = $ep->compile($expr_token);
         $var_token = $expr_token->last_child;
@@ -537,7 +544,8 @@ class Compiler
                 } elseif (preg_match("~^\`.+\`$~s", $tpval)) {
                     $token_prop_entry .= trim($tpval, '`');
                 } elseif (preg_match("~\{.+\}~", $tpval)) {
-                    $ep = new \Floxim\Floxim\Template\ExpressionParser;
+                    //$ep = new \Floxim\Floxim\Template\ExpressionParser;
+                    $ep = self::getExpressionParser();
                     $tpval = preg_replace_callback("~\{([^\}]+)\}~", function($m) use($ep) {
                         return "'.".$ep->build($m[1]).".'";
                     }, $tpval);

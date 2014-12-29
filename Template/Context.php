@@ -70,6 +70,17 @@ class Context {
         return array();
     }
     
+    public function closestEntity($type = null) {
+        for ($i = count($this->stack) - 1; $i >= 0; $i--) {
+            $cc = $this->stack[$i];
+            if ($cc instanceof \Floxim\Floxim\System\Entity) {
+                if (!$type || $cc->isInstanceOf($type)) {
+                    return $cc;
+                }
+            }
+        }
+    }
+    
     public function get($name = null, $context_offset = null)
     {
         $need_local = false;
