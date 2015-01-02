@@ -83,7 +83,7 @@ window.$fx_fields = {
         return $t.jQuery('form_row', json);
     },
 
-    floatfield: function (json ) {
+    float: function (json ) {
         return $t.jQuery('form_row', json);
     },
 

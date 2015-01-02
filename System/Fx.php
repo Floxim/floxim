@@ -545,6 +545,9 @@ class Fx
                     return;
                 }
                 $arr[$pp] = array(); //fx::collection();
+            } elseif  ($is_aa && isset($arr[$pp]) && $num + 1 === $total) {
+                $arr[$pp] = $var_value;
+                return;
             }
             $arr =& $arr[$pp];
         }

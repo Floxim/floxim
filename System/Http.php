@@ -55,6 +55,11 @@ class Http
     
     public function post($url, $data)
     {
+        foreach ($data as $k => $v) {
+            if (!is_scalar($v)) {
+                $data[$k] = json_encode($v);
+            }
+        }
         $options = array(
             'http' => array(
                 'header'  => "Content-type: application/x-www-form-urlencoded\r\n",

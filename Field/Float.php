@@ -7,7 +7,7 @@ class Float extends Baze
     public function getJsField($content)
     {
         parent::getJsField($content);
-        $this->_js_field['type'] = 'floatfield';
+        $this->_js_field['type'] = 'float';
 
         return $this->_js_field;
     }
