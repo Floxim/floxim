@@ -103,7 +103,7 @@ if (_c.context !== 'panel') {
     setTimeout(function() {
         $fx_fields.make_redactor(
             $('textarea.fx_wysiwyg', html), 
-            {extra_buttons:['html'], linebreaks: _c.nl2br}
+            {extra_buttons:['html'], linebreaks: (_c.nl2br && _c.nl2br !== '0')}
         );
         var $box = html.find('.redactor_box'),
             $container = html,
