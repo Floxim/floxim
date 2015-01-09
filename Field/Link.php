@@ -108,11 +108,16 @@ class Link extends Baze
         }
 
         $this->_js_field['type'] = 'select';
-        if ($target_content !== 'lang') {
-            $finder->where('site_id', $content['site_id']);
-            $name_prop = 'name';
-        } else {
-            $name_prop = 'en_name';
+        
+        $name_prop = $finder->getNameField();
+        
+        if (!$name_prop) {
+            if ($target_content !== 'lang') {
+                $finder->where('site_id', $content['site_id']);
+                $name_prop = 'name';
+            } else {
+                $name_prop = 'en_name';
+            }
         }
         $val_items = $finder->all();
         $this->_js_field['values'] = $val_items->getValues($name_prop, 'id');

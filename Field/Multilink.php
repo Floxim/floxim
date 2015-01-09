@@ -50,6 +50,10 @@ class Multilink extends Baze
                 if ($ef['name'] == $rel[2]) {
                     continue;
                 }
+                // do not show "is published" flag in this table
+                if ($ef['name'] == 'is_published') {
+                    continue;
+                }
                 $this->_js_field['tpl'] [] = $ef;
                 $this->_js_field['labels'] [] = $ef['label'];
             }
@@ -66,6 +70,10 @@ class Multilink extends Baze
                     foreach ($linker_fields as $lf) {
                         // skip the relation field
                         if ($lf['name'] == $rel[2]) {
+                            continue;
+                        }
+                        // do not show "is published" flag in this table
+                        if ($lf['name'] == 'is_published') {
                             continue;
                         }
                         // form field has "name" prop instead of "keyword"
