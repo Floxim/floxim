@@ -285,7 +285,17 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         $this->unique_indexes[$field] = $index;
         return $this;
     }
-
+    
+    public function setKeyField($field) 
+    {
+        $new_data = array();
+        foreach ($this->data as $item) {
+            $new_data[$item[$field]] = $item;
+        }
+        $this->data = $new_data;
+        return $this;
+    }
+    
     const FILTER_EQ = 1;
     const FILTER_EXISTS = 2;
     const FILTER_CALLBACK = 3;

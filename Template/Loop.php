@@ -37,7 +37,15 @@ class Loop implements \ArrayAccess
         } else {
             $this->current = $this->_is_collection ? $this->looped->next() : next($this->looped);
         }
-        $this->key = $this->_is_collection ? $this->looped->key() : key($this->looped);
+        if ($this->_is_collection){
+            if ($this->current instanceof System\Collection && $this->current->group_key) {
+                $this->key = $this->current->group_key;
+            } else {
+                $this->key = $this->looped->key();
+            }
+        } else {
+            $this->key = key($this->looped);
+        }
     }
 
     public function isLast()

@@ -48,7 +48,8 @@ class Finder extends System\Finder
         if (!$page) {
             return;
         }
-        $ids = $page->getParentIds();
+        //$ids = $page->getParentIds();
+        $ids = $page->getPath()->getValues('id');
         $ids [] = $page['id'];
         $ids [] = 0; // root
         $infoblocks = $this->where('page_id', $ids)->where('site_id', $page['site_id'])->all();

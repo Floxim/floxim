@@ -53,18 +53,44 @@ class Http
         header($name . ": " . $value);
     }
     
-    public function post($url, $data)
+    public function post($url, $data, $headers = array())
     {
-        foreach ($data as $k => $v) {
-            if (!is_scalar($v)) {
-                $data[$k] = json_encode($v);
+        $has_content_type = false;
+        $header_string = '';
+        $serialize_type = 'urlencode';
+        
+        foreach ($headers as $h => $v) {
+            $header_string .= $h.': '.$v."\r\n";
+            if (strtolower($h) === 'content-type') {
+                $has_content_type = true;
+                if ($v === 'application/json'){
+                    $serialize_type = 'json_encode';
+                }
             }
         }
+        
+        if (!$has_content_type) {
+            $header_string .= "Content-type: application/x-www-form-urlencoded\r\n";
+        }
+        
+        if (!is_scalar($data)) {
+            if ($serialize_type === 'urlencode') {
+                foreach ($data as $k => $v) {
+                    if (!is_scalar($v)) {
+                        $data[$k] = json_encode($v);
+                    }
+                }
+                $data = http_build_query($data, null, '&');
+            } else {
+                $data = json_encode($data);
+            }
+        }
+        
         $options = array(
             'http' => array(
-                'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
+                'header'  => $header_string,
                 'method'  => 'POST',
-                'content' => http_build_query($data, null, '&')
+                'content' => $data
             )
         );
         $context  = stream_context_create($options);

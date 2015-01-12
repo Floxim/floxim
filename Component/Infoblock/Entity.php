@@ -171,10 +171,11 @@ class Entity extends System\Entity implements Template\Entity
             return;
         }
 
-        $ids = $page->getParentIds();
+        //$ids = $page->getParentIds();
+        $ids = $page->getPath()->getValues('id');
         $ids [] = $page['id'];
         $ids [] = 0; // root
-
+        
         if (!in_array($this['page_id'], $ids)) {
             return false;
         }

@@ -53,8 +53,8 @@ class Ajax extends Base
             } else {
                 $action = $action[0];
             }
-        } elseif (isset($_POST['action'])) {
-            $action = $_POST['action'];
+        } elseif (isset($_POST['_ajax_controller'])) {
+            $action = $_POST['_ajax_controller'];
         } else {
             return null;
         }

@@ -484,7 +484,8 @@ class Infoblock extends Admin
         // format: [page_id]-[descendants|children|this]-[|type_id]
 
 
-        $path_ids = $c_page->getParentIds();
+        //$path_ids = $c_page->getParentIds();
+        $path_ids = $c_page->getPath()->getValues('id');
         $path = fx::data('page', $path_ids);
         $path [] = $c_page;
         $path_count = count($path);

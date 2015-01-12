@@ -56,7 +56,7 @@ class Front extends Base
         }
 
         $c_page = $page_id === fx::env('page_id') ? fx::env('page') : fx::data('page', $page_id);
-
+        
         $infoblocks = fx::data('infoblock')
             ->getForPage($c_page)
             ->find(function ($ib) {
