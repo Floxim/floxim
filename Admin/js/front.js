@@ -684,17 +684,26 @@ fx_front.prototype.is_selectable = function(node) {
         case 'design':
             return n.hasClass('fx_area') || n.hasClass('fx_infoblock');
         case 'edit':
+            
+            // adder placeholders and fields inside are not selectable (mainly for keyboard navigation)
             var $placeholder = n.closest('.fx_entity_adder_placeholder');
             if ($placeholder.length > 0 && !$placeholder.hasClass('fx_entity_adder_placeholder_active')) {
                 return false;
             }
-            if (n.hasClass('fx_entity') || n.hasClass('fx_accept_content')) {
+            
+            // select an entity to show "edit - delete - move" buttons
+            //if (n.hasClass('fx_entity') || n.hasClass('fx_accept_content')) {
+            if (n.hasClass('fx_entity')) {
                 return true;
             }
+            
+            // select a block to show "add" button
             var c_meta = n.data('fx_controller_meta');
             if (c_meta && (c_meta.accept_content || c_meta.fields)) {
-                return true;
+                //return true;
             }
+            
+            // text fields and variables in attributes
             if ( n.hasClass('fx_template_var') || n.hasClass('fx_template_var_in_att') ) {
                 if ($fx.front.is_var_bound_to_entity(n)) {
                     return false;
@@ -813,7 +822,7 @@ fx_front.prototype.select_item = function(node) {
             $node.edit_in_place();
             var $closest_entity = $node.closest('.fx_entity');
             if ($closest_entity.length && $closest_entity[0] !== $node[0]) {
-                $fx.front.select_content_entity($closest_entity, true);
+                $fx.front.select_content_entity($closest_entity, $node);
             }
         }
     }
@@ -1046,6 +1055,7 @@ fx_front.prototype.hilight = function(container) {
         removeClass('fx_var_bound_to_entity').
         removeClass('fx_no_hilight').
         removeClass('fx_clearfix');
+    $('.fx_inline_adder').remove();
     $('.fx_hilight_hover').removeClass('fx_hilight_hover');
     items.filter('.fx_hidden_placeholded').removeClass('fx_hidden_placeholded').html('');
     
@@ -1084,7 +1094,17 @@ fx_front.prototype.hilight = function(container) {
 
         if (meta.accept_content) {
             i.addClass('fx_accept_content');
-            
+            //$fx.front.create_inline_adder(i);
+        }
+        
+        if (i.is('.fx_entity') && !i.hasClass('fx_accept_neighbours')) {
+            var $entity_parent = i.parent();
+            var $placeholder = $entity_parent.find('>.fx_entity_adder_placeholder');
+            if ($placeholder.length > 0) {
+                $entity_parent.find('>.fx_entity').addClass('fx_accept_neighbours');
+                $entity_parent.data('fx_neighbour_placeholder', $placeholder);
+                $fx.front.create_inline_adder($entity_parent);
+            }
         }
         
         var is_selectable = $fx.front.is_selectable(item);
@@ -1152,6 +1172,170 @@ fx_front.prototype.hilight = function(container) {
     $('.fx_hilight_outline .fx_hilight').addClass('fx_hilight_outline');
 };
 
+fx_front.prototype.get_list_orientation = function($entities) {
+    var is_x = true;
+    var is_y = true;
+    var c_x = null;
+    var c_y = null;
+    $entities.each(function()  {
+        var $entity = $(this);
+        if (!$entity.is(':visible')) {
+            return;
+        }
+        var o  = $entity.offset();
+        if (c_x === null){
+            c_x = o.left;
+        } else if (o.left !== c_x) {
+            is_y = false;
+        }
+        if (c_y === null){
+            c_y = o.top;
+        } else if (o.top !== c_y) {
+            is_x = false;
+        }
+    });
+    var axis = is_x ? 'x' : is_y ? 'y' : null;
+    return axis;
+};
+
+fx_front.prototype.create_inline_adder = function($node) {
+    var $overlay = this.get_front_overlay();
+    var title = $node.data('fx_neighbour_placeholder').data('fx_entity_name');
+    var $button = $(
+        '<div class="fx_inline_adder">'+
+            '<span class="fx_inline_adder__plus">+</span>'+
+            '<span class="fx_inline_adder__title">Add '+title+'<span>'+
+        '</div>'
+    );
+
+    $overlay.append($button);
+    $node.data('fx_inline_adder', $button).addClass('fx_has_inline_adder');
+    var out_timeout = null,
+        title_timeout = null;
+    var hide_button = function() {
+        out_timeout = setTimeout(
+            function() {
+                $button.hide();
+            },
+            500
+        );
+    };
+    $button.on('mouseenter', function() {
+        clearTimeout(out_timeout);
+        clearTimeout(title_timeout);
+        $button.addClass('fx_inline_adder_hover');
+        $button.one('mouseleave', function() {
+            hide_button();
+            title_timeout = setTimeout(function() {$button.removeClass('fx_inline_adder_hover');}, 350);
+        });
+    });
+    var $entities = $node.find('>.fx_entity');
+    var button = $button[0];
+    $node.on('mouseover', function(e) {
+        if ( $(e.target).closest('.fx_has_inline_adder')[0] !== $node[0] ) {
+            return;
+        }
+        $('.fx_inline_adder').each(function() {
+            if (this !== button) {
+                //$(this).hide();
+            }
+        });
+        clearTimeout(out_timeout);
+        $node.one('mouseout', hide_button);
+        if ($button.is(':visible')) {
+            return;
+        }
+        var axis = $fx.front.get_list_orientation($entities);
+        var axis_class = axis === 'y' ? 'horizontal' : 'vertical';
+        $button.addClass('fx_inline_adder_'+axis_class);
+        var offset = $node.offset();
+        var css = {
+            display:'block',
+            left:offset.left - 18
+        };
+        var is_fixed = $fx.front.is_fixed($node);
+        if (is_fixed) {
+            css.position = 'fixed';
+            css.top = offset.top - $(window).scrollTop();
+        } else {
+            css.top = offset.top;
+        }
+        css.top -= 8;
+        if (css.left < 0) {
+            css.left = 0;
+        }
+        $button.data('position_hash', css.left+':'+css.top);
+        $button.css(css);
+        var entity_distance = 0;
+        if ($entities.length > 1) {
+            var $e1 = $entities.eq(0),
+                $e2 = $entities.eq(1),
+                o1 = $e1.offset(),
+                o2 = $e2.offset();
+            if (axis === 'y') {
+                entity_distance = o2.top - (o1.top + $e1.outerHeight());
+            } else {
+                entity_distance = o2.left - (o1.left + $e1.outerWidth());
+            }
+            entity_distance = entity_distance < 0 ? 0 : Math.round(entity_distance);
+        }
+        
+        function place_button(e) {
+            var $entity = $(e.target).closest('.fx_entity');
+            //console.log('plsng');
+            if (!$entity.length || $entities.index($entity) === -1) {
+                //console.log('skpi');
+                return;
+            }
+            var e_top = e.pageY,
+                e_left = e.pageX,
+                offset = $entity.offset(),
+                top = offset.top,
+                left = offset.left;
+                
+            if (axis === 'y') {
+                var size = $entity.outerHeight(),
+                    diff = e_top - offset.top;
+                if (size / 2 < diff) {
+                    top += size + entity_distance/2;
+                } else {
+                    top -= (entity_distance/2);
+                }
+            } else {
+                var size = $entity.outerWidth(),
+                    diff = e_left - offset.left;
+                if (size / 2 < diff) {
+                    left += size + entity_distance/2;
+                } else {
+                    left -= entity_distance/2;
+                }
+            }
+            top -= axis === 'y' ? 9 : 13;
+            left -= axis === 'y' ? 18 : 9;
+            
+            
+            if (is_fixed) {
+                top -= $(window).scrollTop();
+            }
+            var hash = top+':'+left;
+            //console.log(hash, e_left);
+            if ($button.data('position_hash') !== hash) {
+                console.log('mov!', hash);
+                $button
+                    .data('position_hash', hash)
+                    .stop()
+                    .animate({
+                    top:top,
+                    left:left
+                });
+            }
+        }
+        
+        $node.on('mousemove', place_button);
+        place_button(e);
+    });
+};
+
 fx_front.prototype.is_jquery_overriden = function() {
     // if jquery is overriden by template script (another version is used)
     // we will attach click listeners to each hilightable node
@@ -1214,9 +1398,9 @@ fx_front.prototype.load = function ( mode ) {
     $('html').trigger('fx_set_front_mode', this.mode);
 };
 
-fx_front.prototype.select_content_entity = function($entity, from_field) {
+fx_front.prototype.select_content_entity = function($entity, $from_field) {
     // if true, child field is actually selected
-    from_field = from_field || false;
+    $from_field = $from_field || false;
     
     var entity_meta = $entity.data('fx_entity');
     var ib_node = $entity.closest('.fx_infoblock').get(0);
@@ -1225,6 +1409,7 @@ fx_front.prototype.select_content_entity = function($entity, from_field) {
     if ($node_panel.children().length) {
         $node_panel.append('<div class="fx_node_panel_separator"></div>');
     }
+    
     $node_panel.append('<div class="fx_node_panel_label">'+$entity.data('fx_entity_name')+':</div>');
     
     var ce_id = entity_meta[2] || entity_meta[0];
@@ -1233,7 +1418,7 @@ fx_front.prototype.select_content_entity = function($entity, from_field) {
         entity:'content',
         action:'add_edit',
         content_type:entity_meta[1]
-    }
+    };
     
     if (ce_id) {
         edit_action_params.content_id = entity_meta[0];
@@ -1303,7 +1488,7 @@ fx_front.prototype.select_content_entity = function($entity, from_field) {
         });
     }
     
-    if (!from_field) {
+    if (!$from_field) {
         var $bound_to_edit = $([]);
         $('.fx_var_bound_to_entity', $entity).each(function() {
             var $bound = $(this);
@@ -1312,10 +1497,18 @@ fx_front.prototype.select_content_entity = function($entity, from_field) {
             }
         });
         $bound_to_edit.edit_in_place();
+    } else if ($from_field.is('.fx_template_var')) {
+        var field_meta = $from_field.data('fx_var');
+        if (field_meta.type === 'string' || field_meta.type === 'text') {
+            $node_panel.append('<div class="fx_node_panel_separator"></div>');
+            var field_title = 'Editing: ' + field_meta.label;
+            $node_panel.append('<div class="fx_node_panel_label">'+field_title+'</div>');
+        }
     }
     $('html').one('fx_deselect', function(e) {
         $fx.front.stop_entities_sortable();
     });
+    
 };
 
 fx_front.prototype.select_infoblock = function(n) {
@@ -1430,28 +1623,7 @@ fx_front.prototype.start_entities_sortable = function($cp) {
     }
     $cp.addClass('fx_entity_container_sortable');
     
-    var is_x = true;
-    var is_y = true;
-    var c_x = null;
-    var c_y = null;
-    $entities.each(function()  {
-        var $entity = $(this);
-        if (!$entity.is(':visible')) {
-            return;
-        }
-        var o  = $entity.offset();
-        if (c_x === null){
-            c_x = o.left;
-        } else if (o.left !== c_x) {
-            is_y = false;
-        }
-        if (c_y === null){
-            c_y = o.top;
-        } else if (o.top !== c_y) {
-            is_x = false;
-        }
-    });
-    var axis = is_x ? 'x' : is_y ? 'y' : null;
+    var axis = $fx.front.get_list_orientation($entities);
     
     var sort_params = {
         axis:axis,
@@ -1719,6 +1891,16 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
     return xhr;
 };
 
+fx_front.prototype.is_fixed = function($node){
+    var $parents = $node.parents();
+    for (var i = $parents.length - 1; i >= 0; i--) {
+        if ($parents.eq(i).css('position') === 'fixed') {
+            return true;
+        }
+    }
+    return false;
+};
+
 fx_front.prototype.scrollTo = function($node, if_invisible, callback) {
     // if the whole node is invisible, do nothing
     if (!$node.is(':visible')) {
@@ -1735,11 +1917,8 @@ fx_front.prototype.scrollTo = function($node, if_invisible, callback) {
     if ($node.length === 0) {
         return;
     }
-    var $parents = $node.parents();
-    for (var i = $parents.length - 1; i >= 0; i--) {
-        if ($parents.eq(i).css('position') === 'fixed') {
-            return;
-        }
+    if ($fx.front.is_fixed($node)) {
+        return;
     }
     var body_offset = parseInt($('body').css('margin-top'));
     var top_offset = $node.offset().top - body_offset - 50;
@@ -1849,7 +2028,7 @@ fx_front.prototype.get_panel_z_index = function() {
  */
 fx_front.prototype.hide_hover_outlines = function(pos) {
     var $panes = $('body>.fx_front_overlay .fx_outline_style_hover');
-    var treshold = 3;
+    var treshold = 1;
     $panes.each(function(i, p) {
         var $p = $(p),
             offset = $p.offset(),

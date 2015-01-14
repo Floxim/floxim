@@ -75,7 +75,7 @@
     //background-color:@pane_color_hover_dark;
 }
 
-.fx_outliner (@light:transparent; @dark; @size:3px; @shadow:6px; @shadow-color:rgba(50, 50, 50, 0.6);) {
+.fx_outliner (@light:transparent; @dark; @size:3px; @shadow:6px; @shadow-color:rgba(50, 50, 50, 0.6) ) {
     &.fx_outline_pane_top, &.fx_outline_pane_bottom {
         background-image: -webkit-linear-gradient(left, @light 50%, @dark 50%);
         background-image:    -moz-linear-gradient(left, @light 50%, @dark 50%);
@@ -466,4 +466,53 @@ span.fx_area_marker {
     width:0 !important;
     height:0 !important;
     margin:0 !important;
+}
+
+.fx_inline_adder {
+    position:absolute;
+    display:none;
+    cursor:pointer;
+    color:#FFF;
+    width:0;
+    height:0;
+    z-index:10000;
+    
+    &_horizontal  {
+        border-left: 20px solid #3fb7de;
+        border-bottom:9px solid transparent;
+        border-top: 9px solid transparent;
+    }
+    
+    &_vertical {
+        border-top: 20px solid #3fb7de;
+        border-right: 9px solid transparent;
+        border-left: 9px solid transparent;
+    }
+
+    &__plus {
+        width: 0;
+        height: 0;
+        position: absolute;
+        top: -9px;
+        left: -17px;
+        font-size:12px;
+        font-weight:bold;
+    }
+    &_vertical &__plus {
+        top: -23px;
+        left: -3px;
+    }
+    &__title {
+        display:none;
+        font-size:11px;
+        white-space:nowrap;
+        background:#3fb7de;
+        position: absolute;
+        top: -9px;
+        left: -20px;
+        padding: 2px;
+    }
+    &_hover &__title {
+        display: inline-block;
+    }
 }
