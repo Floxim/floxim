@@ -16,9 +16,24 @@ class Frontoffice extends System\Controller
 
     protected $_result = array();
 
-    public function assign($key, $value)
+    public function assign($key, $value = null)
     {
+        if (func_num_args() === 1 && (is_array($key) || $key instanceof \Traversable)) {
+            foreach ($key as $real_key => $value){ 
+                $this->assign($real_key, $value);
+            }
+            return;
+        }
         $this->_result[$key] = $value;
+    }
+    
+    public function getResult($key = null) {
+        if (func_num_args() === 0) {
+            return $this->_result;
+        }
+         if (isset($this->_result[$key]) ) {
+             return $this->_result[$key];
+         }
     }
 
     public function process()
