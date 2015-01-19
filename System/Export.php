@@ -23,6 +23,19 @@ class Export
      * @var array
      */
     protected $componentsForExport = array();
+    /**
+     * Служебная переменная для хранения уже экспортированных элементов контента. Необходима для учета дублей при экспорте.
+     *
+     * @var array
+     */
+    protected $contentsForExport = array();
+    /**
+     * Служебная переменная для хранения текущих открытых для записи данных файлов
+     *
+     * @var array
+     */
+    protected $exportFilesOpened = array();
+
 
     function __construct($params = array())
     {
@@ -48,22 +61,37 @@ class Export
     /**
      * Запускат процесс экспорта контента
      *
-     * @param $siteId
-     * @param null $contentId
+     * @param int $contentId
      * @throws \Exception
      */
-    public function exportContent($siteId, $contentId = null)
+    public function exportContent($contentId)
     {
-        $contentFilter = array(
-            array('site_id', $siteId)
-        );
-        if ($contentId) {
-            if ($content = fx::data('floxim.main.content', $contentId)) {
-                $contentFilter[] = array('materialized_path', $content['materialized_path'] . '%', 'like');
-                $contentFilter[] = array('parent_id', $content['parent_id'], '<>');
-            } else {
-                throw new \Exception("Content by ID ({$contentId}) not found");
-            }
+        /**
+         * Начальный список компонентов и контента
+         */
+        $this->componentsForExport = array();
+        $this->contentsForExport = array();
+        $this->exportFilesOpened = array();
+        /**
+         * Рекурсивный экспорт ветки дерева
+         */
+        $this->exportContentTree($contentId);
+        /**
+         * Корректно завершаем файлы экспорта
+         */
+        $this->finishAllExportOpenedFiles();
+
+        $this->exportComponents($this->componentsForExport);
+    }
+
+    protected function exportContentTree($contentId)
+    {
+        $contentFilter = array();
+        if ($content = fx::data('floxim.main.content', $contentId)) {
+            $contentFilter[] = array('materialized_path', $content['materialized_path'] . '%', 'like');
+            $contentFilter[] = array('parent_id', $content['parent_id'], '<>');
+        } else {
+            throw new \Exception("Content by ID ({$contentId}) not found");
         }
 
         $usedTypes = array();
@@ -88,11 +116,7 @@ class Export
          */
         $this->readDataTable('floxim.main.content', $contentFilter, $callback);
 
-        /**
-         * Начальный список компонентов
-         */
-        $this->componentsForExport = array_keys($usedTypes);
-
+        $this->componentsForExport = array_merge($this->componentsForExport, array_keys($usedTypes));
         /**
          * Дополнительно проходим все типы
          */
@@ -101,10 +125,18 @@ class Export
              * Для каждого компонента нужно получить список линкованных полей
              */
             $linkedFields = $this->getLinkedFieldsForComponent($type);
-            $_this=$this;
+            $_this = $this;
+            $linkedContent = array();
 
             $this->readDataTable($type, array(array('id', $contentIds)),
-                function ($item) use ($linkedFields, $usedTypes, $_this) {
+                function ($item) use ($type, $linkedFields, $usedTypes, $_this, &$linkedContent) {
+                    /**
+                     * Сохраняем элемент в файл
+                     */
+                    if (!in_array($item['id'], $_this->contentsForExport)) {
+                        $_this->saveTableRowToFile($item, $type);
+                        $_this->contentsForExport[] = $item['id'];
+                    }
                     /**
                      * Некоторые поля могут содержать линкованные данные на другие таблицы
                      * Нужно проверять поля на тип
@@ -118,7 +150,7 @@ class Export
                                 /**
                                  * Добавляем линкуемый компонент в число экспортируемых
                                  */
-                                $_this->componentsForExport[]=$linkedField['target_id'];
+                                $_this->componentsForExport[] = $linkedField['target_id'];
                                 /**
                                  * Линкуемое значение
                                  */
@@ -136,8 +168,11 @@ class Export
                                 /**
                                  * Формируем новый список ID элементов контента
                                  * Для каждого такого элемента необходимо будет получить полное дочернее дерево
+                                 * Еще проблема в том, что тип из настроек поля может не совпадать с фактическим конечным типом элемента
                                  */
-
+                                if (!in_array($value, $linkedContent)) {
+                                    $linkedContent[] = $value;
+                                }
 
                             }
                         } elseif ($linkedField['type'] == \Floxim\Floxim\Component\Field\Entity::FIELD_MULTILINK) {
@@ -149,13 +184,22 @@ class Export
                         }
                     }
                 });
+            /**
+             * Вычитаем контент, который уже был экспортирован
+             */
+            $linkedContent = array_diff($linkedContent, $_this->contentsForExport);
+            /**
+             * Для каждого узла запускаем экспорт ветки
+             * todo: попробовать перевести на content\finder::descendantsOf
+             */
+            foreach ($linkedContent as $id) {
+                $this->exportContentTree($id);
+            }
         }
+        /**
+         * Экспортируем дополнительно собранные данные, например, инфоблоки
+         */
 
-        //var_dump($usedInfoblocks);
-        //var_dump($usedTypes);
-
-
-        $this->exportComponents($this->componentsForExport);
     }
 
     /**
@@ -237,7 +281,6 @@ class Export
             }
             $types[] = $item;
         }
-        fx::debug($types);
         return $types;
     }
 
@@ -335,5 +378,41 @@ class Export
         $fileSave = $path . DIRECTORY_SEPARATOR . $fileSave;
         fx::files()->mkdir($path);
         fx::files()->writefile($fileSave, json_encode($data));
+    }
+
+    protected function saveTableRowToFile($item, $datatype, $fileSave = null)
+    {
+        if (is_object($item)) {
+            $item = $item->get();
+        }
+        /**
+         * Save to file
+         */
+        $fileSave = $fileSave ?: "{$datatype}.dat";
+        $path = $this->pathExportTmp . DIRECTORY_SEPARATOR . $this->pathRelDataDb;
+        $fileSave = $path . DIRECTORY_SEPARATOR . $fileSave;
+        fx::files()->mkdir($path);
+
+        if (in_array($fileSave, $this->exportFilesOpened)) {
+            $this->writeFile($fileSave, ",\n" . json_encode($item), 'a');
+        } else {
+            $this->writeFile($fileSave, "[\n" . json_encode($item), 'w');
+            $this->exportFilesOpened[] = $fileSave;
+        }
+    }
+
+    protected function finishAllExportOpenedFiles()
+    {
+        foreach ($this->exportFilesOpened as $file) {
+            $this->writeFile($file, "\n]", 'a');
+        }
+    }
+
+    protected function writeFile($filename, $filedata = '', $modeOpen = 'a')
+    {
+        $fh = fx::files()->open($filename, $modeOpen);
+        fputs($fh, $filedata);
+        fclose($fh);
+        return 0;
     }
 }
