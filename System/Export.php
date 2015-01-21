@@ -30,6 +30,13 @@ class Export
      */
     protected $contentsForExport = array();
     /**
+     * Служебная переменная для хранения уже экспортированных элементов системных таблиц. Необходима для учета дублей при экспорте.
+     * Значения хранятся в разрезах названия сущностей
+     *
+     * @var array
+     */
+    protected $systemItemsForExport = array();
+    /**
      * Служебная переменная для хранения текущих открытых для записи данных файлов
      *
      * @var array
@@ -58,6 +65,94 @@ class Export
         $this->pathRelDataDb = 'data' . DIRECTORY_SEPARATOR . 'db';
     }
 
+
+    protected function exportSystemItemsByField($type, $field, $values)
+    {
+        /**
+         * Можно оптимизировать, чтобы обойтись одним запросом и одним проходом результата
+         */
+        $ids = array();
+        $this->readDataTable($type, array(array($field, $values)), function ($item) use (&$ids) {
+            $ids[] = $item['id'];
+        });
+        $this->exportSystemItems($type, $ids);
+    }
+
+    protected function exportSystemItems($type, $ids)
+    {
+        if (!is_array($ids)) {
+            $ids = array($ids);
+        }
+        $ids = array_unique($ids);
+
+        if (isset($this->systemItemsForExport[$type])) {
+            $ids = array_diff($ids, $this->systemItemsForExport[$type]);
+        }
+
+        $usedSystemItems = array();
+        $usedContentItems = array();
+        $_this = $this;
+        $this->readDataTable($type, array(array('id', $ids)),
+            function ($item) use ($_this, $type, &$usedSystemItems, &$usedContentItems) {
+                /**
+                 * Сохраняем элемент в файл
+                 */
+                $_this->saveTableRowToFile($item, $type);
+                $_this->systemItemsForExport[$type][] = $item['id'];
+                /**
+                 * Хардкодим для специфичных типов
+                 */
+                if ($type == 'infoblock') {
+                    /**
+                     * Формируем список дополнительных элементов по связям
+                     */
+
+                    /**
+                     * Парент
+                     */
+                    if ($item['parent_infoblock_id'] and (!isset($usedSystemItems['infoblock']) or !in_array($item['parent_infoblock_id'],
+                                $usedSystemItems['infoblock']))
+                    ) {
+                        $usedSystemItems['infoblock'][] = $item['parent_infoblock_id'];
+                    }
+                    /**
+                     * Сайт
+                     * todo: здесь нужно продумать, т.к. не понятно для чего экспортить сайт, если мы сделать экспорт только ветки дерева
+                     */
+                    if ($item['site_id'] and (!isset($usedSystemItems['site']) or !in_array($item['site_id'],
+                                $usedSystemItems['site']))
+                    ) {
+                        $usedSystemItems['site'][] = $item['site_id'];
+                    }
+                    /**
+                     * Страница контента
+                     */
+                    if ($item['page_id'] and !in_array($item['page_id'], $usedContentItems)) {
+                        $usedContentItems[] = $item['page_id'];
+                    }
+                }
+            }
+        );
+
+        /**
+         * Экспортируем привязанные к инфоблокам infoblock_visual
+         */
+        if ($type == 'infoblock') {
+            $this->exportSystemItemsByField('infoblock_visual', 'infoblock_id', $ids);
+        }
+
+        /**
+         * Экспортируем связанные данные
+         */
+        foreach ($usedSystemItems as $linkType => $linkIds) {
+            $this->exportSystemItems($linkType, $linkIds);
+        }
+        /**
+         * Связанный контент
+         */
+        $this->exportContentTreeArray($usedContentItems);
+    }
+
     /**
      * Запускат процесс экспорта контента
      *
@@ -71,6 +166,7 @@ class Export
          */
         $this->componentsForExport = array();
         $this->contentsForExport = array();
+        $this->systemItemsForExport = array();
         $this->exportFilesOpened = array();
         /**
          * Рекурсивный экспорт ветки дерева
@@ -95,14 +191,16 @@ class Export
         }
 
         $usedTypes = array();
-        $usedInfoblocks = array();
+        $usedSystemItems = array();
         /**
          * Обработка каждого узла, здесь нужно формировать вспомогательные данные
          */
-        $callback = function ($item) use (&$usedTypes, &$usedInfoblocks) {
+        $callback = function ($item) use (&$usedTypes, &$usedSystemItems) {
             $usedTypes[$item['type']][] = $item['id'];
-            if ($item['infoblock_id'] and !in_array($item['infoblock_id'], $usedInfoblocks)) {
-                $usedInfoblocks[] = $item['infoblock_id'];
+            if ($item['infoblock_id'] and (!isset($usedSystemItems['infoblock']) or !in_array($item['infoblock_id'],
+                        $usedSystemItems['infoblock']))
+            ) {
+                $usedSystemItems['infoblock'][] = $item['infoblock_id'];
             }
         };
         /**
@@ -115,6 +213,12 @@ class Export
          * Все дочерние узлы
          */
         $this->readDataTable('floxim.main.content', $contentFilter, $callback);
+        /**
+         * Экспортируем системные данные
+         */
+        foreach ($usedSystemItems as $type => $ids) {
+            $this->exportSystemItems($type, $ids);
+        }
 
         $this->componentsForExport = array_merge($this->componentsForExport, array_keys($usedTypes));
         /**
@@ -127,9 +231,10 @@ class Export
             $linkedFields = $this->getLinkedFieldsForComponent($type);
             $_this = $this;
             $linkedContent = array();
+            $linkedSystemItems = array();
 
             $this->readDataTable($type, array(array('id', $contentIds)),
-                function ($item) use ($type, $linkedFields, $usedTypes, $_this, &$linkedContent) {
+                function ($item) use ($type, $linkedFields, $usedTypes, $_this, &$linkedContent, &$linkedSystemItems) {
                     /**
                      * Сохраняем элемент в файл
                      */
@@ -174,6 +279,19 @@ class Export
                                     $linkedContent[] = $value;
                                 }
 
+                            } elseif ($linkedField['target_type'] == 'system') {
+                                /**
+                                 * Линкуемое значение
+                                 */
+                                if (!($value = $item[$linkedField['keyword']])) {
+                                    continue;
+                                }
+                                if (!isset($linkedSystemItems[$linkedField['target_id']])) {
+                                    $linkedSystemItems[$linkedField['target_id']] = array();
+                                }
+                                if (!in_array($value, $linkedSystemItems[$linkedField['target_id']])) {
+                                    $linkedSystemItems[$linkedField['target_id']][] = $value;
+                                }
                             }
                         } elseif ($linkedField['type'] == \Floxim\Floxim\Component\Field\Entity::FIELD_MULTILINK) {
                             /**
@@ -189,17 +307,34 @@ class Export
              */
             $linkedContent = array_diff($linkedContent, $_this->contentsForExport);
             /**
-             * Для каждого узла запускаем экспорт ветки
-             * todo: попробовать перевести на content\finder::descendantsOf
+             * Удаляем дубли системных данных
              */
-            foreach ($linkedContent as $id) {
-                $this->exportContentTree($id);
-            }
+            //var_dump($linkedSystemItems);
+            //$linkedSystemItems = array_diff($linkedSystemItems, $_this->systemItemsForExport);
+
+            /**
+             * Для каждого узла запускаем экспорт ветки
+             */
+            $this->exportContentTreeArray($linkedContent);
         }
         /**
          * Экспортируем дополнительно собранные данные, например, инфоблоки
          */
 
+    }
+
+    protected function exportContentTreeArray($ids)
+    {
+        if (!is_array($ids)) {
+            $ids = array($ids);
+        }
+        /**
+         * Для каждого узла запускаем экспорт ветки
+         * todo: попробовать перевести на content\finder::descendantsOf
+         */
+        foreach ($ids as $id) {
+            $this->exportContentTree($id);
+        }
     }
 
     /**
