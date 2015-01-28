@@ -193,6 +193,15 @@ abstract class Entity implements \ArrayAccess
     public function get($prop_name = null)
     {
         if ($prop_name) {
+            if (is_array($prop_name)) {
+                $res = array();
+                foreach ($prop_name as $real_name) {
+                    if (is_scalar($real_name)) {
+                        $res[$real_name]= $this->get($real_name);
+                    }
+                }
+                return $res;
+            }
             return $this->offsetGet($prop_name);
         }
         return $this->data;
