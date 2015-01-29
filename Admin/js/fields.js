@@ -109,7 +109,8 @@ window.$fx_fields = {
         options = $.extend({
             imageUpload : '/vendor/Floxim/Floxim/Admin/Controller/redactor-upload.php',
             tidyHtml:false,
-            buttons: ['formatting',  'bold', 'italic', 'deleted',
+            toolbarFixed:false,
+            buttons: ['html', 'formatting',  'bold', 'italic', 'deleted',
                     'unorderedlist', 'orderedlist', 'outdent', 'indent',
                     'image', 'video', 'file', 'table', 'link', 'alignment', 'horizontalrule'],
             plugins: ['fontcolor']

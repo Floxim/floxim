@@ -103,12 +103,15 @@ if (_c.context !== 'panel') {
     setTimeout(function() {
         $fx_fields.make_redactor(
             $('textarea.fx_wysiwyg', html), 
-            {extra_buttons:['html'], linebreaks: (_c.nl2br && _c.nl2br !== '0')}
+            {buttonSource:true, linebreaks: (_c.nl2br && _c.nl2br !== '0')}
         );
-        var $box = html.find('.redactor_box'),
+        var $box = html.find('.redactor-box'),
             $container = html,
-            $editor = html.find('.redactor_editor'),
-            $toolbar = html.find('.redactor_toolbar');
+            $editor = html.find('.redactor-editor'),
+            $toolbar = html.find('.redactor-toolbar');
+        
+        $editor.addClass('redactor_fx_wysiwyg');
+        $toolbar.attr('style', '');
             
         $editor.on('focus', function() {
             $container.addClass('fx_textarea_container_redactor_focused').css('height', '');
@@ -126,7 +129,7 @@ if (_c.context !== 'panel') {
         }).on('blur', function() {
             setTimeout(function() {
                 var $focused = $(document.activeElement);
-                var $focused_box = $focused.closest('.redactor_box');
+                var $focused_box = $focused.closest('.redactor-box');
                 if (!$focused_box.length || $focused_box[0] !== $box[0]) {
                     $editor.closest('.fx_textarea_container').removeClass('fx_textarea_container_redactor_focused');
                 }
@@ -146,10 +149,10 @@ if (_c.context !== 'panel') {
             target:this,
             maxWidth:500,
             onfinish:function() {
-                var res = ta.redactor('get');
+                var res = ta.redactor('code.get');
                 $('textarea.fx_wysiwyg', html).val(res).html(res);
                 set_snippet(res);
-                ta.redactor('destroy');
+                ta.redactor('core.destroy');
             }
         });
         popup.$body.append(ta);

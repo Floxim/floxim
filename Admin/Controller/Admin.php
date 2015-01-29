@@ -146,6 +146,7 @@ class Admin extends System\Controller
             $path_floxim . '/lib/js/jquery.ba-resize.min.js',
             $path_floxim . '/lib/js/jquery.scrollTo.js',
             $path_floxim . '/Admin/js/map.js',
+            $path_floxim . '/Admin/js/node-panel.js',
             $path_floxim . '/Admin/js/infoblock.js' // infoblock form overrides
         );
         $page = fx::page();

@@ -61,6 +61,20 @@ class Finder extends System\Finder
 
         return $infoblocks;
     }
+    
+    /**
+     * Get infoblocks where content can be placed and displayed
+     * 
+     * @param type $content
+     */
+    public function getForContent($content)
+    {
+        if (!$content['type'] || !$content['parent_id']) {
+            return fx::collection();
+        }
+        $this->whereContent($content['type']);
+        return $this->getForPage($content['parent']);
+    }
 
     /**
      * Sort collection of infoblocks by scope "strength":
@@ -98,20 +112,27 @@ class Finder extends System\Finder
         });
         return $infoblocks;
     }
-
-    public function getContentInfoblocks($content_type = null)
+    
+    public function whereContent($content_type = null, $with_child_types = true) 
     {
         if ($content_type) {
             // @todo: always store full component keyword
-            $this->where(
-                'controller', 
-                array_unique(array(
-                    preg_replace("~^floxim\.main\.~", '', $content_type), 
-                    fx::getComponentFullName($content_type)
-                ))
-            );
+            $com = fx::component($content_type);
+            if ($with_child_types) {
+                $variants = $com->getAllVariants()->getValues('keyword');
+                $this->where('controller', $variants);
+            } else {
+                $this->where('controller', $com['keyword']);
+            }
         }
+        
         $this->where('action', 'list_infoblock');
+        return $this;
+    }
+
+    public function getContentInfoblocks($content_type = null)
+    {
+        $this->whereContent($content_type);
         return $this->all();
     }
 

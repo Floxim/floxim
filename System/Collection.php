@@ -33,9 +33,14 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
 
     public function fork($data = array())
     {
-        $collection = new Collection($data);
+        if ($data instanceof Collection) {
+            $collection = $data;
+        } else {
+            $collection = new Collection($data);
+        }
         $collection->is_sortable = $this->is_sortable;
         $collection->finder = $this->finder;
+        $collection->concated = $this->concated;
         return $collection;
     }
     
@@ -642,7 +647,14 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         }
         return $this;
     }
-
+    
+    protected $concated = array();
+    
+    public function getConcated() 
+    {
+        return $this->concated;
+    }
+    
     public function concat($collection)
     {
         if (!is_array($collection) && !($collection instanceof \Traversable)) {
@@ -650,6 +662,9 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         }
         foreach ($collection as $item) {
             $this[] = $item;
+        }
+        if ($collection instanceof Collection) {
+            $this->concated []= $collection;
         }
         return $this;
     }

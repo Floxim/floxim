@@ -168,15 +168,21 @@ class Entity extends System\Entity implements Template\Entity
     public function isAvailableOnPage($page)
     {
         if ($this['site_id'] != $page['site_id']) {
+            //fx::debug('nosite');
             return;
         }
 
-        //$ids = $page->getParentIds();
-        $ids = $page->getPath()->getValues('id');
+        if ($page->hasVirtualPath()) {
+            $ids = $page->getPath()->getValues('id');
+        } else {
+            $ids = $page->getParentIds();
+        }
+        
         $ids [] = $page['id'];
         $ids [] = 0; // root
         
         if (!in_array($this['page_id'], $ids)) {
+            //fx::debug('no pid');
             return false;
         }
 
@@ -184,16 +190,20 @@ class Entity extends System\Entity implements Template\Entity
         if ($this['page_id'] != 0) {
             // scope - "this page only"
             if (fx::dig($this, 'scope.pages') == 'this' && $this['page_id'] != $page['id']) {
+                //fx::debug('no this');
                 return false;
             }
             // scope - "this level, and we look parent
             if (fx::dig($this, 'scope.pages') == 'children' && $this['page_id'] == $page['id']) {
+                //fx::debug('no chidl');
                 return false;
             }
         }
         // check for compliance with the filter type page
         $scope_page_type = fx::dig($this, 'scope.page_type');
         if ($scope_page_type && fx::getComponentFullName($scope_page_type) != fx::getComponentFullName($page['type'])) {
+        //if ($scope_page_type && $scope_page_type != $page['type']) {
+            //fx::debug('no ttyp', $scope_page_type, $page['type']);
             return false;
         }
         return true;

@@ -30,4 +30,14 @@ class Finder extends System\Finder
     {
         return true;
     }
+    
+    public function relations() {
+        return array(
+            'infoblock' => array(
+                self::BELONGS_TO,
+                'infoblock',
+                'infoblock_id'
+            )
+        );
+    }
 }

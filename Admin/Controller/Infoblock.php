@@ -24,11 +24,18 @@ class Infoblock extends Admin
             $this->ui->hidden('area', serialize($input['area'])),
             $this->ui->hidden('page_id', $input['page_id']),
             $this->ui->hidden('admin_mode', isset($input['admin_mode']) ? $input['admin_mode'] : ''),
-            $this->ui->hidden('container_infoblock_id', $input['container_infoblock_id'])
+            $this->ui->hidden('container_infoblock_id', $input['container_infoblock_id']),
+            $this->ui->hidden('container_infoblock_id', $input['container_infoblock_id']),
         );
+        
+        if (isset($input['rel_infoblock_id'])) {
+            $fields []= $this->ui->hidden('rel_infoblock_id', $input['rel_infoblock_id']);
+            $fields []= $this->ui->hidden(
+                'rel_position', 
+                isset($input['rel_position']) ? $input['rel_position'] : 'after'
+            );
+        }
 
-        //fx::env('page', $input['page_id']);
-        //$page = fx::data('page', $input['page_id']);
         $page = fx::env('page');
 
         $area_meta = $input['area'];
@@ -135,20 +142,24 @@ class Infoblock extends Admin
 
     public function selectSettings($input)
     {
-        // The current, editable) InfoBlock
+        // The current, editable InfoBlock
         $infoblock = null;
         
-        /*
-        if (isset($input['page_id'])) {
-            // set into the environment of the current page
-            // it is possible to get the layout
-            fx::env('page', $input['page_id']);
+        if (isset($input['rel_infoblock_id'])) {
+            $this->response->addFields(array(
+                $this->ui->hidden('rel_infoblock_id', $input['rel_infoblock_id']),
+                $this->ui->hidden(
+                    'rel_position', 
+                    isset($input['rel_position']) ? $input['rel_position'] : 'after'
+                )
+            ));
         }
-         * 
-         */
-
+        
         $area_meta = is_string($input['area']) ? unserialize($input['area']) : $input['area'];
-
+        
+        $update_priority = false;
+        $site_id = fx::env('site_id');
+        
         if (isset($input['id']) && is_numeric($input['id'])) {
             // Edit existing InfoBlock
             $infoblock = fx::data('infoblock', $input['id']);
@@ -158,8 +169,7 @@ class Infoblock extends Admin
         } else {
             // Create a new type and ID of the controller received from the previous step
             list($controller, $action) = explode(":", $input['controller']);
-            //$site_id = fx::data('page', $input['page_id'])->get('site_id');
-            $site_id = fx::env('site_id');
+            
             $infoblock = fx::data("infoblock")->create(array(
                 'controller'             => $controller,
                 'action'                 => $action,
@@ -167,9 +177,20 @@ class Infoblock extends Admin
                 'site_id'                => $site_id,
                 'container_infoblock_id' => $input['container_infoblock_id']
             ));
-            $last_visual = fx::data('infoblock_visual')->where('area', $area_meta['id'])->order(null)->order('priority',
-                'desc')->one();
-            $priority = $last_visual ? $last_visual['priority'] + 1 : 0;
+            if (!$input['rel_infoblock_id']) {
+                $last_visual = 
+                        fx::data('infoblock_visual')
+                            ->where('area', $area_meta['id'])
+                            ->where('infoblock.site_id', $site_id)
+                            ->order(null)
+                            ->order('priority', 'desc')
+                            ->one();
+                $priority = $last_visual ? $last_visual['priority'] + 1 : 0;
+            } else {
+                $rel_visual = fx::data('infoblock', $input['rel_infoblock_id'])->getVisual();
+                $priority = $input['rel_position'] === 'after' ? $rel_visual['priority'] + 1 : $rel_visual['priority'];
+                $update_priority = true;
+            }
             $i2l = fx::data('infoblock_visual')->create(array(
                 'area'      => $area_meta['id'],
                 'layout_id' => fx::env('layout'),
@@ -236,6 +257,17 @@ class Infoblock extends Admin
 
             $infoblock->setScopeString($input['scope']['complex_scope']);
             $infoblock->digSet('scope.visibility', $input['scope']['visibility']);
+            
+            if ($update_priority) {
+                $next_vis = fx::data('infoblock_visual')
+                    ->where('area', $area_meta['id'])
+                    ->where('infoblock.site_id', $site_id)
+                    ->where('priority', $i2l['priority'], '>=')
+                    ->all();
+                $next_vis->apply(function($vis) {
+                    $vis->set('priority', $vis['priority'] + 1)->save();
+                });
+            }
 
             $i2l['wrapper'] = fx::dig($input, 'visual.wrapper');
             $i2l['template'] = fx::dig($input, 'visual.template');
@@ -243,6 +275,8 @@ class Infoblock extends Admin
             $infoblock->save();
             $i2l['infoblock_id'] = $infoblock['id'];
             $i2l->save();
+            
+            
             $controller->setParam('infoblock_id', $infoblock['id']);
             if (isset($controller)) {
                 if ($is_new_infoblock) {
@@ -734,6 +768,12 @@ class Infoblock extends Admin
         if (isset($input['new_entity_props'])) {
             $new_props = $input['new_entity_props'];
             $contents['new'] = fx::content($new_props['type'])->create($new_props);
+            if (!$contents['new']['infoblock_id']) {
+                $avail_infoblocks = fx::data('infoblock')->getForContent($contents['new']);
+                if (count($avail_infoblocks) > 0) {
+                    $contents['new']['infoblock_id'] = $avail_infoblocks->first()->get('id');
+                }
+            }
         }
 
         if (isset($vars['content'])) {

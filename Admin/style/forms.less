@@ -49,7 +49,7 @@
 }
 
 #fx_admin_content .fx_admin_form {
-    .fx_input, .redactor_box, .livesearch {
+    .fx_input, .redactor-box, .livesearch {
         width:50%;
     }
 }
@@ -117,7 +117,7 @@
 
 /* HORIZONTAL FORM */
 #fx_admin_control, .fx_node_panel {
-    .redactor_box {
+    .redactor-box {
         min-width:285px;
         max-width:600px;
         ul, ul li {
@@ -134,22 +134,21 @@
         }
     }
 
-    .redactor_editor {
+    .redactor-editor {
         max-height:270px;
     }
-    .redactor_toolbar {
+    .redactor-toolbar {
         left:0;
         top:0;
         border: none;
-        //border-bottom: 1px solid #e1e1e1 !important;
-        min-width:525px;
-        .redactor_separator {
+        //min-width:525px;
+        .redactor-separator {
             border-right:none;
             height:31px;
         }
     }
     .fx_form_horizontal {
-        .redactor_toolbar {
+        .redactor-toolbar {
             background: #FFF !important;
             border:none !important;
             top:2px;
@@ -257,7 +256,7 @@
 #fx_admin_control {
     .fx_textarea_container {
         position:relative;
-        .redactor_toolbar {
+        .redactor-toolbar {
             display:block;
             position:absolute;
             visibility:hidden;
@@ -265,11 +264,10 @@
             height:32px;
             left:0;
         }
-        //&, 
-        &.fx_textarea_container_redactor_focused .redactor_toolbar {
+        &.fx_textarea_container_redactor_focused .redactor-toolbar {
             visibility:visible;
         }
-        .redactor_editor {
+        .redactor-editor {
             padding:5px;
             &, p, li {
                 font-size:13px;

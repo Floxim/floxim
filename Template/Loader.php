@@ -313,7 +313,7 @@ class Loader
             $tpl = new $classname($action, $data);
             return $tpl;
         }
-        fx::log('template not found', $tpl_name);
+        //fx::log('template not found', $tpl_name);
         return false;
     }
 

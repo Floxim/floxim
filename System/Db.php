@@ -122,6 +122,11 @@ class Db extends \PDO
             $statement//,
         //debug_backtrace()
         );
+        static $catcha = false;
+        if (strstr($statement, "fx_floxim_main_content.id = ''") && !$catcha) {
+            fx::log(debug_backtrace(null, 15));
+            $catcha = true;
+        }
         return $this->last_result;
     }
     

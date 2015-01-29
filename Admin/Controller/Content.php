@@ -21,6 +21,12 @@ class Content extends Admin
                 'infoblock_id' => $input['infoblock_id'],
                 'site_id'      => $parent_page['site_id']
             ));
+            if (!$content['infoblock_id']) {
+                $avail_infoblocks = fx::data('infoblock')->getForContent($content);
+                if (count($avail_infoblocks) > 0) {
+                    $content['infoblock_id'] = $avail_infoblocks->first()->get('id');
+                }
+            }
         }
 
         $fields = array(

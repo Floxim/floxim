@@ -109,7 +109,7 @@ abstract class Finder
 
     public function one()
     {
-        $this->limit = 1;
+        $this->limit(1);
         $data = $this->getEntities();
         return isset($data[0]) ? $data[0] : false;
     }
@@ -117,10 +117,24 @@ abstract class Finder
     public function limit()
     {
         $args = func_get_args();
+        /*
         if (count($args) == 1) {
             $this->limit = $args[0];
         } elseif (count($args) == 2) {
             $this->limit = $args[0] . ', ' . $args[1];
+        }
+         * 
+         */
+        if (count($args) === 1) {
+            $this->limit = array(
+                'offset' => 0,
+                'count' => (int) $args[0]
+            );
+        } else {
+            $this->limit = array(
+                'offset' => (int) $args[0],
+                'count' => (int) $args[1]
+            );
         }
         return $this;
     }
@@ -176,9 +190,14 @@ abstract class Finder
         return array($field, $value, $type, $original_field);
     }
 
-    public function where($field, $value = null, $type = '=')
+    public function where($field = null, $value = null, $type = '=')
     {
-        if (func_num_args() === 1 && strtolower($field) === 'false') {
+        $num_args = func_num_args();
+        if ($num_args === 0) {
+            return $this->where;
+        }
+        
+        if ($num_args === 1 && strtolower($field) === 'false') {
             $field = null;
             $value = 'FALSE';
             $type = 'RAW';
@@ -329,7 +348,7 @@ abstract class Finder
             foreach ($this->where as $cond) {
                 $conds [] = $this->makeCond($cond, $base_table);
             }
-            $q .= "\nWHERE " . join(" AND ", $conds);
+            $q .= "\n WHERE " . join(" AND ", $conds);
         }
         if (count($this->group) > 0) {
             $q .= "\n GROUP BY " . join(", ", $this->group);
@@ -341,7 +360,7 @@ abstract class Finder
             $q .= "\n ORDER BY " . join(", ", $this->order);
         }
         if ($this->limit) {
-            $q .= "\n LIMIT " . $this->limit;
+            $q .= "\n LIMIT " . $this->limit['offset'].', '.$this->limit['count'];
         }
         return $q;
     }
@@ -595,8 +614,13 @@ abstract class Finder
                 }
                 if (count($entities) === 1) {
                     $entity = $entities->first();
-                    $rel_item = $rel_finder->where($rel_target_field, $entity[$rel_field])->one();
-                    $entity[$rel_name] = $rel_item;
+                    $rel_item_id = $entity[$rel_field];
+                    if ($rel_item_id) {
+                        $rel_item = $rel_finder->where($rel_target_field, $rel_item_id)->one();
+                        $entity[$rel_name] = $rel_item;
+                    } else {
+                        $entity[$rel_name] = null;
+                    }
                 } else {
                     $rel_items = $rel_finder->where($rel_target_field, $entities->getValues($rel_field))->all();
                     $entities->attach($rel_items, $rel_field, $rel_name, $rel_target_field);

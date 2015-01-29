@@ -568,6 +568,11 @@ class Fx
     {
         return $data instanceof Collection ? $data : new Collection($data);
     }
+    
+    public static function tree($data, $children_key = 'children', $extra_root_ids = array()) 
+    {
+        return new Tree($data, $children_key, $extra_root_ids);
+    }
 
     /*
      * @return \Floxim\Floxim\System\Input
@@ -745,6 +750,11 @@ class Fx
     public static function trigger($event, $params = null)
     {
         return self::getEventManager()->trigger($event, $params);
+    }
+    
+    public static function event($name, $params = null)
+    {
+        return new Event($name, $params);
     }
 
 

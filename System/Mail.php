@@ -75,6 +75,11 @@ class Mail
         if (isset($params['to'])) {
             $this->to($params['to']);
         }
+        
+        if (isset($params['bcc'])) {
+            $this->bcc($params['bcc']);
+        }
+        
         return $this;
     }
 

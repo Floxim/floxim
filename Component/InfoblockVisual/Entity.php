@@ -12,14 +12,17 @@ class Entity extends System\Entity
         parent::beforeSave();
         unset($this['is_stub']);
         if (!$this['priority'] && $this['layout_id']) {
+            fx::log('no prior', $this);
             $last_vis = fx::data('infoblock_visual')->where('layout_id', $this['layout_id'])->where('area',
                 $this['area'])->order(null)->order('priority', 'desc')->one();
             $this['priority'] = $last_vis['priority'] + 1;
+            fx::log('lurk last', $this['priority']);
         }
         $files = $this->getModifiedFileParams();
         foreach ($files as $f) {
             fx::files()->rm($f);
         }
+        fx::log('now saving', $this['priority']);
     }
 
     protected function beforeDelete()
