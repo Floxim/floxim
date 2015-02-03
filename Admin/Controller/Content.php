@@ -93,7 +93,6 @@ class Content extends Admin
                     $res['reload'] = str_replace("%d", $content['id'], $input['reload_url']);
                 }
             }  catch (\Exception $e) {
-                fx::log('Exceptn', $e);
                 $res['status'] = 'error';
             }
         }
