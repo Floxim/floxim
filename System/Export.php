@@ -166,6 +166,25 @@ class Export
                             }
                         }
                     }
+                } elseif ($type == 'infoblock_visual') {
+                    /**
+                     * TODO: пока не понятно, что делать с layout_id
+                     */
+
+                    /**
+                     * Получаем ссылки на контент из визуальных параметров
+                     * todo: проблема - ссылки могут быть не только на контент, но и на инфоблоки, в итоге валит ошибку
+                     */
+                    $visuals = $item['template_visual'];
+                    if (is_array($visuals)) {
+                        foreach ($visuals as $name => $value) {
+                            if (preg_match('#._(\d+)$#', $name, $match)) {
+                                if (!in_array($match[1], $usedContentItems)) {
+                                    $usedContentItems[] = $match[1];
+                                }
+                            }
+                        }
+                    }
                 }
             }
         );
