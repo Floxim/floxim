@@ -27,7 +27,6 @@ class Front extends Base
                 exit;
             }
         }
-        fx::log('front');
         fx::env('page', $page);
         fx::http()->status('200');
         $layout_ib = $this->getLayoutInfoblock($page);
