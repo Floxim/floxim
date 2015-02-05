@@ -475,6 +475,9 @@ abstract class Finder
             if (!$field_name) {
                 return $cond[1];
             }
+            if (!$cond[1]) {
+                return $field_name;
+            }
             if (!preg_match("~^\`~", $field_name)) {
                 $field_name = '`' . (join("`.`", explode(".", $field_name))) . '`';
             }
