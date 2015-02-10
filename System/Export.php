@@ -12,11 +12,17 @@ class Export
      */
     protected $pathExportTmp = null;
     /**
-     * Относительный пусть в каталоге экспорта до хранения данных БД
+     * Относительный путь в каталоге экспорта до хранения данных БД
      *
      * @var null
      */
     protected $pathRelDataDb = null;
+    /**
+     * Относительный путь в каталоге экспорта до хранения файлов
+     *
+     * @var null
+     */
+    protected $pathRelDataFile = null;
     /**
      * Служебная переменная для хранения текущего списка экспортируемых компонентов
      *
@@ -63,6 +69,7 @@ class Export
             $this->pathExportTmp = fx::path('@files/export/');
         }
         $this->pathRelDataDb = 'data' . DIRECTORY_SEPARATOR . 'db';
+        $this->pathRelDataFile = 'data' . DIRECTORY_SEPARATOR . 'file';
     }
 
 
@@ -242,7 +249,8 @@ class Export
             $contentFilter[] = array('materialized_path', $content['materialized_path'] . '%', 'like');
             $contentFilter[] = array('parent_id', $content['parent_id'], '<>');
         } else {
-            throw new \Exception("Content by ID ({$contentId}) not found");
+            //throw new \Exception("Content by ID ({$contentId}) not found");
+            return;
         }
 
         $usedTypes = array();
@@ -284,18 +292,32 @@ class Export
              * Для каждого компонента нужно получить список линкованных полей
              */
             $linkedFields = $this->getLinkedFieldsForComponent($type);
+            $imageFields = $this->getImageFieldsForComponent($type);
             $_this = $this;
             $linkedContent = array();
             $linkedSystemItems = array();
 
             $this->readDataTable($type, array(array('id', $contentIds)),
-                function ($item) use ($type, $linkedFields, $usedTypes, $_this, &$linkedContent, &$linkedSystemItems) {
+                function ($item) use (
+                    $type,
+                    $linkedFields,
+                    $imageFields,
+                    $usedTypes,
+                    $_this,
+                    &$linkedContent,
+                    &$linkedSystemItems
+                ) {
                     /**
                      * Сохраняем элемент в файл
                      */
                     if (!in_array($item['id'], $_this->contentsForExport)) {
                         $_this->saveTableRowToFile($item, $type);
                         $_this->contentsForExport[] = $item['id'];
+                    } else {
+                        /**
+                         * Нет смысла повторно обрабатывать контент
+                         */
+                        return;
                     }
                     /**
                      * Некоторые поля могут содержать линкованные данные на другие таблицы
@@ -304,6 +326,12 @@ class Export
                     foreach ($linkedFields as $linkedField) {
                         $_this->processingLinkedField($linkedField, $item[$linkedField['keyword']], $linkedContent,
                             $linkedSystemItems);
+                    }
+                    /**
+                     * Экспортируем изображения
+                     */
+                    foreach ($imageFields as $imageField) {
+                        $_this->processingImageField($imageField, $item[$imageField['keyword']]);
                     }
                 });
 
@@ -370,6 +398,23 @@ class Export
          */
 
 
+    }
+
+    protected function getImageFieldsForComponent($componentKeyword)
+    {
+        if (is_object($componentKeyword)) {
+            $component = $componentKeyword;
+        } else {
+            if (!($component = fx::data('component', $componentKeyword))) {
+                return array();
+            }
+        }
+
+        $fields = $component->getAllFields()->find(function ($f) {
+            return in_array($f->getTypeId(), array(\Floxim\Floxim\Component\Field\Entity::FIELD_IMAGE));
+        });
+
+        return $fields;
     }
 
     /**
@@ -622,6 +667,31 @@ class Export
              */
 
 
+        }
+    }
+
+    protected function processingImageField($field, $value)
+    {
+        if ($field['type'] == \Floxim\Floxim\Component\Field\Entity::FIELD_IMAGE) {
+            /**
+             * Путь до изображения
+             */
+            if (!$value) {
+                return;
+            }
+            /**
+             * Копируем файл
+             */
+            $this->exportFile($value);
+        }
+    }
+
+    protected function exportFile($fileRel)
+    {
+        $pathSource = fx::path($fileRel);
+        $pathDist = $this->pathExportTmp . DIRECTORY_SEPARATOR . $this->pathRelDataFile . $fileRel;
+        if (!file_exists($pathDist)) {
+            fx::files()->copy($pathSource, $pathDist);
         }
     }
 }
