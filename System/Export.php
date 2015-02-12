@@ -190,6 +190,12 @@ class Export
                                     $usedContentItems[] = $match[1];
                                 }
                             }
+                            /**
+                             * Ищем линки на изображения
+                             */
+                            if (preg_match('#^\/floxim_files\/#i', $value)) {
+                                $this->exportFile($value);
+                            }
                         }
                     }
                 }
@@ -690,7 +696,7 @@ class Export
     {
         $pathSource = fx::path($fileRel);
         $pathDist = $this->pathExportTmp . DIRECTORY_SEPARATOR . $this->pathRelDataFile . $fileRel;
-        if (!file_exists($pathDist)) {
+        if (file_exists($pathSource) and !file_exists($pathDist)) {
             fx::files()->copy($pathSource, $pathDist);
         }
     }
