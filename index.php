@@ -18,7 +18,6 @@ register_shutdown_function(function () {
         if (fx::config('dev.on')) {
             echo fx::page()->postProcess($res);
         }
-        
         fx::log('down', $res, $_SERVER, $_POST);
     }
 });
