@@ -162,6 +162,14 @@
         margin-right: 5px;
         margin-left:5px;
     }
+    
+    .date_field {
+        margin-top:3px;
+    }
+    
+    .field_name__is_published {
+        display: none;
+    }
 }
 
 .fx_node_panel .redactor-toolbar {
@@ -200,8 +208,16 @@
 
 .fx_node_panel .field_livesearch {
     .livesearch_items {
+        margin-top:5px;
+    }
+    .livesearch_has_value .livesearch_item {
         margin-top:2px;
-        border:none;
+    }
+    .livesearch_multiple {
+        .livesearch_items {
+            margin-top: 2px;
+            padding: 3px;
+        }
     }
 }
 
@@ -313,7 +329,7 @@ img.fx_hilight {
 
 .fx_infoblock_hidden {
     display:none;
-    opacity: 0.7;
+    //opacity: 0.7;
 }
 
 .fx_infoblock_hidden .fx_infoblock_hidden {
@@ -359,8 +375,23 @@ body:not(.fx_mode_edit) .fx_entity_hidden {
 
 .fx_hidden_placeholded {
     .fx_inplace_mark();
-    &.fx_infoblock, &.fx_area {
+    &.fx_infoblock, &.fx_area, &.fx_placeholded_collection {
         .fx_inplace_mark_block();
+    }
+}
+
+.fx_hidden_placeholder_mark .fx_adder_variant {
+    cursor: pointer;
+    position: relative;
+    display: inline-block;
+    color:#147EA0;
+    &:after {
+        content: '';
+        border-bottom: 1px dashed #147EA0;
+        width: 100%;
+        position: absolute;
+        left: 0;
+        bottom: 2px;
     }
 }
 
@@ -479,6 +510,11 @@ body:not(.fx_mode_edit) .fx_entity_hidden {
     display:none !important;
 }
 
+.fx_linker_placeholder {
+    -webkit-filter: blur(3px);
+    filter:blur(3px);
+}
+
 body:not(.fx_mode_edit) .fx_view_hidden {
     display:none;
 }
@@ -494,7 +530,6 @@ span.fx_area_marker {
     display:none;
     cursor:pointer;
     color:#FFF;
-    z-index: 10000;
     background: url('images/images.png') no-repeat -596px 0px;
     z-index:10000;
     
@@ -508,27 +543,6 @@ span.fx_area_marker {
         width: 20px;
         height: 24px;
     }
-    
-    /*
-    &__line {
-        position: absolute;
-        background: #3fb7de;
-    }
-    
-    &_horizontal &__line {
-        width: 1px;
-        height: 2px;
-        top: 9px;
-        left: 19px;
-    }
-    
-    &_vertical &__line {
-        width: 2px;
-        left:8px;
-        top:19px;
-        height:2px;
-    }
-    */
     
     &_inverted {
         transform: rotate(180deg);
@@ -595,4 +609,8 @@ span.fx_area_marker {
     &_hidden {
         display:none !important;
     }
+}
+
+.redactor-toolbar-tooltip {
+    display:none !important;
 }

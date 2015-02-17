@@ -176,7 +176,7 @@ class Content extends Admin
         }
         $component = fx::data('component', $content['type']);
 
-        $header = fx::alang("Delete") . ' ' . $component['item_name'];
+        $header = fx::alang("Delete") . ' ' . mb_strtolower($component->getItemName());
         if (($content_name = $content['name'])) {
             $header .= ' "' . $content_name . '"';
         }

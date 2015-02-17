@@ -58,17 +58,39 @@
     width:auto !important;
 }
 
+.fx_date_input() {
+    .fx_date_parts {
+        display:inline-block;
+        padding:3px 6px;
+        border:1px solid #999;
+        &, input.fx_date_part {
+            font-family:monospace;
+            font-size:13px;
+            outline:none;
+        }
+    }
+    
+    .fx_date_part {
+        width:18px;
+        border: none;
+        &_y {
+            width:30px;
+        }
+    }
+}
+
 .date_field {
     //position: relative;
-    .icon {
-        display:none; //hide it for it looks ugly now ;(
-        width: 26px;
-        height: 26px;
-        position: absolute;
-        top: 0;
-        right: 0;
+    
+    .fx_date_input();
+    
+    .fx_datepicker_icon {
+        display: inline-block;
+        width: 20px;
+        height: 23px;
+        vertical-align: top;
         cursor: pointer;
-        background-image: url("images/calendar_blue.gif");
+        background: url('images/images.png') no-repeat -682px 0px;
     }
 }
 
@@ -188,6 +210,18 @@
             font-size:10px;
             text-transform: uppercase;
         }
+        .fx_date_input();
+        .fx_date_parts {
+            background:#FFF;
+        }
+        
+        .livesearch_items {
+            padding: 4px;
+            box-sizing: border-box;
+            .livesearch_input {
+                width:3px;
+            }
+        }
     }
 
     .fx_form_cols {
@@ -239,7 +273,7 @@
     }
 
     .livesearch_items {
-        min-width:50px;
+        min-width:150px;
         width:auto;
         background:#FFF;
         /*height: 28px;*/

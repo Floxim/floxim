@@ -2,6 +2,8 @@
 
 namespace Floxim\Floxim\Template;
 
+use Floxim\Floxim\System\Fx as fx;
+
 class AttrtypeParser extends Fsm
 {
 
@@ -83,11 +85,11 @@ class AttrtypeParser extends Fsm
     }
 
 
-    protected function  setPropVal($props = array(), $ch)
+    protected function  setPropVal($props, $ch)
     {
         foreach ($props as $prop => $value) {
             $c_type = '';
-            if (!preg_match('~' . $prop . '=[\'\"]?\w+[\'\"]?~', $ch)) {
+            if (!preg_match('~\s' . $prop . '=[\'\"]?\w+[\'\"]?~', $ch)) {
                 $c_type = ' ' . $prop . '="' . $value . '"';
             }
 
@@ -98,7 +100,13 @@ class AttrtypeParser extends Fsm
 
     public function setImageVar($ch)
     {
-        $this->res .= $this->setPropVal(array('inatt' => 'true', 'type' => 'image'), $ch);
+        $props = array('inatt' => 'true', 'type' => 'image');
+        if ($this->state === self::SRC_VAL) {
+            $props['att'] = 'src';
+        } elseif ($this->state === self::STYLE_BACKGROUND_URL) {
+            $props['att'] = 'style:background-url';
+        }
+        $this->res .= $this->setPropVal($props, $ch);
     }
 
     public function setHrefVar($ch)

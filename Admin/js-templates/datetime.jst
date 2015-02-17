@@ -1,43 +1,57 @@
 <!--[input ? _c.type == 'datetime']-->
-	<div class="date_field">
-		<input 
-            type="text" 
-            class="date_input fx_input" 
-            value="<?=_c.value?>" 
-            <?=$t.field_id_name(_c)?> />
-            <div class="icon"></div>
-	</div>
+<div class="date_field">
+    <?
+    var date_order = $fx.lang('date_order').split('');
+    var parts = {
+        d:{max:31},
+        m:{max:12},
+        y:{min:0,len:4,max:3000},
+        h:{min:0,max:23},
+        i:{min:0,max:59}
+    };
+    if (_c.value) {
+        var d = new Date(_c.value);
+        $.each(parts, function(p, pv) {
+            if (p === 'h') {
+                var hours = d.getHours();
+                parts[p].val = (hours < 10 ? '0' : '') + '' + hours;
+            } else if (p === 'i') {
+                var minutes = d.getMinutes();
+                parts[p].val = (minutes < 10 ? '0' : '') + '' + minutes;
+            } else {
+                parts[p].val = $.datepicker.formatDate(p+''+p, d );
+            }
+        });
+    }
+    ?>
+    <input 
+        type="text" 
+        style="visibility:hidden; width:1px; height:1px; padding:0;margin:0;vertical-align:bottom;"
+        class="date_input fx_input" 
+        value="<?=_c.value?>" 
+        <?=$t.field_id_name(_c)?> />
+    
+    <span class="fx_date_parts">
+        <?
+        $.each(date_order, function(index, item) {
+            if (parts[item]) {
+                var meta = parts[item]
+                ?><input 
+                    class="fx_date_part fx_date_part_<?=item?>" 
+                    data-len="<?=meta.len || 2?>" 
+                    data-max="<?=meta.max || ''?>"
+                    data-min="<?=meta.min || '1'?>"
+                    value="<?=meta.val?>"
+                    placeholder="<?=$fx.lang('date_placeholder_'+item)?>" /><?
+            } else {
+                print(item);
+            }
+        });
+        ?>
+    </span>
+    <div class="fx_datepicker_icon"></div>
+</div>
 
 <!--jquery-->
-var inp  = $('input.date_input', html);
-$('.icon', html).click(function(){
-    console.log('asdf')
-    inp.focus();
-});
-function get_inp_time(inp) {
-    var v = inp.val();
-    var v_time = v.replace(/^[^\s]+\s/, '');
-    inp.data('time', v_time);
-}
-get_inp_time(inp);
-inp.keyup(function() {get_inp_time($(this))});
-inp.click(function() {
-    $(this).datepicker('show');
-});
 
-var show_format = 'yy-mm-dd';
-inp.datepicker({
-		changeMonth: true,
-		changeYear: true,
-		firstDay:1,
-		dateFormat: show_format,
-		onSelect:function(dateText, datepicker) {
-            var c_val = inp.val();
-            console.log(dateText, c_val, datepicker);
-			inp.focus();
-            if (inp.data('time')) {
-                inp.val( dateText + ' ' +inp.data('time'));
-            }
-		}
-});
-inp.datepicker('widget').addClass('fx_overlay');
+$fx_fields.handle_date_field(html);

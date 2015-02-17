@@ -120,7 +120,7 @@ function node_panel($node, params) {
         }
         
         
-        var $p_items = $p.children().not('.fx_buttons_dropdown');
+        var $p_items = $p.children(':visible').not('.fx_buttons_dropdown');
         if ($p_items.length === 0) {
             return;
         }

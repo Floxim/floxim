@@ -26,6 +26,12 @@ class Tree extends Collection {
         $index_by_parent = array();
         
         $children_key = $this->childrenKey;
+        
+        $linkers = isset($data->linkers) ? $data->linkers : null;
+        
+        if ($linkers) {
+            $this->linkers = $linkers;
+        }
 
         foreach ($data as $item) {
             if (in_array($item['id'], $this->extraRootIds)) {
@@ -53,7 +59,18 @@ class Tree extends Collection {
                 $item[$children_key] = fx::collection();
             }
         }
-        $this->data = $data->findRemove('id', $non_root)->getData();
+        $final_data = array();
+        foreach ($data as $index => $item) {
+            if (in_array($item['id'], $non_root)) {
+                if ($linkers  && isset($linkers[$index])) {
+                    unset($linkers[$index]);
+                }
+                continue;
+            }
+            $final_data[$index] = $item;
+        }
+        $this->data = $final_data;
+        //$this->data = $data->findRemove('id', $non_root)->getData();
         if ($this->count() > 0) {
             $first_item = $this->first();
             $this->addFilter($this->parentKey, $first_item[$this->parentKey]);

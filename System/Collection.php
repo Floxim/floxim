@@ -41,6 +41,9 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         $collection->is_sortable = $this->is_sortable;
         $collection->finder = $this->finder;
         $collection->concated = $this->concated;
+        if (isset($this->relFinders)) {
+            $collection->relFinders = $this->relFinders;
+        }
         return $collection;
     }
     
@@ -333,6 +336,23 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
      */
     public function sort($sorter)
     {
+        if (!is_callable($sorter)) {
+            $sorter_field = $sorter;
+            $sorter = function($a, $b) use ($sorter_field) {
+                if (!isset($a[$sorter_field]) || !isset($b[$sorter_field])) {
+                    return 0;
+                }
+                $av = $a[$sorter_field];
+                $bv = $b[$sorter_field];
+                if ($av < $bv) {
+                    return -1;
+                }
+                if ($av > $bv) {
+                    return 1;
+                }
+                return 0;
+            };
+        }
         @ uasort($this->data, $sorter);
         return $this;
     }
@@ -442,8 +462,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
                     $key_index = $key;
                 }
                 if (!isset($res[$key_index])) {
-                    $group_collection = new Collection();
-                    $group_collection->is_sortable = $this->is_sortable;
+                    $group_collection = $this->fork();
                     $group_collection->group_key = $key;
                     $res[$key_index] = $group_collection;
                 }
@@ -591,6 +610,12 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
             $index_val = $our_item[$cond_field];
             $our_item[$res_field] = isset($res_index[$index_val]) ? $res_index[$index_val] : null;
         }
+        if ($what->finder) {
+            if (!isset($this->relFinders)) {
+                $this->relFinders = array();
+            }
+            $this->relFinders[$res_field] = $what->finder;
+        }
         return $this;
     }
 
@@ -612,7 +637,8 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         $cond_field,
         $res_field,
         $check_field = 'id',
-        $extract_field = null
+        $extract_field = null, // e.g. "content" for linkers
+        $extract_real_field = null // e.g. "linked_id" for linkers
     ) {
         // what = [post1,post2]
         // this = [user1, user2]
@@ -624,26 +650,39 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         foreach ($what as $what_item) {
             $index_key = $what_item[$cond_field];
             if (!isset($res_index[$index_key])) {
-                $new_collection = $what->fork();
-                $new_collection->addFilter($cond_field, $index_key);
-                $res_index[$index_key] = $new_collection;
                 if ($extract_field) {
-                    $res_index[$index_key]->linker_map = new Collection();
+                    $new_collection = fx::collection();
+                    $linkers = $what->fork();
+                    $linkers->addFilter($cond_field, $index_key);
+                    if ($extract_real_field) {
+                        $linkers->linkedBy = $extract_real_field;
+                    }
+                    $new_collection->linkers = $linkers;
+                    if (isset($what->relFinders) && isset($what->relFinders[$extract_field])) {
+                        $new_collection->finder = $what->relFinders[$extract_field];
+                    }
+                } else {
+                    $new_collection = $what->fork();
+                    $new_collection->addFilter($cond_field, $index_key);
                 }
+                $res_index[$index_key] = $new_collection;
             }
             if (!$extract_field) {
                 $res_index[$index_key] [] = $what_item;
             } else {
                 $end_value = $what_item[$extract_field];
                 $res_index[$index_key][] = $end_value;
-                $res_index[$index_key]->linker_map[] = $what_item;
+                $res_index[$index_key]->linkers[] = $what_item;
             }
             //$res_index[$index_key][]= $extract_field ? $what_item[$extract_field] : $what_item;
         }
         foreach ($this as $our_item) {
             $check_value = $our_item[$check_field];
-            $our_item[$res_field] = isset($res_index[$check_value]) ?
-                $res_index[$check_value] : fx::collection();
+            $res_collection = isset($res_index[$check_value]) ? $res_index[$check_value] : fx::collection();
+            $our_item[$res_field] = $res_collection;
+            if ($our_item instanceof \Floxim\Main\Content\Entity && isset($res_collection->linkers)) {
+                $res_collection->linkers->selectField = $our_item->getFormField($res_field);
+            }
         }
         return $this;
     }

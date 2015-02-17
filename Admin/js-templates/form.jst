@@ -8,7 +8,7 @@
 $('.input_container', html).append($t.jQuery('input', _c));
 
 <!--[form_row ? (_c.type == 'checkbox' || _c.type == 'bool') && typeof _c.values == 'undefined' && _c.context !== 'panel']-->
-<div class="field field_checkbox">
+<div class="field field_checkbox field_name__<?=_c.name?>">
     <?=$t.input(_c)?>
     <label style="display:inline;" for="<?=_c.name?>"><?=_c.label?></label>
 </div>

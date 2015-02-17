@@ -233,6 +233,9 @@ abstract class Finder
             $this->order = array();
             return $this;
         }
+        if (is_string($this->order)) {
+            $this->order = empty($this->order) ? array() : array($this->order);
+        }
         if (!preg_match("~asc|desc~i", $direction)) {
             $direction = 'ASC';
         }
@@ -612,6 +615,7 @@ abstract class Finder
                 if (!$rel_target_field) {
                     $rel_target_field = 'id';
                 }
+                /*
                 if (count($entities) === 1) {
                     $entity = $entities->first();
                     $rel_item_id = $entity[$rel_field];
@@ -622,9 +626,14 @@ abstract class Finder
                         $entity[$rel_name] = null;
                     }
                 } else {
+                 * 
+                 */
                     $rel_items = $rel_finder->where($rel_target_field, $entities->getValues($rel_field))->all();
                     $entities->attach($rel_items, $rel_field, $rel_name, $rel_target_field);
+                    /*
                 }
+                     * 
+                     */
                 break;
             case self::HAS_MANY:
                 $rel_items = $rel_finder->where($rel_field, $entities->getValues('id'))->all();
@@ -654,7 +663,7 @@ abstract class Finder
                     $rel_finder->where($end_rel_field, 0, '!=');
                 }
                 $rel_items = $rel_finder->all()->find($end_rel, null, '!=');
-                $entities->attachMany($rel_items, $rel_field, $rel_name, 'id', $end_rel);
+                $entities->attachMany($rel_items, $rel_field, $rel_name, 'id', $end_rel, $end_rel_field);
                 break;
         }
     }

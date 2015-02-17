@@ -28,13 +28,14 @@ class Log extends Admin
         $index = $logger->getIndex();
 
         foreach ($index as $item) {
+            $url = preg_replace("~^http://[^/]+~", '', $item['url']);
             $r = array(
                 'id'      => $item['id'],
                 'date'    => array(
                     'name' => date('d.m.Y, H:i:s', round($item['start'])),
                     'url'  => '#admin.log.show(' . $item['id'] . ')'
                 ),
-                'request' => '[' . $item['method'] . '] ' . $item['host'] . $item['url'],
+                'request' => '[' . $item['method'] . '] ' . $item['host'] . $url,
                 'time'    => sprintf('%.5f', $item['time']),
                 'entries' => $item['count_entries']
             );

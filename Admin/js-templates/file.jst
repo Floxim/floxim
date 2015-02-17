@@ -1,9 +1,15 @@
 <!--[input ? (_c.type == 'image' || _c.type == 'file')]-->
 <?
 var c_value = _c.value.path;
+var value_is_emtpy = !c_value || ($fx && $fx.front && c_value === $fx.front.image_stub);
 ?>
 <div class="fx_image_field" data-field_type="<?=_c.type?>">
-    <input type="hidden" <?=$t.field_id_name(_c)?> class="real_value" value="<?=c_value?>" />
+    <input 
+        type="hidden" 
+        <?=$t.field_id_name(_c)?> 
+        class="real_value" 
+        value="<?=c_value?>" 
+        data-format_modifier="<?= _c.format_modifier || '' ?>" />
     <div class="fx_preview 
                 <?= c_value ? 'fx_preview_filled' : ''?> 
                 fx_preview_<?=_c.type?>">
@@ -25,7 +31,7 @@ var c_value = _c.value.path;
                 <input class="remote_file_location fx_input" placeholder="<?=$fx.lang('paste URL')?>" />
             </span>
             <a class="fx_file_killer" 
-               style="display:<?=(c_value ? 'block' : 'none')?>" 
+               style="display:<?=(!value_is_emtpy ? 'block' : 'none')?>" 
                title="<?=$fx.lang('Delete')?>">
             </a>
         </span>

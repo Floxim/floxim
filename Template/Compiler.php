@@ -412,7 +412,7 @@ class Compiler
             }
         }
 
-        // e.g. "name" or "image_".$this->v('id')
+        // e.g. "name" or "image_".$context->get('id')
         $var_id = preg_replace('~^\$context->get\(~', '', preg_replace("~\)$~", '', $expr));
 
         $has_default = $token->getProp('default') || count($token->getChildren()) > 0;
@@ -510,7 +510,6 @@ class Compiler
 
 
         if ($modifiers) {
-
             $modifiers_code = $this->applyModifiers($display_val_var, $modifiers, $token);
             if ($token->need_type) {
                 $code .= '$var_meta = ' . $var_meta_expr . ";\n";
@@ -518,7 +517,13 @@ class Compiler
                 $var_meta_defined = true;
             }
             $code .= $modifiers_code;
+            
+            // default formatters for date and image
+            if (count($modifiers) === 1 && !$modifiers[0]['name'] && isset($modifiers[0]['args'][0])) {
+                $token->setProp('format_modifier', trim($modifiers[0]['args'][0], '"\''));
+            }
         }
+        
         if ($token->getProp('editable') == 'false') {
             $code .= 'echo  ' . $expr . ";\n";
         } else {
@@ -621,7 +626,6 @@ class Compiler
             'check_traversable' => 'false'
         ));
 
-
         if (($separator = $this->findSeparator($token))) {
             $each_token->addChild($separator);
         }
@@ -629,8 +633,16 @@ class Compiler
 
         $code = "<?php\n";
         $code .= $arr_id . ' = ' . $expr . ";\n";
-        $code .= "if (" . $arr_id . " && (is_array(" . $arr_id . ") || " . $arr_id . " instanceof Traversable) && count(" . $arr_id . ")) {\n?>";
-
+        $code .= "if (" . 
+                    $arr_id . " && (is_array(" . $arr_id . ") || " . 
+                    $arr_id . " instanceof Traversable)) {\n";
+        
+        $code .= $this->getAdderPlaceholderCode($arr_id);
+        
+        $code .= "if (count(" . $arr_id . ")) {\n";
+        
+        $code .= "?>";
+        
         $items = array();
 
         foreach ($token->children as $child) {
@@ -692,7 +704,7 @@ class Compiler
             $code .= $this->getTokenCode($child, $token);
         }
 
-        $code .= "<?php\n}\n?>";
+        $code .= "<?php\n}\n}\n?>";
         return $code;
     }
 
@@ -752,6 +764,19 @@ class Compiler
         $code .= "\$context->pop();\n";
         return $code;
     }
+    
+    protected function getAdderPlaceholderCode($arr_id)
+    {
+        $code = '';
+        $code .= 'if ($_is_admin ';
+        $code .= ' && ' . $arr_id . ' instanceof \\Floxim\\Floxim\\System\\Collection ';
+        $code .= ' && isset(' . $arr_id . '->finder)';
+        $code .= ' && $this->getMode("add") != "false" ';
+        $code .= ' && ' . $arr_id . '->finder instanceof \\Floxim\\Main\\Content\\Finder) {' . "\n";
+        $code .= $arr_id . '->finder->createAdderPlaceholder(' . $arr_id . ');' . "\n";
+        $code .= "}\n";
+        return $code;
+    }
 
     protected function tokenEachToCode(Token $token)
     {
@@ -794,16 +819,9 @@ class Compiler
         $check_traversable = $token->getProp('check_traversable') !== 'false';
         if ($check_traversable) {
             $code .= "if (is_array(" . $arr_id . ") || " . $arr_id . " instanceof Traversable) {\n";
+            // add-in-place settings
+            $code .= $this->getAdderPlaceholderCode($arr_id);
         }
-        // add-in-place settings
-
-        $code .= 'if ($_is_admin ';
-        $code .= ' && ' . $arr_id . ' instanceof \\Floxim\\Floxim\\System\\Collection ';
-        $code .= ' && isset(' . $arr_id . '->finder)';
-        $code .= ' && $this->getMode("add") != "false" ';
-        $code .= ' && ' . $arr_id . '->finder instanceof \\Floxim\\Main\\Content\\Finder) {' . "\n";
-        $code .= $arr_id . '->finder->createAdderPlaceholder(' . $arr_id . ');' . "\n";
-        $code .= "}\n";
 
         $loop_id = '$' . $item_alias . '_loop';
         $code .= $loop_id . ' = new \\Floxim\\Floxim\\Template\\Loop(' . $arr_id . ', ' . $loop_key . ', ' . $loop_alias . ");\n";

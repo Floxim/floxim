@@ -56,8 +56,8 @@ class Suitable
         foreach ($all_visual as $c_vis) {
             $c_layout_id = $c_vis['layout_id'];
             $infoblocks->
-            findOne('id', $c_vis['infoblock_id'])->
-            setVisual($c_vis, $c_layout_id);
+                findOne('id', $c_vis['infoblock_id'])->
+                setVisual($c_vis, $c_layout_id);
             if (!isset($layout_rate[$c_layout_id])) {
                 $layout_rate[$c_layout_id] = 0;
             }
@@ -87,6 +87,7 @@ class Suitable
             if (!$ib_visual['is_stub']) {
                 continue;
             }
+            fx::log('suiting', $ib, $ib_visual);
             $old_area = $ib->getPropInherited('visual.area', $source_layout_id);
             // Suit record infoblock to the area where list infoblock is placed
             if ($ib->getPropInherited('action') == 'record') {
@@ -121,6 +122,8 @@ class Suitable
             $area_meta = isset($c_areas[$ib_visual['area']]) ? $c_areas[$ib_visual['area']] : null;
 
             $controller_templates = $ib_controller->getAvailableTemplates($layout['keyword'], $area_meta);
+            
+            fx::log('got av templates', $controller_templates, $ib_controller, $area_meta);
 
             $old_template = $ib->getPropInherited('visual.template', $source_layout_id);
 
@@ -132,7 +135,7 @@ class Suitable
                     break;
                 }
             }
-            if (!isset($ib_visual['template'])) {
+            if (!$ib_visual['template']) {
                 $ib_visual['template'] = $controller_templates[0]['full_id'];
                 $used_template_props = $controller_templates[0];
             }
@@ -162,6 +165,7 @@ class Suitable
             }
 
             unset($ib_visual['is_stub']);
+            fx::log('saving ibv', $ib_visual);
             $ib_visual->save();
         }
     }

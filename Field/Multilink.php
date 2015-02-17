@@ -30,7 +30,7 @@ class Multilink extends Baze
             $this->_js_field['name_postfix'] = $linker_field;
             if (isset($content[$this['keyword']])) {
                 $this->_js_field['value'] = array();
-                $linkers = $content[$this['keyword']]->linker_map;
+                $linkers = $content[$this['keyword']]->linkers;
                 foreach ($content[$this['keyword']] as $num => $v) {
                     $this->_js_field['value'] [] = array(
                         'id'       => $v['id'],
@@ -62,7 +62,7 @@ class Multilink extends Baze
                 if ($rel[0] === System\Finder::HAS_MANY) {
                     $linkers = $content[$this['keyword']];
                 } else {
-                    $linkers = $content[$this['keyword']]->linker_map;
+                    $linkers = $content[$this['keyword']]->linkers;
                 }
                 foreach ($linkers as $linker) {
                     $linker_fields = $linker->getFormFields();
@@ -307,7 +307,7 @@ class Multilink extends Baze
         $linker_prop_name = $rel[3];
         // value to be returned
         $new_value = new System\Collection();
-        $new_value->linker_map = new System\Collection();
+        $new_value->linkers = new System\Collection();
         // Find the name for the field, for example "most part"
         // something strashnenko...
         //$linker_com_name = preg_replace('~^content_~', '', $linker_data_type);
@@ -342,15 +342,15 @@ class Multilink extends Baze
                         $linked_props['parent_id'] = $linked_parent_id;
                     }
                 }
-            } elseif (isset($existing_items->linker_map)) {
-                $linker_item = $existing_items->linker_map->findOne($end_link_field_name, $linked_props);
+            } elseif (isset($existing_items->linkers)) {
+                $linker_item = $existing_items->linkers->findOne($end_link_field_name, $linked_props);
             }
             if (!$linker_item) {
                 $linker_item = fx::data($linker_data_type)->create();
             }
             $linker_item->setFieldValues(array($end_link_field_name => $linked_props), array($end_link_field_name));
             $new_value[] = $linker_item[$linker_prop_name];
-            $new_value->linker_map [] = $linker_item;
+            $new_value->linkers [] = $linker_item;
         }
         return $new_value;
     }

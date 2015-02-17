@@ -798,7 +798,11 @@ class Infoblock extends Admin
                 foreach ($content_vars as $var) {
                     $vals[$var['var']['name']] = $var['value'];
                 }
-                $contents[$content_id]->setFieldValues($vals, array_keys($vals));
+                if (isset($contents[$content_id])) {
+                    $contents[$content_id]->setFieldValues($vals, array_keys($vals));
+                } else {
+                    fx::log('Content not found in group', $contents, $content_id, $vals);
+                }
             }
         }
 
