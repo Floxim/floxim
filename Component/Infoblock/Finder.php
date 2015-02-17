@@ -136,9 +136,9 @@ class Finder extends System\Finder
         return $this->all();
     }
 
-    protected static $isStaticCacheUsed = true;
-    protected static $fullStaticCache = true;
-    protected static $storeStaticCache = false;
+    public static $isStaticCacheUsed = true;
+    public static $fullStaticCache = true;
+    public static $storeStaticCache = false;
 
     public static function prepareFullDataForCacheFinder($finder)
     {

@@ -786,7 +786,7 @@ abstract class Finder
         return $entity;
     }
 
-    protected $useStaticCache = true;
+    public $useStaticCache = true;
 
     public function setUseStaticCache($value)
     {
@@ -932,15 +932,15 @@ abstract class Finder
         return $set;
     }
 
-    protected static $isStaticCacheUsed = false;
+    public static $isStaticCacheUsed = false;
 
     public static function isStaticCacheUsed()
     {
         return static::$isStaticCacheUsed;
     }
 
-    protected static $fullStaticCache = false;
-    protected static $storeStaticCache = false;
+    public static $fullStaticCache = false;
+    public static $storeStaticCache = false;
 
     protected static function getStaticCacheKey()
     {

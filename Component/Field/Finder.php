@@ -27,7 +27,7 @@ class Finder extends System\Finder
         );
     }
 
-    protected static $isStaticCacheUsed = true;
+    public static $isStaticCacheUsed = true;
 
     public function __construct()
     {
