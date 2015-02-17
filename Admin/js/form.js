@@ -54,7 +54,7 @@ fx_form = {
             $fx.buttons.draw_buttons(settings.buttons);
         }
         $.each(settings.fields, function(i, json) {
-            var target = json.tab
+            var target = json.tab !== undefined
                             ? $('#'+settings.form.id+'_'+json.tab, $form_node)
                             : $form_node;
             $fx_form.draw_field(json, target);

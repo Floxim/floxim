@@ -12,11 +12,17 @@ class Export
      */
     protected $pathExportTmp = null;
     /**
-     * Относительный пусть в каталоге экспорта до хранения данных БД
+     * Относительный путь в каталоге экспорта до хранения данных БД
      *
      * @var null
      */
     protected $pathRelDataDb = null;
+    /**
+     * Относительный путь в каталоге экспорта до хранения файлов
+     *
+     * @var null
+     */
+    protected $pathRelDataFile = null;
     /**
      * Служебная переменная для хранения текущего списка экспортируемых компонентов
      *
@@ -63,6 +69,7 @@ class Export
             $this->pathExportTmp = fx::path('@files/export/');
         }
         $this->pathRelDataDb = 'data' . DIRECTORY_SEPARATOR . 'db';
+        $this->pathRelDataFile = 'data' . DIRECTORY_SEPARATOR . 'file';
     }
 
 
@@ -130,6 +137,67 @@ class Export
                     if ($item['page_id'] and !in_array($item['page_id'], $usedContentItems)) {
                         $usedContentItems[] = $item['page_id'];
                     }
+                    /**
+                     * Связи из параметров
+                     */
+                    $params = $item['params'];
+                    if (isset($params['extra_infoblocks']) and is_array($params['extra_infoblocks'])) {
+                        foreach ($params['extra_infoblocks'] as $id) {
+                            $usedSystemItems['infoblock'][] = $item['parent_infoblock_id'];
+                        }
+                    }
+                    /**
+                     * Условия инфоблоков conditions
+                     */
+                    if (isset($params['conditions']) and $params['conditions']) {
+                        /**
+                         * Получаем компонент через контроллер инфоблока, он необходим для получения списка линкованных полей
+                         */
+                        $component = fx::controller($item['controller'])->getComponent();
+                        $linkedFields = $_this->getLinkedFieldsForComponent($component);
+                        /**
+                         * Перебираем все поля в условии
+                         */
+                        foreach ($params['conditions'] as $fieldCond) {
+                            if (isset($linkedFields[$fieldCond['name']]) and $fieldCond['value']) {
+                                $linkedField = $linkedFields[$fieldCond['name']];
+                                $_this->processingLinkedField($linkedField, $fieldCond['value'], $usedContentItems,
+                                    $usedSystemItems);
+                            }
+                            /**
+                             * Т.к. инфоблок реализован не через механизм дополнительных полей
+                             */
+                            if ($fieldCond['name'] == 'infoblock_id') {
+                                $usedSystemItems['infoblock'] = array_merge($usedSystemItems['infoblock'],
+                                    $fieldCond['value']);
+                            }
+                        }
+                    }
+                } elseif ($type == 'infoblock_visual') {
+                    /**
+                     * TODO: пока не понятно, что делать с layout_id
+                     */
+
+                    /**
+                     * Получаем ссылки на контент из визуальных параметров
+                     * todo: проблема - ссылки могут быть не только на контент, но и на инфоблоки, в итоге валит ошибку
+                     */
+                    $visuals = $item['template_visual'];
+                    if (is_array($visuals)) {
+                        foreach ($visuals as $name => $value) {
+                            if (preg_match('#._(\d+)$#', $name, $match)) {
+                                if (!in_array($match[1], $usedContentItems)) {
+                                    $usedContentItems[] = $match[1];
+                                }
+                            }
+                            /**
+                             * Ищем линки на изображения
+                             */
+                            if (preg_match('#^\/floxim_files\/#i', $value)) {
+                                $this->exportFile($value);
+                            }
+                        }
+                    }
                 }
             }
         );
@@ -187,7 +255,8 @@ class Export
             $contentFilter[] = array('materialized_path', $content['materialized_path'] . '%', 'like');
             $contentFilter[] = array('parent_id', $content['parent_id'], '<>');
         } else {
-            throw new \Exception("Content by ID ({$contentId}) not found");
+            //throw new \Exception("Content by ID ({$contentId}) not found");
+            return;
         }
 
         $usedTypes = array();
@@ -229,89 +298,65 @@ class Export
              * Для каждого компонента нужно получить список линкованных полей
              */
             $linkedFields = $this->getLinkedFieldsForComponent($type);
+            $imageFields = $this->getImageFieldsForComponent($type);
             $_this = $this;
             $linkedContent = array();
             $linkedSystemItems = array();
 
             $this->readDataTable($type, array(array('id', $contentIds)),
-                function ($item) use ($type, $linkedFields, $usedTypes, $_this, &$linkedContent, &$linkedSystemItems) {
+                function ($item) use (
+                    $type,
+                    $linkedFields,
+                    $imageFields,
+                    $usedTypes,
+                    $_this,
+                    &$linkedContent,
+                    &$linkedSystemItems
+                ) {
                     /**
                      * Сохраняем элемент в файл
                      */
                     if (!in_array($item['id'], $_this->contentsForExport)) {
                         $_this->saveTableRowToFile($item, $type);
                         $_this->contentsForExport[] = $item['id'];
+                    } else {
+                        /**
+                         * Нет смысла повторно обрабатывать контент
+                         */
+                        return;
                     }
                     /**
                      * Некоторые поля могут содержать линкованные данные на другие таблицы
                      * Нужно проверять поля на тип
                      */
                     foreach ($linkedFields as $linkedField) {
-                        if ($linkedField['type'] == \Floxim\Floxim\Component\Field\Entity::FIELD_LINK) {
-                            /**
-                             * Обработка связи "один к одному"
-                             */
-                            if ($linkedField['target_type'] == 'component') {
-                                /**
-                                 * Добавляем линкуемый компонент в число экспортируемых
-                                 */
-                                $_this->componentsForExport[] = $linkedField['target_id'];
-                                /**
-                                 * Линкуемое значение
-                                 */
-                                if (!($value = $item[$linkedField['keyword']])) {
-                                    continue;
-                                }
-                                /**
-                                 * Пропускаем те элементы, которые уже есть в списке
-                                 */
-                                if (isset($usedTypes[$linkedField['target_id']]) and in_array($value,
-                                        $usedTypes[$linkedField['target_id']])
-                                ) {
-                                    continue;
-                                }
-                                /**
-                                 * Формируем новый список ID элементов контента
-                                 * Для каждого такого элемента необходимо будет получить полное дочернее дерево
-                                 * Еще проблема в том, что тип из настроек поля может не совпадать с фактическим конечным типом элемента
-                                 */
-                                if (!in_array($value, $linkedContent)) {
-                                    $linkedContent[] = $value;
-                                }
-
-                            } elseif ($linkedField['target_type'] == 'system') {
-                                /**
-                                 * Линкуемое значение
-                                 */
-                                if (!($value = $item[$linkedField['keyword']])) {
-                                    continue;
-                                }
-                                if (!isset($linkedSystemItems[$linkedField['target_id']])) {
-                                    $linkedSystemItems[$linkedField['target_id']] = array();
-                                }
-                                if (!in_array($value, $linkedSystemItems[$linkedField['target_id']])) {
-                                    $linkedSystemItems[$linkedField['target_id']][] = $value;
-                                }
-                            }
-                        } elseif ($linkedField['type'] == \Floxim\Floxim\Component\Field\Entity::FIELD_MULTILINK) {
-                            /**
-                             * Обработка связи "один ко многим"
-                             */
-
-
-                        }
+                        $_this->processingLinkedField($linkedField, $item[$linkedField['keyword']], $linkedContent,
+                            $linkedSystemItems);
+                    }
+                    /**
+                     * Экспортируем изображения
+                     */
+                    foreach ($imageFields as $imageField) {
+                        $_this->processingImageField($imageField, $item[$imageField['keyword']]);
                     }
                 });
+
+            /**
+             * Экспортируем привязанные к контенту инфоблоки
+             */
+            $this->exportSystemItemsByField('infoblock', 'page_id', $contentIds);
+
+            /**
+             * Экспортируем системные данные
+             */
+            foreach ($linkedSystemItems as $typeSystem => $ids) {
+                $this->exportSystemItems($typeSystem, $ids);
+            }
+
             /**
              * Вычитаем контент, который уже был экспортирован
              */
             $linkedContent = array_diff($linkedContent, $_this->contentsForExport);
-            /**
-             * Удаляем дубли системных данных
-             */
-            //var_dump($linkedSystemItems);
-            //$linkedSystemItems = array_diff($linkedSystemItems, $_this->systemItemsForExport);
-
             /**
              * Для каждого узла запускаем экспорт ветки
              */
@@ -328,6 +373,7 @@ class Export
         if (!is_array($ids)) {
             $ids = array($ids);
         }
+        $ids = array_unique($ids);
         /**
          * Для каждого узла запускаем экспорт ветки
          * todo: попробовать перевести на content\finder::descendantsOf
@@ -360,6 +406,23 @@ class Export
 
     }
 
+    protected function getImageFieldsForComponent($componentKeyword)
+    {
+        if (is_object($componentKeyword)) {
+            $component = $componentKeyword;
+        } else {
+            if (!($component = fx::data('component', $componentKeyword))) {
+                return array();
+            }
+        }
+
+        $fields = $component->getAllFields()->find(function ($f) {
+            return in_array($f->getTypeId(), array(\Floxim\Floxim\Component\Field\Entity::FIELD_IMAGE));
+        });
+
+        return $fields;
+    }
+
     /**
      * Возвращает список полей компонента, которые задействуют линковку на другие объекты
      *
@@ -370,8 +433,12 @@ class Export
     protected function getLinkedFieldsForComponent($componentKeyword)
     {
         $types = array();
-        if (!($component = fx::data('component', $componentKeyword))) {
-            return $types;
+        if (is_object($componentKeyword)) {
+            $component = $componentKeyword;
+        } else {
+            if (!($component = fx::data('component', $componentKeyword))) {
+                return $types;
+            }
         }
 
         $chain = $component->getChain();
@@ -414,7 +481,7 @@ class Export
 
 
             }
-            $types[] = $item;
+            $types[$item['keyword']] = $item;
         }
         return $types;
     }
@@ -549,5 +616,88 @@ class Export
         fputs($fh, $filedata);
         fclose($fh);
         return 0;
+    }
+
+    protected function processingLinkedField($linkedField, $value, &$linkedContent, &$linkedSystemItems)
+    {
+        if ($linkedField['type'] == \Floxim\Floxim\Component\Field\Entity::FIELD_LINK) {
+            /**
+             * Линкуемое значение
+             */
+            if (!$value) {
+                return;
+            }
+            if (!is_array($value)) {
+                $value = array($value);
+            }
+
+            /**
+             * Обработка связи "один к одному"
+             */
+            if ($linkedField['target_type'] == 'component') {
+                /**
+                 * Добавляем линкуемый компонент в число экспортируемых
+                 */
+                $this->componentsForExport[] = $linkedField['target_id'];
+
+                /**
+                 * Пропускаем те элементы, которые уже есть в списке
+                 * todo: Проверить пропуск этого условия
+                 */
+                /**
+                 * if (isset($usedTypes[$linkedField['target_id']]) and in_array($value,
+                 * $usedTypes[$linkedField['target_id']])
+                 * ) {
+                 * return;
+                 * }
+                 */
+
+
+                /**
+                 * Формируем новый список ID элементов контента
+                 * Для каждого такого элемента необходимо будет получить полное дочернее дерево
+                 * Еще проблема в том, что тип из настроек поля может не совпадать с фактическим конечным типом элемента
+                 */
+                $linkedContent = array_merge($linkedContent, $value);
+
+            } elseif ($linkedField['target_type'] == 'system') {
+                if (!isset($linkedSystemItems[$linkedField['target_id']])) {
+                    $linkedSystemItems[$linkedField['target_id']] = array();
+                }
+                $linkedSystemItems[$linkedField['target_id']] = array_merge($linkedSystemItems[$linkedField['target_id']],
+                    $value);
+            }
+        } elseif ($linkedField['type'] == \Floxim\Floxim\Component\Field\Entity::FIELD_MULTILINK) {
+            /**
+             * Обработка связи "один ко многим"
+             */
+
+
+        }
+    }
+
+    protected function processingImageField($field, $value)
+    {
+        if ($field['type'] == \Floxim\Floxim\Component\Field\Entity::FIELD_IMAGE) {
+            /**
+             * Путь до изображения
+             */
+            if (!$value) {
+                return;
+            }
+            /**
+             * Копируем файл
+             */
+            $this->exportFile($value);
+        }
+    }
+
+    protected function exportFile($fileRel)
+    {
+        $pathSource = fx::path($fileRel);
+        $pathDist = $this->pathExportTmp . DIRECTORY_SEPARATOR . $this->pathRelDataFile . $fileRel;
+        if (file_exists($pathSource) and !file_exists($pathDist)) {
+            fx::files()->copy($pathSource, $pathDist);
+        }
     }
 }

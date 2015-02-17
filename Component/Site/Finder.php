@@ -11,7 +11,7 @@ class Finder extends System\Finder
     public function __construct()
     {
         parent::__construct();
-        $this->order = 'priority';
+        $this->order[] = 'priority asc';
     }
 
     public function getById($id)

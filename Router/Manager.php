@@ -61,9 +61,17 @@ class Manager
         if (!isset($context['site_id'])) {
             $context['site_id'] = fx::env('site')->get('id');
         }
-        foreach ($this->routers as $r) {
+        foreach ($this->routers as $router_key => $r) {
             $result = $r['router']->route($url, $context);
             if ($result !== null && $result !== false) {
+                $log_option = fx::config('dev.log_routes');
+                if (
+                    (is_bool($log_option) && $log_option) ||
+                    (is_array($log_option)) && in_array($router_key, $log_option) ||
+                    (is_string($log_option) && $log_option === $router_key)
+                ) {
+                    fx::log('routed', $router_key, $url);
+                }
                 return $result;
             }
         }
