@@ -88,7 +88,8 @@ class Env
 
     public function getSiteId()
     {
-        return $this->getSite()->get('id');
+        $site = $this->getSite();
+        return $site ? $site->get('id') : null;
     }
 
     public function setUser($user)

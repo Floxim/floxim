@@ -112,7 +112,7 @@ class Site extends Admin
         fx::input()->setCookie('fx_target_location', '/floxim/#admin.site.all');
         $result = array(
             'status' => 'ok',
-            'reload' => '/~ajax/user:crossite_auth_form'
+            'reload' => '/~ajax/user:cross_site_auth_form'
         );
         return $result;
     }

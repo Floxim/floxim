@@ -59,7 +59,8 @@ class Manager
         }
 
         if (!isset($context['site_id'])) {
-            $context['site_id'] = fx::env('site')->get('id');
+            $env_site = fx::env('site');
+            $context['site_id'] = $env_site ? $env_site['id'] : null;
         }
         foreach ($this->routers as $router_key => $r) {
             $result = $r['router']->route($url, $context);

@@ -28,22 +28,25 @@ class Configjs
                 'name' => fx::alang('Development', 'system'),
                 'key'  => 'develop',
                 'href' => '/floxim/#admin.component.all'
-            ),
-            'site'    => array(
+            )
+        );
+        
+        $site = fx::env('site');
+        if ($site) {
+            $main_menu['site'] = array(
                 'name' => fx::env('site')->get('domain'),
                 'key'  => 'site',
                 'href' => '/'
-            )
-        );
-
-        $other_sites = fx::data('site')->where('id', fx::env('site')->get('id'), '!=')->all();
-        if (count($other_sites) > 0) {
-            $main_menu['site']['children'] = array();
-            foreach ($other_sites as $other_site) {
-                $main_menu['site']['children'] [] = array(
-                    'name' => $other_site['domain'],
-                    'href' => 'http://' . $other_site['domain'] . '/'
-                );
+            );
+            $other_sites = fx::data('site')->where('id', $site['id'], '!=')->all();
+            if (count($other_sites) > 0) {
+                $main_menu['site']['children'] = array();
+                foreach ($other_sites as $other_site) {
+                    $main_menu['site']['children'] [] = array(
+                        'name' => $other_site['domain'],
+                        'href' => 'http://' . $other_site['domain'] . '/'
+                    );
+                }
             }
         }
         $this->addMainMenu($main_menu);
