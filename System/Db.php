@@ -102,8 +102,11 @@ class Db extends \PDO
         if (!$this->last_result) {
 
             $this->last_error = $this->errorInfo();
-            //fx::log($statement, debug_backtrace());
-            fx::debug('sql error', $statement, debug_backtrace());
+            fx::log(
+                'sql error', 
+                $statement, 
+                debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)
+            );
             throw new \Exception(
                 "Query: " . $statement . "\n" .
                 "Error: " . $this->last_error[2]

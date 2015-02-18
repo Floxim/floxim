@@ -87,8 +87,6 @@ class Link extends Baze
     public function getJsField($content)
     {
         parent::getJsField($content);
-        //$target_component = fx::data('component', $this['format']['target']);
-        //$target_content = 'content_'.$target_component['keyword'];
         $target_content = $this->getTargetName();
         $finder = fx::data($target_content);
 

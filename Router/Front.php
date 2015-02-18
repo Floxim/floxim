@@ -29,6 +29,7 @@ class Front extends Base
         }
         fx::env('page', $page);
         fx::http()->status('200');
+
         $layout_ib = $this->getLayoutInfoblock($page);
         $res = $layout_ib->render();
         return $res;

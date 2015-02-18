@@ -286,7 +286,8 @@ class Debug
      */
     public function log()
     {
-        if (defined("FX_ALLOW_DEBUG") && !FX_ALLOW_DEBUG) {
+        //if (defined("FX_ALLOW_DEBUG") && !FX_ALLOW_DEBUG) {
+        if (!fx::config('dev.on')) {
             return;
         }
         if ($this->disabled) {

@@ -252,8 +252,7 @@ class Template
         } catch (\Exception $e) {
             fx::log(
                 'template exception', 
-                $e
-                //debug_backtrace(null,6)
+                $e->getMessage()
             );
         }
         $result = ob_get_clean();
