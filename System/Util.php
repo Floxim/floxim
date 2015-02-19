@@ -307,4 +307,75 @@ class Util
         }
         return $camelized;
     }
+    
+    // tables with content
+    protected static $dumperFullTables = array(
+        'component',
+        'datatype',
+        'field',
+        'floxim_user_user',
+        'lang',
+        'lang_string',
+        'layout',
+        'module',
+        'option',
+        'patch',
+        'patch_migration',
+        'widget'
+    );
+    
+    /**
+     * Create SQL dump file for empty system with no site-related data
+     * @param type $target_file
+     */
+    public function dumpMeta($target_file = null) 
+    {
+        if (!$target_file) {
+            $target_file = fx::path('/install/floxim_meta.sql');
+        }
+        
+        $all_tables = array_keys(fx::schema());
+        
+        $schema_tables = array_diff($all_tables, self::$dumperFullTables);
+        
+        // small file with no data
+        $schema_dump_file = fx::path('@files/schema_tables.sql');
+        
+        fx::db()->dump(array(
+            'tables' => $schema_tables,
+            'data' => false,
+            'file' => $schema_dump_file
+        ));
+        
+        fx::db()->dump(array(
+            'tables' => self::$dumperFullTables,
+            'file' => $target_file
+        ));
+        
+        $fh = fopen($target_file, 'a');
+        fputs($fh, file_get_contents($schema_dump_file));
+        fclose($fh);
+        unlink($schema_dump_file);
+    }
+    
+    /**
+     * Create dump file to import site-related data
+     */
+    public function dumpData($target_file = null)
+    {
+        if (!$target_file) {
+            $target_file = fx::path('/install/floxim_data.sql');
+        }
+        
+        $all_tables = array_keys(fx::schema());
+        
+        $content_tables = array_diff($all_tables, self::$dumperFullTables);
+        
+        fx::db()->dump(array(
+            'tables' => $content_tables,
+            'data' => true,
+            'schema' => false,
+            'file' => $target_file
+        ));
+    }
 }

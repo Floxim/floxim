@@ -282,5 +282,38 @@ class Db extends \PDO
     {
         return $this->last_query;
     }
-
+    
+    public function dump($params) {
+        
+        $params = array_merge(array(
+            'data' => true,
+            'schema' => true
+        ), $params);
+        
+        $dump_path = fx::config('dev.mysqldump_path');
+        if (!$dump_path) {
+            return;
+        }
+        $command = $dump_path.' -u'.fx::config('db.user').' -p'.fx::config('db.password');
+        
+        $command .= ' '.fx::config('db.name');
+        
+        if (!$params['schema']) {
+            $command .= ' --no-create-info';
+        }
+        
+        if (!$params['data']) {
+            $command .= ' --no-data';
+        }
+        
+        $command .= ' --skip-comments';
+        
+        foreach ($params['tables'] as $t) {
+            $command .= ' '.$this->replacePrefix('{{'.$t.'}}');
+        }
+        
+        $command .= ' > '.$params['file'];
+        
+        exec($command);
+    }
 }
