@@ -364,10 +364,15 @@ class Debug
 
         $args = func_get_args();
         $items = array();
+        $light_mode = fx::config('dev.debug_light');
         foreach ($args as $a) {
             $type = gettype($a);
             if ($type == 'array' || $type == 'object') {
-                $a = print_r($a, 1);
+                if ($light_mode) {
+                    $a = '['. ($type === 'object' ? get_class($a) : $type) .']';
+                } else {
+                    $a = print_r($a, 1);
+                }
             }
             $items[] = array($type, $a);
         }
