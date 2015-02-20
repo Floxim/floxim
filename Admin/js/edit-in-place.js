@@ -78,7 +78,7 @@ function fx_edit_in_place( node ) {
             }
         }, 50);
     }).on('keydown.edit_in_place', function(e) {
-        eip.handle_keydown(e);
+        return eip.handle_keydown(e);
     });
 
     this.is_linker_placeholder = false;
@@ -288,7 +288,9 @@ fx_edit_in_place.prototype.add_panel_field = function(meta) {
 fx_edit_in_place.prototype.stop = function() {
     this.node.data('edit_in_place', null);
     this.node.removeClass('fx_edit_in_place').removeClass('fx_editable_empty');
+    console.log('stpng');
     if (this.stopped) {
+        console.log('alrd');
         return this;
     }
     for (var i =0 ;i<this.panel_fields.length; i++) {
@@ -301,6 +303,9 @@ fx_edit_in_place.prototype.stop = function() {
     this.panel_fields = [];
     this.node.data('edit_in_place', null);
     this.node.attr('contenteditable', null);
+    
+    $('.fx_var_editable', this.node).attr('contenteditable', null);
+    
     this.node.removeClass('fx_var_editable');
     if (this.is_content_editable && this.is_wysiwyg) {
         this.destroy_wysiwyg();

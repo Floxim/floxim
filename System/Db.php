@@ -286,8 +286,10 @@ class Db extends \PDO
     public function dump($params) {
         
         $params = array_merge(array(
-            'data' => true,
-            'schema' => true
+            'data' => true,     // export data or not
+            'schema' => true,   // generate CREATE TABLE or not
+            'add' => false,     // add data to existing file or overwrite it
+            'where' => false    // condition
         ), $params);
         
         $dump_path = fx::config('dev.mysqldump_path');
@@ -308,11 +310,15 @@ class Db extends \PDO
         
         $command .= ' --skip-comments';
         
+        if ($params['where']) {
+            $command .= ' --where="'.$params['where'].'"';
+        }
+        
         foreach ($params['tables'] as $t) {
             $command .= ' '.$this->replacePrefix('{{'.$t.'}}');
         }
         
-        $command .= ' > '.$params['file'];
+        $command .= ($params['add'] ? ' >> ' : ' > ').$params['file'];
         
         exec($command);
     }

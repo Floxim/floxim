@@ -308,22 +308,39 @@ class Util
         return $camelized;
     }
     
-    // tables with content
-    protected static $dumperFullTables = array(
-        'component',
-        'datatype',
-        'field',
-        'floxim_user_user',
-        'lang',
-        'lang_string',
-        'layout',
-        'module',
-        'option',
-        'patch',
-        'patch_migration',
-        'widget'
-    );
-    
+    /**
+     * 
+     * @param type $type data | meta
+     */
+    public static function dumperGetTables($type) 
+    {
+        $meta = array(
+            'component',
+            'datatype',
+            'field',
+            'floxim_user_user',
+            'lang',
+            'lang_string',
+            'layout',
+            'module',
+            'option',
+            'patch',
+            'patch_migration',
+            'widget'
+        );
+        
+        if ($type === 'meta') {
+            return $meta;
+        }
+        
+        $all = array_keys(fx::schema());
+        
+        // do not export content table, it needs special treatment
+        $meta []= 'floxim_main_content'; 
+        return array_diff($all, $meta);
+    }
+
+
     /**
      * Create SQL dump file for empty system with no site-related data
      * @param type $target_file
@@ -334,28 +351,24 @@ class Util
             $target_file = fx::path('/install/floxim_meta.sql');
         }
         
-        $all_tables = array_keys(fx::schema());
-        
-        $schema_tables = array_diff($all_tables, self::$dumperFullTables);
-        
-        // small file with no data
-        $schema_dump_file = fx::path('@files/schema_tables.sql');
-        
         fx::db()->dump(array(
-            'tables' => $schema_tables,
+            'tables' => self::dumperGetTables('data'),
             'data' => false,
-            'file' => $schema_dump_file
-        ));
-        
-        fx::db()->dump(array(
-            'tables' => self::$dumperFullTables,
             'file' => $target_file
         ));
         
-        $fh = fopen($target_file, 'a');
-        fputs($fh, file_get_contents($schema_dump_file));
-        fclose($fh);
-        unlink($schema_dump_file);
+        fx::db()->dump(array(
+            'tables' => self::dumperGetTables('meta'),
+            'file' => $target_file,
+            'add' => true
+        ));
+        
+        fx::db()->dump(array(
+            'tables' => array('floxim_main_content'),
+            'where' => "type = 'floxim.user.user'",
+            'file' => $target_file,
+            'add' => true
+        ));
     }
     
     /**
@@ -367,15 +380,21 @@ class Util
             $target_file = fx::path('/install/floxim_data.sql');
         }
         
-        $all_tables = array_keys(fx::schema());
-        
-        $content_tables = array_diff($all_tables, self::$dumperFullTables);
+        $tables = self::dumperGetTables('data');
         
         fx::db()->dump(array(
-            'tables' => $content_tables,
+            'tables' => array_diff($tables, array('session')),
             'data' => true,
             'schema' => false,
             'file' => $target_file
+        ));
+        
+        fx::db()->dump(array(
+            'tables' => array('floxim_main_content'),
+            'where' => "type != 'floxim.user.user'",
+            'file' => $target_file,
+            'schema' => false,
+            'add' => true
         ));
     }
 }
