@@ -1300,7 +1300,13 @@ class Compiler
                 if (isset($of_map[$value])) {
                     $value = $of_map[$value];
                 }
-                $of_parts[$key] = fx::getComponentFullName($value);
+                $c_of = explode(":", $value);
+                // no component, e.g. fx:of="list"
+                if (count($c_of) === 1) {
+                    $of_parts[$key] = fx::getComponentFullName($com_name).':'.$value;
+                } else {
+                    $of_parts[$key] = fx::getComponentFullName($c_of[0]).':'.$c_of[1];
+                }
             }
             $of = join(',', $of_parts);
         } else {

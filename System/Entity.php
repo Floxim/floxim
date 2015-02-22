@@ -286,6 +286,13 @@ abstract class Entity implements \ArrayAccess
         return $vals;
     }
 
+    /**
+     * 
+     * @param \Floxim\Form\Form $form
+     * @param type $fields
+     * @return boolean
+     * @throws \Exception
+     */
     public function validateWithForm($form = null, $fields = null)
     {
         if ($form === null) {
@@ -299,6 +306,9 @@ abstract class Entity implements \ArrayAccess
         $this->loadFromForm($form, $fields);
         if (!$this->validate()) {
             $this->throwInvalid();
+            return false;
+        }
+        if ($form->hasErrors()) {
             return false;
         }
         return true;

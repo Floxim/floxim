@@ -206,7 +206,8 @@ fx_front.prototype.handle_click = function(e) {
     $fx.front.select_item(closest_selectable);
     var $link = $(target).closest('a[href]');
     if ($link.length && $link.closest('.fx_entity_adder_placeholder').length === 0) {
-        var $panel = $fx.front.get_node_panel();
+        //var $panel = $fx.front.get_node_panel();
+        var $panel = $('.fx_node_panel:visible').first();
         var $click = $(
             '<div class="fx_follow_the_link">'+
                 '<a href="'+$link.attr('href')+'">click</a>'+
@@ -298,8 +299,6 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
         var target_size = get_size();
         
         $block_mark.slideUp(speed);
-        
-        
         
         $placeholder
           .css({width:0,height:0})
@@ -1186,19 +1185,25 @@ fx_front.prototype.hilight = function(container) {
             var is_hidden = false;
             if (hidden_placeholder) {
                 var $adder_placeholder = i.find('.fx_entity_adder_placeholder').first();
-                var mark_tag = 'div';
+                var mark_tag = 'div',
+                    mark_colspan = null;
                 if ($adder_placeholder.length) {
                     var $placeholded = $adder_placeholder.parent();
                     mark_tag = $adder_placeholder[0].nodeName;
                     $placeholded.addClass('fx_placeholded_collection');
+                    if (mark_tag === 'TR') {
+                        mark_colspan = $adder_placeholder.children().length;
+                    }
                 } else {
                     $placeholded = i;
                 }
                 $placeholded.addClass('fx_hidden_placeholded');
                 var $children = $placeholded.children();
                 if ($children.length) {
+                    if (mark_tag === 'TR') {
+                        hidden_placeholder = '<td colspan="'+mark_colspan+'">'+hidden_placeholder+'</td>';
+                    }
                     var $hidden_placeholder = $('<'+mark_tag+' class="fx_hidden_placeholder_mark">'+hidden_placeholder+'</'+mark_tag+'>');
-                    //$children.hide();
                     $children.first().before($hidden_placeholder);
                 } else {
                     $placeholded.html(hidden_placeholder);
@@ -1304,12 +1309,16 @@ fx_front.prototype.create_inline_entity_adder = function($node) {
     var $title = $button.data('title_node');
     
     var $placeholder_mark = $node.is('.fx_hidden_placeholder_mark') ? $node : $('.fx_hidden_placeholder_mark', $node);
+    var $placeholder_mark_td = $('td', $placeholder_mark); 
     
     if ($placeholder_mark.length) {
-        var $add_text_titles = [];
         var add_text = '. '+ $fx.lang('You can add %s here') + '.';
         add_text = add_text.replace(/\%s/, '<span class="fx_adder_variants"></span>');
-        $placeholder_mark.append(add_text);
+        if ($placeholder_mark_td.length) {
+            $placeholder_mark_td.append(add_text);
+        } else {
+            $placeholder_mark.append(add_text);
+        }
         var $text_variants = $('.fx_adder_variants', $placeholder_mark);
     }
     

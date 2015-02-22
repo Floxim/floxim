@@ -339,12 +339,8 @@ class Controller
         $meta = array();
         $my_name = $this->getControllerName();
         foreach ($sources as $src) {
-            $src_name = null;
             $src_hash = md5($src);
-            $src_abs = fx::path()->http($src);
-            preg_match("~/([^/]+?)/[^/]+$~", $src_abs, $src_name);
-            $c_src_name = $src_name ? fx::util()->camelToUnderscore($src_name[1]) : false;
-            $is_own = $c_src_name && $my_name && fx::getComponentFullName($c_src_name) === $my_name;
+            $is_own = $my_name && fx::getComponentFullNameByPath(fx::path()->http($src)) === $my_name;
             $src = include $src;
             if (!isset($src['actions'])) {
                 continue;

@@ -117,6 +117,20 @@ class Fx
         )
     );
 
+    public static function getComponentFullNameByPath($path)
+    {
+        $match = preg_match("~/([^/]+?)/([^/]+?)/([^/]+?)/[^/]+$~", $path, $parts);
+        if (!$match) {
+            return null;
+        }
+        array_shift($parts);
+        foreach ($parts as &$p) {
+            $p = fx::util()->camelToUnderscore($p);
+        }
+        $res = join(".", $parts);
+        return $res;
+    }
+    
     public static function getComponentFullName($name)
     {
         return fx::cache('array')->remember(
