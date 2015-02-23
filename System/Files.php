@@ -309,6 +309,17 @@ class Files
         }
         return $fh;
     }
+    
+    
+    public function touch($filename)
+    {
+        $filename = fx::path()->abs($filename);
+        $dir = dirname($filename);
+        if (!file_exists($dir) || !is_dir($dir)) {
+            $this->mkdir($dir);
+        }
+        touch($filename);
+    }
 
     public function writefile($filename, $filedata = '', $make_dir = true)
     {

@@ -53,6 +53,26 @@ class Http
         header($name . ": " . $value);
     }
     
+    public function get($url, $headers = array())
+    {
+        $header_string = '';
+        
+        foreach ($headers as $h => $v) {
+            $header_string .= $h.': '.$v."\r\n";
+        }
+        
+        $options = array(
+            'http' => array(
+                'header'  => $header_string,
+                'method'  => 'GET'
+            )
+        );
+        $context  = stream_context_create($options);
+        $result = @ file_get_contents($url, false, $context);
+        return $result;
+    }
+    
+    
     public function post($url, $data, $headers = array())
     {
         $has_content_type = false;
