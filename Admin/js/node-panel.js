@@ -129,24 +129,34 @@ function node_panel($node, params) {
         
         
         $p.css({
-            width: $(window).width() - 50,
-            left:0,
+            width:'10000px',
+            left:'-10000px',
             visibility:'hidden',
             display:'block'
         });
-        
         var po = $p.offset();
         var p_left = po.left;
         var $lpi = $p_items.last();
         $lpi.css('margin-right', '3px');
         var p_right = $lpi.offset().left + $lpi.outerWidth() + parseInt($lpi.css('margin-right'));
         var p_width = p_right - p_left + 5;
-        var p_height = $p.outerHeight();
+        var win_width = $(window).width();
+        
+        if (p_width > win_width) {
+            p_width = win_width - 10;
+            $p.css('width', p_width).addClass('fx_node_panel_too_wide');
+        } else {
+            $p.removeClass('fx_node_panel_too_wide');
+        }
+        
+        
         var css = {
             width:p_width + 'px',
             visibility:'visible',
             opacity:1
         };
+        
+        var p_height = $p.outerHeight();
         var top_fix = 0;
         var $top_fixed_nodes = $('#fx_admin_panel, .fx_top_fixed');
         

@@ -2208,6 +2208,7 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
                    }
                });
                var $new_infoblock_node = $('body');
+               $new_infoblock_node.removeClass('fx_infoblock_disabled');
            } else {
                var $new_infoblock_node = $( $.trim(res) );
                $infoblock_node.hide();
