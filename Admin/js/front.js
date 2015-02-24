@@ -1222,7 +1222,7 @@ fx_front.prototype.hilight = function(container) {
             }
             
             
-            if (is_hidden){
+            if (is_hidden || (i.is('.fx_area') && $fx.front.node_is_empty(i)) ) {
                 if (i.hasClass('fx_area')) {
                     var a_meta = i.data('fx_area');
                     var area_placeholder = $fx.lang('Area %s is empty, you can add some blocks here.');
