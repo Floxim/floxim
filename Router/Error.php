@@ -15,8 +15,11 @@ class Error extends Front
         return $ctr;
     }
     
-    public function getErrorPage($site_id) 
+    public function getErrorPage($site_id = null) 
     {
+        if (is_null($site_id)) {
+            $site_id = fx::env('site_id');
+        }
         $error_page = fx::data(
             'page',
             fx::data('site', $site_id)->get('error_page_id')
