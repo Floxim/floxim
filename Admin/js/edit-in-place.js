@@ -59,7 +59,8 @@ function fx_edit_in_place( node ) {
     
     var selected_entity = this.node.closest('.fx_entity').get(0);
 
-    $('html').one('fx_deselect.edit_in_place', function(e) {
+    $('html')
+    .one('fx_deselect.edit_in_place', function(e) {
         eip.fix().stop();
         setTimeout(function() {
             var do_save = true;
@@ -117,10 +118,19 @@ fx_edit_in_place.prototype.handle_keydown = function(e) {
         this.stop();
         this.restore();
         $fx.front.deselect_item();
-        //e.stopImmediatePropagation();
         return false;
     }
-    if (e.which === 13 && (!this.is_wysiwyg || e.ctrlKey)) {
+    if (e.which === 13) {
+        var $target = $(e.target),
+            $node = $target.closest('.fx_edit_in_place');
+        if ($node.length) {
+            var c_eip = $node.data('edit_in_place');
+        } else {
+            c_eip = this;
+        }
+        if (c_eip.is_wysiwyg) {
+            return;
+        }
         this.fix();
         this.save().stop();
         $(this.node).closest('a').blur();
@@ -288,9 +298,7 @@ fx_edit_in_place.prototype.add_panel_field = function(meta) {
 fx_edit_in_place.prototype.stop = function() {
     this.node.data('edit_in_place', null);
     this.node.removeClass('fx_edit_in_place').removeClass('fx_editable_empty');
-    console.log('stpng');
     if (this.stopped) {
-        console.log('alrd');
         return this;
     }
     for (var i =0 ;i<this.panel_fields.length; i++) {
@@ -301,7 +309,7 @@ fx_edit_in_place.prototype.stop = function() {
         this.panel_fields[i].remove();
     }
     this.panel_fields = [];
-    this.node.data('edit_in_place', null);
+    
     this.node.attr('contenteditable', null);
     
     $('.fx_var_editable', this.node).attr('contenteditable', null);
@@ -561,7 +569,7 @@ fx_edit_in_place.prototype.save = function() {
     $.each(fx_edit_in_place.vars, function() {
         vars.push(this);
     });
-    console.log('saving', vars);
+    
     if (vars.length === 0) {
         return this;
     }
@@ -596,9 +604,6 @@ fx_edit_in_place.prototype.save = function() {
         post_data.new_entity_props = new_entity_props;
     }
     
-    //console.log('saving', post_data);
-    //return this;
-    
     var node = this.node,
         $infoblock = node.closest('.fx_infoblock');
     
@@ -628,7 +633,18 @@ fx_edit_in_place.prototype.restore = function() {
 fx_edit_in_place.prototype.make_wysiwyg = function () {
     var sel = window.getSelection(),
         $node = this.node,
-        node = $node[0];
+        node = $node[0],
+        eip = this;
+    
+    $node.on('keydown.edit_in_place', function(e) {
+        if (e.which === 13 && e.ctrlKey) {
+            eip.fix();
+            eip.save().stop();
+            e.stopImmediatePropagation();
+            return false;
+        }
+    });
+    
     if (sel && $.contains(node, sel.focusNode)) {
         var range = sel.getRangeAt(0);
         range.collapse(true);

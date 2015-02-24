@@ -2601,7 +2601,6 @@ fx_front.prototype.outline_block = function(n, style, speed) {
             if (pane_position === 'fixed') {
                 //lens_css.top -= doc_scroll;
                 lens_css.position = 'fixed';
-                //console.log('-' + doc_scroll);
             }
             
             $lens.css(lens_css);
