@@ -44,7 +44,7 @@ class File extends Baze
                 if (file_exists($c_val) && is_file($c_val)) {
                     preg_match("~[^" . preg_quote(DIRECTORY_SEPARATOR) . ']+$~', $c_val, $fn);
 
-                    $path = fx::path()->http('@content_files/' . $content['type'] . '/' . $this['keyword'] . '/' . $fn[0]);
+                    $path = fx::path()->http('@content_files/' . $content['site_id'].'/'.$content['type'] . '/' . $this['keyword'] . '/' . $fn[0]);
 
                     $try = 0;
                     while (fx::path()->exists($path)) {
