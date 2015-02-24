@@ -16,6 +16,15 @@ class Entity extends System\Entity
         }
         return $this->content_table;
     }
+    
+    public function getAllTables()
+    {
+        $tables = array();
+        foreach ($this->getChain() as $com) {
+            $tables []= $com->getContentTable();
+        }
+        return $tables;
+    }
 
     protected $chain = null;
     /**

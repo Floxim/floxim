@@ -372,7 +372,7 @@ class Util
     }
     
     /**
-     * Create dump file to import site-related data
+     * Create dump file to import site-related data (from all sites)
      */
     public function dumpData($target_file = null)
     {
@@ -396,5 +396,80 @@ class Util
             'schema' => false,
             'add' => true
         ));
+    }
+    
+    /**
+     * 
+     */
+    public function dumpSiteData($site_id = null, $target_file = null)
+    {
+        if (is_null($site_id)) {
+            $site_id = fx::env('site_id');
+        }
+        
+        if (is_null($target_file)) {
+            $dir = '@files/export/site_'.$site_id;
+            fx::files()->mkdir($dir);
+            $target_file = fx::path()->abs($dir.'/data.sql');
+        }
+        
+        // export infoblocks
+        fx::db()->dump(array(
+            'tables' => array('infoblock'),
+            'where' => 'site_id = '.$site_id,
+            'schema' => false,
+            'file' => $target_file
+        ));
+        
+        // export infoblock_visual
+        $infoblock_ids = fx::data('infoblock')->where('site_id', $site_id)->all()->getValues('id');
+        
+        fx::db()->dump(array(
+            'tables' => array('infoblock_visual'),
+            'where' => 'infoblock_id IN ('.join(", ", $infoblock_ids).')',
+            'schema' => false,
+            'file' => $target_file,
+            'add' => true
+        ));
+        
+        // export main content table
+        fx::db()->dump(array(
+            'tables' => array('floxim_main_content'),
+            'where' => 'site_id  = '.$site_id,
+            'schema' => false,
+            'file' => $target_file,
+            'add' => true
+        ));
+        
+        // get existing content items
+        $items = fx::db()->getResults('select id, type from {{floxim_main_content}} where site_id = '.fx::env('site_id'));
+        $items = fx::collection($items)->group('type');
+
+        $tables = array();
+
+        foreach ($items as $com_keyword => $data) {
+            $com = fx::component($com_keyword);
+            $com_tables = $com->getAllTables();
+            foreach ($com_tables as $t) {
+                if ($t === 'floxim_main_content') {
+                    continue;
+                }
+                if (!isset($tables[$t])) {
+                    $tables[$t] = array();
+                }
+                $tables[$t] = array_merge($tables[$t], $data->getValues('id'));
+            }
+        }
+        
+        foreach ($tables as $t => $item_ids) {
+            // export content table
+            fx::db()->dump(array(
+                'tables' => array($t),
+                'where' => 'id IN ('.join(',', $item_ids).')',
+                'schema' => false,
+                'file' => $target_file,
+                'add' => true
+            ));
+        }
     }
 }

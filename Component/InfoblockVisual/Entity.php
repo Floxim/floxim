@@ -94,6 +94,9 @@ class Entity extends System\Entity
                 continue;
             }
             $new = $this[$field];
+            if (!$new) {
+                $new = array();
+            }
             $old = $this->getOld($field);
             if (!$old || !is_array($old)) {
                 $old = array();
