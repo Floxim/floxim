@@ -121,6 +121,7 @@ class Layout extends Admin
         try {
             $layout->save();
             $layout->scaffold();
+            fx::trigger('layout_created', array('layout' => $layout));
             $result['reload'] = '#admin.layout.all';
         } catch (Exception $e) {
             $result['status'] = 'error';
