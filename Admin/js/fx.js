@@ -212,13 +212,13 @@ window.$fx = {
             
             return;
         }
-        $('html, body').html('').css({
+        $('body').html('').css({
             background:'#EEE',
             color:'#000', 
             margin:'30px 0', 
             font:'bold 22px arial',
             textAlign:'center'
-        }).html('reloading...');
+        }).html('<div class="fx_overlay fx_reloading">'+$fx.lang('reloading')+'...</div>');
         document.location.href = typeof new_location === 'string' ? new_location : document.location.href.replace(/#.*$/, '');  
     },
         

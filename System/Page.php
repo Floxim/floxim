@@ -99,18 +99,42 @@ class Page
         $this->files_js = array();
         $this->all_js = array();
     }
+    
+    public function addCssBundleFromString($string, $template_dir)
+    {
+        $lines = explode("\n", $string);
+        $files = array();
+        foreach ($lines as $l) {
+            $l = trim($l);
+            if (empty($l)) {
+                continue;
+            }
+            if (!preg_match("~^(/|https?://)~", $l)) {
+                $l = $template_dir.$l;
+            }
+            $files[]= fx::path()->abs($l);
+        }
+        $this->addCssBundle($files);
+    }
 
-    public function addCssBundle($files, $params = array())
+    public function addCssBundle($input_files, $params = array())
     {
 
         if (!isset($params['name'])) {
-            $params['name'] = md5(join($files));
+            $params['name'] = md5(join($input_files));
         }
         $params['name'] .= '.css.gz';
 
         $http_path = fx::path()->http('@files/asset_cache/' . $params['name']);
         $full_path = fx::path()->abs($http_path);
 
+        $files = array();
+        foreach ($input_files as $f) {
+            if (file_exists($f)) {
+                $files []= $f;
+            }
+        }
+        
         $last_modified = 0;
         $less_flag = false;
         foreach ($files as $file) {

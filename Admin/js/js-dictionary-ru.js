@@ -20,6 +20,7 @@
         'This block is empty' : 'Здесь пока ничего нет',
         'or' : 'или',
         'You can add %s here' : 'Можно добавить %s',
+        'reloading': 'Обновляем страницу',
         date_order:'d.m.y, h:i',
         date_placeholder_d: 'дд',
         date_placeholder_m: 'мм',

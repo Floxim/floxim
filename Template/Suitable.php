@@ -8,13 +8,23 @@ use Floxim\Floxim\System\Fx as fx;
 class Suitable
 {
 
-    public static function unsuit($site_id = null, $layout_id = null)
+    public static function unsuit($layout_id = null, $site_id = null)
     {
         if (is_null($site_id)) {
             $site_id = fx::env('site')->get('id');
         }
         if (is_null($layout_id)) {
             $layout_id = fx::data('site', $site_id)->get('layout_id');
+        }
+        if (!is_numeric($layout_id)) {
+            $layout = fx::data('layout')->whereOr(
+                array('keyword', '%'.$layout_id.'%', 'like'),
+                array('keyword', '%'.$layout_id.'%', 'like')
+            )->one();
+            if (!$layout) {
+                return;
+            }
+            $layout_id = $layout['id'];
         }
         $infoblocks_query = fx::data('infoblock')
             ->where('site_id', $site_id)
@@ -61,10 +71,16 @@ class Suitable
             if (!isset($layout_rate[$c_layout_id])) {
                 $layout_rate[$c_layout_id] = 0;
             }
+            // count how many visual blocks are defined for each layout
+            // later we should sort this to fined correct "original" layout made by human
             $layout_rate[$c_layout_id]++;
         }
-
-        $source_layout_id = $c_layout_id;
+        
+        //$source_layout_id = $c_layout_id;
+        $avail_layout_ids = array_keys($layout_rate);
+        // temp: use first
+        // $source_layout_id = $avail_layout_ids[0];
+        $source_layout_id = end($avail_layout_ids);
 
         if (!$layout_ib) {
             $layout_ib = fx::router('front')->getLayoutInfoblock(fx::env('page'));
@@ -87,7 +103,7 @@ class Suitable
             if (!$ib_visual['is_stub']) {
                 continue;
             }
-            fx::log('suiting', $ib, $ib_visual);
+            
             $old_area = $ib->getPropInherited('visual.area', $source_layout_id);
             // Suit record infoblock to the area where list infoblock is placed
             if ($ib->getPropInherited('action') == 'record') {
@@ -123,10 +139,8 @@ class Suitable
 
             $controller_templates = $ib_controller->getAvailableTemplates($layout['keyword'], $area_meta);
             
-            fx::log('got av templates', $controller_templates, $ib_controller, $area_meta);
-
             $old_template = $ib->getPropInherited('visual.template', $source_layout_id);
-
+            //fx::log('for ib vis', $ib_visual, $old_template, $ib['visuals'], $area_map);
             $used_template_props = null;
             foreach ($controller_templates as $c_tpl) {
                 if ($c_tpl['full_id'] == $old_template) {
@@ -139,7 +153,9 @@ class Suitable
                 $ib_visual['template'] = $controller_templates[0]['full_id'];
                 $used_template_props = $controller_templates[0];
             }
-
+            
+            //fx::log($ib_controller, $controller_templates, $used_template_props);
+            
             if (!$ib_visual['area']) {
                 $block_size = self::getSize($used_template_props['size']);
                 $c_area = null;
@@ -165,14 +181,12 @@ class Suitable
             }
 
             unset($ib_visual['is_stub']);
-            fx::log('saving ibv', $ib_visual);
             $ib_visual->save();
         }
     }
 
     protected function adjustLayoutVisual($layout_ib, $layout_id, $source_layout_id)
     {
-
         $is_root_layout = (bool)$layout_ib['parent_infoblock_id'];
         if ($is_root_layout && $source_layout_id) {
             $root_layout_ib = $layout_ib->getRootInfoblock();
@@ -180,39 +194,50 @@ class Suitable
                 $this->adjustLayoutVisual($root_layout_ib, $layout_id, $source_layout_id);
             }
         }
-
+        
         $layout = fx::data('layout', $layout_id);
-
 
         $layout_tpl = fx::template('theme.' . $layout['keyword']);
         $template_variants = $layout_tpl->getTemplateVariants();
 
         $source_template_params = null;
-
+        
         if ($source_layout_id) {
             $source_template = $layout_ib->getPropInherited('visual.template', $source_layout_id);
             if (!$is_root_layout) {
                 $source_template_params = $layout_ib->getPropInherited('visual.template_visual', $source_layout_id);
             }
             $old_areas = fx::template($source_template)->getAreas();
+            
             $c_relevance = 0;
             $c_variant = null;
             foreach ($template_variants as $tplv) {
-                if ($tplv['of'] !== 'layout:show' && $tplv['id'] !== '_layout_body') {
+                if ($tplv['of'] !== 'floxim.component.layout:show' && $tplv['id'] !== '_layout_body') {
                     continue;
                 }
                 $test_layout_tpl = fx::template($tplv['full_id']);
                 $tplv['real_areas'] = $test_layout_tpl->getAreas();
                 $map = $this->mapAreas($old_areas, $tplv['real_areas']);
+                /*
+                fx::log(
+                    'mapped', 
+                    fx::data('layout', $source_layout_id)->get('name').' -> '.
+                    $tplv['full_id'],
+                    $map, 
+                    $old_areas, 
+                    $tplv['real_areas']
+                );
+                 * 
+                 */
                 if (!$map) {
                     continue;
                 }
                 if ($map['relevance'] > $c_relevance) {
                     $c_relevance = $map['relevance'];
                     $c_variant = $map + array(
-                            'full_id' => $tplv['full_id'],
-                            'areas'   => $tplv['real_areas']
-                        );
+                        'full_id' => $tplv['full_id'],
+                        'areas'   => $tplv['real_areas']
+                    );
                 }
             }
         }
@@ -250,11 +275,16 @@ class Suitable
     protected function mapAreas($old_set, $new_set)
     {
         $total_relevance = 0;
-        foreach ($old_set as &$old_area) {
+        $old_pos = 0;
+        foreach ($old_set as $old_area_id => &$old_area) {
             $old_size = $this->_getSize($old_area);
             $c_match = false;
             $c_match_index = 1;
+            $old_pos++;
+            $new_pos = 0;
+            
             foreach ($new_set as $new_area_id => $new_area) {
+                $new_pos++;
                 $new_size = $this->_getSize($new_area);
                 $area_match = 0;
 
@@ -288,9 +318,12 @@ class Suitable
 
                 // if the field is already another: -2
                 if ($new_area['used']) {
-                    $area_match -= 2;
+                    $area_match -= 1;
                 }
-
+                
+                $offset_diff = abs($old_pos/count($old_set) - $new_pos/count($new_set))*2;
+                $area_match -= $offset_diff;
+                
                 // if the current index is larger than the previous - remember
                 if ($area_match > $c_match_index) {
                     $c_match = $new_area_id;
@@ -300,10 +333,12 @@ class Suitable
             if ($c_match_index == 0) {
                 return false;
             }
-            $old_area['analog'] = $c_match;
-            $old_area['relevance'] = $c_match_index;
-            $new_set[$c_match]['used'] = true;
-            $total_relevance += $c_match_index;
+            if ($c_match) {
+                $old_area['analog'] = $c_match;
+                $old_area['relevance'] = $c_match_index;
+                $new_set[$c_match]['used'] = true;
+                $total_relevance += $c_match_index;
+            }
         }
         // for each unused lower the score 2
         foreach ($new_set as $new_area) {
@@ -357,12 +392,33 @@ class Suitable
         }
         return $n;
     }
+    
+    protected function guessSizeByName($name)
+    {
+        if (preg_match("~main|content~", $name)) {
+            return array('width' => 'wide', 'height' => 'high');
+        }
+        if (preg_match("~side|col~", $name)) {
+            return array('width' => 'narrow', 'height' => 'high');
+        }
+        
+        if (preg_match("~head|top|foot|bottom~", $name)) {
+            return array('height' => 'low', 'width' => 'wide');
+        }
+    }
 
     protected function _getSize($block)
     {
         $res = array('width' => 'any', 'height' => 'any');
         if (!isset($block['size'])) {
-            return $res;
+            if (!isset($block['id'])) {
+                return $res;
+            }
+            $guessed = $this->guessSizeByName($block['id']);
+            if (!$guessed) {
+                return $res;
+            }
+            return $guessed;
         }
         if (preg_match('~wide|narrow~', $block['size'], $width)) {
             $res['width'] = $width[0];

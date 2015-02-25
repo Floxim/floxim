@@ -196,7 +196,7 @@ class Template
         $areas = array();
         ob_start();
         fx::listen('render_area.get_areas', function ($e) use (&$areas) {
-            $areas[$e->area['id']] = $e->area;
+            $areas[$e['area']['id']] = $e['area'];
         });
         $this->render(array('_idle' => true));
         fx::unlisten('render_area.get_areas');

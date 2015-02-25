@@ -257,6 +257,10 @@ class Token
         ),
         'separator' => array(
             'type' => 'double'
+        ),
+        'css' => array(
+            'type' => 'double',
+            'contains' => array('var', 'if', 'elseif', 'else', 'apply', 'call')
         )
     );
 

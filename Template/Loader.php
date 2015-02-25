@@ -15,6 +15,7 @@ class Loader
     protected $source_files = array();
     protected $template_name = null;
     protected $target_hash = null;
+    protected $imported_paths = array();
 
     public function __construct()
     {
@@ -32,12 +33,33 @@ class Loader
         }
         $this->source_files[] = realpath($source_file);
     }
+    
+    public function handleSourceDirConfig($source_dir)
+    {
+        $config_file = $source_dir.'/template.ini';
+        if (!file_exists($config_file)) {
+            return;
+        }
+        $config_data = parse_ini_file($config_file, true);
+        if (!$config_data || !isset($config_data['import']) || !is_array($config_data['import'])) {
+            return;
+        }
+        foreach ($config_data['import'] as $template => $import) {
+            $template_dir = self::nameToPath($template);
+            if ($import === '*') {
+                $this->imported_paths[]= $template_dir;
+                $this->addSourceDir($template_dir);
+            }
+        }
+    }
 
     public function addSourceDir($source_dir)
     {
         if (!file_exists($source_dir) || !is_dir($source_dir)) {
             throw new \Exception('Source dir ' . $source_dir . ' does not exist');
         }
+        
+        $this->handleSourceDirConfig($source_dir);
 
         $tpl_files = glob($source_dir . '/*.tpl');
         if (!$tpl_files) {
@@ -83,30 +105,34 @@ class Loader
         }
         return $this->is_aliased;
     }
+    
+    public static function nameToPath($name)
+    {
+        $ns = fx::getComponentNamespace($name);
+        $ns = explode("\\", trim($ns, "\\"));
+        if ($ns[0] === 'Theme') {
+            $ns[0] = 'theme';
+        } else {
+            array_unshift($ns, 'module');
+        }
+        return fx::path()->abs('/' . join("/", $ns));
+    }
 
     public function addDefaultSourceDirs()
     {
-
         $template_name = $this->getTemplateName();
 
         if (!$this->isAliased()) {
-            $ns = fx::getComponentNamespace($this->getTemplateName());
-
-            $ns = explode("\\", trim($ns, "\\"));
-
-            if ($ns[0] === 'Theme') {
-                $ns[0] = 'theme';
-            } else {
-                array_unshift($ns, 'module');
-            }
-
-            $dirs = array(fx::path()->abs('/' . join("/", $ns)));
+            
+            $dir = self::nameToPath($this->getTemplateName());
+            
+            $dirs = array($dir);
 
             foreach ($dirs as $dir) {
                 try {
                     $this->addSourceDir($dir);
                 } catch (\Exception $e) {
-                    fx::log('Error while adding template source dir', $e, $ns);
+                    fx::log('Error while adding template source dir', $e->getMessage());
                 }
             }
         }
@@ -461,7 +487,14 @@ class Loader
         }
         $res = '{templates name="' . $this->getTemplateName() . '" is_aliased="'.($this->isAliased() ? 'true': 'false').'"}';
         foreach ($sources as $file => $source) {
-            $res .= '{templates source="' . $file . '"}';
+            $is_imported = false;
+            foreach ($this->imported_paths as $imported_path) {
+                if (strpos($file, $imported_path) === 0) {
+                    $is_imported = true;
+                    break;
+                }
+            }
+            $res .= '{templates source="' . $file . '" is_imported="'.($is_imported ? 'true' : 'false').'" }';
             $res .= $this->prepareFileData($source, $file);
             $res .= '{/templates}';
         }

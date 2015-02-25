@@ -34,7 +34,9 @@ html.click(function() {
     var vals = $b.data('inline');
     var $form = $b.closest('form');
     $.each(vals, function(k, v) {
-        console.log($(':input[name="'+k+'"]'), v);
-        $(':input[name="'+k+'"]').val(v);
+        $(':input[name="'+k+'"]').val(v).trigger('change');
     });
+    if (_c.submit) {
+        $b.closest('form').submit();
+    }
 });

@@ -136,6 +136,10 @@ class Env
     public function getLayout()
     {
         if (!isset($this->current['layout'])) {
+            if ( ($preview_id = self::getLayoutPreview()) ) {
+                $this->current['layout'] = $preview_id;
+                return $preview_id;
+            }
             $page_id = $this->getPageId();
             if ($page_id) {
                 $page = fx::data('page', $page_id);
@@ -151,6 +155,36 @@ class Env
             }
         }
         return $this->current['layout'];
+    }
+    
+    protected static function getLayoutPreviewCookieName($site_id = null)
+    {
+        if (!$site_id) {
+            $site_id = fx::env('site_id');
+        }
+        return 'fx_layout_preview_'.$site_id;
+    }
+    
+    /**
+     * 
+     * @param type $layout_id drop cookie if false
+     */
+    public function setLayoutPreview($layout_id)
+    {
+        if ($layout_id === false) {
+            $cookie_time = time() - 60*60*60;
+            unset($this->current['layout']);
+        } else {
+            $this->current['layout'] = $layout_id;
+            $cookie_time = time() + 60*60*24*365;
+        }
+        setcookie(self::getLayoutPreviewCookieName(), $layout_id, $cookie_time, '/');
+    }
+    
+    public function getLayoutPreview()
+    {
+        $cookie = self::getLayoutPreviewCookieName();
+        return isset($_COOKIE[$cookie]) ? $_COOKIE[$cookie] : null;
     }
 
     public function getLayoutId()

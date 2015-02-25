@@ -169,6 +169,81 @@ class Layout extends Admin
         $this->response->submenu->setMenu('layout-' . $layout['id'])->setSubactive($action);
         return $result;
     }
+    
+    public function changeTheme($input) {
+        $fields = array();
+        $layouts = fx::data('layout')->all();
+        $layouts_select = array();
+        
+        $current_preview = fx::env()->getLayoutPreview();
+        
+        foreach ($layouts as $layout) {
+            $layouts_select[] = array(
+                $layout['id'], 
+                $layout['name'] . ($current_preview == $layout['id'] ? ' ('.fx::alang('Preview').')' : '')
+            );
+        }
+
+        $fields [] = array(
+            'name'   => 'layout_id',
+            'type'   => 'select',
+            'values' => $layouts_select,
+            'value'  => fx::env('layout_id'),
+            'label'  => fx::alang('Layout', 'system')
+        );
+        
+        $fields[]= $this->ui->hidden('settings_sent', 'true');
+        $fields[]= $this->ui->hidden('entity', 'layout');
+        $fields[]= $this->ui->hidden('action', 'change_theme');
+        
+        $real_layout_id = fx::env('site')->get('layout_id');
+        
+        if ($current_preview) {    
+            $fields [] = array(
+                'type'  => 'button',
+                'role'  => 'preset',
+                'label' => fx::alang('Cancel preview', 'system'),
+                'data'  => array(
+                    'layout_id' => $real_layout_id
+                ),
+                'parent' => array('layout_id' => '!='.$real_layout_id),
+                'submit' => true
+            );
+        }
+        
+        if (isset($input['settings_sent'])) {
+            if ($input['pressed_button'] == 'preview') {
+                fx::env()->setLayoutPreview($input['layout_id']);
+            } else {
+                if (!$current_preview || $current_preview != $real_layout_id) {
+                    fx::env('site')->set('layout_id', $input['layout_id'])->save();
+                }
+                if ($current_preview) {
+                    fx::env()->setLayoutPreview(false);
+                }
+            }
+            return array(
+                'status' => 'ok',
+                'reload' => true
+            );
+        }
+        
+        $this->response->addFormButton(array(
+            'key'   => 'preview',
+            'label' => fx::alang('Preview', 'system')
+        ));
+        
+        $this->response->addFormButton(array(
+            'key'   => 'save',
+            'label' => fx::alang('Save', 'system')
+        ));
+        
+        return array(
+            'fields' => $fields,
+            'header' => fx::alang('Change theme', 'system'),
+            'view'   => 'horizontal'
+        );
+    }
 
     public static function makeBreadcrumb($template, $action, $breadcrumb)
     {

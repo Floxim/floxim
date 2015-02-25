@@ -12,6 +12,8 @@ class Compiler
 {
     protected $template_set_name = null;
     protected $is_aliased = false;
+    protected $current_source_file = null;
+    protected $current_source_is_imported = false;
 
     /**
      * Convert the tree of tokens in the php code
@@ -1024,42 +1026,65 @@ class Compiler
     {
         return $this->tokenHeadfileToCode($token, 'css');
     }
+    
+    protected function cssBundleToCode($token)
+    {
+        
+        $code .= "ob_start();\n";
+        // add extra \n to each text child
+        foreach ($token->getChildren() as $child) {
+            if ($child->name == 'code') {
+                $child->setProp('value', "\n ".$child->getProp('value')." \n");
+            } elseif ($child->name == 'var'){
+                $child->setProp('editable', 'false');
+            }
+        }
+        $code .= $this->childrenToCode($token)."\n";
+        $code .= 'fx::page()->addCssBundleFromString(ob_get_clean(), $template_dir);'."\n";
+        return $code;
+    }
 
     protected function tokenHeadfileToCode($token, $type)
     {
         $code = "<?php\n";
-        foreach ($token->getChildren() as $set) {
-            $set = preg_split("~[\n]~", $set->getProp('value'));
-            foreach ($set as $file) {
-                $file = trim($file);
-                if (empty($file)) {
-                    continue;
-                }
-                $res_string = '';
-                $alias = null;
-                if (preg_match('~\sas\s~', $file)) {
-                    $file_parts = explode(" as ", $file);
-                    $file = trim($file_parts[0]);
-                    $alias = trim($file_parts[1]);
-                }
-                // constant
-                if (preg_match("~^[A-Z0-9_]+$~", $file)) {
-                    $res_string = $file;
-                } elseif (!preg_match("~^(/|https?://)~", $file)) {
-                    $res_string = '$template_dir."' . $file . '"';
-                } else {
-                    $res_string = '"' . $file . '"';
-                }
-                if ($alias) {
-                    $code .= "if (!fx::page()->hasFileAlias('" . $alias . "', '" . $type . "')) {\n";
-                }
-                $code .= 'fx::page()->add' . fx::util()->underscoreToCamel($type) . 'File(' . $res_string . ");\n";
-                if ($alias) {
-                    $code .= "fx::page()->hasFileAlias('" . $alias . "', '" . $type . "', true);\n";
-                    $code .= "}\n";
+        $code .= 'if (!$context->get("_idle")) {'."\n";
+        if ($token->getProp('bundle')) {
+            $code .= $this->cssBundleToCode($token);
+        } else {
+            foreach ($token->getChildren() as $set) {
+                $set = preg_split("~[\n]~", $set->getProp('value'));
+                foreach ($set as $file) {
+                    $file = trim($file);
+                    if (empty($file)) {
+                        continue;
+                    }
+                    $res_string = '';
+                    $alias = null;
+                    if (preg_match('~\sas\s~', $file)) {
+                        $file_parts = explode(" as ", $file);
+                        $file = trim($file_parts[0]);
+                        $alias = trim($file_parts[1]);
+                    }
+                    // constant
+                    if (preg_match("~^[A-Z0-9_]+$~", $file)) {
+                        $res_string = $file;
+                    } elseif (!preg_match("~^(/|https?://)~", $file)) {
+                        $res_string = '$template_dir."' . $file . '"';
+                    } else {
+                        $res_string = '"' . $file . '"';
+                    }
+                    if ($alias) {
+                        $code .= "if (!fx::page()->hasFileAlias('" . $alias . "', '" . $type . "')) {\n";
+                    }
+                    $code .= 'fx::page()->add' . fx::util()->underscoreToCamel($type) . 'File(' . $res_string . ");\n";
+                    if ($alias) {
+                        $code .= "fx::page()->hasFileAlias('" . $alias . "', '" . $type . "', true);\n";
+                        $code .= "}\n";
+                    }
                 }
             }
         }
+        $code .= "}\n";
         $code .= "\n?>";
         return $code;
     }
@@ -1103,14 +1128,15 @@ class Compiler
     protected function makeTemplateCode(&$tpl_props, &$registry)
     {
         self::$func_counter++;
-        if (self::$func_counter > 100) {
+        if (self::$func_counter > 1000) {
+            fx::log('More than 1000 functions registered!');
             return;
         }
         $code  = '';
         $token = $tpl_props['_token'];
         if (!$token) {
-            fx::debug($tpl_props, debug_backtrace());
-            die();
+            fx::log('No template token while processing template code', $tpl_props);
+            return;
         }
         $predicate = $token->getProp('test');
         $tags = isset($tpl_props['tags']) ? $tpl_props['tags'] : null;
@@ -1150,6 +1176,10 @@ class Compiler
             $hash .= join(", ", $tags);
             $code .= '// tags: '.join(", ", $tags)."\n";
         }
+        if (isset($tpl_props['variant_number'])) {
+            $hash .= ' '.$tpl_props['variant_number'];
+            $code .= '// variant number: '.$tpl_props['variant_number']."\n";
+        }
         if ($hash) {
             $method_name .= '_'. md5($hash);
         }
@@ -1160,9 +1190,7 @@ class Compiler
         $code .= "fx::env()->addCurrentTemplate(\$this);\n";
 
         if (strstr($children_code, "\$template_dir")) {
-            $template_path = str_replace(realpath($_SERVER['DOCUMENT_ROOT']), '', $this->_current_source_file);
-            $template_path = str_replace('\\', '/', $template_path);
-            $template_dir = preg_replace("~/[^/]+$~", '', $template_path) . '/';
+            $template_dir = preg_replace("~[^/]+$~", '', $tpl_props['file']);
             $code .= "\$template_dir = '" . $template_dir . "';\n";
         }
         $has_meta_var = strstr($children_code, "\$_is_wrapper_meta");
@@ -1260,7 +1288,14 @@ class Compiler
         }
         
         $tpl_props['id'] =  $tpl_id;
-        $tpl_props['file'] = fx::path()->http($this->_current_source_file);
+        $tpl_props['file'] = fx::path()->http($this->current_source_file);
+        $tpl_props['is_imported'] = $this->current_source_is_imported;
+        if ($this->current_source_is_imported) {
+            if (!$tpl_props['tags']) {
+                $tpl_props['tags'] = array();
+            }
+            $tpl_props['tags'][]= 'imported';
+        }
         
         if (($offset = $token->getProp('offset'))) {
             $tpl_props['offset'] = $offset;
@@ -1337,10 +1372,12 @@ class Compiler
             // this is the second template with the same name
             if (!isset($this->templates[$tpl_id]['_variants'])) {
                 $first_tpl = $this->templates[$tpl_id];
+                $first_tpl['variant_number'] = 0;
                 $this->templates[$tpl_id] = $first_tpl + array(
-                        '_variants' => array($first_tpl)
-                    );
+                    '_variants' => array($first_tpl)
+                );
             }
+            $tpl_props['variant_number'] = count($this->templates[$tpl_id]['_variants']);
             $this->templates[$tpl_id]['_variants'][] = $tpl_props;
         } else {
             $this->templates[$tpl_id] = $tpl_props;
@@ -1353,7 +1390,8 @@ class Compiler
     protected function collectTemplates($root)
     {
         foreach ($root->getChildren() as $template_file_token) {
-            $this->_current_source_file = $template_file_token->getProp('source');
+            $this->current_source_file = $template_file_token->getProp('source');
+            $this->current_source_is_imported = $template_file_token->getProp('is_imported') === 'true';
             foreach ($template_file_token->getChildren() as $template_token) {
                 $this->registerTemplate($template_token);
             }
@@ -1494,10 +1532,15 @@ class Compiler
         // $code could throw a "Cannot redeclare" fatal error.
 
         $braces || $code = "if(0){{$code}\n}";
-
+        
+        register_shutdown_function(function() use ($code) {
+            if (!fx::env('complete_ok')) {
+                fx::log('Died while compiling template', $code);
+            }
+        });
         ob_start();
         $eval_res = eval($code);
-
+        
         if (false === $eval_res) {
             if ($braces) {
                 $braces = PHP_INT_MAX;
