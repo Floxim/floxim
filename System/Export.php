@@ -102,7 +102,7 @@ class Export
         if (isset($this->systemItemsForExport[$type])) {
             $ids = array_diff($ids, $this->systemItemsForExport[$type]);
         } else {
-            $this->systemItemsForExport[$type]=array();
+            $this->systemItemsForExport[$type] = array();
         }
 
         if (!$ids) {
@@ -112,7 +112,7 @@ class Export
         /**
          * Сразу блокируем повторный экспорт
          */
-        $this->systemItemsForExport[$type]=array_merge($this->systemItemsForExport[$type],$ids);
+        $this->systemItemsForExport[$type] = array_merge($this->systemItemsForExport[$type], $ids);
 
         $usedSystemItems = array();
         $usedContentItems = array();
@@ -120,7 +120,7 @@ class Export
         $this->readDataTable($type, array(array('id', $ids)),
             function ($item) use ($_this, $type, &$usedSystemItems, &$usedContentItems, $ids) {
 
-                $needSave=true;
+                $needSave = true;
                 /**
                  * Хардкодим для специфичных типов
                  */
@@ -129,7 +129,7 @@ class Export
                      * Проверяем принадлежность инфоблока к корневому дереву
                      * TODO: при экспорте сайта необходимо рефакторить
                      */
-                    if (!in_array($item['page_id'],$_this->contentsRootTreeForExport)) {
+                    if (!in_array($item['page_id'], $_this->contentsRootTreeForExport)) {
                         //$needSave=false;
                         return;
                     }
@@ -189,7 +189,7 @@ class Export
                         foreach ($params['conditions'] as $fieldCond) {
                             if (isset($linkedFields[$fieldCond['name']]) and $fieldCond['value']) {
                                 $linkedField = $linkedFields[$fieldCond['name']];
-                                $_this->processingLinkedField($linkedField, $fieldCond['value'], $usedContentItems,
+                                $_this->processingLinkedField($linkedField, $fieldCond['value'], null, $usedContentItems,
                                     $usedSystemItems);
                             }
                             /**
@@ -267,7 +267,7 @@ class Export
         /**
          * Рекурсивный экспорт ветки дерева
          */
-        $this->exportContentTree($contentId,true);
+        $this->exportContentTree($contentId, true);
         /**
          * Корректно завершаем файлы экспорта
          */
@@ -276,7 +276,7 @@ class Export
         $this->exportComponents($this->componentsForExport);
     }
 
-    protected function exportContentTree($contentId,$isRoot=false)
+    protected function exportContentTree($contentId, $isRoot = false)
     {
         $contentFilter = array();
         if ($content = fx::data('floxim.main.content', $contentId)) {
@@ -364,10 +364,10 @@ class Export
                         /**
                          * Пропускаем экспорт родителя корневого узла
                          */
-                        if ($isRoot and $linkedField['keyword']=='parent_id' and $item['id']==$contentId) {
+                        if ($isRoot and $linkedField['keyword'] == 'parent_id' and $item['id'] == $contentId) {
                             continue;
                         }
-                        $_this->processingLinkedField($linkedField, $item[$linkedField['keyword']], $linkedContent,
+                        $_this->processingLinkedField($linkedField, $item[$linkedField['keyword']], $item['id'], $linkedContent,
                             $linkedSystemItems);
                     }
                     /**
@@ -507,11 +507,24 @@ class Export
                     $item['target_type'] = 'system';
                 }
             } elseif ($field['type'] == \Floxim\Floxim\Component\Field\Entity::FIELD_MULTILINK) {
+                $item['linking_field'] = fx::data('field', $format['linking_field'])->get('keyword');
+                $item['linking_component'] = fx::data('component', $format['linking_datatype'])->get('keyword');
                 /**
                  * Обработка формата "один ко многим"
                  */
-
-
+                if (isset($format['mm_field']) and $format['mm_field']) {
+                    /**
+                     * Many-many
+                     */
+                    $item['type-many'] = 'many-many';
+                    $item['mm_field'] = fx::data('field', $format['mm_field'])->get('keyword');
+                    $item['mm_component'] = fx::data('component', $format['mm_datatype'])->get('keyword');
+                } else {
+                    /**
+                     * Has many
+                     */
+                    $item['type-many'] = 'has-many';
+                }
             }
             $types[$item['keyword']] = $item;
         }
@@ -650,7 +663,7 @@ class Export
         return 0;
     }
 
-    protected function processingLinkedField($linkedField, $value, &$linkedContent, &$linkedSystemItems)
+    protected function processingLinkedField($linkedField, $value, $itemId, &$linkedContent, &$linkedSystemItems)
     {
         if ($linkedField['type'] == \Floxim\Floxim\Component\Field\Entity::FIELD_LINK) {
             /**
@@ -662,13 +675,13 @@ class Export
             if (!is_array($value)) {
                 $value = array($value);
             }
-
             /**
              * Обработка связи "один к одному"
              */
             if ($linkedField['target_type'] == 'component') {
                 /**
                  * Добавляем линкуемый компонент в число экспортируемых
+                 * todo: скорее всего это можно пропустить, т.к. при экспорте дерева контента все-равно получается компонент
                  */
                 $this->componentsForExport[] = $linkedField['target_id'];
                 /**
@@ -702,8 +715,41 @@ class Export
             /**
              * Обработка связи "один ко многим"
              */
-
-
+            if ($linkedField['type-many'] == 'has-many') {
+                /**
+                 * Варианта два:
+                 * 1 - переданы конкретные значения в $value (используется в условиях инфоблоков)
+                 * 2 - передан id обрабатываемого элемента $itemId (используется для получения связей конкретного элемента)
+                 */
+                if ($itemId) {
+                    /**
+                     * Получаем список элементов контента
+                     */
+                    $finder = fx::data($linkedField['linking_component']);
+                    $contents = $finder->where($linkedField['linking_field'], $itemId)->all()->getValues('id');
+                    $linkedContent = array_merge($linkedContent, $contents);
+                } else {
+                    if (!$value) {
+                        return;
+                    }
+                    if (!is_array($value)) {
+                        $value = array($value);
+                    }
+                    $linkedContent = array_merge($linkedContent, $value);
+                }
+            } elseif ($linkedField['type-many'] == 'many-many') {
+                /**
+                 * Обработка связи "много ко многим"
+                 */
+                $finder = fx::data($linkedField['linking_component']);
+                $linkers = $finder->where($linkedField['linking_field'], $itemId)->all()->getValues($linkedField['mm_field']);
+                $linkedContent = array_merge($linkedContent, $linkers);
+                /**
+                 * Добавляем линкуемый компонент в число экспортируемых
+                 * todo: скорее всего это можно пропустить, т.к. при экспорте дерева контента все-равно получается компонент
+                 */
+                $this->componentsForExport[] = $linkedContent['mm_component'];
+            }
         }
     }
 
