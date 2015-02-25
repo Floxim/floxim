@@ -201,6 +201,13 @@ class Export
                             }
                         }
                     }
+                    /**
+                     * Линкованные параметры
+                     */
+                    $finder = fx::data('floxim.main.linker');
+                    if ($linkers = $finder->where('infoblock_id', $item['id'])->all()->getValues('linked_id')) {
+                        $usedContentItems = array_merge($usedContentItems, $linkers);
+                    }
                 } elseif ($type == 'infoblock_visual') {
                     /**
                      * TODO: пока не понятно, что делать с layout_id
