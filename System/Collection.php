@@ -475,13 +475,13 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
     }
 
     /*
-     * To apply a function to all elements
+     * Apply a function to all elements
      */
     public function apply($callback)
     {
         $initial_key = key($this->data);
-        foreach ($this->data as &$di) {
-            call_user_func_array($callback, array(&$di));
+        foreach ($this->data as $dk => &$di) {
+            call_user_func_array($callback, array(&$di, $dk));
         }
         $this->setPosition($initial_key);
         return $this;

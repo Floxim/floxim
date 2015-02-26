@@ -350,7 +350,7 @@ class Entity extends System\Entity implements Template\Entity
             try {
                 $res = $controller->process();
             } catch (\Exception $e) {
-                fx::log('controller exception', $controller, $e);
+                fx::log('controller exception', $controller, $e->getMessage());
                 $res = '';
             }
         }
