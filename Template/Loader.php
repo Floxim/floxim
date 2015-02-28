@@ -31,7 +31,7 @@ class Loader
             $this->addSourceDir($source_file);
             return;
         }
-        $this->source_files[] = realpath($source_file);
+        $this->source_files[] = $source_file;
     }
     
     public function handleSourceDirConfig($source_dir)

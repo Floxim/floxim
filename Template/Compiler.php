@@ -1291,7 +1291,7 @@ class Compiler
         $tpl_props['file'] = fx::path()->http($this->current_source_file);
         $tpl_props['is_imported'] = $this->current_source_is_imported;
         if ($this->current_source_is_imported) {
-            if (!$tpl_props['tags']) {
+            if (!isset($tpl_props['tags']) || !$tpl_props['tags']) {
                 $tpl_props['tags'] = array();
             }
             $tpl_props['tags'][]= 'imported';

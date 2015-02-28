@@ -57,7 +57,7 @@ class Admin extends System\Controller
         }
 
         if (isset($input['posting']) && $input['posting']) {
-            if (!$result['text']) {
+            if (!isset($result['text']) || !$result['text']) {
                 $result['text'] = $this->getStatusText();
             }
         }
@@ -182,8 +182,10 @@ class Admin extends System\Controller
         } else {
             $auth_form = fx::controller('user:auth_form')->render('user:auth_form');
 
-            $recover_form = fx::controller('user:recover_form',
-                array('email' => $_POST['email']))->render('user:recover_form');
+            $recover_form = fx::controller(
+                    'user:recover_form',
+                    array('email' => isset($_POST['email']) ? $_POST['email'] : null)
+                )->render('user:recover_form');
             $res = fx::template('@admin:authorize')->render(array(
                 'auth_form'    => $auth_form,
                 'recover_form' => $recover_form

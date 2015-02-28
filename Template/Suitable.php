@@ -173,7 +173,7 @@ class Suitable
 
             $old_wrapper = $ib->getPropInherited('visual.wrapper', $source_layout_id);
             if ($old_wrapper && $area_meta) {
-                $area_suit = self::parseAreaSuitProp($area_meta['suit']);
+                $area_suit = self::parseAreaSuitProp(isset($area_meta['suit']) ? $area_meta['suit'] : null);
                 if ($area_suit['default_wrapper']) {
                     $ib_visual['wrapper'] = $area_suit['default_wrapper'][0];
                     $ib_visual['wrapper_visual'] = $ib->getPropInherited('visual.wrapper_visual', $source_layout_id);
@@ -317,7 +317,7 @@ class Suitable
                 $area_match += $this->compareNames($old_area['id'], $new_area['id']);
 
                 // if the field is already another: -2
-                if ($new_area['used']) {
+                if (isset($new_area['used']) && $new_area['used']) {
                     $area_match -= 1;
                 }
                 
@@ -348,7 +348,7 @@ class Suitable
         }
         $map = array();
         foreach ($old_set as $old_set_item) {
-            $map[$old_set_item['id']] = $old_set_item['analog'];
+            $map[$old_set_item['id']] = isset($old_set_item['analog']) ? $old_set_item['analog'] : null;
         }
         $res = array('relevance' => $total_relevance, 'map' => $map);
         return $res;
