@@ -461,7 +461,7 @@ class Util
         ));
         
         // get existing content items
-        $items = fx::db()->getResults('select id, type from {{floxim_main_content}} where site_id = '.fx::env('site_id'));
+        $items = fx::db()->getResults('select id, type from {{floxim_main_content}} where site_id = '.$site_id);
         $items = fx::collection($items)->group('type');
 
         $tables = array();
