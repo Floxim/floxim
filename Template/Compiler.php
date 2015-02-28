@@ -1030,7 +1030,7 @@ class Compiler
     protected function cssBundleToCode($token)
     {
         
-        $code .= "ob_start();\n";
+        $code = "ob_start();\n";
         // add extra \n to each text child
         foreach ($token->getChildren() as $child) {
             if ($child->name == 'code') {
