@@ -94,6 +94,11 @@ class Import
         }
         $this->loadAllDataToTmpTable($dir);
 
+        /**
+         * Непосредственный импорт контента
+         * 1.
+         */
+
 
         /**
          * Удаляем из таблицы временные данные
@@ -152,11 +157,12 @@ class Import
               `key` varchar(50) NOT NULL,
               `target_id` int(11) NOT NULL,
               `target_type` varchar(250) NOT NULL,
+              `component_type` varchar(250) NOT NULL,
               `data` mediumtext NOT NULL
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
             ALTER TABLE {{" . $this->tmpTable . "}}
-             ADD PRIMARY KEY (`id`), ADD KEY `key` (`key`), ADD KEY `target_id` (`target_id`,`target_type`);
+             ADD PRIMARY KEY (`id`), ADD KEY `key` (`key`), ADD KEY `target_id` (`target_id`,`target_type`), ADD KEY `component_type` (`target_id`,`component_type`);
 
             ALTER TABLE {{" . $this->tmpTable . "}}
             MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
@@ -182,9 +188,16 @@ class Import
     protected function loadAllDataToTmpTable($dir)
     {
         $mask = $dir . DIRECTORY_SEPARATOR . $this->pathRelDataDb . DIRECTORY_SEPARATOR . '*';
-        if ($files = glob($mask)) {
-            foreach ($files as $file) {
-                $this->loadDataFileToTmpTable($file);
+        if ($dirs = glob($mask, GLOB_ONLYDIR)) {
+            foreach ($dirs as $dirType) {
+
+                $componentType = pathinfo($dirType, PATHINFO_FILENAME);
+                $mask = $dir . DIRECTORY_SEPARATOR . $this->pathRelDataDb . DIRECTORY_SEPARATOR . '*';
+                if ($files = glob($dirType . DIRECTORY_SEPARATOR . '*')) {
+                    foreach ($files as $file) {
+                        $this->loadDataFileToTmpTable($file, $componentType);
+                    }
+                }
             }
         }
     }
@@ -194,19 +207,20 @@ class Import
      *
      * @param $file
      */
-    protected function loadDataFileToTmpTable($file)
+    protected function loadDataFileToTmpTable($file, $componentType)
     {
         $nameFile = basename($file);
         if (preg_match('#^(.+)\.dat$#i', $nameFile, $match)) {
             $type = $match[1];
             $_this = $this;
             $tmpFinder = new TableTmpFinder();
-            $this->readJsonFile($file, function ($data) use ($_this, $tmpFinder, $type) {
+            $this->readJsonFile($file, function ($data) use ($_this, $tmpFinder, $type, $componentType) {
                 $item = $tmpFinder->create(array(
-                    'key'         => $_this->key,
-                    'target_id'   => $data['id'],
-                    'target_type' => $type,
-                    'data'        => $data,
+                    'key'            => $_this->key,
+                    'target_id'      => $data['id'],
+                    'target_type'    => $type,
+                    'component_type' => $componentType,
+                    'data'           => $data,
                 ));
                 $item->save();
             });

@@ -54,6 +54,12 @@ class Export
      * @var array
      */
     protected $exportFilesOpened = array();
+    /**
+     * Мета информация экспорта
+     *
+     * @var array
+     */
+    protected $metaInfo = array();
 
 
     function __construct($params = array())
@@ -157,7 +163,7 @@ class Export
                     if ($item['site_id'] and (!isset($usedSystemItems['site']) or !in_array($item['site_id'],
                                 $usedSystemItems['site']))
                     ) {
-                        $usedSystemItems['site'][] = $item['site_id'];
+                        //$usedSystemItems['site'][] = $item['site_id'];
                     }
                     /**
                      * Страница контента
@@ -271,6 +277,9 @@ class Export
         $this->contentsForExport = array();
         $this->systemItemsForExport = array();
         $this->exportFilesOpened = array();
+        $this->metaInfo = array(
+            'time_start' => time(),
+        );
         /**
          * Рекурсивный экспорт ветки дерева
          */
@@ -281,6 +290,25 @@ class Export
         $this->finishAllExportOpenedFiles();
 
         $this->exportComponents($this->componentsForExport);
+
+        /**
+         * Записываем мету
+         */
+        $this->metaInfo = array_merge($this->metaInfo, array(
+            'export_type' => 'content',
+            'paths'       => array(
+                'data_db'   => $this->pathRelDataDb,
+                'data_file' => $this->pathRelDataFile,
+            ),
+            'time_finish' => time(),
+        ));
+        $this->saveMetaInfo();
+    }
+
+    protected function saveMetaInfo()
+    {
+        $file = $this->pathExportTmp . DIRECTORY_SEPARATOR . 'meta.json';
+        $this->writeFile($file, json_encode($this->metaInfo));
     }
 
     protected function exportContentTree($contentId, $isRoot = false)
@@ -292,6 +320,11 @@ class Export
         } else {
             //throw new \Exception("Content by ID ({$contentId}) not found");
             return;
+        }
+
+        if ($isRoot) {
+            $this->metaInfo['content_root_id'] = $content['id'];
+            $this->metaInfo['content_root_type'] = $content['type'];
         }
 
         $_this = $this;
@@ -459,6 +492,11 @@ class Export
             return in_array($f->getTypeId(), array(\Floxim\Floxim\Component\Field\Entity::FIELD_IMAGE));
         });
 
+        /**
+         * Сохраняем в мета компонента
+         */
+        $this->metaInfo['component_image_fields'][$componentKeyword] = $fields->getValues(array('keyword', 'type', 'id'));
+
         return $fields;
     }
 
@@ -474,6 +512,7 @@ class Export
         $types = array();
         if (is_object($componentKeyword)) {
             $component = $componentKeyword;
+            $componentKeyword = $component['keyword'];
         } else {
             if (!($component = fx::data('component', $componentKeyword))) {
                 return $types;
@@ -535,6 +574,10 @@ class Export
             }
             $types[$item['keyword']] = $item;
         }
+        /**
+         * Сохраняем в мета компонента
+         */
+        $this->metaInfo['component_linked_fields'][$componentKeyword] = $types;
         return $types;
     }
 
@@ -640,10 +683,21 @@ class Export
             $item = $item->get();
         }
         /**
+         * Нужно определить системная это таблица или таблица контента
+         * todo: требуется рефакторинг, чтобы учитывать будущие кастомные таблицы модулей
+         */
+        $parts = explode('.', $datatype);
+        if (count($parts) > 2) {
+            $componentType = 'content';
+        } else {
+            $componentType = 'system';
+        }
+
+        /**
          * Save to file
          */
         $fileSave = $fileSave ?: "{$datatype}.dat";
-        $path = $this->pathExportTmp . DIRECTORY_SEPARATOR . $this->pathRelDataDb;
+        $path = $this->pathExportTmp . DIRECTORY_SEPARATOR . $this->pathRelDataDb . DIRECTORY_SEPARATOR . $componentType;
         $fileSave = $path . DIRECTORY_SEPARATOR . $fileSave;
         fx::files()->mkdir($path);
 
