@@ -51,6 +51,11 @@ class Infoblock extends Admin
         $controllers->concat(fx::data('widget')->all());
 
         foreach ($controllers as $c) {
+            
+            if (fx::config()->isBlockDisabled($c['keyword'])) {
+                continue;
+            }
+            
             $controller_type = $c instanceof Component\Entity ? 'component' : 'widget';
             // todo: psr0 need verify
             $controller_name = $c['keyword'];
@@ -72,12 +77,18 @@ class Infoblock extends Admin
                 if (preg_match("~^_~", $action_code)) {
                     continue;
                 }
+                
+                if (fx::config()->isBlockDisabled($c['keyword'], $action_code)) {
+                    continue;
+                }
+                
                 if (isset($action_info['check_context'])) {
                     $is_avail = call_user_func($action_info['check_context'], $page);
                     if (!$is_avail) {
                         continue;
                     }
                 }
+                
                 $act_ctr = fx::controller($controller_name . ':' . $action_code);
                 $act_templates = $act_ctr->getAvailableTemplates(fx::env('layout'), $area_meta);
                 if (count($act_templates) == 0) {
@@ -102,6 +113,7 @@ class Infoblock extends Admin
                         }
                         break;
                 }
+                
                 $c_item['children'][] = array(
                     'data'     => $action_name,
                     'metadata' => array(
@@ -521,7 +533,9 @@ class Infoblock extends Admin
         //$path_ids = $c_page->getParentIds();
         $path_ids = $c_page->getPath()->getValues('id');
         $path = fx::data('page', $path_ids);
-        $path [] = $c_page;
+        if (!$path->findOne('id', $c_page['id'])) {
+            $path [] = $c_page;
+        }
         $path_count = count($path);
         $c_type = $c_page['type'];
         $page_com = fx::data('component', $c_page['type']);

@@ -105,7 +105,8 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
 
     public function next()
     {
-        return next($this->data);
+        $next =  next($this->data);
+        return $next;
     }
 
     public function key()
@@ -541,6 +542,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
 
     public function getValues($field, $key_field = null, $as_collection = false)
     {
+        $initial_key = key($this->data);
         $result = array();
         if ($field instanceof \Closure) {
             foreach ($this->data as $k => $v) {
@@ -550,6 +552,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
             if ($as_collection) {
                 $result = new Collection($result);
             }
+            $this->setPosition($initial_key);
             return $result;
         }
         if (is_array($field)) {
@@ -569,6 +572,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
             if ($as_collection) {
                 $result = new Collection($result);
             }
+            $this->setPosition($initial_key);
             return $result;
         }
         foreach ($this->data as $k => $v) {
@@ -584,6 +588,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         if ($as_collection) {
             $result = new Collection($result);
         }
+        $this->setPosition($initial_key);
         return $result;
     }
 

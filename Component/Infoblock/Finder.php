@@ -42,12 +42,13 @@ class Finder extends System\Finder
         }
     }
 
-    public function getForPage($page_id)
+    public function getForPage($page_id = null)
     {
         $page = $page_id instanceof System\Entity ? $page_id : fx::data('page', $page_id);
         if (!$page) {
-            return;
+            return fx::collection();
         }
+        
         //$ids = $page->getParentIds();
         $ids = $page->getPath()->getValues('id');
         $ids [] = $page['id'];
@@ -69,10 +70,14 @@ class Finder extends System\Finder
      */
     public function getForContent($content)
     {
-        if (!$content['type'] || !$content['parent_id']) {
+        if (!$content['type']) {
             return fx::collection();
         }
         $this->whereContent($content['type']);
+        if (!$content['parent_id']) {
+            $site_id = $content['site_id'] ? $content['site_id'] : fx::env('site_id');
+            return $this->where('site_id', $site_id)->all();
+        }
         return $this->getForPage($content['parent']);
     }
 

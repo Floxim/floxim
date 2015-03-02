@@ -15,22 +15,33 @@ window.fx_controller_tree = function (html) {
     
     setTimeout(function() {
         $('#fx_admin_extra_panel .fx_button').not('.fx_admin_button_cancel').hide();
+        var $filters = $('.filter_set', html),
+            $header = $filters.closest('form').find('.form_header');
+        $header.append($filters);
     }, 100);
+    
+    
+    $('.filter_controller', html).closest('.filter_box').hide();
+    $('.filter_type', html).closest('.filter_box').hide();
+   
+    var $filters = $('.filter_set .filter', html),
+        $filter_search = $('.filter_search input', html);
     
     var $filter_dropper = $('.drop_filters a', html);
     $filter_dropper.click(function() {
-        $('.filter_search input', html).val('');
-        $('.filter_controller', html).val('');
-        $('.filter_type', html).val('');
+        $filter_search.val('');
+        $(':input', $filters).val('');
+        //$('.filter_controller', html).val('');
+        //$('.filter_type', html).val('');
         filter_controllers();
     });
     
     function filter_controllers() {
         var subs = $('.fx_sub', html);
-        var term = $('.filter_search input', html).val();
+        var term = $filter_search.val();
         var has_filters = term.length > 0;
         subs.show();
-        $('.filter', html).each(function() {
+        $filters.each(function() {
             var filter = $(this).data('filter');
             var filter_value = $(':input', this).val();
             if (filter_value === '') {

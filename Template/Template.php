@@ -28,6 +28,32 @@ class Template
         $this->action = $action;
         //fx::trigger('initTemplate', array('template' => $this));
     }
+    
+    public function getIcon($what_for)
+    {
+        $theme = fx::env('theme_template');
+        if ( !$theme) {
+            return;
+        }
+        $dirs = $theme->getTemplateSourceDirs();
+        if (!$dirs) {
+            return;
+        }
+        $file = $what_for.'.png';
+        foreach ($dirs as $dir) {
+            $c_file = $dir.'/icons/'.$file;
+            if (file_exists(fx::path($c_file))) {
+                return $c_file;
+            }
+        }
+    }
+    
+    public function getTemplateSourceDirs()
+    {
+        if (isset(static::$template_source_dirs)) {
+            return static::$template_source_dirs;
+        }
+    }
 
     public function setParent($parent_template)
     {
@@ -223,7 +249,6 @@ class Template
         if (is_string($method)) {
             return !$with_priority ? $method : array($method, 0.5);
         }
-        //$res = call_user_func( array($this, 'solve_'.$action), $context, $tags);
         $res = call_user_func(get_called_class().'::solve_'.$action, $context, $tags);
         return !$with_priority ? $res[0] : $res;
     }
@@ -231,7 +256,7 @@ class Template
 
     public function render($data = array())
     {
-        if ($this->level > 10) {
+        if ($this->level > 50) {
             return '<div class="fx_template_error">bad recursion?</div>';
         }
         if (count($data) > 0) {

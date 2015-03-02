@@ -874,6 +874,7 @@ class Compiler
     protected function tokenSetToCode($token)
     {
         $var = $token->getProp('var');
+        
         $value = self::parseExpression($token->getProp('value'));
         $is_default = $token->getProp('default');
         $code = "<?php\n";
@@ -886,7 +887,7 @@ class Compiler
             $code .= "?>\n";
             return $code;
         }
-
+        
         $var = $this->varialize($var);
 
         if ($is_default) {
@@ -1409,12 +1410,23 @@ class Compiler
         $code .= "<?php\n";
         $code .= 'class ' . $class_name . " extends \\Floxim\\Floxim\\Template\\Template {\n";
 
+        $template_source_dirs = array();
+        
         $registry = array();
         foreach ($this->templates as $meta) {
+            if (isset($meta['file'])) {
+                $template_source_dirs[]= dirname($meta['file']);
+            }
             $code .= $this->makeTemplateCode($meta, $registry);
         }
+        
+        $template_source_dirs = array_unique($template_source_dirs);
+        
         $action_map = array();
         $overrides = array();
+        
+        
+        
         foreach ($registry as $t) {
             $id = $t['id'];
             if (!isset($action_map[$id])) {
@@ -1435,6 +1447,9 @@ class Compiler
         }
         $code .= 'protected static $templates = ' . var_export($registry, 1) . ";\n";
         $code .= 'protected static $action_map = '. var_export($action_map,1).";\n";
+        
+        $code .= 'protected static $template_source_dirs = '.var_export($template_source_dirs,1).";\n";
+        
         $code .= "public static function init() {\n";
         if (count($overrides) > 0) {
             $code .= "fx::listen('loadTemplate', function(\$e) {\n";

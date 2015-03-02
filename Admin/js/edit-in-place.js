@@ -3,9 +3,12 @@ $.fn.edit_in_place = function(command) {
     var $nodes = this;
     $nodes.each(function() {
         var $node = $(this);
+        
         var eip = $node.data('edit_in_place');
-        if (!eip) {
+        if (!eip || !eip.panel_fields.length) {
             eip = new fx_edit_in_place($node);
+        } else {
+            console.log('existing eip', eip);
         }
         if (!command) {
             return eip;
@@ -213,7 +216,7 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
             "content:attr(fx_placeholder);"+
         "}"+
     "</style>").appendTo( $('head') );
-
+    
     $n.addClass('fx_var_editable');
     $n.attr('fx_placeholder', meta.label || meta.name || meta.id);
 
@@ -507,11 +510,19 @@ fx_edit_in_place.prototype.get_vars = function() {
                         if (!formatted_value) {
                             formatted_value = $fx.front.image_stub;
                         }
-                        var att_style = pf_meta.att.match(/style:(.+)$/);
-                        if (att_style) {
-                            this.node.css(att_style[1], formatted_value);
+                        if (!pf_meta.att) {
+                            var that = this;
+                            setTimeout(function() {
+                                that.fix();
+                                that.save().stop();                            
+                            },200);
                         } else {
-                            this.node.attr(pf_meta.att, formatted_value);
+                            var att_style = pf_meta.att.match(/style:(.+)$/);
+                            if (att_style) {
+                                this.node.css(att_style[1], formatted_value);
+                            } else {
+                                this.node.attr(pf_meta.att, formatted_value);
+                            }
                         }
                     }
                     //fx_template_var
@@ -668,9 +679,17 @@ fx_edit_in_place.prototype.make_wysiwyg = function () {
     if (this.meta.linebreaks !== undefined) {
         linebreaks = !!this.meta.linebreaks;
     }
+    var toolbar = this.meta.toolbar;
+    if (!toolbar && this.node.closest('a, i, span, b, strong, em').length > 0) {
+        toolbar = 'inline';
+    }
+    if (toolbar === 'inline') {
+        linebreaks = true;
+    }
     $fx_fields.make_redactor($node, {
         linebreaks:linebreaks,
         placeholder:false,
+        toolbarPreset: toolbar,
         toolbarExternal: '.editor_panel',
         initCallback: function() {
             var $box = $node.closest('.redactor-box');

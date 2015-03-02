@@ -104,6 +104,10 @@ class Config
     public function load(array $config = array())
     {
         static $loaded = false;
+        define("FX_ALLOW_DEBUG", true);
+        if (isset($config['disable'])) {
+            $config['disable'] = $this->prepareDisableConfig($config['disable']);
+        }
         $this->config = array_merge($this->config, $config);
         if (!$loaded) {
             if (!$this->config['dev.on'] && !defined("FX_ALLOW_DEBUG")) {
@@ -118,10 +122,48 @@ class Config
         }
         ini_set('date.timezone', $this->config['date.timezone']);
         fx::template()->registerSource('admin', fx::path('@floxim/Admin/templates'));
+        
         $loaded = true;
         return $this;
     }
 
+    protected function prepareDisableConfig($cfg)
+    {
+        $linear = fx::util()->arrayLinear($cfg);
+        $res = array();
+        foreach ($linear as $com) {
+            if (strstr($com, ':')) {
+                list($com, $act) = explode(":", $com);
+                if (!isset($res[$com])) {
+                    $res[$com] = array();
+                }
+                $res[$com][]= $act;
+            } else {
+                $res[]= $com;
+            }
+        }
+        return $res;
+    }
+    
+    public function isBlockDisabled($component, $action = null)
+    {
+        $disabled = $this->config['disable'];
+        if (!$disabled || !is_array($disabled)) {
+            return false;
+        }
+        if (in_array($component, $disabled)) {
+            return true;
+        }
+        if (!isset($disabled[$component])) {
+            return false;
+        }
+        $actions = $disabled[$component];
+        if (is_array($actions) && in_array($action, $actions)) {
+            return true;
+        }
+        return false;
+    }
+    
     public function toArray()
     {
         return $this->config;

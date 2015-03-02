@@ -115,6 +115,11 @@ window.$fx_fields = {
                     'image', 'video', 'file', 'table', 'link', 'alignment', 'horizontalrule'],
             plugins: ['fontcolor']
         }, options);
+        
+        if (options.toolbarPreset === 'inline') {
+            options.buttons = ['bold', 'italic', 'deleted'];
+        }
+        
         if (options.extra_buttons) {
             for(var i = 0; i < options.extra_buttons.length; i++) {
                 options.buttons.push(options.extra_buttons[i]);

@@ -472,4 +472,22 @@ class Util
             ));
         }
     }
+    
+    function arrayLinear($arr) {
+        $res = array();
+        $path = array();
+        $array_linear = function ($arr) use (&$res, &$path, &$array_linear) {
+            foreach ($arr as $k => $v) {
+                if (is_array($v)) {
+                    $path []= $k;
+                    $array_linear($v);
+                    array_pop($path);
+                } else {
+                    $res[] = join("", $path) . $v;
+                }
+            }
+        };
+        $array_linear($arr);
+        return $res;
+    }
 }

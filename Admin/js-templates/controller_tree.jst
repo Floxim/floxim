@@ -4,11 +4,12 @@
     <?
     var children = _c.children || _c.values;
     ?>
-    <div>
+    <div class="filter_set">
         <div class="filter_box filter_search">
             <label>&nbsp;</label>
             <input class="fx_input" type="text" placeholder="Search..." />
         </div>
+        
         <div class="filter_box filter" data-filter="type">
             <label>Type: </label>
             <select class="fx_controller_groups filter_type fx_input">
@@ -31,6 +32,7 @@
                 ?>
             </select>
         </div>
+        
         <div class="filter_box drop_filters"><a>Show all</a></div>
     </div>
     <div class="fx_controller_list">

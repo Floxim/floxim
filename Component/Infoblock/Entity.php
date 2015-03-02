@@ -168,7 +168,6 @@ class Entity extends System\Entity implements Template\Entity
     public function isAvailableOnPage($page)
     {
         if ($this['site_id'] != $page['site_id']) {
-            //fx::debug('nosite');
             return;
         }
 
@@ -182,7 +181,6 @@ class Entity extends System\Entity implements Template\Entity
         $ids [] = 0; // root
         
         if (!in_array($this['page_id'], $ids)) {
-            //fx::debug('no pid');
             return false;
         }
 
@@ -190,20 +188,16 @@ class Entity extends System\Entity implements Template\Entity
         if ($this['page_id'] != 0) {
             // scope - "this page only"
             if (fx::dig($this, 'scope.pages') == 'this' && $this['page_id'] != $page['id']) {
-                //fx::debug('no this');
                 return false;
             }
             // scope - "this level, and we look parent
             if (fx::dig($this, 'scope.pages') == 'children' && $this['page_id'] == $page['id']) {
-                //fx::debug('no chidl');
                 return false;
             }
         }
         // check for compliance with the filter type page
         $scope_page_type = fx::dig($this, 'scope.page_type');
         if ($scope_page_type && fx::getComponentFullName($scope_page_type) != fx::getComponentFullName($page['type'])) {
-        //if ($scope_page_type && $scope_page_type != $page['type']) {
-            //fx::debug('no ttyp', $scope_page_type, $page['type']);
             return false;
         }
         return true;
@@ -389,8 +383,12 @@ class Entity extends System\Entity implements Template\Entity
             return false;
         }
         $parts = explode(":", $tpl_name);
-        //$tpl = fx::template($tpl_name);
         $tpl = \Floxim\Floxim\Template\Loader::loadTemplateVariant($parts[0], $parts[1]);
+        
+        // Assign template into env if this infoblock is the layout infoblock
+        if ($this['controller'] === 'layout' && $this['action'] === 'show') {
+            fx::env('theme_template', $tpl);
+        }
         return $tpl;
     }
 

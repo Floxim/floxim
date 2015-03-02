@@ -348,7 +348,10 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
             function() {
                 $placeholder.removeClass('fx_entity_adder_placeholder_active').css(null_size);
                 
-                $('.fx_template_var', $placeholder).html('');
+                $('.fx_template_var', $placeholder)
+                        .html('')
+                        .removeClass('fx_var_editable')
+                        .removeClass('fx_editable_empty');
                 
                 if ($placeholder_pre.length) {
                     $placeholder_pre.after($placeholder);
@@ -881,7 +884,7 @@ fx_front.prototype.is_var_bound_to_entity = function($node) {
         return true;
     }
     
-    if (!$node.is(':visible')) {
+    if (!$node.is(':visible') || $('.fx_template_var', $entity).length > 1) {
         return false;
     }
     
@@ -1518,7 +1521,7 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
         $button.css(css);
         $button.animate({opacity:1},800);
         var entity_distance = 0;
-        
+        var right_edge = $(window).width() - 20;
         
         function place_button(e) {
             
@@ -1585,6 +1588,12 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
                 top += $entity.height();
                 $button.addClass('fx_inline_adder_inverted');
             }
+            if (left < 0) {
+                left = 0;
+            } else if (left > right_edge) {
+                left = right_edge;
+            }
+            
             var hash = top+':'+left;
             if ($button.data('position_hash') !== hash) {
                 
@@ -1835,16 +1844,6 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
     } else if ($from_field.is('.fx_template_var')) {
         var field_panel = $fx.front.node_panel.get($from_field);
         add_text_field_label(field_panel, $from_field);
-        /*
-        var field_meta = $from_field.data('fx_var');
-        if (field_meta.type === 'string' || field_meta.type === 'text' || field_meta.type === 'html') {
-            var $field_panel = $fx.front.node_panel.get($from_field);
-            $field_panel.$panel.append('<div class="fx_node_panel_separator"></div>');
-            $field_panel.add_label(
-                'Editing: '+field_meta.label
-            );
-        }
-        */
     }
     $('html').one('fx_deselect', function(e) {
         $fx.front.stop_entities_sortable();
@@ -2569,10 +2568,14 @@ fx_front.prototype.outline_block = function(n, style, speed) {
             var lens_css = {
                 'z-index':css['z-index']
             };
+            var win_height = $(window).height(),
+                body_height = $('body').height();
+            
             var win_size = {
                 width:$(document).width(),
                 //height:$(document).height()
-                height:$('body').height() + $('body').offset().top
+                // $('body').height()
+                height: Math.max(win_height, body_height) + $('body').offset().top
             };
             switch(type) {
                 case 'top':
