@@ -499,7 +499,10 @@ class Thumb
         $config = explode(",", $config);
         $params = array();
         foreach ($config as $props) {
-            list($prop, $value) = explode(":", $props);
+            //list($prop, $value) = explode(":", $props);
+            $prop_parts = explode(":", $props);
+            $prop = $prop_parts[0];
+            $value = isset($prop_parts[1]) ? $prop_parts[1] : null;
             $prop = trim($prop);
             if (isset($prop_map[$prop])) {
                 $prop = $prop_map[$prop];

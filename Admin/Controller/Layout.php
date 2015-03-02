@@ -39,7 +39,7 @@ class Layout extends Admin
                 'url'  => $submenu_first['url']
             );
             $el = array('id' => $item['id'], 'name' => $name);
-            if ($layout_use[$item['id']]) {
+            if (isset($layout_use[$item['id']])) {
                 $el['use'] = join(', ', $layout_use[$item['id']]);
                 $el['fx_not_available_buttons'] = array('delete');
             } else {

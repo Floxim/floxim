@@ -413,12 +413,30 @@ class Util
             $target_file = fx::path()->abs($dir.'/data.sql');
         }
         
+        // export the site
+        fx::db()->dump(array(
+            'tables' => array('site'),
+            'where' => 'id = '.$site_id,
+            'schema' => false,
+            'file' => $target_file
+        ));
+        
         // export infoblocks
         fx::db()->dump(array(
             'tables' => array('infoblock'),
             'where' => 'site_id = '.$site_id,
             'schema' => false,
-            'file' => $target_file
+            'file' => $target_file,
+            'add' => true
+        ));
+        
+        // export URL aliases
+        fx::db()->dump(array(
+            'tables' => array('url_alias'),
+            'where' => 'site_id = '.$site_id,
+            'schema' => false,
+            'file' => $target_file,
+            'add' => true
         ));
         
         // export infoblock_visual
@@ -432,6 +450,7 @@ class Util
             'add' => true
         ));
         
+        
         // export main content table
         fx::db()->dump(array(
             'tables' => array('floxim_main_content'),
@@ -442,7 +461,7 @@ class Util
         ));
         
         // get existing content items
-        $items = fx::db()->getResults('select id, type from {{floxim_main_content}} where site_id = '.fx::env('site_id'));
+        $items = fx::db()->getResults('select id, type from {{floxim_main_content}} where site_id = '.$site_id);
         $items = fx::collection($items)->group('type');
 
         $tables = array();

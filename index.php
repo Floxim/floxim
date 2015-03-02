@@ -2,10 +2,15 @@
 
 use Floxim\Floxim\System\Fx as fx;
 
+
 // if request directs right to /floxim/index.php
 // e.g. admin interface
 // current dir /vendor/floxim/floxim/
-require_once(dirname(__FILE__) . '/../../../boot.php');
+
+//require_once(dirname(__FILE__) . '/../../../boot.php');
+$boot = $_SERVER['DOCUMENT_ROOT'].'/boot.php';
+require_once($boot);
+
 
 
 register_shutdown_function(function () {
