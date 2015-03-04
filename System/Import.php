@@ -24,11 +24,49 @@ class Import
      */
     protected $tmpTable = null;
     /**
+     * Мета информация экспорта
+     *
+     * @var null
+     */
+    protected $metaInfo = null;
+    /**
      * Уникальный ключ текущего импорта
      *
      * @var null
      */
     protected $key = null;
+    /**
+     * Новый корневой узел куда производится импорт
+     *
+     * @var null
+     */
+    protected $contentRootNew = null;
+    /**
+     * Старый корневой узел, который экспортировался
+     * Храним его для кеша, чтобы не запрашивать каждый раз. Храниться в виде массива, а не Entity
+     *
+     * @var null
+     */
+    protected $contentRootOld = null;
+    /**
+     * Сайт в который нужно производить импорт
+     *
+     * @var null
+     */
+    protected $siteNew = null;
+    /**
+     * Служебная переменная для хранения текущей карты маппинга id (old -> new)
+     * Список в разрезе типов. Для контента общий тип "content"
+     *
+     * @var array
+     */
+    protected $mapIds = array();
+    /**
+     * Служебная переменная для списка колбэков по обработке id
+     *
+     * @var array
+     */
+    protected $callbackIdUpdateStack = array();
 
     function __construct($params = array())
     {
@@ -42,8 +80,6 @@ class Import
      */
     protected function init($params)
     {
-        $this->pathRelDataDb = 'data' . DIRECTORY_SEPARATOR . 'db';
-        $this->pathRelDataFile = 'data' . DIRECTORY_SEPARATOR . 'file';
         $this->tmpTable = 'import_tmp';
     }
 
@@ -75,9 +111,24 @@ class Import
         /**
          * Проверим страницу назначение на существование
          */
-        if (!($contentInsert = fx::data('floxim.main.content', $pageInsert))) {
+        if (!($this->contentRootNew = fx::data('floxim.main.content', $pageInsert))) {
             throw new \Exception("Content by ID ({$pageInsert}) not found");
         }
+        /**
+         * Определяем текущий сайт
+         * todo: нужно учесть при импорте всего сайта
+         */
+        if (!($this->siteNew = fx::env()->getSite())) {
+            throw new \Exception("Not defined current site");
+        }
+        /**
+         * Получаем мета информацию импорта
+         */
+        if (!$this->readMetaInfo($dir)) {
+            throw new \Exception("Can't read meta info");
+        }
+        $this->pathRelDataDb = $this->metaInfo['paths']['data_db'];
+        $this->pathRelDataFile = $this->metaInfo['paths']['data_file'];
         /**
          * Генерируем уникальный ключ для идентификации импорта в таблице временных данных
          */
@@ -94,16 +145,304 @@ class Import
         }
         $this->loadAllDataToTmpTable($dir);
 
-        /**
-         * Непосредственный импорт контента
-         * 1.
-         */
 
+        $_this = $this;
+        /**
+         * Получаем старый корневой узел
+         */
+        $itemTmp = $this->getTmpRowContent($this->metaInfo['content_root_id']);
+        $this->contentRootOld = $itemTmp['data'];
+        /**
+         * Импортируем системные данные
+         */
+        $this->readTmpDataTable(array(array('component_type', 'system')), function ($item) use ($_this) {
+            $_this->insertSystemItem($item);
+        });
+        /**
+         * Импортируем данные контента
+         */
+        $this->readTmpDataTable(array(array('component_type', 'content')), function ($item) use ($_this) {
+            $_this->insertContentItem($item);
+        });
+        /**
+         * Запускаем отложенные коллбэки
+         */
+        $this->runCallbacksIdUpdate();
 
         /**
          * Удаляем из таблицы временные данные
          */
         $this->removeDataFromTmpTable();
+    }
+
+    protected function readMetaInfo($dir)
+    {
+        $file = $dir . DIRECTORY_SEPARATOR . 'meta.json';
+        if (file_exists($file) and $content = @file_get_contents($file) and $content = @json_decode($content, true)) {
+            return $this->metaInfo = $content;
+        }
+        return false;
+    }
+
+    protected function runCallbacksIdUpdate()
+    {
+        foreach ($this->callbackIdUpdateStack as $callback) {
+            $callback();
+        }
+    }
+
+    protected function insertSystemItem($item)
+    {
+        if ($finder = fx::data($item['target_type'])) {
+            $_this = $this;
+            $itemIdNew = null;
+            $createNew = true;
+
+            /**
+             * Заполняем данные
+             */
+            $data = array();
+            foreach ($item['data'] as $field => $value) {
+                // todo: можно убрать цикл, если нет дополнительной обработки полей
+                if ($field != 'id') {
+                    $data[$field] = $value;
+                }
+            }
+
+            if ($item['target_type'] == 'site') {
+                if ($this->siteNew) {
+                    $itemIdNew = $existing['id'];
+                    $createNew = false;
+                } else {
+                    /**
+                     * Ищем сайт по домену
+                     */
+                    if ($existing = fx::data($item['target_type'])->where('domain', $data['domain'])->one()) {
+                        $itemIdNew = $existing['id'];
+                        $createNew = false;
+                    }
+                }
+            }
+
+            /**
+             * Список линкованных полей полей в зависимости от типа
+             */
+            if ($item['target_type'] == 'infoblock') {
+                /**
+                 * todo: site_id - пропускаем
+                 */
+
+                /**
+                 * page_id
+                 */
+                $linkIdOld = $data['page_id'];
+                if (false === ($idLinkNew = $this->getIdNewForType($linkIdOld, 'content'))) {
+                    $data['page_id'] = 0;
+                    /**
+                     * Добавляем коллбэк на получение ID после импорта всех данных
+                     */
+                    $this->addCallbackIdUpdate($item['target_type'], $itemIdNew, 'content', $linkIdOld, 'page_id');
+                } else {
+                    $data['page_id'] = $idLinkNew;
+                }
+
+                /**
+                 * parent_infoblock_id
+                 */
+                $linkIdOld = $data['parent_infoblock_id'];
+                if (false === ($idLinkNew = $this->getIdNewForType($linkIdOld, 'infoblock'))) {
+                    $data['parent_infoblock_id'] = 0;
+                    /**
+                     * Добавляем коллбэк на получение ID после импорта всех данных
+                     */
+                    $this->addCallbackIdUpdate($item['target_type'], $itemIdNew, 'infoblock', $linkIdOld, 'parent_infoblock_id');
+                } else {
+                    $data['parent_infoblock_id'] = $idLinkNew;
+                }
+
+                /**
+                 * todo: Связи из параметров
+                 */
+
+                /**
+                 * todo: Условия инфоблоков conditions
+                 */
+
+                /**
+                 * todo: Линкованные параметры
+                 */
+            }
+
+            if ($item['target_type'] == 'infoblock_visual') {
+                /**
+                 * infoblock_id
+                 */
+                $linkIdOld = $data['infoblock_id'];
+                if (false === ($idLinkNew = $this->getIdNewForType($linkIdOld, 'infoblock'))) {
+                    $data['infoblock_id'] = 0;
+                    /**
+                     * Добавляем коллбэк на получение ID после импорта всех данных
+                     */
+                    $this->addCallbackIdUpdate($item['target_type'], $itemIdNew, 'infoblock', $linkIdOld, 'infoblock_id');
+                } else {
+                    $data['infoblock_id'] = $idLinkNew;
+                }
+
+                /**
+                 * todo: Получаем ссылки на контент из визуальных параметров
+                 */
+            }
+
+            if ($createNew) {
+                $itemNew = $finder->create($data);
+                $itemNew->save();
+                $itemIdNew = $itemNew['id'];
+            }
+            $this->mapIds[$item['target_type']][$item['target_id']] = $itemIdNew;
+        }
+    }
+
+    protected function insertContentItem($item)
+    {
+        if ($finder = fx::data($item['target_type'])) {
+            $_this = $this;
+            $itemIdNew = null;
+            $createNew = true;
+
+            /**
+             * Заполняем данные
+             */
+            $data = array();
+            foreach ($item['data'] as $field => $value) {
+                // todo: можно убрать цикл, если нет дополнительной обработки полей
+                if ($field != 'id') {
+                    $data[$field] = $value;
+                }
+            }
+
+            if ($item['target_type'] == 'floxim.user.user') {
+                /**
+                 * Пользователя нужно сначала искать по емайлу, если нет, то создаем по стандартной схеме
+                 */
+                if ($existing = fx::data($item['target_type'])->where('email', $data['email'])->one()) {
+                    $itemIdNew = $existing['id'];
+                    $createNew = false;
+                }
+            }
+
+
+            /**
+             * infoblock_id
+             */
+            $linkIdOld = $data['infoblock_id'];
+            if (false === ($idLinkNew = $this->getIdNewForType($linkIdOld, 'infoblock'))) {
+                $data['infoblock_id'] = 0;
+                /**
+                 * Добавляем коллбэк на получение ID после импорта всех данных
+                 */
+                $this->addCallbackIdUpdate($item['target_type'], $itemIdNew, 'infoblock', $linkIdOld, 'infoblock_id');
+            } else {
+                $data['infoblock_id'] = $idLinkNew;
+            }
+
+            /**
+             * Дополнительные линкованные поля
+             */
+            if (isset($this->metaInfo['component_linked_fields'][$item['target_type']])) {
+                $linkFields = $this->metaInfo['component_linked_fields'][$item['target_type']];
+                foreach ($linkFields as $field => $fieldParams) {
+
+                    /**
+                     * Обработка полей "один к одному"
+                     */
+                    if ($fieldParams['type'] == \Floxim\Floxim\Component\Field\Entity::FIELD_LINK) {
+                        if ($fieldParams['target_type'] == 'component') {
+                            // для контента
+                            $linkType = 'content';
+                        } else {
+                            // для системных
+                            $linkType = $fieldParams['target_id'];
+                        }
+
+                        $linkIdOld = $data[$field];
+                        if (false === ($idLinkNew = $this->getIdNewForType($linkIdOld, $linkType))) {
+                            $data[$field] = 0;
+                            /**
+                             * Добавляем коллбэк на получение ID после импорта всех данных
+                             */
+                            $this->addCallbackIdUpdate($item['target_type'], $itemIdNew, $linkType, $linkIdOld, $field);
+                        } else {
+                            $data[$field] = $idLinkNew;
+                        }
+                    }
+
+                    /**
+                     * todo: Обработка полей "один ко многими" и "многие ко многим"
+                     */
+
+                }
+
+            }
+
+
+            if ($createNew) {
+                $itemNew = $finder->create($data);
+                $itemNew->save();
+                $itemIdNew = $itemNew['id'];
+            }
+            $this->mapIds['content'][$item['target_id']] = $itemIdNew;
+        }
+    }
+
+    /**
+     * Добавляет коллбэк на обновление ID
+     *
+     * @param $itemType
+     * @param $itemIdNew
+     * @param $linkType
+     * @param $linkIdOld
+     * @param $linkField
+     */
+    protected function addCallbackIdUpdate($itemType, &$itemIdNew, $linkType, $linkIdOld, $linkField)
+    {
+        $_this = $this;
+        $this->callbackIdUpdateStack[] = function () use ($_this, $itemType, &$itemIdNew, $linkType, $linkIdOld, $linkField) {
+            $itemNew = fx::data($itemType, $itemIdNew);
+            if ($itemNew and false !== ($idNew = $_this->getIdNewForType($linkIdOld, $linkType))) {
+                $itemNew[$linkField] = $idNew;
+                $itemNew->save();
+            }
+        };
+    }
+
+    /**
+     * Получает новый ID из карты маппинга
+     *
+     * @param $idOld
+     * @param $type
+     * @return bool
+     */
+    protected function getIdNewForType($idOld, $type)
+    {
+        if (!$idOld) {
+            /**
+             * Дефолтное пустое значение
+             */
+            return $idOld;
+        }
+        if (isset($this->mapIds[$type]) and array_key_exists($idOld, $this->mapIds[$type])) {
+            return $this->mapIds[$type][$idOld];
+        }
+        /**
+         * Проверяем на корневой узел
+         */
+        if ($type == 'content' and $this->contentRootOld['parent_id'] == $idOld) {
+            return $this->mapIds[$type][$idOld] = $this->contentRootNew['id'];
+        }
+        if ($type == 'infoblock' and $this->contentRootOld['infoblock_id'] == $idOld) {
+            return $this->mapIds[$type][$idOld] = $this->contentRootNew['infoblock_id'];
+        }
+        return false;
     }
 
     /**
@@ -275,6 +614,53 @@ class Import
             ->where('target_id', $id)
             ->where('target_type', $type)
             ->one();
+    }
+
+    /**
+     * Возвращает запись контента из временной таблице по id
+     *
+     * @param $id
+     * @param $type
+     * @return bool|null
+     */
+    protected function getTmpRowContent($id)
+    {
+        $tmpFinder = new TableTmpFinder();
+        return $tmpFinder->where('key', $this->key)
+            ->where('target_id', $id)
+            ->where('component_type', 'content')
+            ->one();
+    }
+
+    public function readTmpDataTable($filter = array(), \Closure $callback = null)
+    {
+        $finder = new TableTmpFinder();
+        $curPage = 1;
+        $perPage = 100;
+        /**
+         * Build filter
+         */
+        $items = $finder->order('id', 'asc');
+        $finder->where('key', $this->key);
+        if ($filter and is_array($filter)) {
+            foreach ($filter as $filterItem) {
+                $finder->where($filterItem[0], $filterItem[1], isset($filterItem[2]) ? $filterItem[2] : '=');
+            }
+        }
+        /**
+         * Retrieve items from db
+         */
+        $data = array();
+        while ($items = $finder->limit(($curPage - 1) * $perPage, $perPage)->all() and $items->count()) {
+            foreach ($items as $item) {
+                if (!is_null($callback)) {
+                    $callback($item);
+                }
+                $data[$item['id']] = $item->get();
+            }
+            $curPage++;
+        }
+        return $data;
     }
 }
 

@@ -220,6 +220,10 @@ class Export
                      */
 
                     /**
+                     * todo: решить, что делать с infoblock_id (по идеи все infoblock_visual экспортируются через связь с инфоблоками, которые уже экспортированы)
+                     */
+
+                    /**
                      * Получаем ссылки на контент из визуальных параметров
                      * todo: проблема - ссылки могут быть не только на контент, но и на инфоблоки, в итоге валит ошибку
                      */
@@ -308,7 +312,7 @@ class Export
     protected function saveMetaInfo()
     {
         $file = $this->pathExportTmp . DIRECTORY_SEPARATOR . 'meta.json';
-        $this->writeFile($file, json_encode($this->metaInfo));
+        $this->writeFile($file, json_encode($this->metaInfo), 'w');
     }
 
     protected function exportContentTree($contentId, $isRoot = false)
