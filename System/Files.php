@@ -55,6 +55,20 @@ class Files
             return $info["http_code"];
         }
     }
+    
+    public function applyRecursive($path, $callback) {
+        $files = glob($path.'/*');
+        if (!$files) {
+            return;
+        }
+        foreach ($files as $f) {
+            if (is_dir($f)) {
+                $this->applyRecursive($f, $callback);
+            } else {
+                call_user_func($callback, $f);
+            }
+        }
+    }
 
     protected function lsNotRecursive($path)
     {

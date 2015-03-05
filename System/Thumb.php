@@ -474,6 +474,9 @@ class Thumb
 
     protected function readConfig($config)
     {
+        if (is_array($config)) {
+            return $config;
+        }
         $prop_map = array(
             'w'    => 'width',
             'h'    => 'height',
@@ -485,7 +488,7 @@ class Thumb
         $config = trim($config);
 
         $config = preg_replace_callback(
-            '~(\d+)[\*x](\d+)~',
+            '~(\d+)\s*[\*x]\s*(\d+)~',
             function ($matches) {
                 return 'width:' . $matches[1] . ',height:' . $matches[2];
             },
