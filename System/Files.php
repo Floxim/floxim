@@ -912,6 +912,14 @@ class Files
                 $filename = fx::path()->fileName($full_path);
             }
         }
+        
+        // default image resizer
+        $resize_config = fx::config('image.default_resize');
+        fx::log('cfg', $resize_config, $this->isImage($full_path));
+        if ($resize_config && $this->isImage($full_path)) {
+            $thumb = new \Floxim\Floxim\System\Thumb($full_path, $resize_config);
+            $thumb->process($full_path);
+        }
 
         $http_path = fx::path()->http($full_path);
 
@@ -1107,9 +1115,17 @@ class Files
         }
     }
 
-    public function isImage($filename)
+    function isImage($filename) 
     {
-        return (strpos($this->mimeContentType($filename), 'image/') !== false);
+        $is = @getimagesize($filename);
+        if (!$is ) {
+            return false;
+        }
+        // we want only gif, jpg and png
+        if (!in_array($is[2], array(1,2,3)) ) {
+            return false;
+        }
+        return true;
     }
 
     public function getFileError($error_num)
