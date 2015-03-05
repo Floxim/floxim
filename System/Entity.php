@@ -102,6 +102,7 @@ abstract class Entity implements \ArrayAccess
 
     public function save()
     {
+        fx::trigger('before_save', array('entity' => $this));
         $this->beforeSave();
         $pk = $this->getPk();
         // update
@@ -132,7 +133,7 @@ abstract class Entity implements \ArrayAccess
             $this->afterInsert();
         }
         $this->afterSave();
-
+        fx::trigger('after_save', array('entity' => $this));
         return $this;
     }
 

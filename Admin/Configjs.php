@@ -34,7 +34,7 @@ class Configjs
         $site = fx::env('site');
         if ($site) {
             $main_menu['site'] = array(
-                'name' => fx::env('site')->get('domain'),
+                'name' => fx::env('site')->getLocalDomain(),
                 'key'  => 'site',
                 'href' => '/'
             );
@@ -42,9 +42,10 @@ class Configjs
             if (count($other_sites) > 0) {
                 $main_menu['site']['children'] = array();
                 foreach ($other_sites as $other_site) {
+                    $domain = $other_site->getLocalDomain();
                     $main_menu['site']['children'] [] = array(
-                        'name' => $other_site['domain'],
-                        'href' => 'http://' . $other_site['domain'] . '/'
+                        'name' => $domain,
+                        'href' => 'http://' . $domain . '/'
                     );
                 }
             }

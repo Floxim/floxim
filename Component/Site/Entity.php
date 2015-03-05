@@ -63,4 +63,22 @@ class Entity extends System\Entity
         }
         return $hosts;
     }
+    
+    /**
+     * If current host ends with .loc, returns site's .loc mirror, otherwise - main domain
+     */
+    public function getLocalDomain()
+    {
+        $is_loc = preg_match("~\.loc$~", $_SERVER['HTTP_HOST']);
+        if (!$is_loc) {
+            return $this['domain'];
+        }
+        $hosts = $this->getAllHosts();
+        foreach ($hosts as $host) {
+            if (preg_match("~\.loc$~", $host)) {
+                return $host;
+            }
+        }
+        return $this['domain'];
+    }
 }
