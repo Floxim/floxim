@@ -1,0 +1,22 @@
+{
+  "name" : "Floxim/Floxim",
+  "description" : "Floxim CMS core",
+  "repositories" : [
+        {
+            "type" : "vcs",
+            "url" : "https://github.com/Floxim/composer"
+        },
+        {
+            "type" : "vcs",
+            "url" : "https://github.com/Floxim/module-main"
+        }
+    ],
+    "minimum-stability" : "dev",
+    "require" : {
+        "floxim/composer" : "*",
+        "floxim/module-main" : "*",
+        "leafo/lessphp": "0.4.0",
+        "phpmailer/phpmailer": "5.2.8",
+        "linkorb/jsmin-php": "dev-master"
+    }
+}

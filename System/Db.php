@@ -289,14 +289,15 @@ class Db extends \PDO
             'data' => true,     // export data or not
             'schema' => true,   // generate CREATE TABLE or not
             'add' => false,     // add data to existing file or overwrite it
-            'where' => false    // condition
+            'where' => false,   // condition,
+            'tables' => array()
         ), $params);
         
         $dump_path = fx::config('dev.mysqldump_path');
         if (!$dump_path) {
             return;
         }
-        $command = $dump_path.' -u'.fx::config('db.user').' -p'.fx::config('db.password');
+        $command = $dump_path.' -u'.fx::config('db.user').' -p'.fx::config('db.password').' --host='.fx::config('db.host');
         
         $command .= ' '.fx::config('db.name');
         
@@ -319,7 +320,6 @@ class Db extends \PDO
         }
         
         $command .= ($params['add'] ? ' >> ' : ' > ').$params['file'];
-        
         exec($command);
     }
 }
