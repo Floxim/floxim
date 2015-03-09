@@ -69,7 +69,6 @@ class Entity extends System\Entity
                     foreach ($f['format']['values'] as $val) {
                         $vals[$val['id']] = $val['value'];
                     }
-                    fx::log($f, $vals);
                     $offsets[$keyword.'_name'] = array(
                         'type' => self::OFFSET_SELECT,
                         'values' => $vals,
