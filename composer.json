@@ -1,5 +1,5 @@
 {
-    "name" : "Floxim/Floxim",
+    "name" : "floxim/floxim",
     "description" : "Floxim CMS core",
     "require" : {
         "floxim/composer" : "*",
