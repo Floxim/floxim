@@ -18,6 +18,12 @@ class Import
      */
     protected $pathRelDataFile = null;
     /**
+     * Текущий каталог импорта
+     *
+     * @var null
+     */
+    protected $currentDir = null;
+    /**
      * Временная таблица для обработки импорта
      *
      * @var null
@@ -61,6 +67,12 @@ class Import
      * @var array
      */
     protected $mapIds = array();
+    /**
+     * Служебная переменная для хранения текущей карты маппинга файлов (old -> new)
+     *
+     * @var array
+     */
+    protected $mapFiles = array();
     /**
      * Служебная переменная для списка колбэков по обработке id
      *
@@ -107,7 +119,7 @@ class Import
      */
     public function importContentFromDir($pageInsert, $dir)
     {
-        $dir = fx::path('@files/export/');
+        $this->currentDir = $dir = fx::path('@files/export/');
         /**
          * Проверим страницу назначение на существование
          */
@@ -261,8 +273,28 @@ class Import
                 }
 
                 /**
-                 * todo: Связи из параметров
+                 * Связи из параметров
                  */
+                $params = $data['params'];
+                if (isset($params['extra_infoblocks']) and is_array($params['extra_infoblocks'])) {
+                    /**
+                     * Обновляем параметры через коллбэк
+                     */
+                    $this->callbackIdUpdateStack[] = function () use ($_this, &$itemIdNew) {
+                        if ($itemNew = fx::data('infoblock', $itemIdNew)) {
+                            $params = $itemNew['params'];
+                            foreach ($params['extra_infoblocks'] as $k => $id) {
+                                if (false !== ($idNew = $_this->getIdNewForType($id, 'infoblock'))) {
+                                    $params['extra_infoblocks'][$k] = $idNew;
+                                } else {
+                                    unset($params['extra_infoblocks'][$k]);
+                                }
+                            }
+                            $itemNew['params'] = $params;
+                            $itemNew->save();
+                        }
+                    };
+                }
 
                 /**
                  * todo: Условия инфоблоков conditions
@@ -289,8 +321,43 @@ class Import
                 }
 
                 /**
-                 * todo: Получаем ссылки на контент из визуальных параметров
+                 * Получаем ссылки на контент из визуальных параметров
                  */
+                $visuals = $data['template_visual'];
+                if (is_array($visuals)) {
+                    foreach ($visuals as $name => $value) {
+                        if (preg_match('#^(.+_)(\d+)$#', $name, $match)) {
+                            /**
+                             * Есть ссылочные параметры - запускаем коллбэк обработку
+                             */
+                            $this->callbackIdUpdateStack[] = function () use ($_this, &$itemIdNew) {
+                                if ($itemNew = fx::data('infoblock_visual', $itemIdNew)) {
+                                    $visuals = $itemNew['template_visual'];
+                                    foreach ($visuals as $name => $value) {
+                                        /**
+                                         * Ищем линки на изображения
+                                         */
+                                        if (preg_match('#^\/floxim_files\/#i', $value)) {
+                                            $visuals[$name] = $value = $_this->importFile($value);
+                                        }
+                                        if (preg_match('#^(.+_)(\d+)$#', $name, $match)) {
+                                            unset($visuals[$name]);
+                                            if ($idNew = $_this->getIdNewForType($match[2], 'content')) {
+                                                $visuals[$match[1] . $idNew] = $value;
+                                            }
+                                        }
+                                    }
+                                    $itemNew['template_visual'] = $visuals;
+                                    $itemNew->save();
+                                }
+                            };
+                            /**
+                             * Прерываем, т.к. цикл нужен только для обнаружение факта использования ссылочных параметров
+                             */
+                            break;
+                        }
+                    }
+                }
             }
 
             if ($createNew) {
@@ -381,7 +448,22 @@ class Import
                      */
 
                 }
+            }
 
+            /**
+             * Дополнительные поля с изображением
+             * todo: сюда попадает поле avatar пользователя - что с ним делать пока не ясно
+             */
+            if ($item['target_type'] != 'floxim.user.user') {
+                if (isset($this->metaInfo['component_image_fields'][$item['target_type']])) {
+                    $imageFields = $this->metaInfo['component_image_fields'][$item['target_type']];
+                    foreach ($imageFields as $fieldParams) {
+                        if ($fieldParams['type'] == \Floxim\Floxim\Component\Field\Entity::FIELD_IMAGE) {
+                            $image = $data[$fieldParams['keyword']];
+                            $data[$fieldParams['keyword']] = $this->importFile($image);
+                        }
+                    }
+                }
             }
 
 
@@ -472,6 +554,41 @@ class Import
         /**
          * todo: Проверяем, если этот модуль уже есть в системе, то пропускаем импорт
          */
+    }
+
+    /**
+     * Импортирует файл из каталога импорта
+     * Дополнительно проверяется соответствие по карте маппинга
+     *
+     * @param $file
+     * @return string
+     */
+    protected function importFile($file)
+    {
+        $fileFullPath = $this->currentDir . DIRECTORY_SEPARATOR . $this->pathRelDataFile . $file;
+        if (array_key_exists($fileFullPath, $this->mapFiles)) {
+            return $this->mapFiles[$fileFullPath];
+        }
+
+        if (file_exists($fileFullPath)) {
+            $fileName = pathinfo($file, PATHINFO_FILENAME);
+            $filePath = pathinfo($file, PATHINFO_DIRNAME);
+            $fileExt = pathinfo($file, PATHINFO_EXTENSION);
+            $pathDest = fx::path($filePath) . DIRECTORY_SEPARATOR;
+
+            $i = 0;
+            $fileNameUniq = $fileName . '.' . $fileExt;
+            /**
+             * Формируем уникальное имя с проверкой на существование
+             */
+            while (file_exists($pathDest . $fileNameUniq)) {
+                $i++;
+                $fileNameUniq = $fileName . '_' . $i . '.' . $fileExt;
+            }
+            fx::files()->copy($fileFullPath, $pathDest . $fileNameUniq);
+            return $this->mapFiles[$fileFullPath] = $pathDest . $fileNameUniq;
+        }
+        return null;
     }
 
     /**

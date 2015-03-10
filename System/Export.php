@@ -177,7 +177,7 @@ class Export
                     $params = $item['params'];
                     if (isset($params['extra_infoblocks']) and is_array($params['extra_infoblocks'])) {
                         foreach ($params['extra_infoblocks'] as $id) {
-                            $usedSystemItems['infoblock'][] = $item['parent_infoblock_id'];
+                            $usedSystemItems['infoblock'][] = $id;
                         }
                     }
                     /**
