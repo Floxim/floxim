@@ -1,6 +1,9 @@
 {
     "name" : "floxim/floxim",
     "description" : "Floxim CMS core",
+    "autoload": {
+        "psr-4": { "Floxim\\": "" }
+    },
     "require" : {
         "floxim/composer" : "*",
         "floxim/module-main" : "*",
