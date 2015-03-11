@@ -1,9 +1,13 @@
 {
     "name" : "floxim/floxim",
     "description" : "Floxim CMS core",
+    "autoload": {
+        "psr-4": { "Floxim\\Floxim\\": "" }
+    },
     "require" : {
         "floxim/composer" : "*",
         "floxim/module-main" : "*",
+        "floxim/cache" : "*",
         "leafo/lessphp": "0.4.0",
         "phpmailer/phpmailer": "5.2.8",
         "linkorb/jsmin-php": "dev-master"
