@@ -616,6 +616,13 @@ class Fx
      */
     public static function load($config = null)
     {
+        if (!class_exists('fx')) {
+            class_alias('\\Floxim\\Floxim\\System\\Fx', 'fx');
+        }
+        
+        ClassLoader::register();
+        ClassLoader::addDirectories(array(DOCUMENT_ROOT . '/module'));
+        
         if ($config !== null) {
             self::config()->load($config);
         }
