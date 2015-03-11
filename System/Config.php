@@ -19,7 +19,6 @@ class Config
         'HTTP_LAYOUT_PATH'           => '/layout/',
         'SESSION_KEY'                => '_fx_cms_',
         'HTTP_MODULE_PATH'           => '',
-        'HTTP_ACTION_LINK'           => '',
         'DOCUMENT_ROOT'              => '',
         'HTTP_HOST'                  => '',
         'FLOXIM_FOLDER'              => '',
@@ -43,7 +42,8 @@ class Config
         'templates.check_php_syntax' => 1,
         'cache.gzip_bundles'         => true,
         'cache.meta'                 => true,
-        'date.timezone'              => 'America/New_York'
+        'date.timezone'              => 'America/New_York',
+        'path.admin'                 => '/floxim/'
     );
 
     public function __construct()
@@ -78,7 +78,6 @@ class Config
         $this->config['path.jquery-ui'] = fx::path('@floxim/lib/js/jquery-ui-1.10.3.custom.min.js');
 
         $this->config['templates.cache_dir'] = fx::path('@files/compiled_templates');
-        $this->config['HTTP_ACTION_LINK'] = '/floxim/'; //fx::path()->http('@floxim/index.php');
 
         $this->config['console.commands'] = array(
             'module'    => '\\Floxim\\Floxim\\Console\\Command\\Module',
@@ -105,7 +104,6 @@ class Config
     public function load(array $config = array())
     {
         static $loaded = false;
-        define("FX_ALLOW_DEBUG", true);
         if (isset($config['disable'])) {
             $config['disable'] = $this->prepareDisableConfig($config['disable']);
         }

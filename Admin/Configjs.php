@@ -12,7 +12,7 @@ class Configjs
     public function  __construct()
     {
         $this->options['login'] = 'admin';
-        $this->options['action_link'] = fx::config()->HTTP_ACTION_LINK;
+        $this->options['action_link'] = fx::config('path.admin');
 
         $this->addMoreMenu(Controller\Adminpanel::getMoreMenu());
         $this->addButtons(Controller\Adminpanel::getButtons());
