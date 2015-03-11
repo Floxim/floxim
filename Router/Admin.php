@@ -10,8 +10,13 @@ class Admin extends Base
 
     public function route($url = null, $context = null)
     {
+        /*
         $regexp = "/((floxim\/)+|(vendor\/Floxim\/Floxim\/)+|(vendor\/Floxim\/Floxim\/index.php)+)$/";
         if (!preg_match($regexp, $url)) {
+            return null;
+        }
+        */
+        if ($url !== '/floxim/') {
             return null;
         }
         $input = fx::input()->makeInput();

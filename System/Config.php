@@ -64,8 +64,9 @@ class Config
 
         fx::path()->register('root', DOCUMENT_ROOT);
         fx::path()->register('home', DOCUMENT_ROOT);
-
-        fx::path()->register('floxim', '/vendor/Floxim/Floxim/');
+        
+        $floxim_http_path = preg_replace("~System/Config.php$~", '', fx::path()->http(__FILE__));
+        fx::path()->register('floxim', $floxim_http_path);
         fx::path()->register('module', '/module/');
         fx::path()->register('files', '/floxim_files/');
         fx::path()->register('log', fx::path('@files/log'));
@@ -77,7 +78,7 @@ class Config
         $this->config['path.jquery-ui'] = fx::path('@floxim/lib/js/jquery-ui-1.10.3.custom.min.js');
 
         $this->config['templates.cache_dir'] = fx::path('@files/compiled_templates');
-        $this->config['HTTP_ACTION_LINK'] = fx::path()->http('@floxim/index.php');
+        $this->config['HTTP_ACTION_LINK'] = '/floxim/'; //fx::path()->http('@floxim/index.php');
 
         $this->config['console.commands'] = array(
             'module'    => '\\Floxim\\Floxim\\Console\\Command\\Module',
