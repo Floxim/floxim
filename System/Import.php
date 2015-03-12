@@ -272,10 +272,10 @@ class Import
                     $data['parent_infoblock_id'] = $idLinkNew;
                 }
 
+                $params = $data['params'];
                 /**
                  * Связи из параметров
                  */
-                $params = $data['params'];
                 if (isset($params['extra_infoblocks']) and is_array($params['extra_infoblocks'])) {
                     /**
                      * Обновляем параметры через коллбэк
@@ -299,6 +299,56 @@ class Import
                 /**
                  * todo: Условия инфоблоков conditions
                  */
+
+                /**
+                 * Условия инфоблоков conditions
+                 */
+                if (isset($params['conditions']) and $params['conditions']) {
+                    $this->callbackIdUpdateStack[] = function () use ($_this, &$itemIdNew, $data) {
+                        if ($itemNew = fx::data('infoblock', $itemIdNew)) {
+                            $params = $itemNew['params'];
+                            $component = fx::controller($data['controller'])->getComponent();
+                            if (isset($_this->metaInfo['component_linked_fields'][$component['keyword']])) {
+                                $linkedFields = $_this->metaInfo['component_linked_fields'][$component['keyword']];
+                                /**
+                                 * Перебираем все поля в условии
+                                 */
+                                foreach ($params['conditions'] as $k => $fieldCond) {
+                                    if (isset($linkedFields[$fieldCond['name']]) and $fieldCond['value']) {
+                                        $linkedField = $linkedFields[$fieldCond['name']];
+                                        $valueNew = array();
+                                        foreach ($fieldCond['value'] as $id) {
+                                            if ($linkedField['target_type'] == 'component') {
+                                                $type = 'content';
+                                            } else {
+                                                $type = $linkedField['target_id'];
+                                            }
+                                            if ($idNew = $_this->getIdNewForType($id, $type)) {
+                                                $valueNew[] = $idNew;
+                                            }
+                                        }
+                                        $params['conditions'][$k]['value'] = $valueNew;
+                                    }
+                                    /**
+                                     * Т.к. инфоблок реализован не через механизм дополнительных полей
+                                     */
+                                    if ($fieldCond['name'] == 'infoblock_id') {
+                                        $valueNew = array();
+                                        foreach ($fieldCond['value'] as $id) {
+                                            if ($idNew = $_this->getIdNewForType($id, 'infoblock')) {
+                                                $valueNew[] = $idNew;
+                                            }
+                                        }
+                                        $params['conditions'][$k]['value'] = $valueNew;
+                                    }
+                                }
+                                $itemNew['params'] = $params;
+                                $itemNew->save();
+                            }
+                        }
+                    };
+                }
+
 
                 /**
                  * todo: Линкованные параметры
@@ -586,7 +636,10 @@ class Import
                 $fileNameUniq = $fileName . '_' . $i . '.' . $fileExt;
             }
             fx::files()->copy($fileFullPath, $pathDest . $fileNameUniq);
-            return $this->mapFiles[$fileFullPath] = $pathDest . $fileNameUniq;
+            /**
+             * Возвращать нужно относительный путь
+             */
+            return $this->mapFiles[$fileFullPath] = $filePath.DIRECTORY_SEPARATOR.$fileNameUniq;
         }
         return null;
     }
