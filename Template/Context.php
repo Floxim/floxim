@@ -169,7 +169,6 @@ class Context {
     public function printStackHelp()
     {
         $context_stack = array_reverse($this->stack);
-        //echo "<div class='fx_help_template_title'>" . $this->getTemplateSign() . "</div>";
         foreach ($context_stack as $level => $stack) {
             echo $this->getItemHelp($stack, 0);
         }

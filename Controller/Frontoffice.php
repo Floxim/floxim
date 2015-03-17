@@ -35,9 +35,21 @@ class Frontoffice extends System\Controller
              return $this->_result[$key];
          }
     }
+    
+    protected function getProfiler()
+    {
+        $profile = fx::config('dev.profile_controllers');
+        if ($profile) {
+            return fx::profiler();
+        }
+    }
 
     public function process()
     {
+        $profiler = $this->getProfiler();
+        if ($profiler) {
+            $profiler->block('<b style="color:#900;">ctr:</b> '.$this->getSignature());
+        }
         $result = parent::process();
         if (is_string($result) || is_bool($result)) {
             return $result;
@@ -51,6 +63,9 @@ class Frontoffice extends System\Controller
                 $result['_meta'] = array();
             }
             $result['_meta'] = array_merge_recursive($result['_meta'], $this->_meta);
+        }
+        if ($profiler) {
+            $profiler->stop();
         }
         return $result;
     }

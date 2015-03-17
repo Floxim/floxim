@@ -61,25 +61,34 @@ class ProfilerBlock
             $child_time += $ch->time;
         }
         $child_time = self::ftime($child_time);
-        if ($this->level > 0) {
-            ?><b><?= $this->name ?></b> &mdash; <?= $time ?><?php
-            if ($child_time && $child_time != $time) {
-                ?> (<?= $child_time ?>)<?php
-            }
+        if ($this->level === 0) {
+            ?>
+            <table class="fx_profiler_table">
+            <?php
+        } else  {
+            $padding = 10 * ($this->level - 1);
+            ?>
+            <tr class="fx_profiler_row fx_profiler_row__level_<?=$this->level?>">
+                <td style="padding-left:<?= $padding ?>px;"><?=$this->name?></td>
+                <td>
+                    <?= str_repeat('&nbsp;', $this->level+1)?>
+                    <?= $time ?>
+                    <?= ($child_time && $child_time != $time ? ' <span style="font-size:11px">('.$child_time.')</span>' : '')?>
+                </td>
+            </tr>
+            <?php
         }
         if (count($this->children) > 0) {
-            ?>
-            <ul class="profiler_res">
-                <?php foreach ($this->children as $child) {
-                    if (self::ftime($child->time)) {
-                        ?>
-                        <li><?php $child->show(); ?></li>
-                    <?php
-                    }
-                }?>
-            </ul>
-        <?php
+            foreach ($this->children as $child) {
+                if (self::ftime($child->time)) {
+                    $child->show();
+                }
+            }
         }
+        if ($this->level === 0) {
+            ?></table><?php
+        }
+        /*
         $tags = $this->getTags();
         if ($this->level > 0 && count($tags) > 0) {
             ?>
@@ -90,5 +99,7 @@ class ProfilerBlock
             </ul>
         <?php
         }
+         * 
+         */
     }
 }

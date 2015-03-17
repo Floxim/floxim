@@ -2,16 +2,25 @@
 
 namespace Floxim\Floxim\System;
 
+use Fx as fx;
+
 class Profiler
 {
     protected $level = 0;
     public $data = array();
     protected $stack = array();
+    
+    protected $openTags = array();
 
     const T_BLOCK = 1;
     const T_TAG = 2;
 
     protected $tags = array();
+    
+    public function hasData()
+    {
+        return count($this->tags > 0) || count($this->data) > 0;
+    }
 
     public function block($name)
     {
@@ -24,7 +33,9 @@ class Profiler
     public function tag($name)
     {
         $this->level++;
-        $this->stack [] = array($name, microtime(true), self::T_TAG);
+        $is_nested = in_array($name, $this->openTags);
+        $this->stack [] = array($name, microtime(true), self::T_TAG, $is_nested);
+        $this->openTags []= $name;
         return $this;
     }
 
@@ -43,7 +54,8 @@ class Profiler
             if (!isset($this->tags[$meta[0]])) {
                 $this->tags[$meta[0]] = 0;
             }
-            $this->tags[$meta[0]] += $time;
+            $this->tags[$meta[0]] += $meta[3] ? 0 : $time;
+            array_pop($this->openTags);
         }
 
         $this->level--;
@@ -83,5 +95,16 @@ class Profiler
         ob_start();
         $res->show();
         return ob_get_clean();
+    }
+    
+    public function getSortedTags()
+    {
+        $tags = $this->tags;
+        asort($tags);
+        $tags = array_reverse($tags);
+        foreach ($tags as $t => &$v) {
+            $v = round($v, 4);
+        }
+        return $tags;
     }
 }

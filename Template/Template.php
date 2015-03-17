@@ -253,6 +253,13 @@ class Template
         return !$with_priority ? $res[0] : $res;
     }
 
+    protected function getProfiler()
+    {
+        $profile = fx::config('dev.profile_templates');
+        if ($profile) {
+            return fx::profiler();
+        }
+    }
 
     public function render($data = array())
     {
@@ -272,6 +279,13 @@ class Template
                 throw new \Exception('No template: ' . get_class($this) . '.' . $this->action);
             }
         }
+        
+        $profiler = $this->getProfiler();
+        if ($profiler) {
+            $sign = preg_replace("~^fx_template_~", '', get_class($this)).'::'.preg_replace("~^tpl_~", '', $method);
+            $profiler->block('<b style="color:#009;">tpl:</b> '. $sign );
+        }
+        
         try {
             $this->$method($this->context);
         } catch (\Exception $e) {
@@ -285,6 +299,9 @@ class Template
         
         if (fx::isAdmin()) {
             if ($this->context->get('_idle')) {
+                if ($profiler) {
+                    $profiler->stop();
+                }
                 return $result;
             }
             if (!$this->parent) {
@@ -292,6 +309,9 @@ class Template
                 $result = Template::replaceAreas($result);
                 $result = Field::replaceFields($result);
             }
+        }
+        if ($profiler) {
+            $profiler->stop();
         }
         return $result;
     }

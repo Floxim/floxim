@@ -403,7 +403,9 @@ class Debug
                 if (in_array($item[0], array('array', 'object'))) {
                     echo $this->printFormat($item[1]);
                 } else {
-                    if (strstr($item[1], "\n")) {
+                    if (substr($item[1], 0, 5) === '%raw%') {
+                        echo substr($item[1], 5);
+                    } elseif (strstr($item[1], "\n")) {
                         echo '<pre>' . htmlspecialchars($item[1]) . '</pre>';
                     } else {
                         echo '<pre class="fx_debug_one_line">' . htmlspecialchars($item[1]) . '</pre>';

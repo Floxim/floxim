@@ -939,6 +939,11 @@ class Fx
         static $profiler = null;
         if (is_null($profiler)) {
             $profiler = new Profiler();
+            register_shutdown_function(function() use ($profiler) {
+                if ($profiler->hasData()) {
+                    fx::log('%raw%'.$profiler->show(), $profiler->getSortedTags());
+                }
+            });
         }
         return $profiler;
     }
