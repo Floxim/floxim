@@ -521,12 +521,35 @@ class Import
                 }
 
                 /**
+                 * area
+                 */
+                if (preg_match('#^(.+_)(\d+)$#', $data['area'], $match)) {
+                    $this->callbackIdUpdateStack[] = function () use ($_this, &$itemIdNew, $match) {
+                        if ($itemNew = fx::data('infoblock_visual', $itemIdNew)) {
+                            if ($itemNew and false !== ($idNew = $_this->getIdNewForType($match[2], 'infoblock'))) {
+                                $itemNew['area'] = $match[1] . $idNew;
+                                $itemNew->setNeedRecountFiles(false);
+                                $itemNew->save();
+                            }
+                        }
+                    };
+                }
+
+                /**
                  * Получаем ссылки на контент из визуальных параметров
                  */
                 $visuals = $data['template_visual'];
                 if (is_array($visuals)) {
+                    $startCallback = false;
                     foreach ($visuals as $name => $value) {
-                        if (preg_match('#^(.+_)(\d+)$#', $name, $match)) {
+                        /**
+                         * Ищем линки на изображения
+                         */
+                        if (preg_match('#^\/floxim_files\/#i', $value)) {
+                            $visuals[$name] = $_this->importFile($value);
+                        }
+
+                        if (!$startCallback and preg_match('#^(.+_)(\d+)$#', $name, $match)) {
                             /**
                              * Есть ссылочные параметры - запускаем коллбэк обработку
                              */
@@ -534,12 +557,6 @@ class Import
                                 if ($itemNew = fx::data('infoblock_visual', $itemIdNew)) {
                                     $visuals = $itemNew['template_visual'];
                                     foreach ($visuals as $name => $value) {
-                                        /**
-                                         * Ищем линки на изображения
-                                         */
-                                        if (preg_match('#^\/floxim_files\/#i', $value)) {
-                                            $visuals[$name] = $value = $_this->importFile($value);
-                                        }
                                         if (preg_match('#^(.+_)(\d+)$#', $name, $match)) {
                                             unset($visuals[$name]);
                                             if ($idNew = $_this->getIdNewForType($match[2], 'content')) {
@@ -548,20 +565,26 @@ class Import
                                         }
                                     }
                                     $itemNew['template_visual'] = $visuals;
+                                    $itemNew->setNeedRecountFiles(false);
                                     $itemNew->save();
                                 }
                             };
-                            /**
-                             * Прерываем, т.к. цикл нужен только для обнаружение факта использования ссылочных параметров
-                             */
-                            break;
+                            $startCallback = true;
                         }
                     }
+                    $data['template_visual'] = $visuals;
                 }
             }
 
             if ($createNew) {
                 $itemNew = $finder->create($data);
+                if ($item['target_type'] == 'infoblock_visual') {
+                    /**
+                     * Отключаем специфичную обработку
+                     * Далее она сработает при сохранении из коллбэков
+                     */
+                    $itemNew->setNeedRecountFiles(false);
+                }
                 $itemNew->save();
                 $itemIdNew = $itemNew['id'];
             }
@@ -693,6 +716,9 @@ class Import
             $itemNew = fx::data($itemType, $itemIdNew);
             if ($itemNew and false !== ($idNew = $_this->getIdNewForType($linkIdOld, $linkType))) {
                 $itemNew[$linkField] = $idNew;
+                if ($itemType == 'infoblock_visual') {
+                    $itemNew->setNeedRecountFiles(false);
+                }
                 $itemNew->save();
             }
         };
