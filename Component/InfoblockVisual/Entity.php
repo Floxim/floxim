@@ -7,42 +7,51 @@ use Floxim\Floxim\System\Fx as fx;
 
 class Entity extends System\Entity
 {
+    protected $needRecountFiles = true;
+
     protected function beforeSave()
     {
         parent::beforeSave();
         unset($this['is_stub']);
         if (!$this['priority'] && $this['layout_id']) {
             $last_vis = fx::data('infoblock_visual')
-                            ->where('layout_id', $this['layout_id'])
-                            ->where('area', $this['area'])
-                            ->order(null)
-                            ->order('priority', 'desc')
-                            ->one();
+                ->where('layout_id', $this['layout_id'])
+                ->where('area', $this['area'])
+                ->order(null)
+                ->order('priority', 'desc')
+                ->one();
             $this['priority'] = $last_vis['priority'] + 1;
         }
-        
-        $this->recountFiles();
+
+        if ($this->needRecountFiles) {
+            $this->recountFiles();
+        }
     }
-    
+
+    public function setNeedRecountFiles($need)
+    {
+        $this->needRecountFiles = $need;
+    }
+
     public function recountFiles()
     {
         $modified_params = $this->getModifiedParams();
         foreach ($modified_params as $field => $params) {
             $all_params = $this[$field];
             foreach ($params as $pk => $pv) {
-                if (self::checkValueIsFile($pv['old'])) {
-                    fx::files()->rm($pv['old']);
-                }
                 if (self::checkValueIsFile($pv['new'])) {
                     $ib = $this['infoblock'];
                     $site_id = $ib ? $ib['site_id'] : fx::env('site_id');
-                    
+
                     $file_name = fx::path()->fileName($pv['new']);
-                    $new_path = fx::path('@content_files/'.$site_id.'/visual/'.$file_name);
-                    
+                    $new_path = fx::path('@content_files/' . $site_id . '/visual/' . $file_name);
+
                     fx::files()->move($pv['new'], $new_path);
-                    
+
                     $all_params[$pk] = fx::path()->http($new_path);
+                }
+                if (self::checkValueIsFile($pv['old'])) {
+                    fx::files()->rm($pv['old']);
                 }
             }
             $this[$field] = $all_params;
@@ -69,13 +78,13 @@ class Entity extends System\Entity
         $res = array();
         foreach ($params as $p) {
             if (self::checkValueIsFile($p)) {
-                $res []= $p;
+                $res [] = $p;
             }
         }
         return $res;
     }
-    
-    protected static function checkValueIsFile($v) 
+
+    protected static function checkValueIsFile($v)
     {
         if (empty($v)) {
             return false;
@@ -84,8 +93,8 @@ class Entity extends System\Entity
         $path = fx::path();
         return $path->isInside($v, $files_path) && $path->isFile($v);
     }
-    
-    public function getModifiedParams() 
+
+    public function getModifiedParams()
     {
         $res = array();
         foreach (array('template_visual', 'wrapper_visual') as $field) {
@@ -111,7 +120,7 @@ class Entity extends System\Entity
                 if (isset($old[$key]) && isset($new[$key]) && $old[$key] == $new[$key]) {
                     continue;
                 }
-                $res[$field][$key]= array(
+                $res[$field][$key] = array(
                     'old' => isset($old[$key]) ? $old[$key] : null,
                     'new' => isset($new[$key]) ? $new[$key] : null
                 );
