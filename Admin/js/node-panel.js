@@ -59,6 +59,7 @@ window.fx_node_panels = function() {
     this.enable = function() {
         this.is_disabled = false;
         $('.fx_node_panel').show();
+        this.recount();
     };
 };
 

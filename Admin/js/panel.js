@@ -81,7 +81,7 @@
                     $form.trigger('fx_form_cancel');
                     return false;
                 }
-            })
+            });
         };
         
         this.animate_panel_height = function(panel_height, callback) {
@@ -118,6 +118,7 @@
             var height_delta = body_offset - parseInt($('body').css('margin-top'));
             this.is_moving = true;
             var duration = 300;
+            
             $body.animate(
                 {height: panel_height+'px'}, 
                 {
@@ -125,16 +126,29 @@
                     complete: function() {
                         $fx.front_panel.is_moving = false;
                         setTimeout(function() {
-                            $fx.front.scrollTo( $($fx.front.get_selected_item()) );
+                            //$fx.front.scrollTo( $($fx.front.get_selected_item()) );
                         }, 100);
                     }
                 }
             );
             
+            var body_animate_props = {'margin-top':body_offset + 'px'};
+            var $selected = $($fx.front.get_selected_item());
+            // 3642 - target value
+            // 
+            if ($selected.length) {
+                //body_animate_props.scrollTop = $selected.offset().top;// + height_delta;
+                var scroll_top = $selected.offset().top - 100;
+                if (height_delta < 0) {
+                    scroll_top += height_delta - 100;
+                }
+                body_animate_props.scrollTop = scroll_top;
+            }
+            
             // animate body within a named queue to avoid stopping other animations 
             // (mainly, opacity when layout is reloaded)
             $('body').animate(
-                {'margin-top':body_offset + 'px'},
+                body_animate_props,
                 {
                     complete:callback,
                     duration:duration,
@@ -159,9 +173,6 @@
                     duration:duration,
                     complete: function() {
                         $fx.front_panel.is_moving = false;
-                        setTimeout(function() {
-                            //$fx.front.scrollTo( $($fx.front.get_selected_item()) );
-                        }, 100);
                     }
                 }
             );
@@ -192,7 +203,9 @@
             this.animate_panel_height(0, function () {
                 $body.hide().html('');
                 $footer.hide();
-                $fx.front.enable_node_panel();
+                setTimeout(function() {
+                    $fx.front.enable_node_panel();
+                }, 50);
                 if (!$fx.front.get_selected_item()) {
                     $fx.front.enable_hilight();
                 }
