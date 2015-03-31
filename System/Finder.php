@@ -889,10 +889,7 @@ abstract class Finder
      */
     public function getEntityClassName()
     {
-        $class = explode("\\", get_class($this));
-        $class[count($class) - 1] = 'Entity';
-        $class = join("\\", $class);
-        return $class;
+        return preg_replace("~[^\\\\]+$~", "Entity", get_class($this));
     }
 
     protected function getColumns($table = null)

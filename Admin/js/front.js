@@ -2080,7 +2080,7 @@ fx_front.prototype.set_mode_edit = function () {
     });
 };
 
-fx_front.prototype.start_areas_sortable = function() {
+fx_front.prototype._start_areas_sortable = function() {
     var $areas = $('.fx_area'),
         $ibs = $('.fx_infoblock').not('.fx_infoblock_fake').not('body');
     $ibs.each(function() {
@@ -2122,7 +2122,7 @@ fx_front.prototype.start_areas_sortable = function() {
     //console.log('sas', $areas);
 };
 
-fx_front.prototype.stop_areas_sortable = function() {
+fx_front.prototype._stop_areas_sortable = function() {
     $('.fx_area_sortable').each(function() {
         var $area = $(this);
         console.log($area.data('sortable'));
@@ -2131,7 +2131,7 @@ fx_front.prototype.stop_areas_sortable = function() {
     });
 };
 
-fx_front.prototype._start_areas_sortable = function() {
+fx_front.prototype.start_areas_sortable = function() {
     var $iblocks = $('.fx_infoblock').not('.fx_infoblock_fake').not('body');
     $iblocks.each(function() {
         var $p = $(this).parent();
@@ -2148,7 +2148,7 @@ fx_front.prototype._start_areas_sortable = function() {
     });
     $('.fx_area_sortable').each(function(){
         var cp = $(this);
-        console.log('sorting', cp.attr('class'));
+        //console.log('sorting', cp.attr('class'));
         cp.sortable({
             items:'>.fx_infoblock',
             connectWith:'.fx_area_sortable',
@@ -2201,19 +2201,17 @@ fx_front.prototype._start_areas_sortable = function() {
                     params.next_infoblock_id = next_data.id;
                     params.next_visual_id = next_data.visual_id;
                 }
-                //$fx.front.stop_areas_sortable();
-                //$fx.front.start_areas_sortable();
-                /*
+                $fx.front.stop_areas_sortable();
+                $fx.front.start_areas_sortable();
                 $fx.post(params, function(res) {
                     $fx.front.reload_layout();
                 });
-                */
             }
         });
     });
 };
 
-fx_front.prototype._stop_areas_sortable = function() {
+fx_front.prototype.stop_areas_sortable = function() {
     $('.fx_area_sortable').
             sortable('destroy').
             removeClass('fx_area_sortable');
