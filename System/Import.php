@@ -112,6 +112,76 @@ class Import
     }
 
     /**
+     * импорт сайта из архива
+     *
+     * @param $newSiteParams
+     * @param $zipFile
+     * @throws \Exception
+     */
+    public function importSiteFromZip($newSiteParams, $zipFile)
+    {
+        /**
+         * todo: Распаковка архива
+         */
+
+        $unzipDir = '';
+
+        // for debug
+        $newSiteParams['name'] = $newSiteParams['domain'];
+        $newSiteParams['language'] = 'ru';
+        $unzipDir = $dir = fx::path('@files/export/');
+
+        return $this->importSiteFromDir($newSiteParams, $unzipDir);
+    }
+
+    /**
+     * Импорт сайта из каталога
+     *
+     * @param $newSiteParams
+     * @param $dir
+     * @throws \Exception
+     */
+    public function importSiteFromDir($newSiteParams, $dir)
+    {
+        /**
+         * Проверяем на дублирование сайта
+         */
+        if (fx::data('site')->where('domain', $newSiteParams['domain'])->one()) {
+            throw new \Exception("Site already exists: " . $newSiteParams['domain']);
+        }
+        /**
+         * Создаем новый сайт из параметров
+         */
+        $site = fx::data('site')->create(array(
+            'name'     => $newSiteParams['name'],
+            'domain'   => $newSiteParams['domain'],
+            //'layout_id' => $newSiteParams['layout_id'],
+            'language' => $newSiteParams['language'],
+            'checked'  => 1
+        ));
+
+        if (!$site->validate()) {
+            $errors = $site->getValidateErrors();
+            throw new \Exception("Can't create new site: " . var_export($errors, true));
+        }
+        $site->save();
+        $this->siteNew = $site;
+        /**
+         * Запускаем импорт
+         */
+        $this->importContentFromDir(null, $dir);
+        /**
+         * Для сайта необходимо установить главную страницу и страницу 404
+         * В мета информации есть ID старых страниц, по маппингу нужно найти новые
+         */
+        $site['index_page_id'] = $this->getIdNewForType($this->metaInfo['index_page_id'], 'content') ?: 0;
+        $site['error_page_id'] = $this->getIdNewForType($this->metaInfo['error_page_id'], 'content') ?: 0;
+        $site['layout_id'] = $this->getIdNewForType($this->metaInfo['layout_id'], 'layout') ?: 0;
+
+        $site->save();
+    }
+
+    /**
      * Импорт контента из каталога в узел дерева
      *
      * @param $dir
@@ -122,15 +192,17 @@ class Import
         $this->currentDir = $dir = fx::path('@files/export/');
         /**
          * Проверим страницу назначение на существование
+         * Если null - это экспорт всего сайта
          */
-        if (!($this->contentRootNew = fx::data('floxim.main.content', $pageInsert))) {
-            throw new \Exception("Content by ID ({$pageInsert}) not found");
+        if ($pageInsert) {
+            if (!($this->contentRootNew = fx::data('floxim.main.content', $pageInsert))) {
+                throw new \Exception("Content by ID ({$pageInsert}) not found");
+            }
         }
         /**
          * Определяем текущий сайт
-         * todo: нужно учесть при импорте всего сайта
          */
-        if (!($this->siteNew = fx::env()->getSite())) {
+        if (!$this->siteNew and !($this->siteNew = fx::env()->getSite())) {
             throw new \Exception("Not defined current site");
         }
         /**
@@ -138,6 +210,11 @@ class Import
          */
         if (!$this->readMetaInfo($dir)) {
             throw new \Exception("Can't read meta info");
+        }
+        if ((!$pageInsert and $this->metaInfo['export_type'] != 'site')
+            or ($pageInsert and $this->metaInfo['export_type'] != 'content')
+        ) {
+            throw new \Exception("Неверный тип у источника импорта: " . $this->metaInfo['export_type']);
         }
         $this->pathRelDataDb = $this->metaInfo['paths']['data_db'];
         $this->pathRelDataFile = $this->metaInfo['paths']['data_file'];
@@ -223,7 +300,7 @@ class Import
 
             if ($item['target_type'] == 'site') {
                 if ($this->siteNew) {
-                    $itemIdNew = $existing['id'];
+                    $itemIdNew = $this->siteNew['id'];
                     $createNew = false;
                 } else {
                     /**
@@ -234,6 +311,58 @@ class Import
                         $createNew = false;
                     }
                 }
+
+                if ($createNew) {
+                    /**
+                     * index_page_id
+                     */
+                    $linkIdOld = $data['index_page_id'];
+                    if (false === ($idLinkNew = $this->getIdNewForType($linkIdOld, 'content'))) {
+                        $data['index_page_id'] = 0;
+                        /**
+                         * Добавляем коллбэк на получение ID после импорта всех данных
+                         */
+                        $this->addCallbackIdUpdate($item['target_type'], $itemIdNew, 'content', $linkIdOld, 'index_page_id');
+                    } else {
+                        $data['index_page_id'] = $idLinkNew;
+                    }
+                    /**
+                     * error_page_id
+                     */
+                    $linkIdOld = $data['error_page_id'];
+                    if (false === ($idLinkNew = $this->getIdNewForType($linkIdOld, 'content'))) {
+                        $data['error_page_id'] = 0;
+                        /**
+                         * Добавляем коллбэк на получение ID после импорта всех данных
+                         */
+                        $this->addCallbackIdUpdate($item['target_type'], $itemIdNew, 'content', $linkIdOld, 'error_page_id');
+                    } else {
+                        $data['error_page_id'] = $idLinkNew;
+                    }
+                    /**
+                     * layout_id
+                     */
+                    $linkIdOld = $data['layout_id'];
+                    if (false === ($idLinkNew = $this->getIdNewForType($linkIdOld, 'layout'))) {
+                        $data['layout_id'] = 0;
+                        /**
+                         * Добавляем коллбэк на получение ID после импорта всех данных
+                         */
+                        $this->addCallbackIdUpdate($item['target_type'], $itemIdNew, 'layout', $linkIdOld, 'layout_id');
+                    } else {
+                        $data['layout_id'] = $idLinkNew;
+                    }
+                }
+            }
+
+            if ($item['target_type'] == 'layout') {
+                /**
+                 * Ищем layout по ключевику
+                 */
+                if ($existing = fx::data($item['target_type'])->where('keyword', $data['keyword'])->one()) {
+                    $itemIdNew = $existing['id'];
+                    $createNew = false;
+                }
             }
 
             /**
@@ -241,8 +370,18 @@ class Import
              */
             if ($item['target_type'] == 'infoblock') {
                 /**
-                 * todo: site_id - пропускаем
+                 * site_id
                  */
+                $linkIdOld = $data['site_id'];
+                if (false === ($idLinkNew = $this->getIdNewForType($linkIdOld, 'site'))) {
+                    $data['site_id'] = 0;
+                    /**
+                     * Добавляем коллбэк на получение ID после импорта всех данных
+                     */
+                    $this->addCallbackIdUpdate($item['target_type'], $itemIdNew, 'site', $linkIdOld, 'site_id');
+                } else {
+                    $data['site_id'] = $idLinkNew;
+                }
 
                 /**
                  * page_id
@@ -368,12 +507,49 @@ class Import
                 }
 
                 /**
+                 * layout_id
+                 */
+                $linkIdOld = $data['layout_id'];
+                if (false === ($idLinkNew = $this->getIdNewForType($linkIdOld, 'layout'))) {
+                    $data['layout_id'] = 0;
+                    /**
+                     * Добавляем коллбэк на получение ID после импорта всех данных
+                     */
+                    $this->addCallbackIdUpdate($item['target_type'], $itemIdNew, 'layout', $linkIdOld, 'layout_id');
+                } else {
+                    $data['layout_id'] = $idLinkNew;
+                }
+
+                /**
+                 * area
+                 */
+                if (preg_match('#^(.+_)(\d+)$#', $data['area'], $match)) {
+                    $this->callbackIdUpdateStack[] = function () use ($_this, &$itemIdNew, $match) {
+                        if ($itemNew = fx::data('infoblock_visual', $itemIdNew)) {
+                            if ($itemNew and false !== ($idNew = $_this->getIdNewForType($match[2], 'infoblock'))) {
+                                $itemNew['area'] = $match[1] . $idNew;
+                                $itemNew->setNeedRecountFiles(false);
+                                $itemNew->save();
+                            }
+                        }
+                    };
+                }
+
+                /**
                  * Получаем ссылки на контент из визуальных параметров
                  */
                 $visuals = $data['template_visual'];
                 if (is_array($visuals)) {
+                    $startCallback = false;
                     foreach ($visuals as $name => $value) {
-                        if (preg_match('#^(.+_)(\d+)$#', $name, $match)) {
+                        /**
+                         * Ищем линки на изображения
+                         */
+                        if (preg_match('#^\/floxim_files\/#i', $value)) {
+                            $visuals[$name] = $_this->importFile($value);
+                        }
+
+                        if (!$startCallback and preg_match('#^(.+_)(\d+)$#', $name, $match)) {
                             /**
                              * Есть ссылочные параметры - запускаем коллбэк обработку
                              */
@@ -381,12 +557,6 @@ class Import
                                 if ($itemNew = fx::data('infoblock_visual', $itemIdNew)) {
                                     $visuals = $itemNew['template_visual'];
                                     foreach ($visuals as $name => $value) {
-                                        /**
-                                         * Ищем линки на изображения
-                                         */
-                                        if (preg_match('#^\/floxim_files\/#i', $value)) {
-                                            $visuals[$name] = $value = $_this->importFile($value);
-                                        }
                                         if (preg_match('#^(.+_)(\d+)$#', $name, $match)) {
                                             unset($visuals[$name]);
                                             if ($idNew = $_this->getIdNewForType($match[2], 'content')) {
@@ -395,20 +565,26 @@ class Import
                                         }
                                     }
                                     $itemNew['template_visual'] = $visuals;
+                                    $itemNew->setNeedRecountFiles(false);
                                     $itemNew->save();
                                 }
                             };
-                            /**
-                             * Прерываем, т.к. цикл нужен только для обнаружение факта использования ссылочных параметров
-                             */
-                            break;
+                            $startCallback = true;
                         }
                     }
+                    $data['template_visual'] = $visuals;
                 }
             }
 
             if ($createNew) {
                 $itemNew = $finder->create($data);
+                if ($item['target_type'] == 'infoblock_visual') {
+                    /**
+                     * Отключаем специфичную обработку
+                     * Далее она сработает при сохранении из коллбэков
+                     */
+                    $itemNew->setNeedRecountFiles(false);
+                }
                 $itemNew->save();
                 $itemIdNew = $itemNew['id'];
             }
@@ -540,6 +716,9 @@ class Import
             $itemNew = fx::data($itemType, $itemIdNew);
             if ($itemNew and false !== ($idNew = $_this->getIdNewForType($linkIdOld, $linkType))) {
                 $itemNew[$linkField] = $idNew;
+                if ($itemType == 'infoblock_visual') {
+                    $itemNew->setNeedRecountFiles(false);
+                }
                 $itemNew->save();
             }
         };
@@ -566,11 +745,13 @@ class Import
         /**
          * Проверяем на корневой узел
          */
-        if ($type == 'content' and $this->contentRootOld['parent_id'] == $idOld) {
-            return $this->mapIds[$type][$idOld] = $this->contentRootNew['id'];
-        }
-        if ($type == 'infoblock' and $this->contentRootOld['infoblock_id'] == $idOld) {
-            return $this->mapIds[$type][$idOld] = $this->contentRootNew['infoblock_id'];
+        if ($this->contentRootNew) {
+            if ($type == 'content' and $this->contentRootOld['parent_id'] == $idOld) {
+                return $this->mapIds[$type][$idOld] = $this->contentRootNew['id'];
+            }
+            if ($type == 'infoblock' and $this->contentRootOld['infoblock_id'] == $idOld) {
+                return $this->mapIds[$type][$idOld] = $this->contentRootNew['infoblock_id'];
+            }
         }
         return false;
     }
@@ -637,7 +818,7 @@ class Import
             /**
              * Возвращать нужно относительный путь
              */
-            return $this->mapFiles[$fileFullPath] = $filePath.DIRECTORY_SEPARATOR.$fileNameUniq;
+            return $this->mapFiles[$fileFullPath] = $filePath . DIRECTORY_SEPARATOR . $fileNameUniq;
         }
         return null;
     }

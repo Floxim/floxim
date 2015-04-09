@@ -17,14 +17,21 @@ class Module extends Console\Command
      * @param string $name
      * @param bool $overwrite Overwrite exists module
      */
-    public function doNew($name, $overwrite = false)
+    public function doNew($name)
+    {
+        $module = fx::data('module')->create(array('keyword' => $name));
+        $module->save();
+        $this->doScaffold($name);
+    }
+    
+    public function doScaffold($name, $overwrite = false)
     {
         $name_parts = explode('.', $name);
         if (count($name_parts) != 2) {
             $this->usageError('Name need format "vendor.name"');
         }
-        $this->module_vendor = ucfirst($name_parts[0]);
-        $this->module_name = ucfirst($name_parts[1]);
+        $this->module_vendor = fx::util()->underscoreToCamel($name_parts[0]);
+        $this->module_name = fx::util()->underscoreToCamel($name_parts[1]);
         /**
          * Check for exists
          */

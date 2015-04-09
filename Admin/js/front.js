@@ -91,7 +91,7 @@ fx_front.prototype.handle_mouseover = function(e) {
         e.fx_hilight_done = true;
         return;
     } 
-    if (!$fx.front.is_selectable(this)) {
+    if (!$fx.front.is_selectable(this) || node.closest('.fx_entity_adder_placeholder').length ) {
         return;
     }
     for ( var sel_index = 0; sel_index < $fx.front.unselectable_selectors.length; i++) {
@@ -289,6 +289,11 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
     function show_placeholder() {
         $placeholder.addClass('fx_entity_adder_placeholder_active');
         
+        $('.fx_hilight_hover').each(function() {
+            $fx.front.outline_block_off($(this));
+        });
+        $fx.front.disable_hilight();
+        
         var is_linker_placeholder = placeholder_meta.placeholder_linker;
                 
         if (is_linker_placeholder) {
@@ -339,6 +344,7 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
     };
     
     function hide_placeholder() {
+        $fx.front.disable_hilight();
         $placeholder
           .css(get_size())
           .animate(
@@ -362,6 +368,7 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
                 if (block_was_hidden) {
                     $hidden_block.addClass('fx_hidden_placeholded');
                 }
+                $fx.front.enable_hilight();
             }
         );
         $block_mark.slideDown(speed);
@@ -400,12 +407,12 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
             }
             
             // don't hide placeholder if we are reloading infoblock
-            if ($placeholder.closest('.fx_infoblock').is('.fx_infoblock_disabled')) {
+            var $ib = $placeholder.closest('.fx_infoblock');
+            if ($ib.is('.fx_infoblock_disabled')) {
                 return;
             }
-            
             hide_placeholder();
-        }, 50);
+        }, 100);
     });
 };
 
@@ -830,7 +837,15 @@ fx_front.prototype.is_selectable = function(node) {
         case 'view': default:
             return false;
         case 'design':
-            return n.hasClass('fx_area') || n.hasClass('fx_infoblock');
+            if (n.hasClass('fx_infoblock')) {
+                return true;
+            }
+            if (n.hasClass('fx_area')) {
+                if ($('.fx_infoblock', n).length === 0) {
+                    return true;
+                }
+            }
+            return false;
         case 'edit':
             
             // adder placeholders and fields inside are not selectable (mainly for keyboard navigation)
@@ -1180,6 +1195,9 @@ fx_front.prototype.hilight = function(container) {
                 if ( i.hasClass('fx_template_var') ) {
                     var var_meta = i.data('fx_var');
                     hidden_placeholder = var_meta.label ? var_meta.label : var_meta.id; //i.data('fx_var').label;
+                    if (var_meta.type === 'html' && !var_meta.linebreaks) {
+                        hidden_placeholder = '<p>'+hidden_placeholder+'</p>';
+                    }
                 } else if (i.hasClass('fx_infoblock') && !hidden_placeholder) {
                     var ib_meta = i.data('fx_infoblock');
                     hidden_placeholder = $fx.lang('This block is empty');
@@ -1501,7 +1519,7 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
             }
             $button.show();
             over_timeout = null;
-        }, 500);
+        }, 200);
         
         var is_fixed = $fx.front.is_fixed($node);
         if (is_fixed) {
@@ -1549,10 +1567,12 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
                 offset = $entity.offset(),
                 top = offset.top,
                 left = offset.left,
-                dir = null;
+                dir = null,
+                e_width = $entity.outerWidth(),
+                e_height = $entity.outerHeight();
                 
             if (axis === 'y') {
-                var size = $entity.outerHeight(),
+                var size = e_height,
                     diff = e_top - offset.top;
                 if (size / 2 < diff) {
                     top += size + entity_distance/2;
@@ -1561,8 +1581,12 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
                     top -= (entity_distance/2);
                     dir = 'before';
                 }
+                // move to the center
+                if (e_width > 100) {
+                    left += $entity.outerWidth() / 2;
+                }
             } else {
-                var size = $entity.outerWidth(),
+                var size = e_width,
                     diff = e_left - offset.left;
                 if (size / 2 < diff) {
                     left += size + entity_distance/2;
@@ -1570,6 +1594,10 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
                 } else {
                     left -= entity_distance/2;
                     dir = 'before';
+                }
+                // move down to the center
+                if (e_height > 100) {
+                    top += e_height / 2;
                 }
             }
             $button.data('rel_node', $entity);
@@ -2052,6 +2080,57 @@ fx_front.prototype.set_mode_edit = function () {
     });
 };
 
+fx_front.prototype._start_areas_sortable = function() {
+    var $areas = $('.fx_area'),
+        $ibs = $('.fx_infoblock').not('.fx_infoblock_fake').not('body');
+    $ibs.each(function() {
+        var $par = $(this).parent();
+        if (!$par.hasClass('.fx_area')) {
+            $areas = $areas.add($par);
+        }
+    });
+    
+    
+    var $c_selected = $($fx.front.get_selected_item());
+    
+    $areas.each(function() {
+        var $area = $(this);
+        $area.addClass('fx_area_sortable');
+        var sortable = new Sortable(this, {
+            group:'fx_areas',
+            scroll:true,
+            scrollSensitivity: 100, // px, how near the mouse must be to an edge to start scrolling.
+            scrollSpeed: 40,
+            animation: 350,
+            onStart: function() {
+                
+                $fx.front.outline_block_off($c_selected);
+                $fx.front.disable_hilight();
+                $fx.front.get_node_panel().hide();
+                $areas.addClass('fx_area_target');
+            },
+            onEnd: function() {
+                $areas.removeClass('fx_area_target');
+                $fx.front.enable_hilight();
+                $fx.front.select_item($c_selected);
+            },
+            ghostClass:'ui-sortable-helper'
+        });
+        $area.data('sortable', sortable);
+    });
+    
+    //console.log('sas', $areas);
+};
+
+fx_front.prototype._stop_areas_sortable = function() {
+    $('.fx_area_sortable').each(function() {
+        var $area = $(this);
+        console.log($area.data('sortable'));
+        $area.data('sortable').destroy();
+        $area.removeClass('fx_area_sortable');
+    });
+};
+
 fx_front.prototype.start_areas_sortable = function() {
     var $iblocks = $('.fx_infoblock').not('.fx_infoblock_fake').not('body');
     $iblocks.each(function() {
@@ -2069,6 +2148,7 @@ fx_front.prototype.start_areas_sortable = function() {
     });
     $('.fx_area_sortable').each(function(){
         var cp = $(this);
+        //console.log('sorting', cp.attr('class'));
         cp.sortable({
             items:'>.fx_infoblock',
             connectWith:'.fx_area_sortable',
@@ -2085,13 +2165,15 @@ fx_front.prototype.start_areas_sortable = function() {
                     height:item.outerHeight(),
                     overflow:'hidden'
                 });
+                /*
                 ph.animate({
                     'height':'100px'
                 }, 1000);
                 item.css({overflow:'hidden'}).animate({
                     'height':'100px'
                 }, 1000);
-                $c_selected = $($fx.front.get_selected_item());
+                */
+                var $c_selected = $($fx.front.get_selected_item());
                 $fx.front.outline_block_off($c_selected);
                 $fx.front.disable_hilight();
                 $fx.front.get_node_panel().hide();
@@ -2119,7 +2201,8 @@ fx_front.prototype.start_areas_sortable = function() {
                     params.next_infoblock_id = next_data.id;
                     params.next_visual_id = next_data.visual_id;
                 }
-
+                $fx.front.stop_areas_sortable();
+                $fx.front.start_areas_sortable();
                 $fx.post(params, function(res) {
                     $fx.front.reload_layout();
                 });

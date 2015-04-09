@@ -55,6 +55,12 @@ class Export
      */
     protected $exportFilesOpened = array();
     /**
+     * Флаг экспорта сайта
+     *
+     * @var array
+     */
+    protected $exportSite = false;
+    /**
      * Мета информация экспорта
      *
      * @var array
@@ -82,6 +88,7 @@ class Export
         }
         $this->pathRelDataDb = 'data' . DIRECTORY_SEPARATOR . 'db';
         $this->pathRelDataFile = 'data' . DIRECTORY_SEPARATOR . 'file';
+        $this->exportSite = false;
     }
 
 
@@ -133,9 +140,8 @@ class Export
                 if ($type == 'infoblock') {
                     /**
                      * Проверяем принадлежность инфоблока к корневому дереву
-                     * TODO: при экспорте сайта необходимо рефакторить
                      */
-                    if (!in_array($item['page_id'], $_this->contentsRootTreeForExport)) {
+                    if (!$this->exportSite and !in_array($item['page_id'], $_this->contentsRootTreeForExport)) {
                         //$needSave=false;
                         return;
                     }
@@ -216,8 +222,13 @@ class Export
                     }
                 } elseif ($type == 'infoblock_visual') {
                     /**
-                     * TODO: пока не понятно, что делать с layout_id
+                     * layout_id
                      */
+                    if ($item['layout_id'] and (!isset($usedSystemItems['layout']) or !in_array($item['layout_id'],
+                                $usedSystemItems['layout']))
+                    ) {
+                        $usedSystemItems['layout'][] = $item['layout_id'];
+                    }
 
                     /**
                      * todo: решить, что делать с infoblock_id (по идеи все infoblock_visual экспортируются через связь с инфоблоками, которые уже экспортированы)
@@ -225,7 +236,7 @@ class Export
 
                     /**
                      * Получаем ссылки на контент из визуальных параметров
-                     * todo: проблема - ссылки могут быть не только на контент, но и на инфоблоки, в итоге валит ошибку
+                     * todo: проблема - ссылки могут быть не только на контент, но и на инфоблоки, в итоге валит ошибку. Нужно рефакторить ядро.
                      */
                     $visuals = $item['template_visual'];
                     if (is_array($visuals)) {
@@ -242,6 +253,15 @@ class Export
                                 $_this->exportFile($value);
                             }
                         }
+                    }
+                } elseif ($type == 'site') {
+                    /**
+                     * layout_id
+                     */
+                    if ($item['layout_id'] and (!isset($usedSystemItems['layout']) or !in_array($item['layout_id'],
+                                $usedSystemItems['layout']))
+                    ) {
+                        $usedSystemItems['layout'][] = $item['layout_id'];
                     }
                 }
 
@@ -281,9 +301,9 @@ class Export
         $this->contentsForExport = array();
         $this->systemItemsForExport = array();
         $this->exportFilesOpened = array();
-        $this->metaInfo = array(
+        $this->metaInfo = array_merge($this->metaInfo, array(
             'time_start' => time(),
-        );
+        ));
         /**
          * Рекурсивный экспорт ветки дерева
          */
@@ -299,7 +319,7 @@ class Export
          * Записываем мету
          */
         $this->metaInfo = array_merge($this->metaInfo, array(
-            'export_type' => 'content',
+            'export_type' => $this->exportSite ? 'site' : 'content',
             'paths'       => array(
                 'data_db'   => $this->pathRelDataDb,
                 'data_file' => $this->pathRelDataFile,
@@ -307,6 +327,32 @@ class Export
             'time_finish' => time(),
         ));
         $this->saveMetaInfo();
+    }
+
+    /**
+     * Запускает экспорт всего сайта
+     *
+     * @param $siteId
+     */
+    public function exportSite($siteId)
+    {
+        /**
+         * Получаем корневой узел сайта
+         */
+        if (!($site = fx::data('site', $siteId))) {
+            throw new \Exception("Site not found not found: " . $siteId);
+        }
+        $pageIndexId = $site['index_page_id'];
+        $pageErrorId = $site['error_page_id'];
+
+        $this->metaInfo = array_merge($this->metaInfo, array(
+            'index_page_id' => $pageIndexId,
+            'error_page_id' => $pageErrorId,
+            'layout_id' => $site['layout_id'],
+        ));
+
+        $this->exportSite = true;
+        $this->exportContent($pageIndexId);
     }
 
     protected function saveMetaInfo()
@@ -320,7 +366,7 @@ class Export
         $contentFilter = array();
         if ($content = fx::data('floxim.main.content', $contentId)) {
             $contentFilter[] = array('materialized_path', $content['materialized_path'] . $contentId . '.%', 'like');
-            $contentFilter[] = array('parent_id', $content['parent_id'], '<>');
+            $contentFilter[] = array('parent_id', $content['parent_id'], is_null($content['parent_id']) ? 'is not null' : '<>');
         } else {
             //throw new \Exception("Content by ID ({$contentId}) not found");
             return;
