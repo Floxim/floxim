@@ -53,20 +53,25 @@ class Http
         header($name . ": " . $value);
     }
     
-    public function get($url, $headers = array())
+    public function get($url, $headers = array(), $context_options = array())
     {
         $header_string = '';
-        
-        foreach ($headers as $h => $v) {
-            $header_string .= $h.': '.$v."\r\n";
+        if (is_array($headers)) {
+            foreach ($headers as $h => $v) {
+                $header_string .= $h.': '.$v."\r\n";
+            }
         }
         
         $options = array(
-            'http' => array(
-                'header'  => $header_string,
-                'method'  => 'GET'
+            'http' => array_merge(
+                array(
+                    'header'  => $header_string,
+                    'method'  => 'GET'
+                ),
+                $context_options
             )
         );
+        //$options['http'] = array_merge($options['http'], $context_options);
         $context  = stream_context_create($options);
         $result = @ file_get_contents($url, false, $context);
         return $result;

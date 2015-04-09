@@ -36,6 +36,20 @@ class Console extends Admin
             ob_start();
             $code = $input['console_text'];
             $code = preg_replace("~^<\?(?:php)?~", '', $code);
+            $lines = explode("\n", $code);
+            foreach ($lines as &$line) {
+                if (preg_match("~^\s*>~", $line)) {
+                    $line = preg_replace("~^\s*>~", 'fx::debug(', $line);
+                    $line = preg_replace("~;\s*$~", '', $line);
+                    $line .= ');';
+                }
+            }
+            $code = join("\n", $lines);
+            /*
+            ob_start();
+            fx::debug($code);
+            return array('result' => ob_get_clean());
+            */
             fx::env('console', true);
             fx::config('dev.on', true);
             eval($code);

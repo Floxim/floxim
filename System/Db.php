@@ -104,6 +104,7 @@ class Db extends \PDO
             $this->last_error = $this->errorInfo();
             fx::log(
                 'sql error', 
+                $this->last_error,
                 $statement, 
                 debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)
             );
