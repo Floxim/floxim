@@ -2,8 +2,6 @@
 
 namespace Floxim\Floxim\System;
 
-use Fx as fx;
-
 class Profiler
 {
     protected $level = 0;
