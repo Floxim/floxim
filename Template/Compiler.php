@@ -233,10 +233,12 @@ class Compiler
         } else {
             $tags = 'null';
         }
-        $code .= "if ( (".$tpl." = ";
+        //$code .= "fx::profiler()->tag('ltv ".$set_name.":".$action_name."');\n";
+        $code .= $tpl." = ";
 	$code .= "\\Floxim\\Floxim\\Template\\Loader";
-        $code .= "::loadTemplateVariant('".$set_name."', '".$action_name."', ".$context_var.", ".$forced_group.", ".$tags.")";
-        $code .= " ) ) {\n";
+        $code .= "::loadTemplateVariant('".$set_name."', '".$action_name."', ".$context_var.", ".$forced_group.", ".$tags.");";
+        //$code .= "fx::profiler()->stop();\n";
+        $code .= "if ( ".$tpl." ) {\n";
         $code .= "echo ".$tpl."->setParent(\$this)->render();\n";
         $code .= "}\n";
         // ------------

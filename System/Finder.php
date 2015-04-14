@@ -618,25 +618,17 @@ abstract class Finder
                 if (!$rel_target_field) {
                     $rel_target_field = 'id';
                 }
-                /*
-                if (count($entities) === 1) {
-                    $entity = $entities->first();
-                    $rel_item_id = $entity[$rel_field];
-                    if ($rel_item_id) {
-                        $rel_item = $rel_finder->where($rel_target_field, $rel_item_id)->one();
-                        $entity[$rel_name] = $rel_item;
-                    } else {
-                        $entity[$rel_name] = null;
+                $rel_item_ids = array();
+                foreach ($entities as $entity) {
+                    $rel_id = $entity[$rel_field];
+                    if ($rel_id) {
+                        $rel_item_ids []= $rel_id;
                     }
-                } else {
-                 * 
-                 */
-                    $rel_items = $rel_finder->where($rel_target_field, $entities->getValues($rel_field))->all();
-                    $entities->attach($rel_items, $rel_field, $rel_name, $rel_target_field);
-                    /*
                 }
-                     * 
-                     */
+                if (count($rel_item_ids) > 0) {
+                    $rel_items = $rel_finder->where($rel_target_field, $rel_item_ids)->all();
+                    $entities->attach($rel_items, $rel_field, $rel_name, $rel_target_field);    
+                }
                 break;
             case self::HAS_MANY:
                 $rel_items = $rel_finder->where($rel_field, $entities->getValues('id'))->all();

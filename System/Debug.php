@@ -61,11 +61,21 @@ class Debug
         $this->file = fx::files()->open($this->getFileName(), 'w');
         register_shutdown_function(array($this, 'stopLog'));
     }
+    
+    protected $stop_handlers = array();
+    
+    public function onStop($callback) 
+    {
+        $this->stop_handlers[]= $callback;
+    }
 
     public function stopLog()
     {
         if (is_null($this->file)) {
             return;
+        }
+        foreach ($this->stop_handlers as $callback) {
+            call_user_func($callback);
         }
         fclose($this->file);
         $this->writeIndex();
