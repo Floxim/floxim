@@ -83,14 +83,10 @@ class Context {
     
     public function get($name = null, $context_offset = null)
     {
-        $need_local = false;
-        if ($context_offset === 'local') {
-            $need_local = true;
-            $context_offset = null;
-        }
         // neither var name nor context offset - return current context
+        $stack_length = count($this->stack) - 1;
         if (!$name && !$context_offset) {
-            for ($i = count($this->stack) - 1; $i >= 0; $i--) {
+            for ($i = $stack_length; $i >= 0; $i--) {
                 $c_meta = $this->meta[$i];
                 if (!$c_meta['transparent']) {
                     return $this->stack[$i];
@@ -101,13 +97,13 @@ class Context {
 
         if (!is_null($context_offset)) {
             $context_position = -1;
-            for ($i = count($this->stack) - 1; $i >= 0; $i--) {
+            for ($i = $stack_length; $i >= 0; $i--) {
                 $cc = $this->stack[$i];
                 $c_meta = $this->meta[$i];
                 if (!$c_meta['transparent']) {
                     $context_position++;
                 }
-                if ($context_position == $context_offset) {
+                if ($context_position === $context_offset) {
                     if (!$name) {
                         return $cc;
                     }
@@ -131,19 +127,13 @@ class Context {
             }
             return null;
         }
-
-        for ($i = count($this->stack) - 1; $i >= 0; $i--) {
+        for ($i = $stack_length; $i >= 0; $i--) {
             $cc = $this->stack[$i];
-            if (is_array($cc)) {
-                if (array_key_exists($name, $cc)) {
-                    return $cc[$name];
-                }
-            } elseif ($cc instanceof \ArrayAccess) {
-                if (isset($cc[$name])) {
-                    return $cc[$name];
-                }
-            } elseif (is_object($cc) && isset($cc->$name)) {
-                return $cc->$name;
+            if (
+                ($cc instanceof \ArrayAccess && isset($cc[$name])) ||
+                (is_array($cc) && array_key_exists($name, $cc))
+            ) {
+                return $cc[$name];
             }
         }
         return null;

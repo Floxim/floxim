@@ -15,13 +15,13 @@ class Eventmanager
             foreach ($event_name as $event_name_var) {
                 $this->listen($event_name_var, $callback);
             }
-        }
-        $event = $this->parseEventName($event_name);
-        if ($event['name'] == '*') {
             return;
         }
-        $this->_listeners[] = array(
-            'event_name'  => $event['name'],
+        $event = $this->parseEventName($event_name);
+        if (!isset($this->_listeners[$event['name']])) {
+            $this->_listeners[$event['name']] = array();
+        }
+        $this->_listeners[$event['name']][] = array(
             'event_scope' => $event['scope'],
             'callback'    => $callback
         );
@@ -43,11 +43,16 @@ class Eventmanager
     public function unlisten($event_name)
     {
         $event = $this->parseEventName($event_name);
-        foreach ($this->_listeners as $lst_num => $lst) {
-            if ($event['name'] == '*' || $event['name'] == $lst['event_name']) {
-                if ($event['scope'] == $lst['event_scope']) {
-                    unset($this->_listeners[$lst_num]);
-                }
+        if (!$event['scope']) {
+            unset($this->_listeners[$event['name']]);
+            return;
+        }
+        if (!isset($this->_listeners[$event['name']])) {
+            return;
+        }
+        foreach ($this->_listeners[$event['name']] as $lst_num => $lst) {
+            if ($event['scope'] == $lst['event_scope']) {
+                unset($this->_listeners[$event['name']][$lst_num]);
             }
         }
     }
@@ -55,16 +60,19 @@ class Eventmanager
     public function trigger($e, $params = null)
     {
         if (is_string($e)) {
+            if (!isset($this->_listeners[$e])) {
+                return;
+            }
             $e = new Event($e, $params);
+        } elseif (!isset($this->_listeners[$e->name])) {
+            return;
         }
         $callback_res = null;
-        foreach ($this->_listeners as $lst) {
-            if ($lst['event_name'] == $e->name) {
-                $callback_res = $lst['callback']($e);
-                if ($e->isStopped()) {
-                    $event_res = $e->getResult();
-                    return $event_res ? $event_res : $callback_res;
-                }
+        foreach ($this->_listeners[$e->name] as $lst) {
+            $callback_res = $lst['callback']($e);
+            if ($e->isStopped()) {
+                $event_res = $e->getResult();
+                return $event_res ? $event_res : $callback_res;
             }
         }
         $event_res = $e->getResult();

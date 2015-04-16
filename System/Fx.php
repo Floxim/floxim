@@ -260,16 +260,18 @@ class Fx
      */
     public static function component($id_or_keyword = null) {
         static $components = null;
+        static $components_collection = null;
         static $components_by_keyword = null;
         if (is_null($components)) {
             $finder = new \Floxim\Floxim\Component\Component\Finder();
-            $components = $finder->all();
+            $components_collection = $finder->all();
+            $components = $components_collection->getData();
             foreach ($components as $com) {
                 $components_by_keyword[$com['keyword']] = $com;
             }
         }
         if (func_num_args() === 0) {
-            return $components;
+            return $components_collection;
         }
         if (is_numeric($id_or_keyword)) {
             return isset($components[$id_or_keyword]) ? $components[$id_or_keyword] : null;

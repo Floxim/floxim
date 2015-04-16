@@ -51,6 +51,7 @@ abstract class Entity implements \ArrayAccess
     const OFFSET_LANG = 2;
     const OFFSET_GETTER = 3;
     const OFFSET_SELECT = 4;
+    const OFFSET_CALLBACK = 5;
 
 
     protected $is_loaded = false;
@@ -72,8 +73,12 @@ abstract class Entity implements \ArrayAccess
     
     
     protected static $offset_meta = array();
+    protected $available_offsets_cache = null;
     public function getAvailableOffsets()
     {
+        if (!is_null($this->available_offsets_cache)) {
+            return $this->available_offsets_cache;
+        }
         $c_class = get_called_class();
         if (!isset(self::$offset_meta[$c_class])) {
             $res = array();
@@ -95,8 +100,9 @@ abstract class Entity implements \ArrayAccess
                     'type' => self::OFFSET_LANG
                 );
             }
-            self::$offset_meta[$c_class] = $res;
+            self::$offset_meta[$c_class] = fx::collection($res);
         }
+        $this->available_offsets_cache = self::$offset_meta[$c_class];
         return self::$offset_meta[$c_class];
     }
 
@@ -368,6 +374,7 @@ abstract class Entity implements \ArrayAccess
 
     protected static function isTemplateVar($var)
     {
+        return $var[0] === '%';
         return mb_substr($var, 0, 1) === '%';
     }
     
@@ -378,7 +385,8 @@ abstract class Entity implements \ArrayAccess
     {
 
         // handle template-content vars like $item['%description']
-        if (self::isTemplateVar($offset)) {
+        //if (self::isTemplateVar($offset)) {
+        if ($offset[0] === '%') {
             $offset = mb_substr($offset, 1);
             if (!isset($this[$offset]) || $this->allowTemplateOverride) {
                 $template = fx::env()->getCurrentTemplate();
@@ -401,6 +409,11 @@ abstract class Entity implements \ArrayAccess
         // execute getter everytime
         if ($offset_type === self::OFFSET_GETTER) {
             return call_user_func(array($this, $offset_meta['method']));
+        }
+        
+        // execute external callback
+        if ($offset_type === self::OFFSET_CALLBACK) {
+            return call_user_func($offset_meta['callback'], $this);
         }
         
         // we have stored value, so return it
@@ -435,12 +448,6 @@ abstract class Entity implements \ArrayAccess
         if ($offset_type === self::OFFSET_SELECT) {
             $real_value = $this->data[$offset_meta['real_offset']];
             return $offset_meta['values'][$real_value];
-        }
-        
-        // trigger event to get value from outside
-        $event_result = fx::trigger('offsetGet', array('target' => $this, 'offset' => $offset));
-        if ($event_result) {
-            return $event_result;
         }
     }
 
@@ -491,18 +498,15 @@ abstract class Entity implements \ArrayAccess
     
     public function offsetExists($offset)
     {
-        if (self::isTemplateVar($offset)) {
+        if (array_key_exists($offset, $this->data)) {
             return true;
         }
-        if (array_key_exists($offset, $this->data)) {
+        //if (self::isTemplateVar($offset)) {
+        if ($offset[0] === '%') {
             return true;
         }
         $offsets = $this->getAvailableOffsets();
         if (isset($offsets[$offset])) {
-            return true;
-        }
-        $event_res = fx::trigger('offsetExists', array('target' => $this, 'offset' => $offset));
-        if ($event_res === true) {
             return true;
         }
         return false;

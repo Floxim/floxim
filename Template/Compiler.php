@@ -236,7 +236,7 @@ class Compiler
         //$code .= "fx::profiler()->tag('ltv ".$set_name.":".$action_name."');\n";
         $code .= $tpl." = ";
 	$code .= "\\Floxim\\Floxim\\Template\\Loader";
-        $code .= "::loadTemplateVariant('".$set_name."', '".$action_name."', ".$context_var.", ".$forced_group.", ".$tags.");";
+        $code .= "::loadTemplateVariant('".$set_name."', '".$action_name."', ".$context_var.", ".$forced_group.", ".$tags.");\n";
         //$code .= "fx::profiler()->stop();\n";
         $code .= "if ( ".$tpl." ) {\n";
         $code .= "echo ".$tpl."->setParent(\$this)->render();\n";
@@ -893,7 +893,7 @@ class Compiler
         $var = $this->varialize($var);
 
         if ($is_default) {
-            $code .= "if (is_null(\$context->get('" . $var . "','local'))) {\n";
+            $code .= "if (is_null(\$context->get('" . $var . "'))) {\n";
         }
 
         $code .= '$context->set("' . $var . '", ' . $value . ');' . "\n";

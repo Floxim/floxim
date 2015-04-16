@@ -103,6 +103,16 @@ class Entity extends System\Entity
         }
         return $this->entity_offsets;
     }
+    
+    public function registerOffsetCallback($offset, $callback)
+    {
+        $offsets = $this->getAvailableEntityOffsets();
+        $offsets[$offset] = array(
+            'type' => self::OFFSET_CALLBACK,
+            'callback' => $callback
+        );
+        $this->entity_offsets = $offsets;
+    }
 
     public function getNamespace()
     {
