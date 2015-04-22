@@ -195,6 +195,8 @@ class Command
                 $content = call_user_func($callbackContent, $content);
             }
             if (is_file($target)) {
+                // no overwrite!
+                continue;
                 if ($content === file_get_contents($target)) {
                     echo " unchanged $name\n";
                     continue;
