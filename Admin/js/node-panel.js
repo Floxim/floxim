@@ -25,6 +25,9 @@ window.fx_node_panels = function() {
     };
     
     this.get = function($node) {
+        if (!$node) {
+            $node = $( $fx.front.get_selected_item() );
+        }
         return this.create($node);
     };
     
@@ -128,31 +131,9 @@ function node_panel($node, params) {
         
         var outer_offset = that.params.offset;
         
-        
-        $p.css({
-            width:'10000px',
-            left:'-10000px',
-            visibility:'hidden',
-            display:'block'
-        });
-        var po = $p.offset();
-        var p_left = po.left;
-        var $lpi = $p_items.last();
-        $lpi.css('margin-right', '3px');
-        var p_right = $lpi.offset().left + $lpi.outerWidth() + parseInt($lpi.css('margin-right'));
-        var p_width = p_right - p_left + 5;
-        var win_width = $(window).width();
-        
-        if (p_width > win_width) {
-            p_width = win_width - 10;
-            $p.css('width', p_width).addClass('fx_node_panel_too_wide');
-        } else {
-            $p.removeClass('fx_node_panel_too_wide');
-        }
-        
+        var p_width = $p.outerWidth();
         
         var css = {
-            width:p_width + 'px',
             visibility:'visible',
             opacity:1
         };
@@ -254,11 +235,17 @@ function node_panel($node, params) {
         }
     };
     
-    this.add_label = function(data) {
-        var $label = $('<div class="fx_node_panel_label"></div>');
+    this.add_label = function(data, $before_node) {
+        var $item = $('<div class="fx_node_panel__item fx_node_panel__item-type-label"></div>');
+        var $label = $('<div class="fx_node_panel__item_label"></div>');
         $label.append(data);
-        this.$panel.append($label);
-        return $label;
+        $item.append($label);
+        if (!$before_node) {
+            this.$panel.append($item);
+        } else {
+            $before_node.before($item);
+        }
+        return $item;
     };
     
     this.add_button = function(button, callback) {

@@ -11,10 +11,73 @@ class Adminpanel extends Admin
     {
 
     }
+    
+    public static function getMainMenu()
+    {
+        $main_menu = array(
+            'manage'  => array(
+                'name' => fx::alang('Management', 'system'),
+                'key'  => 'manage',
+                'href' => '/floxim/#admin.administrate.site.all'
+            ),
+            'develop' => array(
+                'name' => fx::alang('Development', 'system'),
+                'key'  => 'develop',
+                'href' => '/floxim/#admin.component.all'
+            )
+        );
+        
+        $site = fx::env('site');
+        if ($site) {
+            $main_menu['site'] = array(
+                'name' => fx::env('site')->getLocalDomain(),
+                'key'  => 'site',
+                'href' => '/'
+            );
+            $other_sites = fx::data('site')->where('id', $site['id'], '!=')->all();
+            if (count($other_sites) > 0) {
+                $main_menu['site']['children'] = array();
+                foreach ($other_sites as $other_site) {
+                    $domain = $other_site->getLocalDomain();
+                    $main_menu['site']['children'] [] = array(
+                        'name' => $domain,
+                        'href' => 'http://' . $domain . '/'
+                    );
+                }
+            }
+        }
+        return $main_menu;
+    }
 
     static public function panelHtml()
     {
-        $res = fx::template('@admin:panel')->render(array('is_front' => true));
+        $data = array(
+            'main_menu' => self::getMainMenu(),
+            'more_menu' => self::getMoreMenu(),
+            'modes' => array(
+                "view" => array(
+                    "name" => fx::alang("View"),
+                    "href" => "view"
+                ),
+                "edit" => array(
+                    "name" => fx::alang("Edit"),
+                    "href" => "edit"
+                ), 
+                "design" => array(
+                    "name" => fx::alang("Design"),
+                    "href" => "design"
+                )
+            ),
+            'profile' => array(
+                'logout' => array(
+                    'name' => fx::alang('Sign out','system'),
+                    'url' => fx::user()->getLogoutUrl()
+                )
+            ),
+            'is_front' => true
+        );
+        $res = fx::template('@admin:panel')->render($data);
+        fx::log('admp', $res);
         return $res;
     }
 

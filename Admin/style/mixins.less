@@ -1,0 +1,30 @@
+@main_color:#2d54ff;
+@alt_color:#FFF;
+@mid_color:#aac0ff;
+
+@button_color: @main_color;
+@button_color_inverted: @alt_color;
+
+@panel_height:60px;
+
+.fx_clearfix {
+    &:after {
+        content:'';
+        display:block;
+        visibility:hidden;
+        height:1px;
+        width:1px;
+        clear:both;
+    }
+}
+
+.fx_triangle_down(@size:5px; @color:@mid_color;) {
+    //position: relative;
+    //top: -2px;
+    display: inline-block;
+    width: 0px;
+    height: 0px;
+    border-left: @size solid transparent;
+    border-right: @size solid transparent;
+    border-top: @size solid @color;
+}

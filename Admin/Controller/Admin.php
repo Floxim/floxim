@@ -159,6 +159,7 @@ class Admin extends System\Controller
         ));
 
         $page->addCssBundle(array(
+            $path_floxim . '/Admin/style/mixins.less',
             $path_floxim . '/Admin/style/main.less',
             $path_floxim . '/Admin/style/forms.less',
             $path_floxim . '/Admin/style/front.less',

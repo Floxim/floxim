@@ -117,24 +117,17 @@ class Page
         $this->addCssBundle($files);
     }
 
-    public function addCssBundle($input_files, $params = array())
+    public function addCssBundle($files, $params = array())
     {
 
         if (!isset($params['name'])) {
-            $params['name'] = md5(join($input_files));
+            $params['name'] = md5(join($files));
         }
         $params['name'] .= '.css.gz';
 
         $http_path = fx::path()->http('@files/asset_cache/' . $params['name']);
         $full_path = fx::path()->abs($http_path);
 
-        $files = array();
-        foreach ($input_files as $f) {
-            if (file_exists($f)) {
-                $files []= $f;
-            }
-        }
-        
         $last_modified = 0;
         $less_flag = false;
         foreach ($files as $file) {
@@ -149,6 +142,8 @@ class Page
                 }
             }
         }
+        
+        fx::log( date('r', filemtime($full_path)),  date('r', $last_modified), $files);
 
         if (!file_exists($full_path) || filemtime($full_path) < $last_modified) {
             $file_content = '';

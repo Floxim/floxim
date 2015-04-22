@@ -22,9 +22,6 @@ window.$fx = {
             $fx.admin = false;
             $fx.buttons = new fx_buttons($fx.settings.buttons.source);
             
-            $fx.main_menu = new fx_main_menu($fx.settings.mainmenu);
-            $fx.main_menu.load();
-                
             $fx.additional_menu = new fx_additional_menu();
             $fx.additional_menu.load();
             $(window).hashchange($fx.set_mode);
@@ -33,8 +30,7 @@ window.$fx = {
             
             if ($fx.mode === 'page') {
                 $fx.front = new fx_front();
-                var c_mode = $.cookie('fx_front_mode') || 'view';
-                $fx.front.load(c_mode);
+                $fx.front.load();
             }
             
             $('html')

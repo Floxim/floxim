@@ -13,17 +13,41 @@
 {template id="panel"}
 <div id="fx_admin_panel" class="fx_overlay">
     <div id="fx_admin_panel_logo"><div class="fx_preloader"></div></div>
-    {$content}
-        <div id="fx_admin_main_menu"></div>
-        <div fx:if="$is_front" id="fx_admin_page_modes"></div>
-        <div fx:if="$is_front" id="fx_admin_more_menu"></div>
-        <div id="fx_admin_additional_menu">
-            <a class="fx_logout" data-url="<?php echo fx::user()->getLogoutUrl() ?>">
-                <?php echo fx::alang('Sign out','system')?>
-            </a>
+    
+        <div id="fx_admin_main_menu" class="fx_button_group">
+            <div fx:each="$main_menu" 
+               class="fx_button fx_button-in_group {if $children}fx_button-has_dropdown fx_button-has_own_action{/if}" 
+               data-href="{$href}" 
+               data-key="{$key}">
+                {$name /}
+                <span fx:if="$children" class="fx_button__arrow"></span>
+                <div fx:with-each="$children" class="fx_dropdown">
+                    <div fx:item data-href="{$href}" class="fx_button fx_button-in_dropdown">
+                        {$name /}
+                    </div>
+                </div>
+            </div>
         </div>
-        <div id="fx_admin_clear"></div>
-    {/$}
+        <div fx:if="$is_front" id="fx_admin_front_menu">
+            <div fx:each="$modes" 
+               class="fx_button fx_button-in_group fx_front_mode" 
+               data-key="{$key}">
+                {$name /}
+            </div><div 
+                fx:with-each="$more_menu" class="fx_button fx_button-in_group fx_button-has_dropdown">
+                More
+                <span class="fx_button__arrow"></span>
+                <div  class="fx_dropdown">
+                    <div fx:item data-href="{$href}" class="fx_button fx_button-in_dropdown">
+                        {$name /}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="fx_admin_additional_menu" fx:with="$profile.logout">
+            <a class="fx_button" data-href="$url">{$name}</a>
+        </div>
+    
 </div>
 <div fx:if="$is_front" id="fx_admin_control" class="fx_overlay">
     <div id="fx_admin_extra_panel">

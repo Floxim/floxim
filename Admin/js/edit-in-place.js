@@ -290,12 +290,16 @@ fx_edit_in_place.prototype.add_panel_field = function(meta) {
     }
     
     //var $field_container = $fx.front.get_node_panel();
-    var $field_container = $fx.front.node_panel.get(this.node).$panel;
-    $field_container.show();
-    var field_node = $fx_form.draw_field(meta, $field_container);
-    field_node.data('meta', meta);
-    this.panel_fields.push(field_node);
-    return field_node;
+    var $panel = $fx.front.node_panel.get(this.node).$panel;
+    $panel.show();
+    var npi = 'fx_node_panel__item';
+    var $field_container = $(
+        '<div class="'+npi+' '+npi+'-type-field '+npi+'-field_type-'+meta.type+' '+npi+'-field_name-'+meta.name+'"></div>');
+    var $field_node = $fx_form.draw_field(meta, $field_container);
+    $field_node.data('meta', meta);
+    this.panel_fields.push($field_node);
+    $panel.append($field_container);
+    return $field_node;
 };
 
 fx_edit_in_place.prototype.stop = function() {
