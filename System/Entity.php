@@ -140,6 +140,8 @@ abstract class Entity implements \ArrayAccess
         }
         $this->afterSave();
         fx::trigger('after_save', array('entity' => $this));
+        $this->modified = array();
+        $this->modified_data = array();
         return $this;
     }
 

@@ -9,7 +9,7 @@ class Ajax extends Base
     public function route($url = null, $context = null)
     {
         $action_info = null;
-        if (!preg_match("~^/\~ajax/([a-z0-9_\.\:-]+)?~", $url, $action_info)) {
+        if (!preg_match("~^/\~ajax/([a-z0-9_\.\:\@-]+)?~", $url, $action_info)) {
             return null;
         }
 
@@ -43,6 +43,8 @@ class Ajax extends Base
                 return $res;
             }
         }
+        
+        
         $template = null;
         if ($action_info && !empty($action_info[1])) {
             $action = $action_info[1];
@@ -65,16 +67,25 @@ class Ajax extends Base
             $action[1] = 'show';
         }
         $action_name = $action[1];
-
-        $controller = fx::controller($controller_name . ':' . $action_name);
-
+        
+        $params = fx::input()->fetchGetPost('_ajax_controller_params');
+        
+        $controller = fx::controller($controller_name . ':' . $action_name, $params);
+        
+        if (!$template) {
+            $template = fx::input()->fetchGetPost('_ajax_template');
+        }
+        
         if (!$template) {
             $tpls = $controller->getAvailableTemplates();
             if (count($tpls) > 0) {
                 $template = $tpls[0]['full_id'];
             }
         }
+        
+        
         $res = $controller->process();
+        
         if ($template) {
             $tpl = fx::template($template);
             if ($tpl) {

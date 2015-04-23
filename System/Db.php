@@ -113,6 +113,10 @@ class Db extends \PDO
                 "Error: " . $this->last_error[2]
             );
         }
+        $trace_rex = fx::config('dev.log_sql_backtrace');
+        if ($trace_rex && preg_match($trace_rex, $statement)) {
+            fx::log($trace_rex, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
+        }
         if (!fx::config('dev.log_sql')) {
             return $this->last_result;
         }
