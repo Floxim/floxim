@@ -8,6 +8,9 @@ class Infoblock extends Base
 {
     public function route($url = null, $context = null)
     {
+        if (!fx::isAdmin()) {
+            return null;
+        }
         if (!preg_match("~^/\~ib/(\d+|fake(?:\-\d+)?)@(\d+)$~", $url, $ib_info)) {
             return null;
         }

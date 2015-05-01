@@ -134,7 +134,7 @@ class Compiler
             $ep = new ExpressionParser();
             $with_expr = $ep->parseWith($with_expr);
         }
-        $switch_context = is_array($with_expr) && isset($with_expr['$']);
+        $switch_context = is_array($with_expr) && isset($with_expr['$']); // && !$is_apply;
         if ($switch_context) {
             $new_context_expression = $this->parseExpression($with_expr['$']);
         }
@@ -293,7 +293,7 @@ class Compiler
 
             if ($mod['is_each'] && $mod['is_template']) {
                 $c_with = $call_token->getProp('with');
-                $call_token->setProp('with', "`" . $display_var . '`_item' . ($c_with ? ', ' . $c_with : ''));
+                //$call_token->setProp('with', "`" . $display_var . '`_item' . ($c_with ? ', ' . $c_with : ''));
                 $each_token = new Token('each', 'single', array('select' => "`" . $display_var . "`"));
                 $each_token->addChild($call_token);
                 $code = "ob_start();\n?>";

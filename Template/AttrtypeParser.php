@@ -87,15 +87,12 @@ class AttrtypeParser extends Fsm
 
     protected function  setPropVal($props, $ch)
     {
+        $token = Token::create($ch);
         foreach ($props as $prop => $value) {
-            $c_type = '';
-            if (!preg_match('~\s' . $prop . '=[\'\"]?\w+[\'\"]?~', $ch)) {
-                $c_type = ' ' . $prop . '="' . $value . '"';
-            }
-
-            $ch = preg_replace("~^([^\s\|\}]+)~", '\1 ' . $c_type, $ch);
+            $token->setProp($prop, $value);
         }
-        return $ch;
+        $res = $token->dump();
+        return $res;
     }
 
     public function setImageVar($ch)

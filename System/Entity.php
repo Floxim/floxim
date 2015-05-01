@@ -70,7 +70,10 @@ abstract class Entity implements \ArrayAccess
         $this->is_loaded = true;
     }
 
-    
+    public function getAvailableOffsetKeys() 
+    {
+        
+    }
     
     protected static $offset_meta = array();
     protected $available_offsets_cache = null;
