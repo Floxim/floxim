@@ -19,12 +19,18 @@ class Context {
 
     public function push($data = array(), $meta = array())
     {
+        if ($data instanceof \Floxim\Floxim\System\Entity) {
+            $ofs = $data->getAvailableOffsets();
+        }
         $this->stack [] = $data;
-        $meta = array_merge(array(
-            'transparent' => false,
-            'autopop'     => false
-        ), $meta);
-        $this->meta[] = $meta;
+        $this->meta[] = array_merge(
+            array(
+                'transparent' => false,
+                'autopop'     => false,
+                //'keys' => $data instanceof \Floxim\Floxim\System\Entity ? array_keys() : null
+                ), 
+            $meta
+        );
     }
     
     public function pop()
@@ -85,10 +91,10 @@ class Context {
     {
         // neither var name nor context offset - return current context
         $stack_length = count($this->stack) - 1;
-        if (!$name && !$context_offset) {
+        if (is_null($name) && is_null($context_offset)) {
             for ($i = $stack_length; $i >= 0; $i--) {
-                $c_meta = $this->meta[$i];
-                if (!$c_meta['transparent']) {
+                //$c_meta = $this->meta[$i];
+                if (!$this->meta[$i]['transparent']) {
                     return $this->stack[$i];
                 }
             }

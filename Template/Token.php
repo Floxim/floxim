@@ -110,6 +110,8 @@ class Token
             $props = array_merge($props, TokenAttParser::getAtts($source));
             if ($name == 'var' && preg_match("~^\s*\|~", $source)) {
                 $props['modifiers'] = self::getVarModifiers($source);
+            } elseif (isset($props['modifiers']) && is_string($props['modifiers'])) {
+                $props['modifiers'] = json_decode($props['modifiers'], true);
             }
         }
 
@@ -145,7 +147,10 @@ class Token
         $res .= $this->type == 'close' ? '/' : '';
         $res .= $this->name . ' ';
         foreach ($this->props as $k => $v) {
-            $res .= $k . '="' . $v . '" ';
+            if (is_array($v)) {
+                $v = json_encode($v);
+            }
+            $res .= $k . "='" . $v . "' ";
         }
         $res .= $this->type == 'single' ? '/' : '';
         $res .= '}';
