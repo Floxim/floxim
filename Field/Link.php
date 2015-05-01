@@ -84,17 +84,18 @@ class Link extends Baze
         return '';
     }
 
-    public function getJsField($content)
+    public function getJsField($content, $with_values = true)
     {
         parent::getJsField($content);
         $target_content = $this->getTargetName();
-        $finder = fx::data($target_content);
+        
 
         if ($this['format']['render_type'] == 'livesearch') {
             $this->_js_field['type'] = 'livesearch';
             $this->_js_field['params'] = array('content_type' => $target_content);
-            if (($c_val = $content[$this['keyword']])) {
-                $c_val_obj = $finder->where('id', $c_val)->one();
+            $c_val = $content[$this['keyword']];
+            if ($c_val) {
+                $c_val_obj = fx::data($target_content)->where('id', $c_val)->one();
                 if ($c_val_obj) {
                     $this->_js_field['value'] = array(
                         'id'   => $c_val_obj['id'],
@@ -106,6 +107,10 @@ class Link extends Baze
         }
 
         $this->_js_field['type'] = 'select';
+        
+        if (!$with_values) {
+            return $this->_js_field;
+        }
         
         $name_prop = $finder->getNameField();
         

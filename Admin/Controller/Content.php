@@ -56,8 +56,9 @@ class Content extends Admin
         }
 
         $this->response->addFields($fields);
+        
         $content_fields = fx::collection($content->getFormFields());
-
+        
         $is_backoffice = isset($input['mode']) && $input['mode'] == 'backoffice';
 
         if (!$is_backoffice) {

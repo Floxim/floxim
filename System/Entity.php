@@ -24,10 +24,6 @@ abstract class Entity implements \ArrayAccess
 
     public function getFinder()
     {
-        if ($this->getType() === 'link') {
-            fx::log(debug_backtrace(null, 10), $this);
-            die();
-        }
         return fx::data($this->getType());
     }
     

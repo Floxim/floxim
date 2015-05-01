@@ -19,15 +19,11 @@ class Context {
 
     public function push($data = array(), $meta = array())
     {
-        if ($data instanceof \Floxim\Floxim\System\Entity) {
-            $ofs = $data->getAvailableOffsets();
-        }
         $this->stack [] = $data;
         $this->meta[] = array_merge(
             array(
                 'transparent' => false,
-                'autopop'     => false,
-                //'keys' => $data instanceof \Floxim\Floxim\System\Entity ? array_keys() : null
+                'autopop'     => false
                 ), 
             $meta
         );
