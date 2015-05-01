@@ -1,10 +1,17 @@
 (function($) {
     
     function fx_front_panel() {
-        var $body = $('#fx_admin_extra_panel .fx_admin_panel_body');
-        var $footer = $('#fx_admin_extra_panel .fx_admin_panel_footer');
+        var $body = $('#fx_admin_extra_panel .fx_admin_panel_body'),
+            $footer = $('#fx_admin_extra_panel .fx_admin_panel_footer'),
+            $side = $('.fx_side_panel'),
+            $side_body = $('.fx_side_panel__body'),
+            $side_footer = $('.fx_side_panel__footer'),
+            front_panel = this,
+            duration = 300;
+        
         var body_default_margin = null;
         this.is_visible = false;
+        this.current_panel_type = null;
         
         this.show_form = function(data, params) {
             if (!params.view) {
@@ -19,6 +26,7 @@
             
             this.stop();
             $footer.html('').show().css('visibility', 'hidden');
+            $side_footer.html('');
             
             $body.css({height:'1px', 'visibility':'hidden'}).removeClass('fx_admin_panel_body_overflow_hidden').show();
             
@@ -28,10 +36,15 @@
             
             data.fields.push({type:'hidden', name:'_base_url', value:document.location.href});
             
+            this.current_panel_type = 'side';
+            
             if (params.view === 'horizontal') {
+                this.current_panel_type = 'top';
                 $.each(data.fields, function(key, field) {
                     field.context = 'panel';
                 });
+            } else {
+                data.ignore_cols = true;
             }
             
             if (!data.form_button) {
@@ -39,10 +52,16 @@
             }
             data.form_button.unshift('cancel');
             data.class_name = 'fx_form_'+params.view;
-            data.button_container = $footer;
             
+            var $form = null;
             
-            var $form = $fx.form.create(data, $body);
+            if (this.current_panel_type === 'top') {
+                data.button_container = $footer;
+                $form = $fx.form.create(data, $body);
+            } else {
+                data.button_container = $side_footer;
+                $form = $fx.form.create(data, $side_body);
+            }
             
             $form.on('fx_form_cancel', function() {
                 if (params.oncancel) {
@@ -60,12 +79,7 @@
                 }
             });
             setTimeout(function() {
-                $footer.css('visibility', 'visible');
-                $body.css('visibility', 'visible');
-                $fx.front_panel.animate_panel_height(null, function () {
-                    $form.resize(function() {
-                        $fx.front_panel.animate_panel_height();
-                    });
+                var callback = function() {
                     var $first_inp = $(':input:visible', $form).first();
                     if ($first_inp.length > 0 && $first_inp.attr('type') !== 'submit') {
                         $first_inp.focus();
@@ -73,7 +87,19 @@
                     if (params.onready) {
                         params.onready($form);
                     }
-                });
+                };
+                if (front_panel.current_panel_type === 'top') {
+                    $footer.css('visibility', 'visible');
+                    $body.css('visibility', 'visible');
+                    $fx.front_panel.animate_panel_height(null, function () {
+                        $form.resize(function() {
+                            $fx.front_panel.animate_panel_height();
+                        });
+                        callback();
+                    });
+                } else {
+                    front_panel.show_sidebar(callback);
+                }
             }, 100);
             
             $('body').off('.fx_front_panel').on('keydown.fx_front_panel', function(e) {
@@ -82,6 +108,60 @@
                     return false;
                 }
             });
+        };
+        
+        
+        this.recount_sidebar = function() {
+            var total_height = $(window).outerHeight(),
+                footer_height = $side_footer.outerHeight(),
+                $form = $('.fx_admin_form', $side),
+                form_height = $form.outerHeight();
+            
+            if (form_height > (total_height - footer_height)) {
+                $side.css({
+                    'height':total_height
+                });
+                $side_body.css({
+                    height: (total_height - footer_height)+'px'
+                });
+                $side_footer.css({
+                    position:'absolute',
+                    bottom:0
+                });
+            } else {
+                $side.css({
+                    height:'auto'
+                });
+                $side_body.css({
+                    height:'auto'
+                });
+                $side_footer.css({
+                    position:'static',
+                    bottom:''
+                });
+            }
+        };
+        
+        this.show_sidebar = function() {
+            $('body').css('overflow', 'hidden');
+            this.recount_sidebar();
+            $(window).resize(
+                'resize.fx_recount_sidebar', 
+                this.recount_sidebar
+            );
+            $side.css({
+                right:'-' + ($side.outerWidth() + 30)+'px'
+            }).animate({
+                right:0
+            }, duration);
+        };
+        
+        this.hide_sidebar = function() {
+            $('body').css('overflow', '');
+            $side.animate({
+                right:'-' + ($side.outerWidth() + 30)+'px'
+            }, duration);
+            $(window).off('resize.fx_recount_sidebar');
         };
         
         this.animate_panel_height = function(panel_height, callback) {
@@ -113,11 +193,10 @@
             if (body_default_margin === null) {
                 body_default_margin = parseInt($('body').css('margin-top'));
             }
-            var body_offset = body_default_margin + panel_height;
+            var body_offset = panel_height === 0 ? body_default_margin : panel_height;
             
             var height_delta = body_offset - parseInt($('body').css('margin-top'));
             this.is_moving = true;
-            var duration = 300;
             
             $body.animate(
                 {height: panel_height+'px'}, 
@@ -199,18 +278,25 @@
         this.hide = function() {
             $fx.front.enable_select();
             $('body').off('.fx_front_panel');
-            
-            this.animate_panel_height(0, function () {
-                $body.hide().html('');
-                $footer.hide();
+            var callback = function() {
                 setTimeout(function() {
                     $fx.front.enable_node_panel();
                 }, 50);
                 if (!$fx.front.get_selected_item()) {
                     $fx.front.enable_hilight();
                 }
-                $fx.front_panel.is_visible = false;
-            });
+            };
+            if (this.current_panel_type === 'top') {
+                this.animate_panel_height(0, function () {
+                    $body.hide().html('');
+                    $footer.hide();
+                    callback();
+                    $fx.front_panel.is_visible = false;
+                });
+            } else {
+                this.hide_sidebar();
+                callback();
+            }
         };
     };
     

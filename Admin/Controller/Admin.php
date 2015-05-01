@@ -127,6 +127,7 @@ class Admin extends System\Controller
             'http://' . getenv("HTTP_HOST") . fx::path()->http($path_floxim).'/Admin/js-templates/compile.php',
             $path_floxim . '/Admin/js/lib.js',
             $path_floxim . '/Admin/js/front.js',
+            $path_floxim . '/Admin/js/adder.js',
             $path_floxim . '/Admin/js/buttons.js',
             $path_floxim . '/Admin/js/form.js',
             $path_floxim . '/Admin/js/patch.js',
@@ -161,6 +162,7 @@ class Admin extends System\Controller
         $page->addCssBundle(array(
             $path_floxim . '/Admin/style/mixins.less',
             $path_floxim . '/Admin/style/main.less',
+            $path_floxim . '/Admin/style/backoffice.less',
             $path_floxim . '/Admin/style/forms.less',
             $path_floxim . '/Admin/style/front.less',
             $path_floxim . '/Admin/style/livesearch.less',
@@ -177,7 +179,8 @@ class Admin extends System\Controller
         self::addAdminFiles();
 
         if (fx::isAdmin()) {
-            $res = fx::template('@admin:back_office')->render();
+            $panel = Adminpanel::panelHtml();
+            $res = fx::template('@admin:back_office')->render(array('panel' => $panel));
             $js_config = new FxAdmin\Configjs();
             fx::page()->addJsText("\$fx.init(" . $js_config->getConfig() . ");");
         } else {

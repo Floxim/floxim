@@ -261,7 +261,7 @@ var url = _c.url == null ? null : (/^#/.test(_c.url) ? _c.url : '#' + $fx.mode +
 <!--[list_field_cell ? _o && (_o.type == 'buttons' || _o.label && _o.label.type == 'buttons')]-->
 <div class="fx_list_buttons">
     <?$.each(_c, function(i, button) {
-        ?><span><?=$t.input($.extend(button, {type:'button'}))?></span><?
+        ?><?=$t.input($.extend(button, {type:'button'}))?><?
     });?>
 </div>
 

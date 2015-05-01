@@ -6,129 +6,8 @@
 
 font-family:Roboto, Arial;
 
-.fx_button {
-    display: inline-block;
-    background: @button_color_inverted;
-    text-decoration: none;
-    padding:10px 20px;
-    border:1px solid @mid_color;
-    border-radius: 3px;
-    font-weight:500;
-    cursor:pointer;
-    white-space:nowrap;
-    
-    &, &__extra {
-        color:@button_color;
-    }
-    
-    &-active {
-        background: @button_color;
-        border-color:@button_color;
-    }
-    &-active, &-active .fx_button__extra {
-        color:@button_color_inverted;
-    }
-    
-    &-in_group {
-        border-radius: 0;
-        border-right: 0;
-        &:first-child {
-            border-top-left-radius: 3px;
-            border-bottom-left-radius: 3px;
-        }
-        &:last-child {
-            border-top-right-radius: 3px;
-            border-bottom-right-radius: 3px;
-            border-right: 1px solid @mid_color;
-        }
-    }
-    
-    &-in_dropdown {
-        display:block;
-        border-radius: 0;
-        border-bottom:none;
-        &:first-child {
-            border-top-left-radius: 3px;
-            border-top-right-radius: 3px;
-        }
-        &:last-child {
-            border-bottom-left-radius: 3px;
-            border-bottom-right-radius: 3px;
-            border-bottom: 1px solid @mid_color;
-        }
-    }
-    
-    &-in_node_panel {
-        padding:10px 9px;
-        font-size:15px;
-        border-radius:0;
-    }
-    
-    
-    &-has_dropdown {
-        position: relative;
-        .fx_button__arrow {
-            .fx_triangle_down();
-            position: relative;
-            left:5px;
-            top:-2px;
-        }
-        &.fx_button-active .fx_button__arrow {
-            .fx_triangle_down(5px; @button_color_inverted);
-        }
-    }
-    
-    &__add_text {
-        display: inline-block;
-        padding-left:32px;
-        padding-right:10px;
-        position:relative;
-        &:before {
-            content:'';
-            display: inline-block;
-            width:26px;
-            height:26px;
-            position:absolute;
-            top:-5px;
-            left:4px;
-            background:url('images/sprite.png') no-repeat -61px 0;
-        }
-    }
-}
-
-.fx_dropdown {
-    position: absolute;
-    left:0;
-    top:41px;
-    display: none;
-}
-
-.fx_icon {
-    height:30px;
-    width:30px;
-    background:url('images/sprite.png') no-repeat 0 0;
-    cursor:pointer;
-    display:inline-block;
-    vertical-align:middle;
-    &-type-edit {
-        background-position: -105px 0;
-    }
-    
-    &-type-publish {
-        background-position:-162px 7px;
-    }
-    
-    &-type-unpublish {
-        background-position: -244px 7px;
-    }
-    
-    &-type-move {
-        background-position:-292px 0;
-    }
-    
-    &-type-delete {
-        background-position: -204px 3px;
-    }
+a, a:visited {
+    color:@button_color;
 }
 
 &#fx_admin_panel, #fx_admin_panel {
@@ -140,6 +19,7 @@ font-family:Roboto, Arial;
     background-color: @alt_color;
     z-index: 2677;
     padding:10px;
+    border-bottom:1px solid #ddd;
 }
 
 #fx_admin_panel_logo {
@@ -169,8 +49,9 @@ font-family:Roboto, Arial;
     background: #fff;
     position: fixed;
     left: 0;
-    top: @panel_height;
-    z-index: 2675;
+    //top: @panel_height;
+    top:0;
+    z-index: 2680;
     &.fx_admin_control_admin {
         //position: relative !important;
         //left: auto;
@@ -241,4 +122,139 @@ font-family:Roboto, Arial;
     }
 }
 
+}
+
+
+.fx_button {
+    display: inline-block;
+    background: @button_color_inverted;
+    text-decoration: none;
+    padding:10px 20px;
+    border:1px solid @mid_color;
+    border-radius: 3px;
+    font-weight:500;
+    cursor:pointer;
+    white-space:nowrap;
+    
+    &, &__extra {
+        color:@button_color;
+    }
+    
+    &-active {
+        background: @button_color;
+        border-color:@button_color;
+    }
+    &-active, &-active .fx_button__extra {
+        color:@button_color_inverted;
+    }
+    
+    &-in_group {
+        border-radius: 0;
+        border-right: 0;
+        &:first-child {
+            border-top-left-radius: 3px;
+            border-bottom-left-radius: 3px;
+        }
+        &:last-child {
+            border-top-right-radius: 3px;
+            border-bottom-right-radius: 3px;
+            border-right: 1px solid @mid_color;
+        }
+    }
+    
+    &-in_dropdown {
+        display:block;
+        border-radius: 0;
+        border-bottom:none;
+        &:first-child {
+            border-top-left-radius: 3px;
+            border-top-right-radius: 3px;
+        }
+        &:last-child {
+            border-bottom-left-radius: 3px;
+            border-bottom-right-radius: 3px;
+            border-bottom: 1px solid @mid_color;
+        }
+    }
+    
+    &-active&-in_dropdown:last-child {
+        border-bottom:1px solid @button_color;
+    }
+    
+    &-in_node_panel {
+        padding:10px 9px;
+        font-size:15px;
+        border-radius:0;
+    }
+    
+    
+    &-has_dropdown {
+        position: relative;
+        .fx_button__arrow {
+            .fx_triangle_down();
+            position: relative;
+            left:5px;
+            top:-2px;
+        }
+        &.fx_button-active .fx_button__arrow {
+            .fx_triangle_down(5px; @button_color_inverted);
+        }
+    }
+    
+    &__add_text {
+        display: inline-block;
+        padding-left:32px;
+        padding-right:10px;
+        position:relative;
+        &:before {
+            content:'';
+            display: inline-block;
+            width:26px;
+            height:26px;
+            position:absolute;
+            top:-5px;
+            left:4px;
+            background:url('images/sprite.png') no-repeat -61px 0;
+        }
+    }
+}
+
+.fx_dropdown {
+    position: absolute;
+    left:0;
+    top:38px;
+    display: none;
+    box-shadow: 1px 1px 10px rgba(0,0,0,0.3);
+}
+
+.fx_icon {
+    height:30px;
+    width:30px;
+    background:url('images/sprite.png') no-repeat 0 0;
+    cursor:pointer;
+    display:inline-block;
+    vertical-align:middle;
+    &-type-edit {
+        background-position: -105px 0;
+    }
+    
+    &-type-publish {
+        background-position:-162px 7px;
+    }
+    
+    &-type-unpublish {
+        background-position: -244px 7px;
+    }
+    
+    &-type-move {
+        background-position:-292px 0;
+    }
+    
+    &-type-delete {
+        background-position: -204px 3px;
+    }
+    
+    &-type-settings {
+        background-position: -602px -1px;
+    }
 }

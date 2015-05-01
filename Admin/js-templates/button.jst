@@ -1,6 +1,6 @@
 <!--[input ? _c.type == 'button']-->
 <div 
-    class="fx_button fx_admin_button_text<?=_c['class'] ? ' fx_admin_button_'+_c['class'] : ''?>" 
+    class="fx_button fx_button-in_group <?= _c.is_active ? 'fx_button-active' : ''?>" 
     <?=$t.data_attr(_c)?>>
     <span><?=_c.label || ''?></span>
 </div>

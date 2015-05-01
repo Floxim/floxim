@@ -43,8 +43,10 @@ fx_form = {
             //return;
             settings.fields = [];
         }
+        
+        var use_tabs = settings.tabs && !settings.ignore_cols;
 
-        if (settings.tabs) {
+        if (use_tabs) {
             $fx_form.init_tabs(settings, $form_node);
         }
         
@@ -54,7 +56,7 @@ fx_form = {
             $fx.buttons.draw_buttons(settings.buttons);
         }
         $.each(settings.fields, function(i, json) {
-            var target = json.tab !== undefined
+            var target = use_tabs && json.tab !== undefined
                             ? $('#'+settings.form.id+'_'+json.tab, $form_node)
                             : $form_node;
             $fx_form.draw_field(json, target);
@@ -81,11 +83,11 @@ fx_form = {
             if (typeof options.is_submit === 'undefined') {
                 options.is_submit = true;
             }
-            switch (options.key) {
-                case 'cancel':
-                    options['class'] = 'cancel';
-                    options.is_submit = false;
-                    break;
+            if (options.key ==='cancel') {
+                options['class'] = 'cancel';
+                options.is_submit = false;
+            } else {
+                options.is_active = true;
             }
             var b = $t.jQuery('input', options);
             b.data('key', options.key);
@@ -113,19 +115,6 @@ fx_form = {
                 }
             }
         });
-        /*
-        if (settings.class_name === "fx_form_cols") {
-            setTimeout(function() {
-                var $first_field = $form_node.find('.field:visible').first();
-                $first_field.css('height', $first_field.outerHeight());
-                setTimeout(function() {
-                    $first_field.css('height', '');
-                }, 30);
-                console.log($first_field);
-                document.title = 'OO'+Math.random();
-            }, 30);
-        }
-        */
         $form_node.on('submit.fx_submit', $fx_form.submit_handler);
     },
             
@@ -173,7 +162,8 @@ fx_form = {
     },
 
     init_tabs: function ( settings, container ) {
-        var do_cols = settings.class_name === "fx_form_cols";
+        var do_cols = !settings.ignore_cols && settings.class_name === "fx_form_cols";
+        console.log(settings, do_cols);
         if (do_cols) {
             container.append($t.jQuery('form_cols', settings));
             return;

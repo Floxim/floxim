@@ -77,7 +77,6 @@ class Adminpanel extends Admin
             'is_front' => true
         );
         $res = fx::template('@admin:panel')->render($data);
-        fx::log('admp', $res);
         return $res;
     }
 

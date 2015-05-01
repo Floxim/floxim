@@ -9,7 +9,6 @@
 }
 
 .fx_admin_form a, .fx_admin_form .ui-state-default a {
-    color: #28abd0;
     cursor: pointer;
 }
 
@@ -18,7 +17,7 @@
 }
 
 .fx_admin_form, .fx_admin_form .ui-widget input, .fx_admin_form .ui-widget select.fx_input, .fx_admin_form .ui-widget textarea.fx_input, .fx_admin_form .ui-widget button {
-    font-size: 13px;
+    font-size: 15px;
 }
 
 .fx_admin_form .field {
@@ -32,17 +31,26 @@
 
 .fx_admin_form {
     .fx_input {
-        font-family: Tahoma, sans-serif;
+        font-family: Roboto, Tahoma, sans-serif;
         display: block;
         margin: 7px 0 20px 0;
         box-sizing:border-box;
         -moz-box-sizing:border-box;
-        //padding: .4em;
-        padding:2px;
-        font-size:14px;
-        border-radius:0;
+        font-size:15px;
+    }
+    .redactor_fx_wysiwyg, .fx_input {
+        padding:8px 12px;
+        border-radius:2px;
+        border:1px solid #cdcdcd;
         &, &:focus, &:active {
             box-shadow:none;
+        }
+        &:focus, &:active {
+            border:1px solid @mid_color;
+            outline-color: @mid_color;
+            outline-offset: -2px;
+            outline-style: auto;
+            outline-width: 5px;
         }
     }
 }
@@ -156,7 +164,7 @@
     }
 
     .redactor-editor {
-        max-height:270px;
+        max-height:350px;
     }
     .redactor-toolbar {
         left:0;
@@ -201,13 +209,12 @@
     .fx_form_horizontal, .fx_form_cols {
         label, input, select, textarea {
             display: inline;
-            font-size: 12px;
+            font-size: 15px;
             width: auto;
             margin: 0;
         }
         label {
-            font-size:10px;
-            text-transform: uppercase;
+            font-size:13px;
         }
         .fx_date_input();
         .fx_date_parts {
@@ -251,8 +258,7 @@
             margin-top:0;
         }
         .input_container {
-            margin-bottom:10px;
-            //overflow:auto;
+            margin-bottom:20px;
         }
         .field_last .input_container {
             margin-bottom:0;
@@ -301,7 +307,6 @@
             visibility:visible;
         }
         .redactor-editor {
-            padding:5px;
             &, p, li {
                 font-size:13px;
             }
@@ -638,11 +643,11 @@
     .fx_admin_panel_footer {
         padding:4px 10px;
         position:absolute;
-        bottom:-31px;
-        background:#f5f5f5;
+        bottom:-49px;
+        background:#FFF;
     }
     .fx_admin_panel_footer, .fx_admin_panel_body {
-        box-shadow:3px 3px 3px #AAA;
+        box-shadow:3px 3px 3px rgba(0,0,0,0.5);
         display:none;
     }
     .fx_admin_panel_body {
@@ -692,4 +697,144 @@
     .fx_input_limit {
         width:30px !important;
     }
+}
+
+.fx_list_filter {
+    width: 100%;
+    height: 35px;
+    clear: both;
+    //margin: 30px 0 20px;
+}
+
+.fx_list_filter label, .fx_list_filter label input {
+    margin: 2px 0 0 10px !important;
+}
+
+.fx_list_filter .fx_list_search {
+    float: left;
+    margin: 0 0 0 5px;
+}
+
+.fx_list_filter .fx_list_search input {
+    height: 8px !important;
+}
+
+.fx_list_filter .fx_list_group {
+    float: right;
+    margin: 0 5px 0 0;
+}
+
+.fx_list_labels td {
+    color: #666;
+    input, select {
+        display:block;
+    }
+}
+
+.fx_list {
+    clear:both;
+    .fx_admin_button_text {
+        height: auto;
+        //background: #3fb7de url('images/button_bg.gif') repeat-x 100% 0;
+        background:none;
+        float: left;
+        cursor: pointer;
+        margin: 0 20px 0 0;
+        border:none;
+        text-decoration: none !important;
+        white-space: nowrap;
+        box-sizing:border-box;
+        span {
+            .fx_admin_button_text_style();
+            margin: 0 10px;
+            color:#3fb7de;
+        }
+    }
+    td:first-child a {
+        text-decoration:none;
+    }
+}
+
+.fx_list .fx_list_separator {
+    font-size:10px; 
+    color:#777;
+}
+
+.fx_list_table .fx_list_cell_buttons {
+    padding-top:0;
+    padding-bottom:0;
+}
+
+.fx_list_buttons {
+    visibility:hidden;
+}
+
+.fx_list_row:hover {
+    background:#F9F9F9;
+    border-bottom:1px solid #ddd;
+    .fx_list_buttons {
+        visibility:visible;
+        opacity:0.6;
+    }
+}
+
+.fx_admin_selected .fx_list_buttons {
+    visibility:visible;
+    opacity:1 !important;
+}
+
+.fx_list_table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.fx_list_table td {
+    vertical-align: top;
+    padding: 5px 10px;
+    font-size:13px;
+}
+
+.fx_list_table h2 {
+    font-size:14px;
+}
+
+
+.fx_list_row {
+    border-bottom: 1px solid #efefef;
+}
+
+.fx_list_image {
+    height: 100px;
+}
+
+.fx_list_row_first {
+    border-top: 1px solid #efefef;
+}
+
+.fx_list_row_item {
+    float: left;
+    margin-right: 20px;
+}
+
+.fx_list_row_item h2 {
+    margin: 0;
+}
+
+.fx_list_cell {
+    //width: 15%;
+}
+
+.fx_list_cell .fx_button {
+    padding-top: 4px;
+    padding-bottom: 4px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+.fx_list_cell_image {
+    width: 1%;
+}
+
+.fx_list_cell_last {
+    //width: 50%;
 }

@@ -72,6 +72,7 @@ fx_front.prototype.make_unselectable = function (selector) {
 };
 
 fx_front.prototype.handle_mouseover = function(e) {
+    
     if ($fx.front.mode === 'view') {
         return;
     }
@@ -86,7 +87,11 @@ fx_front.prototype.handle_mouseover = function(e) {
         e.fx_hilight_done = true;
         return;
     } 
-    if (!$fx.front.is_selectable(this) || node.closest('.fx_entity_adder_placeholder').length ) {
+    if (
+        // @todo: fix make_content_editable for bound-to-entity vars
+        //!$fx.front.is_selectable(this) || 
+        node.closest('.fx_entity_adder_placeholder').length 
+    ) {
         return;
     }
     for ( var sel_index = 0; sel_index < $fx.front.unselectable_selectors.length; i++) {
@@ -94,7 +99,7 @@ fx_front.prototype.handle_mouseover = function(e) {
             return;
         }
     }
-    $fx.front.outline_block_off($($fx.front.c_hover),100);
+    //$fx.front.outline_block_off($($fx.front.c_hover),100);
     var $editable = $(e.target).closest('.fx_template_var'),
         field_type = ($editable.data('fx_var') || {}).type,
         make_content_editable = $editable.length > 0 
@@ -105,6 +110,7 @@ fx_front.prototype.handle_mouseover = function(e) {
     var is_hover_parent = $fx.front.last_hover_node 
                             && $.contains(this, $fx.front.last_hover_node);
     $fx.front.c_hover = this;
+    
     setTimeout(
         function() {
             if ($fx.front.c_hover !== node.get(0)) {
@@ -120,13 +126,14 @@ fx_front.prototype.handle_mouseover = function(e) {
             if (!node.hasClass('fx_hilight_hover') && node.closest('.fx_infoblock_disabled').length === 0) {
                 $('.fx_hilight_hover').removeClass('fx_hilight_hover');
                 node.addClass('fx_hilight_hover');
-                $fx.front.outline_block(node, 'hover', 300);
+                //$fx.front.outline_block(node, 'hover', 300);
                 if (make_content_editable) {
                     $editable.addClass('fx_var_editable').attr('contenteditable', 'true');
                 }
             }
-        }, 
-        is_hover_parent ? 300 : 30
+        },
+        20
+        //is_hover_parent ? 300 : 30
     );
     node.one('mouseout.fx_front_mouseout', function() {
         $fx.front.c_hover = null;
@@ -140,7 +147,7 @@ fx_front.prototype.handle_mouseover = function(e) {
                 }
                 if ($fx.front.c_hover !== node[0]) {
                     node.removeClass('fx_hilight_hover');
-                    $fx.front.outline_block_off(node, 100);
+                    //$fx.front.outline_block_off(node, 100);
                     $editable.removeClass('fx_var_editable').attr('contenteditable', null);
                 }
             },
@@ -224,7 +231,9 @@ fx_front.prototype.handle_click = function(e) {
 
 fx_front.prototype.disable_hilight = function() {
     this.hilight_disabled = true;
-    $('.fx_front_overlay .fx_inline_adder').hide();
+    $('.fx_front_overlay .fx_inline_adder-visible').each(function() {
+        this.fx_hide_inline_adder();
+    });
 };
 
 fx_front.prototype.enable_hilight = function(){
@@ -1291,414 +1300,6 @@ fx_front.prototype.get_list_orientation = function($entities) {
     return axis;
 };
 
-fx_front.prototype.create_inline_infoblock_adder = function($node) {
-    var $button = $fx.front.create_inline_adder($node, '>.fx_infoblock', 'block');
-    $button.on('click', function() {
-        $fx.front.add_infoblock_select_controller($node, $button.data('rel_node'), $button.data('rel_dir'));
-    });
-};
-
-fx_front.prototype.create_inline_entity_adder = function($node) {
-    var $placeholders = $node.data('fx_neighbour_placeholder');
-    var $button = $fx.front.create_inline_adder($node, '>.fx_entity', '');
-    var $title = $button.data('title_node');
-    
-    var $placeholder_mark = $node.is('.fx_hidden_placeholder_mark') ? $node : $('.fx_hidden_placeholder_mark', $node);
-    var $placeholder_mark_td = $('td', $placeholder_mark); 
-    
-    if ($placeholder_mark.length) {
-        var add_text = '. '+ $fx.lang('You can add %s here') + '.';
-        add_text = add_text.replace(/\%s/, '<span class="fx_adder_variants"></span>');
-        if ($placeholder_mark_td.length) {
-            $placeholder_mark_td.append(add_text);
-        } else {
-            $placeholder_mark.append(add_text);
-        }
-        var $text_variants = $('.fx_adder_variants', $placeholder_mark);
-    }
-    
-    var pl = $placeholders.length;
-    $placeholders.each(function(index, item) {
-        var $placeholder = $(this);
-        var entity_name = $placeholder.data('fx_entity_name');
-        var $c_title = $('<div class="fx_adder_variant">'+entity_name+'</div>');
-        $c_title.data('placeholder', $placeholder);
-        $title.append($c_title);
-        if ($placeholder_mark.length) {
-            var $text_variant = $('<span class="fx_adder_variant">'+entity_name.toLowerCase()+'</span>');
-            $text_variant.data('placeholder', $placeholder);
-            $text_variants.append($text_variant);
-            if (index === pl - 2) {
-                $text_variants.append(' '+$fx.lang('or')+' ');
-            } else if (index !== pl - 1) {
-                $text_variants.append(', ');
-            }
-        }
-    });
-    
-    $button.off('click').on('click', '.fx_adder_variant', function(e) {
-        var $c_title = $(this);
-        var $placeholder = $c_title.data('placeholder');
-        $fx.front.show_adder_placeholder($placeholder, $button.data('rel_node'), $button.data('rel_dir'));
-        return false;
-    });
-    
-    if ($placeholder_mark.length) {
-        $placeholder_mark.off('click').on('click', '.fx_adder_variant', function(e) {
-            var $placeholder = $(this).data('placeholder');
-            $fx.front.show_adder_placeholder($placeholder);
-            return false;
-        });
-    }
-};
-
-fx_front.prototype.create_inline_adder = function($node, neighbour_selector, title) {
-    
-    var $existing_button = $node.data('fx_inline_adder');
-    if ($existing_button && $existing_button.length && $existing_button.parent().length) {
-        $existing_button.find('.fx_inline_adder__title').html(title);
-        return $existing_button;
-    }
-    
-    var $overlay = this.get_front_overlay();
-    var $button = $(
-        '<div class="fx_inline_adder fx_overlay">'+
-            '<div class="fx_inline_adder__line"></div>'+
-            '<div class="fx_inline_adder__plus"><span>+</span></div>'+
-            '<div class="fx_inline_adder__title">'+title+'</div>'+
-        '</div>'
-    );
-    
-    var $title = $('.fx_inline_adder__title', $button),
-        $plus = $('.fx_inline_adder__plus', $button),
-        $line = $('.fx_inline_adder__line', $button);
-
-    $button.data('title_node', $title);
-    
-    $button.css('z-index', this.get_overlay_z_index($node));
-    
-    var $entities = $node.find(neighbour_selector).filter(':not(.fx_entity_adder_placeholder)');
-    
-    $overlay.append($button);
-    $node.data('fx_inline_adder', $button).addClass('fx_has_inline_adder');
-    var out_timeout = null,
-        title_timeout = null,
-        over_timeout = null;
-    
-    var hide_button = function(time_offset) {
-        return;
-        if (time_offset === undefined) {
-            time_offset = 500;
-        }
-        if (over_timeout !== null) {
-            clearTimeout(over_timeout);
-            return;
-        }
-        out_timeout = setTimeout(
-            function() {
-                var $button_target = $button.data('rel_node');
-                if (!$button_target) {
-                    $button_target = $node;
-                }
-                $button_target.trigger('fx_collapse_inline_adder');
-                $button.removeClass('fx_inline_adder_hover');
-                $button.hide();
-                $('html').off('.fx_hide_adder_button');
-            },
-            time_offset
-        );
-    };
-    
-    $button.on('mouseenter', function() {
-        clearTimeout(out_timeout);
-        clearTimeout(title_timeout);
-        
-        var $button_target = $button.data('rel_node');
-        if (!$button_target) {
-            $button_target = $node;
-        }
-        $button_target.trigger('fx_expand_inline_adder');
-        
-        $button.off('mouseout.fx_adder_mouseout').on('mouseout.fx_adder_mouseout', function() {
-            if (!$button.hasClass('fx_inline_adder_hover')) {
-                hide_button();
-            }
-        });
-        
-        $button.off('.fx_show_adder').on('click.fx_show_adder', function(e) {
-            var $variants = $('.fx_adder_variant', $button);
-            if ( $variants.length === 1) {
-                $variants.first().click();
-                return;
-            } else if ($variants.length === 0) {
-                return;
-            }
-            clearTimeout(out_timeout);
-            $button.off('.fx_adder_mouseout');
-            $button.addClass('fx_inline_adder_hover');
-            if ($button.is('.fx_inline_adder_vertical')) {
-                $title.css('left', '-' + ($title.width() / 2 - 7)+'px');
-                $title.css('top', '-' + ( $title.height() )+'px');
-            } else {
-                $title.css('top', '-' + ( $title.height() / 2 - 7) + 'px')
-            }
-            return false;
-        });
-        $('html').on('click.fx_hide_adder_button', function(e){
-            var $target_button = $(e.target).closest('.fx_inline_adder');
-            if ($target_button.length === 0) {
-                hide_button(0);
-                return false;
-            }
-        });
-        $('html').on('keyup.fx_hide_adder_button', function(e){
-            if (e.which === 27) {
-                hide_button(0);
-            }
-        });
-    });
-    
-    // if closest infoblock was hidden while rendering, use it as mouse event target
-    var $visible_node = $node;
-    
-    function handle_mouseover (e, $node) {
-        if ($(e.target).closest('.fx_has_inline_adder')[0] !== $node[0] ) {
-            return;
-        }
-        if ($fx.front.hilight_disabled) {
-            return;
-        }
-        
-        clearTimeout(out_timeout);
-        $node.one('mouseout.fx_recount_adders', function() {hide_button();});
-        if ($plus.is(':visible')) {
-            return;
-        }
-        if ($entities.first().is('.fx_infoblock')) {
-            var axis = 'y';
-        } else {
-            var axis = $fx.front.get_list_orientation($entities);
-            if (axis === null) { // && $entities.filter(':visible').length < 2) {
-                axis = 'y';
-            }
-        }
-        var axis_class = axis === 'y' ? 'horizontal' : 'vertical';
-        $button.addClass('fx_inline_adder-'+axis_class);
-        var offset = $node.offset();
-        var css = {
-            //display:'block',
-            opacity:'0',
-            left:offset.left - 18
-        };
-        
-        over_timeout = setTimeout(function() {
-            if ($fx.front.hilight_disabled) {
-                return;
-            }
-            $button.show();
-            over_timeout = null;
-        }, 100);
-        
-        var is_fixed = $fx.front.is_fixed($node);
-        if (is_fixed) {
-            css.position = 'fixed';
-            css.top = offset.top - $(window).scrollTop();
-        } else {
-            css.top = offset.top;
-        }
-        css.top -= 8;
-        
-        if (css.left < 0) {
-            css.left = 0;
-        }
-        
-        
-        $button.data('position_hash', css.left+':'+css.top);
-        $button.css(css);
-        $button.animate({opacity:1},200);
-        var entity_distance = 0;
-        var right_edge = $(window).width() - 20;
-        
-        function place_button(e) {
-            
-            var $entity = $(e.target).closest( neighbour_selector.replace(/^>/, '') );
-            var entity_index = $entities.index($entity);
-            
-            if (!$entity.length || entity_index === -1) {
-                return;
-            }
-            var e_top = e.pageY,
-                e_left = e.pageX,
-                offset = $entity.offset(),
-                top = offset.top,
-                left = offset.left,
-                e_width = $entity.outerWidth(),
-                e_height = $entity.outerHeight(),
-                size = axis === 'x' ? e_width : e_height,
-                diff = axis === 'x' ? (e_left - left) : (e_top - top),
-                is_after = size / 2 < diff,
-                dir = is_after ? 'after' : 'before';
-            
-            if ($button.data('rel_dir') === dir) {
-                var $c_button_entity = $button.data('rel_node');
-                if ($c_button_entity && $c_button_entity.length && $c_button_entity[0] === $entity[0]) {
-                    return;
-                }
-            }
-            
-            $button.data('rel_dir', dir);
-        
-            var neighbour_index = entity_index + (is_after ? 1 : (entity_index === 0 ? $entities.length : -1) ),
-                $neighbour = $entities.eq(neighbour_index),
-                neighbour_offset = $neighbour.offset(),
-                distance = 0;
-            
-            // use neighbour from the other side if there's no nodes on the correct side
-            // or if the correct neighbour is not on the same line ("tiles" case)
-            if ($neighbour.length === 0 || (axis === 'x' && Math.abs(neighbour_offset.top - top) > e_height/2)) {
-                neighbour_index = entity_index + (!is_after ? 1 : (entity_index === 0 ? $entities.length : -1) ),
-                $neighbour = $entities.eq(neighbour_index),
-                neighbour_offset = $neighbour.offset();
-            }
-            
-            if ($neighbour.length) {
-                if (axis === 'x') {
-                    var dims = [left, left+e_width, neighbour_offset.left, neighbour_offset.left + $neighbour.outerWidth() ];
-                } else {
-                    var dims = [top, top+e_height, neighbour_offset.top, neighbour_offset.top + $neighbour.outerHeight() ];
-                }
-                dims.sort(function(a,b){return a-b;});
-                distance = dims[2] - dims[1];
-            }
-            
-            var outstand_treshold = 100,
-                is_outstanding = e_width < outstand_treshold || e_height < outstand_treshold;
-            
-            if ($neighbour.length && !is_outstanding) {
-                is_outstanding = $neighbour.outerWidth() < outstand_treshold 
-                                    || $neighbour.outerHeight() < outstand_treshold;
-            }
-            
-            $button.toggleClass('fx_inline_adder-outstanding', is_outstanding);
-            
-            var b_size = $plus.outerWidth();
-            
-            console.log(size, b_size, distance);
-                
-            if (axis === 'y') {
-                if (is_after) {
-                    top += size + distance/2;
-                } else {
-                    top -= distance/2;
-                }
-                
-                top -= b_size/2;
-                
-                var n_width = $neighbour.length ? $neighbour.outerWidth() : e_width;
-                
-                var line_width = Math.max(e_width, n_width);
-                
-                $line.css({
-                    width:line_width+'px',
-                    top: Math.round(b_size/2) - 1 +'px'
-                });
-                
-                if (is_outstanding) {
-                    $plus.css({
-                        left: '-'+b_size+'px'
-                    });
-                } else {
-                    $plus.css({
-                        left: Math.round(line_width/2 - b_size/2)+'px'
-                    });
-                }
-                
-            } else {
-                
-                if (is_after) {
-                    left += size + distance/2;
-                } else {
-                    left -= distance/2;
-                }
-                
-                left -= b_size/2;
-                
-                var n_height = $neighbour.length ? $neighbour.outerHeight() : e_height;
-                
-                var line_height = Math.max(e_height, n_height);
-                
-                $line.css({
-                    height:line_height+'px',
-                    left: Math.round(b_size/2) - 1 +'px'
-                });
-                
-                if (is_outstanding) {
-                    $plus.css({
-                        top: '-'+b_size+'px'
-                    });
-                } else {
-                    $plus.css({
-                        top: Math.round(line_height/2 - b_size/2)+'px'
-                    });
-                }
-            }
-            $button.data('rel_node', $entity);
-            $button.data('rel_axis', axis);
-            
-            
-            if (is_fixed) {
-                top -= $(window).scrollTop();
-            }
-            
-            // !!! panel height
-            if (top < 140 && axis === 'x') {
-                //top += $entity.height();
-                //$button.addClass('fx_inline_adder_inverted');
-                $plus.css('top', '+='+(line_height + b_size ) );
-                console.log( '+='+(line_height + b_size ))
-            }
-            if (left < 0) {
-                left = 0;
-            } else if (left > right_edge) {
-                left = right_edge;
-            }
-            
-            var stored_left = $button.data('offset_left'),
-                stored_top = $button.data('offset_top');
-            
-            if (
-                !stored_left || 
-                !stored_top || 
-                Math.abs(stored_left - left) > 2 || 
-                Math.abs(stored_top - top) > 2
-            ) {
-                $button.
-                    data('offset_left', left).
-                    data('offset_top', top).
-                    css({
-                        top:top,
-                        left:left
-                    });
-            } else {
-                console.log(
-                    $button.data('offset_left'), 
-                    left,
-                    $button.data('offset_top'), 
-                    top
-                );
-            }
-        }
-        
-        $node.on('mousemove.fx_recount_adders', place_button);
-        place_button(e);
-    }
-    
-    $visible_node.on('mouseover.fx_recount_adders', function(e) {
-        handle_mouseover(e, $visible_node);
-    });
-    
-    return $button;
-};
 
 fx_front.prototype.is_jquery_overriden = function() {
     // if jquery is overriden by template script (another version is used)
@@ -1881,7 +1482,6 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
         )
         && ce_id
     ) {
-        //$fx.front.add_panel_button('move', function() {
         entity_panel.add_button('move', function() {
             var $b = $(this);
             if ($b.hasClass('fx_admin_button_move_active')) {
@@ -1899,6 +1499,8 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
                 $fx.front.start_entities_sortable($entity.parent());
             }
         });
+        //var $sorter = '<div class="fx_icon fx_icon-type-move fx_inline_sorter"></div>';
+        //$entity.append($sorter);
     }
     
     if ($entity.is('.fx_template_var, .fx_template_var_in_att')) {
@@ -2361,6 +1963,9 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
                $infoblock_node.remove();
            }
            
+           if (is_layout) {
+               $fx.front.move_down_body();
+           }
            $fx.front.hilight();
            $new_infoblock_node.trigger('fx_infoblock_loaded');
            $new_infoblock_node.css('opacity', $fx.front.disabled_infoblock_opacity).animate({opacity: 1},250);
@@ -2374,10 +1979,6 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
                    }
                    $fx.front.select_item(sel_target);
                }
-           }
-           
-           if (is_layout) {
-               $fx.front.move_down_body();
            }
            
            if (typeof callback === 'function') {
@@ -2465,9 +2066,9 @@ fx_front.prototype.reload_layout = function(callback) {
 
 fx_front.prototype.move_down_body = function () {
     var panel_height = $('#fx_admin_panel').outerHeight();
-    
     $('body').css('margin-top', '').css('margin-top','+='+panel_height+'px');
     $('.fx_top_fixed').css('top', '+='+panel_height+'px').css('z-index', 2674);
+    console.log('mdb');
 };
 
 fx_front.prototype.get_node_panel = function($node) {
@@ -2505,8 +2106,10 @@ fx_front.prototype.create_button = function(button, callback) {
             for (var i = 0; i < button.dropdown.length; i++){
                 var button_info = button.dropdown[i];
                 button_info.name = button_info.name.replace(new RegExp( $fx.lang('Add')), '');
-                var $button = $fx.front.create_button(button.dropdown[i]);
+                var $button = $fx.front.create_button(button.dropdown[i]).find('.fx_button');
+                //$button.removeClass('fx_button-active');
                 $button.addClass('fx_button-in_dropdown');
+                $('.fx_button__add_text', $button).removeClass('fx_button__add_text');
                 $dropdown.append($button);
             }
         }
@@ -2561,8 +2164,10 @@ fx_front.prototype.get_overlay_z_index = function($n) {
         var $p = $(this);
         if ($p.css('position') === 'fixed') {
             c_zindex = $p.css('z-index');
+            console.log('fixpar', $p);
         }
     });
+    console.log('gozi', c_zindex);
     return c_zindex;
 };
 
@@ -2694,6 +2299,16 @@ fx_front.prototype.outline_block = function(n, style, speed) {
     
     if (draw_lens) {
         n.data('fx_has_lens', true);
+        $.each(panes, function(index, pane) {
+            var $lens = $(pane).data('lens');
+            console.log(pane, $lens);
+            if ($lens) {
+                $lens.css({
+                    width:'1px',
+                    height:'1px'
+                });
+            }
+        });
     }
     
     function make_pane(box, type) {

@@ -1,0 +1,128 @@
+#fx_admin_left {
+    float: left;
+    display: inline-block;
+    width: 15%;
+    background: #FFF;
+    height: 100%;
+    border-right: 1px solid #CCC;
+}
+
+#fx_admin_right {
+    display: inline-block;
+    width: 85%;
+    position:relative;
+}
+
+
+#fx_admin_submenu {
+    margin: 10px 0 0;
+}
+
+#fx_admin_submenu a {
+    display: block;
+    border-left: 3px transparent solid;
+    cursor: pointer;
+    text-decoration: none;
+    padding: 3px 0 3px 17px;
+}
+
+#fx_admin_submenu .fx_admin_submenu_level0 a {
+    font-size: 18px;
+    color: @button_color;
+    text-transform: lowercase;
+    margin: 8px 0;
+}
+
+#fx_admin_submenu .fx_admin_submenu_level1 {
+    border-top: 1px #696d6e dashed;
+    display: none;
+    margin: 22px 0 0;
+    padding: 7px 0 0;
+}
+
+#fx_admin_submenu .fx_admin_submenu_level1 a {
+    color: @button_color;
+    font-variant: small-caps;
+    font-size: 14px;
+    text-transform: lowercase;
+    padding: 3px 0 3px 17px;
+}
+
+/* Dummy two-level submenu - e.g. dev / templates / template 1 */
+#fx_admin_submenu .fx_admin_submenu_items_full a.fx_admin_submenu_child {
+    display: block;
+    font-variant: normal;
+    font-size: 14px;
+    padding: 3px 0 3px 37px;
+}
+
+#fx_admin_submenu h2 {
+    font-size: 18px;
+    font-weight: bold;
+    color: #000;
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+#fx_admin_submenu .fx_admin_submenu_items_full a {
+    font-size: 16px;
+    color: @button_color;
+}
+
+#fx_admin_submenu a:hover, #fx_admin_submenu a.fx_admin_submenu_active {
+    color: @button_color;
+    border-left: 3px #7ecf00 solid;
+}
+
+#fx_admin_submenu a:hover {
+    background: #EEE;
+}
+
+#fx_admin_submenu a.fx_admin_submenu_backlink, #fx_admin_submenu a.fx_admin_submenu_backlink:hover {
+    background: #69ad00 url('images/images.png') no-repeat -228px 0;
+    width: 15px;
+    height: 18px;
+    border: none;
+    margin: 11px 0 0 3px;
+    padding:13px 12px;
+}
+
+/* Хлебные крошки */
+#fx_admin_breadcrumb {
+    padding: 10px 0 10px 20px;
+    border-bottom: 1px solid #EEE;
+    a, span {
+        font-size: 18px;
+    }
+    a {
+        color: @button_color;
+    }
+}
+
+#fx_admin_breadcrumb span {
+    margin: 0 5px;
+}
+
+#fx_admin_breadcrumb a.last, #fx_admin_breadcrumb span.last {
+    color:#000;
+}
+
+
+.fx_admin_html body {
+    margin: @panel_height 0 0;
+    padding: 0;
+}
+
+.fx_admin_html {
+    overflow-y: hidden;
+}
+
+.fx_admin_html, .fx_admin_html body {
+    min-height: 100%;
+    height: 100%;
+    position: relative;
+}
+
+#fx_admin_content {
+    overflow-y: scroll;
+}

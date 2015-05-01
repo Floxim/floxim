@@ -9,7 +9,9 @@ window.$fx = {
         $fx.buttons_map = options.buttons.map;
         $fx.history = options.history;
         $fx.panel = $('#fx_admin_panel');
-       
+        
+        $fx.main_menu = new fx_main_menu($fx.settings.mainmenu);
+        
         $(function () {
             var ajax_counter = 0;
             $(document).ajaxSend(function() {

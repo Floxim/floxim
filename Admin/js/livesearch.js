@@ -110,6 +110,7 @@ window.fx_livesearch = function (node) {
     };
     
     this.focusNextInput = function() {
+        return;
         var next_inp_index = $(":visible:input").index(livesearch.Suggest.input.get(0))*1 + 1;
         var next_inp = $(":visible:input:eq(" + next_inp_index + ")");
         next_inp.focus();
@@ -223,9 +224,9 @@ window.fx_livesearch = function (node) {
         }
 
         var node = $('<li class="livesearch_item'+ (!id ? ' livesearch_item_empty' : '')+'">'+
-            (this.isMultiple ? '<span class="killer">&times;</span>' : '')+
             '<input type="hidden" name="'+input_name+'" value="'+res_value+'" />'+
             '<span class="title">'+name+'</span>'+
+            (this.isMultiple ? '<span class="killer">&times;</span>' : '')+
             '</li>');
         this.inputContainer.before( node );
         this.updateSortableAxis();
@@ -792,8 +793,8 @@ window.fx_suggest = function(params) {
             this.box.css('position', 'fixed');
         }
         this.box.offset({
-            top:node.offset().top + node.outerHeight(),
-            left:this.input.offset().left
+            top:node.offset().top + node.outerHeight() - 7,
+            left:this.input.offset().left - 7
         });
         
         var tmp_box = this.box;
@@ -815,7 +816,7 @@ window.fx_suggest = function(params) {
     
     
     this.hideBox = function(clear_input) {
-        if (typeof clear_input == 'undefined') {
+        if (typeof clear_input === 'undefined') {
             clear_input = true;
         }
         if (!this.box) {

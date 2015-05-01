@@ -1,3 +1,4 @@
+@input_border_color: #cdcdcd;
 
 .livesearch_items, .livesearch_items li {
     list-style-type: none;
@@ -6,20 +7,23 @@
 }
 
 .livesearch_items {
+//    margin-bottom:200px;
     overflow: hidden;
-    border: 1px solid #e1e1e1;
+    border: 1px solid @input_border_color;
     width: 100%;
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     -ms-box-sizing: border-box;
     box-sizing: border-box;
     cursor: text;
+    padding:5px;
+    border-radius: 2px;
 }
 
 .livesearch_has_value .livesearch_items {
     cursor: pointer;
     border-radius: 3px;
-    background: #EFEFEF;
+    //background: #EFEFEF;
     border: 1px solid #E0E0E0;
 }
 
@@ -47,15 +51,15 @@
     float: left;
     white-space: nowrap;
     margin: 0px;
-    padding: 1px 4px;
+    padding: 5px 7px;
     span, input {
         vertical-align: middle;
-        height: 15px;
+        //height: 15px;
         display: inline-block;
         margin: 0;
         padding: 0;
-        font-size: 12px;
-        font-family: Arial;
+        font-size: 14px;
+        //font-family: Arial;
     }
     input {
         padding-left:4px;
@@ -63,24 +67,26 @@
         margin-top:1px;
     }
     &.livesearch_input {
-        padding:0;
-        padding-top:1px;
+        padding-left:0;
+        padding-right:0;
+        input {
+            border: none;
+            outline: 0;
+            -webkit-box-shadow: none;
+            box-shadow: none;
+        }
     }
 }
 
-.livesearch_input input {
-    border: none;
-    outline: 0;
-    -webkit-box-shadow: none;
-    box-shadow: none;
-}
 
 .livesearch_item {
     cursor: pointer;
-    border-radius: 3px;
-    background: #EFEFEF;
-    border: 1px solid #E0E0E0;
-    font-size: 12px;
+    //border-radius: 3px;
+    //background: #f2f5ff;
+    background:#D0DAF9;
+    border-radius:2px;
+    //border: 1px solid #E0E0E0;
+    //font-size: 13px;
     box-sizing:border-box;
     &.ui-sortable-helper {
         border: 1px solid #aaa;
@@ -91,11 +97,12 @@
 
 .livesearch_item .killer {
     display: inline-block;
-    margin-right: 5px;
+    margin-left: 5px;
+    line-height:15px;
     cursor: pointer;
-    color: #900;
-    font-size: 15px;
-    margin-top: -3px;
+    color: #a3bbff;
+    font-size: 28px;
+    font-weight: 300;
     &:hover {
         color:#F00;
     }
@@ -104,22 +111,22 @@
 /* Suggests */
 &.fx_suggest_box {
     background: #FFF;
-    border: 1px solid #9CD;
+    border: 1px solid @input_border_color;
+    box-shadow: 1px 1px 15px rgba(0,0,0,0.3);
     display: none;
-    max-height: 150px;
+    max-height: 205px;
     min-width:150px;
     overflow: auto;
     z-index: 88889;
-    //padding: 2px;
     div {
-        //margin-bottom: 3px;
         cursor: pointer;
         color: #000;
-        font-size: 10pt;
-        padding:3px;
+        font-size: 14px;
+        padding:6px 8px;
     }
     .search_item_active {
-        background: #FFA;
+        background: #f2f5ff;
+        color:@button_color;
     }
     div.add_item {
         color: red;
@@ -132,5 +139,10 @@
         &.livesearch_input {
             margin-right: 0;
         }
+    }
+    
+    .livesearch_item span.title {
+        max-width: 100px;
+        overflow: hidden;
     }
 }

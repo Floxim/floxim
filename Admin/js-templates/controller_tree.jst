@@ -3,6 +3,49 @@
     <input type="hidden" <?=$t.field_id_name(_c)?> class="tree_value_input" />
     <?
     var children = _c.children || _c.values;
+    console.log(children);
+    ?>
+    <div class="filter_box filter_search">
+        <input class="fx_input" type="text" placeholder="Search..." />
+    </div>
+    <div class="fx_controller_list">
+        <?
+        var c = 0;
+        
+        for (var i = 0; i < children.length; i++){
+            var child = children[i];
+            var subs = child.children;
+            ?>
+            <div class="fx_controller_group">
+                <div class="fx_controller_group__title">
+                    <?= child.data ?>
+                </div>
+                <div class="fx_controller_group__children">
+                    <? for (var j = 0; j < subs.length; j++) { 
+                        var sub = subs[j]; 
+                        ?>
+                        <div class="fx_controller_variant" data-id="<?= sub.metadata.id ?>">
+                            <div class="fx_controller_variant__icon"></div>
+                            <div class="fx_controller_variant__title"><?= sub.data ?></div>
+                        </div>
+                    <? } ?>
+                </div>
+            </div>
+            <?
+        }
+        ?>
+    </div>
+</div>
+
+<!--jquery-->
+fx_controller_tree(html);
+
+
+<!--[input ? _c.type =='tree' && _c.name == '_controller']-->
+<div class="fx_controller_select">
+    <input type="hidden" <?=$t.field_id_name(_c)?> class="tree_value_input" />
+    <?
+    var children = _c.children || _c.values;
     ?>
     <div class="filter_set">
         <div class="filter_box filter_search">

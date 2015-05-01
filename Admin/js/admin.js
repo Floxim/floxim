@@ -40,9 +40,11 @@ fx_admin.prototype.load_page = function ( data ) {
     var self = $fx.admin;
     
     $fx.admin.submenu.load(data.submenu);
+    /*
     if ( data.main_menu  ) {
         $fx.main_menu.set_active_item(data.main_menu.active);
     }
+    */
     self.menu_id = data.submenu.menu_id;
 
     $fx.admin.breadcrumb.load(data.breadcrumb);

@@ -217,28 +217,48 @@ fx_buttons.prototype.hide_pulldown = function () {
 /*
  * Click handler for the button in the form lists, private input
  */
-fx_buttons.prototype.form_button_click = function() {
-	var data = $t.inline_data($(this));
-	if ( data.postdata || data.post ) {
-		var postdata = data.postdata || data.post;
-		if (data.send_form) {
-			var form = $(this).closest('form');
-			var formdata = {};
-			$.each(form.serializeArray(), function(num, field) {
-				formdata[field.name] = field.value;
-			});
-			postdata = $.extend(formdata, postdata);
-		}
-		$fx.post(postdata);
-		return false;
-	}
-	if (data.func) {
-		fx_call_user_func(data.func,data);
-	}
-	if (data.url) {
-		document.location.hash = $fx.mode + '.' + data.url.replace(/^#/, '');
-	}
-	return false;
+fx_buttons.prototype.form_button_click = function(e) {
+    var data = $t.inline_data($(this));
+    if ( data.postdata || data.post ) {
+            var postdata = data.postdata || data.post;
+            if (data.send_form) {
+                    var form = $(this).closest('form');
+                    var formdata = {};
+                    $.each(form.serializeArray(), function(num, field) {
+                            formdata[field.name] = field.value;
+                    });
+                    postdata = $.extend(formdata, postdata);
+            }
+            $fx.post(postdata);
+            return false;
+    }
+    if (data.func) {
+            fx_call_user_func(data.func,data);
+    }
+    if (data.url) {
+            document.location.hash = $fx.mode + '.' + data.url.replace(/^#/, '');
+    }
+    var $button = $(this),
+        $target = $(e.target),
+        href = $button.data('href');
+    
+    if ($button.is('.fx_button-has_dropdown')) {
+        if (!$button.is('.fx_button-has_own_action') || $target.is('.fx_button__arrow')) {
+            var $dd = $('.fx_dropdown', $button);
+            if ($dd.is(':visible')) {
+                $dd.hide();
+            } else {
+                $dd.show();
+            }
+            return;
+        }
+    }
+    
+    if (href) {
+        document.location.href = href;
+    }
+    
+    return false;
 };
 
 fx_buttons.prototype.update_available_buttons = function () {
