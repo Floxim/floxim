@@ -333,6 +333,7 @@ class Html
             }
         });
         $res = $tree->serialize();
+        fx::log($res);
         return $res;
     }
 

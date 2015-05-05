@@ -4,7 +4,7 @@ namespace Floxim\Floxim\System;
 
 use Floxim\Floxim\Template;
 
-abstract class Entity implements \ArrayAccess
+abstract class Entity implements \ArrayAccess, Template\Entity
 {
 
     // reference to the class object fx_data_
@@ -21,6 +21,9 @@ abstract class Entity implements \ArrayAccess
     
     // Extra data from forms etc.
     protected $payload = array();
+    
+    /** template entity interface */
+    
 
     public function getFinder()
     {
@@ -54,6 +57,8 @@ abstract class Entity implements \ArrayAccess
 
     public function __construct($input = array())
     {
+        fx::count('create_entity');
+        fx::count('create_'.get_class($this));
         if (isset($input['data']) && $input['data']) {
             $data = $input['data'];
             if (isset($data['id'])) {
@@ -66,9 +71,17 @@ abstract class Entity implements \ArrayAccess
         $this->is_loaded = true;
     }
 
+    protected $available_offset_keys_cache = null;
     public function getAvailableOffsetKeys() 
     {
-        
+        if (is_null($this->available_offset_keys_cache)) {
+            $offsets = $this->getAvailableOffsets();
+            $this->available_offset_keys_cache = array();
+            foreach ($offsets as $k => $v) {
+                $this->available_offset_keys_cache[$k] = true;
+            }
+        }
+        return $this->available_offset_keys_cache;
     }
     
     protected static $offset_meta = array();

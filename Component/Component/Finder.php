@@ -166,14 +166,17 @@ class Finder extends System\Finder
     {
         // get all components
         $collection = parent::loadFullDataForCache();
+        fx::log('lfdfc');
         
         // set it as current finder cache
         // to avoid sql queries from Component\Entity::getChain()
         static::setStaticCache($collection);
+        fx::log('static cache set');
         
         // enable static cache manually
         static::$isStaticCacheUsed = true;
         $collection->indexUnique('keyword')->apply(function($com) {
+            fx::log('preparing '.$com['keyword']);
             $com->getChain();
             $com->getAllFields();
             $com->getAvailableEntityOffsets();

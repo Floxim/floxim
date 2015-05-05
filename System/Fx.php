@@ -15,6 +15,14 @@ class Fx
     {
 
     }
+    
+    public static $counters = array();
+    public static function count($key) {
+        if (!isset(self::$counters[$key])) {
+            self::$counters[$key] = 0;
+        }
+        self::$counters[$key]++;
+    }
 
     /**
      * Force complete run script
@@ -276,9 +284,8 @@ class Fx
         if (is_numeric($id_or_keyword)) {
             return isset($components[$id_or_keyword]) ? $components[$id_or_keyword] : null;
         }
-        $id_or_keyword = self::getComponentFullName($id_or_keyword);
-        return isset($components_by_keyword[$id_or_keyword]) ? $components_by_keyword[$id_or_keyword] : null;
-        //return $components->findOne('keyword', $id_or_keyword, Collection::FILTER_EQ);
+        $keyword = self::getComponentFullName($id_or_keyword);
+        return isset($components_by_keyword[$keyword]) ? $components_by_keyword[$keyword] : null;
     }
     
     public static function  data($datatype, $id = null)
@@ -865,7 +872,7 @@ class Fx
         return $util;
     }
 
-    public static function date($value, $format)
+    public static function date($value, $format = 'Y-m-d H:i:s')
     {
         if (empty($value)) {
             return $value;

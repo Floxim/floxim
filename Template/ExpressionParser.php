@@ -3,6 +3,7 @@
 namespace Floxim\Floxim\Template;
 
 use Floxim\Floxim\System\Exception;
+use Floxim\Floxim\System\Fx as fx;
 
 /**
  * $items.first.name => fx::dig($this->v("items"), "first", "name")
@@ -411,9 +412,10 @@ class ExpressionParser extends Fsm
                     if ($is_local) {
                         $res .= $var . '[' . join('][', $indexes) . ']';
                     } else {
-                        $res .= "fx::dig(" . $var . ", ";
-                        $res .= join(", ", $indexes);
-                        $res .= ")";
+                        $res .= str_repeat('$context->getFrom(', count($indexes));
+                        $res .= $var .', ';
+                        $res .= join("), ", $indexes);
+                        $res .= ')';
                     }
                 } else {
                     $res .= $var;

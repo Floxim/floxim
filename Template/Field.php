@@ -101,6 +101,7 @@ class Field
                     },
                     $tag_matches[0]
                 );
+                /*
                 $tag_meta = array('class' => 'fx_template_var_in_att');
                 foreach ($att_fields as $afk => $af) {
                     $tag_meta['data-fx_template_var_' . $afk] = $af;
@@ -108,6 +109,16 @@ class Field
                 $tag = HtmlToken::createStandalone($tag);
                 $tag->addMeta($tag_meta);
                 $tag = $tag->serialize();
+                 * 
+                 */
+                $meta_string = ' data-has_var_in_att="1" ';
+                foreach ($att_fields as $afk => $af) {
+                    $v = htmlentities(json_encode($af));
+                    $v = str_replace("'", '&apos;', $v);
+                    $v = str_replace("&quot;", '"', $v);
+                    $meta_string .= ' data-fx_template_var_'.$afk."='".$v."' ";
+                }
+                $tag = preg_replace("~>\s*$~", $meta_string.'>', $tag);
                 return $tag;
             },
             $html

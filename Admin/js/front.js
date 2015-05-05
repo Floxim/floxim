@@ -1091,6 +1091,7 @@ fx_front.prototype.node_is_empty = function($n){
 
 fx_front.prototype.hilight = function(container) {
     container = container || $('html');
+    $('*[data-has_var_in_att="1"]', container).addClass('fx_template_var_in_att');
     var fx_selector = '.fx_template_var, .fx_area, .fx_template_var_in_att, .fx_entity, .fx_infoblock, .fx_hidden_placeholded';
     var items = $(fx_selector, container).not('.fx_unselectable');
     if (container.not('.fx_unselectable').is(fx_selector)) {

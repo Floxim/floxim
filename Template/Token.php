@@ -149,6 +149,7 @@ class Token
         foreach ($this->props as $k => $v) {
             if (is_array($v)) {
                 $v = json_encode($v);
+                $v = str_replace("'", "\\'", $v);
             }
             $res .= $k . "='" . $v . "' ";
         }

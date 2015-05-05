@@ -58,7 +58,14 @@ class Entity extends System\Entity
         if (is_null($this->entity_offsets)) {
             $fields = $this->getAllFields();
 
-            $offsets = array();
+            $offsets = array(
+                'id' => array(
+                    'type' => self::OFFSET_FIELD
+                ),
+                'type' => array(
+                    'type' => self::OFFSET_FIELD
+                )
+            );
             foreach ($fields as $f) {
                 $keyword = $f['keyword'];
                 $offsets[$keyword] = array(
@@ -332,6 +339,15 @@ class Entity extends System\Entity
             $infoblock->delete();
         }
     }
+    
+    public function getChildren()
+    {
+        if (!isset($this->data['children'])) {
+            $this->data['children'] = fx::component()->find('parent_id', $this['id']);
+        }
+        return $this->data['children'];
+    }
+    
 
     /**
      * Get collection of all component's descendants
@@ -339,7 +355,8 @@ class Entity extends System\Entity
      */
     public function getAllChildren()
     {
-        $res = fx::collection()->concat($this['children']);
+        //$res = fx::collection()->concat($this->getC['children']);
+        $res = $this->getChildren();
         foreach ($res as $child) {
             $res->concat($child->getAllChildren());
         }

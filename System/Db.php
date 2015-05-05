@@ -114,8 +114,12 @@ class Db extends \PDO
             );
         }
         $trace_rex = fx::config('dev.log_sql_backtrace');
-        if ($trace_rex && preg_match($trace_rex, $statement)) {
-            fx::log($trace_rex, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
+        if ($trace_rex) {
+            if ($trace_rex[0] === '~' && preg_match($trace_rex, $statement)) {
+                fx::log($trace_rex, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
+            } elseif (strstr($statement, $trace_rex)) {
+                fx::log($trace_rex, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
+            }
         }
         if (!fx::config('dev.log_sql')) {
             return $this->last_result;

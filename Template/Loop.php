@@ -67,6 +67,15 @@ class Loop implements \ArrayAccess
     {
         return $this->position % 2 != 0;
     }
+    
+    public function getAvailableOffsetKeys()
+    {
+        return array(
+            $this->current_key => true,
+            'position' => true,
+            $this->current_alias => true
+        );
+    }
 
     public function offsetGet($offset)
     {

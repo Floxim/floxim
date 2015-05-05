@@ -13,4 +13,9 @@ interface Entity extends \ArrayAccess
      * Get meta info about sertain entity field
      */
     public function getFieldMeta($field_keyword);
+    
+    /**
+     * Get all entity offset keys
+     */
+    public function getAvailableOffsetKeys();
 }

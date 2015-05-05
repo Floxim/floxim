@@ -9,24 +9,39 @@ class Context {
     
     protected $meta = array();
     
+    public $vars = array();
+    protected $level = 0;
+    
+    protected $is_idle = false;
+    
+    public function isIdle($set = null) {
+        if (is_null($set)) {
+            return $this->is_idle;
+        }
+        $this->is_idle = $set;
+    }
+    
+    public function getFrom($item, $key)
+    {
+        return $item[$key];
+    }
+    
     public static function create($data = null) {
-        $obj = new self;
+        $obj = new static;
         if ($data) {
             $obj->push($data);
         }
         return $obj;
     }
-
+/*    
     public function push($data = array(), $meta = array())
     {
         $this->stack [] = $data;
-        $this->meta[] = array_merge(
-            array(
-                'transparent' => false,
-                'autopop'     => false
-                ), 
-            $meta
-        );
+        $meta = array_merge(array(
+            'transparent' => false,
+            'autopop'     => false
+        ), $meta);
+        $this->meta[] = $meta;
     }
     
     public function pop()
@@ -52,45 +67,15 @@ class Context {
         $this->stack[$stack_count - 1][$var] = $val;
     }
     
-    public function getVarMeta($var_name = null, $source = null)
-    {
-        if ($var_name === null) {
-            return array();
-        }
-        if ($source && $source instanceof Entity) {
-            $meta = $source->getFieldMeta($var_name);
-            return is_array($meta) ? $meta : array();
-        }
-        for ($i = count($this->stack) - 1; $i >= 0; $i--) {
-            if (!($this->stack[$i] instanceof Entity)) {
-                continue;
-            }
-            if (($meta = $this->stack[$i]->getFieldMeta($var_name))) {
-                return $meta;
-            }
-        }
-        return array();
-    }
-    
-    public function closestEntity($type = null) {
-        for ($i = count($this->stack) - 1; $i >= 0; $i--) {
-            $cc = $this->stack[$i];
-            if ($cc instanceof \Floxim\Floxim\System\Entity) {
-                if (!$type || $cc->isInstanceOf($type)) {
-                    return $cc;
-                }
-            }
-        }
-    }
     
     public function get($name = null, $context_offset = null)
     {
         // neither var name nor context offset - return current context
         $stack_length = count($this->stack) - 1;
-        if (is_null($name) && is_null($context_offset)) {
+        if (!$name && !$context_offset) {
             for ($i = $stack_length; $i >= 0; $i--) {
-                //$c_meta = $this->meta[$i];
-                if (!$this->meta[$i]['transparent']) {
+                $c_meta = $this->meta[$i];
+                if (!$c_meta['transparent']) {
                     return $this->stack[$i];
                 }
             }
@@ -139,6 +124,173 @@ class Context {
             }
         }
         return null;
+    }
+*/
+    
+
+    public function _push($data = array(), $meta = array())
+    {
+        
+        $vars = array();
+        if ($data instanceof Entity || $data instanceof Loop) {
+            $vars = $data->getAvailableOffsetKeys();
+        } elseif (is_array($data) || $data instanceof \Traversable) {
+            foreach ($data as $k => $v) {
+                $vars[$k] = true;
+            }
+        }
+        
+        $this->stack [] = $data;
+        $this->meta[] = array_merge(
+            array(
+                'transparent' => false,
+                'autopop'     => false,
+                'vars' => $vars
+                ), 
+            $meta
+        );
+        
+        foreach ($vars as $vk => $v_stub) {
+            if (!isset($this->vars[$vk])) {
+                $this->vars[$vk] = array();
+            }
+            $this->vars[$vk] []= $this->level;
+        }
+        
+        $this->level++;
+    }
+    
+    public function push($data = array(), $meta = array())
+    {
+        fx::count('ctx_push');
+        $vars = array();
+        if ($data instanceof Entity || $data instanceof Loop) {
+            $vars = $data->getAvailableOffsetKeys();
+        } elseif (is_array($data)) {
+            $vars = array_flip(array_keys($data));
+        }
+        
+        $this->stack [] = $data;
+        $this->meta[] = array_merge(
+            array(
+                'transparent' => false,
+                'autopop'     => false,
+                'vars' => $vars
+                ), 
+            $meta
+        );
+        foreach ($vars as $vk => $v_stub) {
+            if (!isset($this->vars[$vk])) {
+                $this->vars[$vk] = array($this->level);
+            } else {
+                $this->vars[$vk] []= $this->level;
+            }
+        }
+        $this->level++;
+    }
+    
+    public function pop()
+    {
+        array_pop($this->stack);
+        $meta = array_pop($this->meta);
+        foreach ($meta['vars'] as $vk => $v_stub) {
+            if (isset($this->vars[$vk])) {   
+                array_pop($this->vars[$vk]);
+            }
+        }
+        $this->level--;
+        if ($meta['autopop']) {
+            $this->pop();
+        }
+    }
+    
+    public function set($var, $val)
+    {
+        $stack_count = count($this->stack);
+        if ($stack_count == 0) {
+            $this->push(array(), array('transparent' => true));
+        }
+        if (!is_array($this->stack[$stack_count - 1])) {
+            $this->push(array(), array('transparent' => true, 'autopop' => true));
+            $stack_count++;
+        }
+        $level = $stack_count - 1;
+        $this->stack[$level][$var] = $val;
+        $this->meta[$level]['vars'][$var] = true;
+        if (!isset($this->vars[$var])) {
+            $this->vars[$var] = array();
+        }
+        $this->vars[$var][]= $level;
+    }
+    
+    public function get($name = null, $context_offset = null)
+    {
+        // neither var name nor context offset - return current context
+        $stack_length = $this->level - 1;
+        
+        fx::count('ctx_get');
+        
+        if (is_null($name) && is_null($context_offset)) {
+            for ($i = $stack_length; $i >= 0; $i--) {
+                if (!$this->meta[$i]['transparent']) {
+                    return $this->stack[$i];
+                }
+            }
+            return end($this->stack);
+        }
+        
+        if (!isset($this->vars[$name])) {
+            return null;
+        }
+        
+        if (is_null($context_offset)) {
+            return $this->stack[end($this->vars[$name])][$name];
+        }
+        $context_position = 0;
+        for ($i = $stack_length; $i >= 0; $i--) {
+            if (!$this->meta[$i]['transparent']) {
+                $context_position++;
+            }
+            if ($context_position < $context_offset) {
+                continue;
+            }
+            if (in_array($i, $this->vars[$name])) {
+                return $this->stack[$i][$name];
+            }
+        }
+        
+        return null;
+    }
+
+    public function getVarMeta($var_name = null, $source = null)
+    {
+        if ($var_name === null) {
+            return array();
+        }
+        if ($source && $source instanceof Entity) {
+            $meta = $source->getFieldMeta($var_name);
+            return is_array($meta) ? $meta : array();
+        }
+        for ($i = count($this->stack) - 1; $i >= 0; $i--) {
+            if (!($this->stack[$i] instanceof Entity)) {
+                continue;
+            }
+            if (($meta = $this->stack[$i]->getFieldMeta($var_name))) {
+                return $meta;
+            }
+        }
+        return array();
+    }
+    
+    public function closestEntity($type = null) {
+        for ($i = count($this->stack) - 1; $i >= 0; $i--) {
+            $cc = $this->stack[$i];
+            if ($cc instanceof \Floxim\Floxim\System\Entity) {
+                if (!$type || $cc->isInstanceOf($type)) {
+                    return $cc;
+                }
+            }
+        }
     }
     
     public function getHelp()

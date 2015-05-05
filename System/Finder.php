@@ -117,14 +117,6 @@ abstract class Finder
     public function limit()
     {
         $args = func_get_args();
-        /*
-        if (count($args) == 1) {
-            $this->limit = $args[0];
-        } elseif (count($args) == 2) {
-            $this->limit = $args[0] . ', ' . $args[1];
-        }
-         * 
-         */
         if (count($args) === 1) {
             $this->limit = array(
                 'offset' => 0,
@@ -521,7 +513,7 @@ abstract class Finder
             if ($type == '=') {
                 $type = 'IN';
             }
-            $value = " ('" . join("', '", $value) . "') ";
+            $value = " ('" . join("', '", array_unique($value)) . "') ";
         } elseif (in_array(strtolower($type), array('is null', 'is not null'))) {
             $value = '';
         } else {
@@ -800,10 +792,6 @@ abstract class Finder
         }
         $classname = $this->getEntityClassName($data);
         $obj = new $classname(array('data' => $data));
-        // todo: psr0 verify
-        if ($classname == '\\Floxim\\Floxim\\System\\Simplerow') {
-            $obj->table = $this->table;
-        }
         $this->addToStaticCache($obj);
         return $obj;
     }
@@ -978,18 +966,26 @@ abstract class Finder
 
     }
 
-    protected static $cache = array();
+    public static $cache = array();
     public static function getStaticCache()
     {
-        $class = get_called_class();
+        $key = static::getStaticCacheKey();
+        if (!isset(self::$cache[$key])) {
+            self::$cache[$key] = static::initStaticCache();
+        }
+        return self::$cache[$key];
+        
+        /*$class = get_called_class();
         if (!isset(self::$cache[$class])) {
             self::$cache[$class] = static::initStaticCache();
         }
         return self::$cache[$class];
+         * 
+         */
     }
     
     public static function setStaticCache($data) {
-        self::$cache[get_called_class()] = $data;
+        self::$cache[ static::getStaticCacheKey() ] = $data;
     }
 
     /**

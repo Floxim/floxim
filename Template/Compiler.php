@@ -173,9 +173,9 @@ class Compiler
         } else {
             if (count($passed_vars) > 0 || $switch_context) {
                 $context_var = $tpl.'_context';
-                $code .= $context_var. " = new \\Floxim\\Floxim\\Template\\Context();\n";
+                $code .= $context_var. " = new \\Floxim\\Floxim\\Template\\".fx::config('templates.context_class')."();\n";
             } else {
-                $context_var = 'new \\Floxim\\Floxim\\Template\\Context()';
+                $context_var = 'new \\Floxim\\Floxim\\Template\\'.fx::config('templates.context_class').'()';
             }
         }
         
@@ -240,6 +240,9 @@ class Compiler
         //$code .= "fx::profiler()->stop();\n";
         $code .= "if ( ".$tpl." ) {\n";
         $code .= "echo ".$tpl."->setParent(\$this)->render();\n";
+        if ( ($subroot_var = $token->getProp('extract_subroot'))) {
+            $code .= $subroot_var. " = ".$tpl."->is_subroot;\n";
+        }
         $code .= "}\n";
         // ------------
         
@@ -756,13 +759,36 @@ class Compiler
         $code .= $meta_test;
         $code .= "\t\tob_start();\n";
         $code .= "\t}\n";
+        
+        if (!$token->getProp('subroot')) {
+            $use_counted_subroot = true;
+            $has_call = false;
+            $subroot_var = '$'.$item_alias.'_counted_subroot';
+            foreach ($token->getChildren() as $child) {
+                if ($child->name === 'code' && !preg_match("~^\s+$~", $child->getProp('value'))) {
+                    $use_counted_subroot = false;
+                    break;
+                }
+                if ($child->name === 'call') {
+                    $has_call = true;
+                    $child->setProp('extract_subroot', $subroot_var);
+                }
+            }
+            if (!$has_call) {
+                $use_counted_subroot = false;
+            }
+            if ($use_counted_subroot) {
+                $code .= $subroot_var ." = false;\n";
+            }
+            fx::log($token);
+        }
         $code .= $this->childrenToCode($token) . "\n";
         $code .= $meta_test;
         $code .= "\t\techo \$" . $item_alias . "->addTemplateRecordMeta(" .
             "ob_get_clean(), " .
             $arr_id . ", " .
             (!is_null($counter_id) ? $counter_id . " - 1, " : '0, ') .
-            ($token->getProp('subroot') ? 'true' : 'false') .
+            ($token->getProp('subroot') ? 'true' : ($use_counted_subroot ? $subroot_var : 'false' )) .
             ");\n";
         $code .= "\t}\n";
         $code .= "\$context->pop();\n";
@@ -1050,7 +1076,7 @@ class Compiler
     protected function tokenHeadfileToCode($token, $type)
     {
         $code = "<?php\n";
-        $code .= 'if (!$context->get("_idle")) {'."\n";
+        $code .= 'if (!$context->isIdle()) {'."\n";
         if ($token->getProp('bundle')) {
             $code .= $this->cssBundleToCode($token);
         } else {

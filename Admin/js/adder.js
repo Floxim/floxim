@@ -95,6 +95,9 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
         over_timeout = null;
     
     function hide_button($button) {
+        if (window.fx_no_hide) {
+            return;
+        }
         if (!$button) {
             return;
         }
@@ -115,7 +118,6 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
             bl+'-hover '+bl+'-visible'
         ).attr('style', '');
         $('div', $button).attr('style', '');
-        console.trace();
     }
     
     // provide it for outside use (e.g. hide buttons on fx_select)
@@ -246,7 +248,7 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
         };
         
         var is_fixed = $fx.front.is_fixed($node);
-        console.log(is_fixed, $node, $button);
+        
         if (is_fixed) {
             $button.css('position', 'fixed');
         }
@@ -431,10 +433,14 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
                 $button.addClass(bl+'-inverted');
             } else if (left < 140 && axis === 'y') {
                 $plus.css('left', '+='+(line_width + b_size ) );
+                if ( parseInt($plus.css('left')) + left > right_edge) {
+                    $plus.css('left', right_edge - b_size);
+                }
                 $button.addClass(bl+'-inverted');
             } else {
                 $button.removeClass(bl+'-inverted');
             }
+            
             if (left < 0) {
                 left = 0;
             } else if (left > right_edge) {

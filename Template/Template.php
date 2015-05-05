@@ -16,10 +16,12 @@ class Template
 
     public function __construct($action = null, $data = array())
     {
+        
+        //$context_class = "Floxim\\Floxim\\Template\\".fx::config('templates.context_class');
         if ($data instanceof Context) {
             $context = $data;
         } else {
-            $context = new Context();
+            $context = new ContextFlex();
             if (count($data) > 0) {
                 $context->push($data);
             }
@@ -183,7 +185,7 @@ class Template
         $is_admin = fx::isAdmin();
         if ($mode != 'marker') {
             fx::trigger('render_area', array('area' => $area));
-            if ($is_admin && $context->get('_idle')) {
+            if ($is_admin && $context->isIdle()) {
                 return;
             }
         }
@@ -260,11 +262,15 @@ class Template
             return fx::profiler();
         }
     }
-
+    
     public function render($data = array())
     {
         if ($this->level > 50) {
             return '<div class="fx_template_error">bad recursion?</div>';
+        }
+        if (isset($data['_idle'])) {
+            $this->context->isIdle(true);
+            unset($data['_idle']);
         }
         if (count($data) > 0) {
             $this->context->push($data);
@@ -286,6 +292,7 @@ class Template
             $profiler->block('<b style="color:#009;">tpl:</b> '. $sign );
         }
         
+        
         try {
             $this->$method($this->context);
         } catch (\Exception $e) {
@@ -295,10 +302,9 @@ class Template
             );
         }
         $result = ob_get_clean();
-
         
         if (fx::isAdmin()) {
-            if ($this->context->get('_idle')) {
+            if ($this->context->isIdle()) {
                 if ($profiler) {
                     $profiler->stop();
                 }

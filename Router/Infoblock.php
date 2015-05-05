@@ -11,7 +11,7 @@ class Infoblock extends Base
         if (!fx::isAdmin()) {
             return null;
         }
-        if (!preg_match("~^/\~ib/(\d+|fake(?:\-\d+)?)@(\d+)$~", $url, $ib_info)) {
+        if (!preg_match("~^/\~ib/(\d+|fake(?:\-\d+)?)@(\d+)~", $url, $ib_info)) {
             return null;
         }
         $c_url = fx::input('post', '_ajax_base_url');
