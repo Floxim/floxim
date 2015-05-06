@@ -201,10 +201,13 @@ class Compiler
             if ($switch_context_local) {
                 $code .= "\$context->pop();\n";
             }
-            $code .= $context_var."->push(".$tpl_passed.");\n";
         }
         if ($switch_context) {
             $code .= $context_var . "->push(" . $new_context_expression . ");\n";
+        }
+        
+        if (isset($tpl_passed)) {
+            $code .= $context_var."->push(".$tpl_passed.", array('transparent' => true));\n";
         }
         
         // ------------
