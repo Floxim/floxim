@@ -68,14 +68,15 @@ class ContextFlex extends Context {
                 if (!$this->meta[$i]['transparent']) {
                     $context_position++;
                 }
-
                 if ($context_position < $context_offset) {
                     continue;
                 }
                 if (isset($this->stack[$i][$name])) {
                     return $this->stack[$i][$name];
                 }
-                return null;
+                if ($context_position > $context_offset) {
+                    return null;
+                }
             }
             return null;
         }
