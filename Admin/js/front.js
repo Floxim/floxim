@@ -66,11 +66,6 @@ window.fx_front = function () {
     this.c_hover = null;
 };
 
-fx_front.prototype.unselectable_selectors = [];
-fx_front.prototype.make_unselectable = function (selector) {
-    this.unselectable_selectors.push(selector);
-};
-
 fx_front.prototype.handle_mouseover = function(e) {
     
     if ($fx.front.mode === 'view') {
@@ -94,12 +89,8 @@ fx_front.prototype.handle_mouseover = function(e) {
     ) {
         return;
     }
-    for ( var sel_index = 0; sel_index < $fx.front.unselectable_selectors.length; i++) {
-        if (node.is($fx.front.unselectable_selectors[sel_index])) {
-            return;
-        }
-    }
-    //$fx.front.outline_block_off($($fx.front.c_hover),100);
+    
+    $fx.front.outline_block_off($($fx.front.c_hover),100);
     var $editable = $(e.target).closest('.fx_template_var'),
         field_type = ($editable.data('fx_var') || {}).type,
         make_content_editable = $editable.length > 0 
@@ -126,7 +117,7 @@ fx_front.prototype.handle_mouseover = function(e) {
             if (!node.hasClass('fx_hilight_hover') && node.closest('.fx_infoblock_disabled').length === 0) {
                 $('.fx_hilight_hover').removeClass('fx_hilight_hover');
                 node.addClass('fx_hilight_hover');
-                //$fx.front.outline_block(node, 'hover', 300);
+                $fx.front.outline_block(node, 'hover', 300);
                 if (make_content_editable) {
                     $editable.addClass('fx_var_editable').attr('contenteditable', 'true');
                 }
@@ -147,7 +138,7 @@ fx_front.prototype.handle_mouseover = function(e) {
                 }
                 if ($fx.front.c_hover !== node[0]) {
                     node.removeClass('fx_hilight_hover');
-                    //$fx.front.outline_block_off(node, 100);
+                    $fx.front.outline_block_off(node, 100);
                     $editable.removeClass('fx_var_editable').attr('contenteditable', null);
                 }
             },
@@ -1319,8 +1310,8 @@ fx_front.prototype.load = function ( mode ) {
     $('body').removeClass('fx_mode_'+this.mode).addClass('fx_mode_'+mode);
     
     var $mode_buttons = $('.fx_front_mode');
-    $mode_buttons.removeClass('fx_button-active');
-    $mode_buttons.filter('*[data-key="'+mode+'"]').addClass('fx_button-active');
+    $mode_buttons.removeClass('fx_menu_item-active');
+    $mode_buttons.filter('*[data-key="'+mode+'"]').addClass('fx_menu_item-active');
     
     this.mode = mode;
     $.cookie('fx_front_mode', mode, {path:'/'});
@@ -1466,11 +1457,15 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
             function(e) {
                 var $b = $(e.target);
                 var $publish_inp = $('.field_name__is_published input[type="checkbox"]', entity_panel.$panel);
-                if ($b.hasClass('fx_admin_button_publish')) {
-                    $b.removeClass('fx_admin_button_publish').addClass('fx_admin_button_unpublish');
+                if ($b.hasClass('fx_icon-type-publish')) {
+                    $b
+                        .removeClass('fx_icon-type-publish')
+                        .addClass('fx_icon-type-unpublish');
                     $publish_inp[0].checked = true;
                 } else {
-                    $b.removeClass('fx_admin_button_unpublish').addClass('fx_admin_button_publish');
+                    $b
+                        .removeClass('fx_icon-type-unpublish')
+                        .addClass('fx_icon-type-publish');
                     $publish_inp[0].checked = false;
                 }
             }
@@ -2204,7 +2199,7 @@ fx_front.prototype.outline_block = function(n, style, speed) {
     
     var styles = {
         hover: {
-            size:1,
+            size:2,
             recount:false
         },
         hidden: {

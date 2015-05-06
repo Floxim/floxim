@@ -413,7 +413,7 @@
     .fx_preview {
         position:relative;
         min-height:24px;
-        max-width:120px;
+        //max-width:120px;
         &.fx_preview_filled.fx_preview_image {
             .fx_file_controls {
                 background:#FFF;
@@ -433,18 +433,7 @@
         a {
             cursor:pointer;
             display:block;
-            width:24px;
-            height:24px;
             float:left;
-            background:url('images/sprite.png') no-repeat -454px -3px;
-            margin-right:5px;
-            &.fx_paste_link {
-                background-position:-347px -2px;
-            }
-            &.fx_file_killer {
-                background-position:-397px -2px;
-                margin-right:0;
-            }
         }
         input.remote_file_location {
             position:absolute;
@@ -480,12 +469,6 @@
             vertical-align:middle;
         }
     }
-}
-
-.fx_node_panel .fx_image_field .fx_preview .fx_file_controls,
-.fx_image_field .fx_preview.fx_preview_file .fx_file_controls {
-    position:static;
-    visibility:visible !important;
 }
 
 

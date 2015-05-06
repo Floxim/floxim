@@ -25,14 +25,18 @@ var value_is_emtpy = !c_value || ($fx && $fx.front && c_value === $fx.front.imag
         <?}?>
         <span class="fx_file_controls">
             <a class="fx_file_uploader" title="<?= c_value ? $fx.lang('Change') : $fx.lang('Upload') ?>">
+                <span class="fx_icon fx_icon-type-upload"></span>
             </a>
             <span class="fx_remote_file_block">
-                <a class="fx_paste_link" title="<?=$fx.lang('paste URL')?>"></a>
+                <a class="fx_paste_link" title="<?=$fx.lang('paste URL')?>">
+                    <span class="fx_icon fx_icon-type-paste_url"></span>
+                </a>
                 <input class="remote_file_location fx_input" placeholder="<?=$fx.lang('paste URL')?>" />
             </span>
             <a class="fx_file_killer" 
                style="display:<?=(!value_is_emtpy ? 'block' : 'none')?>" 
                title="<?=$fx.lang('Delete')?>">
+                <span class="fx_icon fx_icon-type-delete_image"></span>
             </a>
         </span>
     </div>

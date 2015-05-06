@@ -40,6 +40,7 @@ class Config
         'templates.ttl'              => 0,
         'templates.cache'            => true,
         'templates.check_php_syntax' => 1,
+        'templates.context_class'    => 'ContextFlex',
         'cache.gzip_bundles'         => true,
         'cache.meta'                 => true,
         'date.timezone'              => 'America/New_York',

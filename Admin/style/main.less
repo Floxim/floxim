@@ -18,21 +18,22 @@ a, a:visited {
     height: @panel_height;
     background-color: @alt_color;
     z-index: 2677;
-    padding:10px;
     border-bottom:1px solid #ddd;
+    box-shadow: 1px 1px 15px rgba(0,0,0,0.25);
 }
 
 #fx_admin_panel_logo {
     float:left;
     width: 45px;
-    height:40px;
-    background:url('images/sprite.png') no-repeat  0 0;
-    margin-right: 30px;
+    height:59px;
+    background:url('images/sprite.png') no-repeat  -695px 11px;
+    margin-right: 20px;
+    margin-left: 10px;
 }
 
 #fx_admin_main_menu {
-    float:left;
-    margin-right: 30px;
+    float:right;
+    //margin-right: 30px;
 }
 
 #fx_admin_front_menu {
@@ -122,8 +123,70 @@ a, a:visited {
     }
 }
 
+
+.fx_menu_item {
+    display: block;
+    float:left;
+    background: #FFF;
+    cursor: pointer;
+    height: 59px;
+    padding: 15px 25px;
+    line-height: 29px;
+    border-left:1px solid #DDD;
+    vertical-align:top;
+    
+    &, & a, &:visited {
+        color:#555;
+        text-decoration: none;
+    }
+    
+    &-active {
+        //background:#f3f3f3;
+        background:#eee;
+        padding-top:12px;
+        border-top:3px solid #2d63ff;
+    }
+    
+        
+    .fx_dropdown {
+        top:59px;
+    }
+    
+    &.fx_dropdown__item {
+        white-space: nowrap;
+        height:auto;
+        display: block;
+        padding-top:5px;
+        padding-bottom:5px;
+        float:none;
+    }
+    
+    &-has_dropdown {
+        position: relative;
+        padding-right:35px;
+    }
+    
+    &__arrow {
+        position: absolute;
+        top: 15px;
+        right: 5px;
+        width: 25px;
+        height: 25px;
+        &:after {
+            display: block;
+            content:'';
+            position: relative;
+            left:4px;
+            top:-1px;
+            .fx_triangle_down(6px; #555);
+        }
+        &:hover:after {
+            .fx_triangle_down(6px; @button_color);
+        }
+    }
 }
 
+}
 
 .fx_button {
     display: inline-block;
@@ -235,14 +298,14 @@ a, a:visited {
     display:inline-block;
     vertical-align:middle;
     &-type-edit {
-        background-position: -105px 0;
+        background-position: -105px 1px;
+    }
+    
+    &-type-unpublish, &-type-view {
+        background-position:-160px 7px;
     }
     
     &-type-publish {
-        background-position:-162px 7px;
-    }
-    
-    &-type-unpublish {
         background-position: -244px 7px;
     }
     
@@ -256,5 +319,102 @@ a, a:visited {
     
     &-type-settings {
         background-position: -602px -1px;
+    }
+    
+    &-type-design {
+        background-position: -554px -4px;
+    }
+    
+    &-type-upload {
+        background-position: -451px -1px;
+    }
+    
+    &-type-paste_url {
+        background-position:-345px -2px;
+    }
+    
+    &-type-delete_image {
+        background-position:-392px 0px;
+    }
+}
+
+@media screen and (max-width: 1150px) {
+    #fx_admin_panel_logo {
+        display:none;
+    }
+    .fx_overlay .fx_menu_item {
+        padding-left:17px;
+        padding-right:17px;
+        &-has_dropdown {
+            padding-right:30px;
+        }
+    }
+}
+
+@media screen and (max-width: 950px) {
+    #fx_admin_panel_logo {
+        display:none;
+    }
+    .fx_overlay .fx_menu_item {
+        padding-left:10px;
+        padding-right:10px;
+        &-has_dropdown {
+            padding-right:30px;
+        }
+        
+        &-has_icon .fx_menu_item__name {
+            display:none;
+        }
+        
+        &__name, &__link {
+            font-size:14px;
+        }
+    }
+}
+
+@media screen and (max-width: 670px) {
+    #fx_admin_panel_logo {
+        display:none;
+    }
+    
+    .fx_main_menu_items {
+        position: absolute;
+        width: 200px;
+        background: #FFF;
+        box-shadow: 1px 1px 10px rgba(0,0,0,0.3);
+        right: 0;
+        display:none;
+        .fx_menu_item {
+            border-bottom: 1px solid #DDD;
+            float: none;
+        }
+    }
+    
+    .fx_main_menu_expander {
+        display:block;
+        position:relative;
+        width:35px;
+        height:59px;
+        background:#EEE;
+        cursor:pointer;
+        &:after {
+            content:'';
+            display:block;
+            position: absolute;
+            top: 23px;
+            left: 7px;
+            .fx_triangle_down(12px; #555);
+        }
+    }
+    
+    .fx_overlay .fx_menu_item {
+        padding-left:10px;
+        padding-right:10px;
+        &-has_dropdown {
+            padding-right:30px;
+        }
+        &-has_icon .fx_menu_item__name {
+            display:none;
+        }
     }
 }

@@ -43,6 +43,7 @@ class ContextFlex extends Context {
         }
         
         $this->stack[$this->level][$var] = $val;
+        unset($this->misses[$this->level][$var]);
         //$this->vars[$this->level][$var]= $this->level;
         //$this->vars[$this->level][$var]= $val;
     }
@@ -74,6 +75,7 @@ class ContextFlex extends Context {
                 if (isset($this->stack[$i][$name])) {
                     return $this->stack[$i][$name];
                 }
+                return null;
             }
             return null;
         }

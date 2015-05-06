@@ -57,21 +57,21 @@ class Adminpanel extends Admin
             'modes' => array(
                 "view" => array(
                     "name" => fx::alang("View"),
-                    "href" => "view"
+                    "key" => "view"
                 ),
                 "edit" => array(
                     "name" => fx::alang("Edit"),
-                    "href" => "edit"
+                    "key" => "edit"
                 ), 
                 "design" => array(
                     "name" => fx::alang("Design"),
-                    "href" => "design"
+                    "key" => "design"
                 )
             ),
             'profile' => array(
                 'logout' => array(
                     'name' => fx::alang('Sign out','system'),
-                    'url' => fx::user()->getLogoutUrl()
+                    'href' => fx::user()->getLogoutUrl()
                 )
             ),
             'is_front' => true
@@ -118,7 +118,7 @@ class Adminpanel extends Admin
                 'page_id' => fx::env('page_id')
             )
         );
-        return $more_menu;
+        return array('name' => fx::alang('More'), 'children' => $more_menu);
     }
 
     public static function getButtons()

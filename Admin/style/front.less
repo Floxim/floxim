@@ -74,6 +74,8 @@
 
 @pane_color_hover_light:#EEE;
 @pane_color_hover_dark:#000;
+//@pane_color_hover_light:#FFF;
+//@pane_color_hover_dark:#ececec;
 
 .fx_outline_pane {
     position:absolute;
@@ -127,7 +129,8 @@
 }
 
 .fx_outline_style_hover {
-    .fx_outliner(@light:#EEE; @dark:#000; @size:3px; @shadow:2px; @shadow-color:rgba(50, 50, 50, 0.35));
+    //.fx_outliner(@light:#EEE; @dark:#000; @size:3px; @shadow:2px; @shadow-color:rgba(50, 50, 50, 0.35));
+    .fx_outliner(@light:rgba(255, 255, 255, 0.6); @dark:rgba(0, 0, 0, 0.6); @size:5px; @shadow:2px; @shadow-color:rgba(50, 50, 50, 0.35));
 }
 
 .fx_panel_text_expander {
@@ -165,7 +168,7 @@
         }
     }
     .fx_node_panel_label {
-        font-size: 13px;
+        font-size: 16px;
         margin-top: 8px;
         margin-right: 5px;
         margin-left:5px;
@@ -198,6 +201,8 @@
         }
         &_label {
             vertical-align:middle;
+            font-size:16px;
+            margin:0 3px;
         }
         
         &-field_type-livesearch {
@@ -228,22 +233,6 @@
     float:left;
 }
 
-
-.fx_node_panel {
-    .field_image, .field_file {
-        max-height: 31px;
-        overflow: hidden;
-        .fx_preview {
-            img {
-                display:none;
-            }
-            a {
-                margin-top:3px;
-            }
-        }
-    }
-}
-
 .fx_node_panel .field_livesearch {
     .livesearch_items, input {
         background: transparent;
@@ -266,6 +255,31 @@
     }
 }
 
+.fx_node_panel .fx_image_field .fx_preview .fx_file_controls,
+.fx_image_field .fx_preview.fx_preview_file .fx_file_controls {
+    position:static;
+    visibility:visible !important;
+}
+
+.fx_node_panel {
+    .fx_preview img {
+        display:none;
+    }
+    .fx_file_controls {
+    
+        .fx_file_uploader, 
+        .fx_remote_file_block,
+        .fx_file_killer {
+            margin: 0;
+            padding: 5px;
+            border-left: 1px solid #e0e0e0;
+            position: relative;
+            top: -5px;
+        }
+    }
+}
+
+
 .fx_node_panel .field_colorpicker {
     width:36px;
 }
@@ -273,13 +287,15 @@
 .fx_node_panel .form_label {
     padding:6px 0 5px 0;
     float:left;
-    margin-right:5px;
+    margin-right:6px;
+    /*
     &:after {
         content:':';
         font-size: 13px;
         position:relative;
         left:-4px;
     }
+    */
 }
 
 .fx_node_panel .input_container {
@@ -313,15 +329,15 @@
 
 .fx_node_panel .field {
     margin-left:3px;
-    padding:0 7px;
+    //padding:0 7px;
     //border-left:1px solid #CCC;
-    height:29px;
+    //height:29px;
     box-sizing:border-box;
     &:first-child {
         border-left:none;
     }
     label {
-        font-size:14px;
+        font-size:16px;
         font-weight:normal;
         box-sizing:border-box;
         //height:29px;
