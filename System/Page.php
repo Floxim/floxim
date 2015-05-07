@@ -143,7 +143,7 @@ class Page
             }
         }
         
-        fx::log( date('r', filemtime($full_path)),  date('r', $last_modified), $files);
+        //fx::log( date('r', filemtime($full_path)),  date('r', $last_modified), $files);
 
         if (!file_exists($full_path) || filemtime($full_path) < $last_modified) {
             $file_content = '';
