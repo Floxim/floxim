@@ -154,7 +154,13 @@ abstract class Entity implements \ArrayAccess, Template\Entity
         fx::trigger('after_save', array('entity' => $this));
         $this->modified = array();
         $this->modified_data = array();
+        $this->afterSaveDone();
         return $this;
+    }
+    
+    protected function afterSaveDone()
+    {
+        
     }
 
     /**
