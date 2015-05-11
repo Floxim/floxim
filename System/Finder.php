@@ -130,6 +130,16 @@ abstract class Finder
         }
         return $this;
     }
+    
+    public function selectFromRelated($rel, $field, $alias = null) {
+        $cf = $this->prepareComplexField($rel.'.'.$field, 'select');
+        $aliased = $cf;
+        if ($alias) {
+            $aliased .= ' as '.$alias;
+        }
+        $this->select($aliased);
+        return $cf;
+    }
 
     /**
      * For relational fields: join related item and prepare real field name
