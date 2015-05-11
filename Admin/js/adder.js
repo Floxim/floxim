@@ -117,6 +117,7 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
             bl+'-outstanding '+bl+'-inverted '+bl+'-horizontal '+bl+'-vertical'+
             bl+'-hover '+bl+'-visible'
         ).attr('style', '');
+        $plus.removeClass(bl+'__plus-with_variants');
         $('div', $button).attr('style', '');
     }
     
@@ -157,6 +158,12 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
         
         $button.off('.fx_show_adder').on('click.fx_show_adder', function(e) {
             var $variants = $('.fx_adder_variant', $button);
+            if ($variants.is(':visible')) {
+                $variants.hide();
+                $button.removeClass(bl+'-hover');
+                $plus.removeClass(bl+'__plus-with_variants');
+                return;
+            }
             if ( $variants.length === 1) {
                 $variants.first().click();
                 return;
@@ -168,20 +175,21 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
             $button.addClass(bl+'-hover');
             var css = {display:'block'};
             var plus_size = $plus.outerWidth(); // it seems to be square...
+            $plus.addClass(bl+'__plus-with_variants');
             
             if ($button.hasClass(bl+'-vertical')) {
                 css.left = '-' + ( $title.outerWidth() / 2 - plus_size / 2 ) + 'px';
                 if ($button.hasClass(bl+'-inverted')) {
-                    css.top = $line.outerHeight();
+                    css.top = $line.outerHeight() + plus_size*0.7;
                 } else {
-                    css.top = '-' + $title.outerHeight() + 'px';
+                    css.top = '-' + ($title.outerHeight() + plus_size*0.7) + 'px';
                 }
             } else {
                 css.top = '-' + ( $title.outerHeight() / 2 - plus_size / 2 ) + 'px';
                 if ($button.hasClass(bl+'-inverted')) {
-                    css.left = $line.outerWidth() + 'px';
+                    css.left = ($line.outerWidth() + plus_size*0.7) + 'px';
                 } else {
-                    css.left = '-'+( $title.outerWidth() )+'px';
+                    css.left = '-'+( $title.outerWidth() + plus_size*0.7 )+'px';
                 }
             }
             $title.attr('style', '').css(css);
@@ -333,12 +341,19 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
                 neighbour_offset = $neighbour.offset(),
                 distance = 0;
             
+            
+            function not_on_the_same_line(neighbour_offset) {
+                return axis === 'x' && Math.abs(neighbour_offset.top - top) > e_height/2;
+            }
             // use neighbour from the other side if there's no nodes on the correct side
             // or if the correct neighbour is not on the same line ("tiles" case)
-            if ($neighbour.length === 0 || (axis === 'x' && Math.abs(neighbour_offset.top - top) > e_height/2)) {
+            if ($neighbour.length === 0 || not_on_the_same_line(neighbour_offset)) {
                 neighbour_index = entity_index + (!is_after ? 1 : (entity_index === 0 ? $entities.length : -1) ),
                 $neighbour = $entities.eq(neighbour_index),
                 neighbour_offset = $neighbour.offset();
+                if ($neighbour.length && not_on_the_same_line(neighbour_offset)) {
+                    $neighbour = $([]);
+                }
             }
             
             if ($neighbour.length) {
@@ -466,8 +481,6 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
                         top:top,
                         left:left
                     });
-            } else {
-                console.log('r2');
             }
         }
     }

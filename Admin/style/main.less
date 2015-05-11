@@ -186,6 +186,45 @@ a, a:visited {
     }
 }
 
+&.ui-datepicker {
+    background-color: #fff;
+    padding: 5px;
+    border: 1px solid #CCC;
+    box-sizing: border-box;
+    z-index:10000 !important;
+    .ui-datepicker-current-day {
+        background: #FF0;
+    }
+    .ui-datepicker-prev, .ui-datepicker-next {
+        display:none;
+    }
+    .ui-datepicker-title {
+        text-align:center;
+        margin-bottom:5px;
+    }
+    table{ 
+        border-collapse:collapse;
+    }
+    td {
+        padding:0;
+        a {
+            text-decoration:none;
+            display:block;
+            padding:3px 5px;
+            color:#000;
+            &.ui-state-hover {
+                background:#FF9;
+            }
+        }
+        &.ui-datepicker-today a {
+            text-decoration:underline;
+        }
+        &.ui-datepicker-week-end a {
+            color:#F00;
+        }
+    }
+}
+
 }
 
 .fx_button {
@@ -335,6 +374,10 @@ a, a:visited {
     
     &-type-delete_image {
         background-position:-392px 0px;
+    }
+    
+    &-type-follow {
+        background-position:-767px 0;
     }
 }
 

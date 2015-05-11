@@ -140,12 +140,14 @@ $html.on('click.fx', '.fx_image_field .fx_remote_file_block a',  function() {
     var $block = $(this).closest('.fx_remote_file_block');
     $block.addClass('active');
     $block.closest('.fx_preview').addClass('fx_preview_active');
-    $block.find('input').focus().off('keydown.fx_blur').on('keydown.fx_blur', function(e) {
+    var $inp = $block.find('input');
+    $inp.focus().off('keydown.fx_blur').on('keydown.fx_blur', function(e) {
         if (e.which === 27) {
-            $(this).blur();
+            $(this).blur().trigger('change');
+            
             return false;
         }
-    });
+    }).trigger('change');
 });
 
 $html.on('blur.fx', '.fx_image_field .fx_remote_file_block input', function() {

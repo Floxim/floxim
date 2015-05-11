@@ -412,14 +412,15 @@ class Compiler
                     $linebreaks = false;
                 }
             }
+            //fx::debug($token, $linebreaks, $token_is_visual);
             if (!$token_type) {
                 $token_type = 'string';
             } else {
                 $token->setProp('type', $token_type);
             }
-            if ($linebreaks || $token_is_visual) {
-                $token->setProp('linebreaks', $linebreaks);
-            }
+            //if ($linebreaks || $token_is_visual) {
+            $token->setProp('linebreaks', $linebreaks);
+            //}
         }
 
         // e.g. "name" or "image_".$context->get('id')
