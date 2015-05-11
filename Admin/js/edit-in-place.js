@@ -7,8 +7,6 @@ $.fn.edit_in_place = function(command) {
         var eip = $node.data('edit_in_place');
         if (!eip || !eip.panel_fields.length) {
             eip = new fx_edit_in_place($node);
-        } else {
-            console.log('existing eip', eip);
         }
         if (!command) {
             return eip;
@@ -17,6 +15,11 @@ $.fn.edit_in_place = function(command) {
             case 'destroy':
                 eip.stop();
                 break;
+            case 'get_vars':
+                return eip.get_vars();
+                break;
+            case 'set_var':
+                
         }
     });
 };
@@ -96,9 +99,10 @@ function fx_edit_in_place( node ) {
 
     if ( (!this.is_content_editable || this.is_linker_placeholder) && this.panel_fields.length) {
         setTimeout(function() {
-            if ($('.fx_selected .fx_var_editable').length === 0) {
-                var selector = ':input:visible:not(.date_input'+(eip.is_linker_placeholder ? '' : ', .livesearch_input')+')';
-                var $first_inp = $(selector, eip.panel_fields[0].parent()).first();
+            if ($('.fx_selected .fx_var_editable').length === 0 || eip.is_linker_placeholder) {
+                var selector = ':input:visible' + ( eip.is_linker_placeholder ? '' : ':not(.livesearch_input)');
+                var $panel = eip.panel_fields[0].closest('.fx_node_panel');
+                var $first_inp = $(selector, $panel).first();
                 if ($first_inp.length) {
                     $first_inp.focus();
                 }
@@ -202,6 +206,28 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
         $n.removeClass('fx_hidden_placeholded');
         $n.html('');
     }
+    
+    var nodes_to_sync = [],
+        $var_nodes = $('*[data-fx_var], *[data-has_var_in_att]'),
+        c_node = $n[0];
+    
+    $var_nodes.each(function() {
+        if (this === c_node) {
+            return;
+        }
+        var $node = $(this);
+        var content_var = $node.data('fx_var');
+        if (!content_var) {
+            return;
+        }
+        if (
+            content_var.content_id === meta.content_id &&
+            content_var.id === meta.id &&
+            content_var.var_type === meta.var_type
+        ) {
+            nodes_to_sync.push($node);
+        }
+    });
 
     // create css stylesheet for placeholder color
     // we cannot just append styles to an element, 
@@ -269,6 +295,18 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
             'keyup.edit_in_place keydown.edit_in_place click.edit_in_place change.edit_in_place', 
             function () {setTimeout(handle_node_size,1);}
         );
+    }
+    if (nodes_to_sync.length > 0) {
+        $n.on(
+            'keyup.edit_in_place keydown.edit_in_place click.edit_in_place change.edit_in_place', 
+            function () {
+                var c_html = $n.html();
+                //setTimeout(handle_node_size,1);
+                $.each(nodes_to_sync, function() {
+                    this.html(c_html);
+                });
+            }
+        )
     }
 };
 

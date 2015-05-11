@@ -96,8 +96,9 @@ function node_panel($node, params) {
         });
         setTimeout(this.recount, 10);
         $panel.on(
-            'change.fx_front keyup.fx_front livesearch_value_loaded.fx_front click.fx_front', 
-            that.recount
+            'change.fx_front keyup.fx_front livesearch_value_loaded.fx_front click.fx_front focus.fx_front blur.fx_front', 
+            //that.recount
+            $fx.front.node_panel.recount
         );
         this.$panel = $panel;
         $node.on('fx_deselect.fx_remove_node_panel', function() {
@@ -131,6 +132,8 @@ function node_panel($node, params) {
         
         var outer_offset = that.params.offset;
         
+        // move to the left edge to get real width
+        $p.css('left', 0);
         var p_width = $p.outerWidth();
         
         var css = {
@@ -201,11 +204,13 @@ function node_panel($node, params) {
             css.position = 'fixed';
         }
         
-        var p_gone = (css.left + p_width) - $(window).outerWidth() + 3;
-
+        var win_width = $(window).outerWidth(),
+            p_gone = (css.left + p_width) - (win_width - 3);
+        
         if (p_gone > 0) {
             css.left = css.left - p_gone;
         }
+        
         
         $p.css(css);
         
@@ -219,16 +224,21 @@ function node_panel($node, params) {
             var c_size = get_size($p),
                 p_size = get_size($prev_panel);
             
-            //console.log(c_size, p_size);
             if (c_size.left <= p_size.right && c_size.right >= p_size.left) {
                 if (c_size.top <= p_size.bottom && c_size.bottom >= p_size.top) {
-                    //console.log('inters');
                     var pos = $prev_panel.css('position');
                     var css = {
                         position:pos,
-                        top: $prev_panel.css('top'),
+                        top: parseInt($prev_panel.css('top')),
                         left: parseInt($prev_panel.css('left')) + $prev_panel.width() + 10
                     };
+                    p_gone = (css.left + p_width) - win_width;
+                    // tried to place it from the right side of the previous panel
+                    // but there's not enough space
+                    if (p_gone > 0) {
+                        $prev_panel.css('left', '-='+(p_gone+10)+'px');
+                        css.left = css.left - p_gone - 10;
+                    }
                     $p.css(css);
                 }
             }
@@ -248,9 +258,13 @@ function node_panel($node, params) {
         return $item;
     };
     
-    this.add_button = function(button, callback) {
+    this.add_button = function(button, callback, $before_node) {
         var $button = $fx.front.create_button(button, callback);
-        this.$panel.append($button);
+        if (!$before_node) {
+            this.$panel.append($button);
+        } else {
+            $before_node.before($button);
+        }
         return $button;
     };
     

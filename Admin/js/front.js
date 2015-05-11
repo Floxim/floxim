@@ -123,8 +123,7 @@ fx_front.prototype.handle_mouseover = function(e) {
                 }
             }
         },
-        20
-        //is_hover_parent ? 300 : 30
+        is_hover_parent ? 300 : 30
     );
     node.one('mouseout.fx_front_mouseout', function() {
         $fx.front.c_hover = null;
@@ -199,23 +198,24 @@ fx_front.prototype.handle_click = function(e) {
     $fx.front.select_item(closest_selectable);
     var $link = $(target).closest('a[href]');
     if ($link.length && $link.closest('.fx_entity_adder_placeholder').length === 0) {
-        //var $panel = $fx.front.get_node_panel();
-        //var $panel = $('.fx_node_panel:visible').first();
         var panel = $fx.front.node_panel.get();
+        /*
         var $click = $(
             '<div class="fx_follow_the_link">'+
-                '<a href="'+$link.attr('href')+'">click</a>'+
+                '<a href="'+$link.attr('href')+'" class="fx_icon fx_icon-type-follow"></a>'+
             '</div>'
         );
         panel.add_label($click, panel.$panel.children().filter(':visible').first());
-        /*
-        var $panel_items = $panel.children();
-        if ($panel_items.length > 0) {
-            $panel_items.first().before($click);
-        } else {
-            $panel.append($click);
-        }
         */
+       panel.add_button(
+            {
+                type:'icon', 
+                keyword:'follow',
+                href:$link.attr('href')
+            }, 
+            null, 
+            panel.$panel.find('>*:visible').first()
+        );
     }
     return false;
 };
@@ -518,8 +518,11 @@ fx_front.prototype.redraw_add_button = function($node) {
         ib_accept = ($ib_node.data('fx_controller_meta') || {}).accept_content;
     
     if ($node.is('.fx_entity') && mode === 'edit') {
+        
+        /*
         var is_top_entity = $fx.front.is_top_entity($node),
             $placeholder = $('>.fx_entity_adder_placeholder', $node.parent());
+        
         if ($placeholder.length) {
             var placeholder_meta = $placeholder.data('fx_entity_meta') || {},
                 placeholder_name = placeholder_meta.placeholder_name;
@@ -528,6 +531,7 @@ fx_front.prototype.redraw_add_button = function($node) {
                 callback: $fx.front.get_placeholder_adder_closure($placeholder)
             });
         }
+        
         for (var i = 0; is_top_entity && ib_accept && i < ib_accept.length; i++) {
             var c_meta = ib_accept[i];
             if ($fx.front.find_placeholder_by_meta(c_meta, $placeholder)) {
@@ -538,7 +542,7 @@ fx_front.prototype.redraw_add_button = function($node) {
                 callback: $fx.front.get_panel_adder_closure(c_meta)
             });
         };
-
+        */
         
         var extra_accept = ($node.data('fx_entity_meta') || {}).accept_content || [];
         $.each(extra_accept, function () {
@@ -934,6 +938,7 @@ fx_front.prototype.select_item = function(node) {
     node = $node[0];
     
     $fx.front.outline_block_off($node);
+    $fx.front.outline_block_off($node.find('.fx_hilight_hover'));
     $fx.front.outline_block($node, 'selected');
     
     if (!this.node_panel_disabled) {
@@ -2064,7 +2069,6 @@ fx_front.prototype.move_down_body = function () {
     var panel_height = $('#fx_admin_panel').outerHeight();
     $('body').css('margin-top', '').css('margin-top','+='+panel_height+'px');
     $('.fx_top_fixed').css('top', '+='+panel_height+'px').css('z-index', 2674);
-    console.log('mdb');
 };
 
 fx_front.prototype.get_node_panel = function($node) {
@@ -2083,12 +2087,17 @@ fx_front.prototype.create_button = function(button, callback) {
     } else if (!callback) {
         callback = button.callback;
     }
+    if (!callback && button.href) {
+        callback = function() {
+            document.location.href = button.href;
+        };
+    }
     
     if (!button.type) {
         button.type = 'button';
     }
     
-    var $node = $('<div class="fx_node_panel__item fx_node_panel__item-type-'+button.type+'"></div>');
+    var $node = $('<div class="' + (button.in_dropdown ? '' : 'fx_node_panel__item fx_node_panel__item-type-'+button.type)+'"></div>');
     
     if (button.type === 'icon') {
         var $b = $('<div class="fx_icon fx_icon-type-'+button.keyword+'"></div>');
@@ -2102,9 +2111,8 @@ fx_front.prototype.create_button = function(button, callback) {
             for (var i = 0; i < button.dropdown.length; i++){
                 var button_info = button.dropdown[i];
                 button_info.name = button_info.name.replace(new RegExp( $fx.lang('Add')), '');
-                var $button = $fx.front.create_button(button.dropdown[i]).find('.fx_button');
-                //$button.removeClass('fx_button-active');
-                $button.addClass('fx_button-in_dropdown');
+                button_info.in_dropdown = true;
+                var $button = $fx.front.create_button(button.dropdown[i]);
                 $('.fx_button__add_text', $button).removeClass('fx_button__add_text');
                 $dropdown.append($button);
             }
@@ -2120,7 +2128,9 @@ fx_front.prototype.create_button = function(button, callback) {
         $node.append('<span class="fx_node_panel__item_label">'+button.label+'</span>');
     }
     
-    $node.click(callback);
+    if (!button.dropdown) {
+        $node.on('click', callback);
+    }
     return $node;
 };
 
@@ -2160,10 +2170,8 @@ fx_front.prototype.get_overlay_z_index = function($n) {
         var $p = $(this);
         if ($p.css('position') === 'fixed') {
             c_zindex = $p.css('z-index');
-            console.log('fixpar', $p);
         }
     });
-    console.log('gozi', c_zindex);
     return c_zindex;
 };
 
@@ -2297,7 +2305,6 @@ fx_front.prototype.outline_block = function(n, style, speed) {
         n.data('fx_has_lens', true);
         $.each(panes, function(index, pane) {
             var $lens = $(pane).data('lens');
-            console.log(pane, $lens);
             if ($lens) {
                 $lens.css({
                     width:'1px',

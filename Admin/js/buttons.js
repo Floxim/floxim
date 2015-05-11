@@ -220,23 +220,24 @@ fx_buttons.prototype.hide_pulldown = function () {
 fx_buttons.prototype.form_button_click = function(e) {
     var data = $t.inline_data($(this));
     if ( data.postdata || data.post ) {
-            var postdata = data.postdata || data.post;
-            if (data.send_form) {
-                    var form = $(this).closest('form');
-                    var formdata = {};
-                    $.each(form.serializeArray(), function(num, field) {
-                            formdata[field.name] = field.value;
-                    });
-                    postdata = $.extend(formdata, postdata);
-            }
-            $fx.post(postdata);
-            return false;
+        var postdata = data.postdata || data.post;
+        if (data.send_form) {
+            var form = $(this).closest('form');
+            var formdata = {};
+            $.each(form.serializeArray(), function(num, field) {
+                    formdata[field.name] = field.value;
+            });
+            postdata = $.extend(formdata, postdata);
+        }
+        $fx.post(postdata);
+        console.log('r1');
+        return false;
     }
     if (data.func) {
-            fx_call_user_func(data.func,data);
+        fx_call_user_func(data.func,data);
     }
     if (data.url) {
-            document.location.hash = $fx.mode + '.' + data.url.replace(/^#/, '');
+        document.location.hash = $fx.mode + '.' + data.url.replace(/^#/, '');
     }
     var $button = $(this),
         $target = $(e.target),
@@ -252,13 +253,12 @@ fx_buttons.prototype.form_button_click = function(e) {
             }
             return;
         }
+        return;
     }
     
     if (href) {
         document.location.href = href;
     }
-    
-    return false;
 };
 
 fx_buttons.prototype.update_available_buttons = function () {

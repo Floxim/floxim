@@ -121,11 +121,11 @@
 }
 
 .fx_outline_style_selected {
-    .fx_outliner(@light:#FF0; @dark:#000; @size:3px; @shadow:3px);
+    .fx_outliner(@light:#FF0; @dark:#000; @size:5px; @shadow:3px);
 }
 
 .fx_outline_style_selected_light {
-    .fx_outliner(@light:rgba(255, 255, 0, 0.5); @dark:rgba(50, 50, 50, 0.3); @size:2px; @shadow:1px; @shadow-color:rgba(50, 50, 50, 0.15));
+    .fx_outliner(@light:rgba(255, 255, 0, 0.5); @dark:rgba(50, 50, 50, 0.3); @size:5px; @shadow:1px; @shadow-color:rgba(50, 50, 50, 0.15));
 }
 
 .fx_outline_style_hover {
@@ -645,6 +645,11 @@ span.fx_area_marker {
             left: 8px;
             font-size: 22px;
         }
+        
+        &-with_variants {
+            transform: rotate(45deg);
+            z-index:1;
+        }
     }
     
     &-outstanding &__plus {
@@ -681,17 +686,18 @@ span.fx_area_marker {
         background:#FFF;
         position: absolute;
         padding: 0;
-        border-radius:5px;
+        border-radius:2px;
         box-shadow:1px 1px 8px rgba(0,0,0,0.35);
         border:1px solid @mid_color;
         overflow:hidden;
         
         & .fx_adder_variant {
-            padding:4px 8px;
+            padding:10px 25px;
             color:@button_color;
             border-bottom:1px solid @mid_color;
-            font-size:14px;
-            font-weight:400;
+            font-size: 15px;
+            font-weight: 500;
+            text-align:center;
             
             &:hover {
                 color:#FFF;
