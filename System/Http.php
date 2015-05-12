@@ -78,7 +78,7 @@ class Http
     }
     
     
-    public function post($url, $data, $headers = array())
+    public function post($url, $data, $headers = array(), $context_options = array())
     {
         $has_content_type = false;
         $header_string = '';
@@ -112,10 +112,13 @@ class Http
         }
         
         $options = array(
-            'http' => array(
-                'header'  => $header_string,
-                'method'  => 'POST',
-                'content' => $data
+            'http' => array_merge(
+                array(
+                    'header'  => $header_string,
+                    'method'  => 'POST',
+                    'content' => $data
+                ),
+                $context_options
             )
         );
         $context  = stream_context_create($options);
