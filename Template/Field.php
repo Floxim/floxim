@@ -95,22 +95,12 @@ class Field
                     function ($field_matches) use (&$att_fields) {
                         $replacement = Field::$replacements[$field_matches[1]];
                         $att_fields[$replacement[0]] = $replacement[1];
-                        //fx_template_field::$replacements[$field_matches[1]] = null;
                         Field::$fields_to_drop[] = $field_matches[1];
                         return $replacement[2];
                     },
                     $tag_matches[0]
                 );
-                /*
-                $tag_meta = array('class' => 'fx_template_var_in_att');
-                foreach ($att_fields as $afk => $af) {
-                    $tag_meta['data-fx_template_var_' . $afk] = $af;
-                }
-                $tag = HtmlToken::createStandalone($tag);
-                $tag->addMeta($tag_meta);
-                $tag = $tag->serialize();
-                 * 
-                 */
+                
                 $meta_string = ' data-has_var_in_att="1" ';
                 foreach ($att_fields as $afk => $af) {
                     $v = htmlentities(json_encode($af));
@@ -138,9 +128,8 @@ class Field
                     'data-fx_var' => $replacement[1]
                 ));
                 $tag = $tag->serialize();
-                //fx_template_field::$replacements[$matches[3]] = null;
                 Field::$fields_to_drop[] = $matches[3];
-                return $tag . $matches[2] . $replacement[2] . $matches[4];
+                return $tag . $matches[2] . self::replaceFields($replacement[2]) . $matches[4];
             },
             $html
         );
@@ -169,7 +158,7 @@ class Field
                 ));
                 //fx_template_field::$replacements[$matches[1]] = null;
                 Field::$fields_to_drop [] = $matches[1];
-                $res = $tag->serialize() . $replacement[2] . '</' . $tag_name . '>';
+                $res = $tag->serialize() . self::replaceFields($replacement[2]) . '</' . $tag_name . '>';
                 return $res;
             },
             $html

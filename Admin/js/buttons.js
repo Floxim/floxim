@@ -62,41 +62,38 @@ fx_buttons.prototype.draw_buttons = function ( buttons ) {
         return false;
     }
     $.each(buttons, function(key, button) {
-        if ( button === 'divider' ) {
-            var div = $('<div/>').addClass('nc_adminpanel_button_divider');
-            div.data('key', button);
+        
+        var button_source = self.source[button];
+        if (!button_source) {
+            button.type = 'text';
+            button_source = {type:'text', title:key};
         }
-        else {
-            var button_source = self.source[button];
-            if (typeof button !== 'object') {
-                button = {
-                    key:button,
-                    type:button_source.type,
-                    title:button_source.title
-                };
-            }
-            if (!button_source) {
-                button.type = 'text';
-            }
-            
-            element = $('<div/>').addClass('fx_admin_button_'+button.key);
-            element.attr('title', button.title);
-            if (button.type === 'text' ) {
-                element.addClass('fx_admin_button_text').html( $('<span>').text(button.title) );
-            } else {
-                element.addClass('fx_admin_button');
-            }
+        if (typeof button !== 'object') {
+            button = {
+                key:button,
+                type:button_source.type,
+                title:button_source.title
+            };
+        }
+        
 
-            element.data(button);
-            element.click( function () {
-                if ($(this).data('has_callback')) {
-                    return;
-                }
-                self.handle(button.key);
-                return false;
-            });
-            element.hide();
+        element = $('<div class="fx_button fx_button-key-'+button.key+'" title="'+button.title+'"></div>');
+        if (button.type === 'text' ) {
+            element.html( '<span>'+button.title+'</span>' );
+        } else {
+            element.addClass('fx_button-with_icon').html('<span class="fx_icon fx_icon-type-'+button.key+'"></span>');
         }
+
+        element.data(button);
+        element.click( function () {
+            if ($(this).data('has_callback')) {
+                return;
+            }
+            self.handle(button.key);
+            return false;
+        });
+        element.hide();
+        
         self.container.append(element);
     });
 };

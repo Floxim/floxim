@@ -78,22 +78,27 @@ class Log extends Admin
         return array(
             'fields' => array(
                 array(
-                    'type'    => 'button',
-                    'label'   => fx::alang('Delete', 'system'),
-                    'options' => array(
-                        'action'   => 'drop_log',
-                        'entity'   => 'log',
-                        'fx_admin' => 'true',
-                        'log_id'   => $log_id
-                    )
-                ),
-                array(
-                    'type'    => 'button',
-                    'label'   => fx::alang('Delete all', 'system'),
-                    'options' => array(
-                        'action'   => 'drop_all',
-                        'entity'   => 'log',
-                        'fx_admin' => 'true'
+                    'type' => 'buttons',
+                    'buttons' => array(
+                        array(
+                            'type'    => 'button',
+                            'label'   => fx::alang('Delete', 'system'),
+                            'options' => array(
+                                'action'   => 'drop_log',
+                                'entity'   => 'log',
+                                'fx_admin' => 'true',
+                                'log_id'   => $log_id
+                            )
+                        ),
+                        array(
+                            'type'    => 'button',
+                            'label'   => fx::alang('Delete all', 'system'),
+                            'options' => array(
+                                'action'   => 'drop_all',
+                                'entity'   => 'log',
+                                'fx_admin' => 'true'
+                            )
+                        )
                     )
                 ),
                 array(

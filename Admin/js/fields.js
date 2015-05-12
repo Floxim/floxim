@@ -66,6 +66,10 @@ window.$fx_fields = {
     table: function (json) {
         return $t.jQuery('form_row', json);
     },
+    
+    buttons: function(json) {
+        return $t.jQuery('form_row', json);
+    },
 
     button: function (json) {
         return $t.jQuery('form_row', json);

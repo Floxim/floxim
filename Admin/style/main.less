@@ -54,23 +54,22 @@ a, a:visited {
     top:0;
     z-index: 2680;
     &.fx_admin_control_admin {
-        //position: relative !important;
-        //left: auto;
-        //top: auto;
-        //height: 31px;
         position:absolute !important;
         top:0;
         right:0;
         left:auto;
         width:auto !important;
+        z-index:1;
+        padding-top:5px;
     }
     #fx_admin_buttons {
         //margin: 6px 0 0 10px;
         overflow:hidden;
-        margin-left:20px;
+        //margin-left:20px;
         &>div {
             float:right;
-            margin-top:10px;
+            margin-left:10px;
+            //margin-top:10px;
         }
     }
 
@@ -318,6 +317,10 @@ a, a:visited {
             left:4px;
             background:url('images/sprite.png') no-repeat -61px 0;
         }
+    }
+    
+    &-with_icon {
+        padding:5px 5px 4px 5px;
     }
 }
 

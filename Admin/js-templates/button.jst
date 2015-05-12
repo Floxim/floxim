@@ -1,3 +1,11 @@
+<!--[input ? _c.type == 'buttons']-->
+<div class="fx_buttons"></div>
+
+<!--jquery-->
+for (var i = 0; i < _c.buttons.length; i++) {
+    html.append( $t.jQuery('input', _c.buttons[i]) );
+}
+
 <!--[input ? _c.type == 'button']-->
 <div 
     class="fx_button fx_button-in_group <?= _c.is_active ? 'fx_button-active' : ''?><?= _c.class ? ' fx_button-class-' + _c.class : '' ?>" 
@@ -8,7 +16,6 @@
 <!--jquery-->
 if (_c.options){ 
     html.on('click', function() {
-        console.log('clicka', _c.options);
         $fx.post(_c.options);
     })
 }
