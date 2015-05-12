@@ -108,7 +108,8 @@ class Field
                     $v = str_replace("&quot;", '"', $v);
                     $meta_string .= ' data-fx_template_var_'.$afk."='".$v."' ";
                 }
-                $tag = preg_replace("~>\s*$~", $meta_string.'>', $tag);
+                fx::log('!!', $tag, $meta_string);
+                $tag = preg_replace("~/?>\s*$~", $meta_string.'$0', $tag);
                 return $tag;
             },
             $html
