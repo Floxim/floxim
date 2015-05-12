@@ -936,7 +936,6 @@ fx_front.prototype.select_item = function(node) {
     this.selected_item = node;
     var $node = $(node);
     node = $node[0];
-    
     $fx.front.outline_block_off($node);
     $fx.front.outline_block_off($node.find('.fx_hilight_hover'));
     $fx.front.outline_block($node, 'selected');

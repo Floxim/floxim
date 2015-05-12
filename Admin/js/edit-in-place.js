@@ -1,4 +1,5 @@
 (function($){
+
 $.fn.edit_in_place = function(command) {
     var $nodes = this;
     $nodes.each(function() {
@@ -15,11 +16,6 @@ $.fn.edit_in_place = function(command) {
             case 'destroy':
                 eip.stop();
                 break;
-            case 'get_vars':
-                return eip.get_vars();
-                break;
-            case 'set_var':
-                
         }
     });
 };
@@ -43,6 +39,7 @@ function fx_edit_in_place( node ) {
         this.meta.target_type = 'var';
         this.start(this.meta);
     }
+    
     // edit the attributes of the node
     for( var i in this.node.data()) {
         if (!/^fx_template_var/.test(i)) {
@@ -51,6 +48,7 @@ function fx_edit_in_place( node ) {
         var meta = this.node.data(i);
         meta.target_type = 'att';
         meta.target_key = i;
+        
         this.start(meta);
     }
     // edit fields from fx_controller_meta['field']
@@ -62,7 +60,6 @@ function fx_edit_in_place( node ) {
             eip.start(field);
         });
     }
-    
     var selected_entity = this.node.closest('.fx_entity').get(0);
 
     $('html')
@@ -122,8 +119,12 @@ fx_edit_in_place.prototype.handle_keydown = function(e) {
             e.stopImmediatePropagation();
             return false;
         }
-        this.stop();
-        this.restore();
+        var $edited = $('.fx_edit_in_place');
+        $edited.each(function() {
+            var c_eip = $(this).data('edit_in_place');
+            c_eip.stop();
+            c_eip.restore();
+        });
         $fx.front.deselect_item();
         return false;
     }
@@ -158,7 +159,6 @@ fx_edit_in_place.prototype.start = function(meta) {
         meta.type = 'bool';
     }
     this.node.trigger('fx_before_editing');
-    
     switch (meta.type) {
         case 'datetime':
             this.add_panel_field(
@@ -311,7 +311,7 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
 };
 
 fx_edit_in_place.prototype.add_panel_field = function(meta) {
-    if (meta.real_value) {
+    if (meta.real_value && meta.type !== 'livesearch') {
         meta.value = meta.real_value;
     }
     meta = $.extend({}, meta);
@@ -333,6 +333,7 @@ fx_edit_in_place.prototype.add_panel_field = function(meta) {
     var npi = 'fx_node_panel__item';
     var $field_container = $(
         '<div class="'+npi+' '+npi+'-type-field '+npi+'-field_type-'+meta.type+' '+npi+'-field_name-'+meta.name+'"></div>');
+    
     var $field_node = $fx_form.draw_field(meta, $field_container);
     $field_node.data('meta', meta);
     this.panel_fields.push($field_node);

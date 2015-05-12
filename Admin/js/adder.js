@@ -295,7 +295,6 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
             } else {
                 //place_button(e, false);
                 $button.css(css);
-                console.log('css', css, $button.attr('class'));
             }
             over_timeout = null;
         }, 100);
