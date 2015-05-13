@@ -2,7 +2,7 @@
 <?
 var f_postfix = _c.name_postfix ? '['+_c.name_postfix+']' : '';
 ?>
-<div class="livesearch <?=(_c.is_multiple ? 'livesearch_multiple' : '')?>" 
+<div class="livesearch livesearch_<?=(_c.is_multiple ? 'multiple' : 'single')?>" 
     data-params="<?=$t.json_att(_c.params)?>" 
     data-prototype_name="<?=_c.name?>[prototype]<?=f_postfix?>"
     data-is_multiple="<?=(_c.is_multiple ? 'Y' : 'N')?>">

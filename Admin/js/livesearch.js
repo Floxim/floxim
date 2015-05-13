@@ -252,7 +252,7 @@ window.fx_livesearch = function (node) {
     this.addDisabled = false;
     this.disableAdd = function() {
         this.addDisabled = true;
-        this.inputContainer.css({width:'1px',position:'absolute',left:'-1000px'});
+        this.inputContainer.css({width:'1px',position:'absolute',left:'-10000px'});
         this.Suggest.disabled = true;
         if (!this.isMultiple) {
             this.n.addClass('livesearch_has_value');
@@ -294,6 +294,9 @@ window.fx_livesearch = function (node) {
     this.hideValue = function() {
         var item_node = this.getValueNode();
         if (item_node) {
+            if (!this.isMultiple) {
+                this.input.css('width', this.n.find('.livesearch_items').width());
+            }
             item_node.hide();
             var c_text = item_node.find('.title').text();
             this.input.val(c_text);
@@ -372,18 +375,21 @@ window.fx_livesearch = function (node) {
                 livesearch.Suggest.hideBox();
             }
         });
-        this.n.on('keypress keyup', 'li.livesearch_input input', function(e) {
+        this.n.on('keypress keyup focus', 'li.livesearch_input input', function(e) {
+            if (!livesearch.isMultiple) {
+                return;
+            }
             var v = $(this).val();
             if (v === $(this).data('last_counted_val')) {
                 return;
             }
             $(this).data('last_counted_val', v);
             if (v.length === 0) {
-                $(this).css({width:'5px'});
+                $(this).css({width:'15px'});
                 return;
             }
             var proto_html = '<span style="position:absolute; left: -1000px; top: -1000px; display:none;';
-            styles = ['font-size', 'font-style', 'font-weight', 'font-family', 'line-height', 'text-transform', 'letter-spacing'];
+            var styles = ['font-size', 'font-style', 'font-weight', 'font-family', 'line-height', 'text-transform', 'letter-spacing'];
             for (var i = 0 ; i < styles.length; i++) {
                 proto_html += ' '+styles[i]+':'+$(this).css(styles[i])+';';
             }
@@ -410,7 +416,9 @@ window.fx_livesearch = function (node) {
                 livesearch.input.val(item_title);
             }
             livesearch.hideValue();
-            $(this).select().trigger('keyup');
+            //$(this).select().trigger('keyup');
+            $(this).select();
+            livesearch.Suggest.Search('', {immediate:true});
         });
 
         this.n.on('click', '.livesearch_items', function(e) {
@@ -429,10 +437,24 @@ window.fx_livesearch = function (node) {
         });
 
         this.n.on('suggest_blur', 'li.livesearch_input input', function() {
+            //return;
             var $input = $(this),
                 input_value = $input.val();
             
             if (!livesearch.isMultiple) {
+                /*
+                var $value_node = livesearch.getValueNode();
+                $value_node.show();
+                console.log($value_node);
+                */
+                if (input_value !== '') {
+                    livesearch.showValue();
+                } else {
+                    livesearch.removeValue( livesearch.getValueNode() );
+                    $input.val('');
+                }
+                return false;
+                /*
                 var selected_value = livesearch.getValue();
                 var c_search_item = livesearch.Suggest.getSearchItems().first();
                 // current value is in first in list - save it
@@ -443,6 +465,7 @@ window.fx_livesearch = function (node) {
                     livesearch.Select(c_search_item);
                     return false;
                 }
+                */
             }
             if (input_value && livesearch.allow_new) {
                 livesearch.addValue({id:false, name:input_value});
@@ -523,6 +546,7 @@ window.fx_suggest = function(params) {
                 // anything
                 default:
                     var term = Suggest.getTerm();
+                    console.log('ku srch', term);
                     if (term != '' || e.which == 8) {
                         Suggest.Search(term);
                     }
@@ -600,7 +624,10 @@ window.fx_suggest = function(params) {
         this.locked = false;
     };
     
-    this.Search = function(term) {
+    this.Search = function(term, params) {
+        
+        params = params || {};
+        
         if (this.disabled) {
             return;
         }
@@ -613,16 +640,17 @@ window.fx_suggest = function(params) {
             return;
         }
         this.lastTerm = term;
-        
+        console.log('goon');
         this.Lock();
         // the timeout for fast printing
         setTimeout( function() {
             // query time to change
-            if (term !== Suggest.getTerm()) {
+            if (term !== Suggest.getTerm() && !params.immediate) {
                 return;
             }
-            Suggest.getResults(term);
-        }, 200);
+            console.log('serchng');
+            Suggest.getResults(term, params);
+        }, params.immediate ? 1 : 200);
     };
 
     this.processResults = function(res,requestParams) {
@@ -645,7 +673,10 @@ window.fx_suggest = function(params) {
         this.processResults(res,this.requestParams);
     };
 
-    this.getResults = function(term) {
+    this.getResults = function(term, params) {
+        
+        params = params || {};
+        
         if (this.preset_values && this.preset_values.length) {
             return this.getResultsFromPreset(term);
         }
@@ -670,8 +701,9 @@ window.fx_suggest = function(params) {
         
         var that=this;
         request_params.success = function(res) {
+            console.log('scss');
             // query has changed while they were loading Majesty
-            if (term !== Suggest.getTerm()) {
+            if (term !== Suggest.getTerm() && !params.immediate) {
                 return;
             }
             that.Unlock();
@@ -793,7 +825,7 @@ window.fx_suggest = function(params) {
             this.box.css('position', 'fixed');
         }
         this.box.offset({
-            top:node.offset().top + node.outerHeight() - 7,
+            top:node.offset().top + node.outerHeight() - 2,
             left:this.input.offset().left - 7
         });
         
@@ -876,6 +908,7 @@ window.fx_suggest = function(params) {
         });
         
         this.input.blur(function(e) {
+            //return;
             // Suggest is not active
             if (Suggest.disabled) {
                 return;
@@ -891,7 +924,7 @@ window.fx_suggest = function(params) {
         });
         
         this.input.focus(function(){
-            $(this).trigger('keyup');
+            //$(this).trigger('keyup');
         });
         
         this.box.on('mouseover', '.search_item', function() {
