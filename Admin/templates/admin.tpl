@@ -43,14 +43,14 @@
 </div>
 <div fx:if="$is_front" id="fx_admin_control" class="fx_overlay">
     <div id="fx_admin_extra_panel">
-        <div class="fx_admin_panel_title"></div>
+        <!--<div class="fx_admin_panel_title"></div>-->
         <div class="fx_admin_panel_body"></div>
-        <div class="fx_admin_panel_footer"></div>
+        <!--<div class="fx_admin_panel_footer"></div>-->
     </div>
     <div class="fx_side_panel">
-        <div class="fx_side_panel__title"></div>
+        <!--<div class="fx_side_panel__title"></div>-->
         <div class="fx_side_panel__body"></div>
-        <div class="fx_side_panel__footer"></div>
+        <!--<div class="fx_side_panel__footer"></div>-->
     </div>
 </div>
 {/template}

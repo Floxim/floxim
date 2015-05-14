@@ -237,19 +237,13 @@
     .livesearch_items {
         margin-top:3px;
         margin-left:7px;
+        padding-top:2px;
+        padding-bottom:2px;
     }
-    /*
-    .livesearch_single {
-        .livesearch_items {
-            border:1px solid #CCC;
-            padding-bottom:4px;
-            //padding:2px 19px 2px 4px;
-        }
-        &.livesearch_has_value .livesearch_items {
-            border:1px solid #D0DAF9;
-        }
+    
+    .livesearch_multiple .livesearch_items {
+        border:1px solid transparent;
     }
-    */
     
     .livesearch_items, input {
         background: transparent;
@@ -813,5 +807,41 @@ span.fx_area_marker {
     &__title {
         font-size:16px;
         color:@button_color;
+    }
+}
+
+.fx_admin_form-block_overlay {
+    &, label, .fx_admin_form__header {
+        color:#FFF;
+    }
+    
+    .fx_admin_form__header {
+        border:none;
+        padding:0;
+    }
+    
+    .fx_admin_form__title {
+        margin: 15px 0;
+    }
+    
+    .fx_admin_form__body {
+        padding:0;
+        margin-bottom:15px;
+    }
+    
+    .fx_admin_form__buttons {
+        position: static;
+        margin:0;
+    }
+    
+    .fx_button {
+        background: none;
+        border:1px solid #FFF;
+        margin-right: 10px;
+        border-radius: 2px;
+        color:#FFF;
+        &-class-cancel {
+            font-weight: 100;
+        }
     }
 }

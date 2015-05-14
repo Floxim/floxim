@@ -1,4 +1,7 @@
 (function($){;
+    
+var bl = 'fx_admin_form';
+
 fx_form = {
     
     create:function(options, $target) {
@@ -15,7 +18,7 @@ fx_form = {
         $('html').trigger('fx_before_adm_form_created', settings);
         var $form = $(
                 '<form '+
-                    'class="fx_admin_form" '+
+                    'class="'+bl+'" '+
                     'id="'+settings.form.id+'" '+
                     'action="'+settings.form.action+'" '+
                     'enctype="multipart/form-data" '+
@@ -26,11 +29,17 @@ fx_form = {
         }
         $form.append('<iframe id="'+settings.form.target+'" name="'+settings.form.target+'" style="display:none;"></iframe>');
         $target.html('').append($form);
-        if (settings.header) {
-            var $form_header = $('<div class="form_header">'+settings.header+'</div>');
-            $form.append($form_header);
-        }
-        $fx_form.draw_fields(settings, $form);
+        
+        var $form_header = $('<div class="'+bl+'__header"><div class="'+bl+'__title">'+ (settings.header || '') +'</div></div>');
+        $form.append($form_header);
+        
+        var $form_body = $('<div class="'+bl+'__body"></div>');
+        $form.append($form_body);
+        var $form_footer = $('<div class="'+bl+'__footer"></div>');
+        $form.append($form_footer);
+        
+        $fx_form.draw_fields(settings, $form_body);
+        
 
         if (options.buttons_entity) {
             $fx.admin.set_entity(options.buttons_entity);
@@ -38,40 +47,46 @@ fx_form = {
 
         return $form;
     },
-    draw_fields: function(settings, $form_node) {
+    draw_fields: function(settings, $form_body) {
         if (settings.fields === undefined) {
             //return;
             settings.fields = [];
         }
         
+        var $form = $form_body.closest('form');
+        
         var use_tabs = settings.tabs && !settings.ignore_cols;
 
         if (use_tabs) {
-            $fx_form.init_tabs(settings, $form_node);
+            $fx_form.init_tabs(settings, $form);
         }
         
-        settings.fields = $fx_form.init_joins(settings.fields);
-        
+        // draw list buttons in backoffice
         if ($fx.mode !== 'page') {
             $fx.buttons.draw_buttons(settings.buttons);
         }
         $.each(settings.fields, function(i, json) {
-            var target = use_tabs && json.tab !== undefined
-                            ? $('#'+settings.form.id+'_'+json.tab, $form_node)
-                            : $form_node;
-            $fx_form.draw_field(json, target);
+            var $target = use_tabs && json.tab !== undefined
+                            ? $('.fx_tab_data-key-'+json.tab, $form_body)
+                            : $form_body;
+            $fx_form.draw_field(json, $target);
         });
         
-        $('.fx_tab_data .field:last-child', $form_node).addClass('field_last');
+        $('.fx_tab_data .field:last-child', $form_body).addClass('field_last');
         if (typeof settings.form_button === 'undefined') {
             settings.form_button = [];
         }
         var submit_added = false;
-        var $button_container = settings.button_container;
-        if (!$button_container) {
-            $button_container = $('<div class="fx_form_buttons"></div>');
-            $form_node.append($button_container);
+        var button_container = settings.button_container || 'footer',
+            $button_container = button_container;
+    
+        if (typeof button_container === 'string') {
+            $button_container = $('.'+bl+'__'+button_container, $form);
         }
+        
+        var $buttons = $('<div class="'+bl+'__buttons"></div>');
+        $button_container.append($buttons);
+        
         $.each(settings.form_button, function (key,options) {
             if (typeof options === 'string') {
                 options = {key:options};
@@ -91,22 +106,22 @@ fx_form = {
             }
             var b = $t.jQuery('input', options);
             b.data('key', options.key);
-            $button_container.append(b);
+            $buttons.append(b);
             if (options.key === 'cancel') {
                 b.on('click', function() {
-                    $form_node.trigger('fx_form_cancel');
+                    $form.trigger('fx_form_cancel');
                 });
             }
             if (options.is_submit) {
                 b.on('click', function() {
-                    $form_node.append(
+                    $form.append(
                         '<input type="hidden" name="pressed_button" '+
                             ' value="'+$(this).data('key')+'" />'
                     );
-                    $form_node.submit();
+                    $form.submit();
                 });
                 if (!submit_added) {
-                    $form_node.append(
+                    $form.append(
                         '<input '+
                             ' type="submit" '+
                             ' style="position:absolute; top:-10000px; left:-10000px" />'
@@ -115,7 +130,7 @@ fx_form = {
                 }
             }
         });
-        $form_node.on('submit.fx_submit', $fx_form.submit_handler);
+        $form.on('submit.fx_submit', $fx_form.submit_handler);
     },
             
     submit_handler : function() {
@@ -161,35 +176,64 @@ fx_form = {
         return false;
     },
 
-    init_tabs: function ( settings, container ) {
-        var do_cols = !settings.ignore_cols && settings.class_name === "fx_form_cols";
-        console.log(settings, do_cols);
-        if (do_cols) {
-            container.append($t.jQuery('form_cols', settings));
-            return;
+    init_tabs: function ( settings, $form) {
+        var $form_body = $('.'+bl+'__body', $form),
+            $form_header = $('.'+bl+'__header', $form),
+            $tab_labels = $('<div class="'+bl+'__tab_labels"></div>'),
+            $tab_data = $('<div class="'+bl+'__tab_data"></div>'),
+            c_label = 'fx_tab_label',
+            c_data = 'fx_tab_data';
+    
+        $form_body.append($tab_data);
+        $form_header.append($tab_labels);
+        
+        var tab_data_html = '',
+            tab_labels_html = '',
+            has_active = false;
+            
+        $.each(settings.tabs, function(key,val){
+            if (val.active) {
+                has_active = true;
+            }
+            tab_labels_html += 
+                '<div data-key="'+key+'" class="'+c_label + (val.active ? ' '+c_label+'-active' : '') + '">'+
+                    (val.icon ? 
+                    '<span class="'+c_label+'__icon fx_icon fx_icon-type-'+val.icon+' '+(val.active ? ' fx_icon-active':'')+'"></span>' 
+                    : '')+
+                    '<span class="'+c_label+'__title">'+(val.label || key)+'</span>'+
+                '</div>';
+            
+            tab_data_html += 
+                '<div class="'+c_data+' '+c_data+'-key-'+key+(val.active ? ' '+c_data+'-active' : '')+'">'+
+                '</div>';
+        });
+        $tab_labels.html(tab_labels_html);
+        $tab_data.html(tab_data_html);
+        
+        function select_tab($tab_label) {
+            var key = $tab_label.data('key'),
+                $tab_data = $form_body.find('.fx_tab_data-key-'+key),
+                map = {
+                    fx_icon:$tab_label.find('.fx_icon')
+                };
+            map[c_label] = $tab_label;
+            map[c_data] = $tab_data;
+
+            $.each(map, function(c_class, $node) {
+                $('.'+c_class+'-active', $node.closest('.'+bl+'__tab_data, .'+bl+'__tab_labels')).removeClass(c_class+'-active');
+                $node.addClass(c_class+'-active');
+            });
         }
         
-        $(container).append('<div id="fx_tabs"></div>');
-        var cont = '';
-        var _ul = $('<ul />');
-        var i = 0;
-        var active = 0;
-        var keys = [];
-        $.each(settings.tabs, function(key,val){
-            keys.push(key);
-            if ( val.active ) {
-                active = i;
-            }
-            i++;
-            $(_ul).append(
-                '<li><div class="fx_tab"><div class="fx_tab_corner"></div>'+
-                '<a rel="'+key+'" href="#'+settings.form.id+'_'+key+'">'+
-                    (val.name !== undefined ? val.name : val)+
-                '</a></div></li>'
-            );
-            cont += '<div class="fx_tab_data fx_tab_data_'+key+'" '+
-                        ' id="'+settings.form.id+'_'+key+'"></div>';
+        $tab_labels.on('click', '.'+c_label, function() {
+            select_tab($(this));
         });
+        
+        if (!has_active) {
+            select_tab($tab_labels.find('.'+c_label).first());
+        }
+        
+        /*
         $('#fx_tabs', container).append(_ul);
         $('#fx_tabs', container).append(cont);
         $("#fx_tabs", container).tabs({
@@ -200,6 +244,7 @@ fx_form = {
                 $(this).data('codemirror').refresh();
             });
         });
+        */
     },
     
     init_joins: function(fields) {

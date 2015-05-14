@@ -5,7 +5,33 @@
 }
 
 .fx_admin_form {
-    padding: 20px;
+    
+    padding:0 20px;
+    
+    &__body {
+        padding: 20px 0;
+        overflow: auto;
+        margin-right:-20px;
+        padding-right:20px;
+    }
+    
+    &__title {
+        font-size:20px;
+    }
+    &__header {
+        padding: 20px 0;
+        position:relative;
+        border-bottom: 1px solid #eaeaea;
+        a {
+            cursor:pointer;
+        }
+    }
+    &__buttons {
+        position: absolute;
+        top: 50%;
+        margin-top: -20px;
+        right:0;
+    }
 }
 
 .fx_admin_form a, .fx_admin_form .ui-state-default a {
@@ -128,14 +154,6 @@
     padding: 10px !important;
 }
 
-.fx_admin_form .form_header {
-    font-size:20px;
-    //margin-bottom: 17px;
-}
-
-.fx_admin_form .form_header a {
-    cursor:pointer;
-}
 
 .fx_admin_form .fx_admin_radio_label, .fx_admin_form .fx_admin_checkbox_label {
     font-weight: normal !important;
@@ -180,121 +198,7 @@
             height:31px;
         }
     }
-    .fx_form_horizontal {
-        .redactor-toolbar {
-            background: #FFF !important;
-            border:none !important;
-            top:2px;
-            left:10px;
-        }
-        .field {
-            /*
-            display: inline-block;
-            vertical-align: top;
-            margin-right: 15px;
-            */
-            display: inline-block;
-            vertical-align: top;
-            margin-right: 15px;
-            padding-right: 15px;
-            padding-top: 10px;
-            border-right: 1px solid #eaeaea;
-            padding-bottom: 20px;
-            &:last-child {
-                border-right: none;
-                margin-right:none;
-            }
-            &.field_checkbox {
-                margin-top:0;
-                margin-bottom:0;
-            }
-        }
-        .fx_input {
-            //max-width: 135px;
-            max-width:300px;
-        }
-        .field_text .input_container {
-            overflow:hidden;
-            max-width:150px;
-        }
-        .form_label {
-            display:block;
-            min-height:16px;
-        }
-    }
-
-    .fx_form_horizontal, .fx_form_cols {
-        label, input, select, textarea {
-            display: inline;
-            font-size: 15px;
-            width: auto;
-            margin: 0;
-        }
-        label {
-            font-size:13px;
-            color:#555555;
-        }
-        .fx_date_input();
-        .fx_date_parts {
-            background:#FFF;
-        }
-        
-        .livesearch_items {
-            padding: 4px;
-            box-sizing: border-box;
-            .livesearch_input {
-                width:3px;
-            }
-        }
-    }
-
-    .fx_form_cols {
-        table.fx_form_cols_table {
-            margin-top:17px;
-            min-width:50%;
-            &.fx_form_2_cols {
-                min-width:80%;
-            }
-            &.fx_form_3_cols {
-                width:100%;
-            }
-        }
-        .fx_tab_data {
-            vertical-align:top;
-            padding:0 15px;
-            border-right:1px solid #CCC;
-            width:200px;
-            &.fx_tab_data_first {
-                padding-left:0;
-            }
-            &.fx_tab_data_last {
-                padding-right:0;
-                border-right:none;
-            }
-        }
-        .form_label {
-            margin-top:0;
-        }
-        .input_container {
-            margin-bottom:20px;
-        }
-        .field_last .input_container {
-            margin-bottom:0;
-        }
-        textarea {
-            box-sizing:border-box;
-            -moz-box-sizing:border-box;
-            width:100%;
-            min-height:70px;
-        }
-        .fx_input {
-            width:100%;
-            &.fx_input_floatfield {
-                max-width:150px;
-            }
-        }
-    }
-
+    
     .livesearch_items {
         min-width:150px;
         width:auto;
@@ -302,11 +206,105 @@
         /*height: 28px;*/
     }
     .fx_image_field img {
-        max-height:70px;
-        max-width:100px;
+        max-height: 100px;
+        max-width: 150px;
     }
     .field_set .fx_image_field img {
         max-height:55px;
+    }
+}
+
+.fx_form_horizontal {
+    
+    .redactor-toolbar {
+        background: #FFF !important;
+        border:none !important;
+        top:2px;
+        left:10px;
+    }
+    .field {
+        /*
+        display: inline-block;
+        vertical-align: top;
+        margin-right: 15px;
+        */
+        display: inline-block;
+        vertical-align: top;
+        margin-right: 15px;
+        padding-right: 15px;
+        padding-top: 10px;
+        border-right: 1px solid #eaeaea;
+        padding-bottom: 20px;
+        &:last-child {
+            border-right: none;
+            margin-right:none;
+        }
+        &.field_checkbox {
+            margin-top:0;
+            margin-bottom:0;
+        }
+    }
+    .fx_input {
+        //max-width: 135px;
+        max-width:300px;
+        margin-bottom:0;
+    }
+    .field_text .input_container {
+        overflow:hidden;
+        max-width:150px;
+    }
+    .form_label {
+        display:block;
+        min-height:16px;
+    }
+}
+
+.fx_form_horizontal, .fx_form_vertical {
+    label, input, select, textarea {
+        display: inline;
+        font-size: 15px;
+        width: auto;
+        margin: 0;
+    }
+    label {
+        font-size:13px;
+        color:#555555;
+    }
+    .fx_date_input();
+    .fx_date_parts {
+        background:#FFF;
+    }
+
+    .livesearch_items {
+        padding: 4px;
+        box-sizing: border-box;
+        .livesearch_input {
+            width:3px;
+        }
+    }
+}
+
+.fx_form_vertical {
+    .form_label {
+        margin-top:0;
+    }
+    .input_container {
+        margin-bottom:20px;
+    }
+    .field_last .input_container {
+        margin-bottom:0;
+    }
+    textarea {
+        box-sizing:border-box;
+        -moz-box-sizing:border-box;
+        width:100%;
+        min-height:70px;
+    }
+    .fx_input {
+        width:100%;
+        &.fx_input_floatfield {
+            max-width:150px;
+        }
     }
 }
 
@@ -519,15 +517,6 @@
     margin-top:3px;
 }
 
-/*
-#fx_admin_extra_panel input[type="text"].fx_input, #fx_admin_extra_panel select.fx_input {
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    -ms-box-sizing: border-box;
-    box-sizing: border-box;
-    height: 28px;
-}
-*/
 
 #fx_admin_extra_panel .livesearch {
     max-width:600px;
@@ -595,12 +584,6 @@
     overflow-y: hidden;
     overflow-x: auto;
     height:auto;
-}
-
-#fx_admin_extra_panel form {
-    padding:10px;
-    overflow:auto;
-    overflow-x:hidden;
 }
 
 .fx_overlay .field_hidden {

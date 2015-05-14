@@ -363,8 +363,15 @@ a, a:visited {
         background-position: -602px -1px;
     }
     
+    &-active&-type-settings {
+        background-position: -653px -1px;
+    }
+    
     &-type-design {
         background-position: -554px -4px;
+    }
+    &-active&-type-design {
+        background-position: -503px -4px;
     }
     
     &-type-upload {
@@ -381,6 +388,45 @@ a, a:visited {
     
     &-type-follow {
         background-position:-767px 0;
+    }
+}
+
+.fx_tab_data {
+    display: none;
+    &-active {
+        display: block;
+    }
+}
+
+.fx_tab_label {
+    
+    display: inline-block;
+    cursor: pointer;
+    padding:10px 15px;
+    border-right:1px solid #eaeaea;
+    
+    &:first-child {
+        padding-left:0;
+    }
+    
+    &:last-child {
+        padding-right: 0;
+        border-right: none;
+    }
+    
+    &__title {
+        font-size:18px;
+        vertical-align: middle;
+    }
+    
+    &__icon {
+        margin-right:10px;
+    }
+    
+    
+    
+    &-active {
+        color:@button_color;
     }
 }
 

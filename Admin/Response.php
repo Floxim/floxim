@@ -189,13 +189,24 @@ class Response
     }
 
 
-    public function addTab($tab, $name, $active = false)
+    public function addTab($key, $tab, $active = false)
     {
-        $item = array('name' => $name);
-        if ($active) {
-            $item['active'] = 1;
+        if (!is_array($tab)){
+            $tab = array(
+                'label' => $tab
+            );
         }
-        $this->tabs[$tab] = $item;
+        $tab['key'] = $key;
+        if ($active) {
+            $tab['active'] = true;
+        }
+        $this->tabs[$key] = $tab;
+    }
+    
+    public function addTabs($tabs) {
+        foreach ($tabs as $key => $tab) {
+            $this->addTab($key, $tab);
+        }
     }
 
     public function setEntity($entity)

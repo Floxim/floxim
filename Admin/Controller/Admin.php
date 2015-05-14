@@ -9,19 +9,19 @@ use Floxim\Floxim\System\Fx as fx;
 class Admin extends System\Controller
 {
 
-    /** @var string the default action for the controller to return the html markup */
     protected $action = 'adminOffice';
 
-    /** @var bool the process() method should return the result? */
     protected $process_do_return = false;
 
     protected $entity_type;
     protected $save_history = true;
 
-    /** @var fx_admin_response */
+    /**
+     *
+     * @var type \Floxim\Floxim\Admin\Response
+     */
     protected $response;
 
-    /** @var fx_admin_ui */
     protected $ui;
 
     public function __construct($input = array(), $action = null, $do_return = false)

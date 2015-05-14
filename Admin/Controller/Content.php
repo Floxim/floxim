@@ -59,19 +59,15 @@ class Content extends Admin
         
         $content_fields = fx::collection($content->getFormFields());
         
+        $content_fields->apply(function (&$f) {
+            unset($f['tab']);
+        });
+        $this->response->addFields($content_fields, '', 'content');
+        
         $is_backoffice = isset($input['mode']) && $input['mode'] == 'backoffice';
 
-        if (!$is_backoffice) {
-            $tabbed = $content_fields->group('tab');
-            foreach ($tabbed as $tab => $tab_fields) {
-                $this->response->addTab($tab, $tab);
-                $this->response->addFields($tab_fields, $tab, 'content');
-            }
-        } else {
-            $content_fields->apply(function (&$f) {
-                unset($f['tab']);
-            });
-            $this->response->addFields($content_fields, '', 'content');
+        
+        if ($is_backoffice) {
             $this->response->addFields(array(
                 $this->ui->hidden('mode', 'backoffice'),
                 $this->ui->hidden('reload_url', $input['reload_url'])
@@ -109,7 +105,7 @@ class Content extends Admin
                 $res['header'] .= ' <span class="fx_header_notice">' . fx::alang($move_meta['type']) . ' ' . $move_meta['item']['name'] . '</span>';
             }
         }
-        $res['view'] = 'cols';
+        //$res['view'] = 'cols';
         $this->response->addFormButton('save');
         return $res;
     }

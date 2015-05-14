@@ -16,6 +16,8 @@ class Files
     protected $base_url;
     protected $base_path;
     protected $tmp_files;
+    
+    protected $allowed_extensions = array();
 
     protected function mkdirFtp($path, $recursive = true)
     {
@@ -874,11 +876,12 @@ class Files
         }
         $file_name = $name ? $name : fx::path()->fileName($file);
         $extension = fx::path()->fileExtension($file_name);
-        if (!$extension) {
+        if (!$extension || !in_array($extension, $this->allowed_extensions)) {
             foreach ($http_response_header as $header) {
                 if (preg_match("~^content-type: (.+)$~i", $header, $content_type)) {
                     $mime = $content_type[1];
                     $extension = $this->getExtensionByMime($mime);
+                    $file_name = preg_replace("~\..+?$~", '', $file_name);
                     $file_name .= '.' . $extension;
                     break;
                 }

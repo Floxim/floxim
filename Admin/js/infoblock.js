@@ -59,7 +59,7 @@ window._fx_controller_tree = function (html) {
     setTimeout(function() {
         $('#fx_admin_extra_panel .fx_button').not('.fx_admin_button_cancel').hide();
         var $filters = $('.filter_set', html),
-            $header = $filters.closest('form').find('.form_header');
+            $header = $filters.closest('form').find('.fx_admin_form__header');
         $header.append($filters);
     }, 100);
     

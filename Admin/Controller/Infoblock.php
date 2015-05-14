@@ -228,23 +228,36 @@ class Infoblock extends Admin
                 $settings[$ib_param]['value'] = $ib_param_value;
             }
         }
+        
+        $this->response->addTabs(array(
+            'settings' => array(
+                'label' => 'Settings',
+                'icon' => 'settings'
+            ),
+            'design' => array(
+                'label' => 'Design',
+                'icon' => 'design'
+            )
+        ));
+        
         $this->response->addFields(array(
             array(
                 'label' => fx::alang('Block name', 'system'),
                 'name'  => 'name',
                 'value' => $infoblock['name'],
-                'tip'   => $infoblock['controller'] . '.' . $infoblock['action']
+                'tip'   => $infoblock['controller'] . '.' . $infoblock['action'],
+                'tab' => 'settings'
             )
         ));
 
-        $this->response->addFields($settings, false, 'params');
+        $this->response->addFields($settings, 'settings', 'params');
 
         $format_fields = $this->getFormatFields($infoblock, $area_meta);
-        $this->response->addFields($format_fields, false, 'visual');
+        $this->response->addFields($format_fields, 'design', 'visual');
 
         $c_page = fx::env('page');
         $scope_fields = $this->getScopeFields($infoblock, $c_page);
-        $this->response->addFields($scope_fields, false, 'scope');
+        $this->response->addFields($scope_fields, 'settings', 'scope');
 
         if (isset($input['settings_sent']) && $input['settings_sent'] == 'true') {
             $infoblock['name'] = $input['name'];
@@ -304,6 +317,7 @@ class Infoblock extends Admin
         $actions = $controller->getActions();
         $action_name = $actions[$action]['name'];
 
+        /*
         if (!$infoblock['id']) {
             $result['header'] = ' <a class="back">' . fx::alang('Adding infoblock', 'system') . '</a>';
             $result['header'] .= ' / ' . $action_name;
@@ -311,6 +325,8 @@ class Infoblock extends Admin
             $result['header'] = fx::alang('Settings',
                     'system') . ' / <span title="' . $infoblock['id'] . '">' . $action_name . '</span>';
         }
+         * 
+         */
 
         $fields = array(
             $this->ui->hidden('entity', 'infoblock'),
@@ -325,7 +341,7 @@ class Infoblock extends Admin
         );
 
         $this->response->addFields($fields);
-        return $result;
+        //return $result;
     }
 
     public function listForPage($input)

@@ -2,10 +2,10 @@
     
     function fx_front_panel() {
         var $body = $('#fx_admin_extra_panel .fx_admin_panel_body'),
-            $footer = $('#fx_admin_extra_panel .fx_admin_panel_footer'),
+            //$footer = $('#fx_admin_extra_panel .fx_admin_panel_footer'),
             $side = $('.fx_side_panel'),
             $side_body = $('.fx_side_panel__body'),
-            $side_footer = $('.fx_side_panel__footer'),
+            //$side_footer = $('.fx_side_panel__footer'),
             front_panel = this,
             duration = 300;
         
@@ -25,8 +25,8 @@
             $fx.front.disable_node_panel();
             
             this.stop();
-            $footer.html('').show().css('visibility', 'hidden');
-            $side_footer.html('');
+            //$footer.html('').show().css('visibility', 'hidden');
+            //$side_footer.html('');
             
             $body.css({height:'1px', 'visibility':'hidden'}).removeClass('fx_admin_panel_body_overflow_hidden').show();
             
@@ -44,7 +44,7 @@
                     field.context = 'panel';
                 });
             } else {
-                data.ignore_cols = true;
+                //data.ignore_cols = true;
             }
             
             if (!data.form_button) {
@@ -55,11 +55,12 @@
             
             var $form = null;
             
+            data.button_container = 'header';
             if (this.current_panel_type === 'top') {
-                data.button_container = $footer;
+                //data.button_container = $footer;
                 $form = $fx.form.create(data, $body);
             } else {
-                data.button_container = $side_footer;
+                //data.button_container = $side_footer;
                 $form = $fx.form.create(data, $side_body);
             }
             
@@ -89,7 +90,7 @@
                     }
                 };
                 if (front_panel.current_panel_type === 'top') {
-                    $footer.css('visibility', 'visible');
+                    //$footer.css('visibility', 'visible');
                     $body.css('visibility', 'visible');
                     $fx.front_panel.animate_panel_height(null, function () {
                         $form.resize(function() {
@@ -112,22 +113,29 @@
         
         
         this.recount_sidebar = function() {
-            var total_height = $(window).outerHeight(),
-                footer_height = $side_footer.outerHeight(),
-                $form = $('.fx_admin_form', $side),
+            var $form = $('.fx_admin_form', $side),
+                $form_header = $('.fx_admin_form__header', $form),
+                $form_body = $('.fx_admin_form__body', $form),
+                total_height = $(window).outerHeight(),
+                header_height = $form_header.outerHeight(),
+                //footer_height = 0,
                 form_height = $form.outerHeight();
             
-            if (form_height > (total_height - footer_height)) {
+            //if (form_height > (total_height - header_height)) {
                 $side.css({
                     'height':total_height
                 });
-                $side_body.css({
-                    height: (total_height - footer_height)+'px'
+                $form_body.css({
+                    height: (total_height - header_height)+'px'
                 });
+                console.log((total_height - header_height)+'px', $form_body);
+                /*
                 $side_footer.css({
                     position:'absolute',
                     bottom:0
                 });
+                */
+               /*
             } else {
                 $side.css({
                     height:'auto'
@@ -135,11 +143,13 @@
                 $side_body.css({
                     height:'auto'
                 });
+                
                 $side_footer.css({
                     position:'static',
                     bottom:''
                 });
             }
+            */
         };
         
         this.show_sidebar = function() {
@@ -289,7 +299,7 @@
             if (this.current_panel_type === 'top') {
                 this.animate_panel_height(0, function () {
                     $body.hide().html('');
-                    $footer.hide();
+                    //$footer.hide();
                     callback();
                     $fx.front_panel.is_visible = false;
                 });
