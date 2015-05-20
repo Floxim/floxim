@@ -73,6 +73,9 @@ class Manager
                 ) {
                     fx::log('routed', $router_key, $url);
                 }
+                if ($result instanceof \Floxim\Floxim\System\Controller) {
+                    $result = $result->process();
+                }
                 return $result;
             }
         }

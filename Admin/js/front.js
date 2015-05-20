@@ -1481,13 +1481,11 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
                     delete_cancel();
                     e.stopImmediatePropagation();
                 }
-            });
+            }).one('fx_deselect', delete_cancel);
             
             $fx.post(
                 form_options, 
                 function(json) {
-                    //$fx.front_panel.show_form(json, params);
-                    console.log(json);
                     json.class_name = 'fx_admin_form-block_overlay';
                     json.form_button.unshift('cancel');
                     var $form = $fx.form.create(json, $overlay);

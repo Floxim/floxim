@@ -17,7 +17,7 @@ class Debug
     public function __construct()
     {
         $this->id = md5(microtime() . rand(0, 10000));
-        $this->start_time = isset($_SERVER['REQUEST_TIME_FLOAT']) ? $_SERVER['REQUEST_TIME_FLOAT'] : microtime(true);
+        $this->start_time = defined('FX_START_MICROTIME') ? FX_START_MICROTIME : microtime(true);
         $this->last_time = $this->start_time;
     }
 
