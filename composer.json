@@ -9,6 +9,7 @@
         "floxim/module-main" : "*",
         "floxim/module-user" : "*",
         "floxim/module-nav" : "*",
+        "floxim/module-form" : "*",
         "floxim/cache" : "*",
         "leafo/lessphp": "0.4.0",
         "phpmailer/phpmailer": "5.2.8",
