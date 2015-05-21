@@ -560,12 +560,15 @@ class Compiler
                 } elseif (preg_match("~^\`.+\`$~s", $tpval)) {
                     $token_prop_entry .= trim($tpval, '`');
                 } elseif (preg_match("~\{.+\}~", $tpval)) {
-                    //$ep = new \Floxim\Floxim\Template\ExpressionParser;
                     $ep = self::getExpressionParser();
                     $tpval = preg_replace_callback("~\{([^\}]+)\}~", function($m) use($ep) {
                         return "'.".$ep->build($m[1]).".'";
                     }, $tpval);
                     $token_prop_entry .= "'".$tpval."'";
+                } elseif (preg_match("~^\\$~", $tpval)) {
+                    $ep = self::getExpressionParser();
+                    $tpval = $ep->build($tpval);
+                    $token_prop_entry .= $tpval;
                 } else {
                     $token_prop_entry .= "'" . addslashes($tpval) . "'";
                 }

@@ -1438,6 +1438,8 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
     
     if (ce_id){
         entity_panel.add_button('delete', function() {
+            
+            /*
             var ce_type = entity_meta[3] || entity_meta[1];
             var form_options = {
                 entity:'content',
@@ -1492,7 +1494,7 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
                     $form.on('fx_form_cancel', delete_cancel);
                 }
             );
-            /*
+            */
             var ce_type = entity_meta[3] || entity_meta[1];
             $fx.front_panel.load_form({
                 entity:'content',
@@ -1506,7 +1508,6 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
                     $fx.front.reload_layout();
                 }
             });
-            */
         });
     }
     
