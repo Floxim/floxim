@@ -80,11 +80,13 @@ fx_form = {
         var button_container = settings.button_container || 'footer',
             $button_container = button_container;
     
+        var $buttons = $('<div class="'+bl+'__buttons"></div>');
         if (typeof button_container === 'string') {
             $button_container = $('.'+bl+'__'+button_container, $form);
+            $buttons.addClass(bl+'__buttons-in_'+button_container);
         }
         
-        var $buttons = $('<div class="'+bl+'__buttons"></div>');
+        
         $button_container.append($buttons);
         
         $.each(settings.form_button, function (key,options) {
@@ -198,7 +200,7 @@ fx_form = {
             tab_labels_html += 
                 '<div data-key="'+key+'" class="'+c_label + (val.active ? ' '+c_label+'-active' : '') + '">'+
                     (val.icon ? 
-                    '<span class="'+c_label+'__icon fx_icon fx_icon-type-'+val.icon+' '+(val.active ? ' fx_icon-active':'')+'"></span>' 
+                    '<span class="'+c_label+'__icon fx_icon fx_icon-type-'+val.icon+' '+(val.active ? '' : ' fx_icon-clickable')+'"></span>' 
                     : '')+
                     '<span class="'+c_label+'__title">'+(val.label || key)+'</span>'+
                 '</div>';
@@ -212,10 +214,23 @@ fx_form = {
         
         function select_tab($tab_label) {
             var key = $tab_label.data('key'),
-                $tab_data = $form_body.find('.fx_tab_data-key-'+key),
-                map = {
-                    fx_icon:$tab_label.find('.fx_icon')
-                };
+                $tab_data_item = $form_body.find('.fx_tab_data-key-'+key),
+                $icon = $tab_label.find('.fx_icon'),
+                $c_active_label = $tab_labels.find('.'+c_label+'-active'),
+                $c_active_data = $tab_data.find('.'+c_data+'-active');
+            
+            $c_active_label.removeClass(c_label+'-active');
+            $('.fx_icon', $c_active_label).addClass('fx_icon-clickable');
+            
+            $icon.removeClass('fx_icon-clickable');
+            $tab_label.addClass(c_label+'-active');
+            
+            $c_active_data.removeClass(c_data+'-active');
+            $tab_data_item.addClass(c_data+'-active');
+            
+        
+            
+            /*
             map[c_label] = $tab_label;
             map[c_data] = $tab_data;
 
@@ -223,6 +238,7 @@ fx_form = {
                 $('.'+c_class+'-active', $node.closest('.'+bl+'__tab_data, .'+bl+'__tab_labels')).removeClass(c_class+'-active');
                 $node.addClass(c_class+'-active');
             });
+            */
         }
         
         $tab_labels.on('click', '.'+c_label, function() {

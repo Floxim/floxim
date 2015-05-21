@@ -26,11 +26,24 @@
             cursor:pointer;
         }
     }
+    
+    &__footer {
+        padding: 20px 0;
+        position: relative;
+        //margin-top:-20px;
+        &-sticky {
+            border-top: 1px solid #eaeaea;
+            margin-top:0;
+        }
+    }
+    
     &__buttons {
-        position: absolute;
-        top: 50%;
-        margin-top: -20px;
-        right:0;
+        &-in_header {
+            position: absolute;
+            top: 50%;
+            margin-top: -20px;
+            right:0;
+        }
     }
 }
 

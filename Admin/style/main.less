@@ -237,19 +237,33 @@ a, a:visited {
     cursor:pointer;
     white-space:nowrap;
     
+    text-transform:capitalize;
+    
     &, &__extra {
         color:@button_color;
+    }
+    
+    &:hover, &:active {
+        border-color: @button_color;
     }
     
     &-active {
         background: @button_color;
         border-color:@button_color;
+        &:hover, &:active {
+            background:@button_active_color;
+        }
     }
     &-active, &-active .fx_button__extra {
         color:@button_color_inverted;
     }
     
     &-in_group {
+        margin-right:10px;
+        &:last-child {
+            margin-right:0;
+        }
+        /*
         border-radius: 0;
         border-right: 0;
         &:first-child {
@@ -261,6 +275,11 @@ a, a:visited {
             border-bottom-right-radius: 3px;
             border-right: 1px solid @mid_color;
         }
+        */
+    }
+    
+    &-class-cancel {
+        border:none;
     }
     
     &-in_dropdown {
@@ -363,14 +382,14 @@ a, a:visited {
         background-position: -602px -1px;
     }
     
-    &-active&-type-settings {
+    &-clickable&-type-settings {
         background-position: -653px -1px;
     }
     
     &-type-design {
         background-position: -554px -4px;
     }
-    &-active&-type-design {
+    &-clickable&-type-design {
         background-position: -503px -4px;
     }
     
@@ -404,6 +423,7 @@ a, a:visited {
     cursor: pointer;
     padding:10px 15px;
     border-right:1px solid #eaeaea;
+    color:@button_color;
     
     &:first-child {
         padding-left:0;
@@ -426,7 +446,8 @@ a, a:visited {
     
     
     &-active {
-        color:@button_color;
+        color:#000;
+        cursor:default;
     }
 }
 
