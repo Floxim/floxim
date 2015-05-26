@@ -105,6 +105,7 @@ class Db extends \PDO
             fx::log(
                 'sql error', 
                 $this->last_error,
+                microtime(true),
                 $statement, 
                 debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)
             );
@@ -131,6 +132,7 @@ class Db extends \PDO
             '#' . self::$q_count,
             'q_time: ' . $q_time,
             'q_total: ' . self::$q_time,
+            microtime(true),    
             $statement//,
         //debug_backtrace()
         );
@@ -269,13 +271,9 @@ class Db extends \PDO
 
     public function columnExists($table2check, $column)
     {
-        $sql = "SHOW COLUMNS FROM {{" . $table2check . "}}";
-        foreach ($this->getCol($sql) as $column_name) {
-            if ($column_name == $column) {
-                return true;
-            }
-        }
-        return false;
+        $sql = "SHOW COLUMNS FROM {{" . $table2check . "}} LIKE '".$column."'";
+        $res = $this->getRow($sql);
+        return (bool) $res;
     }
 
     /**

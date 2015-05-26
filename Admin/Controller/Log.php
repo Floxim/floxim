@@ -29,10 +29,14 @@ class Log extends Admin
 
         foreach ($index as $item) {
             $url = preg_replace("~^http://[^/]+~", '', $item['url']);
+            $day_part = date('d.m.Y ', $item['start']);
+            if ($day_part == date('d.m.Y ')) {
+                $day_part = '';
+            }
             $r = array(
                 'id'      => $item['id'],
                 'date'    => array(
-                    'name' => date('d.m.Y, H:i:s', round($item['start'])),
+                    'name' => $day_part.date('H:i:s', floor($item['start'])).':'.round( $item['start'] - floor($item['start']), 3)*1000,
                     'url'  => '#admin.log.show(' . $item['id'] . ')'
                 ),
                 'request' => '[' . $item['method'] . '] ' . $item['host'] . $url,

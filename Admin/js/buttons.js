@@ -85,10 +85,13 @@ fx_buttons.prototype.draw_buttons = function ( buttons ) {
         }
 
         element.data(button);
+        console.log(element, key, button);
         element.click( function () {
+            console.log('button click');
             if ($(this).data('has_callback')) {
                 return;
             }
+            console.log('button handle');
             self.handle(button.key);
             return false;
         });

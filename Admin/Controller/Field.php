@@ -145,13 +145,19 @@ class Field extends Admin
         $data['priority'] = fx::data('field')->nextPriority();
 
         $field = fx::data('field')->create($data);
+        
         if (!$field->validate()) {
             $result['status'] = 'error';
             $result['errors'] = $field->getValidateErrors();
         } else {
-            $result = array('status' => 'ok');
-            $field->save();
-            $result['reload'] = '#admin.' . $input['to_entity'] . '.edit(' . $input['to_id'] . ',fields)';
+            try {
+                $result = array('status' => 'ok');
+                $field->save();
+                $result['reload'] = '#admin.' . $input['to_entity'] . '.edit(' . $input['to_id'] . ',fields)';
+            } catch (\Exception $e) {
+                $result['status'] = 'error';
+                $result['errors'] = $field->getValidateErrors();
+            }
         }
 
 
@@ -190,7 +196,6 @@ class Field extends Admin
         );
         $input['keyword'] = trim($input['keyword']);
         $input['name'] = trim($input['name']);
-        fx::log('saving f', $input);
         foreach ($params as $v) {
             $field->set($v, $input[$v]);
         }
@@ -270,7 +275,7 @@ class Field extends Admin
         if (!is_array($ids)) {
             $ids = array($ids);
         }
-
+        
         foreach ($ids as $id) {
             try {
                 $field = fx::data($es, $id);
@@ -278,7 +283,7 @@ class Field extends Admin
                     continue;
                 }
                 $field->delete();
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 $result['status'] = 'error';
                 $result['text'][] = $e->getMessage();
             }

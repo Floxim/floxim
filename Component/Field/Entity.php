@@ -68,6 +68,8 @@ class Entity extends System\Entity
     {
         return $this['not_null'];
     }
+    
+    protected $column_created = false;
 
     public function validate()
     {
@@ -90,7 +92,7 @@ class Entity extends System\Entity
 
         $modified = $this->modified_data['keyword'] && $this->modified_data['keyword'] != $this->data['keyword'];
 
-        if ($this['component_id'] && ($modified || !$this['id'])) {
+        if (!$this->column_created && $this['component_id'] && ($modified || !$this['id'])) {
 
             /// Edit here
             $component = fx::data('component')->where('id', $this['component_id'])->one();
@@ -103,13 +105,6 @@ class Entity extends System\Entity
                     );
                     $res = false;
                 }
-            }
-            if (fx::db()->columnExists($this->getTable(), $this->data['keyword'])) {
-                $this->validate_errors[] = array(
-                    'field' => 'keyword',
-                    'text'  => fx::alang('This field already exists', 'system')
-                );
-                $res = false;
             }
         }
 
@@ -135,7 +130,7 @@ class Entity extends System\Entity
         return fx::data('component')->where('id', $this['component_id'])->one()->getContentTable();
     }
 
-    protected function afterInsert()
+    protected function beforeInsert()
     {
         if (!$this['component_id']) {
             return;
@@ -144,9 +139,14 @@ class Entity extends System\Entity
         if (!$type) {
             return;
         }
-
-        fx::db()->query("ALTER TABLE `{{" . $this->getTable() . "}}`
-            ADD COLUMN `" . $this['keyword'] . "` " . $type);
+        try {
+            fx::db()->query("ALTER TABLE `{{" . $this->getTable() . "}}`
+                ADD COLUMN `" . $this['keyword'] . "` " . $type);
+            parent::beforeInsert();
+            $this->column_created = true;
+        } catch (\Exception $e) {
+            $this->invalid('Can not create column '.$this['keyword'].": ".$e->getMessage());
+        }
     }
 
     protected function afterUpdate()
@@ -165,13 +165,18 @@ class Entity extends System\Entity
                 }
             }
         }
+        parent::afterUpdate();
     }
 
     protected function afterDelete()
     {
         if ($this['component_id']) {
             if (self::getSqlTypeByType($this->data['type'])) {
-                fx::db()->query("ALTER TABLE `{{" . $this->getTable() . "}}` DROP COLUMN `" . $this['keyword'] . "`");
+                try {
+                    fx::db()->query("ALTER TABLE `{{" . $this->getTable() . "}}` DROP COLUMN `" . $this['keyword'] . "`");
+                } catch (\Exception $e) {
+                    fx::log('Drop field exception', $e->getMessage());
+                }
             }
         }
         parent::afterDelete();

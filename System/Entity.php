@@ -367,6 +367,8 @@ abstract class Entity implements \ArrayAccess, Template\Entity
 
     protected function afterInsert()
     {
+        $finder_class = get_class($this->getFinder());
+        $finder_class::dropStoredStaticCache();
         return false;
     }
 

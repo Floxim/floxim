@@ -47,6 +47,7 @@ fx_form = {
 
         return $form;
     },
+    
     draw_fields: function(settings, $form_body) {
         if (settings.fields === undefined) {
             //return;
@@ -88,6 +89,8 @@ fx_form = {
         
         
         $button_container.append($buttons);
+        
+        $form.data('button_container', $button_container);
         
         $.each(settings.form_button, function (key,options) {
             if (typeof options === 'string') {
@@ -132,17 +135,44 @@ fx_form = {
                 }
             }
         });
-        $form.on('submit.fx_submit', $fx_form.submit_handler);
+        $form.off('submit.fx_submit').on('submit.fx_submit', $fx_form.submit_handler);
     },
-            
+    lock_form: function($form) {
+        $form.data('is_locked', true);
+        var $bc = $form.data('button_container');
+        if ($bc) {
+            $bc.find('.fx_button').addClass('fx_button-disabled');
+        }
+    },
+    unlock_form: function($form) {
+        $form.data('is_locked', false);
+        var $bc = $form.data('button_container');
+        if ($bc) {
+            $bc.find('.fx_button_disabled').removeClass('fx_button-disabled');
+        }
+    },
+    form_is_locked: function($form) {
+        return $form.data('is_locked');
+    },
     submit_handler : function() {
         var status_block = $("#fx_admin_status_block");
         var $form = $(this);
+        
         $(".ui-state-error").removeClass("ui-state-error");
+        
+        if ($fx.form.form_is_locked($form)) {
+            return false;
+        }
+        
+        $fx.form.lock_form($form);
+        
+        $form.data('submit_in_progress', true);
         
         $form.trigger('fx_form_submit');
         
+        
         $form.ajaxSubmit(function ( data ) {
+            $fx.form.unlock_form($form);
             try {
                 data = $.parseJSON( data );
             } catch(e) {
@@ -416,7 +446,6 @@ fx_form = {
                         }
                         if (false && c_name === test_name) {
                             console.log(_el, par_inp, par_inp.css('display'));
-                            alert('qq');
                         }
                         break;
                     case '!=':

@@ -164,6 +164,13 @@ class Debug
             'time'          => microtime(true) - $this->start_time,
             'count_entries' => $this->count_entries
         );
+        if ($log_header['method'] === 'POST') {
+            $post_params = array();
+            foreach ($_POST as $post_key => $post_value) {
+                $post_params []= $post_key.':'. (is_scalar($post_value) ? mb_substr($post_value, 0, 20) : '[...]');
+            }
+            $log_header['method'] .= ' '.join(", ", $post_params);
+        }
         fputs($fh_index, serialize($log_header) . "\n");
         fclose($fh_index);
         $this->setCount($c_count);
@@ -256,6 +263,12 @@ class Debug
         if (!is_null($id)) {
             return false;
         }
+        usort($res, function($a, $b) {
+            $diff = $a['start'] - $b['start'];
+            return $diff > 0 ? 1 : -1;
+        });
+            
+            
         $res = array_reverse($res);
         return $res;
     }
