@@ -251,8 +251,16 @@ class Content extends Admin
         }
 
         $finder = fx::content($content_type);
-
+        
+        
+        $pager = $finder->createPager(array(
+            'url_template' => $input['url_template'],
+            'current_page' => $input['page']
+        ));
+        
         $items = $finder->all();
+        
+        $list['pager'] = $pager->getData();
         
         $ib_ids = $items->getValues('infoblock_id');
         $infoblocks = fx::data('infoblock', $ib_ids)->indexUnique('id');

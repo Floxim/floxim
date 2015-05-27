@@ -111,6 +111,7 @@ class Component extends Admin
                 'parent' => null
             );
             if ($code == 'fields') {
+                /*
                 foreach ($component->fields() as $v) {
                     $res['field-' . $v['id']] = array(
                         'title'  => $v['name'],
@@ -119,6 +120,8 @@ class Component extends Admin
                         'parent' => 'fields'
                     );
                 }
+                 * 
+                 */
             }
         }
         return $res;
@@ -617,10 +620,11 @@ class Component extends Admin
     public function items($component, $input)
     {
         $this->response->submenu->setSubactive('items');
-        //$this->response->breadcrumb->add_item(fx::alang('Items'));
         $ctr = new Content(array(
             'content_type' => $component['keyword'],
-            'do_return'    => true
+            'do_return'    => true,
+            'page' => isset($input['params'][2]) ? $input['params'][2] : 1,
+            'url_template' => '#admin.component.edit('.$component['id'].',items[[,#page_number#]])'
         ), 'all');
         $res = $ctr->process();
         $this->response->addButtons(array(

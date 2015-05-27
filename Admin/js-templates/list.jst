@@ -60,6 +60,23 @@ if (_c.values) {
 }
 ?>
 </table>
+       
+<? if (_c.pager) { ?>
+    <div class="fx_pager">
+        <? if (_c.pager.previous_page) { ?>
+            <a class="fx_pager__link fx_pager__link-previous" href="<?=_c.pager.previous_page?>">&lt;</a>
+        <? } ?>
+        <? $.each( _c.pager.pages, function(index, url) { ?>
+            <a class="fx_pager__link <? if (index == _c.pager.current_page) {?> fx_pager__link-active<? } ?>"
+               href="<?= url ?> ">
+            <?= index ?>
+            </a>
+        <? }); ?>
+        <? if (_c.pager.next_page) { ?>
+            <a class="fx_pager__link fx_pager__link-next" href="<?=_c.pager.next_page?>">&gt;</a>
+        <? } ?>
+    </div>
+<? } ?>
 </div>
 
 <!--jquery-->

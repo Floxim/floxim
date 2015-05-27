@@ -845,3 +845,21 @@
 .fx_list_cell_last {
     //width: 50%;
 }
+
+.fx_pager {
+    clear:both;
+    &__link {
+        display:inline-block;
+        margin-right:5px;
+        padding:1px 3px;
+        border:1px solid #CCC;
+        border-radius:3px;
+        text-decoration:none;
+        
+        &-active {
+            color:#000 !important;
+            cursor:text !important;
+            border:1px solid #000;
+        }
+    }
+}

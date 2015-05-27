@@ -131,6 +131,20 @@ abstract class Finder
         return $this;
     }
     
+    public function createPager($params = array())
+    {
+        $Pager = new Pager($this, $params);
+        return $Pager;
+    }
+    
+    public function page($page_num, $items_per_page = 100){
+        $this->limit(
+            $items_per_page * ($page_num - 1),
+            $items_per_page
+        );
+        return $this;
+    }
+    
     public function selectFromRelated($rel, $field, $alias = null) {
         $cf = $this->prepareComplexField($rel.'.'.$field, 'select');
         $aliased = $cf;
