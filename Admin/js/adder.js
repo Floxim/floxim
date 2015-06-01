@@ -445,10 +445,10 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
             if (top < 140 && axis === 'x') {
                 $plus.css('top', '+='+(line_height + b_size ) );
                 $button.addClass(bl+'-inverted');
-            } else if (left < 140 && axis === 'y') {
+            } else if (left < 140 && axis === 'y' && is_outstanding) {
                 $plus.css('left', '+='+(line_width + b_size ) );
                 if ( parseInt($plus.css('left')) + left > right_edge) {
-                    $plus.css('left', right_edge - b_size);
+                    $plus.css('left', right_edge - b_size - left);
                 }
                 $button.addClass(bl+'-inverted');
             } else {

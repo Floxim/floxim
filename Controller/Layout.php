@@ -21,13 +21,27 @@ class Layout extends System\Controller
         }
         $page_infoblocks = fx::router('front')->getPageInfoblocks($page_id, $layout_id);
         fx::page()->setInfoblocks($page_infoblocks);
-        //$path = fx::data('page', $page_id)->getPath();
+        
+        
+        $ib = fx::data('infoblock', $this->getParam('infoblock_id'));
+        $layout_keyword = 'default';
+        if ($ib) {
+            $vis = $ib->getVisual();
+            if ($vis) {
+                $c_keyword = preg_replace("~^.+?\:~", '', $vis['template']);
+                if ($c_keyword !== '_layout_body') {
+                    $layout_keyword = $c_keyword;
+                }
+            }
+        }
+        
         $path = fx::env('page')->getPath();
         $current_page = $path->last();
         $res = array(
             'page_id'      => $page_id,
             'path'         => $path,
-            'current_page' => $current_page
+            'current_page' => $current_page,
+            'layout_keyword' => $layout_keyword
         );
         return $res;
     }

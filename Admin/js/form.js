@@ -78,13 +78,14 @@ fx_form = {
         }
         var submit_added = false;
         var button_container = settings.button_container || 'footer',
-            $button_container = button_container;
+            $button_container = button_container,
+            $buttons = $('<div class="'+bl+'__buttons"></div>');
     
         if (typeof button_container === 'string') {
             $button_container = $('.'+bl+'__'+button_container, $form);
+            $buttons.addClass(bl+'__buttons-in_'+button_container);
         }
         
-        var $buttons = $('<div class="'+bl+'__buttons"></div>');
         $button_container.append($buttons);
         
         $.each(settings.form_button, function (key,options) {
