@@ -260,12 +260,6 @@ class Files
             @chmod($local_new_filename, $this->new_file_mods);
             return 0;
         }
-
-        $content = $this->readfile($old_filename);
-        if ($content !== null) {
-            $res = $this->writefile($new_filename, $content);
-        }
-
         return $res;
     }
 
@@ -396,6 +390,7 @@ class Files
 
         // Check for the existence, the ability to read and is not a directory
         if (!file_exists($local_filename) || !is_readable($local_filename) || is_dir($local_filename)) {
+            fx::debug(debug_backtrace());
             throw new Exception\Files("Unable to read file $local_filename");
         }
 
@@ -649,24 +644,11 @@ class Files
         if (!$old_filename || !$new_filename) {
             return null;
         }
-
-        /*if ($old_filename[0] != '/') {
-            $old_filename = '/'.$old_filename;
-        }
-        $local_old_filename = $this->base_path.$old_filename;
-         * 
-         */
+        
         $local_old_filename = fx::path()->abs($old_filename);
 
-        /*
-        if ($new_filename[0] != '/') {
-            $new_filename = '/'.$new_filename;
-        }
-        $local_new_filename = $this->base_path.$new_filename;
-         * 
-         */
         $local_new_filename = fx::path()->abs($new_filename);
-
+        
         $local_parent_dir = dirname($local_new_filename);
 
         if (!is_dir($local_parent_dir)) {  // check whether there is a destination directory

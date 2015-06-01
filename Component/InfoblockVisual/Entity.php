@@ -45,10 +45,13 @@ class Entity extends System\Entity
 
                     $file_name = fx::path()->fileName($pv['new']);
                     $new_path = fx::path('@content_files/' . $site_id . '/visual/' . $file_name);
-
-                    fx::files()->move($pv['new'], $new_path);
-
-                    $all_params[$pk] = fx::path()->http($new_path);
+                    
+                    $move_from = fx::path()->abs($pv['new']);
+                    
+                    if (file_exists($move_from)) {
+                        fx::files()->move($move_from, $new_path);
+                        $all_params[$pk] = fx::path()->http($new_path);
+                    }
                 }
                 if (self::checkValueIsFile($pv['old'])) {
                     fx::files()->rm($pv['old']);
