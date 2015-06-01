@@ -55,12 +55,12 @@
             
             var $form = null;
             
-            
+            data.button_container = 'header';
             if (this.current_panel_type === 'top') {
-                data.button_container = 'header';
+                //data.button_container = $footer;
                 $form = $fx.form.create(data, $body);
             } else {
-                data.button_container = 'footer';
+                //data.button_container = $side_footer;
                 $form = $fx.form.create(data, $side_body);
             }
             
@@ -115,37 +115,45 @@
         this.recount_sidebar = function() {
             var $form = $('.fx_admin_form', $side),
                 $form_header = $('.fx_admin_form__header', $form),
-                $form_footer = $('.fx_admin_form__footer', $form),
-                $form_body = $('.fx_admin_form__body', $form);
-            
-            $form_body.css('height', 'auto');
-            $form_footer.removeClass('fx_admin_form__footer-sticky');
-            
-            var total_height = $(window).outerHeight(),
+                $form_body = $('.fx_admin_form__body', $form),
+                total_height = $(window).outerHeight(),
                 header_height = $form_header.outerHeight(),
-                footer_height = $form_footer.outerHeight(),
-                form_height = $form_body.outerHeight(),
-                counted_body_height = total_height - header_height - footer_height;
+                //footer_height = 0,
+                form_height = $form.outerHeight();
             
-            $side.css({
-                'height':total_height
-            });
-            
-            if (form_height >= counted_body_height) {
-                $form_body.css({
-                    height: counted_body_height+'px'
+            //if (form_height > (total_height - header_height)) {
+                $side.css({
+                    'height':total_height
                 });
-                $form_footer.addClass('fx_admin_form__footer-sticky');
+                $form_body.css({
+                    height: (total_height - header_height)+'px'
+                });
+                console.log((total_height - header_height)+'px', $form_body);
+                /*
+                $side_footer.css({
+                    position:'absolute',
+                    bottom:0
+                });
+                */
+               /*
+            } else {
+                $side.css({
+                    height:'auto'
+                });
+                $side_body.css({
+                    height:'auto'
+                });
+                
+                $side_footer.css({
+                    position:'static',
+                    bottom:''
+                });
             }
+            */
         };
         
         this.show_sidebar = function() {
-            var $body = $('body');
-            $body.css({
-                overflow:'hidden',
-                width: $body.width()
-            });
-            
+            $('body').css('overflow', 'hidden');
             this.recount_sidebar();
             $(window).resize(
                 'resize.fx_recount_sidebar', 
@@ -156,17 +164,10 @@
             }).animate({
                 right:0
             }, duration);
-            var that = this;
-            $('.fx_admin_form__body', $side).resize(function(e) {
-                that.recount_sidebar();
-            });
         };
         
         this.hide_sidebar = function() {
-            $('body').css({
-                width:'',
-                overflow:''
-            });
+            $('body').css('overflow', '');
             $side.animate({
                 right:'-' + ($side.outerWidth() + 30)+'px'
             }, duration);

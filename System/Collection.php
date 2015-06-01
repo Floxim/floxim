@@ -141,7 +141,6 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
     {
         $fork = $this->fork();
         if (count($this->data) == 0) {
-            //return new Collection();
             return $fork;
         }
         if (is_null($prop)) {
@@ -158,45 +157,45 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         $initial_key = key($this->data);
         $res = array();
         if ($compare_type == self::FILTER_EQ) {
-            foreach ($this->data as $item) {
+            foreach ($this->data as $key => $item) {
                 if ($item[$field] == $prop) {
-                    $res [] = $item;
+                    $res [$key] = $item;
                 }
             }
             $this->setPosition($initial_key);
             return $fork->load($res);
         }
         if ($compare_type == self::FILTER_NEQ) {
-            foreach ($this->data as $item) {
+            foreach ($this->data as $key => $item) {
                 if ($item[$field] != $prop) {
-                    $res [] = $item;
+                    $res [$key] = $item;
                 }
             }
             $this->setPosition($initial_key);
             return $fork->load($res);
         }
         if ($compare_type == self::FILTER_IN) {
-            foreach ($this->data as $item) {
+            foreach ($this->data as $key => $item) {
                 if (in_array($item[$field], $prop)) {
-                    $res [] = $item;
+                    $res [$key] = $item;
                 }
             }
             $this->setPosition($initial_key);
             return $fork->load($res);
         }
         if ($compare_type == self::FILTER_EXISTS) {
-            foreach ($this->data as $item) {
+            foreach ($this->data as $key => $item) {
                 if (isset($item[$field]) && $item[$field]) {
-                    $res [] = $item;
+                    $res [$key] = $item;
                 }
             }
             $this->setPosition($initial_key);
             return $fork->load($res);
         }
         if ($compare_type == self::FILTER_CALLBACK) {
-            foreach ($this->data as $item) {
+            foreach ($this->data as $key => $item) {
                 if (call_user_func($field, $item)) {
-                    $res [] = $item;
+                    $res [$key] = $item;
                 }
             }
             $this->setPosition($initial_key);
@@ -339,7 +338,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
     {
         if (!is_callable($sorter)) {
             $sorter_field = $sorter;
-            $sorter = function($a, $b) use ($sorter_field) {
+            $real_sorter = function($a, $b) use ($sorter_field) {
                 if (!isset($a[$sorter_field]) || !isset($b[$sorter_field])) {
                     return 0;
                 }
@@ -353,8 +352,29 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
                 }
                 return 0;
             };
+        } elseif ($sorter instanceof \Closure) {
+            $reflection = new \ReflectionFunction($sorter);
+            $arg_num = $reflection->getNumberOfRequiredParameters();
+            if ($arg_num) {
+                $real_sorter = function($a, $b) use ($sorter) {
+                    $av = $sorter($a);
+                    $bv = $sorter($b);
+                    if ($av < $bv) {
+                        return -1;
+                    }
+                    if ($av > $bv) {
+                        return 1;
+                    }
+                    return 0;
+                };
+            } else {
+                $real_sorter = $sorter;
+            }
+            //fx::debug($arg_num);
+        } else {
+            $real_sorter = $sorter;
         }
-        @ uasort($this->data, $sorter);
+        @ uasort($this->data, $real_sorter);
         return $this;
     }
 
@@ -482,7 +502,10 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
     {
         $initial_key = key($this->data);
         foreach ($this->data as $dk => &$di) {
-            call_user_func_array($callback, array(&$di, $dk));
+            $res = call_user_func_array($callback, array(&$di, $dk));
+            if (!is_null($res)) {
+                $this->data[$dk] = $res;
+            }
         }
         $this->setPosition($initial_key);
         return $this;

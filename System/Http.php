@@ -12,6 +12,8 @@ class Http
         403 => 'Forbidden',
         404 => 'Not Found'
     );
+    
+    protected $last_response_headers = null;
 
     public function status($code)
     {
@@ -74,7 +76,78 @@ class Http
         //$options['http'] = array_merge($options['http'], $context_options);
         $context  = stream_context_create($options);
         $result = @ file_get_contents($url, false, $context);
+        $this->last_response_headers = $http_response_header;
         return $result;
+    }
+    
+    public function getWithHeaders($url, $headers = array(), $context_options = array())
+    {
+        $time = microtime(true);
+        $body = $this->get($url, $headers, $context_options);
+        $res = array(
+            'body' => $body,
+            'response_time' => microtime(true) - $time,
+            'headers' => $this->getLastHeaders(),
+            'charset' => null
+        );
+        
+        $res = array_merge($res, $this->getLastStatus());
+        
+        if (
+            isset($res['headers']['content-type']) 
+            && preg_match("~charset=(.+)~i", $res['headers']['content-type'], $charset)
+        ) {
+            $res['charset'] = $charset[1];
+        }
+        return $res;
+    }
+    
+    public function getLastStatus()
+    {
+        $headers = $this->last_response_headers;
+        $status = $headers[0];
+        preg_match("~\d\d\d~", $status, $status_code);
+        return array(
+            'status' => $status,
+            'status_code' => $status_code ? $status_code[1] : null
+        );
+    }
+    
+    public function getLastHeaders() 
+    {
+        $headers = $this->last_response_headers;
+        $res = array();
+        
+        foreach (array_slice($headers, 1) as $header) {
+            $parts = explode(":", $header, 2);
+            $res[strtolower($parts[0])] = $parts[1];
+        }
+        return $res;
+    }
+    
+    public function head($url, $headers, $context_options)
+    {
+        $header_string = '';
+        if (is_array($headers)) {
+            foreach ($headers as $h => $v) {
+                $header_string .= $h.': '.$v."\r\n";
+            }
+        }
+        
+        $options = array(
+            'http' => array_merge(
+                array(
+                    'header'  => $header_string,
+                    'method'  => 'HEAD'
+                ),
+                $context_options
+            )
+        );
+        
+        $context  = stream_context_create($options);
+        file_get_contents($url, false, $context);
+        $this->last_response_headers = $http_response_header;
+        return $this->getLastHeaders();
     }
     
     
