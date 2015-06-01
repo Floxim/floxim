@@ -1585,7 +1585,9 @@ class Compiler
         
         register_shutdown_function(function() use ($code) {
             if (!fx::env('complete_ok')) {
-                fx::log('Died while compiling template', $code);
+                fx::log(
+                    'Died while compiling template', $code
+                );
             }
         });
         ob_start();

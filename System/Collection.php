@@ -355,7 +355,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         } elseif ($sorter instanceof \Closure) {
             $reflection = new \ReflectionFunction($sorter);
             $arg_num = $reflection->getNumberOfRequiredParameters();
-            if ($arg_num) {
+            if ($arg_num === 1) {
                 $real_sorter = function($a, $b) use ($sorter) {
                     $av = $sorter($a);
                     $bv = $sorter($b);
@@ -370,7 +370,6 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
             } else {
                 $real_sorter = $sorter;
             }
-            //fx::debug($arg_num);
         } else {
             $real_sorter = $sorter;
         }
