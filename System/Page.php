@@ -184,7 +184,8 @@ class Page
         $file = preg_replace_callback(
             '~(url\([\'\"]?)([^/][^\)]+)~i',
             function ($matches) use ($http_base) {
-                if (preg_match("~data\:~", $matches[0])) {
+                // do not touch data and absolute urls
+                if (preg_match("~data\:~", $matches[0]) || preg_match('~^[\'\"]?/~', $matches[2])) {
                     return $matches[0];
                 }
                 return $matches[1] . $http_base . $matches[2];

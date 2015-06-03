@@ -12,6 +12,8 @@ class Ajax extends Base
         if (!preg_match("~^/\~ajax/([a-z0-9_\.\:\@-]+)?~", $url, $action_info)) {
             return null;
         }
+        
+        fx::env('ajax', true);
 
         $c_url = fx::input()->fetchGetPost('_ajax_base_url');
         
@@ -35,10 +37,15 @@ class Ajax extends Base
         // import layout template to recreate real env
         fx::router('front')->importLayoutTemplate();
         
+        $controller_params = fx::input()->fetchGetPost('_ajax_controller_params');
+        
         $c_infoblock_id = fx::input()->fetchGetPost('_ajax_infoblock_id');
         if ($c_infoblock_id) {
             $infoblock = fx::data('infoblock', $c_infoblock_id);
             if ($infoblock) {
+                if ($controller_params) {
+                    $infoblock->override(array('params' => $controller_params));
+                }
                 $res = $infoblock->render();
                 return $res;
             }
@@ -60,7 +67,7 @@ class Ajax extends Base
         } else {
             return null;
         }
-        fx::env('ajax', true);
+        
         $action = explode(":", $action);
         $controller_name = $action[0];
         if (preg_match("~^widget_~", $controller_name) && !isset($action[1])) {
@@ -68,9 +75,7 @@ class Ajax extends Base
         }
         $action_name = $action[1];
         
-        $params = fx::input()->fetchGetPost('_ajax_controller_params');
-        
-        $controller = fx::controller($controller_name . ':' . $action_name, $params);
+        $controller = fx::controller($controller_name . ':' . $action_name, $controller_params);
         
         if (!$template) {
             $template = fx::input()->fetchGetPost('_ajax_template');
