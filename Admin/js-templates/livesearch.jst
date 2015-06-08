@@ -19,7 +19,7 @@ var f_postfix = _c.name_postfix ? '['+_c.name_postfix+']' : '';
     } else {
         ?><input class="preset_value" type="hidden" <?=$t.field_id_name(_c)?>
                 <?if (_c.value) {?>
-                value="<?=_c.value.id?>" 
+                value="<?=_c.value.id || _c.value?>" 
                 data-name="<?=_c.value.name?>" 
                 <?}?>/><?
                     

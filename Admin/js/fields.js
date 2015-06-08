@@ -50,6 +50,25 @@ window.$fx_fields = {
     },
 
     livesearch: function(json) {
+        if (json.values) {
+            json.params = json.params || {};
+            var vals = [];
+            $.each(json.values, function() {
+                var c_val = this;
+                // [ [id1, name1], [id2, name2] ]
+                if (this instanceof Array && this.length === 2) {
+                    c_val = {
+                        id:this[0],
+                        name:this[1]
+                    };
+                }
+                vals.push(c_val);
+                if (json.value === c_val.id) {
+                    json.value = c_val;
+                }
+            });
+            json.params.preset_values = vals;
+        }
         var ls = $t.jQuery('form_row', json);
         return ls;
     },

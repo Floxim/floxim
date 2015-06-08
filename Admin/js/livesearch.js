@@ -44,13 +44,9 @@ window.fx_livesearch = function (node) {
     
     this.getSuggestParams = function() {
         var params = {
-            //url: '/vendor/Floxim/Floxim/index.php',
             url:'/~ajax/floxim.main.content:livesearch/',
             data:{
-                //entity:'content',
-                //action:'livesearch',
-                content_type:this.datatype,
-                //fx_admin:'true'
+                content_type:this.datatype
             },
             count_show:this.count_show
         };
@@ -119,6 +115,9 @@ window.fx_livesearch = function (node) {
     this.addSilent = false;
     
     this.loadValues = function(ids) {
+        if (typeof ids === 'string') {
+            ids = [ ids * 1];
+        }
         if (!(ids instanceof Array) || ids.length === 0) {
             return;
         }
@@ -140,11 +139,10 @@ window.fx_livesearch = function (node) {
                     if (ids.indexOf(a.id) > ids.indexOf(b.id) )
                         return 1;
                     return 0;  
-                });  
+                }); 
                 $.each(res.results, function(index, item) {
                     livesearch.addValue(
                         $.extend({}, item, {input_name:livesearch.inpNames[item.id]})
-                        //item.id, item.name, livesearch.inpNames[item.id]
                     );
                 });
                 livesearch.addSilent = false;
@@ -190,9 +188,6 @@ window.fx_livesearch = function (node) {
         }
         return false;
     };
-    
-    // old style:
-    //this.addValue = function(id, name, input_name) {
     
     // now adding all together
     this.addValue = function(value) {
@@ -437,16 +432,10 @@ window.fx_livesearch = function (node) {
         });
 
         this.n.on('suggest_blur', 'li.livesearch_input input', function() {
-            //return;
             var $input = $(this),
                 input_value = $input.val();
             
             if (!livesearch.isMultiple) {
-                /*
-                var $value_node = livesearch.getValueNode();
-                $value_node.show();
-                console.log($value_node);
-                */
                 if (input_value !== '') {
                     livesearch.showValue();
                 } else {
@@ -454,18 +443,6 @@ window.fx_livesearch = function (node) {
                     $input.val('');
                 }
                 return false;
-                /*
-                var selected_value = livesearch.getValue();
-                var c_search_item = livesearch.Suggest.getSearchItems().first();
-                // current value is in first in list - save it
-                if (
-                    c_search_item && selected_value && 
-                    c_search_item.data('id') === selected_value * 1
-                ) {
-                    livesearch.Select(c_search_item);
-                    return false;
-                }
-                */
             }
             if (input_value && livesearch.allow_new) {
                 livesearch.addValue({id:false, name:input_value});
@@ -546,8 +523,7 @@ window.fx_suggest = function(params) {
                 // anything
                 default:
                     var term = Suggest.getTerm();
-                    console.log('ku srch', term);
-                    if (term != '' || e.which == 8) {
+                    if (term !== '' || e.which === 8) {
                         Suggest.Search(term);
                     }
                     break;
@@ -640,7 +616,7 @@ window.fx_suggest = function(params) {
             return;
         }
         this.lastTerm = term;
-        console.log('goon');
+        
         this.Lock();
         // the timeout for fast printing
         setTimeout( function() {
@@ -648,7 +624,6 @@ window.fx_suggest = function(params) {
             if (term !== Suggest.getTerm() && !params.immediate) {
                 return;
             }
-            console.log('serchng');
             Suggest.getResults(term, params);
         }, params.immediate ? 1 : 200);
     };
@@ -701,7 +676,6 @@ window.fx_suggest = function(params) {
         
         var that=this;
         request_params.success = function(res) {
-            console.log('scss');
             // query has changed while they were loading Majesty
             if (term !== Suggest.getTerm() && !params.immediate) {
                 return;
@@ -789,7 +763,7 @@ window.fx_suggest = function(params) {
     this.searchFromJson = function(jsonResults,term) {
         var results=[];
         $.each(jsonResults,function(k,item){
-            if (item.name && item.name.toLowerCase().indexOf(term)!=-1) {
+            if (item.name && item.name.toLowerCase().indexOf(term)!== -1) {
                 results.push(item);
             }
         });

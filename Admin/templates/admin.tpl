@@ -13,7 +13,8 @@
     fx:template="menu_item" 
     class="fx_menu_item {$class} {if $.icon}fx_menu_item-has_icon{/if}" 
     {if $href}href="{$href}"{/if} 
-    {if $key}data-key="{$key}"{/if}>
+    {if $key}data-key="{$key}"{/if}
+    {if $.button}data-button='{$.button | json_encode}{/if}'>
     <span fx:if="$.icon" class="fx_icon fx_icon-type-{$icon}"></span>
     <span class="fx_menu_item__name">{$name}</span>
 </a>

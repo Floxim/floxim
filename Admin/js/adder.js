@@ -229,18 +229,16 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
             return;
         }
         
-        if ($entities.first().is('.fx_infoblock')) {
-            var axis = 'y';
-        } else {
-            var axis = $fx.front.get_list_orientation($entities);
-            if (axis === null) { // && $entities.filter(':visible').length < 2) {
-                if ($entities.length > 0 && $entities.first().outerWidth() > $node.outerWidth() / 2) {
-                    axis = 'y';
-                } else {
-                    axis = 'x';
-                }
+        
+        var axis = $fx.front.get_list_orientation($entities);
+        if (axis === null) {
+            if ($entities.length > 0 && $entities.first().outerWidth() > $node.outerWidth() / 2) {
+                axis = 'y';
+            } else {
+                axis = 'x';
             }
         }
+            
         var axis_class = axis === 'y' ? 'horizontal' : 'vertical';
         
         $button

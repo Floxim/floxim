@@ -327,6 +327,16 @@ fx_edit_in_place.prototype.add_panel_field = function(meta) {
         meta.label = meta.id;
     }
     
+    if (meta.type === 'livesearch' && !meta.params) {
+        meta.params = {
+            'content_type':meta['content_type']
+        };
+        if (!meta.value) {
+            meta.value = meta.real_value;
+            meta.ajax_preload = true;
+        }
+    }
+    
     //var $field_container = $fx.front.get_node_panel();
     var $panel = $fx.front.node_panel.get(this.node).$panel;
     $panel.show();

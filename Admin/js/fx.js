@@ -58,6 +58,24 @@ window.$fx = {
                 })
                 .on('click.fx', '.fx_main_menu_expander', function() {
                     $('.fx_main_menu_items').toggle();
+                })
+                .on('click.fx', '.fx_menu_item[data-button]', function() {
+                    var $item = $(this),
+                        button_data = $item.data('button');
+                        
+                     $fx.post(
+                        button_data,
+                        function(json) {
+                            $fx.front_panel.show_form(
+                                json, 
+                                {
+                                    onfinish: function () {
+                                        $fx.front.reload_layout();
+                                    }
+                                }
+                            );
+                        }
+                    );
                 });
             $(document).ajaxComplete(function(e, jqXHR) {
                 ajax_counter--;
