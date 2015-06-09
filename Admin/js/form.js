@@ -66,9 +66,13 @@ fx_form = {
             $fx.buttons.draw_buttons(settings.buttons);
         }
         $.each(settings.fields, function(i, json) {
-            var $target = use_tabs && json.tab !== undefined
-                            ? $('.fx_tab_data-key-'+json.tab, $form_body)
-                            : $form_body;
+            var $target = $form_body;
+            if (use_tabs && json.tab !== undefined) {
+                $target = $('.fx_tab_data-key-'+json.tab, $form_body);
+                if (json.type !== 'hidden') {
+                    $target.data('tab_label').show();
+                }
+            }
             $fx_form.draw_field(json, $target);
         });
         
@@ -83,6 +87,7 @@ fx_form = {
     
         if (typeof button_container === 'string') {
             $button_container = $('.'+bl+'__'+button_container, $form);
+            $button_container.show();
             $buttons.addClass(bl+'__buttons-in_'+button_container);
         }
         
@@ -213,35 +218,35 @@ fx_form = {
         $form_body.append($tab_data);
         $form_header.append($tab_labels);
         
-        var tab_data_html = '',
-            tab_labels_html = '',
-            has_active = false;
+        //var tab_data_html = '',
+            //tab_labels_html = '',
+        var has_active = false;
             
         $.each(settings.tabs, function(key,val){
             if (val.active) {
                 has_active = true;
             }
-            tab_labels_html += 
-                '<div data-key="'+key+'" class="'+c_label + (val.active ? ' '+c_label+'-active' : '') + '">'+
+            var $tab_label = 
+                $('<div data-key="'+key+'" class="'+c_label + (val.active ? ' '+c_label+'-active' : '') + '" style="display:none;">'+
                     (val.icon ? 
-                    '<span class="'+c_label+'__icon fx_icon fx_icon-type-'+val.icon+' '+(val.active ? ' fx_icon-active':'')+'"></span>' 
+                    '<span class="'+c_label+'__icon fx_icon fx_icon-type-'+val.icon+'"></span>' 
                     : '')+
                     '<span class="'+c_label+'__title">'+(val.label || key)+'</span>'+
-                '</div>';
-            
-            tab_data_html += 
-                '<div class="'+c_data+' '+c_data+'-key-'+key+(val.active ? ' '+c_data+'-active' : '')+'">'+
-                '</div>';
+                '</div>'),
+                $tab_data_item = 
+                $('<div class="'+c_data+' '+c_data+'-key-'+key+(val.active ? ' '+c_data+'-active' : '')+'">'+
+                '</div>');
+            $tab_data_item.data('tab_label', $tab_label);
+            $tab_labels.append($tab_label);
+            $tab_data.append($tab_data_item);
         });
-        $tab_labels.html(tab_labels_html);
-        $tab_data.html(tab_data_html);
+        //$tab_labels.html(tab_labels_html);
+        //$tab_data.html(tab_data_html);
         
         function select_tab($tab_label) {
             var key = $tab_label.data('key'),
                 $tab_data = $form_body.find('.fx_tab_data-key-'+key),
-                map = {
-                    fx_icon:$tab_label.find('.fx_icon')
-                };
+                map = {};
             map[c_label] = $tab_label;
             map[c_data] = $tab_data;
 
@@ -249,6 +254,8 @@ fx_form = {
                 $('.'+c_class+'-active', $node.closest('.'+bl+'__tab_data, .'+bl+'__tab_labels')).removeClass(c_class+'-active');
                 $node.addClass(c_class+'-active');
             });
+            $('.'+c_label+' .fx_icon').addClass('fx_icon-clickable');
+            $('.'+c_label+'-active .fx_icon').removeClass('fx_icon-clickable');
         }
         
         $tab_labels.on('click', '.'+c_label, function() {
@@ -258,19 +265,6 @@ fx_form = {
         if (!has_active) {
             select_tab($tab_labels.find('.'+c_label).first());
         }
-        
-        /*
-        $('#fx_tabs', container).append(_ul);
-        $('#fx_tabs', container).append(cont);
-        $("#fx_tabs", container).tabs({
-            active: active
-        });
-        $('.fx_tab a', container).click(function(){
-            $('textarea.fx_code').each(function() {
-                $(this).data('codemirror').refresh();
-            });
-        });
-        */
     },
     
     init_joins: function(fields) {

@@ -1438,63 +1438,6 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
     
     if (ce_id){
         entity_panel.add_button('delete', function() {
-            
-            /*
-            var ce_type = entity_meta[3] || entity_meta[1];
-            var form_options = {
-                entity:'content',
-                action:'delete_save',
-                content_type:ce_type,
-                content_id:ce_id,
-                page_id:$fx.front.get_page_id(),
-                fx_admin:true
-            };
-            var $overlay = $('<div class="fx_overlay fx_block_overlay fx_block_overlay-type-delete"></div>');
-            $fx.front.get_front_overlay().append($overlay);
-            var offset = $entity.offset();
-            
-            $fx.front.select_item($entity[0]);
-            
-            $fx.front.disable_node_panel();
-            
-            $overlay.css({
-                position:'absolute',
-                top: offset.top,
-                left:offset.left,
-                width:$entity.outerWidth(),
-                height:$entity.outerHeight(),
-                background:'rgba(155,0,0,0.5)'
-            });
-            
-            $entity.css({
-                '-webkit-filter': 'blur(3px)',
-                'filter':'blur(3px)'
-            });
-            
-            function delete_cancel() {
-                $overlay.remove();
-                $entity.attr('style', '');
-                $fx.front.enable_node_panel();
-                $('body').off('.fx_delete_cancel');
-            }
-            
-            $('body').on('keydown.fx_delete_cancel', function(e) {
-                if (e.which === 27) {
-                    delete_cancel();
-                    e.stopImmediatePropagation();
-                }
-            }).one('fx_deselect', delete_cancel);
-            
-            $fx.post(
-                form_options, 
-                function(json) {
-                    json.class_name = 'fx_admin_form-block_overlay';
-                    json.form_button.unshift('cancel');
-                    var $form = $fx.form.create(json, $overlay);
-                    $form.on('fx_form_cancel', delete_cancel);
-                }
-            );
-            */
             var ce_type = entity_meta[3] || entity_meta[1];
             $fx.front_panel.load_form({
                 entity:'content',

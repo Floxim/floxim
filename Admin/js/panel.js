@@ -288,9 +288,9 @@
             $fx.front.enable_select();
             $('body').off('.fx_front_panel');
             var callback = function() {
-                setTimeout(function() {
+                //setTimeout(function() {
                     $fx.front.enable_node_panel();
-                }, 50);
+                //}, 50);
                 if (!$fx.front.get_selected_item()) {
                     $fx.front.enable_hilight();
                 }
