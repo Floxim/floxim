@@ -392,17 +392,6 @@ class Fx
         }
         $args = func_get_args();
         if ($num_args === 1) {
-            /*
-            if ($args[0] == 'is_admin') {
-                $method = array($env, 'is_admin');
-            } else {
-                $method = array($env, 'get_' . $args[0]);
-            }
-            if (is_callable($method)) {
-                return call_user_func($method);
-            }
-             * 
-             */
             return $env->get($args[0]);
         }
         if (count($args) == 2) {
@@ -486,16 +475,6 @@ class Fx
         }
         $template = Template\Loader::loadByName($template_name, $action, $data);
         return $template;
-        /*
-        $template = Template\Loader::autoload($template_name);
-        
-        fx::debug($class_name);
-        if (!class_exists($class_name)) {
-            $class_name = '\\Floxim\\Floxim\\Template\\Template';
-        }
-        return new $class_name($action, $data);
-         * 
-         */
     }
 
     protected static $page = null;

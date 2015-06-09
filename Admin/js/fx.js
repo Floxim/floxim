@@ -257,6 +257,9 @@ window.$fx = {
         
     post: function ( data, callback ) {
         data.fx_admin = true;
+        if (!data._base_url) {
+            data._base_url = document.location.href.replace(/#.*$/, '');
+        }
         if (!callback) {
             callback = function() {};
         }

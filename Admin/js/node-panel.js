@@ -165,8 +165,10 @@ function node_panel($node, params) {
         if ( that.params.align === 'left') {
             css.left = no.left - outer_offset;
         } else {
-            //css.left = no.left - outer_offset + $node.width() - p_width;
             css.left = no.left + $node.width() - p_width + outer_offset / 2;
+        }
+        if (css.left < 0) {
+            css.left = 0;
         }
         var node_height = $node.data('fx_visible_height') || $node.outerHeight();
         var node_top = no.top;
@@ -206,6 +208,7 @@ function node_panel($node, params) {
         
         var win_width = $(window).outerWidth(),
             p_gone = (css.left + p_width) - (win_width - 3);
+        
         
         if (p_gone > 0) {
             css.left = css.left - p_gone;

@@ -109,6 +109,9 @@ class Front extends Base
 
     public function getLayoutInfoblock($page)
     {
+        if (!is_object($page)) {
+            fx::log(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
+        }
         $path = $page->getPath()->copy()->reverse();
         foreach ($path as $c_page){
             if (method_exists($c_page, 'getLayoutInfoblock')) {
