@@ -821,7 +821,6 @@ class Compiler
             if ($use_counted_subroot) {
                 $code .= $subroot_var ." = false;\n";
             }
-            fx::log($token);
         }
         $code .= $this->childrenToCode($token) . "\n";
         $code .= $meta_test;
