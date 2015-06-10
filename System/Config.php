@@ -66,7 +66,15 @@ class Config
         fx::path()->register('root', DOCUMENT_ROOT);
         fx::path()->register('home', DOCUMENT_ROOT);
         
-        $floxim_http_path = preg_replace("~System/Config.php$~", '', fx::path()->http(__FILE__));
+        $floxim_http_path = null;
+        //  try to get correct case of floxim path
+        if (preg_match("~/vendor/floxim/floxim/~i", __FILE__, $floxim_http_path)) {
+            $floxim_http_path = $floxim_http_path[0];
+        } else {
+            // lower case by default
+            $floxim_http_path = '/vendor/floxim/floxim/';
+        }
+        
         fx::path()->register('floxim', $floxim_http_path);
         fx::path()->register('module', '/module/');
         fx::path()->register('files', '/floxim_files/');
