@@ -632,11 +632,7 @@ span.fx_area_marker {
     &-visible {
         display:block;
     }
-    /*
-    height: 15px;
-    width:  15px;
-    background:#F00;
-    */
+    
     &__plus {
         width:40px;
         height:40px;
@@ -644,41 +640,74 @@ span.fx_area_marker {
         background:@button_color;
         box-shadow:1px 1px 8px rgba(0,0,0,0.55);
         position:absolute;
-        span {
-            width: 24px;
-            height: 24px;
-            border: 2px solid #FFF;
-            border-radius: 12px;
-            line-height: 0;
-            display: block;
-            font-weight: 300;
-            color: #FFF;
-            padding-left: 4px;
-            padding-top: 10px;
-            position: relative;
-            top: 8px;
-            left: 8px;
-            font-size: 22px;
-            margin:0;
-        }
         
         &-with_variants {
-            transform: rotate(45deg);
             z-index:1;
         }
+        
+        // fixed label for non-sortable lists
+        &_label {
+            white-space: nowrap;
+            display: block;
+            margin-left: 40px;
+            margin-top: 10px;
+            margin-right: 15px;
+            color: #FFF;
+            font-style: normal;
+        }
+    }
+    &__plus_plus {
+        width: 24px;
+        height: 24px;
+        border: 2px solid #FFF;
+        border-radius: 12px;
+        line-height: 0;
+        display: block;
+        font-weight: 300;
+        color: #FFF;
+        padding-left: 4px;
+        padding-top: 10px;
+        position: relative;
+        top: 8px;
+        left: 8px;
+        font-size: 22px;
+        margin:0;
+    }
+    
+    &__plus-with_variants &__plus_plus {
+        transform: rotate(45deg);
+    }
+    
+    &-not_sortable &__plus {
+        border-radius: 0;
+        width:auto;
+    }
+    &-not_sortable &__plus_plus {
+        float:left;
+    }
+    
+    &-not_sortable &__plus_label {
+        white-space: nowrap;
+        display: block;
+        margin-left: 40px;
+        margin-top: 10px;
+        margin-right: 15px;
+        color: #FFF;
+        font-style: normal;
     }
     
     &-outstanding &__plus {
         width:30px;
         height:30px;
-        span {
-            width:30px;
-            height:30px;
-            border:none;
-            top: 5px;
-            left: 4px;
-            font-size: 27px;
-        }
+    }
+    
+    &-outstanding &__plus_plus {
+        width: 24px;
+        height: 19px;
+        border:none;
+        top: 5px;
+        left: 4px;
+        font-size: 27px;
     }
     
     &__line {

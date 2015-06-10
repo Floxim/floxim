@@ -73,7 +73,7 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
     var $button = $(
         '<div class="'+bl+' fx_overlay">'+
             '<div class="'+bl+'__line"></div>'+
-            '<div class="'+bl+'__plus"><span>+</span></div>'+
+            '<div class="'+bl+'__plus"><span class="'+bl+'__plus_plus">+</span></div>'+
             '<div class="'+bl+'__title">'+title+'</div>'+
         '</div>'
     );
@@ -140,6 +140,49 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
         );
     }
     
+    function place_title() {
+        var css = {display:'block'};
+        var plus_size = $plus.outerWidth(); // it seems to be square...
+            
+        if ($button.hasClass(bl+'-not_sortable')) {
+            css.left = 0;
+            css.top = $plus.outerHeight();
+        } else if ($button.hasClass(bl+'-outstanding')) {
+
+            if ($button.hasClass(bl+'-vertical')) {
+                css.left = '-' + ( $title.outerWidth() / 2 - plus_size / 2 ) + 'px';
+                if ($button.hasClass(bl+'-inverted')) {
+                    css.top = $line.outerHeight() + plus_size*0.7;
+                } else {
+                    css.top = '-' + ($title.outerHeight() + plus_size*0.7) + 'px';
+                }
+            } else {
+                css.top = '-' + ( $title.outerHeight() / 2 - plus_size / 2 ) + 'px';
+                if ($button.hasClass(bl+'-inverted')) {
+                    css.left = ($line.outerWidth() + plus_size*0.7) + 'px';
+                } else {
+                    css.left = '-'+( $title.outerWidth() + plus_size*0.7 )+'px';
+                }
+            }
+            if ( parseInt($button.css('left')) + parseInt(css.left) < 0) {
+                css.left = 0;
+            }
+
+        } else {
+            if ($button.hasClass(bl+'-vertical')) {
+                css.left = plus_size * 0.7;
+                css.top = ($line.outerHeight() - $title.outerHeight()) / 2;
+                if (parseInt($button.css('left')) + $title.outerWidth() > $(window).width()) {
+                    css.left -= ($title.outerWidth() + plus_size*0.5);
+                }
+            } else {
+                css.left = ($line.outerWidth() - $title.outerWidth()) / 2;
+                css.top = plus_size * 0.7;
+            }
+        }
+        $title.attr('style', '').css(css);
+    }
+    
     $button.on('mouseenter', function() {
         clearTimeout(out_timeout);
         clearTimeout(title_timeout);
@@ -170,29 +213,13 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
             } else if ($variants.length === 0) {
                 return;
             }
+            $variants.show();
             clearTimeout(out_timeout);
             $button.off('.fx_adder_mouseout');
             $button.addClass(bl+'-hover');
-            var css = {display:'block'};
-            var plus_size = $plus.outerWidth(); // it seems to be square...
             $plus.addClass(bl+'__plus-with_variants');
             
-            if ($button.hasClass(bl+'-vertical')) {
-                css.left = '-' + ( $title.outerWidth() / 2 - plus_size / 2 ) + 'px';
-                if ($button.hasClass(bl+'-inverted')) {
-                    css.top = $line.outerHeight() + plus_size*0.7;
-                } else {
-                    css.top = '-' + ($title.outerHeight() + plus_size*0.7) + 'px';
-                }
-            } else {
-                css.top = '-' + ( $title.outerHeight() / 2 - plus_size / 2 ) + 'px';
-                if ($button.hasClass(bl+'-inverted')) {
-                    css.left = ($line.outerWidth() + plus_size*0.7) + 'px';
-                } else {
-                    css.left = '-'+( $title.outerWidth() + plus_size*0.7 )+'px';
-                }
-            }
-            $title.attr('style', '').css(css);
+            place_title();
             return false;
         });
         $('html').on('click.fx_hide_adder_button', function(e){
@@ -250,7 +277,7 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
         var offset = $node.offset();
         var css = {
             opacity:'0',
-            left:offset.left - $plus.outerWidth()
+            left:offset.left// - $plus.outerWidth()
         };
         
         var is_fixed = $fx.front.is_fixed($node);
@@ -264,7 +291,7 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
         } else {
             css.top = offset.top;
         }
-        css.top -= 8;
+        //css.top -= 8;
         
         if (css.left < 0) {
             css.left = 0;
@@ -292,6 +319,21 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
                 $node.on('mousemove.fx_recount_adders', place_button);
             } else {
                 //place_button(e, false);
+                if (!$button.hasClass(bl+'-not_sortable')) {
+                    $button.addClass(bl+'-not_sortable');
+                    var $variants = $('.fx_adder_variant', $title),
+                        plus_label_text = $fx.lang('Add');
+                    
+                    if ($variants.length === 1) {
+                        plus_label_text += ' '+$variants.first().text();
+                    } else {
+                        plus_label_text += '...';
+                    }
+                    
+                    var $plus_label = $('<div class="'+bl+'__plus_label">'+plus_label_text+'</div>');
+                    $plus.append($plus_label);
+                }
+                css.top -= $plus.height();
                 $button.css(css);
             }
             over_timeout = null;
@@ -455,8 +497,8 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
             
             if (left < 0) {
                 left = 0;
-            } else if (left > right_edge) {
-                left = right_edge;
+            } else if ( (left + $plus.outerWidth()/2) > right_edge) {
+                left = right_edge - $plus.outerWidth()/2;
             }
             
             top = Math.round(top);
@@ -478,6 +520,9 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
                         top:top,
                         left:left
                     });
+                if ($plus.hasClass(bl+'__plus-with_variants')) {
+                    place_title();
+                }
             }
         }
     }

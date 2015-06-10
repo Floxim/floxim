@@ -331,6 +331,21 @@ class Html
                 $n->omit = $omit;
                 $n->removeAttribute('fx:omit');
             }
+            
+            if ($n->hasAttribute('fx:e')) {
+                $e_value = $n->getAttribute('fx:e');
+                $n->addClass('{bem_element}'.$e_value.'{/bem_element}');
+                $n->removeAttribute('fx:e');
+            }
+            
+            if ($n->hasAttribute('fx:b')) {
+                $b_value = $n->getAttribute('fx:b');
+                $n->addClass('{bem_block}'.$b_value.'{/bem_block}');
+                $n->removeAttribute('fx:b');
+                $n->parent->addChildAfter(HtmlToken::create('<?php $this->bemStopBlock(); ?>'), $n);
+            }
+            
+            
         });
         $res = $tree->serialize();
         //fx::log($res);

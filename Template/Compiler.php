@@ -67,6 +67,40 @@ class Compiler
     {
         return $token->getProp('value');
     }
+    
+    protected function tokenBemBlockToCode($token)
+    {
+        //fx::debug($token);
+        $code =  "<?php\n";
+        $code .= "ob_start();\n";
+        $code .= $this->childrenToCode($token);
+        $code .= '$block_string = ob_get_clean();'."\n";
+        $code .= '$block_parts = \\Floxim\\Floxim\\Template\\Template::bemParseStr($block_string);'."\n";
+        $code .= "\$this->bemStartBlock(\$block_parts['name']);\n";
+        $code .= "echo \$block_parts['name'].' ';\n";
+        $code .= "foreach (\$block_parts['modifiers'] as \$mod) {\n";
+        $code .= "echo \$block_parts['name'].'_'.\$mod.' ';\n";
+        $code .= "}\n";
+        $code .= "?>";
+        return $code;
+    }
+    
+    protected function tokenBemElementToCode($token)
+    {
+        $code =  "<?php\n";
+        $code .= "ob_start();\n";
+        $code .= $this->childrenToCode($token);
+        $code .= '$el_string = ob_get_clean();'."\n";
+        $code .= '$el_parts = \\Floxim\\Floxim\\Template\\Template::bemParseStr($el_string);'."\n";
+        $code .= "\$full_name = \$this->bemGetBlock().'__'.\$el_parts['name'];\n";
+        $code .= "echo \$full_name.' ';\n";
+        $code .= "foreach (\$el_parts['modifiers'] as \$mod) {\n";
+        $code .= "echo \$full_name.'_'.\$mod.' ';\n";
+        $code .= "}\n";
+        $code .= "?>";
+        return $code;
+        return '_element_';
+    }
 
     protected function tokenHelpToCode($token)
     {

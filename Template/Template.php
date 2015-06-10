@@ -31,6 +31,40 @@ class Template
         //fx::trigger('initTemplate', array('template' => $this));
     }
     
+    public static function bemParseStr($str) 
+    {
+        $str = trim($str);
+        $str = preg_split("~\s+~", $str);
+        $res = array(
+            'name' => array_shift($str),
+            'modifiers' => $str
+        );
+        return $res;
+    }
+    
+    protected $bem_stack = array();
+    
+    protected function bemStartBlock($name)
+    {
+        $this->bem_stack[]= $name;
+    }
+    
+    protected function bemStopBlock()
+    {
+        array_pop($this->bem_stack);
+    }
+    
+    public function bemGetBlock()
+    {
+        if (count($this->bem_stack) > 0) {
+            return end($this->bem_stack);
+        }
+        if ($this->parent) {
+            return $this->parent->bemGetBlock();
+        }
+        return '';
+    }
+    
     public function getIcon($what_for)
     {
         $theme = fx::env('theme_template');

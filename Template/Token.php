@@ -213,6 +213,14 @@ class Token
             'type'     => 'double',
             'contains' => array('code', 'template', 'area', 'var', 'call', 'each', 'if', 'elseif', 'else', 'separator')
         ),
+        'bem_block' => array(
+            'type'     => 'double',
+            'contains' => array('code', 'var', 'call', 'if', 'elseif', 'else')
+        ),
+        'bem_element' => array(
+            'type'     => 'double',
+            'contains' => array('code', 'var', 'call', 'if', 'elseif', 'else')
+        ),
         'with_each' => array(
             'type'     => 'double',
             'contains' => array(
