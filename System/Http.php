@@ -73,9 +73,8 @@ class Http
                 $context_options
             )
         );
-        //$options['http'] = array_merge($options['http'], $context_options);
         $context  = stream_context_create($options);
-        $result = @ file_get_contents($url, false, $context);
+        $result = file_get_contents($url, false, $context);
         $this->last_response_headers = $http_response_header;
         return $result;
     }
@@ -117,6 +116,10 @@ class Http
     {
         $headers = $this->last_response_headers;
         $res = array();
+        
+        if (!is_array($headers)) {
+            return $res;
+        }
         
         foreach (array_slice($headers, 1) as $header) {
             $parts = explode(":", $header, 2);

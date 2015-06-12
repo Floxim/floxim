@@ -141,6 +141,6 @@ class Path
             return '';
         }
         preg_match("~\.([^\.]+)$~", $file_name, $ext);
-        return $ext ? $ext[0] : '';
+        return $ext ? $ext[1] : '';
     }
 }
