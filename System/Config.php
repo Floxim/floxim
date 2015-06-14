@@ -44,7 +44,8 @@ class Config
         'cache.gzip_bundles'         => true,
         'cache.meta'                 => true,
         'date.timezone'              => 'America/New_York',
-        'path.admin'                 => '/floxim/'
+        'path.admin'                 => '/floxim/',
+        'image.max_filesize'         => 10485760 // ~10m
     );
 
     public function __construct()

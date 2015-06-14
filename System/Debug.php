@@ -272,6 +272,31 @@ class Debug
         $res = array_reverse($res);
         return $res;
     }
+    
+    /**
+     * Get list of log files that aren't listed in the index
+     * @param array $found
+     */
+    public function getLost($found = array()) 
+    {
+        $found = fx::collection($found)->getValues('id', 'id');
+        $files = glob($this->getDir()."/log_*");
+        $res = array();
+        foreach ($files as $file) {
+            preg_match("~log_([^\.]+)~", $file, $id);
+            $id = $id[1];
+            if (!isset($found[$id])) {
+                $res []= array(
+                    'id' => $id,
+                    'start' => filemtime($file),
+                    'host' => '???',
+                    'count_entries' => '???',
+                    'method' => '???'
+                );
+            }
+        }
+        return $res;
+    }
 
     public function showItem($item_id)
     {

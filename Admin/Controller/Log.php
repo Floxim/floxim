@@ -26,6 +26,10 @@ class Log extends Admin
 
         $logger = fx::debug();
         $index = $logger->getIndex();
+        
+        $lost = $logger->getLost($index);
+        
+        $index = fx::collection($index)->concat($lost);
 
         foreach ($index as $item) {
             $url = preg_replace("~^http://[^/]+~", '', $item['url']);

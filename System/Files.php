@@ -900,7 +900,6 @@ class Files
         
         // default image resizer
         $resize_config = fx::config('image.default_resize');
-        fx::log('cfg', $resize_config, $this->isImage($full_path));
         if ($resize_config && $this->isImage($full_path)) {
             $thumb = new \Floxim\Floxim\System\Thumb($full_path, $resize_config);
             $thumb->process($full_path);

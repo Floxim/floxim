@@ -36,6 +36,10 @@ class Thumb
             // incorrect/unknown type pictures
             throw new \Exception('Wrong image type');
         }
+        $max_filesize = fx::config('image.max_filesize');
+        if ($max_filesize && filesize($source_path) > $max_filesize) {
+            throw new \Exception('Image is too big (limit is '.$max_filesize.')');
+        }
         $this->info += self::$_types[$info['imagetype']];
     }
 
