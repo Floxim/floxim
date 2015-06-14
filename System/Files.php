@@ -852,21 +852,21 @@ class Files
         if (!preg_match("~^https?://~", $file)) {
             return;
         }
-        $file_data = file_get_contents($file);
+        
+        $file_data = fx::http()->get($file, array(), array('timeout' => 10));
+        $headers = fx::http()->getLastHeaders();
+        
         if (!$file_data) {
             return;
         }
         $file_name = $name ? $name : fx::path()->fileName($file);
         $extension = fx::path()->fileExtension($file_name);
         if (!$extension || !in_array($extension, $this->allowed_extensions)) {
-            foreach ($http_response_header as $header) {
-                if (preg_match("~^content-type: (.+)$~i", $header, $content_type)) {
-                    $mime = $content_type[1];
-                    $extension = $this->getExtensionByMime($mime);
-                    $file_name = preg_replace("~\..+?$~", '', $file_name);
-                    $file_name .= '.' . $extension;
-                    break;
-                }
+            if (isset($headers['content-type'])) {
+                $mime = $headers['content_type'];
+                $extension = $this->getExtensionByMime($mime);
+                $file_name = preg_replace("~\..+?$~", '', $file_name);
+                $file_name .= '.' . $extension;
             }
         }
         $put_file = $this->getPutFilename($dir, $file_name);

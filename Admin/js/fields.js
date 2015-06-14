@@ -174,8 +174,12 @@ $html.on('click.fx', '.fx_image_field .fx_remote_file_block a',  function() {
 });
 
 $html.on('blur.fx', '.fx_image_field .fx_remote_file_block input', function() {
-    $(this).closest('.fx_remote_file_block').removeClass('active');
-    $(this).closest('.fx_preview').removeClass('fx_preview_active');
+    var $inp = $(this);
+    if ($inp.attr('disabled') !== undefined) {
+        return;
+    }
+    $inp.closest('.fx_remote_file_block').removeClass('active');
+    $inp.closest('.fx_preview').removeClass('fx_preview_active');
 });
 
 function handle_upload(data, $block) {
@@ -247,6 +251,7 @@ $html.on('paste.fx', '.fx_image_field .remote_file_location', function() {
         if (!val.match(/https?:\/\/.+/)) {
             return;
         }
+        $inp.attr('disabled', 'disabled').val($fx.lang('loading')+'...');
         $.ajax({
             url:'/floxim/',
             type:'post',
@@ -254,7 +259,12 @@ $html.on('paste.fx', '.fx_image_field .remote_file_location', function() {
             dataType: 'json',
             success: function ( data ) {
                 handle_upload(data, $block);
+                $inp.get(0).removeAttribute('disabled');
                 $inp.val('').blur();
+            },
+            error: function() {
+                console.log('on err');
+                $inp.get(0).removeAttribute('disabled').val($fx.lang('error')).focus();
             }
         });
     }, 50);
