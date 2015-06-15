@@ -115,6 +115,7 @@ class Admin extends System\Controller
         $path_floxim = fx::path('@floxim');
         $js_files = array(
             FX_JQUERY_PATH,
+            $path_floxim . '/lib/js/jquery.bem.js', // https://github.com/zenwalker/jquery-bem
             $path_floxim . '/Admin/js/fxj.js',
             $path_floxim . '/Admin/js/fx.js',
             $path_floxim . '/Admin/js/js-dictionary-' . fx::config('lang.admin'). '.js',

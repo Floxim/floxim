@@ -28,13 +28,14 @@
 </div>
 
 {template id="panel"}
-<div id="fx_admin_panel" class="fx_overlay">
-    <div id="fx_admin_panel_logo"><div class="fx_preloader"></div></div>
+<div fx:b="fx-admin-panel" class="fx_overlay">
+    <div fx:e="logo"><div class="fx_preloader"></div></div>
     <div fx:if="$is_front" id="fx_admin_front_menu">
         {apply menu_item each $modes with $class = 'fx_front_mode', $icon = $key /}
         {apply menu_item with $more_menu /}
     </div>
-    <div id="fx_admin_main_menu" class="fx_button_group">
+    <div fx:if="$panel_title" fx:e="title">{$panel_title}</div>
+    <div fx:if="$main_menu" id="fx_admin_main_menu" class="fx_button_group">
         <div class="fx_main_menu_expander"></div>
         <div class="fx_main_menu_items">
             {$main_menu || :menu_item /}
@@ -44,14 +45,10 @@
 </div>
 <div fx:if="$is_front" id="fx_admin_control" class="fx_overlay">
     <div id="fx_admin_extra_panel">
-        <!--<div class="fx_admin_panel_title"></div>-->
         <div class="fx_admin_panel_body"></div>
-        <!--<div class="fx_admin_panel_footer"></div>-->
     </div>
     <div class="fx_side_panel">
-        <!--<div class="fx_side_panel__title"></div>-->
         <div class="fx_side_panel__body"></div>
-        <!--<div class="fx_side_panel__footer"></div>-->
     </div>
 </div>
 {/template}
@@ -76,16 +73,16 @@
 {template id="authorize"}
     {call back_office_layout}
         {call panel}
-            <div class="fx_backend_login_title">Welcome to Floxim CMS! Please sign in.</div>
+            {$panel_title}{lang}Welcome to Floxim CMS! Please sign in.{/lang}{/$}
         {/call}
-        <div class="fx_backend_login">
-            <div class="auth_block">
+        <div fx:b="fx-backend-login">
+            <div fx:e="auth" class="fx_admin_form">
                 {$auth_form}
-                <a class="srv recover_link">I've lost my password</a>
+                <a fx:e="recover-link">{lang}I've lost my password{/lang}</a>
             </div>
-            <div class="recover_block">
+            <div fx:e="recover"  class="fx_admin_form">
                 {$recover_form}
-                <a class="srv login_link">Back to log in</a>
+                <a fx:e="login-link">{lang}Back to log in{/lang}</a>
             </div>
         </div>
     {/call}

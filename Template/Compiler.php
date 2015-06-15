@@ -99,7 +99,21 @@ class Compiler
         $code .= "}\n";
         $code .= "?>";
         return $code;
-        return '_element_';
+    }
+    
+    protected function tokenLangToCode($token)
+    {
+        $code =  "<?php\n";
+        $code .= "ob_start();\n";
+        $code .= $this->childrenToCode($token);
+        $code .= "\$lang_key = trim(ob_get_clean());\n";
+        $dict = $token->getProp('dict');
+        if (!$dict) {
+            $dict = 'system';
+        }
+        $code .= "echo fx::lang(\$lang_key, '".$dict."');\n";
+        $code .= "?>";
+        return $code;
     }
 
     protected function tokenHelpToCode($token)

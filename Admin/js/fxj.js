@@ -9,4 +9,18 @@
 */
 if (jQuery) {
     $fxj = jQuery;
+    
+    jQuery.fn.extend({
+        onElem: function(event, elem_name, callback) {
+            var block_class = jQuery.BEM.getBlockClass(this),
+                elem_class = jQuery.BEM.buildElemClass(block_class, elem_name);
+                
+            this.on(
+                event, 
+                '.'+elem_class, 
+                callback
+            );
+            return this;
+        }
+    });
 }

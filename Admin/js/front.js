@@ -2065,7 +2065,7 @@ fx_front.prototype.reload_layout = function(callback) {
 };
 
 fx_front.prototype.move_down_body = function () {
-    var panel_height = $('#fx_admin_panel').outerHeight();
+    var panel_height = $('.fx-admin-panel').outerHeight();
     $('body').css('margin-top', '').css('margin-top','+='+panel_height+'px');
     $('.fx_top_fixed').css('top', '+='+panel_height+'px').css('z-index', 2674);
 };

@@ -74,7 +74,7 @@ class Adminpanel extends Admin
                     'href' => fx::user()->getLogoutUrl()
                 )
             ),
-            'is_front' => true
+            'is_front' => $_SERVER['REQUEST_URI'] !== fx::config('path.admin')
         );
         $res = fx::template('@admin:panel')->render($data);
         return $res;

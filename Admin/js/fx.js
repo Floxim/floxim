@@ -8,7 +8,7 @@ window.$fx = {
         $fx.settings = options;    
         $fx.buttons_map = options.buttons.map;
         $fx.history = options.history;
-        $fx.panel = $('#fx_admin_panel');
+        $fx.panel = $('.fx-admin-panel');
         
         $fx.main_menu = new fx_main_menu($fx.settings.mainmenu);
         

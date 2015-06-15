@@ -24,7 +24,7 @@ input {
     text-transform: none;
 }
 
-&#fx_admin_panel, #fx_admin_panel {
+&.fx-admin-panel, .fx-admin-panel {
     position: fixed;
     left: 0;
     top: 0;
@@ -34,16 +34,32 @@ input {
     z-index: 2677;
     border-bottom:1px solid #ddd;
     box-shadow: 1px 1px 15px rgba(0,0,0,0.25);
+    &__logo {
+        float:left;
+        width: 45px;
+        height:59px;
+        background:url('images/sprite.png') no-repeat  -695px 11px;
+        margin-right: 20px;
+        margin-left: 10px;
+    }
+    
+    &__title {
+        font-size: 21px;
+        padding-top: 16px;
+        color: #666;
+        margin-left: 100px;
+    }
 }
 
-#fx_admin_panel_logo {
-    float:left;
-    width: 45px;
-    height:59px;
-    background:url('images/sprite.png') no-repeat  -695px 11px;
-    margin-right: 20px;
-    margin-left: 10px;
+.fx-backend-login {
+    margin-left: 100px;
+    margin-top: 130px;
+    
+    .fx_form_row {
+        margin-bottom: 10px;
+    }
 }
+
 
 #fx_admin_main_menu {
     float:right;
@@ -471,7 +487,7 @@ input {
 }
 
 @media screen and (max-width: 1150px) {
-    #fx_admin_panel_logo {
+    .fx-admin-panel__logo {
         display:none;
     }
     .fx_overlay .fx_menu_item {
@@ -484,7 +500,7 @@ input {
 }
 
 @media screen and (max-width: 950px) {
-    #fx_admin_panel_logo {
+    .fx-admin-panel__logo {
         display:none;
     }
     .fx_overlay .fx_menu_item {
@@ -505,7 +521,7 @@ input {
 }
 
 @media screen and (max-width: 670px) {
-    #fx_admin_panel_logo {
+    .fx-admin-panel__logo {
         display:none;
     }
     

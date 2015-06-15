@@ -187,7 +187,10 @@ class Token
                 'if',
                 'with_each',
                 'separator',
-                'with'
+                'with',
+                'lang', 
+                'bem_block', 
+                'bem_element'
             )
         ),
         'code'      => array(
@@ -195,31 +198,34 @@ class Token
         ),
         'area'      => array(
             'type'     => 'both',
-            'contains' => array('code', 'template', 'var', 'area', 'each', 'with_each', 'if', 'elseif', 'else')
+            'contains' => array('code', 'template', 'var', 'lang', 'area', 'each', 'with_each', 'if', 'elseif', 'else', 'bem_block', 'bem_element')
         ),
         'var'       => array(
             'type'     => 'both',
-            'contains' => array('code', 'var', 'call', 'area', 'template', 'each', 'if', 'apply', 'call')
+            'contains' => array('code', 'var', 'call', 'area', 'template', 'each', 'if', 'apply', 'call', 'lang', 'bem_block', 'bem_element')
         ),
         'call'      => array(
             'type'     => 'both',
-            'contains' => array('var', 'each', 'if', 'apply', 'call', 'with_each', 'with')
+            'contains' => array('var', 'lang', 'each', 'if', 'apply', 'call', 'with_each', 'with', 'bem_block', 'bem_element')
         ),
         'templates' => array(
             'type'     => 'double',
             'contains' => array('template', 'templates')
         ),
+        'lang'      => array(
+            'type'     => 'double'
+        ),
         'each'      => array(
             'type'     => 'double',
-            'contains' => array('code', 'template', 'area', 'var', 'call', 'each', 'if', 'elseif', 'else', 'separator')
+            'contains' => array('code', 'template', 'area', 'var', 'lang', 'call', 'each', 'if', 'elseif', 'else', 'separator')
         ),
         'bem_block' => array(
             'type'     => 'double',
-            'contains' => array('code', 'var', 'call', 'if', 'elseif', 'else')
+            'contains' => array('code', 'var', 'lang', 'call', 'if', 'elseif', 'else')
         ),
         'bem_element' => array(
             'type'     => 'double',
-            'contains' => array('code', 'var', 'call', 'if', 'elseif', 'else')
+            'contains' => array('code', 'var', 'lang', 'call', 'if', 'elseif', 'else')
         ),
         'with_each' => array(
             'type'     => 'double',
@@ -229,6 +235,7 @@ class Token
                 'template',
                 'area',
                 'var',
+                'lang',
                 'call',
                 'each',
                 'if',
@@ -245,6 +252,7 @@ class Token
                 'template',
                 'area',
                 'var',
+                'lang',
                 'call',
                 'each',
                 'if',
@@ -255,26 +263,26 @@ class Token
         ),
         'item'      => array(
             'type'     => 'double',
-            'contains' => array('code', 'template', 'area', 'var', 'call', 'each', 'if', 'elseif', 'else')
+            'contains' => array('code', 'template', 'area', 'var', 'lang', 'call', 'each', 'if', 'elseif', 'else')
         ),
         'if'        => array(
             'type'     => 'double',
-            'contains' => array('code', 'template', 'area', 'var', 'call', 'each', 'elseif', 'else')
+            'contains' => array('code', 'template', 'area', 'var', 'lang', 'call', 'each', 'elseif', 'else')
         ),
         'else'      => array(
             'type'     => 'both',
-            'contains' => array('code', 'template', 'area', 'var', 'call', 'each', 'elseif', 'else')
+            'contains' => array('code', 'template', 'area', 'var', 'lang', 'call', 'each', 'elseif', 'else', 'bem_block', 'bem_element')
         ),
         'elseif'    => array(
             'type'     => 'both',
-            'contains' => array('code', 'template', 'area', 'var', 'call', 'each', 'elseif', 'else')
+            'contains' => array('code', 'template', 'area', 'var', 'lang', 'call', 'each', 'elseif', 'else', 'bem_block', 'bem_element')
         ),
         'separator' => array(
             'type' => 'double'
         ),
         'css' => array(
             'type' => 'double',
-            'contains' => array('var', 'if', 'elseif', 'else', 'apply', 'call')
+            'contains' => array('var', 'lang', 'if', 'elseif', 'else', 'apply', 'call')
         )
     );
 

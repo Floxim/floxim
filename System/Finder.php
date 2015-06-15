@@ -541,7 +541,7 @@ abstract class Finder
         } elseif (in_array(strtolower($type), array('is null', 'is not null'))) {
             $value = '';
         } else {
-            $value = "'" . $value . "'";
+            $value = "'" . fx::db()->escape($value). "'";
         }
         return $field . ' ' . $type . ' ' . $value;
     }
