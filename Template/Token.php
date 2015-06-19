@@ -217,7 +217,7 @@ class Token
         ),
         'each'      => array(
             'type'     => 'double',
-            'contains' => array('code', 'template', 'area', 'var', 'lang', 'call', 'each', 'if', 'elseif', 'else', 'separator')
+            'contains' => array('code', 'template', 'area', 'var', 'lang', 'call', 'each', 'if', 'elseif', 'else', 'separator', 'bem_block', 'bem_element')
         ),
         'bem_block' => array(
             'type'     => 'double',
@@ -241,7 +241,9 @@ class Token
                 'if',
                 'elseif',
                 'else',
-                'separator'
+                'separator',
+                'bem_block', 
+                'bem_element'
             )
         ),
         'with'      => array(
