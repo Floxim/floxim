@@ -77,6 +77,7 @@ class Config
         }
         
         fx::path()->register('floxim', $floxim_http_path);
+        fx::path()->register('floxim_js', '@floxim/lib/js');
         fx::path()->register('module', '/module/');
         fx::path()->register('files', '/floxim_files/');
         fx::path()->register('log', fx::path('@files/log'));

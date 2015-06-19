@@ -196,13 +196,14 @@ class Entity extends System\Entity
 
     public function checkRights()
     {
+        if (fx::isAdmin()) {
+            return true;
+        }
+        
         if ($this['type_of_edit'] == Entity::EDIT_ALL || empty($this['type_of_edit'])) {
             return true;
         }
-        if ($this['type_of_edit'] == Entity::EDIT_ADMIN) {
-            return fx::isAdmin();
-        }
-
+        
         return false;
     }
 

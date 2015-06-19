@@ -445,6 +445,41 @@ input {
     }
 }
 
+.fx-alert-container {
+    position: fixed;
+    top: 5px;
+    right: 5px;
+    z-index: 100000;
+}
+
+.fx-admin-alert {
+    padding: 10px 30px 10px 15px;
+    background: #FFF;
+    border: 1px solid #CCC;
+    border-radius: 5px;
+    min-width: 300px;
+    margin-bottom: 20px;
+    box-shadow: -1px 1px 10px rgba(0,0,0,0.3);
+    &__close {
+        cursor: pointer;
+        position: absolute;
+        top: 7px;
+        right: 7px;
+        line-height: 100%;
+        width: 25px;
+        height: 25px;
+        padding-top: 4px;
+        text-align: center;
+        vertical-align: middle;
+        font-weight: bold;
+    }
+    &_status_error {
+        background: #A00;
+        border: 1px solid #900;
+        color: #FFF;
+    }
+}
+
 .fx_tab_data {
     display: none;
     &-active {

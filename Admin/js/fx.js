@@ -215,12 +215,59 @@ window.$fx = {
 
         return true;
     },
+    
+    alert: function(data, status, expire) {
+        var b = 'fx-admin-alert',
+            $body = $('body'),
+            $container = $body.data('fx_alert_container'),
+            $alert = $(
+                '<div class="'+b+'">'+
+                    '<span class="'+b+'__close">&times;</span>'+
+                    '<div class="'+b+'__data"></div>'+
+                '</div>'
+            ),
+            $data = $alert.elem('data');
+        
+        if (!$container) {
+            $container = $('<div class="fx-alert-container fx_overlay"></div>').appendTo($body);
+            $body.data('fx_alert_container', $container);
+        }
+        $data.append(data);
+        $alert.setMod('status', status);
+        $container.append($alert);
+        var destroy = function() {
+            $alert.css({
+                height:$alert.outerHeight(),
+                opacity:1,
+                overflow:'hidden'
+            }).animate({
+                height:0,
+                opacity:0,
+                'padding-top':0,
+                'padding-bottom':0,
+                'margin-bottom':0
+            }, 500, function() {
+                $alert.remove();
+            });
+        };
+        $alert.elem('close').click(destroy);
+        if (expire) {
+            setTimeout(destroy, expire*1000);
+        }
+    },
 
     show_status_text: function ( text, status ) { 
-        console.trace();
-        console.log('sst', text, status);
-        $("#fx_admin_status_block").attr('class', '');
-        $("#fx_admin_status_block").html("<span>"+text+"</span>").addClass(status).fadeIn('slow');
+        var $block = $("#fx_admin_status_block");
+        if (!$block.length) {
+            $block = $('<div id="fx_admin_status_block"></div>');
+            $('body').append($block);
+        }
+        $block
+            .attr('class', '')
+            .html("<span>"+text+"</span>")
+            .addClass(status)
+            .fadeIn('slow');
+        console.log($block);
     },
     
     show_error: function(json) {

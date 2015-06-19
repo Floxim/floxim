@@ -543,7 +543,7 @@ class Component extends Admin
         $field = array(
             'label'  => fx::alang('Parent component', 'system'),
             'name'   => 'parent_id',
-            'type'   => 'select',
+            'type'   => 'livesearch',
             'values' => array() //array('' => fx::alang('--no--','system'))
         );
         $c_finder = fx::data('component');

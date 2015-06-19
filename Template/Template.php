@@ -362,7 +362,7 @@ class Template
     protected static $templates = array();
 
 
-    public function getTemplateVariants()
+    public static function getTemplateVariants()
     {
         return static::$templates;
     }

@@ -765,14 +765,12 @@ class Infoblock extends Admin
      */
     public function saveVar($input)
     {
-        /* @var $ib fx_infoblock */
-
         if (isset($input['page_id'])) {
             fx::env('page_id', $input['page_id']);
         }
 
         $ib = fx::data('infoblock', $input['infoblock']['id']);
-        // for InfoBlock-layouts always save the parameters in the root InfoBlock
+        
         if ($ib->isLayout()) {
             $root_ib = $ib->getRootInfoblock();
             $ib_visual = $root_ib->getVisual();
@@ -829,7 +827,13 @@ class Infoblock extends Admin
                     $vals[$var['var']['name']] = $var['value'];
                 }
                 if (isset($contents[$content_id])) {
-                    $contents[$content_id]->setFieldValues($vals, array_keys($vals));
+                    $set_res = $contents[$content_id]->setFieldValues($vals, array_keys($vals));
+                    if (isset($set_res['status']) && $set_res['status'] === 'error') {
+                        return array(
+                            'status' => 'error',
+                            'errors' => $set_res['errors']
+                        );
+                    }
                 } else {
                     fx::log('Content not found in group', $contents, $content_id, $vals);
                 }

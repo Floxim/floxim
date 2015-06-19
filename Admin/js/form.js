@@ -57,6 +57,8 @@ fx_form = {
         
         var use_tabs = settings.tabs && !settings.ignore_cols;
 
+        settings.fields = $fx.form.init_joins(settings.fields);
+        
         if (use_tabs) {
             $fx_form.init_tabs(settings, $form);
         }
@@ -150,7 +152,7 @@ fx_form = {
         $form.data('is_locked', false);
         var $bc = $form.data('button_container');
         if ($bc) {
-            $bc.find('.fx_button_disabled').removeClass('fx_button-disabled');
+            $bc.find('.fx_button-disabled').removeClass('fx_button-disabled');
         }
     },
     form_is_locked: function($form) {
@@ -175,7 +177,8 @@ fx_form = {
             try {
                 data = $.parseJSON( data );
             } catch(e) {
-                status_block.writeError(data);
+                //status_block.writeError(data);
+                $fx.show_status_text('responce parse error');
                 return false;
             }
             $form.trigger('fx_form_sent', data);
@@ -186,7 +189,14 @@ fx_form = {
                 $form.trigger('fx_form_ok');
             }
             else if (data.status === 'error') {
-                status_block.writeError( data );
+                //status_block.writeError( data );
+                if (data.errors.length) {
+                    $.each(data.errors, function() {
+                        $fx.alert(this.error, 'error', 3);
+                    });
+                } else {
+                    $fx.alert('Error!', 'error', 3);
+                }
                 return;
             }
             else if (data.text) {
@@ -272,13 +282,20 @@ fx_form = {
             res = [],
             field_names = {};
         for (var i = 0; i < fields.length; i++) {
-            var c_join = fields[i].join_with;
+            var c_field = fields[i],
+                c_join = c_field.join_with;
+    
             field_names[fields[i].name] = true;
             if (!c_join) {
                 continue;
             }
             if (!groups[c_join]) {
-                groups[c_join] = {type:'joined_group', fields:[]};
+                var group = {type:'joined_group', fields:[]};
+                if (c_field.tab) {
+                    group.tab = c_field.tab;
+                }
+                group.join_type = c_field.join_type || 'tabs';
+                groups[c_join] = group;
             }
         }
         
@@ -403,8 +420,6 @@ fx_form = {
                 }
                 switch (pexp) {
                     case '==':
-                        var test_name = 'format[linking_mm_type_294_77_196]',
-                            c_name = _el.find(':input').attr('name');
                         do_show = par_val === pval;
                         // check parent visibility
                         // jquery 'is visible' magic doesn't work with input[type=hidden]
@@ -417,10 +432,6 @@ fx_form = {
                                     do_show = $inp_field_block.css('display') !== 'none';
                                 }
                             }
-                        }
-                        if (false && c_name === test_name) {
-                            console.log(_el, par_inp, par_inp.css('display'));
-                            alert('qq');
                         }
                         break;
                     case '!=':
@@ -448,12 +459,13 @@ fx_form = {
             });
             var is_visible = _el.is(':visible');
             var $el_inp =  _el.find(':input');
+            //console.log(do_show, _el, $el_inp);
             if (do_show && !is_visible) {
                 _el.show();
-                $el_inp.trigger('change');
+                $el_inp.trigger('change').trigger('fx_show_input');
             } else if (!do_show && is_visible) {
                 _el.hide();
-                $el_inp.trigger('change');
+                $el_inp.trigger('change').trigger('fx_hide_input');
             }
         };
         _el.hide();

@@ -207,10 +207,10 @@ class Loader
         self::$source_paths[$tpl_name][] = $path;
     }
     
+    protected static $imported_classes = array();
+    
     public static function import($tpl_name)
     {
-        static $imported = array();
-        
         $is_aliased = preg_match("~^\@(.+)~", $tpl_name, $real_name);
         if ($is_aliased) {
             $tpl_name = $real_name[1];
@@ -218,8 +218,8 @@ class Loader
             $tpl_name = fx::getComponentFullName($tpl_name);
         }
         
-        if (isset ($imported[$tpl_name])) {
-            return $imported[$tpl_name];
+        if (isset (self::$imported_classes[$tpl_name])) {
+            return self::$imported_classes[$tpl_name];
         }
         $processor = new self();
         
@@ -232,12 +232,17 @@ class Loader
         try {
             $processor->process();
         } catch (\Exception $e) {
-            $imported[$tpl_name] = false;
+            self::$imported_classes[$tpl_name] = false;
             return false;
         }
-        $imported[$tpl_name] = $classname;
+        self::$imported_classes[$tpl_name] = $classname;
         $classname::init();
         return $classname;
+    }
+    
+    public function getImportedClasses()
+    {
+        return self::$imported_classes;
     }
     
     public static function loadTemplateVariant(

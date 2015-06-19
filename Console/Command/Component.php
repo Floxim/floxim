@@ -71,7 +71,11 @@ class Component extends Console\Command
     protected static function replacePlaceholder($content, $com)
     {
         $parent = $com['parent'];
-        $par_ns = $parent->getNamespace();
+        if ($parent) {
+            $par_ns = $parent->getNamespace();
+        } else {
+            $par_ns = 'Floxim\\Floxim\\System\\Entity';
+        }
         $map = array(
             'Vendor'                => $com->getVendorName(),
             'Module'                => $com->getModuleName(),

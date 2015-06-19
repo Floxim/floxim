@@ -180,6 +180,10 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
                 css.top = plus_size * 0.7;
             }
         }
+        var abs_top = parseInt(css.top) + parseInt($button.css('top'));
+        if (abs_top < $fx.front.get_panel_height()) {
+            css.top = 0;
+        }
         $title.attr('style', '').css(css);
     }
     

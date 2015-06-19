@@ -1,6 +1,7 @@
 (function($) {
-$('html').on('click', '.fx_debug_collapser span', function(e) {
+$('html').on('click', '.fx_debug_collapser>span', function(e) {
     var $node = $(this.parentNode.nextSibling);
+    
     // no control - toggle just current level
     if (!e.ctrlKey){
         $node.toggle();

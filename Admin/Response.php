@@ -166,6 +166,11 @@ class Response
                 $field['tab'] = $tab;
             }
         }
+        foreach ($fields as $field_key => &$field) {
+            if (!isset($field['name'])) {
+                $field['name'] = $field_key;
+            }
+        }
         if ($prefix) {
             foreach ($fields as &$field) {
                 $field['name'] = $prefix . '[' . $field['name'] . ']';

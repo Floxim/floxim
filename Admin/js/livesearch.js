@@ -14,6 +14,7 @@ window.fx_livesearch = function (node) {
         this.plain_values = data_params.plain_values || [];
         this.skip_ids = data_params.skip_ids || [];
         this.allow_new = data_params.allow_new || false;
+        this.allow_select_doubles = data_params.allow_select_doubles;
     } else {
         this.datatype = n.data('content_type');
         this.count_show = n.data('count_show');
@@ -60,7 +61,7 @@ window.fx_livesearch = function (node) {
                 params.skip_ids.push(this.skip_ids[i]);
             }
         }
-        if (vals.length > 0) {
+        if (vals.length > 0 && !this.allow_select_doubles) {
             for (var i = 0; i < vals.length; i++) {
                 params.skip_ids.push(vals[i]);
             }
@@ -198,8 +199,7 @@ window.fx_livesearch = function (node) {
         if ( (!id || id*1 === 0) && !name) {
             return;
         }
-
-        if (id && this.hasValue(id) && this.isMultiple) {
+        if (id && (!this.allow_select_doubles && this.hasValue(id)) && this.isMultiple) {
             return;
         }
         if (!input_name) {
@@ -807,15 +807,29 @@ window.fx_suggest = function(params) {
         setTimeout (
             function () {
                 tmp_box.offset({
-                        top:tmp_box.offset().top+1
+                    top:tmp_box.offset().top+1
                 });
             }
         , 1);
-        this.box.css({
-            //width:node.width()-10+'px'
-            float:'left'
-        });
+        
+        var css = {
+            float:'left',
+            'min-width':node.outerWidth()
+        };
+        
+        this.box.css(css);
         this.skipBlur = false;
+        
+        var $scrollable = $(window);
+        node.parents().each(function() {
+            if ($(this).css('overflow') !== 'visible') {
+                $scrollable = $scrollable.add(this);
+            }
+        });
+        var that = this;
+        $scrollable.off('scroll.suggest_scroll').on('scroll.suggest_scroll', function() {
+            that.showBox();
+        });
         $('html').off('.suggest_clickout').on('mousedown.suggest_clickout', this.clickOut);
     };
     

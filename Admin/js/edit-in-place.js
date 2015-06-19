@@ -93,7 +93,7 @@ function fx_edit_in_place( node ) {
             this.is_linker_placeholder = true;
         }
     }
-
+    /*
     if ( (!this.is_content_editable || this.is_linker_placeholder) && this.panel_fields.length) {
         setTimeout(function() {
             if ($('.fx_selected .fx_var_editable').length === 0 || eip.is_linker_placeholder) {
@@ -106,6 +106,7 @@ function fx_edit_in_place( node ) {
             }
         }, 50);
     }
+    */
 }
 
 fx_edit_in_place.vars = {};
@@ -157,6 +158,9 @@ fx_edit_in_place.prototype.start = function(meta) {
     }
     if (meta.type === 'boolean' || meta.type === 'checkbox') {
         meta.type = 'bool';
+    }
+    if (!meta.name) {
+        meta.name = meta.id;
     }
     this.node.trigger('fx_before_editing');
     switch (meta.type) {
@@ -337,7 +341,6 @@ fx_edit_in_place.prototype.add_panel_field = function(meta) {
         }
     }
     
-    //var $field_container = $fx.front.get_node_panel();
     var $panel = $fx.front.node_panel.get(this.node).$panel;
     $panel.show();
     var npi = 'fx_node_panel__item';
@@ -348,6 +351,10 @@ fx_edit_in_place.prototype.add_panel_field = function(meta) {
     $field_node.data('meta', meta);
     this.panel_fields.push($field_node);
     $panel.append($field_container);
+    // add conditions
+    if (meta.parent) {
+        $fx.form.add_parent_condition(meta.parent, $field_node, $panel);
+    }
     return $field_node;
 };
 
@@ -675,7 +682,18 @@ fx_edit_in_place.prototype.save = function() {
     
     $fx.post(
         post_data, 
-        function() {
+        function(res) {
+            if (res.status === 'error') {
+                if (res.errors.length) {
+                    $.each(res.errors, function() {
+                        $fx.alert(this.error, 'error', 3);
+                    });
+                } else {
+                    $fx.alert('Error!', 'error', 3);
+                }
+                $fx.front.enable_infoblock($infoblock[0]);
+                return;
+            }
             $fx.front.reload_infoblock($infoblock[0]);
 	}
     );

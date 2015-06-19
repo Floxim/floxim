@@ -57,6 +57,8 @@ class Content extends Admin
 
         $this->response->addFields($fields);
         
+        $this->response->addFields( $content->getStructureFields(), '', 'content' );
+        
         $content_fields = fx::collection($content->getFormFields());
         
         $content_fields->apply(function (&$f) {
@@ -78,20 +80,25 @@ class Content extends Admin
 
         if (isset($input['data_sent']) && $input['data_sent']) {
             $res['is_new'] = !$content['id'];
-            $content->setFieldValues($input['content']);
-            foreach ($move_variants as $rel_prop) {
-                if (isset($input[$rel_prop])) {
-                    $content[$rel_prop] = $input[$rel_prop];
-                }
-            }
-            try {
-                $content->save();
-                $res['saved_id'] = $content['id'];
-                if ($is_backoffice) {
-                    $res['reload'] = str_replace("%d", $content['id'], $input['reload_url']);
-                }
-            }  catch (\Exception $e) {
+            $set_res = $content->setFieldValues($input['content']);
+            if (is_array($set_res) && isset($set_res['status']) && $set_res['status'] === 'error') {
                 $res['status'] = 'error';
+                $res['errors'] = $set_res['errors'];
+            } else {
+                foreach ($move_variants as $rel_prop) {
+                    if (isset($input[$rel_prop])) {
+                        $content[$rel_prop] = $input[$rel_prop];
+                    }
+                }
+                try {
+                    $content->save();
+                    $res['saved_id'] = $content['id'];
+                    if ($is_backoffice) {
+                        $res['reload'] = str_replace("%d", $content['id'], $input['reload_url']);
+                    }
+                }  catch (\Exception $e) {
+                    $res['status'] = 'error';
+                }
             }
         }
         $com_item_name = fx::data('component', $content_type)->getItemName();

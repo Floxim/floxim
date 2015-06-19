@@ -560,7 +560,8 @@ class Entity extends System\Entity implements Template\Entity
         }
         return array_unique($result_pages);
     }
-
+    /*
+    // seems not to be used anywhere
     public function getAvailParentsFinder()
     {
         $parent_type = $this['scope']['page_type'];
@@ -579,4 +580,6 @@ class Entity extends System\Entity implements Template\Entity
         }
         return $finder;
     }
+     * 
+     */
 }

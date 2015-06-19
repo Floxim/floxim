@@ -118,13 +118,12 @@ class Finder extends System\Finder
         return $infoblocks;
     }
     
-    public function whereContent($content_type = null, $with_child_types = true) 
+    public function whereContent($content_type = null, $with_parent_types = true) 
     {
         if ($content_type) {
-            // @todo: always store full component keyword
             $com = fx::component($content_type);
-            if ($with_child_types) {
-                $variants = $com->getAllVariants()->getValues('keyword');
+            if ($with_parent_types) {
+                $variants = $com->getChain()->getValues('keyword');
                 $this->where('controller', $variants);
             } else {
                 $this->where('controller', $com['keyword']);

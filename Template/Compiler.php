@@ -1151,6 +1151,10 @@ class Compiler
                     // constant
                     if (preg_match("~^[A-Z0-9_]+$~", $file)) {
                         $res_string = $file;
+                    } 
+                    // @floxim_js/jquery.bem.js
+                    elseif (preg_match("~^@~", $file)) {
+                        $res_string = 'fx::path()->http("'.$file.'")';
                     } elseif (!preg_match("~^(/|https?://)~", $file)) {
                         $res_string = '$template_dir."' . $file . '"';
                     } else {

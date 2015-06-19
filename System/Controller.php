@@ -194,6 +194,25 @@ class Controller
 
         // get acceptable controller
         $controller_variants = $this->getControllerVariants();
+        foreach ($controller_variants as $controller_variant) {
+            fx::template()->import($controller_variant);
+        }
+        foreach ($layout_names as $layout_name) {
+            fx::template()->import('theme.'.$layout_name);
+        }
+        $imported_classes = fx::template()->getImportedClasses();
+        $template_variants = array();
+        foreach ($imported_classes as $class) {
+            if (!$class) {
+                continue;
+            }
+            $template_variants = array_merge(
+                $template_variants,
+                call_user_func(array($class, 'getTemplateVariants'))
+            );
+        }
+        
+        /*
         $template_variants = array();
         // first we take out all the variants of layout templates
         foreach ($layout_names as $layout_name) {
@@ -214,6 +233,8 @@ class Controller
             }
             $controller_variants[$key] = fx::getComponentFullName($controller_variant);
         }
+         * 
+         */
 
         // now - filtered
         $result = array();

@@ -58,8 +58,8 @@ class Baze extends Field\Entity
         if (!is_array($value) && !is_object($value)) {
             $value = trim($value);
         }
-        if ($this['not_null'] && !$value) {
-            $this->error = sprintf(FX_FRONT_FIELD_FILED, $this->description);
+        if ($this['is_required'] && !$value) {
+            $this->error = sprintf(fx::alang('Field "%s" is required'), $this['name']);
             return false;
         }
         return true;

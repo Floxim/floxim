@@ -86,20 +86,12 @@ class Field extends Admin
     {
         $fields[] = $this->ui->input('keyword', fx::alang('Field keyword', 'system'), $info['keyword']);
         $fields[] = $this->ui->input('name', fx::alang('Field name', 'system'), $info['name']);
-        /*
-        $fields []= array(
-            'type' => 'select',
-            'name' => 'form_tab',
-            'label' => 'Form col',
-            'values' => array(
-                array('', '-auto-'),
-                array(1, '1'),
-                array(2, '2'),
-                array(3, '3'),
-                array(4, '4')
-            ),
-            'value' => $info['form_tab']
-        );*/
+        $fields[] = array(
+            'name' => 'is_required', 
+            'label' => fx::alang('Is required'),
+            'type' => 'checkbox',
+            'value' => $info['is_required']
+        );
 
         foreach (fx::data('datatype')->all() as $v) {
             $values[$v['id']] = fx::alang("FX_ADMIN_FIELD_" . strtoupper($v['name']), 'system');
@@ -134,7 +126,7 @@ class Field extends Admin
 
     public function addSave($input)
     {
-        $params = array('format', 'type', 'not_null', 'searchable', 'default', 'type_of_edit', 'form_tab');
+        $params = array('format', 'type', 'not_null', 'searchable', 'default', 'type_of_edit', 'is_required');
         $data['keyword'] = trim($input['keyword']);
         $data['name'] = trim($input['name']);
         foreach ($params as $v) {
@@ -192,7 +184,8 @@ class Field extends Admin
             'searchable',
             'default',
             'type_of_edit',
-            'form_tab'
+            'form_tab',
+            'is_required'
         );
         $input['keyword'] = trim($input['keyword']);
         $input['name'] = trim($input['name']);

@@ -50,13 +50,13 @@ window.$fx_fields = {
     },
 
     livesearch: function(json) {
+        json.params = json.params || {};
         if (json.values) {
-            json.params = json.params || {};
             var vals = [];
             $.each(json.values, function() {
                 var c_val = this;
                 // [ [id1, name1], [id2, name2] ]
-                if (this instanceof Array && this.length === 2) {
+                if (this instanceof Array && this.length >= 2) {
                     c_val = {
                         id:this[0],
                         name:this[1]
@@ -68,6 +68,9 @@ window.$fx_fields = {
                 }
             });
             json.params.preset_values = vals;
+        }
+        if (json.allow_select_doubles) {
+            json.params.allow_select_doubles = json.allow_select_doubles;
         }
         var ls = $t.jQuery('form_row', json);
         return ls;

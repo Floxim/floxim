@@ -326,7 +326,7 @@ for (var i in _c.tabs) {
 $('td', html).first().addClass('fx_tab_data_first');
 $('td', html).last().addClass('fx_tab_data_last');
 
-<!--[form_row ? _c.type === 'joined_group']-->
+<!--[form_row ? _c.type === 'joined_group' && _c.join_type === 'tabs']-->
 <div class="field field_<?=_c.type?>">
     <div class="form_label fx_group_labels">  
     <?
@@ -384,6 +384,46 @@ $labels.on('click', function() {
     var $c_container = $containers.eq( $labels.index(this) );
     $c_container.show().find(':input').focus();
 });
+
+<!--[form_row ? _c.type === 'joined_group' && _c.join_type === 'line']-->
+<div class="field field_<?=_c.type?> field_group-type_line">
+    <div class="input_container">
+        <?
+        $.each(_c.fields, function(index, field) {
+            ?>
+            <div class="fx_group_input">
+            
+            </div>
+            <?
+        });
+        ?>
+    </div>
+</div>
+
+<!--jquery-->
+var $containers = html.find('.fx_group_input');
+
+$.each(_c.fields, function(index, item) {
+    var $input_node = $t.jQuery('form_row', item);
+    item.$input = $input_node;
+    $containers.eq(index).append($input_node );
+});
+
+function recount_groups() {
+    var $vis = $containers.find('.field').filter(':visible'),
+        margin = 2,
+        width = (100 - margin * ($vis.length - 1)) / $vis.length;
+        
+    $vis.parent().css({
+        width:width+'%',
+        'margin-right':margin+'%',
+        float:'left'
+    });
+    $vis.last().parent().css('margin-right', 0);
+}
+
+recount_groups();
+html.on('fx_show_input fx_hide_input', recount_groups);
 
 <!--[input ? _c.class_name === 'fx_field_limit']-->
 <div>

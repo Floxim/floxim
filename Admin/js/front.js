@@ -317,6 +317,11 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
                 if (is_linker_placeholder) {
                     $placeholder.addClass('fx_linker_placeholder');
                     $('.fx_hilight', $placeholder).removeClass('fx_hilight').addClass('fx_unselectable');
+                    $placeholder.on('dblclick', function() {
+                        $('.fx_unselectable', $placeholder).removeClass('fx_unselectable');
+                        $placeholder.removeClass('fx_linker_placeholder fx_unselectable');
+                        $fx.front.hilight($placeholder);
+                    });
                 } else {
                     for (var i = 0; i < $placeholder_fields.length; i++) {
                         var $c_field = $placeholder_fields.eq(i);
@@ -1900,6 +1905,13 @@ fx_front.prototype.disable_infoblock = function(infoblock_node) {
         .addClass('fx_infoblock_disabled');
 };
 
+fx_front.prototype.enable_infoblock = function(infoblock_node) {
+    $(infoblock_node)
+        .off('click.fx_fake_click')
+        .css('opacity', '')
+        .removeClass('fx_infoblock_disabled');
+};
+
 fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_data) {
     
     var $infoblock_node = $(infoblock_node);
@@ -2064,8 +2076,12 @@ fx_front.prototype.reload_layout = function(callback) {
    $fx.front.reload_infoblock($('body').get(0), callback, {infoblock_is_layout:true});
 };
 
+fx_front.prototype.get_panel_height = function() {
+    return $('.fx-admin-panel').outerHeight();
+}
+
 fx_front.prototype.move_down_body = function () {
-    var panel_height = $('.fx-admin-panel').outerHeight();
+    var panel_height = this.get_panel_height();
     $('body').css('margin-top', '').css('margin-top','+='+panel_height+'px');
     $('.fx_top_fixed').css('top', '+='+panel_height+'px').css('z-index', 2674);
 };
