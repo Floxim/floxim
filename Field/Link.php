@@ -112,6 +112,8 @@ class Link extends Baze
             return $this->_js_field;
         }
         
+        $finder = fx::data($target_content);
+        
         $name_prop = $finder->getNameField();
         
         if (!$name_prop) {
