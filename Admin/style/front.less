@@ -498,8 +498,19 @@ body:not(.fx_mode_edit) .fx_entity_hidden {
     opacity:0.7 !important;
 }
 
-.fx_var_editable:empty {
+.fx_var_editable:empty, .fx_editable_empty {
     text-decoration:none !important;
+}
+/*
+.fx_var_editable:focus {
+    background:#F99 !important;
+}
+*/
+
+.fx_setting_focus {
+    display:inline-block;
+    min-width:5px;
+    min-height:5px;
 }
 
 .fx_hilight_outline {

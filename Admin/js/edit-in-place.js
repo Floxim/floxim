@@ -1,5 +1,6 @@
 (function($){
 
+
 $.fn.edit_in_place = function(command) {
     var $nodes = this;
     $nodes.each(function() {
@@ -18,6 +19,32 @@ $.fn.edit_in_place = function(command) {
                 break;
         }
     });
+};
+
+window.fx_eip = {
+    vars: {},
+    get_values: function(entity_id) {
+        var res = {};
+        $.each(this.vars, function() {
+            if (this.var.content_id === entity_id) {
+                res[this.var.name] = this.value;
+            }
+        });
+        return res;
+    },
+    get_edited_vars: function() {
+        var vars = [];
+        var $edited = $('.fx_edit_in_place');
+        $edited.each(function() {
+            var c_eip = $(this).data('edit_in_place');
+            if (c_eip){
+                $.each(c_eip.get_vars(), function(index, item) {
+                    vars.push(item);
+                });
+            }
+        });
+        return vars;
+    }
 };
 
 function fx_edit_in_place( node ) {
@@ -109,8 +136,6 @@ function fx_edit_in_place( node ) {
     */
 }
 
-fx_edit_in_place.vars = {};
-
 fx_edit_in_place.prototype.handle_keydown = function(e) {
     if (e.which === 27) {
         if (e.isDefaultPrevented && e.isDefaultPrevented()) {
@@ -163,6 +188,23 @@ fx_edit_in_place.prototype.start = function(meta) {
         meta.name = meta.id;
     }
     this.node.trigger('fx_before_editing');
+    
+    var is_linker_selector = false;
+    // skip "select entity" field if user is adding new entity
+    if (meta.type === 'livesearch') {
+        var entity_meta = this.node.data('fx_entity_meta') || {};
+        if (
+            entity_meta.placeholder_linker
+            && entity_meta.placeholder_linker._link_field === meta.name
+        ) {
+            is_linker_selector = true;
+        }
+    }
+    
+    if (is_linker_selector && !this.node.is('.fx_linker_placeholder')) {
+        return;
+    }
+    
     switch (meta.type) {
         case 'datetime':
             this.add_panel_field(
@@ -185,7 +227,12 @@ fx_edit_in_place.prototype.start = function(meta) {
             });
             break;
         case 'select': case 'livesearch': case 'bool': case 'color': case 'map': case 'link':
-            this.add_panel_field(meta);
+            var $field = this.add_panel_field(meta);
+            if (is_linker_selector) {
+                $field.on('change', function() {
+                    edit_in_place.fix().save().stop();
+                });
+            }
             break;
         case 'string': case 'html': case '': case 'text': case 'int': case 'float':
             if (meta.target_type === 'att') {
@@ -195,6 +242,16 @@ fx_edit_in_place.prototype.start = function(meta) {
             }
             break;
     }
+};
+
+fx_edit_in_place.prototype.force_focus = function($n) {
+    var selection = window.getSelection(),
+        range = document.createRange();
+    
+    range.setStart($n[0], 0);
+    range.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(range);
 };
 
 fx_edit_in_place.prototype.start_content_editable = function(meta) {
@@ -213,7 +270,8 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
     
     var nodes_to_sync = [],
         $var_nodes = $('*[data-fx_var], *[data-has_var_in_att]'),
-        c_node = $n[0];
+        c_node = $n[0],
+        that = this;
     
     $var_nodes.each(function() {
         if (this === c_node) {
@@ -225,9 +283,19 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
             return;
         }
         if (
-            content_var.content_id === meta.content_id &&
-            content_var.id === meta.id &&
-            content_var.var_type === meta.var_type
+            content_var.var_type === meta.var_type && 
+            (
+                (
+                    content_var.content_id && 
+                    content_var.var_type === 'content' && 
+                    content_var.content_id === meta.content_id &&
+                    content_var.id === meta.id
+                ) || (
+                    content_var.var_type === 'visual' &&
+                    content_var.id === meta.id &&
+                    $node.closest('.fx_infoblock').data('fx_infoblock').id === that.ib_meta.id
+                )
+            )
         ) {
             nodes_to_sync.push($node);
         }
@@ -246,7 +314,7 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
             "content:attr(fx_placeholder);"+
         "}"+
     "</style>").appendTo( $('head') );
-    
+   
     $n.addClass('fx_var_editable');
     $n.attr('fx_placeholder', meta.label || meta.name || meta.id);
 
@@ -282,13 +350,20 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
             is_empty
         );
         if (is_empty && !edit_in_place.is_wysiwyg) {
-            setTimeout(
-                function() {$n.focus();},
-                1
-            );
+            //debugger;
+            $n.focus();
+            edit_in_place.force_focus($n);
         }
     }; 
+    // force node to have size
+    $n.addClass('fx_setting_focus');
+    
     $n.attr('contenteditable', 'true').focus();
+    
+    if ($n.text().length === 0) {
+        this.force_focus($n);
+    }
+    
     this.$closest_button = $n.closest('button');
     if (this.$closest_button.length > 0) {
         this.$closest_button.on('click.edit_in_place', function() {return false;});
@@ -300,6 +375,7 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
             function () {setTimeout(handle_node_size,1);}
         );
     }
+    $n.removeClass('fx_setting_focus');
     if (nodes_to_sync.length > 0) {
         $n.on(
             'keyup.edit_in_place keydown.edit_in_place click.edit_in_place change.edit_in_place', 
@@ -609,17 +685,8 @@ fx_edit_in_place.prototype.fix = function() {
     if (this.stopped) {
         return this;
     }
-    var vars = [];
-    var $edited = $('.fx_edit_in_place');
-    $edited.each(function() {
-        var c_eip = $(this).data('edit_in_place');
-        if (c_eip){
-            $.each(c_eip.get_vars(), function(index, item) {
-                vars.push(item);
-            });
-            //c_eip.stop();
-        }
-    });
+    
+    var vars = fx_eip.get_edited_vars();
     
     // nothing has changed
     if (vars.length === 0) {
@@ -630,37 +697,19 @@ fx_edit_in_place.prototype.fix = function() {
     for (var i = 0; i < vars.length; i++) {
         var v = vars[i].var,
             hash = v.id+'.'+v.var_type+'.'+v.content_id+'.'+v.content_type_id;
-        fx_edit_in_place.vars[hash] = vars[i];
+        fx_eip.vars[hash] = vars[i];
     }
     return this;
 };
 
 fx_edit_in_place.prototype.save = function() {
     var vars = [];
-    $.each(fx_edit_in_place.vars, function() {
+    $.each(fx_eip.vars, function() {
         vars.push(this);
     });
     
     if (vars.length === 0) {
         return this;
-    }
-    var new_entity_props = null;
-    var $adder_placeholder = $(this.node).closest('.fx_entity_adder_placeholder');
-    if ($adder_placeholder.length > 0) {
-        var entity_meta = $adder_placeholder.data('fx_entity_meta');
-        new_entity_props = null;
-        if (entity_meta) {
-            if (entity_meta.placeholder_linker) {
-                new_entity_props = entity_meta.placeholder_linker;
-                if (entity_meta.placeholder.__move_before) {
-                    new_entity_props.__move_before = entity_meta.placeholder.__move_before;
-                } else if (entity_meta.placeholder.__move_after) {
-                    new_entity_props.__move_after = entity_meta.placeholder.__move_after;
-                }
-            } else {
-                new_entity_props = entity_meta.placeholder;
-            }
-        }
     }
     
     var post_data = {
@@ -671,8 +720,25 @@ fx_edit_in_place.prototype.save = function() {
         fx_admin:true,
         page_id:$fx.front.get_page_id()
     };
-    if (new_entity_props) {
-        post_data.new_entity_props = new_entity_props;
+    
+    var $adder_placeholder = $(this.node).closest('.fx_entity_adder_placeholder'),
+        entity_meta = $adder_placeholder.data('fx_entity_meta');
+    
+    if ($adder_placeholder.length > 0 && entity_meta) {
+        if (entity_meta.placeholder_linker) {
+            post_data.new_entity_props = entity_meta.placeholder_linker;
+            if (entity_meta.placeholder.__move_before) {
+                post_data.new_entity_props.__move_before = entity_meta.placeholder.__move_before;
+            } else if (entity_meta.placeholder.__move_after) {
+                post_data.new_entity_props.__move_after = entity_meta.placeholder.__move_after;
+            }
+            // user pressed "add new" button to create linked entity
+            if (!$adder_placeholder.is('.fx_linker_placeholder')) {
+                post_data.create_linked_entity = entity_meta.placeholder.type;
+            }
+        } else {
+            post_data.new_entity_props = entity_meta.placeholder;
+        }
     }
     
     var node = this.node,
@@ -698,7 +764,7 @@ fx_edit_in_place.prototype.save = function() {
 	}
     );
     
-    fx_edit_in_place.vars = {};
+    fx_eip.vars = {};
     return this;
 };
 

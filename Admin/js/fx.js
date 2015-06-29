@@ -53,6 +53,9 @@ window.$fx = {
                         $dd.hide();
                     } else {
                         $dd.show();
+                        $('html').one('click', function() {
+                            $dd.hide();
+                        });
                     }
                     return false;
                 })

@@ -409,7 +409,7 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
                 distance = dims[2] - dims[1];
             }
             
-            var outstand_treshold = 100,
+            var outstand_treshold = 40,
                 is_outstanding = e_width < outstand_treshold || e_height < outstand_treshold;
             
             if ($neighbour.length && !is_outstanding) {

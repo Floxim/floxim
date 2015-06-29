@@ -789,17 +789,27 @@ class Infoblock extends Admin
         })->group(function ($v) {
             return $v['var']['var_type'];
         });
-
-
+        
         $contents = fx::collection();
+        
+        $new_entity = null;
 
         if (isset($input['new_entity_props'])) {
             $new_props = $input['new_entity_props'];
-            $contents['new'] = fx::content($new_props['type'])->create($new_props);
-            if (!$contents['new']['infoblock_id']) {
-                $avail_infoblocks = fx::data('infoblock')->getForContent($contents['new']);
-                if (count($avail_infoblocks) > 0) {
-                    $contents['new']['infoblock_id'] = $avail_infoblocks->first()->get('id');
+            $new_com = fx::component($new_props['type']);
+            $new_entity = fx::content($new_props['type'])->create($new_props);
+            $contents['new@'.$new_com['id']] = $new_entity;
+            
+            // we are working with linker and user pressed "add new" button to create linked entity
+            if (isset($input['create_linked_entity'])) {
+                $linked_entity_com = fx::component($input['create_linked_entity']);
+                $linked_entity = fx::content($linked_entity_com['keyword'])->create();
+                $contents['new@'.$linked_entity_com['id']] = $linked_entity;
+                // bind the new entity to the linker prop
+                if (isset($new_props['_link_field'])) {
+                    $link_field = $new_com->getFieldByKeyword($new_props['_link_field'], true);
+                    $target_prop = $link_field['format']['prop_name'];
+                    $new_entity[$target_prop] = $linked_entity;
                 }
             }
         }
@@ -810,36 +820,29 @@ class Infoblock extends Admin
                 if (!$vid) {
                     $vid = 'new';
                 }
-                return $vid;
+                return $vid.'@'.$v['var']['content_type_id'];
             });
-            foreach ($content_groups as $content_id => $content_vars) {
+            foreach ($content_groups as $content_id_and_type => $content_vars) {
+                list($content_id, $content_type_id) = explode("@", $content_id_and_type);
                 if ($content_id !== 'new') {
-                    $fv = $content_vars->first();
-                    // todo: verify $fv['content_type_id'] -> $fv['var']['content_type_id']
-                    $c_content = fx::content($fv['var']['content_type_id'], $content_id);
+                    $c_content = fx::content($content_type_id, $content_id);
                     if (!$c_content) {
                         continue;
                     }
-                    $contents[$content_id] = $c_content;
+                    $contents[$content_id_and_type] = $c_content;
                 }
                 $vals = array();
                 foreach ($content_vars as $var) {
                     $vals[$var['var']['name']] = $var['value'];
                 }
-                if (isset($contents[$content_id])) {
-                    $set_res = $contents[$content_id]->setFieldValues($vals, array_keys($vals));
-                    if (isset($set_res['status']) && $set_res['status'] === 'error') {
-                        return array(
-                            'status' => 'error',
-                            'errors' => $set_res['errors']
-                        );
-                    }
+                if (isset($contents[$content_id_and_type])) {
+                    $contents[$content_id_and_type]->setFieldValues($vals, array_keys($vals));
                 } else {
                     fx::log('Content not found in group', $contents, $content_id, $vals);
                 }
             }
         }
-
+        
         $new_id = false;
         foreach ($contents as $cid => $c) {
             $c->save();

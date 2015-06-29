@@ -143,7 +143,7 @@ function node_panel($node, params) {
         
         var p_height = $p.outerHeight();
         var top_fix = 0;
-        var $top_fixed_nodes = $('#fx_admin_panel, .fx_top_fixed');
+        var $top_fixed_nodes = $('.fx-admin-panel, .fx_top_fixed');
         
         var doc_scroll = $(document).scrollTop();
         var screen_half = $('body').outerWidth() / 2;
@@ -159,7 +159,6 @@ function node_panel($node, params) {
         var $prev_panel = $p.prevAll('.fx_node_panel').first();
         
         
-        //var $node = $($fx.front.get_selected_item());
         var $node = that.$node;
         var no = $node.offset();
         if ( that.params.align === 'left') {
@@ -196,7 +195,6 @@ function node_panel($node, params) {
             } else {
                 css.position = 'fixed';
                 css.top = top_fix;
-                //css.opacity = 0.7;
                 $p.addClass('fx_node_panel_fixed');
             }
         }
@@ -213,7 +211,6 @@ function node_panel($node, params) {
         if (p_gone > 0) {
             css.left = css.left - p_gone;
         }
-        
         
         $p.css(css);
         

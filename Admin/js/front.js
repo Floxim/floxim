@@ -1,3 +1,5 @@
+/* global Function */
+
 (function($) {
 
 window.fx_front = function () {
@@ -199,15 +201,7 @@ fx_front.prototype.handle_click = function(e) {
     var $link = $(target).closest('a[href]');
     if ($link.length && $link.closest('.fx_entity_adder_placeholder').length === 0) {
         var panel = $fx.front.node_panel.get();
-        /*
-        var $click = $(
-            '<div class="fx_follow_the_link">'+
-                '<a href="'+$link.attr('href')+'" class="fx_icon fx_icon-type-follow"></a>'+
-            '</div>'
-        );
-        panel.add_label($click, panel.$panel.children().filter(':visible').first());
-        */
-       panel.add_button(
+        panel.add_button(
             {
                 type:'icon', 
                 keyword:'follow',
@@ -311,37 +305,59 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
             null,
             function() {
                 $placeholder.css(null_size);
-                var $placeholder_fields = $('.fx_template_var, .fx_template_var_in_att', $placeholder),
-                    $placeholder_focus = $placeholder,
-                    field_found = false;
+                var $placeholder_focus = $placeholder,
+                    find_focus_field = function() {
+                        //$placeholder_fields = $('.fx_template_var, .fx_template_var_in_att', $placeholder);
+                        $placeholder_fields = $placeholder.descendant_or_self('.fx_template_var, .fx_template_var_in_att');
+                        for (var i = 0; i < $placeholder_fields.length; i++) {
+                            var $c_field = $placeholder_fields.eq(i);
+                            if ($fx.front.is_selectable($c_field) && $c_field.is(':visible')) {
+                                // found name field
+                                if ( ($c_field.data('fx_var') || {}).name === 'name') {
+                                    return $c_field;
+                                }
+                            }
+                        }
+                        return $placeholder;
+                    };
+                
                 if (is_linker_placeholder) {
                     $placeholder.addClass('fx_linker_placeholder');
                     $('.fx_hilight', $placeholder).removeClass('fx_hilight').addClass('fx_unselectable');
-                    $placeholder.on('dblclick', function() {
+                } else {
+                    $placeholder_focus = find_focus_field();
+                }
+                $fx.front.select_item($placeholder_focus);
+                
+                if (is_linker_placeholder) {
+                    
+                    /*
+                     * 
+                     * @type @exp;$fx@pro;front@pro;node_panel@call;get{"placeholder":{"type":"floxim.nav.section"},"placeholder_name":"Linker","placeholder_linker":{"infoblock_id":"526","parent_id":"3077","type":"floxim.main.linker","_link_field":"linked_id"}}
+                     */
+                    
+                    var 
+                        link_field_name = $placeholder.data('fx_entity_meta').placeholder_linker._link_field,
+                        selector_selector = '.fx_node_panel__item-field_name-'+link_field_name,
+                        panel = $fx.front.node_panel.get(),
+                        $label = panel.add_label('create new'),
+                        $panel = panel.$panel,
+                        $selector = $(selector_selector, $panel).first(),
+                        $placeholder_fields = $('.fx_node_panel__item-type-field', $panel).not(selector_selector);
+                        //$placeholder_fields = $selector.nextAll('.fx_node_panel__item-type-field:visible');
+
+                    $placeholder_fields.hide();
+                    $label.click(function() {
+                        $placeholder_fields.show();
+                        $label.remove();
+                        $selector.hide();
                         $('.fx_unselectable', $placeholder).removeClass('fx_unselectable');
                         $placeholder.removeClass('fx_linker_placeholder fx_unselectable');
                         $fx.front.hilight($placeholder);
+                        var $focus_field = find_focus_field();
+                        $fx.front.select_item( $focus_field );
                     });
-                } else {
-                    for (var i = 0; i < $placeholder_fields.length; i++) {
-                        var $c_field = $placeholder_fields.eq(i);
-                        if ($fx.front.is_selectable($c_field)) {
-                            if (!$c_field.is(":visible")) {
-                                continue;
-                            }
-                            // found name field
-                            if ( ($c_field.data('fx_var') || {}).name === 'name') {
-                                $placeholder_focus = $c_field;
-                                break;
-                            }
-                            if (!field_found){
-                                $placeholder_focus = $c_field;
-                                field_found = true;
-                            }
-                        }
-                    }
                 }
-                $fx.front.select_item($placeholder_focus);
             }
         );
     };
@@ -445,6 +461,7 @@ fx_front.prototype.get_panel_adder_closure = function(meta) {
         var $current_node = $($fx.front.get_selected_item());
         var $ib_node = $current_node.closest('.fx_infoblock');
         var entity_meta = $current_node && $current_node.data('fx_entity');
+        console.log(entity_meta);
         if (entity_meta) {
             var $button = $(e.target);
             var curr_node_id = entity_meta[0];
@@ -1097,6 +1114,7 @@ fx_front.prototype.hilight = function(container) {
     if (container.not('.fx_unselectable').is(fx_selector)) {
         items = items.add(container);
     }
+    $('.fx_has_inline_adder', container).off('.fx_recount_adders').removeClass('fx_has_inline_adder')
     items.
         off('.fx_recount_outlines').
         off('.fx_recount_adders').
@@ -1414,7 +1432,6 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
         edit_action_params = $.extend(edit_action_params, placeholder_data);
     }
     
-    
     if (!is_linker_placeholder) {
         entity_panel.add_button(
             {
@@ -1423,10 +1440,11 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
                 label:'Edit '+$entity.data('fx_entity_name').toLowerCase()
             }, 
             function() {
+                var entity_values = fx_eip.get_values(ce_id);
                 $fx.front.disable_node_panel();
                 $fx.front.select_item(entity);
                 $fx.front_panel.load_form(
-                    edit_action_params, 
+                    $.extend({}, edit_action_params, {entity_values:entity_values}), 
                     {
                         //view:'cols',
                         onfinish: function() {
@@ -1788,8 +1806,6 @@ fx_front.prototype._start_areas_sortable = function() {
         });
         $area.data('sortable', sortable);
     });
-    
-    //console.log('sas', $areas);
 };
 
 fx_front.prototype._stop_areas_sortable = function() {
@@ -2315,6 +2331,8 @@ fx_front.prototype.outline_block = function(n, style, speed) {
     var overlay_offset = parseInt(front_overlay.css('top'));
     
     var draw_lens = (style === 'selected_light') || (style === 'selected' && n.is('.fx_entity'));
+    
+    draw_lens = false;
     
     if (draw_lens) {
         n.data('fx_has_lens', true);

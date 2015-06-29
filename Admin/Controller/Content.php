@@ -48,6 +48,10 @@ class Content extends Admin
                 break;
             }
         }
+        
+        if (isset($input['entity_values'])) {
+            $content->setFieldValues($input['entity_values'], array_keys($input['entity_values']));
+        }
 
         if (isset($input['content_id'])) {
             $fields [] = $this->ui->hidden('content_id', $input['content_id']);

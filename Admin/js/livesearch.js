@@ -13,7 +13,7 @@ window.fx_livesearch = function (node) {
         this.ajax_preload = data_params.ajax_preload;
         this.plain_values = data_params.plain_values || [];
         this.skip_ids = data_params.skip_ids || [];
-        this.allow_new = data_params.allow_new || false;
+        this.allow_new = data_params.allow_new || true;
         this.allow_select_doubles = data_params.allow_select_doubles;
     } else {
         this.datatype = n.data('content_type');

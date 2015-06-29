@@ -212,30 +212,6 @@ class Controller
             );
         }
         
-        /*
-        $template_variants = array();
-        // first we take out all the variants of layout templates
-        foreach ($layout_names as $layout_name) {
-            if (($layout_tpl = fx::template('theme.' . $layout_name))) {
-                $template_variants = array_merge(
-                    $template_variants,
-                    $layout_tpl->getTemplateVariants()
-                );
-            }
-        }
-        // now - all the variants of templates from template from the controller
-        foreach ($controller_variants as $key => $controller_variant) {
-            if (($controller_template = fx::template($controller_variant))) {
-                $template_variants = array_merge(
-                    $template_variants,
-                    $controller_template->getTemplateVariants()
-                );
-            }
-            $controller_variants[$key] = fx::getComponentFullName($controller_variant);
-        }
-         * 
-         */
-
         // now - filtered
         $result = array();
         foreach ($template_variants as $k => $tplv) {

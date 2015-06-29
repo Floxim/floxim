@@ -107,6 +107,6 @@ class Layout extends System\Controller
      */
     protected function getControllerVariants()
     {
-        return array('layout');
+        return array('floxim.component.layout');
     }
 }
