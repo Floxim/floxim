@@ -23,6 +23,15 @@ $.fn.edit_in_place = function(command) {
 
 window.fx_eip = {
     vars: {},
+    fix: function() {
+        var vars = this.get_edited_vars();
+        for (var i = 0; i < vars.length; i++) {
+            var v = vars[i].var,
+                hash = v.id+'.'+v.var_type+'.'+v.content_id+'.'+v.content_type_id;
+            this.vars[hash] = vars[i];
+        }
+        return vars;
+    },
     get_values: function(entity_id) {
         var res = {};
         $.each(this.vars, function() {
@@ -686,18 +695,13 @@ fx_edit_in_place.prototype.fix = function() {
         return this;
     }
     
-    var vars = fx_eip.get_edited_vars();
+    var vars = fx_eip.fix();
     
     // nothing has changed
     if (vars.length === 0) {
         this.stop();
         this.restore();
         return this;
-    }
-    for (var i = 0; i < vars.length; i++) {
-        var v = vars[i].var,
-            hash = v.id+'.'+v.var_type+'.'+v.content_id+'.'+v.content_type_id;
-        fx_eip.vars[hash] = vars[i];
     }
     return this;
 };
@@ -775,6 +779,7 @@ fx_edit_in_place.prototype.restore = function() {
     var saved = this.node.data('fx_saved_value');
     this.node.html(saved);
     this.node.trigger('fx_editable_restored');
+    fx_eip.vars = {};
     return this;
 };
 

@@ -79,6 +79,9 @@ fx_front.prototype.handle_mouseover = function(e) {
     if (e.fx_hilight_done) {
         return;
     }
+    if (!$fx.front.is_selectable(this)) {
+        return;
+    }
     var node = $(this);
     if (node.hasClass('fx_selected')) {
         e.fx_hilight_done = true;
@@ -862,7 +865,6 @@ fx_front.prototype.is_selectable = function(node) {
             
             // select a block to show "add" button
             var c_meta = n.data('fx_controller_meta');
-            //if (c_meta && (c_meta.accept_content || c_meta.fields)) {
             if (
                 c_meta && (
                     c_meta.fields ||
@@ -872,7 +874,6 @@ fx_front.prototype.is_selectable = function(node) {
             ) {
                 return true;
             }
-            
             // text fields and variables in attributes
             if ( n.hasClass('fx_template_var') || n.hasClass('fx_template_var_in_att') ) {
                 if ($fx.front.is_var_bound_to_entity(n)) {
@@ -1440,6 +1441,7 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
                 label:'Edit '+$entity.data('fx_entity_name').toLowerCase()
             }, 
             function() {
+                fx_eip.fix();
                 var entity_values = fx_eip.get_values(ce_id);
                 $fx.front.disable_node_panel();
                 $fx.front.select_item(entity);
