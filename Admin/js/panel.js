@@ -187,7 +187,6 @@
             
             if (typeof panel_height === 'undefined' || panel_height === null) {
                 panel_height = Math.min(form_height, max_height);
-                //console.log('cnt', form_height, max_height);
             }
             if (panel_height > 0) {
                 $body.toggleClass('fx_admin_panel_body_overflow_hidden', form_height <= panel_height);

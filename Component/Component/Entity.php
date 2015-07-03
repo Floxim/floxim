@@ -254,8 +254,6 @@ class Entity extends System\Entity
 
     public function getSortableFields()
     {
-        //$this->_load_fields();
-
         $result = array();
 
         $result['created'] = fx::alang('Created', 'system');
@@ -270,25 +268,36 @@ class Entity extends System\Entity
         return $result;
     }
 
-    public function isUserComponent()
-    {
-        return $this['keyword'] == 'user';
-    }
-
     protected function afterInsert()
     {
         $this->createContentTable();
+        $root = $this->getRootComponent();
+        if ( $this['parent_id'] && !$root->getFieldByKeyword('type') ) {
+            $content_type_field = fx::component('floxim.main.content')->getFieldByKeyword('type');
+            $props = $content_type_field->get();
+            unset($props['id']);
+            $new_field = $content_type_field->getFinder()->create($props);
+            $new_field['component_id'] = $root['id'];
+            $new_field->save();
+            $q = 'update {{'.$root->getContentTable().'}} set type = "'.$root['keyword'].'"';
+            fx::db()->query($q);
+        }
+    }
+    
+    public function getRootComponent()
+    {
+        return $this->getChain()->first();
     }
 
     public function createContentTable()
     {
-        //$table = str_replace('.', '_', $this['keyword']);
         $table = $this->getContentTable();
-        $sql = "DROP TABLE IF  EXISTS `{{{$table}}}`;
-            CREATE TABLE IF NOT EXISTS `{{{$table}}}` (
-            `id` int(11) NOT NULL,
-            PRIMARY KEY (`id`)
-            ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;";
+        $sql = "CREATE TABLE IF NOT EXISTS `{{".$table."}}` (";
+        $sql .= '`id` int(11) unsigned NOT NULL';
+        if (!$this['parent_id']) {
+            $sql .= ' AUTO_INCREMENT';
+        }
+        $sql .= ', PRIMARY KEY (`id`) ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;';
         fx::db()->query($sql);
     }
 
@@ -334,7 +343,7 @@ class Entity extends System\Entity
 
     protected function deleteInfoblocks()
     {
-        $infoblocks = fx::data('infoblock')->where('controller', 'component_' . $this['keyword'])->all();
+        $infoblocks = fx::data('infoblock')->where('controller', $this['keyword'])->all();
         foreach ($infoblocks as $infoblock) {
             $infoblock->delete();
         }

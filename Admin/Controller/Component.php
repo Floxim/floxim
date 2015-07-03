@@ -633,7 +633,10 @@ class Component extends Admin
                 'title' => 'Add new ' . $component['keyword'],
                 'url'   => '#admin.component.edit(' . $component['id'] . ',add_item)'
             ),
-            "delete"
+            array(
+                'key' => "delete",
+                'params' => array('content_type' => $component['keyword'])
+            )
         ));
         foreach ($res['fields'][0]['values'] as &$item) {
             $url = '#admin.component.edit(' . $component['id'] . ',edit_item,' . $item['id'] . ')';

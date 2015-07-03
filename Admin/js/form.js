@@ -404,7 +404,7 @@ fx_form = {
                     pval = pval.replace(/^\!\~/, '');
                     pexp = 'not_regexp';
                 }
-                var par_inp = $(':input[name="'+pkey+'"]');
+                var par_inp = $(':input[name="'+pkey+'"]', container);
                 if (par_inp.length === 0) {
                     return;
                 }
@@ -425,12 +425,9 @@ fx_form = {
                         // jquery 'is visible' magic doesn't work with input[type=hidden]
                         // so we invent our own magic!
                         if (do_show) {
-                            do_show = par_inp.css('display') !== 'none';
-                            if (do_show) {
-                                var $inp_field_block = par_inp.closest('.field');
-                                if ($inp_field_block.length) {
-                                    do_show = $inp_field_block.css('display') !== 'none';
-                                }
+                            var $inp_field_block = par_inp.closest('.field');
+                            if ($inp_field_block.length) {
+                                do_show = $inp_field_block.css('display') !== 'none';
                             }
                         }
                         break;

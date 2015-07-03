@@ -30,6 +30,7 @@ window.fx_eip = {
                 hash = v.id+'.'+v.var_type+'.'+v.content_id+'.'+v.content_type_id;
             this.vars[hash] = vars[i];
         }
+        console.log(vars);
         return vars;
     },
     get_values: function(entity_id) {
@@ -41,11 +42,16 @@ window.fx_eip = {
         });
         return res;
     },
+    get_edited_nodes: function() {
+        return $('.fx_edit_in_place');
+    },
     get_edited_vars: function() {
-        var vars = [];
-        var $edited = $('.fx_edit_in_place');
+        var vars = [],
+            $edited = this.get_edited_nodes();
+        
         $edited.each(function() {
             var c_eip = $(this).data('edit_in_place');
+            console.log(c_eip);
             if (c_eip){
                 $.each(c_eip.get_vars(), function(index, item) {
                     vars.push(item);
@@ -53,6 +59,12 @@ window.fx_eip = {
             }
         });
         return vars;
+    },
+    stop: function() {
+        this.get_edited_nodes().each(function() {
+            $(this).data('edit_in_place').stop();
+        });
+        this.vars = {};
     }
 };
 
@@ -614,7 +626,8 @@ fx_edit_in_place.prototype.get_vars = function() {
                 }
             }
         } else {
-            $c_input = $(':input[name="'+pf_meta['name']+'"]', pf);
+            //$c_input = $(':input[name="'+pf_meta['name']+'"]', pf);
+            $c_input = pf.descendant_or_self(':input[name="'+pf_meta['name']+'"]');
             var new_value = $c_input.val();
         }
         

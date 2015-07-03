@@ -104,13 +104,16 @@ class Finder extends System\Finder
             if ($a_scope < $b_scope) {
                 return 1;
             }
-            $a_level = count(fx::content('page', $a['page_id'])->getParentIds());
-            $b_level = count(fx::content('page', $b['page_id'])->getParentIds());
+            $a_page = fx::content('page', $a['page_id']);
+            $b_page = fx::content('page', $b['page_id']);
+            
+            $a_level = $a_page ? count($a_page->getParentIds()) : 0;
+            $b_level = $b_page ? count($b_page->getParentIds()) : 0;
+            
             if ($a_level > $b_level) {
                 return -1;
             }
             if ($a_level < $b_level) {
-                //echo $b['id'].' winzzz';
                 return 1;
             }
             return $a['id'] < $b['id'] ? 1 : -1;

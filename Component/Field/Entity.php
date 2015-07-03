@@ -92,7 +92,7 @@ class Entity extends System\Entity
 
         $modified = $this->modified_data['keyword'] && $this->modified_data['keyword'] != $this->data['keyword'];
 
-        if (!$this->column_created && $this['component_id'] && ($modified || !$this['id'])) {
+        if (!$this->column_created && !$this->getPayload('skip_sql') && $this['component_id'] && ($modified || !$this['id'])) {
 
             /// Edit here
             $component = fx::data('component')->where('id', $this['component_id'])->one();
@@ -133,6 +133,9 @@ class Entity extends System\Entity
     protected function beforeInsert()
     {
         if (!$this['component_id']) {
+            return;
+        }
+        if ($this->getPayload('skip_sql')) {
             return;
         }
         $type = $this->getSqlType();

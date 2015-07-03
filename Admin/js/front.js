@@ -334,11 +334,6 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
                 
                 if (is_linker_placeholder) {
                     
-                    /*
-                     * 
-                     * @type @exp;$fx@pro;front@pro;node_panel@call;get{"placeholder":{"type":"floxim.nav.section"},"placeholder_name":"Linker","placeholder_linker":{"infoblock_id":"526","parent_id":"3077","type":"floxim.main.linker","_link_field":"linked_id"}}
-                     */
-                    
                     var 
                         link_field_name = $placeholder.data('fx_entity_meta').placeholder_linker._link_field,
                         selector_selector = '.fx_node_panel__item-field_name-'+link_field_name,
@@ -347,8 +342,7 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
                         $panel = panel.$panel,
                         $selector = $(selector_selector, $panel).first(),
                         $placeholder_fields = $('.fx_node_panel__item-type-field', $panel).not(selector_selector);
-                        //$placeholder_fields = $selector.nextAll('.fx_node_panel__item-type-field:visible');
-
+                        
                     $placeholder_fields.hide();
                     $label.click(function() {
                         $placeholder_fields.show();
@@ -1450,6 +1444,7 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
                     {
                         //view:'cols',
                         onfinish: function() {
+                            fx_eip.stop();
                             $fx.front.reload_infoblock(ib_node);
                         },
                         oncancel: function() {

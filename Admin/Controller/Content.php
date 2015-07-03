@@ -9,10 +9,13 @@ class Content extends Admin
 
     public function addEdit($input)
     {
+        if (!isset($input['content_type'])) {
+            return false;
+        }
+        $content_type = $input['content_type'];
         // get the edited object
         if (isset($input['content_id']) && $input['content_id']) {
-            $content = fx::data('content', $input['content_id']);
-            $content_type = $content['type'];
+            $content = fx::data($content_type, $input['content_id']);
         } else {
             $content_type = $input['content_type'];
             $parent_page = fx::data('page', $input['parent_id']);
@@ -21,7 +24,6 @@ class Content extends Admin
                 'infoblock_id' => $input['infoblock_id'],
                 'site_id'      => $parent_page['site_id']
             ));
-            $content->guessParentAndInfoblock();
         }
 
         $fields = array(
@@ -60,8 +62,9 @@ class Content extends Admin
         }
 
         $this->response->addFields($fields);
-        
-        $this->response->addFields( $content->getStructureFields(), '', 'content' );
+        if ($content->isInstanceOf('floxim.main.content')) {
+            $this->response->addFields( $content->getStructureFields(), '', 'content' );
+        }
         
         $content_fields = fx::collection($content->getFormFields());
         
@@ -123,11 +126,16 @@ class Content extends Admin
 
     public function deleteSave($input)
     {
+        if (!isset($input['content_type'])) {
+            return;
+        }
+        $content_type = $input['content_type'];
         $id = isset($input['content_id']) ? $input['content_id'] : (isset($input['id']) ? $input['id'] : false);
         if (!$id) {
             return;
         }
-        $content = fx::data('content', $id);
+        $content = fx::data($content_type, $id);
+        fx::log('del', $content, $content_type);
         if (!$content) {
             return;
         }
@@ -151,14 +159,16 @@ class Content extends Admin
         /**
          * check children
          */
-        $descendants = fx::data('content')->descendantsOf($content)->all();
-        if (($count_descendants = $descendants->count())) {
-            $fields[] = array(
-                'type' => 'html',
-                'html' => fx::alang('The content contains some descendants',
-                        'system') . ', <b>' . $count_descendants . '</b> ' . fx::alang('items. These items will be removed.',
-                        'system')
-            );
+        if ($content->isInstanceOf('floxim.main.content')) {
+            $descendants = fx::data('content')->descendantsOf($content)->all();
+            if (($count_descendants = $descendants->count())) {
+                $fields[] = array(
+                    'type' => 'html',
+                    'html' => fx::alang('The content contains some descendants',
+                            'system') . ', <b>' . $count_descendants . '</b> ' . fx::alang('items. These items will be removed.',
+                            'system')
+                );
+            }
         }
 
         $this->response->addFields($fields);
@@ -176,7 +186,7 @@ class Content extends Admin
             $content->delete();
             return $response;
         }
-        $component = fx::data('component', $content['type']);
+        $component = fx::data('component', $content_type);
 
         $header = fx::alang("Delete") . ' ' . mb_strtolower($component->getItemName());
         if (($content_name = $content['name'])) {
@@ -243,15 +253,18 @@ class Content extends Admin
             'entity' => 'content'
         );
         
-        $list['labels']['infoblock'] = 'Infoblock';
-
         if ($content_type === 'content') {
             $list['labels']['type'] = 'Type';
         }
 
         $com = fx::data('component', $content_type);
-
+        
         $fields = $com->getAllFields();
+        
+        $ib_field = $fields->findOne('keyword', 'infoblock_id');
+        if ($ib_field) {
+            $list['labels']['infoblock'] = $ib_field['name'];
+        }
 
         $fields->findRemove(function ($f) {
             return $f['type_of_edit'] == Field\Entity::EDIT_NONE;
@@ -310,9 +323,11 @@ class Content extends Admin
         }
 
         $this->response->addButtons(array(
-            "delete"
+            array(
+                'key' => "delete",
+                'content_type' => $content_type
+            )
         ));
-
         return array('fields' => array('list' => $list));
     }
 }

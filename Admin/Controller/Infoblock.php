@@ -394,7 +394,7 @@ class Infoblock extends Admin
                 'visibility' => array(
                     'field' => array(
                         'name'   => 'visibility[' . $ib['id'] . ']',
-                        'type'   => 'select',
+                        'type'   => 'hidden',
                         'values' => $this->getScopeVisibilityOptions(),
                         'value'  => $ib['scope']['visibility']
                     )
@@ -632,11 +632,11 @@ class Infoblock extends Admin
             'value'  => $c_scope_code
         );
         $fields ['visibility'] = array(
-            'type'      => 'select',
+            'type'      => 'hidden',
             'label'     => 'Visibility',
             'name'      => 'visibility',
-            'join_with' => 'complex_scope',
-            'values'    => $this->getScopeVisibilityOptions(),
+            //'join_with' => 'complex_scope',
+            //'values'    => $this->getScopeVisibilityOptions(),
             'value'     => $infoblock['scope']['visibility']
         );
         return $fields;
@@ -752,7 +752,7 @@ class Infoblock extends Admin
                 'label'     => fx::alang('Wrapper', 'system'),
                 'name'      => 'wrapper',
                 'type'      => 'select',
-                'join_with' => 'template',
+                //'join_with' => 'template',
                 'values'    => $wrappers,
                 'value'     => $c_wrapper
             );

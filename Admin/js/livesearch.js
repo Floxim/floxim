@@ -794,6 +794,10 @@ window.fx_suggest = function(params) {
     this.showBox = function() {
         this.boxVisible = true;
         var node = this.offsetNode;
+        if (!node.is(':visible')) {
+            this.box.hide();
+            return;
+        }
         this.box.show();
         if (this.isFixed()) {
             this.box.css('position', 'fixed');

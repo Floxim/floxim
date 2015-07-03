@@ -74,7 +74,7 @@ class Component extends Console\Command
         if ($parent) {
             $par_ns = $parent->getNamespace();
         } else {
-            $par_ns = 'Floxim\\Floxim\\System\\Entity';
+            $par_ns = '\\Floxim\\Floxim\\Component\\Basic';
         }
         $map = array(
             'Vendor'                => $com->getVendorName(),

@@ -62,8 +62,7 @@ fx_buttons.prototype.draw_buttons = function ( buttons ) {
         return false;
     }
     $.each(buttons, function(key, button) {
-        
-        var button_source = self.source[button];
+        var button_source = self.source[typeof button === 'string' ? button : button.key];
         if (!button_source) {
             button.type = 'text';
             button_source = {type:'text', title:key};
@@ -74,8 +73,9 @@ fx_buttons.prototype.draw_buttons = function ( buttons ) {
                 type:button_source.type,
                 title:button_source.title
             };
+        } else if (!button.type) {
+            button.type = button.key === 'delete' ? 'icon' : 'text';
         }
-        
 
         element = $('<div class="fx_button fx_button-key-'+button.key+'" title="'+button.title+'"></div>');
         if (button.type === 'text' ) {
@@ -89,7 +89,7 @@ fx_buttons.prototype.draw_buttons = function ( buttons ) {
             if ($(this).data('has_callback')) {
                 return;
             }
-            self.handle(button.key);
+            self.handle(button.key, button);
             return false;
         });
         element.hide();
@@ -141,7 +141,7 @@ fx_buttons.prototype.hide_panel = function () {
  * Primary processing pressing, for example, the pop-up menu
  * the very pressure processing - elsewhere
  */
-fx_buttons.prototype.handle = function ( button ) {
+fx_buttons.prototype.handle = function ( button, button_data ) {
     if ( this.pulldown[button] ) {
         if ( this.pulldown_is_hide ) {
             this.show_pulldown(button, this.pulldown[button]);
@@ -159,7 +159,10 @@ fx_buttons.prototype.handle = function ( button ) {
             return false;
         }
     }
-    if (button === 'delete' && confirm('Are you sure?')){
+    if (button === 'delete') {
+        button = {key:button, params:button_data.params};
+    }
+    if (button.key === 'delete' && confirm('Are you sure?')) {
         var sel = $('.fx_admin_selected');
         if (sel.length === 0) {
             return;
@@ -174,6 +177,9 @@ fx_buttons.prototype.handle = function ( button ) {
             id:cid,
             posting:true
         };
+        if (button.params) {
+            opts = $.extend({}, opts, button.params);
+        }
         $fx.post(
             opts, 
             function(res) {
