@@ -171,8 +171,9 @@ class Suitable
                 $ib_visual['area'] = $c_area;
             }
 
-            $old_wrapper = $ib->getPropInherited('visual.wrapper', $source_layout_id);
-            if ($old_wrapper && $area_meta) {
+            //$old_wrapper = $ib->getPropInherited('visual.wrapper', $source_layout_id);
+            //if ($old_wrapper && $area_meta) {
+            if ($area_meta) {
                 $area_suit = self::parseAreaSuitProp(isset($area_meta['suit']) ? $area_meta['suit'] : null);
                 if ($area_suit['default_wrapper']) {
                     $ib_visual['wrapper'] = $area_suit['default_wrapper'][0];

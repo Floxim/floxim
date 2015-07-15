@@ -124,6 +124,7 @@ function node_panel($node, params) {
             return;
         }
         
+        $p.css('visibility', 'visible').show();
         
         var $p_items = $p.children(':visible').not('.fx_buttons_dropdown');
         if ($p_items.length === 0) {
@@ -260,7 +261,7 @@ function node_panel($node, params) {
     
     this.add_button = function(button, callback, $before_node) {
         var $button = $fx.front.create_button(button, callback);
-        if (!$before_node) {
+        if (!$before_node || $before_node.length === 0) {
             this.$panel.append($button);
         } else {
             $before_node.before($button);

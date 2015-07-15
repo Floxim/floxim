@@ -90,6 +90,24 @@ abstract class Finder
         return array();
     }
     
+    public function getNonScalarFields()
+    {
+        $fields = $this->json_encode;
+        $ml = $this->getMultiLangFields();
+        
+        $encoded_ml = array_intersect($fields, $ml);
+        
+        if (count($encoded_ml) > 0) {
+            $langs = fx::data('lang')->all()->getValues('lang_code');
+            foreach ($encoded_ml as $f) {
+                foreach ($langs as $l) {
+                    $fields[]= $f.'_'.$l;
+                }
+            }
+        }
+        return $fields;
+    }
+    
     public function getTable()
     {
         return $this->table;
@@ -572,7 +590,7 @@ abstract class Finder
                 }
             }
             // don't forget json decode
-            foreach ($this->json_encode as $json_field_name) {
+            foreach ($this->getNonScalarFields() as $json_field_name) {
                 if (isset($v[$json_field_name])) {
                     $v_decode = @json_decode($v[$json_field_name], true);
                     $v[$json_field_name] = $v_decode ? $v_decode : array();
@@ -911,6 +929,8 @@ abstract class Finder
         $cols = $this->getColumns();
 
         $set = array();
+        
+        $encoded_fields = $this->getNonScalarFields();
 
         foreach ($data as $k => $v) {
             if (!in_array($k, $cols)) {
@@ -919,7 +939,7 @@ abstract class Finder
             if (in_array($k, $this->serialized)) {
                 $v = serialize($v);
             }
-            if (in_array($k, $this->json_encode)) {
+            if (in_array($k, $encoded_fields)) {
                 $v = json_encode($v);
             }
             $str = "'" . fx::db()->escape($v) . "' ";

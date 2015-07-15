@@ -383,7 +383,29 @@ class Entity extends System\Entity
         return $res;
     }
     
-    public function getItemName() {
+    public function getItemName($scenario = 'add') {
+        $lang = fx::alang()->getLang();
+        $decl = $this['declension'];
+        // this should be done via some config in future
+        $declension_map = array(
+            'ru' => array(
+                'add' => 'singular.acc',
+                'add_many' => 'plural.acc',
+                'one' => 'singular.nom',
+                'list' => 'plural.nom'
+            )
+        );
+        if (isset($declension_map[$lang])) {
+            $map = $declension_map[$lang];
+            if ($scenario && isset($map[$scenario])) {
+                $form = explode(".", $map[$scenario]);
+                $res = $decl[$form[1]][$form[0]];
+                if ($res) {
+                    return $res;
+                }
+            }
+        }
+        
         $item_name = $this['item_name'];
         return empty($item_name) ? $this['name'] : $item_name;
     }

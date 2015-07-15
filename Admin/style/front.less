@@ -154,6 +154,7 @@
     //border:1px solid #CCC;
     background:#ececec;
     box-shadow: 0px 0px 10px rgba(50,50,50,0.6);
+    border-radius: 2px;
     min-height: 40px;
     display:none;
     &.fx_node_panel_too_wide {
@@ -448,8 +449,8 @@ body:not(.fx_mode_edit) .fx_entity_hidden {
     box-sizing: border-box !important;
     outline: 1px dotted #000;
     
-    margin:15px 0;
-    padding: 5px;
+    //margin:15px 0;
+    //padding: 5px;
     font-size: 16px;
     
     td&.fx_infoblock, td&.fx_area {
@@ -602,7 +603,7 @@ body:not(.fx_mode_edit) .fx_entity_hidden {
     color:#000;
 }
 
-.fx_overlay .fx_admin_panel_body .fx_list_table {
+.fx_overlay .fx-top-panel .fx_list_table {
     td.fx_list_cell {
         padding:1px 3px;
         vertical-align:middle;
@@ -788,18 +789,21 @@ span.fx_area_marker {
 }
 
 .fx_infoblock_stub {
+    /*
     .fx_inplace_mark();
     .fx_inplace_mark_block();
     &_hidden {
         display:none !important;
     }
+    */
+    display: none;
 }
 
 .redactor-toolbar-tooltip {
     display:none !important;
 }
 
-.fx_side_panel {
+.fx-side-panel {
     background: #FFF;
     width: 40%;
     position: absolute;
@@ -817,6 +821,12 @@ span.fx_area_marker {
     
     &__body {
         overflow: auto;
+    }
+    
+    &_style_alert {
+        top:100px;
+        right:40px;
+        width:450px
     }
 }
 
@@ -885,6 +895,104 @@ span.fx_area_marker {
         color:#FFF;
         &-class-cancel {
             font-weight: 100;
+        }
+    }
+}
+
+.fx-top-panel {
+    &_style_finish {
+        background:#2d63ff;
+        .fx_admin_form__close_icon {
+            font-size: 45px;
+            line-height: 100%;
+            color: #082781;
+            cursor: pointer;
+            margin-right: 20px;
+            position: absolute;
+            top: 50%;
+            left: 30px;
+            margin-top: -25px;
+        }
+        &, label, .fx_admin_form__title {
+            color:#FFF;
+        }
+        .fx_admin_form {
+            min-height:60px;
+            text-align:right;
+            &__header {
+                border:none;
+            }
+            &__body {
+                min-height:60px;
+                &:after {
+                    content:'';
+                    display:inline-block;
+                    vertical-align: middle;
+                    min-height:60px;
+                    padding-left:1px;
+                }
+            }
+            
+            
+                .field {
+                    border:none;
+                    text-align:left;
+                    vertical-align: middle;
+                    padding-top: 10px;
+                    padding-bottom:10px;
+                    margin-right:30px;
+                }
+                .form_label, .input_container {
+                    display:inline-block;
+                    margin:0;
+                    vertical-align: middle;
+                }
+                .form_label {
+                    margin-bottom: 5px;
+                    display: block;
+                }
+                .fx_input {
+                    margin:0;
+                }
+                
+                .field_name__eip_fields_container {
+                    margin-right:0;
+                }
+                
+                .field_raw__name-form_label {
+                    cursor: pointer;
+                    font-size: 13px;
+                    border-bottom: 1px dashed #FFF;
+                }
+            
+            .fx_eip_fields_container {
+                display: inline-block;
+            }
+            .field_name__form_label {
+                position: absolute;
+                bottom: -38px;
+                right: 0;
+                margin-right: 0;
+                background: #2d63ff;
+                padding: 10px;
+                border-bottom-left-radius: 2px;
+            }
+            &__header, &__body, &__footer, &__buttons {
+                display: inline-block;
+                vertical-align: middle;
+                padding:0;
+            }
+            &__header {
+                display: block;
+                position: absolute;
+                top: 50%;
+                margin-top: -15px;
+                left: 75px;
+            }
+            &__footer .field {
+                margin-right:0;
+                margin-left:30px;
+            }
         }
     }
 }

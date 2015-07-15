@@ -267,7 +267,7 @@ input {
     cursor:pointer;
     white-space:nowrap;
     
-    text-transform:capitalize;
+    text-transform:lowercase;
     
     &, &__extra {
         color:@button_color;
@@ -298,23 +298,19 @@ input {
         &:last-child {
             margin-right:0;
         }
-        /*
-        border-radius: 0;
-        border-right: 0;
-        &:first-child {
-            border-top-left-radius: 3px;
-            border-bottom-left-radius: 3px;
-        }
-        &:last-child {
-            border-top-right-radius: 3px;
-            border-bottom-right-radius: 3px;
-            border-right: 1px solid @mid_color;
-        }
-        */
     }
     
     &-class-cancel {
         border:none;
+    }
+    
+    &-class-delete {
+        background: #FFF;
+        color:#D66;
+        border:none;
+        &:hover {
+            background:#FEE;
+        }
     }
     
     &-in_dropdown {
@@ -519,6 +515,39 @@ input {
         color:#000;
         cursor:default;
     }
+}
+
+@-webkit-keyframes fx-progress-line {
+    0% {
+        background-position: 0 0;
+    }
+    100% {
+        background-position: 400px 0;
+    }
+}
+
+@-moz-keyframes fx-progress-line {
+    0% {
+        background-position: 0 0;
+    }
+    100% {
+        background-position: 400px 0;
+    }
+}
+
+.fx-progress-line {
+    position: fixed;
+    opacity: 0;
+    top:0;
+    left:0;
+    z-index:100000;
+    width:100%;
+    height:3px;
+    outline:0px solid #CCC;
+    background-image:linear-gradient(45deg,#6BDCC7 0%,#648FF5 40%,#25a7e5 60%,#6BDCC7 100%);
+    background-size:400px;
+    -webkit-animation: fx-progress-line 0.5s linear infinite;
+    -moz-animation: fx-progress-line 0.5s linear infinite;
 }
 
 @media screen and (max-width: 1150px) {

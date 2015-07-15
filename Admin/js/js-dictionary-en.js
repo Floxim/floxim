@@ -5,6 +5,7 @@
         date_placeholder_m: 'MM',
         date_placeholder_y: 'YYYY',
         date_placeholder_h: 'HH',
-        date_placeholder_i: 'MM'
+        date_placeholder_i: 'MM',
+        'do_edit' : 'Edit',
     };
 })($fx);

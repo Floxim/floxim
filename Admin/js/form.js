@@ -44,6 +44,10 @@ fx_form = {
         if (options.buttons_entity) {
             $fx.admin.set_entity(options.buttons_entity);
         }
+        
+        var onsubmit = options.onsubmit || $fx_form.submit_handler;
+        
+        $form.off('submit.fx_submit').on('submit.fx_submit', onsubmit);
 
         return $form;
     },
@@ -137,9 +141,10 @@ fx_form = {
                     );
                     submit_added = true;
                 }
+            } else if (options.onclick) {
+                b.on('click', options.onclick);
             }
         });
-        $form.off('submit.fx_submit').on('submit.fx_submit', $fx_form.submit_handler);
     },
     lock_form: function($form) {
         $form.data('is_locked', true);

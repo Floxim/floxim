@@ -27,6 +27,8 @@ class Finder extends System\Finder
             )
         );
     }
+    
+    protected $json_encode = array('declension');
 
     public function getMultiLangFields()
     {
@@ -34,6 +36,7 @@ class Finder extends System\Finder
             'name',
             'description',
             'item_name',
+            'declension'
         );
     }
 

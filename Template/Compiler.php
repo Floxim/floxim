@@ -578,8 +578,12 @@ class Compiler
             $code .= $modifiers_code;
             
             // default formatters for date and image
-            if (count($modifiers) === 1 && !$modifiers[0]['name'] && isset($modifiers[0]['args'][0])) {
-                $token->setProp('format_modifier', trim($modifiers[0]['args'][0], '"\''));
+            if (count($modifiers) === 1) {
+                if (!$modifiers[0]['name'] && isset($modifiers[0]['args'][0])) {
+                    $token->setProp('format_modifier', trim($modifiers[0]['args'][0], '"\''));
+                } elseif (in_array($modifiers[0]['name'], array('fx::date', 'fx::image'))) {
+                    $token->setProp('format_modifier', $modifiers[0]['args'][0]);
+                }
             }
         }
         

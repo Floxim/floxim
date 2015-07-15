@@ -17,7 +17,9 @@ window.$fx = {
             $(document).ajaxSend(function() {
                 ajax_counter++;
                 if (ajax_counter > 0) {
-                    $('.fx_preloader').css('visibility', 'visible');
+                    $('.fx-progress-line').animate({
+                        opacity:1
+                    }, 100);
                 }
             });
             
@@ -83,7 +85,9 @@ window.$fx = {
             $(document).ajaxComplete(function(e, jqXHR) {
                 ajax_counter--;
                 if (ajax_counter === 0) {
-                    $('.fx_preloader').css('visibility', 'hidden');
+                    $('.fx-progress-line').stop().animate({
+                        opacity:0
+                    }, 100);
                 }
                 if (!jqXHR || !jqXHR.getResponseHeader) {
                     return;
@@ -270,7 +274,6 @@ window.$fx = {
             .html("<span>"+text+"</span>")
             .addClass(status)
             .fadeIn('slow');
-        console.log($block);
     },
     
     show_error: function(json) {

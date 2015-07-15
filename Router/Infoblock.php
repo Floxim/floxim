@@ -14,7 +14,7 @@ class Infoblock extends Base
         if (!preg_match("~^/\~ib/(\d+|fake(?:\-\d+)?)@(\d+)~", $url, $ib_info)) {
             return null;
         }
-        $c_url = fx::input('post', '_ajax_base_url');
+        $c_url = fx::input()->fetchGetPost('_ajax_base_url');
         if ($c_url) {
             $_SERVER['REQUEST_URI'] = $c_url;
             $path = fx::router()->getPath($c_url);
@@ -30,6 +30,10 @@ class Infoblock extends Base
         }
         $ib_id = $ib_info[1];
         $page_id = $ib_info[2];
+        if (!fx::env('page') && $page_id) {
+            $page = fx::data('floxim.main.content', $page_id);
+            fx::env('page', $page);
+        }
         fx::env('ajax', true);
 
         $page_infoblocks = fx::router('front')->getPageInfoblocks(

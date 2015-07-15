@@ -28,6 +28,14 @@ class Finder extends System\Finder
             'lang'
         );
     }
+    
+    public function getLang() 
+    {
+        if (is_null($this->lang)) {
+            $this->setLang();
+        }
+        return $this->lang;
+    }
 
 
     public function getString($string, $dict = null)

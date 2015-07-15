@@ -404,7 +404,8 @@
 }
 
 .fx_admin_form .field_checkbox {
-    margin:10px 0;
+    margin-top:10px;
+    margin-bottom:10px;
     input[type="checkbox"] {
         margin-left:0;
     }
@@ -643,22 +644,12 @@
     }   
 }
 
-#fx_admin_extra_panel {
-    .fx_admin_panel_footer {
-        padding:4px 10px;
-        position:absolute;
-        bottom:-49px;
-        background:#FFF;
-    }
-    .fx_admin_panel_footer, .fx_admin_panel_body {
-        box-shadow:3px 3px 3px rgba(0,0,0,0.5);
-        display:none;
-    }
-    .fx_admin_panel_body {
-        overflow:auto !important;
-        &.fx_admin_panel_body_overflow_hidden {
-            overflow:hidden !important;
-        }
+.fx-top-panel {
+    box-shadow:0 3px 5px rgba(0,0,0,0.5);
+    display:none;
+    overflow:auto !important;   
+    &_overflow_hidden {
+        overflow:hidden !important;
     }
 }
 

@@ -315,18 +315,6 @@ class Infoblock extends Admin
         }
 
         $actions = $controller->getActions();
-        $action_name = $actions[$action]['name'];
-
-        /*
-        if (!$infoblock['id']) {
-            $result['header'] = ' <a class="back">' . fx::alang('Adding infoblock', 'system') . '</a>';
-            $result['header'] .= ' / ' . $action_name;
-        } else {
-            $result['header'] = fx::alang('Settings',
-                    'system') . ' / <span title="' . $infoblock['id'] . '">' . $action_name . '</span>';
-        }
-         * 
-         */
 
         $fields = array(
             $this->ui->hidden('entity', 'infoblock'),
@@ -341,7 +329,6 @@ class Infoblock extends Admin
         );
 
         $this->response->addFields($fields);
-        //return $result;
     }
 
     public function listForPage($input)
@@ -377,7 +364,7 @@ class Infoblock extends Admin
             'labels' => array(
                 'name'       => fx::alang('Name', 'system'),
                 'type'       => fx::alang('Type', 'system'),
-                'visibility' => fx::alang('Visibility', 'system'),
+                //'visibility' => fx::alang('Visibility', 'system'),
                 'area'       => fx::alang('Area', 'system'),
             )
         );
@@ -391,6 +378,7 @@ class Infoblock extends Admin
                 'id'         => $ib['id'],
                 'name'       => $ib['name'],
                 'type'       => preg_replace("~^component_~", '', $ib['controller']) . '.' . $ib['action'],
+                /*
                 'visibility' => array(
                     'field' => array(
                         'name'   => 'visibility[' . $ib['id'] . ']',
@@ -399,6 +387,8 @@ class Infoblock extends Admin
                         'value'  => $ib['scope']['visibility']
                     )
                 ),
+                 * 
+                 */
                 'area'       => $vis['area']
             );
         }
@@ -416,8 +406,6 @@ class Infoblock extends Admin
 
     public function layoutSettings($input)
     {
-        //$c_page = fx::data('page', $input['page_id']);
-        //$infoblock = $c_page->getLayoutInfoblock();
         $c_page = fx::env('page');
         $infoblock = fx::router('front')->getLayoutInfoblock($c_page);
 
@@ -765,6 +753,7 @@ class Infoblock extends Admin
      */
     public function saveVar($input)
     {
+        $result = array();
         if (isset($input['page_id'])) {
             fx::env('page_id', $input['page_id']);
         }
@@ -844,10 +833,22 @@ class Infoblock extends Admin
         }
         
         $new_id = false;
+        
+        $result['saved_entities'] = array();
+        
         foreach ($contents as $cid => $c) {
-            $c->save();
-            if ($cid == 'new') {
-                $new_id = $c['id'];
+            try {
+                $c->save();
+                $result['saved_entities'][]= $c->get();
+                if ($cid == 'new') {
+                    $new_id = $c['id'];
+                }
+            } catch (\Exception $e) {
+                $result['status'] = 'error';
+                if ($e instanceof \Floxim\Floxim\System\Exception\EntityValidation) {
+                    $result['errors'] = $e->toResponse();
+                }
+                break;
             }
         }
 
@@ -889,6 +890,7 @@ class Infoblock extends Admin
                 $controller->handleInfoblock('save', $ib, array('params' => $modified_params));
             }
         }
+        return $result;
     }
 
 

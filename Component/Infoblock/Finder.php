@@ -19,13 +19,7 @@ class Finder extends System\Finder
         );
     }
 
-    public function __construct()
-    {
-        parent::__construct();
-        // todo: psr0 need verify
-        $this->classname = 'fx_infoblock';
-        $this->json_encode = array('params', 'scope');
-    }
+    public $json_encode = array('params', 'scope');
 
     public function isLayout()
     {

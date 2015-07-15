@@ -1,6 +1,8 @@
 <!--[form_row]-->
-<div class="field field_<?=_c.type?><?=_c.class_name ? ' '+_c.class_name : ''?> field_name__<?=_c.id?>">
-    <?=$t.label(_c)?>
+<div class="field field_<?=_c.type?><?=_c.class_name ? ' '+_c.class_name : ''?> field_name__<?=_c.id || _c.name?>">
+    <?if (_c.type !== 'raw') {?>
+        <?=$t.label(_c)?>
+    <?}?>
     <div class="input_container"></div>
 </div>
 
@@ -61,6 +63,10 @@ name="<?=_c.name?>" id="<?=_c.name?>"
 		<?=$t.field_id_name(_c)?> 
 		value="<?=$t.clear(_c.value || '')?>" />
 
+                
+<!--[input ? _c.type == 'html']-->
+<span class="fx_input__type_html"><?=_c.value?></span>
+                
 <!--[input ? _c.type == 'hidden']-->
 <input <?=$t.field_id_name(_c)?> value="<?=_c.value === false ? '' : $t.clear(_c.value)?>" type="hidden" />
 
@@ -470,3 +476,6 @@ html.on('change', '.fx_limit_all', function() {
     }
     return false;
 });
+
+<!--[input ? _c.type == 'raw']-->
+<div class="field_raw__value field_raw__name-<?=_c.name?>"><?= _c.value ?></div>

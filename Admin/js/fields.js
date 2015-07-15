@@ -3,6 +3,13 @@ window.$fx_fields = {
     html: function (json) {
       return json.html;  
     },
+    
+    raw: function(json) {
+        if (json.wrap) {
+            return $t.jQuery('form_row', json);
+        }
+        return json.value;
+    },
 
     label: function(json) {
         return $t.jQuery('field_label', json);
@@ -313,7 +320,7 @@ html.on('keydown', '.fx_date_part', function(e) {
 
     if (e.which === 40 || e.which === 38) { // down or up
         part_val = part_val*1;
-        part_val += (e.which === 40 ? 1 : -1);
+        part_val += (e.which === 40 ? -1 : 1);
         if (part_val < min) {
             part_val = max;
         } else if (part_val > max) {

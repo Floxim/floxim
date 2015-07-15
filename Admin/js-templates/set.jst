@@ -4,7 +4,9 @@
         <table id="fx_fieldset_<?=_c.name?>">
             <thead>
                 <tr class="fx_fieldset_label">
-                <td></td>
+                <?if (!_c.without_delete) {?>
+                    <td></td>
+                <?}?>
                 <?for(var i = 0; i < _c.labels.length; i++) {
                     if (typeof _c.labels[i] != 'string') {
                         continue;
@@ -108,10 +110,13 @@ if (!flag) {
 }
 <!--[fieldset_row ? _o.set_field.is_cond_set === undefined]-->
 <tr class="fx_fieldset_row row_<?=_o.index?>">
+    <?if (!_o.set_field.without_delete) {?>
     <td>
         <a class="fx_fieldset_remove" href="javascript:void();" title="<?=$fx.lang('Delete')?>">&times;</a>
     </td>
-    <?for (var i = 0; i< _c.length; i++) {
+    <?
+    }
+    for (var i = 0; i< _c.length; i++) {
         ?><td class="input_cell_<?=i?>"></td><?
     }?>
 </tr>

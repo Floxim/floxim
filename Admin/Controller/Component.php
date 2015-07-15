@@ -256,7 +256,7 @@ class Component extends Admin
         }
         $result['tree']['mode'] = $entity_code . '-' . $component['id'];
         $this->response->submenu->setMenu($entity_code . '-' . $component['id']);
-
+        
         return $result;
     }
 
@@ -320,9 +320,7 @@ class Component extends Admin
         if (!empty($input['name'])) {
             $component['name'] = $input['name'];
         }
-        //$component['parent_id'] = $input['parent_id'];
-        //$component['description'] = $input['description'];
-        //$component['item_name'] = $input['item_name'];
+        $component['declension'] = $input['declension'];
         $component->save();
         return array('status' => 'ok');
     }
@@ -567,25 +565,12 @@ class Component extends Admin
             'name'  => 'name',
             'value' => $component['name']
         );
-        /*
-        $fields[] = array(
-            'label' => fx::alang('Name of entity created by the component', 'system'),
-            'name'  => 'item_name',
-            'value' => $component['item_name']
-        );
-         * 
-         */
-        /*
-        $fields[] = array(
-            'label' => fx::alang('Description', 'system'),
-            'name'  => 'description',
-            'value' => $component['description'],
-            'type'  => 'text'
-        );
-         * 
-         */
-
-        //$fields []= $this->_get_parent_component_field($component);
+        
+        $lang = fx::data('lang')->where('lang_code', fx::alang()->getLang())->one();
+        $decl = $lang->getDeclensionField($component['declension']);
+        $decl['name'] = 'declension';
+        $decl['label'] = fx::alang('Declension');
+        $fields[]= $decl;
 
         $fields[] = array('type' => 'hidden', 'name' => 'phase', 'value' => 'settings');
         $fields[] = array('type' => 'hidden', 'name' => 'id', 'value' => $component['id']);

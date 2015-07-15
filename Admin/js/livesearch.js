@@ -456,7 +456,9 @@ window.fx_livesearch = function (node) {
     };
     
     this.destroy = function() {
-        this.Suggest.box.remove();
+        if (this.Suggest.box) {
+            this.Suggest.box.remove();
+        }
     };
     
     this.Init();

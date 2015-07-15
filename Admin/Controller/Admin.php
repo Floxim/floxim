@@ -126,6 +126,7 @@ class Admin extends System\Controller
             $path_floxim . '/Admin/js-templates/jstx.js',
             'http://' . getenv("HTTP_HOST") . fx::path()->http($path_floxim).'/Admin/js-templates/compile.php',
             $path_floxim . '/Admin/js/lib.js',
+            $path_floxim . '/Admin/js/sort.js',
             $path_floxim . '/Admin/js/front.js',
             $path_floxim . '/Admin/js/adder.js',
             $path_floxim . '/Admin/js/buttons.js',

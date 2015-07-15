@@ -172,6 +172,7 @@ abstract class Entity implements \ArrayAccess, Template\Entity
         $exception = new Exception\EntityValidation(
             fx::lang("Unable to save entity \"" . $this->getType() . "\"")
         );
+        $exception->entity = $this;
         $exception->addErrors($this->validate_errors);
         $form = $this->getBoundForm();
         if ($form) {
@@ -273,7 +274,13 @@ abstract class Entity implements \ArrayAccess, Template\Entity
         $this->beforeDelete();
         $this->getFinder()->delete($pk, $this->data[$pk]);
         $this->modified_data = $this->data;
+        fx::trigger('after_delete', array('entity' => $this));
         $this->afterDelete();
+    }
+    
+    public function isInstanceOf($type)
+    {
+        return $type === $this->getType();
     }
 
     public function validate()

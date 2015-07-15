@@ -13,6 +13,14 @@ class Content extends Admin
             return false;
         }
         $content_type = $input['content_type'];
+        
+        $linker = null;
+        $linker_field = null;
+        
+        if (is_string($input['placeholder_linker'])) {
+            $input['placeholder_linker'] = unserialize($input['placeholder_linker']);
+        }
+        
         // get the edited object
         if (isset($input['content_id']) && $input['content_id']) {
             $content = fx::data($content_type, $input['content_id']);
@@ -24,6 +32,10 @@ class Content extends Admin
                 'infoblock_id' => $input['infoblock_id'],
                 'site_id'      => $parent_page['site_id']
             ));
+            if (isset($input['placeholder_linker']) && is_array($input['placeholder_linker'])) {
+                $linker = fx::data($input['placeholder_linker']['type'])->create($input['placeholder_linker']);
+                $linker_field = $input['placeholder_linker']['_link_field'];
+            }
         }
 
         $fields = array(
@@ -34,6 +46,12 @@ class Content extends Admin
             $this->ui->hidden('data_sent', true),
             $this->ui->hidden('fx_admin', true)
         );
+        
+        if ($linker) {
+            $fields[]= $this->ui->hidden('placeholder_linker', serialize($input['placeholder_linker']));
+        }
+        
+        
 
         $move_meta = null;
         $move_variants = array('__move_before', '__move_after');
@@ -94,7 +112,8 @@ class Content extends Admin
             } else {
                 foreach ($move_variants as $rel_prop) {
                     if (isset($input[$rel_prop])) {
-                        $content[$rel_prop] = $input[$rel_prop];
+                        $moved_entity = $linker ? $linker : $content;
+                        $moved_entity[$rel_prop] = $input[$rel_prop];
                     }
                 }
                 try {
@@ -103,12 +122,20 @@ class Content extends Admin
                     if ($is_backoffice) {
                         $res['reload'] = str_replace("%d", $content['id'], $input['reload_url']);
                     }
+                    if ($linker) {
+                        $linker[$linker_field] = $content['id'];
+                        $linker->save();
+                    }
                 }  catch (\Exception $e) {
                     $res['status'] = 'error';
+                    if ($e instanceof \Floxim\Floxim\System\Exception\EntityValidation) {
+                        $res['errors'] = $e->toResponse();
+                    }
                 }
             }
         }
-        $com_item_name = fx::data('component', $content_type)->getItemName();
+        
+        $com_item_name = fx::data('component', $content_type)->getItemName('add');
 
         if (isset($input['content_id']) && $input['content_id']) {
             $res['header'] = fx::alang('Editing ',
@@ -116,7 +143,7 @@ class Content extends Admin
         } else {
             $res['header'] = fx::alang('Adding new ', 'system') . ' ' . $com_item_name;
             if ($move_meta) {
-                $res['header'] .= ' <span class="fx_header_notice">' . fx::alang($move_meta['type']) . ' ' . $move_meta['item']['name'] . '</span>';
+                //$res['header'] .= ' <span class="fx_header_notice">' . fx::alang($move_meta['type']) . ' ' . $move_meta['item']['name'] . '</span>';
             }
         }
         //$res['view'] = 'cols';
@@ -135,7 +162,6 @@ class Content extends Admin
             return;
         }
         $content = fx::data($content_type, $id);
-        fx::log('del', $content, $content_type);
         if (!$content) {
             return;
         }
@@ -172,7 +198,7 @@ class Content extends Admin
         }
 
         $this->response->addFields($fields);
-        $this->response->addFormButton(array('key' => 'save', 'label' => fx::alang('Delete')));
+        $this->response->addFormButton(array('key' => 'save', 'class' => 'delete', 'label' => fx::alang('Delete')));
         if (isset($input['delete_confirm']) && $input['delete_confirm']) {
             $response = array('status' => 'ok');
             $c_page = fx::env('page');

@@ -28,6 +28,7 @@
 </div>
 
 {template id="panel"}
+<div class="fx-progress-line"></div>
 <div fx:b="fx-admin-panel" class="fx_overlay">
     <div fx:e="logo"><div class="fx_preloader"></div></div>
     <div fx:if="$is_front" id="fx_admin_front_menu">
@@ -44,11 +45,9 @@
     </div>
 </div>
 <div fx:if="$is_front" id="fx_admin_control" class="fx_overlay">
-    <div id="fx_admin_extra_panel">
-        <div class="fx_admin_panel_body"></div>
-    </div>
-    <div class="fx_side_panel">
-        <div class="fx_side_panel__body"></div>
+    <div class="fx-top-panel"></div>
+    <div fx:b="fx-side-panel">
+        <div fx:e="body"></div>
     </div>
 </div>
 {/template}

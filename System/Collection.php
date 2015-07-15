@@ -679,6 +679,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
             if (!isset($res_index[$index_key])) {
                 if ($extract_field) {
                     $new_collection = fx::collection();
+                    $new_collection->is_sortable = $what->is_sortable;
                     $linkers = $what->fork();
                     $linkers->addFilter($cond_field, $index_key);
                     if ($extract_real_field) {

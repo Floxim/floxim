@@ -1,34 +1,47 @@
 (function($) {
     
     function fx_front_panel() {
-        var $body = $('#fx_admin_extra_panel .fx_admin_panel_body'),
-            //$footer = $('#fx_admin_extra_panel .fx_admin_panel_footer'),
-            $side = $('.fx_side_panel'),
-            $side_body = $('.fx_side_panel__body'),
-            //$side_footer = $('.fx_side_panel__footer'),
+        var $topbar = $('.fx-top-panel'),
+            $sidebar = $('.fx-side-panel'),
+            $side_body = $('.fx-side-panel__body'),
             front_panel = this,
             duration = 300;
         
         var body_default_margin = null;
+        
+        this.panels = [];
+        
+        this.get_current_panel = function() {
+            var c_len = this.panels.length;
+            return c_len ? this.panels[c_len - 1] : null;
+        };
+        /*
         this.is_visible = false;
         this.current_panel_type = null;
-        
+        this.current_panel_style = null;
+        this.current_params = {};
+        */
         this.show_form = function(data, params) {
+            
+            var c_panel = {};
+            this.panels.push(c_panel);
+            
             if (!params.view) {
                 params.view = data.view ? data.view : 'vertical';
             }
-            this.is_visible = true;
+            if (!params.style) {
+                params.style = 'default';
+            }
+            c_panel.is_visible = true;
             
             // disable hilight & select, hide node panel
-            $fx.front.disable_hilight();
-            $fx.front.disable_select();
-            $fx.front.disable_node_panel();
+            if (!params.keep_hilight_on) {
+                $fx.front.disable_hilight();
+                $fx.front.disable_select();
+                $fx.front.disable_node_panel();
+            }
             
             this.stop();
-            //$footer.html('').show().css('visibility', 'hidden');
-            //$side_footer.html('');
-            
-            $body.css({height:'1px', 'visibility':'hidden'}).removeClass('fx_admin_panel_body_overflow_hidden').show();
             
             if (!data.fields) {
                 data.fields = [];
@@ -36,31 +49,49 @@
             
             data.fields.push({type:'hidden', name:'_base_url', value:document.location.href});
             
-            this.current_panel_type = 'side';
+            c_panel.current_panel_type = 'side';
+            c_panel.current_panel_style = params.style;
             
             if (params.view === 'horizontal') {
-                this.current_panel_type = 'top';
-                $.each(data.fields, function(key, field) {
-                    field.context = 'panel';
-                });
-            } else {
-                //data.ignore_cols = true;
+                c_panel.current_panel_type = 'top';
+                if (c_panel.current_panel_style !== 'finish') {
+                    $.each(data.fields, function() {
+                        this.context = 'panel';
+                    });
+                }
             }
             
             if (!data.form_button) {
                 data.form_button = ['save'];
             }
-            data.form_button.unshift('cancel');
+            if (c_panel.current_panel_style !== 'finish') {
+                data.form_button.unshift('cancel');
+            }
             data.class_name = 'fx_form_'+params.view;
+            
+            c_panel.current_params = params;
             
             var $form = null;
             
             data.button_container = 'header';
-            if (this.current_panel_type === 'top') {
-                //data.button_container = $footer;
-                $form = $fx.form.create(data, $body);
+            if (c_panel.current_panel_type === 'top') {
+                if (c_panel.current_panel_style === 'finish') {
+                    data.button_container = 'footer';
+                }
+                $topbar.css({height:'1px', 'visibility':'hidden'}).mod('overflow', null);
+                $topbar.show();
+                $topbar.mod('style', c_panel.current_panel_style);
+                $form = $fx.form.create(data, $topbar);
+                if (c_panel.current_panel_style === 'finish') {
+                    var $closer = $('<div class="fx_admin_form__close_icon">&times;</div>');
+                    $closer.insertBefore($form.children().first());
+                    $closer.on('click', function() {
+                        $form.trigger('fx_form_cancel');
+                    });
+                }
             } else {
                 data.button_container = 'footer';
+                $sidebar.mod('style', c_panel.current_panel_style);
                 $form = $fx.form.create(data, $side_body);
             }
             
@@ -81,21 +112,23 @@
             });
             setTimeout(function() {
                 var callback = function() {
-                    var $first_inp = $(':input:visible', $form).first();
-                    if ($first_inp.length > 0 && $first_inp.attr('type') !== 'submit') {
-                        $first_inp.focus();
+                    if (!params.skip_focus) {
+                        var $first_inp = $(':input:visible', $form).first();
+                        if ($first_inp.length > 0 && $first_inp.attr('type') !== 'submit') {
+                            $first_inp.focus();
+                        }
                     }
                     if (params.onready) {
                         params.onready($form);
                     }
                 };
-                if (front_panel.current_panel_type === 'top') {
-                    //$footer.css('visibility', 'visible');
-                    $body.css('visibility', 'visible');
+                if (c_panel.current_panel_type === 'top') {
+                    $topbar.css('visibility', 'visible');
                     $fx.front_panel.animate_panel_height(null, function () {
                         $form.resize(function() {
                             $fx.front_panel.animate_panel_height();
                         });
+                        $form.resize();
                         callback();
                     });
                 } else {
@@ -109,11 +142,12 @@
                     return false;
                 }
             });
+            return $form;
         };
         
         
         this.recount_sidebar = function() {
-            var $form = $('.fx_admin_form', $side),
+            var $form = $('.fx_admin_form', $sidebar),
                 $form_header = $('.fx_admin_form__header', $form),
                 $form_footer = $('.fx_admin_form__footer', $form),
                 $form_body = $('.fx_admin_form__body', $form);
@@ -127,7 +161,7 @@
                 form_height = $form_body.outerHeight(),
                 counted_body_height = total_height - header_height - footer_height;
             
-            $side.css({
+            $sidebar.css({
                 'height':total_height
             });
             
@@ -139,27 +173,45 @@
             }
         };
         
-        this.show_sidebar = function() {
-            var $body = $('body');
-            $body.css({
-                overflow:'hidden',
-                width: $body.width()
-            });
+        this.show_sidebar = function(callback) {
+            var c_panel = this.get_current_panel(),
+                $body = $('body'),
+                style = c_panel.current_panel_style;
             
-            this.recount_sidebar();
-            $(window).resize(
-                'resize.fx_recount_sidebar', 
-                this.recount_sidebar
-            );
-            $side.css({
-                right:'-' + ($side.outerWidth() + 30)+'px'
-            }).animate({
-                right:0
-            }, duration);
-            var that = this;
-            $('.fx_admin_form__body', $side).resize(function(e) {
-                that.recount_sidebar();
-            });
+            $sidebar.show();
+            
+            switch (style) {
+                case 'default':
+                    $body.css({
+                        overflow:'hidden',
+                        width: $body.width()
+                    });
+
+                    this.recount_sidebar();
+                    $(window).resize(
+                        'resize.fx_recount_sidebar', 
+                        this.recount_sidebar
+                    );
+                    $sidebar.css({
+                        right:'-' + ($sidebar.outerWidth() + 30)+'px'
+                    }).animate({
+                        right:0
+                    }, duration);
+                    var that = this;
+                    $('.fx_admin_form__body', $sidebar).resize(function(e) {
+                        that.recount_sidebar();
+                    });
+                    if (callback){
+                        setTimeout(callback, duration);
+                    }
+                    break;
+                case 'alert':
+                    $sidebar.attr('style', '');
+                    if (callback) {
+                        callback();
+                    }
+                    return;
+            }
         };
         
         this.hide_sidebar = function() {
@@ -167,9 +219,14 @@
                 width:'',
                 overflow:''
             });
-            $side.animate({
-                right:'-' + ($side.outerWidth() + 30)+'px'
-            }, duration);
+            var c_panel = this.get_current_panel();
+            if (c_panel.current_panel_style === 'default') {
+                $sidebar.animate({
+                    right:'-' + ($sidebar.outerWidth() + 30)+'px'
+                }, duration);
+            } else {
+                $sidebar.hide();
+            }
             $(window).off('resize.fx_recount_sidebar');
         };
         
@@ -181,21 +238,21 @@
             var max_height = Math.round(
                 $(window).height() * 0.75
             );
-            var $form = $('form', $body);
-            
+            var $form = $('form', $topbar);
+                        
             var form_height = $form.outerHeight();
             
             if (typeof panel_height === 'undefined' || panel_height === null) {
                 panel_height = Math.min(form_height, max_height);
             }
             if (panel_height > 0) {
-                $body.toggleClass('fx_admin_panel_body_overflow_hidden', form_height <= panel_height);
+                $topbar.mod('overflow', form_height <= panel_height ? 'hidden' : null);
             }
             
             $form.css({'box-sizing':'border-box', 'width': '101%'});
             $form.css('width', '100%');
             
-            if (panel_height === $body.height()) {
+            if (panel_height === $topbar.height()) {
                 return;
             }
             if (body_default_margin === null) {
@@ -206,7 +263,7 @@
             var height_delta = body_offset - parseInt($('body').css('margin-top'));
             this.is_moving = true;
             
-            $body.animate(
+            $topbar.animate(
                 {height: panel_height+'px'}, 
                 {
                     duration: duration,
@@ -266,7 +323,7 @@
         };
         
         this.stop = function() {
-            $body.stop(true,false);
+            $topbar.stop(true,false);
             $('body').stop('fx_panel_queue', true,false);
             $fx.front.get_front_overlay().stop(true,false);
             $('.fx_top_fixed').stop(true,false);
@@ -283,23 +340,37 @@
                 }
             );
         };
-        this.hide = function() {
+        this.hide = function(callback_final) {
+            var that = this,
+                c_panel = this.get_current_panel();
+            if (!c_panel) {
+                if (callback_final) {
+                    callback_final();
+                }
+                return;
+            }
             $fx.front.enable_select();
             $('body').off('.fx_front_panel');
+            
+            
             var callback = function() {
-                //setTimeout(function() {
+                
+                if (!c_panel.current_params.keep_hilight_on) {
                     $fx.front.enable_node_panel();
-                //}, 50);
-                if (!$fx.front.get_selected_item()) {
-                    $fx.front.enable_hilight();
+                    if (!$fx.front.get_selected_item()) {
+                        $fx.front.enable_hilight();
+                    }
                 }
+                if (callback_final) {
+                    callback_final();
+                }
+                that.panels.pop();
             };
-            if (this.current_panel_type === 'top') {
+            if (c_panel.current_panel_type === 'top') {
                 this.animate_panel_height(0, function () {
-                    $body.hide().html('');
-                    //$footer.hide();
+                    $topbar.hide().html('');
                     callback();
-                    $fx.front_panel.is_visible = false;
+                    c_panel.is_visible = false;
                 });
             } else {
                 this.hide_sidebar();
