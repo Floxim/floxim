@@ -983,6 +983,7 @@ fx_front.prototype.is_selectable = function(node) {
             // text fields and variables in attributes
             if ( n.hasClass('fx_template_var') || n.hasClass('fx_template_var_in_att') ) {
                 if ($fx.front.is_var_bound_to_entity(n)) {
+                    console.log('is bound', n);
                     return false;
                 }
                 return true;
@@ -1698,6 +1699,7 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
                 
             }
         });
+        /*
         entity_panel.add_button('move', function() {
             var $b = $(this);
             if ($b.hasClass('fx_admin_button_move_active')) {
@@ -1715,8 +1717,7 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
                 $fx.front.start_entities_sortable($entity.parent());
             }
         });
-        //var $sorter = '<div class="fx_icon fx_icon-type-move fx_inline_sorter"></div>';
-        //$entity.append($sorter);
+        */
     }
     
     if ($entity.is('.fx_template_var, .fx_template_var_in_att')) {

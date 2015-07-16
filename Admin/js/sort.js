@@ -5,25 +5,23 @@ $fx.sortable = {
         
         params = $.extend({
             clone:true,
-            animate:true
+            animate:true,
+            axis:'auto'
         }, params);
         
         var $overlay = $fx.front.get_front_overlay(),
             $node = params.node,
             offset = $node.offset(),
             $sorter = $('<div class="fx_overlay fx_sorter"><div class="fx_icon fx_icon-type-move"></div></div>'),
-            z_index = $fx.front.get_panel_z_index();
+            z_index = $fx.front.get_panel_z_index(),
+            button_offset = $node.height()/2 - 20,
+            click_offset = 0;
         
         $overlay.append($sorter);
         $sorter.css({
-            position:'absolute',
-            top:offset.top + $node.height()/2 - 20,
+            top:offset.top + button_offset,
             left:offset.left - 45,
-            'z-index':z_index,
-            'background-color': '#ececec',
-            'border-radius': '2px',
-            'box-shadow': '0 0 10px rgba(0,0,0,0.4)',
-            'padding':'4px'
+            'z-index':z_index
         });
 
         $('html').one('fx_deselect', function() {
@@ -94,9 +92,14 @@ $fx.sortable = {
             return res;
         }
         
+        
         $sorter.draggable({
             scrollSensitivity:80,
             start: function(e) {
+                click_offset = {
+                    x:$sorter.width() - e.offsetX,
+                    y:$sorter.height() - e.offsetY
+                };
                 if (params.onstart) {
                     params.onstart();
                 }
@@ -114,7 +117,8 @@ $fx.sortable = {
                 } else {
                     $placeholder = $($node[0].cloneNode(true));
                     $placeholder.css({
-                        outline:'3px solid #FFA',
+                        outline:'3px solid #EE0',
+                        position:'relative',
                         'z-index':z_index - 2
                     });
                 }
@@ -124,7 +128,7 @@ $fx.sortable = {
                     position:'absolute',
                     'z-index':z_index-1,
                     width:$node.width(),
-                    opacity:0.1,
+                    opacity:0.3,
                     overflow:'hidden',
                     outline:'2px dotted #000'
                 });
@@ -137,8 +141,8 @@ $fx.sortable = {
             drag: function(e) {
 
                 $node.offset({
-                    top:e.pageY,
-                    left:e.pageX
+                    top:e.pageY - button_offset - click_offset.y,
+                    left:e.pageX + click_offset.x
                 });
                 if (is_moving) {
                     return;
