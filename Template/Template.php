@@ -65,6 +65,22 @@ class Template
         return '';
     }
     
+    protected $template_params = array();
+    
+    public function registerParam($name, $data)
+    {
+        if ($this->parent) {
+            $this->parent->registerParam($name, $data);
+            return;
+        }
+        $this->template_params[$name] = $data;
+    }
+    
+    public function getRegisteredParams()
+    {
+        return $this->template_params;
+    }
+    
     public function getIcon($what_for)
     {
         $theme = fx::env('theme_template');

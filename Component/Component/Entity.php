@@ -364,8 +364,7 @@ class Entity extends System\Entity
      */
     public function getAllChildren()
     {
-        //$res = fx::collection()->concat($this->getC['children']);
-        $res = $this->getChildren();
+        $res = $this->getChildren()->copy();
         foreach ($res as $child) {
             $res->concat($child->getAllChildren());
         }

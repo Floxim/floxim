@@ -292,7 +292,11 @@ class Entity extends System\Entity implements Template\Entity
             $vis = $this->getVisual();
             //$vis['']
             foreach ($data['visual'] as $k => $v) {
-                $vis[$k] = $v;
+                if (in_array($k, array('template_visual', 'wrapper_visual'))) {
+                    $vis[$k] = array_merge($vis[$k], $v);
+                } else {
+                    $vis[$k] = $v;
+                }
             }
         }
         if (isset($data['controller']) && $data['controller'] && $data['controller'] !== 'null') {
@@ -427,11 +431,23 @@ class Entity extends System\Entity implements Template\Entity
             $tpl_params = array_merge($tpl_params, $result);
         }
         $tpl_params['infoblock'] = $this;
-        $this->output_cache = $tpl->render($tpl_params);
+        $is_admin = fx::isAdmin();
+        
+        try {
+            $this->output_cache = $tpl->render($tpl_params);
+        } catch (\Exception $e) {
+            fx::log('error while rendering...', $e->getMessage());
+            $this->output_cache = $is_admin ? 'Error, see logs' : '';
+        }
+        if ($is_admin) {
+            $this->infoblock_meta['template_params'] = $tpl->getRegisteredParams();
+        }
         $this->output_is_subroot = $tpl->is_subroot;
         $this->output_is_cached = true;
         return $this->output_cache;
     }
+    
+    protected $infoblock_meta = array();
 
     /**
      * wrap ib's output
@@ -453,7 +469,20 @@ class Entity extends System\Entity implements Template\Entity
         }
         $wrap_params['content'] = $output;
         $wrap_params['infoblock'] = $this;
-        $result = $tpl_wrap->render($wrap_params);
+        
+        $is_admin = fx::isAdmin();
+        
+        try {
+            $result = $tpl_wrap->render($wrap_params);
+        } catch (\Exception $e) {
+            fx::log('error while wrapping', $e->getMessage());
+            $result = $output;
+        }
+        
+        if ($is_admin) {
+            $this->infoblock_meta['wrapper_params'] = $tpl_wrap->getRegisteredParams();
+        }
+        
         $this->output_is_subroot = $tpl_wrap->is_subroot;
         return $result;
     }
@@ -482,6 +511,13 @@ class Entity extends System\Entity implements Template\Entity
             'data-fx_infoblock' => $ib_info, // todo: psr0 need fix
             'class'             => 'fx_infoblock fx_infoblock_' . $this['id']
         );
+        
+        foreach ($this->infoblock_meta as $meta_key => $meta_val) {
+            // register only non-empty props
+            if ($meta_val && !is_array($meta_val) || count($meta_val) > 0) {
+                $meta['data-fx_'.$meta_key] = $meta_val;
+            }
+        }
         
         if (isset($_POST['_ajax_base_url'])) {
             $meta['data-fx_ajax_base_url'] = $_POST['_ajax_base_url'];

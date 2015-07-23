@@ -16,6 +16,7 @@
         'Delete' : 'Удалить',
         'Area %s is empty, you can add some blocks here.' : 'Область "%s" пуста, сюда можно добавить блоки.',
         'Add block to' : 'Добавить блок в',
+        'block' : 'блок',
         'Adding' : 'Добавляем',
         'Before': 'Перед',
         'After' : 'После',

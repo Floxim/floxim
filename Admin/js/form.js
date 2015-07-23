@@ -320,7 +320,13 @@ fx_form = {
         return res;
     },
 
-    draw_field: function(json, target) {
+    draw_field: function(json, target, position) {
+        position = position || 'into';
+        var $rel_node = null;
+        if (position !== 'into') {
+            $rel_node = target;
+            target = $rel_node.parent();
+        }
         if (json.type === undefined) {
             json.type = 'input';
         }
@@ -342,7 +348,19 @@ fx_form = {
         }
         
         var node = $fx_fields[type](json);
-        target.append(node);
+        switch (position) {
+            case 'into':
+                target.append(node);
+                break;
+            case 'before':
+                node.insertBefore($rel_node);
+                break;
+            case 'after':
+                node.insertAfter($rel_node);
+                break;
+        }
+        
+        
         if (node === '') {
             return null;
         }

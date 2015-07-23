@@ -67,9 +67,13 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
     {
         return $this->filtered_by;
     }
+    
+    public static $counter = 0;
 
     public function __construct($data = array())
     {
+        self::$counter++;
+        $this->id = self::$counter;
         if (is_array($data)) {
             $this->data = $data;
         } else {

@@ -7,6 +7,18 @@ use Floxim\Floxim\System\Fx as fx;
 class ContextFlex extends Context {
     public $vars = array();
     
+    public function getFromTop($var)
+    {
+        return isset($this->stack[1][$var]) ? $this->stack[1][$var] : null;
+    }
+    
+    protected $last_var_level = null;
+    
+    public function getLastVarLevel()
+    {
+        return $this->last_var_level;
+    }
+    
     public function push($data = array(), $meta = array()) {
         
         $l = ++$this->level;
@@ -84,17 +96,15 @@ class ContextFlex extends Context {
         for ($i = $this->level; $i >= 0; $i--) {
             
             if (isset($this->misses[$i][$name])) {
-                //fx::count('c_dissmiss');
                 continue;
             }
             if (isset($this->stack[$i][$name])) {
-                //fx::count('c_found');
+                $this->last_var_level = $i;
                 return $this->stack[$i][$name];
             } 
-            //fx::count('c_miss');
             $this->misses[$i][$name] = true;
         }
-        
+        $this->last_var_level = null;
         return null;
     }
     

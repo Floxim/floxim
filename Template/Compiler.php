@@ -14,6 +14,32 @@ class Compiler
     protected $is_aliased = false;
     protected $current_source_file = null;
     protected $current_source_is_imported = false;
+    
+    protected $state_stack = array();
+    
+    protected function pushState($type, $value)
+    {
+        if (!isset($this->state_stack[$type])) {
+            $this->state_stack[$type] = array();
+        }
+        $this->state_stack[$type][]= $value;
+    }
+    
+    protected function popState($type)
+    {
+        return array_pop($this->state_stack[$type]);
+    }
+    
+    protected function getState($type)
+    {
+        if (!isset($this->state_stack[$type])) {
+            return null;
+        }
+        if (count($this->state_stack[$type]) === 0) {
+            return null;
+        }
+        return end($this->state_stack[$type]);
+    }
 
     /**
      * Convert the tree of tokens in the php code
@@ -70,10 +96,11 @@ class Compiler
     
     protected function tokenBemBlockToCode($token)
     {
-        //fx::debug($token);
         $code =  "<?php\n";
         $code .= "ob_start();\n";
+        $this->pushState('edit', false);
         $code .= $this->childrenToCode($token);
+        $this->popState('edit');
         $code .= '$block_string = ob_get_clean();'."\n";
         $code .= '$block_parts = \\Floxim\\Floxim\\Template\\Template::bemParseStr($block_string);'."\n";
         $code .= "\$this->bemStartBlock(\$block_parts['name']);\n";
@@ -122,6 +149,68 @@ class Compiler
         $code .= "echo \$this->getHelp();\n";
         $code .= "?>";
         return $code;
+    }
+    
+    protected function presetToTemplate(Token $token)
+    {
+        $tpl_token = Token::create('{template}');
+        $target_tpl = $token->getProp('template');
+        $tpl_token->setProp('is_preset_of', $target_tpl);
+        
+        if (preg_match("~[a-z0-9\._-]+?\:[a-z0-9_-]+$~", $target_tpl)) {
+            try {
+                $target_tpl_obj = fx::template($target_tpl);
+                if ($target_tpl_obj) {
+                    $info = $target_tpl_obj->getInfo();
+                    if (isset($info['of'])) {
+                        $tpl_token->setProp('of', $info['of']);
+                    }
+                }
+            } catch (\Exception $e) {
+                fx::debug('ooops', $e);
+            }
+        }
+        
+        $id = preg_replace("~[^a-z0-9_]+~", '_', $target_tpl).'_'.$token->getProp('id');
+        
+        $tpl_token->setProp('id', $id);
+        
+        if ( ($preset_name = $token->getProp('name')) ) {
+            $tpl_token->setProp('name', $preset_name);
+        }
+        
+        $apply = '{apply '.$token->getProp('template');
+        $vars = array();
+        foreach ($token->getChildren() as $child) {
+            if ($child->name !== 'code') {
+                continue;
+            }
+            $data = $child->getProp('value');
+            $data = explode("\n", trim($data));
+            foreach ($data as $line) {
+                $line = trim($line);
+                if (!preg_match("~([\$a-z0-9_-]+)\s*\:\s*(.+)$~i", $line, $parts)) {
+                    continue;
+                }
+                $var = $parts[1];
+                if (!preg_match("~^\$~", $var)) {
+                    $var = '$'.$var;
+                }
+                $val = $parts[2];
+                if (!preg_match('~^([\"\\\']).+\1$~', $val)) {
+                    $val = '"'.$val.'"';
+                }
+                $vars []= $var.' = '.$val;
+            }
+        }
+        if (count($vars) > 0) {
+            $apply .= ' with '.join(", ", $vars);
+        }
+        $apply .= '/}';
+        $apply_token = Token::create($apply);
+        $apply_token->setProp('extract_subroot', '$this->is_subroot');
+        $tpl_token->addChild($apply_token);
+        return $tpl_token;
     }
 
     protected function tokenCallToCode(Token $token)
@@ -587,7 +676,7 @@ class Compiler
             }
         }
         
-        if ($token->getProp('editable') == 'false') {
+        if ($token->getProp('editable') == 'false' || $this->getState('edit') === false) {
             $code .= 'echo  ' . $expr . ";\n";
         } else {
             $code .= 'echo !$_is_admin ? ' . $expr . ' : $this->printVar(' . "\n";
@@ -630,10 +719,7 @@ class Compiler
                 $meta_parts [] = "array(" . join(", ", $tp_parts) . ")";
             }
             $meta_parts [] = '$_is_wrapper_meta';
-
-            if ($token->getProp('editable') == 'false') {
-                $meta_parts [] = 'array("editable"=>false)';
-            }
+            
             if ($real_val_defined) {
                 $meta_parts [] = 'array("real_value" => ' . $real_val_var . ')';
             }
@@ -930,7 +1016,6 @@ class Compiler
         }
         $code .= $counter_id."++;\n";
         $code .= "}\n"; // close foreach
-        //$code .= 'array_pop($this->context_stack);'."\n"; // pop loop object
         $code .= "\$context->pop();\n";
         if ($check_traversable) {
             $code .= "}\n";  // close if
@@ -956,14 +1041,29 @@ class Compiler
     {
         $this->registerTemplate($token);
     }
+    
+    
+    protected function tokenPresetToCode(Token $token)
+    {
+        $this->registerTemplate($token);
+    }
 
     protected function tokenSetToCode($token)
     {
+        $code = "<?php\n";
+        
         $var = $token->getProp('var');
         
-        $value = self::parseExpression($token->getProp('value'));
+        if ($token->getProp('value')) {
+            $value = self::parseExpression($token->getProp('value'));
+        } else {
+            $code .= "ob_start();\n";
+            $code .= $this->childrenToCode($token);
+            $value = "ob_get_clean()";
+        }
+        
         $is_default = $token->getProp('default');
-        $code = "<?php\n";
+        
 
         if (preg_match("~\.~", $var)) {
             $parts = explode('.', $var, 2);
@@ -1192,15 +1292,58 @@ class Compiler
     protected function childrenToCode(Token $token)
     {
         $parts = array();
+        $param_parts = array();
         foreach ($token->getChildren() as $child) {
-            if ($child->name !== 'elseif' && $child->name !== 'else') {
+            if ($child->name === 'param') {
+                $param_parts []= $this->tokenParamToCode($child);
+            } elseif ($child->name !== 'elseif' && $child->name !== 'else') {
                 $parts [] = $this->getTokenCode($child, $token);
             }
         }
         if (count($parts) == 0) {
             return '';
         }
-        $code = '?>' . join("", $parts) . "<?php ";
+        $code = '?>' . join("", $param_parts).join("", $parts) . "<?php ";
+        return $code;
+    }
+    
+    protected function tokenParamToCode(Token $token)
+    {
+        $name = $token->getProp('name');
+        $props = $token->getAllProps();
+        unset($props['name']);
+        
+        $val_var = "\$param__".$name."_value";
+        
+        $code = "<?php\n";
+        $code .= $val_var." = \$context->get('".$name."');\n";
+        $val_is_null = $val_var."_is_null";
+        $code .= $val_is_null . " = is_null(".$val_var.");\n";
+        if (isset($props['default'])) {
+            // handle computable defaults
+            $default_val = "'".$props['default']."'";
+            
+            $code .= "if (".$val_is_null.") {\n";
+            $code .= $val_var." = ".$default_val.";\n";
+            $code .= "\$context->set('".$name."', ".$val_var.");\n";
+            $code .= "}\n";
+        }
+        $code .= "if (\$_is_admin && (".$val_is_null." || \$context->getLastVarLevel() === 1  ) ) {\n";
+        $exported_props = array(
+            "'value' => ".$val_var
+        );
+        foreach ($props as $k => $v) {
+            $c_prop = "'".$k."' => ";
+            if (preg_match("~^\`.+\`$~", $v)) {
+                $c_prop .= trim($v, '`');
+            } else {
+                $c_prop .= "'".addslashes($v)."'";
+            }
+            $exported_props []= $c_prop;
+        }
+        $code .= "\$this->registerParam('".$name."', array(".join(", ", $exported_props).") );\n";
+        $code .= "}\n";
+        $code .= "?>";
         return $code;
     }
 
@@ -1271,6 +1414,7 @@ class Compiler
             $hash .= ' '.$tpl_props['variant_number'];
             $code .= '// variant number: '.$tpl_props['variant_number']."\n";
         }
+        
         if ($hash) {
             $method_name .= '_'. md5($hash);
         }
@@ -1442,6 +1586,8 @@ class Compiler
         $tpl_props += array(
             'name'   => $name,
             'of'     => $of,
+            'is_preset_of' => $token->getProp('is_preset_of'),
+            'is_abstract' => $token->getProp('is_abstract'),
             '_token' => $token
         );
         return $tpl_props;
@@ -1449,6 +1595,9 @@ class Compiler
 
     protected function registerTemplate(Token $token)
     {
+        if ($token->name === 'preset') {
+            $token = $this->presetToTemplate($token);
+        }
         if ($token->name != 'template') {
             return;
         }

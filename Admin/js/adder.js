@@ -1,9 +1,14 @@
 (function($) {
     
 fx_front.prototype.create_inline_infoblock_adder = function($node) {
-    var $button = $fx.front.create_inline_adder($node, '>.fx_infoblock', 'block');
-    $button.on('click', function() {
+    var $button = $fx.front.create_inline_adder(
+        $node, 
+        '.fx_infoblock', 
+        '<span class="fx_adder_variant">'+$fx.lang('block')+'</span>'
+    );
+    $('.fx_adder_variant', $button).on('click', function() {
         $fx.front.add_infoblock_select_controller($node, $button.data('rel_node'), $button.data('rel_dir'));
+        return false;
     });
 };
 
@@ -214,7 +219,8 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
             if ( $variants.length === 1) {
                 $variants.first().click();
                 return;
-            } else if ($variants.length === 0) {
+            } 
+            if ($variants.length === 0) {
                 return;
             }
             $variants.show();
@@ -328,7 +334,7 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
                     var $variants = $('.fx_adder_variant', $title),
                         plus_label_text = $fx.lang('Add');
                     
-                    if ($variants.length === 1) {
+                    if ($variants.length <= 1) {
                         plus_label_text += ' '+$variants.first().text();
                     } else {
                         plus_label_text += '...';
@@ -345,7 +351,12 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
         
         var right_edge = $(window).width() - 20;
         
-        
+        function get_margins($entity) {
+            return {
+                x: parseInt($entity.css('margin-left')) + parseInt($entity.css('margin-right')),
+                y: parseInt($entity.css('margin-top')) + parseInt($entity.css('margin-bottom'))
+            };
+        }
         
         function place_button(e, sortable) {
             
@@ -362,6 +373,7 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
                 left = offset.left,
                 e_width = $entity.outerWidth(),
                 e_height = $entity.outerHeight(),
+                e_margins = get_margins($entity),  
                 size = axis === 'x' ? e_width : e_height,
                 diff = axis === 'x' ? (e_left - left) : (e_top - top),
                 is_after = size / 2 < diff,
@@ -381,6 +393,7 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
         
             var neighbour_index = entity_index + (is_after ? 1 : (entity_index === 0 ? $entities.length : -1) ),
                 $neighbour = $entities.eq(neighbour_index),
+                neighbour_is_real = $neighbour.length > 0,
                 neighbour_offset = $neighbour.offset(),
                 distance = 0;
             
@@ -390,7 +403,10 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
             }
             // use neighbour from the other side if there's no nodes on the correct side
             // or if the correct neighbour is not on the same line ("tiles" case)
-            if ($neighbour.length === 0 || not_on_the_same_line(neighbour_offset)) {
+            if (
+                $neighbour.length === 0 || 
+                not_on_the_same_line(neighbour_offset)
+            ) {
                 neighbour_index = entity_index + (!is_after ? 1 : (entity_index === 0 ? $entities.length : -1) ),
                 $neighbour = $entities.eq(neighbour_index),
                 neighbour_offset = $neighbour.offset();
@@ -406,15 +422,17 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
                     var dims = [top, top+e_height, neighbour_offset.top, neighbour_offset.top + $neighbour.outerHeight() ];
                 }
                 dims.sort(function(a,b){return a-b;});
-                distance = dims[2] - dims[1];
+                distance = neighbour_is_real ? dims[2] - dims[1] : 0;
             }
             
             var outstand_treshold = 40,
-                is_outstanding = e_width < outstand_treshold || e_height < outstand_treshold;
+                is_outstanding = (e_width + e_margins.x) < outstand_treshold || 
+                                 (e_height + e_margins.y) < outstand_treshold;
             
-            if ($neighbour.length && !is_outstanding) {
-                is_outstanding = $neighbour.outerWidth() < outstand_treshold 
-                                    || $neighbour.outerHeight() < outstand_treshold;
+            if ($neighbour.length && neighbour_is_real && !is_outstanding) {
+                var n_margins = get_margins($neighbour);
+                is_outstanding = ($neighbour.outerWidth() + n_margins.x) < outstand_treshold ||
+                                 ($neighbour.outerHeight() + n_margins.y) < outstand_treshold;
             }
             
             $button.toggleClass('fx_inline_adder-outstanding', is_outstanding);
@@ -434,6 +452,11 @@ fx_front.prototype.create_inline_adder = function($node, neighbour_selector, tit
                 
                 var line_width = Math.max(e_width, n_width);
                 
+                
+                if (n_width > e_width && $neighbour.length) {
+                    left -= offset.left - neighbour_offset.left;
+                }
+               
                 $line.css({
                     width:line_width+'px',
                     top: Math.round(b_size/2) - 1 +'px'

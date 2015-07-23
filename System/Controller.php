@@ -215,6 +215,9 @@ class Controller
         // now - filtered
         $result = array();
         foreach ($template_variants as $k => $tplv) {
+            if (isset($tplv['is_abstract'])) {
+                continue;
+            }
             foreach (explode(",", $tplv['of']) as $tpl_of) {
                 $of_parts = explode(":", $tpl_of);
                 if (count($of_parts) != 2) {

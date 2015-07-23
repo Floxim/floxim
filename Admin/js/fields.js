@@ -18,6 +18,11 @@ window.$fx_fields = {
     input: function(json) {
         return $t.jQuery('form_row', json);
     },
+    
+    number: function(json) {
+        json.class_name = 'number' + (json.class_name || '');
+        return $t.jQuery('form_row', json);
+    },
 
     file: function (json) {
         return $t.jQuery('form_row', json);

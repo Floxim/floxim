@@ -983,7 +983,6 @@ fx_front.prototype.is_selectable = function(node) {
             // text fields and variables in attributes
             if ( n.hasClass('fx_template_var') || n.hasClass('fx_template_var_in_att') ) {
                 if ($fx.front.is_var_bound_to_entity(n)) {
-                    console.log('is bound', n);
                     return false;
                 }
                 return true;
@@ -1759,7 +1758,34 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
         $fx.front.stop_entities_sortable();
         $fx.front.outline_block_off($entity);
     });
+};
+
+fx_front.prototype.extract_infoblock_visual_fields = function($ib_node, $form) {
+    var types = ['template', 'wrapper'];
     
+    $.each(types, function(index, type) {
+        var props = $ib_node.data('fx_'+type+'_params'),
+            field_class = 'fx_infoblock_'+type+'_param_field';
+        
+        $('.'+field_class, $form).remove();
+        if (!props) {
+            return;
+        }
+        var $rel_field = $(':input[name="visual['+type+']"]', $form).closest('.field');
+        $.each(props, function(prop_name, prop_data) {
+            var meta = $.extend(
+                {}, 
+                prop_data, {
+                    name:'visual['+type+'_visual]['+prop_name+']',
+                    context:'panel'
+                }
+            );
+
+            var $field = $fx.form.draw_field(meta, $rel_field, 'after');
+            $field.addClass(field_class);
+            $rel_field = $field;
+        });
+    });
 };
 
 fx_front.prototype.select_infoblock = function(n) {
@@ -1772,8 +1798,10 @@ fx_front.prototype.select_infoblock = function(n) {
         return;
     }
     $fx.front.add_panel_button('settings', function() {
-        var ib_node = n;
-        var ib = $(ib_node).data('fx_infoblock');
+        var ib_node = n,
+            $ib_node = $(ib_node),
+            ib = $ib_node.data('fx_infoblock');
+        
         if (!ib) {
             return;
         }
@@ -1790,7 +1818,6 @@ fx_front.prototype.select_infoblock = function(n) {
             visual_id:ib.visual_id,
             page_id: $fx.front.get_page_id(), //$('body').data('fx_page_id'),
             fx_admin:true,
-            //area_size:area_size
             area:area_meta
         }, {
             view:'horizontal',
@@ -1799,8 +1826,9 @@ fx_front.prototype.select_infoblock = function(n) {
             },
             onready:function($form) {
                 $form.data('ib_node', ib_node);
+                $fx.front.extract_infoblock_visual_fields($ib_node, $form);
                 $form.on('change.fx_front', function(e) {
-                    if (e.target.name === 'livesearch_input') {
+                    if (e.target.name === 'livesearch_input' || e.target.name === 'scope[complex_scope]') {
                         return;
                     }
                     if (is_waiting) {
@@ -1811,6 +1839,7 @@ fx_front.prototype.select_infoblock = function(n) {
                         $form.data('ib_node'), 
                         function($new_ib_node) {
                             $form.data('ib_node', $new_ib_node);
+                            $fx.front.extract_infoblock_visual_fields($new_ib_node, $form);
                             is_waiting = false;
                         }, 
                         {override_infoblock:$form.serialize()}

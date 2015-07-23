@@ -156,6 +156,11 @@ class Html
                     $tpl_macro_tag .= ' is_macro="true" ';
                 }
                 $tpl_macro_tag .= $subroot;
+                
+                if ($n->hasAttribute('fx:abstract')) {
+                    $tpl_macro_tag .= ' is_abstract="true" ';
+                    $n->removeAttribute('fx:abstract');
+                }
 
                 if (($tpl_for = $n->getAttribute('fx:of'))) {
                     $tpl_macro_tag .= ' of="' . $tpl_for . '"';

@@ -46,10 +46,12 @@ class Infoblock extends Admin
             'name'   => 'controller',
             'values' => array()
         );
+        
 
         $controllers = fx::data('component')->all();
+        
         $controllers->concat(fx::data('widget')->all());
-
+        
         foreach ($controllers as $c) {
             
             if (fx::config()->isBlockDisabled($c['keyword'])) {
@@ -130,14 +132,7 @@ class Infoblock extends Admin
                 $fields['controller']['values'][] = $c_item;
             }
         }
-        $this->response->addFormButton(array(
-            'key'   => 'next',
-            'label' => fx::alang('Next', 'system')
-        ));
-        $this->response->addFormButton(array(
-            'key'   => 'finish',
-            'label' => fx::alang('Finish', 'system')
-        ));
+        
         $result = array(
             'fields'        => $fields,
             'header'        => fx::alang('Adding infoblock', 'system'),
@@ -296,6 +291,13 @@ class Infoblock extends Admin
 
             $i2l['wrapper'] = fx::dig($input, 'visual.wrapper');
             $i2l['template'] = fx::dig($input, 'visual.template');
+            
+            foreach (array('template_visual', 'wrapper_visual') as $vis_prop) {
+                if (isset($input['visual'][$vis_prop])) {
+                    $i2l[$vis_prop] = array_merge($i2l[$vis_prop], $input['visual'][$vis_prop]);
+                }
+            }
+            
             $is_new_infoblock = !$infoblock['id'];
             $infoblock->save();
             $i2l['infoblock_id'] = $infoblock['id'];

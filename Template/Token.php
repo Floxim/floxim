@@ -37,18 +37,31 @@ class Token
         $source = ltrim($source, '/');
         $first_char = substr($source, 0, 1);
         $is_var = in_array($first_char, array('$', '%'));
+        $is_param = false;
         if ($is_var && !$is_close) {
             $ep = new ExpressionParser();
             $name = $ep->findVarName(trim($source, '/ '));
+        } elseif ($first_char === '@') {
+            $name = 'param';
+            $source = preg_replace_callback(
+                "~^@([^\s]+)~", 
+                function($m) use (&$props) {
+                    $props['name'] = $m[1];
+                    return '';
+                }, 
+                $source
+            );
+            $source = trim($source);
+            $is_param = true;
         } else {
             preg_match("~^[^\s\/\\|}]+~", $source, $name);
             $name = $name[0];
         }
-        //preg_match("~^\/?([^\s\/\\|}]+)~", $source, $name);
-
-        //$source = substr($source, strlen($name[0]));
-        $source = substr($source, strlen($name));
-
+        
+        if (!$is_param) {
+            $source = substr($source, strlen($name));
+        }
+        
         if ($name == 'apply') {
             $name = 'call';
             $props['apply'] = true;
@@ -85,6 +98,17 @@ class Token
         } else {
             $type = 'unknown';
         }
+        
+        if ($name === 'preset' && $type === 'open' && !preg_match("~id\s*?=~", $source)) {
+            $source = preg_replace_callback(
+                "~([a-z0-9\.\_\-\:]+)\#([a-z0-9_-]+)~", 
+                function($m) {
+                    return 'template="'.trim($m[1]).'" id="'.trim($m[2]).'"';
+                },
+                $source
+            );
+        }
+        
         if (($name == 'if' || $name == 'elseif') && $type != 'close' && !preg_match('~test=~', $source)) {
             $props['test'] = $source;
         } elseif ($name == 'call' && $type != 'close' && !preg_match('~id=~', $source)) {
@@ -190,8 +214,18 @@ class Token
                 'with',
                 'lang', 
                 'bem_block', 
-                'bem_element'
+                'bem_element',
+                'param'
             )
+        ),
+        'preset'  => array(
+            'type'     => 'double',
+            'contains' => array(
+                'code'
+            )
+        ),
+        'param' => array(
+            'type' => 'single'
         ),
         'code'      => array(
             'type' => 'single'
@@ -210,7 +244,7 @@ class Token
         ),
         'templates' => array(
             'type'     => 'double',
-            'contains' => array('template', 'templates')
+            'contains' => array('template', 'templates', 'preset')
         ),
         'lang'      => array(
             'type'     => 'double'
@@ -285,6 +319,10 @@ class Token
         'css' => array(
             'type' => 'double',
             'contains' => array('var', 'lang', 'if', 'elseif', 'else', 'apply', 'call')
+        ),
+        'set' => array(
+            'type' => 'both',
+            'contains' => array('code', 'var', 'lang', 'call', 'apply', 'if', 'elseif', 'else', 'each')
         )
     );
 

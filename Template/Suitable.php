@@ -500,7 +500,6 @@ class Suitable
             }
             $res_suit .= '; ';
         }
-        fx::log('res suit', $res_suit);
         return $res_suit;
     }
 
