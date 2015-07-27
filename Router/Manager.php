@@ -22,8 +22,11 @@ class Manager
 
     protected $routers = array();
 
-    public function register(Base $router, $name = null, $priority = null)
+    public function register($router, $name = null, $priority = null)
     {
+        if ($router instanceof \Closure) {
+            $router = Closure::create($router);
+        }
         if (is_null($name)) {
             $name = get_class($router);
         }

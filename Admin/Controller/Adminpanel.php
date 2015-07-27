@@ -46,6 +46,7 @@ class Adminpanel extends Admin
                 }
             }
         }
+        fx::trigger('admin_main_menu_ready', array('menu' => &$main_menu));
         return $main_menu;
     }
 
