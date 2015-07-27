@@ -391,7 +391,8 @@ class Entity extends System\Entity
                 'add' => 'singular.acc',
                 'add_many' => 'plural.acc',
                 'one' => 'singular.nom',
-                'list' => 'plural.nom'
+                'list' => 'plural.nom',
+                'with' => 'plural.inst'
             )
         );
         if (isset($declension_map[$lang])) {

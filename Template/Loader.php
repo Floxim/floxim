@@ -41,6 +41,7 @@ class Loader
             return;
         }
         $config_data = parse_ini_file($config_file, true);
+        
         if (!$config_data || !isset($config_data['import']) || !is_array($config_data['import'])) {
             return;
         }

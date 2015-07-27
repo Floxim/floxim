@@ -65,7 +65,8 @@ class Adminpanel extends Admin
                 ), 
                 "design" => array(
                     "name" => fx::alang("Design"),
-                    "key" => "design"
+                    "key" => "design",
+                    'icon' => 'settings'
                 )
             ),
             'profile' => array(

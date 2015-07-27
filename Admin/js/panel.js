@@ -95,6 +95,8 @@
                 $form = $fx.form.create(data, $side_body);
             }
             
+            c_panel.$form = $form;
+            
             $form.on('fx_form_cancel', function() {
                 if (params.oncancel) {
                     params.oncancel($form);
@@ -138,7 +140,8 @@
             
             $('body').off('.fx_front_panel').on('keydown.fx_front_panel', function(e) {
                 if (e.which === 27) {
-                    $form.trigger('fx_form_cancel');
+                    //$form.trigger('fx_form_cancel');
+                    $fx.front_panel.get_current_panel().$form.trigger('fx_form_cancel');
                     return false;
                 }
             });
@@ -350,7 +353,9 @@
                 return;
             }
             $fx.front.enable_select();
-            $('body').off('.fx_front_panel');
+            if (this.panels.length === 1) {
+                $('body').off('.fx_front_panel');
+            }
             
             
             var callback = function() {

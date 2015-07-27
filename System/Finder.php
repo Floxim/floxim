@@ -283,6 +283,11 @@ abstract class Finder
         }
         return $this;
     }
+    
+    public function getOrder()
+    {
+        return $this->order;
+    }
 
     public function with($relation, $finder = null, $only = false)
     {

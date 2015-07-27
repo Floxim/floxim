@@ -854,6 +854,7 @@ window.fx_suggest = function(params) {
         if (clear_input) {
             this.input.val('');
         }
+        this.offsetNode.parents().off('.suggest_scroll');
         $('html').off('mousedown.suggest_clickout');
     };
     

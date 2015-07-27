@@ -99,9 +99,14 @@
     }
 }
 
-#fx_admin_content .fx_admin_form {
+#fx_admin_content .fx_admin_form .field {
+    width:50%;
+    
     .fx_input, .redactor-box, .livesearch {
-        width:50%;
+        width:100%;
+    }
+    .fx_group_input .field {
+        width:100%;
     }
 }
 
@@ -692,6 +697,12 @@
     .fx_input_limit {
         width: 65px !important;
         display: inline-block;
+        &[disabled="disabled"] {
+            width: 2px !important;
+            padding-left: 0;
+            visibility: hidden;
+            padding-right: 0;
+          }
     }
 }
 

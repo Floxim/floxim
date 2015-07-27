@@ -175,9 +175,15 @@ class Compiler
         
         $tpl_token->setProp('id', $id);
         
-        if ( ($preset_name = $token->getProp('name')) ) {
-            $tpl_token->setProp('name', $preset_name);
+        // copy this props to the generated template
+        $passed_props = array('name', 'suit', 'of', 'size');
+        foreach ($passed_props as $passed_prop) {
+            if ( ($preset_prop = $token->getProp($passed_prop)) ) {
+                $tpl_token->setProp($passed_prop, $preset_prop);
+            }
         }
+        
+        
         
         $apply = '{apply '.$token->getProp('template');
         $vars = array();

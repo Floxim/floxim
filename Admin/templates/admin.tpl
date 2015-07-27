@@ -32,7 +32,7 @@
 <div fx:b="fx-admin-panel" class="fx_overlay">
     <div fx:e="logo"><div class="fx_preloader"></div></div>
     <div fx:if="$is_front" id="fx_admin_front_menu">
-        {apply menu_item each $modes with $class = 'fx_front_mode', $icon = $key /}
+        {apply menu_item each $modes with $class = 'fx_front_mode', $icon = $icon ? $icon : $key /}
         {apply menu_item with $more_menu /}
     </div>
     <div fx:if="$panel_title" fx:e="title">{$panel_title}</div>

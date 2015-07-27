@@ -164,6 +164,8 @@ class Component extends Admin
                 'type'                => 'select',
                 'label'               => 'Module',
                 'name'                => $v . '__module',
+                'join_with'           => 'vendor',
+                'join_type'           => 'line',
                 'parent'              => array('vendor' => $v),
                 'values'              => $modules,
                 'hidden_on_one_value' => true
@@ -209,14 +211,14 @@ class Component extends Admin
                 'label' => fx::alang('Component name', 'system'),
                 'name'  => 'name'
             ),
-            /*
-            array(
-                'label' => fx::alang('Name of an entity created by the component', 'system'),
-                'name'  => 'item_name'
-            ),*/
             array(
                 'label' => fx::alang('Keyword', 'system'),
                 'name'  => 'keyword'
+            ),
+            array(
+                'label' => fx::alang('Is abstract?', 'system'),
+                'name' => 'is_abstract',
+                'type' => 'checkbox'
             )
         );
 
@@ -321,6 +323,7 @@ class Component extends Admin
             $component['name'] = $input['name'];
         }
         $component['declension'] = $input['declension'];
+        $component['is_abstract'] = $input['is_abstract'];
         $component->save();
         return array('status' => 'ok');
     }
@@ -564,6 +567,13 @@ class Component extends Admin
             'label' => fx::alang('Component name', 'system'),
             'name'  => 'name',
             'value' => $component['name']
+        );
+        
+        $fields []= array(
+            'label' => fx::alang('Is abstract?', 'system'),
+            'name' => 'is_abstract',
+            'type' => 'checkbox',
+            'value' => $component['is_abstract']
         );
         
         $lang = fx::data('lang')->where('lang_code', fx::alang()->getLang())->one();

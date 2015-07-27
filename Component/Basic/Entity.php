@@ -371,12 +371,19 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
         
         $com = $this->getComponent();
         $entity_atts['data-fx_entity_name'] = $com->getItemName();
+        
+        $is_placeholder = $this->isAdderPlaceholder();
 
-        if ($this->isAdderPlaceholder()) {
+        if ($is_placeholder) {
             $entity_atts['class'] .= ' fx_entity_adder_placeholder';
         }
         if (isset($this['_meta'])) {
-            $entity_atts['data-fx_entity_meta'] = $this['_meta'];
+            $c_meta = $this['_meta'];
+            if ($is_placeholder) {
+                $c_meta['has_page'] = $this->hasPage();
+                $c_meta['publish'] = $this->getDefaultPublishState();
+            }
+            $entity_atts['data-fx_entity_meta'] = $c_meta;
         }
         
         // fields to edit in panel
@@ -390,7 +397,12 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
                 if (!is_array($field_meta)) {
                     continue;
                 }
-                $field_meta['current_value'] = $this[$field_keyword];
+                // !!! hardcode
+                if ($is_placeholder && $field_keyword === 'is_published') {
+                    $field_meta['current_value'] = $this->getDefaultPublishState();
+                } else {
+                    $field_meta['current_value'] = $this[$field_keyword];
+                }
                 $att_fields []= $field_meta;
             }
         }
@@ -399,10 +411,13 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
             $linker_field = $linker->getFieldMeta($linkers->linkedBy);
             $linker_collection_field = $linkers->selectField;
             
-            if (!$this->isAdderPlaceholder() && $linker_collection_field && $linker_collection_field['params']['content_type']) {
+            if (!$is_placeholder && $linker_collection_field && $linker_collection_field['params']['content_type']) {
                 $linker_type = $linker_collection_field['params']['content_type'];
             } else {
                 $linker_type = $this['type'];
+                $linker_field['params']['conditions'] = array(
+                    array('type', $linker_type)
+                );
             }
             $linker_field['params']['content_type'] = $linker_type;
             $linker_field['label'] = fx::alang('Select').' '. mb_strtolower(fx::component($linker_type)->getItemName());
@@ -445,6 +460,29 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
         return $entity_atts;
     }
     
+    public function hasPage()
+    {
+        return isset($this['url']);
+    }
+    
+    public function getDefaultPublishState()
+    {
+        // entities without own page can be published immediately by default
+        if (!$this->hasPage()) {
+            return true;
+        }
+        // @todo:
+        // if we are inside hidden branch, make this entity visible by default
+        // so user can publish the whole branch at once when ready
+        /*
+        if ($this['parent'] && !$this['parent']['is_branch_published']) {
+            return true;
+        }
+         * 
+         */
+        return false;
+    }
+    
     
     /**
      * Check if the entity is adder placeholder or set this property to $switch_to value
@@ -476,5 +514,30 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
             }
         }
         return parent::validate();
+    }
+    
+    public function hasAvailableInfoblock()
+    {
+        if ($this['infoblock_id']) {
+            return true;
+        }
+        
+        $structure_fields = $this->getStructureFields();
+                    
+        if (
+            (
+                !isset($structure_fields['infoblock_id']) || 
+                count($structure_fields['infoblock_id']['values']) === 0
+            ) 
+            && !$this->canHaveNoInfoblock()
+        ) {
+            return false;
+        }
+        return true;
+    }
+    
+    public function isAvailableInSelectedBlock()
+    {
+        return $this->hasAvailableInfoblock();
     }
 }

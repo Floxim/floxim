@@ -93,8 +93,12 @@ class Db extends \PDO
         $statement = $this->prepareQuery($statement);
 
         // determine the type of request
+        // but what for???
+        /*
         preg_match("/^([a-z]+)\s+/i", $statement, $match);
         $this->query_type = strtolower($match[1]);
+         * 
+         */
         $this->last_result = parent::query($statement);
         $this->num_queries++;
         $this->last_query = $statement;

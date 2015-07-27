@@ -63,7 +63,7 @@ fx_buttons.prototype.draw_buttons = function ( buttons ) {
     }
     $.each(buttons, function(key, button) {
         var button_source = self.source[typeof button === 'string' ? button : button.key];
-        if (!button_source) {
+        if (!button_source && button.type === undefined) {
             button.type = 'text';
             button_source = {type:'text', title:key};
         }
@@ -76,6 +76,7 @@ fx_buttons.prototype.draw_buttons = function ( buttons ) {
         } else if (!button.type) {
             button.type = button.key === 'delete' ? 'icon' : 'text';
         }
+        
 
         element = $('<div class="fx_button fx_button-key-'+button.key+'" title="'+button.title+'"></div>');
         if (button.type === 'text' ) {

@@ -47,3 +47,17 @@ html.click(function() {
         $b.closest('form').submit();
     }
 });
+
+<!--[input ? _c.type === 'icon']-->
+<div class="fx_icon fx_icon-type-<?=_c.icon?>"
+     <?= _c.label ? ' title="' + _c.label + '"' : ''?>
+     >
+    
+</div>
+
+
+<!--[input ? _c.type === 'icon_text']-->
+<div class="fx_button fx_button-with_icon fx_button-icon-<?=_c.icon?>">
+    <div class="fx_icon fx_icon-type-<?=_c.icon?>"></div>
+    <span><?=_c.label?></span>
+</div>

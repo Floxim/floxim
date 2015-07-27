@@ -308,6 +308,15 @@ class Util
         return $camelized;
     }
     
+    
+    /*
+     * Multibyte ucfirst()
+     */
+    public function ucfirst($s)
+    {
+        return mb_strtoupper( mb_substr($s,0,1)).mb_substr($s,1);
+    }
+    
     /**
      * 
      * @param type $type data | meta

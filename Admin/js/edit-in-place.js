@@ -34,6 +34,16 @@ window.fx_eip = {
         }
         return vars;
     },
+    get_modified_vars: function()
+    {
+        var res = [];
+        $.each(this.vars, function() {
+            if (this.value !== this.var.computed_default_value) {
+                res.push(this);
+            }
+        });
+        return res;
+    },
     get_values: function(entity_id) {
         var res = {};
         $.each(this.vars, function() {
@@ -130,7 +140,7 @@ window.fx_eip = {
         });
         
         if (vars.length === 0) {
-            return this;
+            return vars;
         }
         
         var $infoblock = $node.closest('.fx_infoblock'),
@@ -209,6 +219,7 @@ window.fx_eip = {
                 callback(res);
             }
         );
+        return vars;
     },
     // this is called by click-out or Enter / Ctrl+Enter on text fields
     submit: function() {
@@ -330,7 +341,7 @@ fx_edit_in_place.prototype.start = function(meta) {
         return;
     }
     
-    if (!meta.initial_value) {
+    if (meta.initial_value === undefined) {
         if (meta.real_value !== undefined) {
             meta.initial_value = meta.real_value;
         } else if (meta.target_type === 'var') {
@@ -622,6 +633,15 @@ fx_edit_in_place.prototype.add_panel_field = function(meta) {
     if (meta.parent) {
         $fx.form.add_parent_condition(meta.parent, $field_node, $field_container);
     }
+    // use last() to find real checkbox instead of hidden helper
+    var $value_inp = $field_node.descendant_or_self(':input[name="'+meta.name+'"]').last(),
+        default_value = $value_inp.val();
+    
+    if ($value_inp.attr('type') === 'checkbox') {
+        default_value = $value_inp.attr('checked') ? '1' : '0';
+    }
+    
+    meta.computed_default_value = default_value;
     return $field_node;
 };
 
@@ -742,7 +762,6 @@ fx_edit_in_place.prototype.get_vars = function() {
             formatted_value = null;
         
         if (!pf_meta) {
-            console.log('no meta', this.panel_fields[i], this);
             continue;
         }
         var old_value = pf_meta.value;
