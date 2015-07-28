@@ -273,9 +273,12 @@ function fx_edit_in_place( node ) {
         });
     }
     var $selected_entity = this.node.closest('.fx_entity');
-    this.node.one('fx_deselect.edit_in_place', function(e) {
+    $(this.node).closest('.fx_selected').one('fx_deselect.edit_in_place', function(e) {
         eip.fix().stop();
-        $selected_entity.edit_in_place('destroy');
+        
+        if ($selected_entity[0] !== this) {
+            $selected_entity.edit_in_place('destroy');
+        }
         setTimeout(function() {
             var do_save = true;
             var selected = $fx.front.get_selected_item();
@@ -372,6 +375,10 @@ fx_edit_in_place.prototype.start = function(meta) {
                 field_meta
             ).on('fx_change_file', function(e) {
                 edit_in_place.fix();
+                $(this).trigger('change');
+                if (!meta.att || !e.target.value) {
+                    edit_in_place.save();
+                }
             });
             break;
         case 'select': case 'livesearch': case 'bool': case 'color': case 'map': case 'link': case 'label':

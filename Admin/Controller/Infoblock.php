@@ -52,6 +52,8 @@ class Infoblock extends Admin
         
         $controllers->concat(fx::data('widget')->all());
         
+        
+        
         foreach ($controllers as $c) {
             
             if (fx::config()->isBlockDisabled($c['keyword'])) {
@@ -620,8 +622,16 @@ class Infoblock extends Admin
             } else {
                 $ctr = $infoblock->initController();
                 $cfg = $ctr->getConfig(true);
-                if (isset($cfg['default_scope']) && is_callable($cfg['default_scope'])) {
-                    $c_scope_code = call_user_func($cfg['default_scope']);
+                if (isset($cfg['default_scope'])) {
+                    $c_scope_code = is_callable($cfg['default_scope']) 
+                                        ? call_user_func($cfg['default_scope'])
+                                        : $cfg['default_scope'];
+                    
+                    if ($c_scope_code === 'this') {
+                        $c_scope_code = fx::env('page_id').'-this-';
+                    } elseif ($c_scope_code === 'all') {
+                        $c_scope_code = fx::env('site')->get('index_page_id').'-descendants-';
+                    }
                 }
             }
         }
@@ -670,6 +680,8 @@ class Infoblock extends Admin
         );
         $area_suit = isset($area_meta['suit']) ? $area_meta['suit'] : '';
         $area_suit = Template\Suitable::parseAreaSuitProp($area_suit);
+        
+        $area_size = Template\Suitable::getSize($area_meta['size']);
 
         $force_wrapper = $area_suit['force_wrapper'];
         $default_wrapper = $area_suit['default_wrapper'];
@@ -717,9 +729,19 @@ class Infoblock extends Admin
                 }
 
                 if ($tplv['of'] == 'floxim.layout.wrapper:show') {
-                    $wrappers[$full_id] = $tplv['name'];
-                    if ($force_wrapper && empty($c_wrapper)) {
-                        $c_wrapper = $full_id;
+                    $size_ok = true;
+                    if ($area_size && isset($tplv['size'])) {
+                        $size = Template\Suitable::getSize($tplv['size']);
+                        $size_rate = Template\Suitable::checkSizes($size, $area_size);
+                        if (!$size_rate) {
+                            $size_ok = false;
+                        }
+                    }
+                    if ($size_ok) {
+                        $wrappers[$full_id] = $tplv['name'];
+                        if ($force_wrapper && empty($c_wrapper)) {
+                            $c_wrapper = $full_id;
+                        }
                     }
                 }
             }

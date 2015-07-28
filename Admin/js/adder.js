@@ -1,10 +1,6 @@
 (function($) {
     
-fx_front.prototype.create_inline_infoblock_adder = function($node) {
-    if ($node.is('.fx_hidden_placeholded')) {
-        return;
-    }
-    
+fx_front.prototype.get_own_infoblocks = function($node) {
     var infoblocks = [],
         area_node = $node.closest('.fx_area')[0];
     
@@ -13,9 +9,17 @@ fx_front.prototype.create_inline_infoblock_adder = function($node) {
             infoblocks.push(this);
         }
     });
+    return $(infoblocks);
+};
+    
+fx_front.prototype.create_inline_infoblock_adder = function($node) {
+    if ($node.is('.fx_hidden_placeholded')) {
+        return;
+    }
+    
     var $button = $fx.front.create_inline_adder(
         $node, 
-        $(infoblocks),
+        $fx.front.get_own_infoblocks($node),
         '<span class="fx_adder_variant">'+$fx.lang('block')+'</span>',
         'infoblock'
     );
@@ -24,6 +28,28 @@ fx_front.prototype.create_inline_infoblock_adder = function($node) {
         $fx.front.add_infoblock_select_controller($node, $button.data('rel_node'), $button.data('rel_dir'));
         return false;
     });
+    
+    // Recreate adders when infoblock is reloaded
+    $node
+        .off('.ib_reload_handle_adders')
+        .on('fx_infoblock_loaded.ib_reload_handle_adders', function(e) {
+            var $ib = $(e.target),
+                $area = $ib.closest('.fx_area'); // .fx_has_inline_adder_infoblock ?
+                
+            $fx.front.destroy_inline_infoblock_adder($area);
+            $fx.front.create_inline_infoblock_adder($area);
+                
+        });
+};
+
+fx_front.prototype.destroy_inline_infoblock_adder = function($node) {
+    var $infoblocks = $fx.front.get_own_infoblocks($node);
+    $node.off('.fx_recount_adders_infoblock');
+    $infoblocks.off('.fx_recount_adders_infoblock');
+    var $b = $node.data('fx_inline_adder_infoblock');
+    if ($b) {
+        $b.remove();
+    }
 };
 
 fx_front.prototype.create_inline_entity_adder = function($node) {
@@ -88,6 +114,10 @@ fx_front.prototype.create_inline_entity_adder = function($node) {
     }
 };
 
+fx_front.prototype.destroy_inline_entity_adder = function($node) {
+    
+};
+
 fx_front.prototype.create_inline_adder = function($node, $entities, title, scope) {
     var bl = 'fx_inline_adder';
     var $existing_button = $node.data('fx_inline_adder');
@@ -135,7 +165,7 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
             $button_target = $node;
         }
         $button_target.trigger('fx_collapse_inline_adder');
-        $('html').off('.fx_hide_adder_button');
+        $('html').off('.fx_hide_adder_button_'+scope);
         $button.data({
             rel_node:null,
             rel_dir:null,
@@ -256,14 +286,14 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
             place_title();
             return false;
         });
-        $('html').on('click.fx_hide_adder_button', function(e){
+        $('html').on('click.fx_hide_adder_button_'+scope, function(e){
             var $target_button = $(e.target).closest('.'+bl);
             if ($target_button.length === 0) {
                 hide_button_timeout(0);
                 return false;
             }
         });
-        $('html').on('keyup.fx_hide_adder_button', function(e){
+        $('html').on('keyup.fx_hide_adder_button_'+scope, function(e){
             if (e.which === 27) {
                 hide_button_timeout(0);
             }
@@ -282,7 +312,7 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
         }
         
         clearTimeout(out_timeout);
-        $node.one('mouseout.fx_recount_adders', function() {
+        $node.one('mouseout.fx_recount_adders_'+scope, function() {
             hide_button_timeout();
         });
         
@@ -350,7 +380,7 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
             $button.animate({opacity:1},100);
             if (is_sortable) {
                 place_button(e, $(e.target).closest($entities));
-                $entities.on('mousemove.fx_recount_adders', function(e) {
+                $entities.on('mousemove.fx_recount_adders_'+scope, function(e) {
                     place_button(e, $(this));
                 });
             } else {
@@ -455,7 +485,7 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
                 distance = neighbour_is_real ? dims[2] - dims[1] : 0;
             }
             
-            var outstand_treshold = scope === 'infoblock' ? 1 : 30,
+            var outstand_treshold = scope === 'infoblock' ? 20 : 35,
                 is_outstanding = (e_width + e_margins.x) < outstand_treshold || 
                                  (e_height + e_margins.y) < outstand_treshold;
             
@@ -500,8 +530,15 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
                     var plus_left = Math.round(line_width/2 - b_size/2),
                         plus_top = 0;
                     if (scope === 'entity' && (is_last && is_after || is_first && !is_after) ) {
-                        plus_left += 40;
-                        plus_top = is_after ? -15 : 15;
+                        var $ib_button = $entity.closest('.fx_has_inline_adder_infoblock').data('fx_inline_adder_infoblock');
+                        if ($ib_button) {
+                            var ib_box = $ib_button.offset();
+                            
+                            if (Math.abs(ib_box.top - top) < 20 ) {
+                                plus_left += 40;
+                                plus_top = is_after ? -15 : 15;
+                            }
+                        }
                     }
                     $plus.css({
                         left: plus_left+'px',
@@ -591,7 +628,7 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
         }
     }
     
-    $visible_node.off('.fx_recount_adders').on('mouseover.fx_recount_adders', function(e) {
+    $visible_node.off('.fx_recount_adders_'+scope).on('mouseover.fx_recount_adders_'+scope, function(e) {
         handle_mouseover(e, $visible_node);
     });
     

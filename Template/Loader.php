@@ -34,6 +34,8 @@ class Loader
         $this->source_files[] = $source_file;
     }
     
+    protected $config_entries = array();
+    
     public function handleSourceDirConfig($source_dir)
     {
         $config_file = $source_dir.'/template.ini';
@@ -41,6 +43,8 @@ class Loader
             return;
         }
         $config_data = parse_ini_file($config_file, true);
+        
+        $this->config_entries []= $config_data;
         
         if (!$config_data || !isset($config_data['import']) || !is_array($config_data['import'])) {
             return;
@@ -440,6 +444,7 @@ class Loader
 
         unset($parser);
         $compiler = new Compiler();
+        $compiler->addTemplateConfigEntries($this->config_entries);
         $res = $compiler->compile($tree, $this->getCompiledClassName());
         return $res;
     }

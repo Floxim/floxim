@@ -1235,7 +1235,11 @@ fx_front.prototype.hilight = function(container) {
     if (container.not('.fx_unselectable').is(fx_selector)) {
         items = items.add(container);
     }
-    $('.fx_has_inline_adder', container).off('.fx_recount_adders').removeClass('fx_has_inline_adder')
+    $('.fx_has_inline_adder', container)
+        .off('.fx_recount_adders_entity')
+        .off('.fx_recount_adders_infoblock')
+        .removeClass('fx_has_inline_adder');
+    
     items.
         off('.fx_recount_outlines').
         off('.fx_recount_adders').

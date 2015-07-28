@@ -38,6 +38,9 @@ class Controller
      */
     public function getParam($name, $default = null)
     {
+        if (!$this->forced_params_loaded) {
+            $this->applyForcedParams();
+        }
         return isset($this->input[$name]) ? $this->input[$name] : $default;
     }
 
@@ -89,13 +92,14 @@ class Controller
     }
 
     protected static $cfg_time = 0;
-
+    protected $forced_params_loaded = false;
     protected function applyForcedParams()
     {
-        /*
-        static $time = 0;
-        $start = microtime(true);
-        */
+        if ($this->forced_params_loaded) {
+            return;
+        }
+        $this->forced_params_loaded = true;
+        
         $sig = str_replace(":", '__', $this->getSignature());
         $cache_file = fx::path('@files/cache/ctr_defaults_' . $sig . '.php');
 
@@ -197,8 +201,14 @@ class Controller
         foreach ($controller_variants as $controller_variant) {
             fx::template()->import($controller_variant);
         }
+        
+        // this will be used to restrict allowed templates by config 'ignore' directive
+        $theme_template = null;
         foreach ($layout_names as $layout_name) {
             fx::template()->import('theme.'.$layout_name);
+        }
+        if (count($layout_names) === 1) {
+            $theme_template = fx::template('theme.'.end($layout_names));
         }
         $imported_classes = fx::template()->getImportedClasses();
         $template_variants = array();
@@ -257,6 +267,12 @@ class Controller
                         continue;
                     }
                     $tplv['size_rate'] = $size_rate;
+                }
+                if ($theme_template && !$theme_template->isTemplateAllowed($tplv['full_id'])) {
+                    fx::log('disallowed by config', $theme_template, $tplv);
+                    continue;
+                } else {
+                    fx::log('allowed', $theme_template, $tplv);
                 }
                 $result [] = $tplv;
             }

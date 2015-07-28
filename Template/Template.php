@@ -469,4 +469,24 @@ class Template
         );
         return $html;
     }
+    
+    public function isTemplateAllowed($template_name)
+    {
+        if (!isset(static::$template_config_entries) || !is_array(static::$template_config_entries)) {
+            return true;
+        }
+        $res = true;
+        foreach (static::$template_config_entries as $e) {
+            if (isset($e['ignore'])) {
+                foreach ($e['ignore'] as $key => $rule) {
+                    $rex = '~^'.str_replace("\\*", '.*', preg_quote($key)).'$~';
+                    if (preg_match($rex, $template_name)) {
+                        $res = false;
+                    }
+                }
+            }
+            // implement "allow" directive here
+        }
+        return $res;
+    }
 }

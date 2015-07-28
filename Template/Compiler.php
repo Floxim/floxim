@@ -40,6 +40,12 @@ class Compiler
         }
         return end($this->state_stack[$type]);
     }
+    
+    protected $config_entries = array();
+    public function addTemplateConfigEntries($entries) 
+    {
+        $this->config_entries = $entries;
+    }
 
     /**
      * Convert the tree of tokens in the php code
@@ -1694,6 +1700,10 @@ class Compiler
         $code .= 'protected static $action_map = '. var_export($action_map,1).";\n";
         
         $code .= 'protected static $template_source_dirs = '.var_export($template_source_dirs,1).";\n";
+        
+        if (isset($this->config_entries) && is_array($this->config_entries)) {
+            $code .= 'protected static $template_config_entries = '.var_export($this->config_entries,1).";\n";
+        }
         
         $code .= "public static function init() {\n";
         if (count($overrides) > 0) {
