@@ -370,7 +370,7 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
         }
         
         $com = $this->getComponent();
-        $entity_atts['data-fx_entity_name'] = $com->getItemName();
+        $entity_atts['data-fx_entity_name'] = fx::util()->ucfirst($com->getItemName('one'));
         
         $is_placeholder = $this->isAdderPlaceholder();
 

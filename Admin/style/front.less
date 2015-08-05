@@ -72,11 +72,6 @@
     display:none;
 }
 
-@pane_color_hover_light:#EEE;
-@pane_color_hover_dark:#000;
-//@pane_color_hover_light:#FFF;
-//@pane_color_hover_dark:#ececec;
-
 .fx_outline_pane {
     position:absolute;
     //background-color:@pane_color_hover_dark;
@@ -126,12 +121,11 @@
 
 .fx_outline_style_selected_light {
     opacity:0;
-    //.fx_outliner(@light:rgba(255, 255, 0, 0.5); @dark:rgba(50, 50, 50, 0.3); @size:5px; @shadow:1px; @shadow-color:rgba(50, 50, 50, 0.15));
 }
 
 .fx_outline_style_hover {
-    //.fx_outliner(@light:#EEE; @dark:#000; @size:3px; @shadow:2px; @shadow-color:rgba(50, 50, 50, 0.35));
-    .fx_outliner(@light:rgba(255, 255, 255, 0.6); @dark:rgba(0, 0, 0, 0.6); @size:5px; @shadow:2px; @shadow-color:rgba(50, 50, 50, 0.35));
+    //.fx_outliner(@light:rgba(255, 255, 255, 0.6); @dark:rgba(0, 0, 0, 0.6); @size:5px; @shadow:2px; @shadow-color:rgba(50, 50, 50, 0.35));
+    .fx_outliner(@light:rgba(255, 255, 255, 0.3); @dark:rgba(0, 0, 0, 0.3); @size:5px; @shadow:2px; @shadow-color:rgba(50, 50, 50, 0.35));
 }
 
 .fx_panel_text_expander {
@@ -204,7 +198,8 @@
             padding:0;
         }
         &-type-label {
-            padding-top:9px;
+            padding-top: 11px;
+            padding-bottom: 10px;
         }
         &_label {
             vertical-align:middle;
@@ -215,6 +210,9 @@
         &-field_type-livesearch {
             padding-top:0;
             padding-bottom:0;
+        }
+        &-button-label {
+            border-right: none;
         }
     }
     
@@ -662,15 +660,28 @@ span.fx_area_marker {
     margin:0 !important;
 }
 
+// we use special layer for adders to set z-index for it (but not for buttons)
+// so we can make "pluses" always over "lines"
+.fx_inline_adder_overlay {
+    position:absolute;
+}
+
 .fx_inline_adder {
     position:absolute;
-    display:none;
+    opacity:0;
+    //transition:opacity 0.2s ease;
     cursor:pointer;
     
-    z-index:10000;
+    //display: block;
+    //z-index:10000;
     
     &-visible {
-        display:block;
+        //display:block;
+        opacity:1;
+    }
+    
+    &-hover {
+        z-index:2;
     }
     
     &__plus {
@@ -680,11 +691,13 @@ span.fx_area_marker {
         background:@button_color;
         box-shadow:1px 1px 8px rgba(0,0,0,0.55);
         position:absolute;
-        
+        margin-left:0;
+        z-index:1;
+        /*
         &-with_variants {
             z-index:1;
         }
-        
+        */
         // fixed label for non-sortable lists
         &_label {
             white-space: nowrap;
@@ -696,6 +709,15 @@ span.fx_area_marker {
             font-style: normal;
         }
     }
+    
+    &-infoblock&-horizontal &__plus {
+        margin-left:-25px;
+    }
+    
+    &-entity&-horizontal &__plus, &-entity&-horizontal &__title {
+        margin-left:15px;
+    }
+    
     &__plus_plus {
         width: 24px;
         height: 24px;
@@ -778,6 +800,7 @@ span.fx_area_marker {
         box-shadow:1px 1px 8px rgba(0,0,0,0.35);
         border:1px solid @mid_color;
         overflow:hidden;
+        z-index:1;
         
         & .fx_adder_variant {
             padding:10px 25px;
@@ -815,7 +838,8 @@ span.fx_area_marker {
 }
 
 .fx_lens {
-    background: rgba(0,0,0,0.25);
+    //background: rgba(0,0,0,0.25);
+    background: rgba(0,0,0,0.8);
     position: absolute;
 }
 

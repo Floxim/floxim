@@ -177,7 +177,10 @@ class Compiler
             }
         }
         
-        $id = preg_replace("~[^a-z0-9_]+~", '_', $target_tpl).'_'.$token->getProp('id');
+        $id = preg_replace("~[^a-z0-9_]+~", '_', $target_tpl);
+        if ( ($own_id = $token->getProp('id'))) {
+            $id .= '_'.$own_id;
+        }
         
         $tpl_token->setProp('id', $id);
         

@@ -99,13 +99,14 @@ class Token
             $type = 'unknown';
         }
         
-        if ($name === 'preset' && $type === 'open' && !preg_match("~id\s*?=~", $source)) {
+        if ($name === 'preset' && $type !== 'close' && !preg_match("~id\s*?=~", $source)) {
             $source = preg_replace_callback(
-                "~([a-z0-9\.\_\-\:]+)\#([a-z0-9_-]+)~", 
+                "~([a-z0-9\.\_\-\:]+)\#?([a-z0-9_-]+)?~", 
                 function($m) {
                     return 'template="'.trim($m[1]).'" id="'.trim($m[2]).'"';
                 },
-                $source
+                $source,
+                1
             );
         }
         

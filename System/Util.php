@@ -518,4 +518,32 @@ class Util
         $array_linear($arr);
         return $res;
     }
+    
+    public function getDeclensionByNumber($word, $num)
+    {
+        if (!is_array($word)) {
+            // some magic here...
+        } 
+        // array of arrays - looks like declension rules
+        elseif (is_array(current($word)) && isset($word['nom'])) {
+            // just for russian for now
+            $word = array(
+                $word['nom']['singular'],
+                $word['gen']['singular'],
+                $word['gen']['plural']
+            );
+        }
+        $num=$num%100;
+	if ($num>19) {
+            $num=$num%10;
+	}
+	switch ($num) {
+		case 1:
+			return($word[0]);
+		case 2: case 3: case 4:  
+			return($word[1]);
+		default: 
+			return($word[2]);
+	}
+    }
 }

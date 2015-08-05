@@ -974,4 +974,10 @@ class Fx
         $manager->run($command);
         return ob_get_clean();
     }
+    
+    
+    public static function decl($word, $number)
+    {
+        return fx::util()->getDeclensionByNumber($word, $number);
+    }
 }

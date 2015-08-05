@@ -179,7 +179,8 @@
         this.show_sidebar = function(callback) {
             var c_panel = this.get_current_panel(),
                 $body = $('body'),
-                style = c_panel.current_panel_style;
+                style = c_panel.current_panel_style,
+                that = this;
             
             $sidebar.show();
             
@@ -191,9 +192,11 @@
                     });
 
                     this.recount_sidebar();
-                    $(window).resize(
+                    $(window).on(
                         'resize.fx_recount_sidebar', 
-                        this.recount_sidebar
+                        function(e) {
+                            that.recount_sidebar(e);
+                        }
                     );
                     $sidebar.css({
                         right:'-' + ($sidebar.outerWidth() + 30)+'px'
@@ -201,7 +204,7 @@
                         right:0
                     }, duration);
                     var that = this;
-                    $('.fx_admin_form__body', $sidebar).resize(function(e) {
+                    $('.fx_admin_form__body', $sidebar).on('resize.fx_recount_sidebar', function(e) {
                         that.recount_sidebar();
                     });
                     if (callback){
@@ -231,6 +234,7 @@
                 $sidebar.hide();
             }
             $(window).off('resize.fx_recount_sidebar');
+            $('.fx_admin_form__body', $sidebar).off('resize');
         };
         
         this.animate_panel_height = function(panel_height, callback) {

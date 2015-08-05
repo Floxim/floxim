@@ -26,6 +26,7 @@
         'You can add %s here' : 'Можно добавить %s',
         'reloading': 'Обновляем страницу',
         'All?':'все',
+        'Infoblock': 'Блок',
         date_order:'d.m.y, h:i',
         date_placeholder_d: 'дд',
         date_placeholder_m: 'мм',

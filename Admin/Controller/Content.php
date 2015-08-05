@@ -186,13 +186,23 @@ class Content extends Admin
          * check children
          */
         if ($content->isInstanceOf('floxim.main.content')) {
-            $descendants = fx::data('content')->descendantsOf($content)->all();
-            if (($count_descendants = $descendants->count())) {
+            $all_descendants = fx::data('content')->descendantsOf($content)->all()->group('type');
+            $type_parts = array();
+            foreach ($all_descendants as $descendants_type => $descendants) {
+                if ($descendants_type === 'floxim.main.linker') {
+                    continue;
+                }
+                $descendants_com = fx::component($descendants_type);
+                $type_parts []= count($descendants).' '.
+                                fx::util()->getDeclensionByNumber($descendants_com['declension'], count($descendants));
+            }
+            if (count($type_parts) > 0) {
+                $com_name = fx::util()->ucfirst($content->getComponent()->getItemName('one'));
+                $alert = '<p>'.$com_name.' содержит данные, они также будут удалены:</p>';
+                $alert .= '<ul><li>'.join('</li><li>', $type_parts).'</li></ul>';
                 $fields[] = array(
                     'type' => 'html',
-                    'html' => fx::alang('The content contains some descendants',
-                            'system') . ', <b>' . $count_descendants . '</b> ' . fx::alang('items. These items will be removed.',
-                            'system')
+                    'html' => $alert
                 );
             }
         }
@@ -216,7 +226,7 @@ class Content extends Admin
 
         $header = fx::alang("Delete") . ' ' . mb_strtolower($component->getItemName());
         if (($content_name = $content['name'])) {
-            $header .= ' "' . $content_name . '"';
+            $header .= ' &laquo;' . $content_name . '&raquo;';
         }
         $header .= "?";
         $res = array('header' => $header);

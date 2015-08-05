@@ -308,6 +308,9 @@ class Infoblock extends Admin
             
             foreach (array('template_visual', 'wrapper_visual') as $vis_prop) {
                 if (isset($input['visual'][$vis_prop])) {
+                    if (!is_array($i2l[$vis_prop])) {
+                        $i2l[$vis_prop] = array();
+                    }
                     $i2l[$vis_prop] = array_merge($i2l[$vis_prop], $input['visual'][$vis_prop]);
                 }
             }
@@ -939,7 +942,6 @@ class Infoblock extends Admin
         $controller = $infoblock->initController();
         $fields = array(
             array(
-                //'label' => fx::alang('I am REALLY sure', 'system'),
                 'name'  => 'delete_confirm',
                 'type'  => 'hidden'
             ),
@@ -949,6 +951,7 @@ class Infoblock extends Admin
             $this->ui->hidden('fx_admin', true)
         );
         $ib_content = $infoblock->getOwnedContent();
+        /*
         if ($ib_content->length > 0) {
             $fields[] = array(
                 'name'   => 'content_handle',
@@ -963,13 +966,110 @@ class Infoblock extends Admin
                 //'parent' => array('delete_confirm' => true)
             );
         }
-
+        */
+        $alert = '';
+        if (count($ib_content)) {
+            $ib_content_count = count($ib_content);
+            $ib_content_types = $ib_content->getValues('type');
+            $ib_content_type_count = array();
+            foreach ($ib_content_types as $ib_content_type) {
+                if (!isset($ib_content_type_count[$ib_content_type])) {
+                    $ib_content_type_count[$ib_content_type] = 0;
+                }
+                $ib_content_type_count[$ib_content_type]++;
+            }
+            
+            // block contains linkers only
+            if (count($ib_content_type_count) === 1 && $ib_content_types[0] === 'floxim.main.linker') {
+                $link_word = fx::util()->getDeclensionByNumber(
+                    array(
+                        'ссылку', 
+                        'ссылки', 
+                        'ссылок'
+                    ), 
+                    $ib_content_count
+                );
+                $alert = '<p>Блок содержит '.$ib_content_count.' '.$link_word.' на другие данные. ';
+                $alert .= $ib_content_count == 1 ? 'Эта ссылка будет удалена' : 'Эти ссылки будут удалены';
+                $alert .= ', а сами данные останутся.</p>';
+            } else {
+                
+                // $ib_content_ids = $ib_content->getValues('id');
+                $alert = '<p>Блок содержит ';
+                if (count($ib_content_type_count) === 1) {
+                    $com = fx::component($ib_content_types[0]);
+                    $decl = $com['declension'];
+                    $alert .= $ib_content_count . ' ';
+                    $alert .= fx::util()->getDeclensionByNumber(
+                        array(
+                            $decl['acc']['singular'], 
+                            $decl['gen']['singular'],
+                            $decl['gen']['plural'],
+                        ), 
+                        $ib_content_count
+                    );
+                    $alert .= '</p>';
+                } else {
+                    $alert .= ' данные:</p>';
+                    $type_parts = array();
+                    foreach ($ib_content_type_count as $ib_content_type => $c_type_count) {
+                        $com = fx::component($ib_content_type);
+                        $type_parts []= $c_type_count.' '.fx::util()->getDeclensionByNumber(
+                            $com['declension'],
+                            $c_type_count
+                        );
+                    }
+                    $alert .= '<ul><li>'.join('</li><li>', $type_parts).'</li></ul>';
+                }
+                $alert .= '<p>Эти данные будут удалены.</p>';
+                
+                
+                $ids = $ib_content->getValues('id');
+                $nested_query = fx::data('content')
+                    ->descendantsOf($ids, false)
+                    ->group('type')
+                    ->select('type')
+                    ->select('count(*) as cnt')
+                    ->showQuery();
+                $nested_types = fx::db()->getResults($nested_query);
+                if (count($nested_types) > 0) {
+                    $type_parts = array();
+                    foreach ($nested_types as $c_nested_type) {
+                        if ($c_nested_type['type'] === 'floxim.main.linker') {
+                            continue;
+                        }
+                        $com = fx::component($c_nested_type['type']);
+                        $type_parts []= $c_nested_type['cnt'].' '.fx::util()->getDeclensionByNumber(
+                            $com['declension'], 
+                            $c_nested_type['cnt']
+                        );
+                    }
+                    if (count($type_parts) > 0) {
+                        $alert .= '<p>Также будут удалены все вложенные данные:</p>';
+                        $alert .= '<ul><li>'.join('</li><li>', $type_parts).'</li></ul>';
+                    }
+                }
+            }
+        }
+        $fields []= array(
+            'name' => 'content_alert',
+            'type' => 'html',
+            'value' => $alert
+        );
+        
+        
         if ($infoblock['controller'] == 'layout' && !$infoblock['parent_infoblock_id']) {
             unset($fields[0]);
             $fields [] = array('type' => 'html', 'html' => fx::alang('Layouts can not be deleted', 'system'));
         }
         $this->response->addFields($fields);
-        $this->response->addFormButton(array('key' => 'save', 'label' => fx::alang('Delete')));
+        $this->response->addFormButton(
+            array(
+                'key' => 'save', 
+                'label' => fx::alang('Delete'),
+                'class' => 'delete'
+            )
+        );
         if ($input['delete_confirm']) {
             $this->response->setStatusOk();
             if ($ib_content) {
@@ -986,9 +1086,16 @@ class Infoblock extends Admin
             $controller->handleInfoblock('delete', $infoblock, $input);
             $infoblock->delete();
         }
+        if ($infoblock['name']) {
+            $header = fx::alang('Delete infoblock', 'system');
+            $header .= ' &laquo;'.$infoblock['name'].'&raquo';
+        } else {
+            $header = fx::alang('Delete this infoblock', 'system');
+        }
+        $header .= '?';
+        $header = '<span title="'.$infoblock['controller'].':'.$infoblock['action'].'">'.$header."</span>";
         return array(
-            'header' => fx::alang('Delete infoblock', 'system').' '.$infoblock['name']
-                        .' ('.$infoblock['controller'].':'.$infoblock['action'].')?'
+            'header' => $header
         );
     }
 

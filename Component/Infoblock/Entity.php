@@ -293,6 +293,9 @@ class Entity extends System\Entity implements Template\Entity
             //$vis['']
             foreach ($data['visual'] as $k => $v) {
                 if (in_array($k, array('template_visual', 'wrapper_visual'))) {
+                    if (!is_array($vis[$k])) {
+                        $vis[$k] = array();
+                    }
                     $vis[$k] = array_merge($vis[$k], $v);
                 } else {
                     $vis[$k] = $v;

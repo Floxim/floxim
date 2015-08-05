@@ -421,6 +421,10 @@ fx_form = {
         if (parent instanceof Array) {
             parent = {};
             parent[parent[0]] = parent[1];
+        } else if (typeof parent === 'string') {
+            var obj = {};
+            obj[parent] = '!=0';
+            parent = obj;
         }
        
         var check_parent_state = function() {
@@ -443,6 +447,14 @@ fx_form = {
                 var par_inp = $(':input[name="'+pkey+'"]', container);
                 if (par_inp.length === 0) {
                     return;
+                }
+                
+                // checkbox & hidden couple
+                if (par_inp.length > 1) {
+                    var $par_chb = par_inp.filter('input[type="checkbox"]');
+                    if ($par_chb.length) {
+                        par_inp = $par_chb;
+                    }
                 }
 
                 if (par_inp.attr('type') === 'checkbox') {
@@ -474,6 +486,9 @@ fx_form = {
                             ) {
                             do_show = true;
                         } else {
+                            if (typeof pval === 'string' && pval.match(/^[0-9]+$/)) {
+                                pval = pval*1;
+                            }
                             do_show = (par_val !== pval);
                         }
                         break;
@@ -492,7 +507,7 @@ fx_form = {
             });
             var is_visible = _el.is(':visible');
             var $el_inp =  _el.find(':input');
-            //console.log(do_show, _el, $el_inp);
+            
             if (do_show && !is_visible) {
                 _el.show();
                 $el_inp.trigger('change').trigger('fx_show_input');

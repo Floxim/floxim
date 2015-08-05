@@ -5,9 +5,20 @@ fx_front.prototype.get_own_infoblocks = function($node) {
         area_node = $node.closest('.fx_area')[0];
     
     $('.fx_infoblock', $node).each(function() {
-        if ($(this).closest('.fx_area')[0] === area_node) {
-            infoblocks.push(this);
-        }
+        var ib = this,
+            $ib = $(this);
+        
+        $ib.parents().each(function() {
+            var $par = $(this);
+            if ($par.is('.fx_infoblock_wrapper')) {
+                ib = this;
+            } else if ($par.is('.fx_area')) {
+                if (this === area_node) {
+                    infoblocks.push(ib);
+                }
+                return false;
+            }
+        });
     });
     return $(infoblocks);
 };
@@ -38,7 +49,6 @@ fx_front.prototype.create_inline_infoblock_adder = function($node) {
                 
             $fx.front.destroy_inline_infoblock_adder($area);
             $fx.front.create_inline_infoblock_adder($area);
-                
         });
 };
 
@@ -118,22 +128,45 @@ fx_front.prototype.destroy_inline_entity_adder = function($node) {
     
 };
 
+var get_neighbour = function($entity, $entities, dir) {
+    var $neighbour = $entity,
+        c = 0;
+    do {
+        $neighbour = dir === 'prev' ? $neighbour.prev() : $neighbour.next();
+        if ($neighbour.is ( $entities) ) {
+            return $neighbour;
+        }
+        c++;
+    } while ($neighbour && $neighbour.length > 0 && c < 100);
+    return $([]);
+};
+
 fx_front.prototype.create_inline_adder = function($node, $entities, title, scope) {
     var bl = 'fx_inline_adder';
-    var $existing_button = $node.data('fx_inline_adder');
+    var $existing_button = $node.data('fx_inline_adder_'+scope);
     if ($existing_button && $existing_button.length && $existing_button.parent().length) {
         $existing_button.find('.fx_inline_adder__title').html(title);
         return $existing_button;
     }
     
-    var is_sortable = $entities.filter('.fx_sortable, .fx_infoblock').length > 0;
+    var is_sortable = scope === 'infoblock' || $entities.filter('.fx_sortable').length > 0;
     
-    var $overlay = this.get_front_overlay();
+    var $overlay = this.get_front_overlay(),
+        $adder_overlay = $('.fx_inline_adder_overlay', $overlay);
+    
+    if ($adder_overlay.length === 0) {
+        var z_index = $fx.front.get_overlay_z_index($node);
+        
+        $adder_overlay = $('<div class="fx_inline_adder_overlay" style="z-index:'+z_index+'"></div>');
+        $overlay.append($adder_overlay);
+        
+    }
+    
     var $button = $(
         '<div class="'+bl+' '+bl+'-'+(!is_sortable ? 'not_sortable' : scope)+' fx_overlay">'+
             '<div class="'+bl+'__line"></div>'+
-            '<div class="'+bl+'__plus"><span class="'+bl+'__plus_plus">+</span></div>'+
             '<div class="'+bl+'__title">'+title+'</div>'+
+            '<div class="'+bl+'__plus"><span class="'+bl+'__plus_plus">+</span></div>'+
         '</div>'
     );
     
@@ -143,11 +176,10 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
     
     $button.data('title_node', $title);
     
-    var z_index = $fx.front.get_overlay_z_index($node);
     
     //var $entities = $node.find(neighbour_selector).filter(':not(.fx_entity_adder_placeholder)');
     
-    $overlay.append($button);
+    $adder_overlay.append($button);
     $node.data('fx_inline_adder_'+scope, $button).addClass('fx_has_inline_adder fx_has_inline_adder_'+scope);
     var out_timeout = null,
         title_timeout = null,
@@ -157,7 +189,7 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
         if (window.fx_no_hide) {
             return;
         }
-        if (!$button) {
+        if (!$button || !$button.is('.'+bl+'-visible')) {
             return;
         }
         var $button_target = $button.data('rel_node');
@@ -172,12 +204,16 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
             offset_left:null,
             offset_top:null
         });
-        $button.removeClass(
-            bl+'-outstanding '+bl+'-inverted '+bl+'-horizontal '+bl+'-vertical'+
-            bl+'-hover '+bl+'-visible'
-        ).attr('style', '');
-        $plus.removeClass(bl+'__plus-with_variants');
-        $('div', $button).attr('style', '');
+        $button.removeClass(bl+'-visible');
+        //setTimeout(function() {
+            $button.removeClass(
+                bl+'-outstanding '+bl+'-inverted '+bl+'-horizontal '+bl+'-vertical'+
+                bl+'-hover '+bl+'-visible '+bl+'-overlapped'
+            ).attr('style', '');
+            $plus.removeClass(bl+'__plus-with_variants');
+            $('div', $button).attr('style', '');
+            $title.hide();
+        //},200);
     }
     
     // provide it for outside use (e.g. hide buttons on fx_select)
@@ -194,9 +230,12 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
             return;
         }
         out_timeout = setTimeout(
-            function() {hide_button($button);},
+            function() {
+                hide_button($button);
+            },
             time_offset
         );
+        return out_timeout;
     }
     
     function place_title() {
@@ -246,6 +285,13 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
         $title.attr('style', '').css(css);
     }
     
+    function hide_title() {
+        //$variants.hide();
+        $title.hide();
+        $button.removeClass(bl+'-hover');
+        $plus.removeClass(bl+'__plus-with_variants');
+    }
+    
     $button.on('mouseenter', function() {
         clearTimeout(out_timeout);
         clearTimeout(title_timeout);
@@ -265,9 +311,7 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
         $button.off('.fx_show_adder').on('click.fx_show_adder', function(e) {
             var $variants = $('.fx_adder_variant', $button);
             if ($variants.is(':visible')) {
-                $variants.hide();
-                $button.removeClass(bl+'-hover');
-                $plus.removeClass(bl+'__plus-with_variants');
+                hide_title();
                 return;
             }
             if ( $variants.length === 1) {
@@ -303,6 +347,12 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
     // if closest infoblock was hidden while rendering, use it as mouse event target
     var $visible_node = $node;
     
+    // use this to count overlapping
+    var $closest_area = null;
+    if (scope === 'entity') {
+        $closest_area = $node.closest('.fx_area');
+    }
+    
     function handle_mouseover (e, $node) {
         if ($(e.target).closest('.fx_has_inline_adder_'+scope)[0] !== $node[0] ) {
             return;
@@ -312,11 +362,18 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
         }
         
         clearTimeout(out_timeout);
-        $node.one('mouseout.fx_recount_adders_'+scope, function() {
+        //$node.one('mouseout.fx_recount_adders_'+scope, function() {
+        var e_scope = 'mouseleave.fx_recount_adders_'+scope;
+        $node.off(e_scope).on(e_scope, function(e) {
+            var $leave_to = $(e.toElement);
+            if ($leave_to.is('.fx_outline_pane') || $leave_to.closest('.'+bl).length > 0) {
+                return;
+            }
             hide_button_timeout();
         });
         
-        if ($plus.is(':visible')) {
+        
+        if ($button.is('.'+bl+'-visible')) {
             return;
         }
         
@@ -332,15 +389,9 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
             
         var axis_class = axis === 'y' ? 'horizontal' : 'vertical';
         
-        $button
-            .removeClass(bl+'-horizontal')
-            .removeClass(bl+'-vertical')
-            .addClass(bl+'-'+axis_class)
-            .css('z-index', z_index);
-    
         var offset = $node.offset();
         var css = {
-            opacity:'0',
+            //opacity:'0',
             left:offset.left// - $plus.outerWidth()
         };
         
@@ -377,7 +428,7 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
                 rel_node:null,
                 offset_top:null
             });
-            $button.animate({opacity:1},100);
+            //$button.animate({opacity:1},100);
             if (is_sortable) {
                 place_button(e, $(e.target).closest($entities));
                 $entities.on('mousemove.fx_recount_adders_'+scope, function(e) {
@@ -415,9 +466,15 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
             };
         }
         
+        // timeout for separating big (infoblock) and small (entity) adder buttons
+        var overlap_timeout = null;
+        
         function place_button(e, $entity) {
             
-            //var $entity = $(e.target).closest( neighbour_selector.replace(/^>/, '') );
+            if ($entity.closest('.fx_is_moving').length > 0) {
+                hide_button($button);
+                return;
+            }
             
             var entity_index = $entities.index($entity);
             
@@ -451,12 +508,18 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
             
             $button.data('rel_dir', dir);
         
-            var neighbour_index = entity_index + (is_after ? 1 : (entity_index === 0 ? $entities.length : -1) ),
-                $neighbour = $entities.eq(neighbour_index),
-                neighbour_is_real = $neighbour.length > 0,
+            //var neighbour_index = entity_index + (is_after ? 1 : (entity_index === 0 ? $entities.length : -1) ),
+            //    $neighbour = $entities.eq(neighbour_index),
+            var $neighbour = get_neighbour($entity, $entities, is_after ? 'next' : 'prev'),
+                //neighbour_is_real = $neighbour.length > 0,
                 neighbour_offset = $neighbour.offset(),
                 distance = 0;
             
+            // should it really be here?
+            $button
+                .removeClass(bl+'-horizontal')
+                .removeClass(bl+'-vertical')
+                .addClass(bl+'-'+axis_class);
             
             function not_on_the_same_line(neighbour_offset) {
                 return axis === 'x' && Math.abs(neighbour_offset.top - top) > e_height/2;
@@ -464,15 +527,17 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
             // use neighbour from the other side if there's no nodes on the correct side
             // or if the correct neighbour is not on the same line ("tiles" case)
             if (
-                $neighbour.length === 0 || 
-                not_on_the_same_line(neighbour_offset)
+                $neighbour.length && not_on_the_same_line(neighbour_offset)
             ) {
+                $neighbour = $([]);
+                /*
                 neighbour_index = entity_index + (!is_after ? 1 : (entity_index === 0 ? $entities.length : -1) ),
                 $neighbour = $entities.eq(neighbour_index),
                 neighbour_offset = $neighbour.offset();
                 if ($neighbour.length && not_on_the_same_line(neighbour_offset)) {
                     $neighbour = $([]);
                 }
+                */
             }
             
             if ($neighbour.length) {
@@ -482,14 +547,15 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
                     var dims = [top, top+e_height, neighbour_offset.top, neighbour_offset.top + $neighbour.outerHeight() ];
                 }
                 dims.sort(function(a,b){return a-b;});
-                distance = neighbour_is_real ? dims[2] - dims[1] : 0;
+                distance = dims[2] - dims[1];
+                //distance = neighbour_is_real ? dims[2] - dims[1] : 0;
             }
             
             var outstand_treshold = scope === 'infoblock' ? 20 : 35,
                 is_outstanding = (e_width + e_margins.x) < outstand_treshold || 
                                  (e_height + e_margins.y) < outstand_treshold;
             
-            if ($neighbour.length && neighbour_is_real && !is_outstanding) {
+            if ($neighbour.length && !is_outstanding) {
                 var n_margins = get_margins($neighbour);
                 is_outstanding = ($neighbour.outerWidth() + n_margins.x) < outstand_treshold ||
                                  ($neighbour.outerHeight() + n_margins.y) < outstand_treshold;
@@ -529,17 +595,7 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
                 } else {
                     var plus_left = Math.round(line_width/2 - b_size/2),
                         plus_top = 0;
-                    if (scope === 'entity' && (is_last && is_after || is_first && !is_after) ) {
-                        var $ib_button = $entity.closest('.fx_has_inline_adder_infoblock').data('fx_inline_adder_infoblock');
-                        if ($ib_button) {
-                            var ib_box = $ib_button.offset();
-                            
-                            if (Math.abs(ib_box.top - top) < 20 ) {
-                                plus_left += 40;
-                                plus_top = is_after ? -15 : 15;
-                            }
-                        }
-                    }
+                    
                     $plus.css({
                         left: plus_left+'px',
                         top: plus_top+'px'
@@ -621,6 +677,38 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
                         top:top,
                         left:left
                     });
+                hide_title();
+                /*
+                clearTimeout(overlap_timeout);
+                // recount overlapping with infoblock adder
+                if (scope === 'entity' && $closest_area.length) {
+                    overlap_timeout = setTimeout(function() {
+                        
+                        var $ib_button = $closest_area.data('fx_inline_adder_infoblock'),
+                            $ib_plus = $ib_button.find('.fx_inline_adder__plus');
+                        
+                        //$ib_plus.css('transition', 'none');
+                        $ib_plus[0].style.transition = 'none';
+                        $ib_button.removeClass('fx_inline_adder-overlapped');
+                        
+                        var overlaps = false;
+                        if ((is_first && !is_after) || (is_last && is_after)) {
+                            var a = $ib_plus[0].getBoundingClientRect(),
+                                b = $plus[0].getBoundingClientRect();
+                                
+                            overlaps = 
+                                    a.left <= b.right &&
+                                    b.left <= a.right &&
+                                    a.top <= b.bottom &&
+                                    b.top <= a.bottom;
+                        }
+                        //$ib_plus.css('transition', null);
+                        $ib_plus[0].style.transition = null;
+                        $ib_button.toggleClass('fx_inline_adder-overlapped', overlaps);
+                            
+                    }, 1);
+                }
+                */
                 if ($plus.hasClass(bl+'__plus-with_variants')) {
                     place_title();
                 }

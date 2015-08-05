@@ -1,7 +1,7 @@
 (function($){
 window.$fx_fields = {
     html: function (json) {
-      return json.html;  
+      return json.html || json.value;  
     },
     
     raw: function(json) {

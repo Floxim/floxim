@@ -526,7 +526,7 @@ class Loader
         // remove fx-comments
         $file_data = preg_replace("~\{\*.*?\*\}~s", '', $file_data);
         $file_data = trim($file_data);
-        if (!preg_match("~^{template~", $file_data)) {
+        if (!preg_match("~^{(template|preset)~", $file_data)) {
             $file_data = $this->wrapFile($file, $file_data);
         }
         return $file_data;

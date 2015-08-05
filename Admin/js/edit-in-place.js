@@ -571,14 +571,16 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
     if (!this.is_wysiwyg) {
         handle_node_size();
         $n.on(
-            'keyup.edit_in_place keydown.edit_in_place click.edit_in_place change.edit_in_place', 
+            //'keyup.edit_in_place keydown.edit_in_place click.edit_in_place change.edit_in_place', 
+            'input.edit_in_place',
             function () {setTimeout(handle_node_size,1);}
         );
     }
     $n.removeClass('fx_setting_focus');
     if (nodes_to_sync.length > 0) {
         $n.on(
-            'keyup.edit_in_place keydown.edit_in_place click.edit_in_place change.edit_in_place', 
+            //'keyup.edit_in_place keydown.edit_in_place click.edit_in_place change.edit_in_place', 
+            'input.edit_in_place',
             function () {
                 var c_html = fx_edit_in_place.prototype.clear_spaces($n.html());
                 $.each(nodes_to_sync, function() {
