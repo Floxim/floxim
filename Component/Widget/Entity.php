@@ -62,4 +62,43 @@ class Entity extends System\Entity
     {
         
     }
+    
+    /**  !!! copy-paste from Component\Entity */
+    public function getNamespace()
+    {
+        return fx::getComponentNamespace($this['keyword']);
+    }
+
+    protected $nsParts = null;
+
+    protected function getNamespacePart($number = null)
+    {
+        if (is_null($this->nsParts)) {
+            $ns = $this->getNamespace();
+            $this->nsParts = explode("\\", trim($ns, "\\"));
+        }
+        return $this->nsParts[$number];
+    }
+
+    public function getVendorName()
+    {
+        return $this->getNamespacePart(0);
+    }
+
+    public function getModuleName()
+    {
+        return $this->getNamespacePart(1);
+    }
+
+    public function getOwnName()
+    {
+        return $this->getNamespacePart(2);
+    }
+    
+    public function getPath()
+    {
+        return fx::path('@module/' . fx::getComponentPath($this['keyword']));
+    }
+    
+    
 }

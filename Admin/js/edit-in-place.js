@@ -26,6 +26,13 @@ window.fx_eip = {
     get_var_hash: function(meta) {
         return meta.id+'.'+meta.var_type+'.'+meta.content_id+'.'+meta.content_type_id;
     },
+    get_vars: function() {
+        var res = [];
+        $.each(this.vars, function() {
+            res.push(this);
+        });
+        return res;
+    },
     fix: function() {
         var vars = this.get_edited_vars();
         for (var i = 0; i < vars.length; i++) {
@@ -74,12 +81,13 @@ window.fx_eip = {
         this.get_edited_nodes().each(function() {
             $(this).data('edit_in_place').stop();
         });
+        console.log('fullstop');
         this.vars = {};
     },
     append_value: function($node, meta, value, formatted_value) {
         switch (meta.target_type) {
             case 'var':
-                var formatted_value = value;
+                formatted_value = value;
                 if (meta.type === 'datetime' && meta.format_modifier){
                     var timestamp = (new Date(value)).getTime() / 1000;
                     formatted_value = php_date_format(meta.format_modifier, timestamp);
@@ -154,7 +162,11 @@ window.fx_eip = {
             fx_admin:true,
             page_id:$fx.front.get_page_id()
         };
-        
+        /*
+        console.trace();
+        console.log(vars);
+        return;
+        */
         var $adder_placeholder = $node.closest('.fx_entity_adder_placeholder'),
             entity_meta = $adder_placeholder.data('fx_entity_meta');
     
@@ -274,28 +286,30 @@ function fx_edit_in_place( node ) {
     }
     var $selected_entity = this.node.closest('.fx_entity');
     $(this.node).closest('.fx_selected').one('fx_deselect.edit_in_place', function(e) {
-        eip.fix().stop();
+        fx_eip.fix();
+        eip.stop();
         
         if ($selected_entity[0] !== this) {
             $selected_entity.edit_in_place('destroy');
         }
-        setTimeout(function() {
-            var do_save = true;
-            var selected = $fx.front.get_selected_item();
-            if (selected) {
-                var $selected = $(selected);
-                var new_entity = $selected
-                                    .closest('.fx_entity')
-                                    .get(0);
-                if (new_entity && new_entity === $selected_entity.get(0)) {
-                    do_save = false;
+        if (fx_eip.get_vars().length > 0) {
+            setTimeout(function() {
+                var do_save = true;
+                var selected = $fx.front.get_selected_item();
+                if (selected) {
+                    var $selected = $(selected);
+                    var new_entity = $selected
+                                        .closest('.fx_entity')
+                                        .get(0);
+                    if (new_entity && new_entity === $selected_entity.get(0)) {
+                        do_save = false;
+                    }
                 }
-            }
-            if (do_save) {
-                //eip.save();
-                fx_eip.submit();
-            }
-        }, 50);
+                if (do_save) {
+                    fx_eip.submit();
+                }
+            }, 50);
+        }
     });
     
     $('html').on('keydown.edit_in_place', function(e) {

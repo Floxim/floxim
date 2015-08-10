@@ -56,19 +56,24 @@ class Adminpanel extends Admin
             'main_menu' => self::getMainMenu(),
             'more_menu' => self::getMoreMenu(),
             'modes' => array(
+                /*
                 "view" => array(
                     "name" => fx::alang("View"),
                     "key" => "view"
                 ),
+                 * 
+                 */
                 "edit" => array(
                     "name" => fx::alang("Edit"),
                     "key" => "edit"
-                ), 
+                )/*, 
                 "design" => array(
                     "name" => fx::alang("Design"),
                     "key" => "design",
                     'icon' => 'settings'
                 )
+                 * 
+                 */
             ),
             'profile' => array(
                 'logout' => array(

@@ -93,6 +93,7 @@ class Config
         $this->config['console.commands'] = array(
             'module'    => '\\Floxim\\Floxim\\Console\\Command\\Module',
             'component' => '\\Floxim\\Floxim\\Console\\Command\\Component',
+            'widget'    => '\\Floxim\\Floxim\\Console\\Command\\Widget'
         );
 
         $this->config['cache.data.default_storage'] = 'array';

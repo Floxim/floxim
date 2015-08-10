@@ -509,6 +509,7 @@ class Entity extends System\Entity implements Template\Entity
         }
 
         $ib_info['controller'] = $this->getPropInherited('controller') . ':' . $this->getPropInherited('action');
+        $ib_info['name'] = $this['name'];
 
         $meta = array(
             'data-fx_infoblock' => $ib_info, // todo: psr0 need fix

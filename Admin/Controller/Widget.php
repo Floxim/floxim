@@ -92,7 +92,6 @@ class Widget extends Component
         $data['name'] = trim($input['name']);
         $data['keyword'] = $this->getFullKeyword($input);
 
-        fx::log('saving...', $data);
         $widget = fx::data('widget')->create($data);
 
         if (!$widget->validate()) {
@@ -103,7 +102,7 @@ class Widget extends Component
             return $result;
         }
         $widget->save();
-        fx::log('savd', $widget);
+        fx::console('widget scaffold --id=' . $widget['id']);
         $result['reload'] = '#admin.widget.all';
         return $result;
     }
