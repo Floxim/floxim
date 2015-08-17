@@ -6,23 +6,27 @@ $fx.sortable = {
         params = $.extend({
             clone:true,
             animate:true,
-            axis:'auto'
+            axis:'auto',
+            use_helper:false
         }, params);
         
         var $overlay = $fx.front.get_front_overlay(),
             $node = params.node,
             offset = $node.offset(),
-            $sorter = $('<div class="fx_overlay fx_sorter"><div class="fx_icon fx_icon-type-move"></div></div>'),
+            $sorter = params.$button,
             z_index = $fx.front.get_panel_z_index(),
             button_offset = $node.height()/2 - 20,
             click_offset = 0;
         
-        $overlay.append($sorter);
-        $sorter.css({
-            top:offset.top + button_offset,
-            left:offset.left - 45,
-            'z-index':z_index
-        });
+        if (!$sorter) {
+            $sorter = $('<div class="fx_overlay fx_sorter"><div class="fx_icon fx_icon-type-move"></div></div>');
+            $overlay.append($sorter);
+            $sorter.css({
+                top:offset.top + button_offset,
+                left:offset.left - 45,
+                'z-index':z_index
+            });
+        }
 
         $('html').one('fx_deselect', function() {
             $sorter.remove();
@@ -92,6 +96,8 @@ $fx.sortable = {
             return res;
         }
         
+        var $helper = null;
+        
         
         $sorter.draggable({
             scrollSensitivity:80,
@@ -122,16 +128,28 @@ $fx.sortable = {
                         'z-index':z_index - 2
                     });
                 }
+                if (params.use_helper)  {
+                    $helper = $('<div class="fx_sort_helper"></div>').appendTo('body');
+                    $node.css({
+                        opacity:0,
+                        position:'absolute',
+                        'z-index':z_index-1
+                    });
+                } else {
+                    $node.css({
+                        position:'absolute',
+                        'z-index':z_index-1,
+                        width:$node.width(),
+                        opacity:0.3,
+                        overflow:'hidden',
+                        outline:'2px dotted #000'
+                    });
+                    $helper = $node;
+                }
                 
                 placeholder = $placeholder[0];
-                $node.css({
-                    position:'absolute',
-                    'z-index':z_index-1,
-                    width:$node.width(),
-                    opacity:0.3,
-                    overflow:'hidden',
-                    outline:'2px dotted #000'
-                });
+                
+                
                 $placeholder.insertBefore($node);
                 
                 prev_node = $placeholder.prev()[0];
@@ -139,19 +157,24 @@ $fx.sortable = {
                 $sorter.css('opacity', '0');
             },
             drag: function(e) {
-
-                $node.offset({
-                    top:e.pageY - button_offset - click_offset.y,
-                    left:e.pageX + click_offset.x
-                });
+                var helper_offset = {
+                    top:e.pageY,
+                    left:e.pageX
+                };
+                if (!params.use_helper) {
+                    helper_offset.top -= (button_offset + click_offset.y);
+                    helper_offset.left += click_offset.x
+                }
+                $helper.offset(helper_offset);
                 if (is_moving) {
+                    console.log('ret mvng');
                     return;
                 }
                 
-                var box = $node[0].getBoundingClientRect();
+                var box = $helper[0].getBoundingClientRect();
                 var intersect = get_intersection(box);
                 if ( intersect.$node &&  intersect.rel_square > 0.5) {
-                    
+                    console.log('ok', intersect);
                     var old_rect = placeholder.getBoundingClientRect();
                     
                     if (intersect.x < 0) {
@@ -193,11 +216,16 @@ $fx.sortable = {
                         recount_map();
                         is_moving = false;
                     }, duration);
-                }
+                } else {
+                    console.log('not good', intersect);
+                } 
+                
             },
             stop: function() {
+                //return;
                 $node.insertBefore($placeholder);
                 $node.attr('style', '');
+                //$('.fx_sort_helper').remove();
                 $placeholder.remove();
                 $sorter.remove();
                 

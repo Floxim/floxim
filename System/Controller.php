@@ -204,8 +204,9 @@ class Controller
         
         // this will be used to restrict allowed templates by config 'ignore' directive
         $theme_template = null;
+        $layout_classes = array();
         foreach ($layout_names as $layout_name) {
-            fx::template()->import('theme.'.$layout_name);
+            $layout_classes []= fx::template()->import('theme.'.$layout_name);
         }
         if (count($layout_names) === 1) {
             $theme_template = fx::template('theme.'.end($layout_names));
@@ -214,6 +215,10 @@ class Controller
         $template_variants = array();
         foreach ($imported_classes as $class) {
             if (!$class) {
+                continue;
+            }
+            // ignore templates from layouts not listed in arg
+            if (preg_match("~^fx_template_theme~", $class) && !in_array($class, $layout_classes)) {
                 continue;
             }
             $template_variants = array_merge(
@@ -269,10 +274,7 @@ class Controller
                     $tplv['size_rate'] = $size_rate;
                 }
                 if ($theme_template && !$theme_template->isTemplateAllowed($tplv['full_id'])) {
-                    fx::log('disallowed by config', $theme_template, $tplv);
                     continue;
-                } else {
-                    fx::log('allowed', $theme_template, $tplv);
                 }
                 $result [] = $tplv;
             }

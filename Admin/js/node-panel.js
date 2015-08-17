@@ -238,12 +238,14 @@ function node_panel($node, params) {
                     // but there's not enough space
                     if (p_gone > 0) {
                         $prev_panel.css('left', '-='+(p_gone+10)+'px');
+                        $prev_panel.trigger('fx_reposition');
                         css.left = css.left - p_gone - 10;
                     }
                     $p.css(css);
                 }
             }
         }
+        $p.trigger('fx_reposition');
     };
     
     this.add_label = function(data, $before_node) {

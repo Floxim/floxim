@@ -301,7 +301,7 @@ input {
     }
     
     &-class-cancel {
-        border:none;
+        border-color:#e0e8ff;
     }
     
     &-class-delete {
@@ -443,6 +443,10 @@ input {
     &-type-done {
         background-position:-833px -4px;
     }
+    
+    &-type-place {
+        background-position:-1615px -5px;
+    }
 }
 
 .fx-alert-container {
@@ -491,21 +495,12 @@ input {
     
     display: inline-block;
     cursor: pointer;
-    padding:10px 15px;
-    border-right:1px solid #eaeaea;
+    padding:18px 20px 12px 20px;
+    border-top:3px solid transparent;
     color:@button_color;
     
-    &:first-child {
-        padding-left:0;
-    }
-    
-    &:last-child {
-        padding-right: 0;
-        border-right: none;
-    }
-    
     &__title {
-        font-size:18px;
+        font-size:15px;
         vertical-align: middle;
     }
     
@@ -516,6 +511,7 @@ input {
     
     
     &-active {
+        border-top:3px solid #ff5741;
         color:#000;
         cursor:default;
     }

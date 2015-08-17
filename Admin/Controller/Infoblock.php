@@ -225,47 +225,45 @@ class Infoblock extends Admin
                 $settings[$ib_param]['value'] = $ib_param_value;
             }
         }
-        /*
         $this->response->addTabs(array(
             'settings' => array(
-                'label' => 'Settings',
-                'icon' => 'settings'
+                'label' => fx::alang('Settings'),
+                //'icon' => 'settings'
             ),
             'design' => array(
-                'label' => 'Design',
-                'icon' => 'design'
+                'label' => fx::alang('Design settings'),
+                //'icon' => 'design'
             )
         ));
-        */
         $this->response->addFields(array(
             array(
                 'label' => fx::alang('Block name', 'system'),
                 'name'  => 'name',
                 'value' => $infoblock['name'],
                 'tip'   => $infoblock['controller'] . '.' . $infoblock['action'],
-                'tab' => 'header'
+                'tab' => 'settings'
             )
         ));
+        
+        $c_page = fx::env('page');
+        $scope_fields = $this->getScopeFields($infoblock, $c_page);
+        $this->response->addFields(
+            $scope_fields, 
+            'settings', //'header', 
+            'scope'
+        );
 
         $this->response->addFields(
             $settings, 
-            'header', // 'settings', // tab
+            'settings', // 'header', // tab
             'params'
         );
 
         $format_fields = $this->getFormatFields($infoblock, $area_meta);
         $this->response->addFields(
             $format_fields, 
-            null, //'design', // tab
+            'design', // tab
             'visual'
-        );
-
-        $c_page = fx::env('page');
-        $scope_fields = $this->getScopeFields($infoblock, $c_page);
-        $this->response->addFields(
-            $scope_fields, 
-            'header', //'settings', 
-            'scope'
         );
 
         if (isset($input['settings_sent']) && $input['settings_sent'] == 'true') {
@@ -1054,7 +1052,7 @@ class Infoblock extends Admin
         $fields []= array(
             'name' => 'content_alert',
             'type' => 'html',
-            'value' => $alert
+            'value' => '<div class="fx_delete_alert">'.$alert.'</div>'
         );
         
         

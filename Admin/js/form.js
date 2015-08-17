@@ -73,12 +73,7 @@ fx_form = {
         }
         $.each(settings.fields, function(i, json) {
             var $target = $form_body;
-            if (use_tabs && json.tab !== undefined) {
-                $target = $('.fx_tab_data-key-'+json.tab, $form_body);
-                if (json.type !== 'hidden') {
-                    $target.data('tab_label').show();
-                }
-            } else if (json.tab === 'header') {
+            if (json.tab === 'header') {
                 var $form_header = $form_body.closest('form').find('.'+bl+'__header'),
                     $target = $form_header.find('.'+bl+'__header_fields');
                 if ($target.length === 0) {
@@ -86,6 +81,11 @@ fx_form = {
                     $form_header.children().first().before($target);
                 }
                 
+            } else if (use_tabs && json.tab !== undefined) {
+                $target = $('.fx_tab_data-key-'+json.tab, $form_body);
+                if (json.type !== 'hidden' && $target.data('tab_label')) {
+                    $target.data('tab_label').show();
+                }
             }
             $fx_form.draw_field(json, $target);
         });

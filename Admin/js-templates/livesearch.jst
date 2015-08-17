@@ -1,8 +1,9 @@
 <!--[input ? _c.type == 'livesearch']-->
 <?
 var f_postfix = _c.name_postfix ? '['+_c.name_postfix+']' : '';
+var bl = _c.is_multiple ? 'multisearch' : 'monosearch';
 ?>
-<div class="livesearch livesearch_<?=(_c.is_multiple ? 'multiple' : 'single')?>" 
+<div class="livesearch <?=bl?>" 
     data-params="<?=$t.json_att(_c.params)?>" 
     data-prototype_name="<?=_c.name?>[prototype]<?=f_postfix?>"
     data-is_multiple="<?=(_c.is_multiple ? 'Y' : 'N')?>">
@@ -25,12 +26,13 @@ var f_postfix = _c.name_postfix ? '['+_c.name_postfix+']' : '';
                     
     }
     ?>
-    <ul class="livesearch_items">
-        <li class="livesearch_input">
-            <input type="text" class="livesearch_input" />
-        </li>
-    </ul>
-    <div class="livesearch_results">
+    <div class="livesearch__container <?=bl?>__container">
+        <input type="text" class="livesearch__input <?=bl?>__input" />
+        <div class="livesearch__control livesearch__control_arrow">
+            
+        </div>
+    </div>
+    <div class="livesearch__results">
     </div>
 </div>
 

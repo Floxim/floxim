@@ -510,6 +510,9 @@ class Thumb
             $prop_parts = explode(":", $props);
             $prop = $prop_parts[0];
             $value = isset($prop_parts[1]) ? $prop_parts[1] : null;
+            if (is_numeric($value)) {
+                $value = floor($value);
+            }
             $prop = trim($prop);
             if (isset($prop_map[$prop])) {
                 $prop = $prop_map[$prop];

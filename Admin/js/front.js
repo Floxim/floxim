@@ -241,9 +241,13 @@ fx_front.prototype.disable_hilight = function() {
     $('.fx_front_overlay .fx_inline_adder-visible').each(function() {
         this.fx_hide_inline_adder();
     });
+    this.disable_adders('infoblock');
+    this.disable_adders('entity');
 };
 
 fx_front.prototype.enable_hilight = function(){
+    this.enable_adders('infoblock');
+    this.enable_adders('entity');
     this.hilight_disabled = false;
 };
 
@@ -1132,7 +1136,7 @@ fx_front.prototype.draw_select_path = function($node) {
             if ( $(this).closest('.fx_entity')[0] === $node[0]) {
                 $path = $path.add( $(this) );
             }
-        })
+        });
     }
     
     var path_items = [],
@@ -1142,20 +1146,40 @@ fx_front.prototype.draw_select_path = function($node) {
         if (this.nodeName === 'BODY') {
             return;
         }
+        
+        // limit path to three items
         if (block_found && entity_found) {
             //return false;
         }
+        
         var $cp = $(this);
         var is_active = $cp.closest($node).length > 0;
         
+        //console.log($cp.data(), is_active);
+        
         if ($cp.data('fx_var')) {
+            var data = $cp.data('fx_var');
             path_items.push({
-                type:'Поле',
-                label:$cp.data('fx_var').label,
+                type: data.var_type === 'content' ? 'Поле' : 'Надпись',
+                label:data.label || data.id,
                 node:$cp,
                 is_active:is_active
             });
         } 
+        
+        $.each($cp.data(), function(data_key, data) {
+            if (!data_key.match(/^fx_template_var_/)) {
+                return;
+            }
+            if (data.type === 'image' && data.att === 'src') {
+                path_items.push({
+                    type:'Поле',
+                    label:data.label || data.name,
+                    node:$cp
+                });
+            }
+        });
+        
         if ($cp.is('.fx_entity')) {
             entity_found = true;
             path_items.push({
@@ -1217,6 +1241,10 @@ fx_front.prototype.draw_select_path = function($node) {
             $item.click(function() {
                 $fx.front.select_item(item.node[0]);
             });
+        } else {
+            $item.click(function() {
+                $fx.front.scrollTo(item.node);
+            });
         }
         $path_panel.append($item);
     });
@@ -1242,13 +1270,6 @@ fx_front.prototype.select_item = function(node) {
         this.make_node_panel($node);
     }
     
-    var closest_ib_node = $node.closest('.fx_infoblock')[0];
-    /*
-    $fx.front.freeze_events(closest_ib_node);
-    $node.one('fx_deselect', function() {
-        $fx.front.unfreeze_events(closest_ib_node);
-    });
-    */
     if ($fx.front.mode === 'edit') {
         if ($node.is('.fx_entity')) {
             $fx.front.select_content_entity($node);
@@ -1268,7 +1289,8 @@ fx_front.prototype.select_item = function(node) {
     
     var scrolling = false;
     setTimeout(function() {
-        if (!scrolling && !$node.hasClass('fx_edit_in_place')) {
+        //if (!scrolling && !$node.hasClass('fx_edit_in_place')) {
+        if (!scrolling && !$node.hasClass('fx_var_editable')) {
             $fx.front.scrollTo($node, true, function() {
                 scrolling = false;
             });
@@ -1277,7 +1299,7 @@ fx_front.prototype.select_item = function(node) {
     }, 150);
     
     // if you delete the selected node from the tree pull deselect_item()
-    $(node).bind('remove.deselect_removed', function(e) {
+    $node.bind('remove.deselect_removed', function(e) {
         $fx.front.deselect_item();
     });
     
@@ -1318,6 +1340,8 @@ fx_front.prototype.select_item = function(node) {
             }
         }
     });
+    
+    $node.closest('.fx_entity_hidden').addClass('fx_entity_hidden-selected');
 };
 
 fx_front.prototype.make_node_panel = function($node) {
@@ -1353,6 +1377,8 @@ fx_front.prototype.deselect_item = function() {
                 unbind('remove.deselect_removed');
         
         $fx.front.outline_block_off($node);
+        
+        $node.closest('.fx_entity_hidden-selected').removeClass('fx_entity_hidden-selected');
         this.node_panel.remove($node);
     }
     this.get_select_path_panel().hide();
@@ -1546,25 +1572,7 @@ fx_front.prototype.hilight = function(container) {
             }
         }
         if (i.is('.fx_area') && $fx.front.node_is_empty(i))  {
-            var a_meta = i.data('fx_area');
-            var area_placeholder = $fx.lang(
-                                        'Area %s is empty, you can add some blocks here.'
-                                    ).replace(
-                                        /\%s/, 
-                                        a_meta.name ? a_meta.name : a_meta.id
-                                    ),
-                $area_placeholder = $('<span class="fx_area_placeholder">'+area_placeholder+'</span>');
-            
-            $area_placeholder.on(
-                'click', 
-                'a', 
-                function() {
-                    $fx.front.add_infoblock_select_controller(i);
-                    return false;
-                }
-            );
-            i.append($area_placeholder);
-            i.addClass('fx_hidden_placeholded');
+            $fx.front.hilight_area_empty(i, 'add');
         }
     });
     
@@ -1596,6 +1604,44 @@ fx_front.prototype.hilight = function(container) {
         $('.fx_hilight').bind('click.fx_front', $fx.front.handle_click);
     }
     $('.fx_hilight_outline .fx_hilight').addClass('fx_hilight_outline');
+};
+
+fx_front.prototype.hilight_area_empty = function($area, scenario) {
+    var a_meta = $area.data('fx_area');
+    var area_placeholder = $fx.lang(
+                                scenario === 'place' ? 
+                                    '%s: <a>put the block here</a>.' : 
+                                    'Area %s is empty, you can add some blocks here.'
+                            ).replace(
+                                /\%s/, 
+                                a_meta.name ? a_meta.name : a_meta.id
+                            ),
+        $area_placeholder = $('<span class="fx_area_placeholder">'+area_placeholder+'</span>');
+
+    if (scenario === 'place') {
+        $area_placeholder.on(
+            'click', 
+            'a',
+            function() {
+                $area_placeholder.remove();
+                $area.removeClass('fx_hidden_placeholded');
+                var $cutted_ib = $('.fx_infoblock_cutted');
+                $fx.front.place_block($cutted_ib, $area, 'into');
+            }
+        );
+    } else {
+        $area_placeholder.on(
+            'click', 
+            'a', 
+            function() {
+                $fx.front.add_infoblock_select_controller($area);
+                return false;
+            }
+        );
+    }
+    $area.find('>.fx_area_placeholder').remove();
+    $area.append($area_placeholder);
+    $area.addClass('fx_hidden_placeholded');
 };
 
 fx_front.prototype.get_list_orientation = function($entities) {
@@ -1816,9 +1862,16 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
 
     var entity = $entity[0];
     
+    $('html').one('fx_deselect', function(e) {
+        $fx.front.outline_block_off($entity);
+    });
     if ($from_field) {
         $fx.front.outline_block($entity, 'selected_light');
+        return;
     }
+    
+    
+    
     
     var panel_params = {};
     if ($from_field) {
@@ -1916,7 +1969,6 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
             node:$entity,
             entities:$sortable_entities,
             onstart: function() {
-                //fx_eip.fix();
                 fx_eip.stop();
                 $fx.front.outline_block_off($entity);
                 $fx.front.disable_node_panel();
@@ -1925,8 +1977,6 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
                 $fx.front.outline_block_off($entity.find('.fx_hilight_hover'));
             },
             onstop: function() {
-                //$fx.front.select_item($entity);
-                
                 var data = $entity.data('fx_entity'),
                     id = data[2] || data[0],
                     type = data[3] || data[1];
@@ -1989,10 +2039,6 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
         var field_panel = $fx.front.node_panel.get($from_field);
         add_text_field_label(field_panel, $from_field);
     }
-    $('html').one('fx_deselect', function(e) {
-        $fx.front.stop_entities_sortable();
-        $fx.front.outline_block_off($entity);
-    });
 };
 
 fx_front.prototype.extract_infoblock_visual_fields = function($ib_node, $form) {
@@ -2035,33 +2081,29 @@ fx_front.prototype.extract_infoblock_visual_fields = function($ib_node, $form) {
     });
 };
 
-fx_front.prototype.select_infoblock = function(n, panel) {
-    
+fx_front.prototype.select_infoblock = function($node, panel) {
     if ($fx.front.mode === 'edit') {
-        n.edit_in_place();
+        $node.edit_in_place();
     }
     
-    if ($fx.front.mode !== 'design') {
-        //return;
-    }
     if (!panel) {
         panel = $fx.front.node_panel.get();
     }
+    /*
     var $label = panel.add_label( $fx.lang('Infoblock') );
     
     $label.addClass('fx_node_panel__item-button-label');
-    
-    //$fx.front.add_panel_button('settings', function() {
+    */
     panel.add_button('settings', function() {
-        var ib_node = n,
-            $ib_node = $(ib_node),
+        var ib_node = $node[0],
+            $ib_node = $node,
             ib = $ib_node.data('fx_infoblock');
         
         if (!ib) {
             return;
         }
-        var area_node = $fx.front.get_area_node(ib_node);//ib_node.closest('.fx_area');
-        var area_meta = $fx.front.get_area_meta(area_node);
+        var $area_node = $fx.front.get_area_node($ib_node);//ib_node.closest('.fx_area');
+        var area_meta = $fx.front.get_area_meta($area_node);
         
         var is_waiting = false, 
             ib_loader = null;
@@ -2114,7 +2156,14 @@ fx_front.prototype.select_infoblock = function(n, panel) {
         });
     });
     
-    //$fx.front.add_panel_button('delete', function() {
+    panel.add_button({
+        type:'icon',
+        keyword:'place',
+        label:'Переместить'
+    }, function() {
+        $fx.front.start_placing_block($node);
+    });
+    
     panel.add_button('delete', function() {
         var ib_node = $fx.front.get_selected_item();
         if (!ib_node) {
@@ -2136,14 +2185,106 @@ fx_front.prototype.select_infoblock = function(n, panel) {
             }
         });
     });
+};
+
+fx_front.prototype.start_placing_block = function($ib_node){
+    $fx.front.deselect_item();
+    $fx.front.disable_hilight();
+    var $areas = $('.fx_area');
     
-    /*
-    $fx.front.start_areas_sortable();
-    
-    $('html').one('fx_deselect', function() {
-        $fx.front.stop_areas_sortable();
+    $areas.filter('.fx_hidden_placeholded').each(function() {
+        $fx.front.hilight_area_empty($(this), 'place');
     });
-    */
+    
+    $ib_node.addClass('fx_infoblock_cutted');
+    $areas.each(function() {
+        var $area = $(this);
+        $fx.front.create_inline_infoblock_placer($area, $ib_node);
+    });
+    var ib_meta = $ib_node.data('fx_infoblock');
+    var $panel = $(
+        '<div class="fx_placer_panel">'+
+            '<div class="fx_placer_panel__body">'+
+                '<div class="fx_placer_panel__block fx_placed_block_symbol">'+
+                    '<div class="fx_placed_block_symbol__icon"></div>'+
+                    '<div class="fx_placed_block_symbol__title">'+
+                        '<div class="fx_placed_block_symbol__type">'+
+                            'Перемещаем блок'+
+                        '</div>'+
+                        '<div class="fx_placed_block_symbol__label">'+
+                            ib_meta.name+
+                        '</div>'+
+                    '</div>'+
+                '</div>'+
+                '<div class="fx_placer_panel__description">'+
+                    'Выберите место, куда нужно вставить блок, и нажмите &darr;'+
+                '</div>'+
+            '</div>'+
+            '<div class="fx_closer">&times;</div>'+
+        '</div>');
+    $('.fx-admin-panel').append($panel);
+    
+    $panel.find('.fx_placed_block_symbol').click(function() {
+        $fx.front.scrollTo($ib_node);
+    });
+    $('.fx_closer', $panel).click(function() {
+        $fx.front.stop_placing_block($ib_node);
+    });
+    $('body').on('keyup.fx_stop_placing_block', function(e) {
+        if (e.which === 27) {
+            $fx.front.stop_placing_block($ib_node);
+        }
+    });
+};
+
+fx_front.prototype.stop_placing_block = function($ib_node) {
+    $ib_node.removeClass('fx_infoblock_cutted');
+    $fx.front.destroy_all_infoblock_placers();
+    $fx.front.enable_hilight();
+    $('.fx_area.fx_hidden_placeholded').each(function() {
+        $fx.front.hilight_area_empty($(this), 'add');
+    });
+    $('body').off('.fx_stop_placing_block');
+    $('.fx_placer_panel').remove();
+};
+
+fx_front.prototype.place_block = function($ib_node, $rel_node, dir) {
+    var $old_area = $ib_node.closest('.fx_area');
+    if (dir === 'before') {
+        $rel_node.before($ib_node);
+    } else if (dir === 'after') {
+        $rel_node.after($ib_node);
+    } else if (dir === 'into') {
+        $rel_node.append($ib_node);
+    }
+    // it was the only ib in it's area
+    if ($('.fx_infoblock', $old_area).length === 0) {
+        $fx.front.hilight_area_empty($old_area, 'place');
+    }
+    
+    $fx.front.select_item($ib_node);
+    
+    var ib_data = $ib_node.data('fx_infoblock'),
+        params = {
+            entity:'infoblock',
+            action:'move',
+            area:$ib_node.closest('.fx_area').data('fx_area').id
+        };
+
+    params.infoblock_id = ib_data.id;
+    params.visual_id = ib_data.visual_id;
+
+    var $next_ib = $ib_node.next('.fx_infoblock');
+    if ($next_ib.length > 0) {
+        var next_data = $next_ib.data('fx_infoblock');
+        params.next_infoblock_id = next_data.id;
+        params.next_visual_id = next_data.visual_id;
+    }
+    $fx.post(params, function(res) {
+        $fx.front.reload_layout();
+    });
+    
+    this.stop_placing_block($ib_node);
 };
 
 fx_front.prototype.set_mode_view = function () {
@@ -2159,105 +2300,13 @@ fx_front.prototype.get_sortable_entities = function($cp) {
     return $entities;
 };
 
-fx_front.prototype.start_entities_sortable = function($cp) {
-    var $entities = $fx.front.get_sortable_entities($cp);
-    var placeholder_class = "fx_entity_placeholder";
-    if ($entities.first().css('display') === 'inline') {
-        placeholder_class += ' fx_entity_placeholder_inline';
-    }
-    $cp.addClass('fx_entity_container_sortable');
-    
-    var axis = $fx.front.get_list_orientation($entities);
-    
-    var sort_params = {
-        axis:axis,
-        items:$entities,
-        placeholder: placeholder_class,
-        forcePlaceholderSize : true,
-        distance:3,
-        helper:'clone',
-        start:function(e, ui) {
-            // dummy block with black border
-            var ph = ui.placeholder;
-            
-            // original dragged item
-            // it is hidden by this moment
-            var item = ui.item;
-            
-            // item's clone wich is being dragged
-            var helper = ui.helper;
-            
-            // we are to set helper's offset same as the original item had before jqueryui hide it
-            // so we show the item, copy its offset and hide again
-            item.show();
-            helper.offset(item.offset());
-            item.hide();
-            
-            // then put the item to the end
-            // to preserve real number of items for :nth-child selector
-            item.parent().append(item);
-            
-            ph.css({
-                // -1px to fix sub-pixel size (like 33.333% of 100px)
-                width: (helper.outerWidth() - 1) +'px',
-                height:helper.outerHeight()+'px',
-                'box-sizing':'border-box'
-            });
-            ph.attr('class', ph.attr('class')+ ' '+item.attr('class'));
-            var $c_selected = $($fx.front.get_selected_item());
-            $fx.front.outline_block_off($c_selected);
-            $fx.front.disable_hilight();
-            $fx.front.disable_node_panel();
-        },
-        sort:function(e,ui) {
-            //debugger;
-        },
-        stop:function(e, ui) {
-            var ce = ui.item.closest('.fx_entity');
-            var ce_data = ce.data('fx_entity');
-            var ce_id = ce_data[2] || ce_data[0];
-            var ce_type = ce_data[3] || ce_data[1];
-
-            var next_e = ce.nextAll('.fx_entity').first();
-            var next_id = null;
-            if (next_e.length > 0) {
-                var next_data = next_e.data('fx_entity');
-                next_id = next_data[2] || next_data[0];
-            }
-            //$fx.front.disable_infoblock($cp.closest('.fx_infoblock'));
-            $fx.post({
-                entity:'content',
-                action:'move',
-                content_id:ce_id,
-                content_type:ce_type,
-                next_id:next_id
-            }, function(res) {
-                $fx.front.reload_infoblock($cp.closest('.fx_infoblock'));
-                $fx.front.enable_node_panel();
-            });
-            //$fx.front.get_node_panel().show();
-        }
-    };
-    $cp.sortable(sort_params);
-};
-
-fx_front.prototype.stop_entities_sortable = function(container) {
-    if (!container) {
-        container = $('.fx_entity_container_sortable');
-    }
-    if (!container.hasClass('fx_entity_container_sortable')) {
-        return;
-    }
-    container.removeClass('fx_entity_container_sortable');
-    container.sortable('destroy');
-};
-
 fx_front.prototype.set_mode_edit = function () {
     $fx.panel.one('fx.startsetmode', function() {
         $('html').off('.fx_edit_mode');
     });
 };
 
+/*
 fx_front.prototype._start_areas_sortable = function() {
     var $areas = $('.fx_area'),
         $ibs = $('.fx_infoblock').not('.fx_infoblock_fake').not('body');
@@ -2298,13 +2347,6 @@ fx_front.prototype._start_areas_sortable = function() {
     });
 };
 
-fx_front.prototype._stop_areas_sortable = function() {
-    $('.fx_area_sortable').each(function() {
-        var $area = $(this);
-        $area.data('sortable').destroy();
-        $area.removeClass('fx_area_sortable');
-    });
-};
 
 fx_front.prototype.start_areas_sortable = function() {
     var $iblocks = $('.fx_infoblock').not('.fx_infoblock_fake').not('body');
@@ -2339,14 +2381,6 @@ fx_front.prototype.start_areas_sortable = function() {
                     height:item.outerHeight(),
                     overflow:'hidden'
                 });
-                /*
-                ph.animate({
-                    'height':'100px'
-                }, 1000);
-                item.css({overflow:'hidden'}).animate({
-                    'height':'100px'
-                }, 1000);
-                */
                 var $c_selected = $($fx.front.get_selected_item());
                 $fx.front.outline_block_off($c_selected);
                 $fx.front.disable_hilight();
@@ -2384,12 +2418,13 @@ fx_front.prototype.start_areas_sortable = function() {
         });
     });
 };
-
 fx_front.prototype.stop_areas_sortable = function() {
     $('.fx_area_sortable').
             sortable('destroy').
             removeClass('fx_area_sortable');
 };
+                                
+*/
 
 fx_front.prototype.set_mode_design = function() {
     $fx.panel.one('fx.startsetmode', function() {

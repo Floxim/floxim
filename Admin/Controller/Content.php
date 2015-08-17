@@ -185,7 +185,35 @@ class Content extends Admin
         /**
          * check children
          */
-        if ($content->isInstanceOf('floxim.main.content')) {
+        $alert = '';
+        
+        $is_linker = $content->isInstanceOf('floxim.main.linker');
+        
+        if ($is_linker) {
+            $linked_entity = $content['content'];
+            $linked_com = $linked_entity->getComponent();
+            $alert = '<p>'.
+                        fx::alang(
+                            'Only link will be removed, not %s itself', 
+                            null, 
+                            $linked_com->getItemName('one')
+                        );
+            
+            $linked_section = $linked_entity->getPath()->copy()->reverse()->findOne(function($i) {
+                return $i->isInstanceOf('floxim.nav.section');
+            });
+            
+            if ($linked_section) {
+                $alert .= fx::alang(
+                    ', it will be available in the %s section', 
+                    null,
+                    $linked_section['name']
+                );
+            }
+            
+            $alert .= '</p>';
+            //fx::log($linked_entity->getPath());
+        } elseif ($content->isInstanceOf('floxim.main.content')) {
             $all_descendants = fx::data('content')->descendantsOf($content)->all()->group('type');
             $type_parts = array();
             foreach ($all_descendants as $descendants_type => $descendants) {
@@ -200,11 +228,15 @@ class Content extends Admin
                 $com_name = fx::util()->ucfirst($content->getComponent()->getItemName('one'));
                 $alert = '<p>'.$com_name.' содержит данные, они также будут удалены:</p>';
                 $alert .= '<ul><li>'.join('</li><li>', $type_parts).'</li></ul>';
-                $fields[] = array(
-                    'type' => 'html',
-                    'html' => $alert
-                );
             }
+        }
+        
+        
+        if ($alert) {
+            $fields[] = array(
+                'type' => 'html',
+                'html' => '<div class="fx_delete_alert">'.$alert.'</div>'
+            );
         }
 
         $this->response->addFields($fields);
@@ -224,9 +256,22 @@ class Content extends Admin
         }
         $component = fx::data('component', $content_type);
 
-        $header = fx::alang("Delete") . ' ' . mb_strtolower($component->getItemName());
+        if ($is_linker) {
+            $com_name = $linked_com->getItemName();
+        } else {
+            $com_name = $component->getItemName();
+        }
+        
+        $header = $is_linker ? fx::alang('delete_from_list') : fx::alang("Delete");
+        
+        $header .= ' ' . mb_strtolower($com_name);
+        
         if (($content_name = $content['name'])) {
+            $content_name = strip_tags($content_name);
+            $content_name = trim($content_name);
             $header .= ' &laquo;' . $content_name . '&raquo;';
+        } elseif ($is_linker) {
+            $header .= ' '.fx::alang('from this list');
         }
         $header .= "?";
         $res = array('header' => $header);

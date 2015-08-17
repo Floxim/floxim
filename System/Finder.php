@@ -279,6 +279,8 @@ abstract class Finder
             $table = $this->getColTable($field);
             if ($table) {
                 $this->order [] = "{{" . $table . "}}.`" . $field . "` " . $direction;
+            } else {
+                $this->order []= "`".$field."` ".$direction;
             }
         }
         return $this;
