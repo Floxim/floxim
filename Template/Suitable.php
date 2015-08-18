@@ -93,14 +93,11 @@ class Suitable
         $layout_visual = $layout_ib->getVisual();
         $area_map = $layout_visual['area_map'];
         
-        fx::log($area_map);
-
         $layout_template_name = $layout_ib->getPropInherited('visual.template');
 
         // seems to be second call of ::getAreas(), can be cached or reused
         $c_areas = fx::template($layout_template_name)->getAreas();
-        fx::log($c_areas);
-
+        
         foreach ($infoblocks as $ib) {
             $ib_visual = $ib->getVisual($layout_id);
             if (!$ib_visual['is_stub']) {
@@ -138,23 +135,16 @@ class Suitable
                 $ib->getPropInherited('action')
             );
             
-            fx::log(
-                $ib->getPropInherited('controller').':'.$ib->getPropInherited('action'),
-                $ib_visual['area']
-            );
-
             $area_meta = isset($c_areas[$ib_visual['area']]) ? $c_areas[$ib_visual['area']] : null;
 
             $controller_templates = $ib_controller->getAvailableTemplates($layout['keyword'], $area_meta);
             
-            //fx::log($controller_templates, $ib_visual);
             
             $old_template = $ib->getPropInherited('visual.template', $source_layout_id);
-            //fx::log('for ib vis', $ib_visual, $old_template, $ib['visuals'], $area_map);
+            
             $used_template_props = null;
             foreach ($controller_templates as $c_tpl) {
                 if ($c_tpl['full_id'] === $old_template) {
-                    fx::log('found equal', $c_tpl, $old_template);
                     $ib_visual['template'] = $c_tpl['full_id'];
                     $used_template_props = $c_tpl;
                     break;
@@ -169,19 +159,13 @@ class Suitable
                     function(&$tpl) use ($that, $old_template_id) {
                         $res = $that->compareNames($tpl['id'], $old_template_id);
                         $tpl['name_match'] = $res;
-                        if ($res > 0) {
-                            fx::log($res.' for '. $tpl['id'].' vs '.  $old_template_id);
-                        }
                         return 1/($res+1);
                     }
                 );
-                fx::log('sorted', $old_template_id, $controller_templates);
                 $res_template = $controller_templates->first();
                 $ib_visual['template'] = $res_template['full_id'];
                 $used_template_props = $res_template;
             }
-            
-            //fx::log($ib_controller, $controller_templates, $used_template_props);
             
             if (!$ib_visual['area']) {
                 $block_size = self::getSize($used_template_props['size']);
@@ -246,17 +230,7 @@ class Suitable
                 $test_layout_tpl = fx::template($tplv['full_id']);
                 $tplv['real_areas'] = $test_layout_tpl->getAreas();
                 $map = $this->mapAreas($old_areas, $tplv['real_areas']);
-                /*
-                fx::log(
-                    'mapped', 
-                    fx::data('layout', $source_layout_id)->get('name').' -> '.
-                    $tplv['full_id'],
-                    $map, 
-                    $old_areas, 
-                    $tplv['real_areas']
-                );
-                 * 
-                 */
+                
                 if (!$map) {
                     continue;
                 }

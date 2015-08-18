@@ -560,7 +560,7 @@ class Infoblock extends Admin
         $path_count = count($path);
         $c_type = $c_page['type'];
         $page_com = fx::data('component', $c_page['type']);
-        $c_type_name = $page_com->getItemName();
+        $c_type_name = $page_com->getItemName('one');
 
         $container_infoblock = null;
         if ($infoblock['container_infoblock_id']) {

@@ -921,13 +921,20 @@ span.fx_area_marker {
     }
 }
 
+.fx_controller_list {
+    margin:0 -20px;
+}
+
 .fx_controller_group {
     
     cursor:pointer;
     
+    padding-left:20px;
+    padding-right:20px;
+    
     &__title {
         font-size:18px;
-        padding:10px;
+        padding:10px 0;
     }
     
     &__children {
@@ -936,9 +943,9 @@ span.fx_area_marker {
     }
     
     &-active {
-        background:#f3f6ff;
-        border-top:1px solid #d8dff5;
-        border-bottom:1px solid #d8dff5;
+        background:#e3e6ff;
+        //border-top:1px solid #d8dff5;
+        //border-bottom:1px solid #d8dff5;
     }
     
     &-active &__children {

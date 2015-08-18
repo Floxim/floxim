@@ -27,6 +27,7 @@
         'reloading': 'Обновляем страницу',
         'All?':'все',
         'Infoblock': 'Блок',
+        "Add new block": "Добавить блок",
         date_order:'d.m.y, h:i',
         date_placeholder_d: 'дд',
         date_placeholder_m: 'мм',

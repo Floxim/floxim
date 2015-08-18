@@ -382,7 +382,7 @@ class Entity extends System\Entity
         return $res;
     }
     
-    public function getItemName($scenario = 'add') {
+    public function getItemName($scenario = 'one') {
         $lang = fx::alang()->getLang();
         $decl = $this['declension'];
         // this should be done via some config in future

@@ -257,9 +257,9 @@ class Content extends Admin
         $component = fx::data('component', $content_type);
 
         if ($is_linker) {
-            $com_name = $linked_com->getItemName();
+            $com_name = $linked_com->getItemName('add');
         } else {
-            $com_name = $component->getItemName();
+            $com_name = $component->getItemName('add');
         }
         
         $header = $is_linker ? fx::alang('delete_from_list') : fx::alang("Delete");

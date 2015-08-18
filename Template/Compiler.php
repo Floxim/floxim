@@ -173,7 +173,7 @@ class Compiler
                     }
                 }
             } catch (\Exception $e) {
-                fx::debug('ooops', $e);
+                fx::log('Can not init target template', $token, $e);
             }
         }
         
@@ -192,12 +192,15 @@ class Compiler
             }
         }
         
-        
-        
         $apply = '{apply '.$token->getProp('template');
         $vars = array();
         foreach ($token->getChildren() as $child) {
+            if (in_array($child->name, array('js', 'css', 'param', 'if', 'else', 'elseif'))) {
+                $tpl_token->addChild($child);
+                continue;
+            }
             if ($child->name !== 'code') {
+                fx::log('unknown preset child', $child);
                 continue;
             }
             $data = $child->getProp('value');
