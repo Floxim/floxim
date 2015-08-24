@@ -171,6 +171,302 @@ window.$fx_fields = {
     }
 };
 
+window.$fx_fields.init_fieldset = function(html, _c) {
+    $('tbody.fx_fieldset_rows', html).sortable();
+
+    var fs = $('.fx_fieldset', html);
+
+    if (!_c.values) {
+        _c.values = _c.value || [];
+    }
+    var flag = false;
+    $.each(_c.values, function(row, val) {
+        var val_num = 0;
+        var inputs = [];
+        var row_index = val._index || row;
+        $.each(_c.tpl, function(tpl_index, tpl_props) {
+            inputs.push(
+                $.extend(
+                    {}, 
+                    tpl_props, 
+                    {
+                        name:_c.name+'['+row_index+']['+tpl_props.name+']',
+                        value:val[tpl_props.name]
+                    }
+                )
+            );
+        });
+        $('.fx_fieldset_rows', html).append($t.jQuery('fieldset_row', inputs, {index:row, set_field: _c}));
+    });
+
+    fs.on('click', '.fx_fieldset_remove', function() {
+            $(this).parents('.fx_fieldset_row').remove();	
+    });
+    $('.fx_fieldset_add', fs).click( function() {
+        var fs = $(this).closest('.fx_fieldset');
+        var inputs = [];
+        var index = $('.fx_fieldset_row', fs).length + 1;
+        for (var i = 0; i < _c.tpl.length; i++) {
+            inputs.push( 
+                $.extend({}, _c.tpl[i], {
+                    name:_c.name+'[new_'+index+']['+_c.tpl[i].name+']'
+                })
+            );
+        }
+        var new_row = $t.jQuery('fieldset_row', inputs, {index:index, set_field: _c});
+        $('.fx_fieldset_rows', fs).append(new_row);
+        new_row.find(':input:visible').first().focus();
+    });
+    /*
+    if (!flag) {
+        $('.fx_fieldset_add', fs).click();
+        $('.fx_fieldset_rows .fx_fieldset_row', fs).addClass('fake').one('change', function() {
+            $(this).removeClass('fake')
+        });
+    }
+    */
+};
+
+window.$fx_fields.init_condset = function(html, _c, _o) {
+    var i = 0;
+    console.log(_c, _o);
+    var is_new_row = typeof _o.index === 'number';
+
+    var intervals = _o.set_field.date_intervals;
+
+    html.on('change', '.input_cell_0 select', function() {
+        var opt = $(this).find('option').filter(':selected');
+        set_control(opt.data('meta'), $(this).parent().parent());
+    });
+    html.on('change', '.input_cell_1 select.date_operator', function() {
+        var type = $(this).val(); 
+
+        if (typeof _o.index === 'number') {
+            var name = 'new_'+_o.index;
+        } else {
+            var name = _o.index;
+        }
+        switch (type){
+            case 'in_future':
+            case 'in_past':
+                var cells = $(this).parent().parent().find('[class*="input_cell"]').not('.input_cell_0').not('.input_cell_1');
+                cells.empty();
+            break;
+            case 'next':
+            case 'last':
+
+                var cells = $(this).parent().parent().find('[class*="input_cell"]').not('.input_cell_0').not('.input_cell_1');
+                cells.remove();
+                $(this).parent()
+                .after('<td class="input_cell_2"><input type="text" class="fx_input fx_input_number" name="params[conditions]['+name+'][value]" id="params[conditions]['+name+'][value]" value=""></td>')
+                //.next().after('<td class="input_cell_3"></td>');
+
+                var select = $t.jQuery(
+                    'input', {
+                        'type':'select', 
+                        'name': 'params[conditions]['+name+']['+'interval'+']',
+                        'values':
+                            intervals
+                        }
+                );
+                $(this).parent().parent().find('.input_cell_2').append(select)
+            break;
+            default:
+                var cells = $(this).parent().parent().find('[class*="input_cell"]').not('.input_cell_0').not('.input_cell_1');
+                cells.remove();
+                $(this).parent().after('<td class="input_cell_2"></td>');
+                var input_line = $t.jQuery(
+                    'input', {
+                        'type':'datetime', 
+                        'name': 'params[conditions]['+name+']['+'value'+']',
+                        }
+                );
+                $(this).parent().parent().find('.input_cell_2').html(input_line);
+            break;
+        }
+    });
+    function set_saved () {
+        if (!is_new_row){
+            var name = "[name='params[conditions]["+_o.index+"]";
+            $(name+"[name]']", html)
+                .val(_o.set_field.values[_o.index].name)
+                .change();
+            $(name+"[operator]']", html).val(_o.set_field.values[_o.index].operator);
+            var option_meta = $(name+"[name]']", html).find('option').filter(':selected').data('meta');
+            if (option_meta.type === 'bool') {
+                if(_o.set_field.values[_o.index].value === 1) {
+                    $(name+"[value]']", html).eq(1).attr('checked', 'checked');
+                }
+            } else if (option_meta.type === 'datetime') {
+                if (_o.set_field.values[_o.index].value === undefined) {
+                    $(name+"[value]']", html).remove();
+                } else if (_o.set_field.values[_o.index].interval !== undefined) {
+                    var select = $t.jQuery(
+                        'input', {
+                            'type':'select', 
+                            'name': 'params[conditions]['+_o.index+']['+'interval'+']',
+                            'values':
+                                intervals
+                            }
+                    );
+                    var cell = $('<td class="input_cell_3"></td>').append(select);
+                    $(name+"[value]']", html).parent().parent().after(cell);
+                    $(name+"[value]']", html).unbind();
+                }
+                $(name+"[operator]']", html).change();
+                if (_o.set_field.values[_o.index].interval !== undefined) {
+                    $(name+"[interval]']", html).val(_o.set_field.values[_o.index].interval);
+                }
+
+                $(name+"[value]']", html).val(_o.set_field.values[_o.index].value).css('width', '40px');
+
+            } else {
+                $(name+"[value]']", html).val(_o.set_field.values[_o.index].value);
+            }
+        }
+    }
+    function set_control (meta, selector) {
+        var type = meta.type;
+        var c_value;
+        if (typeof _o.index === 'number') {
+            var name = 'params[conditions][new_'+_o.index+'][';
+        } else {
+            var name = 'params[conditions]['+_o.index+'][';
+            c_value = _o.set_field.value[_o.index].value;
+        }
+
+        var html = selector;
+        switch(type) {
+            case 'text':
+            case 'string':
+                var select = $t.jQuery(
+                    'input', {
+                        'type':'select', 
+                        'name': name+'operator'+']',
+                        'values':
+                            _o
+                                .set_field
+                                .operators_map
+                                .string
+                        }
+                );
+                $('.input_cell_1', html).html(select);
+                var input_line = $t.jQuery(
+                    'input', {
+                        'type':'text', 
+                        'name': name+'value'+']',
+                        }
+                );
+                $('.input_cell_2', html).html(input_line);
+            break;
+            case 'int':
+                var select = $t.jQuery(
+                    'input', {
+                        'type':'select', 
+                        'name': name+'operator'+']',
+                        'values':
+                            _o
+                                .set_field
+                                .operators_map
+                                .int
+                        }
+                );
+                $('.input_cell_1', html).html(select);
+                var input_line = $t.jQuery(
+                    'input', {
+                        'type':'int', 
+                        'name': name+'value'+']'
+                    }
+                );
+                $('.input_cell_2', html).html(input_line);
+            break;
+            case 'bool':
+                var select = $t.jQuery(
+                    'input', {
+                        'type':'hidden', 
+                        'name': name+'operator'+']',
+                        'value': '='
+                    }
+                );
+                $('.input_cell_1', html).html(select);
+                var input_line = $t.jQuery(
+                    'input', {
+                        'type':'checkbox', 
+                        'name': name+'value'+']'
+                    }
+                );
+                $('.input_cell_2', html).html(input_line);
+            break;
+            case 'datetime':
+                var select = $t.jQuery(
+                    'input', {
+                        'type':'select', 
+                        'name': name+'operator'+']',
+                        'values':
+                            _o
+                                .set_field
+                                .operators_map
+                                .datetime
+                    }
+                );
+                select.addClass('date_operator');
+                $('.input_cell_1', html).html(select);
+                var input_line = $t.jQuery(
+                    'input', {
+                        'type':'datetime', 
+                        'name': name+'value'+']'
+                    }
+                );
+                $('.input_cell_2', html).html(input_line);
+            break;
+            case 'multilink':
+            case 'link':
+                var select = $t.jQuery(
+                    'input', {
+                        'type':'select', 
+                        'name': name+'operator'+']',
+                        'values':
+                            _o
+                                .set_field
+                                .operators_map
+                                .link
+                        }
+                );
+
+                $('.input_cell_1', html).html(select);
+                //console.log('lsm', meta);
+                var livesearch_opts = {
+                    'type':'livesearch',
+                    'name': name+'value'+']',
+                    'is_multiple': true,
+                    'value':c_value,
+                    ajax_preload:true,
+                    params: {
+                        'content_type' : meta.content_type,
+                        count_show : 20,
+                        preset_values : meta.values,
+                        conditions:meta.conditions
+                    }
+                };
+                var live_search = $t.jQuery(
+                    'input', livesearch_opts
+                );
+                $('.input_cell_2', html).html(live_search);
+            break;
+        }
+    }
+    $.each(_o.set_field.tpl[0].values, function (key, value) {
+        var opt = $('<option value="'+key+'">'+value.description+'</option>');
+        opt.data('meta', value);
+        $('.input_cell_0 select', html).append(opt);
+
+        if (i++ === 0 && is_new_row)  {
+            set_control(opt.data('meta'), $('.input_cell_0 select', html).parent().parent())
+        }
+    });
+    set_saved();
+};
+
 // file field
 
 var $html = $('html');

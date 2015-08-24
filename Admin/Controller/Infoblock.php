@@ -679,11 +679,16 @@ class Infoblock extends Admin
                 'type'  => 'hidden'
             )
         );
-        $area_suit = isset($area_meta['suit']) ? $area_meta['suit'] : '';
-        $area_suit = Template\Suitable::parseAreaSuitProp($area_suit);
         
-        $area_size = Template\Suitable::getSize($area_meta['size']);
+        
+        $layout_name = fx::data('layout', $i2l['layout_id'])->get('keyword');
 
+        $controller_name = $infoblock->getPropInherited('controller');
+
+        $action_name = $infoblock->getPropInherited('action');
+        
+        $area_suit = Template\Suitable::parseAreaSuitProp(isset($area_meta['suit']) ? $area_meta['suit'] : '');
+        
         $force_wrapper = $area_suit['force_wrapper'];
         $default_wrapper = $area_suit['default_wrapper'];
 
@@ -697,55 +702,15 @@ class Infoblock extends Admin
                 $c_wrapper = $default_wrapper[0];
             }
         }
-        
-        $layout_name = fx::data('layout', $i2l['layout_id'])->get('keyword');
-
-        $controller_name = $infoblock->getPropInherited('controller');
-
-        $action_name = $infoblock->getPropInherited('action');
 
         // Collect available wrappers
         $layout_tpl = fx::template('theme.' . $layout_name);
         if ($layout_tpl) {
-            $template_variants = $layout_tpl->getTemplateVariants();
-            foreach ($template_variants as $tplv) {
-                $full_id = $tplv['full_id'];
-                if (!isset($tplv['suit'])) {
-                    $tplv['suit'] = '';
-                }
-                if ($tplv['suit'] == 'local' && $area_meta['id'] != $tplv['area']) {
-                    continue;
-                }
-                if ($force_wrapper && !in_array($tplv['full_id'], $force_wrapper)) {
-                    continue;
-                }
-                if (is_string($tplv['suit']) && $tplv['suit']) {
-                    $tplv_suit = preg_split("~\,\s*~", $tplv['suit']);
-                    if (in_array('local', $tplv_suit)) {
-                        $tplv_suit []= $tplv['area'];
-                    }
-                    if (!in_array($area_meta['id'], $tplv_suit)) {
-                        continue;
-                    }
-                }
-
-                if ($tplv['of'] == 'floxim.layout.wrapper:show') {
-                    $size_ok = true;
-                    if ($area_size && isset($tplv['size'])) {
-                        $size = Template\Suitable::getSize($tplv['size']);
-                        $size_rate = Template\Suitable::checkSizes($size, $area_size);
-                        if (!$size_rate) {
-                            $size_ok = false;
-                        }
-                    }
-                    if ($size_ok) {
-                        $wrappers[$full_id] = $tplv['name'];
-                        if ($force_wrapper && empty($c_wrapper)) {
-                            $c_wrapper = $full_id;
-                        }
-                    }
-                }
+            $avail_wrappers = \Floxim\Floxim\Template\Suitable::getAvailableWrappers($layout_tpl, $area_meta);
+            foreach ($avail_wrappers as $avail_wrapper) {
+                $wrappers[$avail_wrapper['full_id']] = $avail_wrapper['name'];
             }
+            //$wrappers = array_merge($wrappers, $avail_wrappers);
         }
 
         // Collect the available templates
@@ -949,22 +914,26 @@ class Infoblock extends Admin
             $this->ui->hidden('fx_admin', true)
         );
         $ib_content = $infoblock->getOwnedContent();
-        /*
+        
         if ($ib_content->length > 0) {
             $fields[] = array(
                 'name'   => 'content_handle',
+                'type'   => 'hidden',
+                'value' => 'delete'
+                /*
+                ,
                 'label'  => fx::alang('The infoblock contains some content',
                         'system') . ', <b>' . $ib_content->length . '</b> ' . fx::alang('items. What should we do with them?',
                         'system'),
-                'type'   => 'select',
                 'values' => array(
                     'unbind' => fx::alang('Unbind/Hide', 'system'),
                     'delete' => fx::alang('Delete', 'system')
-                ),
-                //'parent' => array('delete_confirm' => true)
+                )
+                 * 
+                 */
             );
         }
-        */
+        
         $alert = '';
         if (count($ib_content)) {
             $ib_content_count = count($ib_content);

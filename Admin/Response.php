@@ -163,7 +163,9 @@ class Response
         }
         if ($tab) {
             foreach ($fields as &$field) {
-                $field['tab'] = $tab;
+                if (!isset($field['tab'])) {
+                    $field['tab'] = $tab;
+                }
             }
         }
         foreach ($fields as $field_key => &$field) {

@@ -72,7 +72,7 @@ class Suitable
                 $layout_rate[$c_layout_id] = 0;
             }
             // count how many visual blocks are defined for each layout
-            // later we should sort this to fined correct "original" layout made by human
+            // later we should sort this to find correct "original" layout made by human
             $layout_rate[$c_layout_id]++;
         }
         
@@ -86,17 +86,32 @@ class Suitable
             $layout_ib = fx::router('front')->getLayoutInfoblock(fx::env('page'));
         }
 
+        $area_map = array();
+        
         if ($layout_ib->getVisual()->get('is_stub')) {
             $this->adjustLayoutVisual($layout_ib, $layout_id, $source_layout_id);
+            $layout_visual = $layout_ib->getVisual();
+            $area_map = $layout_visual['area_map'];
+        } else {
+            $layout_visual = $layout_ib->getVisual();
+            $old_layout_template = $layout_ib->getPropInherited('visual.template', $source_layout_id);
+            if ($old_layout_template) {
+                $old_areas = fx::template($old_layout_template)->getAreas();
+                $new_areas = fx::template($layout_visual['template'])->getAreas();
+                
+                //$tplv['real_areas'] = $test_layout_tpl->getAreas();
+                $area_map = $this->mapAreas($old_areas, $new_areas);
+                $area_map = $area_map['map'];
+            }
         }
-
-        $layout_visual = $layout_ib->getVisual();
-        $area_map = $layout_visual['area_map'];
+        
         
         $layout_template_name = $layout_ib->getPropInherited('visual.template');
-
+        $layout_template = fx::template($layout_template_name);
         // seems to be second call of ::getAreas(), can be cached or reused
-        $c_areas = fx::template($layout_template_name)->getAreas();
+        $c_areas = $layout_template->getAreas();
+        
+        $c_wrappers = array();
         
         foreach ($infoblocks as $ib) {
             $ib_visual = $ib->getVisual($layout_id);
@@ -129,6 +144,7 @@ class Suitable
                     $ib_visual['area'] = $old_area;
                 }
             }
+            
             $ib_controller = fx::controller(
                 $ib->getPropInherited('controller'),
                 $ib->getPropInherited('params'),
@@ -182,7 +198,24 @@ class Suitable
                 $ib_visual['area'] = $c_area;
             }
 
-            //$old_wrapper = $ib->getPropInherited('visual.wrapper', $source_layout_id);
+            $old_wrapper = $ib->getPropInherited('visual.wrapper', $source_layout_id);
+            if ($old_wrapper){
+                if (!isset($c_wrappers[$c_area])) {
+                    $c_wrappers[$c_area] = self::getAvailableWrappers($layout_template, $area_meta);
+                }
+                $old_wrapper_id = preg_replace("~^.+\:~", '', $old_wrapper);
+                $avail_wrappers = $c_wrappers[$c_area];
+                if (count($avail_wrappers)) {
+                    $new_wrapper = fx::collection($avail_wrappers)->sort(
+                        function($w) use ($old_wrapper_id) {
+                            return 1/(1 + Suitable::compareNames($w['name'], $old_wrapper_id));
+                        }
+                    )->first();
+                    $ib_visual['wrapper'] = $new_wrapper['full_id'];
+                    $ib_visual['wrapper_visual'] = $ib->getPropInherited('visual.wrapper_visual', $source_layout_id);
+                }
+            }
+            
             //if ($old_wrapper && $area_meta) {
             if ($area_meta) {
                 $area_suit = self::parseAreaSuitProp(isset($area_meta['suit']) ? $area_meta['suit'] : null);
@@ -195,6 +228,55 @@ class Suitable
             unset($ib_visual['is_stub']);
             $ib_visual->save();
         }
+    }
+    
+    public static function getAvailableWrappers($layout_tpl, $area_meta = null)
+    {
+        
+        $area_suit = self::parseAreaSuitProp(isset($area_meta['suit']) ? $area_meta['suit'] : '');
+        $force_wrapper = $area_suit['force_wrapper'];
+        $area_size = self::getSize($area_meta['size']);
+
+        $wrappers = array();
+        
+        $template_variants = $layout_tpl->getTemplateVariants();
+        foreach ($template_variants as $tplv) {
+            $full_id = $tplv['full_id'];
+            if ($tplv['of'] !== 'floxim.layout.wrapper:show') {
+                continue;
+            }
+            if (!isset($tplv['suit'])) {
+                $tplv['suit'] = '';
+            }
+            if ($tplv['suit'] == 'local' && $area_meta['id'] != $tplv['area']) {
+                continue;
+            }
+            if ($force_wrapper && !in_array($tplv['full_id'], $force_wrapper)) {
+                continue;
+            }
+            if (is_string($tplv['suit']) && $tplv['suit']) {
+                $tplv_suit = preg_split("~\,\s*~", $tplv['suit']);
+                if (in_array('local', $tplv_suit)) {
+                    $tplv_suit []= $tplv['area'];
+                }
+                if (!in_array($area_meta['id'], $tplv_suit)) {
+                    continue;
+                }
+            }
+
+            $size_ok = true;
+            if ($area_size && isset($tplv['size'])) {
+                $size = self::getSize($tplv['size']);
+                $size_rate = self::checkSizes($size, $area_size);
+                if (!$size_rate) {
+                    $size_ok = false;
+                }
+            }
+            if ($size_ok) {
+                $wrappers[$full_id] = $tplv;
+            }
+        }
+        return $wrappers;
     }
 
     protected function adjustLayoutVisual($layout_ib, $layout_id, $source_layout_id)
@@ -510,8 +592,12 @@ class Suitable
      * @param string $s2
      * @return int count common trigrams
      */
-    protected function compareNames($s1, $s2)
+    public static function compareNames($s1, $s2)
     {
+        
+        if ($s1 === $s2) {
+            return mb_strlen($s1)*100;
+        }
         $getNgrams = function ($word, $n = 3) {
             $ngrams = array();
             for ($i = 0; $i < mb_strlen($word); $i++) {

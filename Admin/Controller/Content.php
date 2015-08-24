@@ -348,6 +348,9 @@ class Content extends Admin
         }
 
         $fields->findRemove(function ($f) {
+            if ($f['keyword'] === 'parent_id' || $f['keyword'] === 'type' || $f['keyword'] === 'site_id') {
+                return false;
+            }
             return $f['type_of_edit'] == Field\Entity::EDIT_NONE;
         });
 
@@ -360,7 +363,8 @@ class Content extends Admin
         
         $pager = $finder->createPager(array(
             'url_template' => $input['url_template'],
-            'current_page' => $input['page']
+            'current_page' => $input['page'],
+            'items_per_page' => 100
         ));
         
         $items = $finder->all();

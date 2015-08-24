@@ -687,6 +687,7 @@ span.fx_area_marker {
     }
     
     &__plus {
+        opacity:0;
         width:34px;
         height:34px;
         //border-radius: 20px;
@@ -741,11 +742,20 @@ span.fx_area_marker {
         transform: rotate(45deg);
     }
     
+    &-not_sortable &__plus-with_variants {
+        transform:none;
+    }
     
-    &-entity &__plus, &-infoblock&-outstanding &__plus {
+    
+    &-entity &__plus {
         width:24px;
         height:24px;
     }
+    
+    &-infoblock&-outstanding &__plus {
+        margin-left:0;
+    }
+    
     &-entity &__plus {
         background-position:-1480px -8px;
     }
@@ -756,16 +766,8 @@ span.fx_area_marker {
         background-position:-1283px 0px;
     }
     
-    &-entity &__plus_plus, &-infoblock&-outstanding &__plus_plus {
-        width: 24px;
-        height: 19px;
-        border:none;
-        top: 5px;
-        left: 4px;
-        font-size: 27px;
-    }
-    
     &-not_sortable &__plus {
+        opacity:1;
         border-radius: 0;
         width:auto;
         height:40px;
@@ -794,7 +796,7 @@ span.fx_area_marker {
         left:0;
         visibility:hidden;
     }
-    &:hover {
+    &:hover, &:hover &__plus {
         opacity:1 !important;
     }
     &:hover &__line {

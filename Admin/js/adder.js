@@ -491,7 +491,6 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
                 rel_node:null,
                 offset_top:null
             });
-            //$button.animate({opacity:1},100);
             if (is_sortable) {
                 place_button(e, $(e.target).closest($entities));
                 $entities.on('mousemove.fx_recount_adders_'+scope, function(e) {
@@ -595,7 +594,12 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
                 }
             }
             
-            $button.css('opacity', opacity);
+            if ($node.closest('.layout-header').length) {
+                console.log(opacity);
+            }
+            
+            //$button.css('opacity', opacity);
+            $plus.css('opacity', opacity);
             
             if ($button.data('rel_dir') === dir) {
                 var $c_button_entity = $button.data('rel_node');
@@ -604,7 +608,7 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
                 }
             }
             
-            $plus.attr('style', '');
+            $plus.attr('style', '').css('opacity', opacity);
             $line.attr('style', '');
             
             $button.data('rel_dir', dir);
