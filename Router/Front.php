@@ -20,6 +20,7 @@ class Front extends Base
         if (!$page) {
             return null;
         } else {
+			$url = preg_replace("~\?.+$~", '', $url);
             if (
                 $url && !$page->hasVirtualPath() && urldecode($url) != $page['url']
             ) {
