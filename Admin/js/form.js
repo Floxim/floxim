@@ -243,9 +243,19 @@ fx_form = {
         $form_body.append($tab_data);
         $form_header.append($tab_labels);
         
-        //var tab_data_html = '',
-            //tab_labels_html = '',
         var has_active = false;
+        $.each(settings.fields, function(field_index, field) {
+            if (field.tab && typeof field.tab === 'object') {
+                var tab_key = field.tab.key;
+                if (!settings.tabs[tab_key]) {
+                    settings.tabs[tab_key] = {
+                        key:tab_key,
+                        label:field.tab.label
+                    };
+                }
+                field.tab = tab_key;
+            }
+        });
             
         $.each(settings.tabs, function(key,val){
             if (key === 'header') {

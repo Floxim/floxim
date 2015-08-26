@@ -81,10 +81,12 @@ window.fx_eip = {
         this.get_edited_nodes().each(function() {
             $(this).data('edit_in_place').stop();
         });
-        console.log('fullstop');
         this.vars = {};
     },
     append_value: function($node, meta, value, formatted_value) {
+        if (!meta.target_type && meta.inatt) {
+            meta.target_type = 'att';
+        }
         switch (meta.target_type) {
             case 'var':
                 formatted_value = value;
@@ -292,24 +294,27 @@ function fx_edit_in_place( node ) {
         if ($selected_entity[0] !== this) {
             $selected_entity.edit_in_place('destroy');
         }
-        if (fx_eip.get_vars().length > 0) {
-            setTimeout(function() {
-                var do_save = true;
-                var selected = $fx.front.get_selected_item();
-                if (selected) {
-                    var $selected = $(selected);
-                    var new_entity = $selected
-                                        .closest('.fx_entity')
-                                        .get(0);
-                    if (new_entity && new_entity === $selected_entity.get(0)) {
-                        do_save = false;
-                    }
+        var c_vars = fx_eip.get_vars();
+        
+        setTimeout(function() {
+            if (c_vars.length === 0 && !$selected_entity.is('.fx_entity_adder_placeholder')) {
+                return;
+            }
+            var do_save = true;
+            var selected = $fx.front.get_selected_item();
+            if (selected) {
+                var $selected = $(selected);
+                var new_entity = $selected
+                                    .closest('.fx_entity')
+                                    .get(0);
+                if (new_entity && new_entity === $selected_entity.get(0)) {
+                    do_save = false;
                 }
-                if (do_save) {
-                    fx_eip.submit();
-                }
-            }, 50);
-        }
+            }
+            if (do_save) {
+                fx_eip.submit();
+            }
+        }, 50);
     });
     
     $('html').on('keydown.edit_in_place', function(e) {
@@ -463,6 +468,10 @@ fx_edit_in_place.prototype.force_focus = function($n) {
     selection.addRange(range);
 };
 
+fx_edit_in_place.prototype.is_text_empty = function(text) {
+    return text.length === 0 || (text.length === 1 && text.charCodeAt(0) === 8203);
+};
+
 fx_edit_in_place.prototype.start_content_editable = function(meta) {
     var $n = this.node;
     this.is_content_editable = true;
@@ -479,12 +488,11 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
         $n.html('');
     }
     
-    var nodes_to_sync = [],
-        $var_nodes = $('*[data-fx_var], *[data-has_var_in_att]'),
+    var $var_nodes = $('*[data-fx_var], *[data-has_var_in_att]'),
         c_node = $n[0],
         that = this;
     
-    this.nodes_to_sync = nodes_to_sync;
+    this.nodes_to_sync = [];
     
     $var_nodes.each(function() {
         if (this === c_node) {
@@ -511,7 +519,7 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
             )
         ) {
             content_var.target_type = 'var';
-            nodes_to_sync.push($node);
+            that.nodes_to_sync.push($node);
         }
     });
 
@@ -557,7 +565,7 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
     var edit_in_place = this;
     var handle_node_size = function () {
         var text = $.trim($n.text());
-        var is_empty = text.length === 0 || (text.length === 1 && text.charCodeAt(0) === 8203);
+        var is_empty = edit_in_place.is_text_empty(text);
         if (is_empty && !edit_in_place.is_wysiwyg) {
             $n.html('&#8203;');
         }
@@ -593,13 +601,13 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
         );
     }
     $n.removeClass('fx_setting_focus');
-    if (nodes_to_sync.length > 0) {
+    if (this.nodes_to_sync.length > 0) {
         $n.on(
             //'keyup.edit_in_place keydown.edit_in_place click.edit_in_place change.edit_in_place', 
             'input.edit_in_place',
             function () {
                 var c_html = fx_edit_in_place.prototype.clear_spaces($n.html());
-                $.each(nodes_to_sync, function() {
+                $.each(that.nodes_to_sync, function() {
                     var $node_to_sync = $(this);
                     fx_eip.append_value($node_to_sync, $node_to_sync.data('fx_var'), c_html);
                 });
@@ -699,10 +707,10 @@ fx_edit_in_place.prototype.stop = function() {
     $('*').off('.edit_in_place');
     this.node.blur();
     this.stopped = true;
-    var was_placeholded_by = this.node.data('was_placeholded_by');
+    var was_placeholded_by = this.node.data('was_placeholded_by'),
+        c_text = this.node.text();
     
-    
-    if (was_placeholded_by && this.node.text().match(/^\s*$/)) {
+    if (was_placeholded_by && this.is_text_empty(c_text)) {
         this.node.addClass('fx_hidden_placeholded').html(was_placeholded_by);
     }
     $('head .fx_placeholder_stylesheet').remove();

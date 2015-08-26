@@ -589,20 +589,34 @@
         font-size:12px;
     }
     .fx_fieldset_add {
-        margin:5px 0; 
+        margin:5px 0 5px 25px; 
+        
         display: inline-block;
+        text-decoration: none;
+        border-bottom: 1px dashed #2d54ff;
+        
     } 
+    
+    td {
+        white-space: nowrap;
+    }
+    
     input[type="text"], select, textarea {
         width:auto;
         margin:0;
+        display:inline-block;
+        
+    }
+    
+    input.fx_input_number {
+        margin-right:3px;
     }
 
     a.fx_fieldset_remove {
         color:#F00;
         font-weight:bold;
         text-decoration:none;
-        position:relative;
-        top:6px;
+        margin-right:10px;
     }
 }
 
@@ -888,4 +902,11 @@
             border:1px solid #000;
         }
     }
+}
+
+.fx_condset {
+    .form_label {
+        display:none;
+    }
+    
 }

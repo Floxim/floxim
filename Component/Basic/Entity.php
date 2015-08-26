@@ -420,7 +420,7 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
                 );
             }
             $linker_field['params']['content_type'] = $linker_type;
-            $linker_field['label'] = fx::alang('Select').' '. mb_strtolower(fx::component($linker_type)->getItemName());
+            $linker_field['label'] = fx::alang('Select').' '. mb_strtolower(fx::component($linker_type)->getItemName('add'));
             
             if (!$linker_collection_field || !$linker_collection_field['allow_select_doubles']) {
                 $linker_field['params']['skip_ids'] = array();

@@ -938,8 +938,15 @@ fx_front.prototype.add_infoblock_select_settings = function(data) {
                 }
             };
             var ib_loader = null, 
-                is_waiting = false;
+                is_waiting = false,
+                c_data = null;
+            
             $form.on('change.fx_front', function(e) {
+                var new_data = $form.serialize();
+                if (c_data === new_data) {
+                    return;
+                }
+                c_data = new_data;
                 if (is_waiting) {
                     if (ib_loader !== null) {
                         ib_loader.abort();
@@ -964,7 +971,7 @@ fx_front.prototype.add_infoblock_select_settings = function(data) {
                             add_ib_to_form($new_ib_node);
                         }
                     }, 
-                    {override_infoblock:$form.serialize()}
+                    {override_infoblock:c_data}
                 );
             });
             add_fake_ib(function($ib_node) {
@@ -1155,8 +1162,6 @@ fx_front.prototype.draw_select_path = function($node) {
         var $cp = $(this);
         var is_active = $cp.closest($node).length > 0;
         
-        //console.log($cp.data(), is_active);
-        
         if ($cp.data('fx_var')) {
             var data = $cp.data('fx_var');
             path_items.push({
@@ -1257,6 +1262,7 @@ fx_front.prototype.select_item = function(node) {
     }
     
     this.deselect_item();
+    
     this.selected_item = node;
     var $node = $(node);
     this.draw_select_path($node);
@@ -1790,8 +1796,11 @@ fx_front.prototype.get_edit_closure = function($entity, params) {
         var entity_values = fx_eip.get_values(ce_id);
         
         $fx.front.disable_node_panel();
+        
         $fx.front.select_item($entity);
+        
         fx_eip.stop();
+        
         $fx.front_panel.load_form(
             $.extend(
                 {}, 
@@ -1804,13 +1813,41 @@ fx_front.prototype.get_edit_closure = function($entity, params) {
             {
                 onready: function($form) {
                     fx_eip.stop();
+                    var $att_var_nodes = $entity.descendant_or_self('*[data-has_var_in_att]');
+                    $att_var_nodes.each(function() {
+                        var $c_node = $(this),
+                            c_data = $c_node.data();
+                        $.each(c_data, function(data_key,data) {
+                            if (!data_key.match(/fx_template_var_/)) {
+                                return;
+                            }
+                            if (data.type === 'image' && data.var_type === 'content') {
+                                var $target_field = $form.find('.field_name__'+data.name);
+                                $target_field.on('fx_change_file', function(e) {
+                                    //console.log('fxchf', e);
+                                    console.log('apv', $c_node, data, e.upload_response.formatted_value);
+                                    fx_eip.append_value($c_node, data, e.upload_response.formatted_value);
+                                });
+                            }
+                        });
+                    });
                     var $var_nodes = $entity.descendant_or_self('*[data-fx_var]');
                     $var_nodes.each(function() {
                         var $var_node = $(this),
                             var_meta = $var_node.data('fx_var');
                         var_meta.target_type = 'var';
-                        $form.find('.field_name__'+var_meta.name).on('input', function(e) {
-                            fx_eip.append_value($var_node, var_meta, $(e.target).val());
+                        $form.find('.field_name__'+var_meta.name).on('input keyup change', function(e) {
+                            var $field = $(this),
+                                $target = $(e.target),
+                                val = null;
+                            if ($target.is('.redactor_fx_wysiwyg')) {
+                                val = $target.html();
+                            } else if ($field.is('.field_datetime')) {
+                                val = $field.find('.date_input').val();
+                            } else {
+                                val = $(e.target).val();
+                            }
+                            fx_eip.append_value($var_node, var_meta, val);
                         });
                     });
                 },

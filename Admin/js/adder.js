@@ -34,6 +34,8 @@ fx_front.prototype.create_inline_infoblock_adder = function($node) {
         '<span class="fx_adder_variant">'+$fx.lang('block')+'</span>',
         'infoblock'
     );
+    
+    $button.attr('title', $fx.lang('Add new block'));
 
     $('.fx_adder_variant', $button).on('click', function() {
         $fx.front.add_infoblock_select_controller($node, $button.data('rel_node'), $button.data('rel_dir'));
@@ -124,10 +126,16 @@ fx_front.prototype.create_inline_entity_adder = function($node) {
         var $title = $button.data('title_node');
     }
     
-    var pl = $placeholders.length;
+    var pl = $placeholders.length,
+        title_parts = [];
+    
     $placeholders.each(function(index, item) {
-        var $placeholder = $(this);
-        var entity_name = $placeholder.data('fx_entity_name');
+        var $placeholder = $(this),
+            entity_meta = $placeholder.data('fx_entity_meta'),
+            entity_name = entity_meta ? entity_meta.placeholder_name : $placeholder.data('fx_entity_name');
+            
+        title_parts.push(entity_name);
+        
         var $c_title = $('<div class="fx_adder_variant">'+entity_name+'</div>');
         $c_title.data('placeholder', $placeholder);
         if ($placeholder_mark.length) {
@@ -157,6 +165,7 @@ fx_front.prototype.create_inline_entity_adder = function($node) {
             $fx.front.show_adder_placeholder($placeholder, $button.data('rel_node'), $button.data('rel_dir'));
             return false;
         });
+        $button.attr('title', $fx.lang('Add')+' '+title_parts.join(', '));
     }
 };
 
@@ -482,7 +491,6 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
                 rel_node:null,
                 offset_top:null
             });
-            //$button.animate({opacity:1},100);
             if (is_sortable) {
                 place_button(e, $(e.target).closest($entities));
                 $entities.on('mousemove.fx_recount_adders_'+scope, function(e) {
@@ -586,7 +594,12 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
                 }
             }
             
-            $button.css('opacity', opacity);
+            if ($node.closest('.layout-header').length) {
+                console.log(opacity);
+            }
+            
+            //$button.css('opacity', opacity);
+            $plus.css('opacity', opacity);
             
             if ($button.data('rel_dir') === dir) {
                 var $c_button_entity = $button.data('rel_node');
@@ -595,7 +608,7 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
                 }
             }
             
-            $plus.attr('style', '');
+            $plus.attr('style', '').css('opacity', opacity);
             $line.attr('style', '');
             
             $button.data('rel_dir', dir);
