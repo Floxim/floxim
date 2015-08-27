@@ -315,9 +315,6 @@ class Template
     
     public function render($data = array())
     {
-        if ($this->level > 50) {
-            return '<div class="fx_template_error">bad recursion?</div>';
-        }
         if (isset($data['_idle'])) {
             $this->context->isIdle(true);
             unset($data['_idle']);
@@ -335,6 +332,12 @@ class Template
                 throw new \Exception('No template: ' . get_class($this) . '.' . $this->action);
             }
         }
+        
+        if ($this->level > 50) {
+            fx::log('recursion in', get_class($this), $method);
+            return '<div class="fx_template_error">bad recursion?</div>';
+        }
+        
         
         $profiler = $this->getProfiler();
         if ($profiler) {

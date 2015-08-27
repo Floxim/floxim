@@ -14,6 +14,7 @@ class Compiler
     protected $is_aliased = false;
     protected $current_source_file = null;
     protected $current_source_is_imported = false;
+    protected $current_source_import_level = null;
     
     protected $state_stack = array();
     
@@ -1484,6 +1485,12 @@ class Compiler
             if (!($prior = $t->getProp('priority'))) {
                 $prior = $t->getProp('test') ? 0.5 : 0;
             }
+            if ($v['is_imported']) {
+                $prior -= 0.2;
+            }
+            if ($v['import_level']) {
+                $prior += $v['import_level']/100;
+            }
             $v['_priority'] = $prior;
         }
 
@@ -1543,11 +1550,14 @@ class Compiler
         $tpl_props['id'] =  $tpl_id;
         $tpl_props['file'] = fx::path()->http($this->current_source_file);
         $tpl_props['is_imported'] = $this->current_source_is_imported;
+        $i_level = $this->current_source_import_level;
+        $tpl_props['import_level'] = $i_level;
+        
         if ($this->current_source_is_imported) {
             if (!isset($tpl_props['tags']) || !$tpl_props['tags']) {
                 $tpl_props['tags'] = array();
             }
-            $tpl_props['tags'][]= 'imported';
+            $tpl_props['tags'][]= 'imported'.($i_level > 0 ? $i_level : '');
         }
         
         if (($offset = $token->getProp('offset'))) {
@@ -1649,7 +1659,11 @@ class Compiler
     {
         foreach ($root->getChildren() as $template_file_token) {
             $this->current_source_file = $template_file_token->getProp('source');
-            $this->current_source_is_imported = $template_file_token->getProp('is_imported') === 'true';
+            $c_imported = $template_file_token->getProp('is_imported');
+            $this->current_source_is_imported = $c_imported !== 'false';
+            
+            $this->current_source_import_level = $this->current_source_is_imported ? $c_imported : null;
+            
             foreach ($template_file_token->getChildren() as $template_token) {
                 $this->registerTemplate($template_token);
             }

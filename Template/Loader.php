@@ -36,6 +36,9 @@ class Loader
     
     protected $config_entries = array();
     
+    protected $import_level = 0;
+    protected $max_import_level = 0;
+    
     public function handleSourceDirConfig($source_dir)
     {
         $config_file = $source_dir.'/template.ini';
@@ -52,8 +55,13 @@ class Loader
         foreach ($config_data['import'] as $template => $import) {
             $template_dir = self::nameToPath($template);
             if ($import === '*') {
-                $this->imported_paths[]= $template_dir;
+                $this->import_level++;
+                if ($this->import_level > $this->max_import_level) {
+                    $this->max_import_level = $this->import_level;
+                }
+                $this->imported_paths[$template_dir] = $this->import_level;
                 $this->addSourceDir($template_dir);
+                $this->import_level--;
             }
         }
     }
@@ -499,13 +507,13 @@ class Loader
         $res = '{templates name="' . $this->getTemplateName() . '" is_aliased="'.($this->isAliased() ? 'true': 'false').'"}';
         foreach ($sources as $file => $source) {
             $is_imported = false;
-            foreach ($this->imported_paths as $imported_path) {
+            foreach ($this->imported_paths as $imported_path => $import_level) {
                 if (strpos($file, $imported_path) === 0) {
                     $is_imported = true;
                     break;
                 }
             }
-            $res .= '{templates source="' . $file . '" is_imported="'.($is_imported ? 'true' : 'false').'" }';
+            $res .= '{templates source="' . $file . '" is_imported="'.($is_imported ? ($this->max_import_level - $import_level) : 'false').'" }';
             $res .= $this->prepareFileData($source, $file);
             $res .= '{/templates}';
         }
