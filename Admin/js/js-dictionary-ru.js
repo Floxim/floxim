@@ -33,6 +33,7 @@
         date_placeholder_m: 'мм',
         date_placeholder_y: 'гггг',
         date_placeholder_h: 'чч',
-        date_placeholder_i: 'мм'
+        date_placeholder_i: 'мм',
+        'Move': 'Переместить'
     };
 })($fx);

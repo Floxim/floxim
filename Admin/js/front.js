@@ -2196,7 +2196,7 @@ fx_front.prototype.select_infoblock = function($node, panel) {
     panel.add_button({
         type:'icon',
         keyword:'place',
-        label:'Переместить'
+        label:$fx.lang('Move')
     }, function() {
         $fx.front.start_placing_block($node);
     });
