@@ -16,9 +16,8 @@ class MigrationManager
     {
         return isset($this->params[$name]) ? $this->params[$name] : $default;
     }
-
-
-    public function create($name = null)
+    
+    public function create($name = null, $save_as_done = false)
     {
         $name = 'm' . date('Ymd_His') . (!is_null($name) ? "_$name" : '');
         $content = "<?php
@@ -41,9 +40,15 @@ class MigrationManager
             if (file_exists($dir)) {
                 fx::files()->mkdir($dir);
             }
-            fx::files()->writefile($dir . '/' . $name . '.php', $content);
+            $target_file = $dir . '/' . $name . '.php';
+            fx::files()->writefile($target_file, $content);
             if ($this->getParam('console')) {
                 echo('Successful!');
+            }
+            if ($save_as_done) {
+                require_once($target_file);
+                $migration = new $name;
+                $migration->saveAsDone();
             }
             return true;
         } catch (Exception $e) {
@@ -91,5 +96,22 @@ class MigrationManager
         }
         // todo: need fix
         echo('Count run new migrations: ' . $count);
+    }
+    
+    public function find($name)
+    {
+        $dir = fx::path('@floxim/update/migration');
+        // get migrations
+        $migration_files = glob($dir . '/m*_'.$name.'.php');
+        if (!$migration_files) {
+            return null;
+        }
+        foreach ($migration_files as $migration_file) {
+            $info = pathinfo($migration_file);
+            require_once($migration_file);
+            $class_name = $info['filename'];
+            $m = new $class_name;
+            return $m;
+        }
     }
 }
