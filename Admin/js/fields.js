@@ -229,7 +229,6 @@ window.$fx_fields.init_fieldset = function(html, _c) {
 
 window.$fx_fields.init_condset = function(html, _c, _o) {
     var i = 0;
-    console.log(_c, _o);
     var is_new_row = typeof _o.index === 'number';
 
     var intervals = _o.set_field.date_intervals;
@@ -421,7 +420,7 @@ window.$fx_fields.init_condset = function(html, _c, _o) {
             break;
             case 'multilink':
             case 'link':
-                var select = $t.jQuery(
+                var $select = $t.jQuery(
                     'input', {
                         'type':'select', 
                         'name': name+'operator'+']',
@@ -433,8 +432,8 @@ window.$fx_fields.init_condset = function(html, _c, _o) {
                         }
                 );
 
-                $('.input_cell_1', html).html(select);
-                //console.log('lsm', meta);
+                $('.input_cell_1', html).html($select);
+                
                 var livesearch_opts = {
                     'type':'livesearch',
                     'name': name+'value'+']',
@@ -448,10 +447,22 @@ window.$fx_fields.init_condset = function(html, _c, _o) {
                         conditions:meta.conditions
                     }
                 };
-                var live_search = $t.jQuery(
+                var $livesearch = $t.jQuery(
                     'input', livesearch_opts
                 );
-                $('.input_cell_2', html).html(live_search);
+                $('.input_cell_2', html).html($livesearch);
+                
+                function handle_current() {
+                    var cv = $select.val();
+                    if (cv === 'is_current' || cv === 'is_not_current') {
+                        $livesearch.hide();
+                    } else {
+                        $livesearch.show();
+                    }
+                }
+                
+                $select.on('change', handle_current);
+                setTimeout(handle_current,100);
             break;
         }
     }

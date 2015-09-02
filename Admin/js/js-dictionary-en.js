@@ -7,5 +7,6 @@
         date_placeholder_h: 'HH',
         date_placeholder_i: 'MM',
         'do_edit' : 'Edit',
+        'Area %s is empty, you can add some blocks here.' : '<a>add new block</a> to %s',
     };
 })($fx);

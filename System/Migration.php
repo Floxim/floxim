@@ -18,10 +18,15 @@ abstract class Migration
         }
         // exec
         $this->up();
+        $this->saveAsDone();
+    }
+    
+    public function saveAsDone()
+    {
         // mark for exec
         $migration = fx::data('patch_migration')->create(
             array(
-                'name' => $name
+                'name' => $this->getName()
             )
         );
         $migration->save();
