@@ -16,11 +16,11 @@ class Entity extends System\Entity
             $this['id'], '!=')->all();
         foreach ($existing as $double) {
             if ($double['string'] == $this['string']) {
-                fx::log('nop', $double['string'], $this['string']);
+                //fx::log('nop', $double['string'], $this['string']);
                 $this->validate_errors [] = 'String "' . $this['string'] . '" already exists in the "' . $this['dict'] . '" dictionary';
                 return false;
             }
-            fx::log('double by case?', $this, $double);
+            //fx::log('double by case?', $this, $double);
         }
         return true;
     }

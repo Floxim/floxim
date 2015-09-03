@@ -17,5 +17,5 @@ interface Entity extends \ArrayAccess
     /**
      * Get all entity offset keys
      */
-    public function getAvailableOffsetKeys();
+    // public function getAvailableOffsetKeys();
 }

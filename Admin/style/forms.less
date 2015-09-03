@@ -69,6 +69,7 @@
     }
 }
 
+
 .fx_admin_form a, .fx_admin_form .ui-state-default a {
     cursor: pointer;
 }
@@ -120,8 +121,10 @@
     }
 }
 
-#fx_admin_content .fx_admin_form .field {
-    width:50%;
+#fx_admin_content {
+    .fx_admin_form .field {
+        width:50%;
+    }
     
     .fx_input, .redactor-box, .livesearch {
         width:100%;
@@ -129,11 +132,25 @@
     .fx_group_input .field {
         width:100%;
     }
+    
+    .fx_fieldset_row .fx_input {
+        width:auto !important;
+    }
+    
+    .fx_admin_form__body {
+        margin-right:0;
+    }
+    .fx_admin_form__footer {
+        padding:20px;
+    }
+    .fx_admin_form .field_name__console_text {
+        width:100%;
+    }
+    .fx_admin_form__header {
+        display: none;
+    }
 }
 
-#fx_admin_content .fx_fieldset_row .fx_input {
-    width:auto !important;
-}
 
 .fx_date_input() {
     .fx_date_parts {

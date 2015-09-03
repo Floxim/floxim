@@ -68,12 +68,9 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         return $this->filtered_by;
     }
     
-    public static $counter = 0;
-
     public function __construct($data = array())
     {
-        self::$counter++;
-        $this->id = self::$counter;
+        fx::count('create collection');
         if (is_array($data)) {
             $this->data = $data;
         } else {
@@ -603,7 +600,11 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         }
         foreach ($this->data as $k => $v) {
             $res_key = $key_field ? $v[$key_field] : $k;
-            if ((is_array($v) || $v instanceof \ArrayAccess) && isset($v[$field])) {
+            if (
+                (is_array($v) || $v instanceof \ArrayAccess) 
+                // we add NULL anyway, so skip isset() for better performance
+                //&& isset($v[$field])
+            ) {
                 $result[$res_key] = $v[$field];
             } elseif (is_object($v) && isset($v->$field)) {
                 $result[$res_key] = $v->$field;

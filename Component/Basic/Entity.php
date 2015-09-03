@@ -12,7 +12,7 @@ use Floxim\Floxim\Component\Field;
  */
 abstract class Entity extends \Floxim\Floxim\System\Entity {
     protected $available_offsets_cache = null;
-    protected $available_offset_keys_cache = null;
+    //protected $available_offset_keys_cache = null;
     
     public function __construct($input = array())
     {
@@ -20,7 +20,7 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
             $this->component_id = $input['component_id'];
         }
         parent::__construct($input);
-        $this->available_offsets_cache = fx::component($this->component_id)->getAvailableEntityOffsets();
+        $this->available_offsets_cache = fx::getComponentById($this->component_id)->getAvailableEntityOffsets();
         return $this;
     }
     
@@ -65,7 +65,7 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
      */
     public function getComponent()
     {
-        $component = fx::component($this->component_id);
+        $component = fx::getComponentById($this->component_id);
         return $component;
     }
 

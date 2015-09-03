@@ -169,6 +169,9 @@ class Finder extends System\Finder
     {
         // get all components
         $collection = parent::loadFullDataForCache();
+        
+        fx::registerComponents($collection);
+        
         // set it as current finder cache
         // to avoid sql queries from Component\Entity::getChain()
         static::setStaticCache($collection);

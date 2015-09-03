@@ -57,20 +57,18 @@ abstract class Entity implements \ArrayAccess, Template\Entity
 
     public function __construct($input = array())
     {
-        fx::count('create_entity');
-        fx::count('create_'.get_class($this));
-        if (isset($input['data']) && $input['data']) {
-            $data = $input['data'];
-            if (isset($data['id'])) {
-                $this->is_loaded = false;
-            }
-            foreach ($data as $k => $v) {
+        if (isset($input['data'])) {
+            foreach ($input['data'] as $k => $v) {
                 $this[$k] = $v;
             }
         }
         $this->is_loaded = true;
     }
 
+    
+    /*
+     * these prop & method were used by ContextFast, and now it's deprecated
+     * 
     protected $available_offset_keys_cache = null;
     public function getAvailableOffsetKeys() 
     {
@@ -83,14 +81,19 @@ abstract class Entity implements \ArrayAccess, Template\Entity
         }
         return $this->available_offset_keys_cache;
     }
+     * 
+     */
     
     protected static $offset_meta = array();
-    protected $available_offsets_cache = null;
+    //protected $available_offsets_cache = null;
     public function getAvailableOffsets()
     {
+        /*
         if (!is_null($this->available_offsets_cache)) {
             return $this->available_offsets_cache;
         }
+         * 
+         */
         $c_class = get_called_class();
         if (!isset(self::$offset_meta[$c_class])) {
             $res = array();
@@ -114,7 +117,10 @@ abstract class Entity implements \ArrayAccess, Template\Entity
             }
             self::$offset_meta[$c_class] = fx::collection($res);
         }
+        /*
         $this->available_offsets_cache = self::$offset_meta[$c_class];
+         * 
+         */
         return self::$offset_meta[$c_class];
     }
 
@@ -413,8 +419,11 @@ abstract class Entity implements \ArrayAccess, Template\Entity
     public function offsetGet($offset)
     {
 
+        if ($offset === 'id') {
+            return isset($this->data['id']) ? $this->data['id'] : null;
+        }
+        
         // handle template-content vars like $item['%description']
-        //if (self::isTemplateVar($offset)) {
         if ($offset[0] === '%') {
             $offset = mb_substr($offset, 1);
             if (!isset($this[$offset]) || $this->allowTemplateOverride) {
@@ -427,6 +436,8 @@ abstract class Entity implements \ArrayAccess, Template\Entity
                 }
             }
         }
+        
+        
         
         $offset_type = null;
         $offsets = $this->getAvailableOffsets();
@@ -448,11 +459,6 @@ abstract class Entity implements \ArrayAccess, Template\Entity
         // we have stored value, so return it
         if (array_key_exists($offset, $this->data)) {
             return $this->data[$offset];
-        }
-        
-        // no override for non-existing id!
-        if ($offset === 'id') {
-            return null;
         }
         
         // multi-lang value
@@ -483,6 +489,7 @@ abstract class Entity implements \ArrayAccess, Template\Entity
     public function offsetSet($offset, $value)
     {
         
+        
         $offset_exists = array_key_exists($offset, $this->data);
         
         $offsets = $this->getAvailableOffsets();
@@ -512,7 +519,7 @@ abstract class Entity implements \ArrayAccess, Template\Entity
             $this->data[$offset] = $value;
             return;
         }
-
+        
         // use non-strict '==' because int values from db becomes strings - should be fixed
         if ($offset_exists && $this->data[$offset] == $value) {
             return;

@@ -177,18 +177,21 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
                 return $cached;
             }
         }
+        
         $classname = $this->getEntityClassName($data);
         
         if (isset($data['type'])) {
-            $component_id = fx::component($data['type'])->get('id');
+            $com = fx::getComponentByKeyword($data['type']);
+            $component_id = $com['id'];
         } else {
             $component_id = $this->component_id;
         }
-
+        
         $obj = new $classname(array(
             'data'         => $data,
             'component_id' => $component_id
         ));
+        
         $this->addToStaticCache($obj);
         return $obj;
     }

@@ -583,12 +583,13 @@ abstract class Finder
     {
         $query = $this->buildQuery();
         $res = fx::db()->getResults($query);
-
+        
         if ($this->calc_found_rows) {
             $this->found_rows = fx::db()->getVar('SELECT FOUND_ROWS()');
         }
 
         $objs = array();
+        $non_scalar_fields = $this->getNonScalarFields();
         foreach ($res as $v) {
             // don't forget serialized
             foreach ($this->serialized as $serialized_field_name) {
@@ -597,7 +598,7 @@ abstract class Finder
                 }
             }
             // don't forget json decode
-            foreach ($this->getNonScalarFields() as $json_field_name) {
+            foreach ($non_scalar_fields as $json_field_name) {
                 if (isset($v[$json_field_name])) {
                     $v_decode = @json_decode($v[$json_field_name], true);
                     $v[$json_field_name] = $v_decode ? $v_decode : array();
@@ -639,7 +640,7 @@ abstract class Finder
 
     public function addRelated($rel_name, $entities, $rel_finder = null)
     {
-
+        
         $relations = $this->relations();
         if (!isset($relations[$rel_name])) {
             return;
@@ -839,6 +840,7 @@ abstract class Finder
                 return $cached;
             }
         }
+        
         $classname = $this->getEntityClassName($data);
         $obj = new $classname(array('data' => $data));
         $this->addToStaticCache($obj);
@@ -1025,14 +1027,6 @@ abstract class Finder
             self::$cache[$key] = static::initStaticCache();
         }
         return self::$cache[$key];
-        
-        /*$class = get_called_class();
-        if (!isset(self::$cache[$class])) {
-            self::$cache[$class] = static::initStaticCache();
-        }
-        return self::$cache[$class];
-         * 
-         */
     }
     
     public static function setStaticCache($data) {

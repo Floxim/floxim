@@ -259,35 +259,6 @@ class Fx
         return $name;
     }
     
-    /**
-     * 
-     * @staticvar null $components
-     * @staticvar null $components_by_keyword
-     * @param type $id_or_keyword
-     * @return \Floxim\Floxim\Component\Component\Entity;
-     */
-    public static function component($id_or_keyword = null) {
-        static $components = null;
-        static $components_collection = null;
-        static $components_by_keyword = null;
-        if (is_null($components)) {
-            $finder = new \Floxim\Floxim\Component\Component\Finder();
-            $components_collection = $finder->all();
-            $components = $components_collection->getData();
-            foreach ($components as $com) {
-                $components_by_keyword[$com['keyword']] = $com;
-            }
-        }
-        if (func_num_args() === 0) {
-            return $components_collection;
-        }
-        if (is_numeric($id_or_keyword)) {
-            return isset($components[$id_or_keyword]) ? $components[$id_or_keyword] : null;
-        }
-        $keyword = self::getComponentFullName($id_or_keyword);
-        return isset($components_by_keyword[$keyword]) ? $components_by_keyword[$keyword] : null;
-    }
-    
     public static function  data($datatype, $id = null)
     {
 
@@ -598,10 +569,7 @@ class Fx
         }
         return call_user_func($callback, func_get_arg(1));
     }
-
-    /*
-     * @return fx_core
-     */
+    
     public static function load($config = null)
     {
         if (!class_exists('fx')) {
@@ -618,6 +586,8 @@ class Fx
         // load options from DB
         self::config()->loadFromDb();
         
+        self::loadComponents();
+        
         // init modules
         $moduleManager = new Modules();
         $modules = $moduleManager->getAll();
@@ -626,6 +596,52 @@ class Fx
                 $m['object']->init();
             }
         }
+    }
+    
+    protected static $components = null;
+    protected static $components_collection = null;
+    protected static $components_by_keyword = array();
+    protected static function loadComponents() 
+    {
+        $finder = new \Floxim\Floxim\Component\Component\Finder();
+        $components = $finder->all();
+        if (!self::$components) {
+            self::registerComponents($components);
+        }
+    }
+    
+    public static function registerComponents($components)
+    {
+        self::$components_collection = $components;
+        self::$components = self::$components_collection->getData();
+        foreach (self::$components as $com) {
+            self::$components_by_keyword[$com['keyword']] = $com;
+        }
+    }
+    
+    /**
+     * @param type $id_or_keyword
+     * @return \Floxim\Floxim\Component\Component\Entity;
+     */
+    public static function component($id_or_keyword = null) {
+        if (func_num_args() === 0) {
+            return self::$components_collection;
+        }
+        if (is_numeric($id_or_keyword)) {
+            return isset(self::$components[$id_or_keyword]) ? self::$components[$id_or_keyword] : null;
+        }
+        $keyword = self::getComponentFullName($id_or_keyword);
+        return isset(self::$components_by_keyword[$keyword]) ? self::$components_by_keyword[$keyword] : null;
+    }
+    
+    public static function getComponentById($id)
+    {
+        return isset(self::$components[$id]) ? self::$components[$id] : null;
+    }
+    
+    public static function getComponentByKeyword($keyword)
+    {
+        return isset(self::$components_by_keyword[$keyword]) ? self::$components_by_keyword[$keyword] : null;
     }
 
     public static function lang($string = null, $dict = null)
