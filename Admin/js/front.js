@@ -849,7 +849,7 @@ fx_front.prototype.add_infoblock_select_settings = function(data) {
                     if (new_cm && new_cm.accept_content) {
                         var first_meta = new_cm.accept_content[0];
                         var adder_closure = $fx.front.get_panel_adder_closure(first_meta);
-                        $fx.front.load('edit');
+                        //$fx.front.load('edit');
                         $fx.front.select_item(new_ib_node.get(0));
                         adder_closure();
                         return;
@@ -993,7 +993,8 @@ fx_front.prototype.is_selectable = function(node) {
         return false;
     }
     
-    var check_event = $.Event('fx_check_is_selectable')
+    
+    var check_event = $.Event('fx_check_is_selectable');
     n.trigger(check_event);
     if (check_event.result === false) {
         return false;
@@ -1006,13 +1007,6 @@ fx_front.prototype.is_selectable = function(node) {
             if (n.hasClass('fx_infoblock')) {
                 return true;
             }
-            /*
-            if (n.hasClass('fx_area')) {
-                if ($('.fx_infoblock', n).length === 0) {
-                    return true;
-                }
-            }
-            */
             return false;
         case 'edit':
             if (n.hasClass('fx_infoblock')) {
@@ -1025,24 +1019,10 @@ fx_front.prototype.is_selectable = function(node) {
             }
             
             // select an entity to show "edit - delete - move" buttons
-            //if (n.hasClass('fx_entity') || n.hasClass('fx_accept_content')) {
             if (n.hasClass('fx_entity')) {
                 return true;
             }
             
-            /*
-            // select a block to show "add" button
-            var c_meta = n.data('fx_controller_meta');
-            if (
-                c_meta && (
-                    c_meta.fields ||
-                    c_meta.hidden ||
-                    $fx.front.node_is_empty(n)
-                )
-            ) {
-                return true;
-            }
-            */
             // text fields and variables in attributes
             if ( n.hasClass('fx_template_var') || n.hasClass('fx_template_var_in_att') ) {
                 if ($fx.front.is_var_bound_to_entity(n)) {
@@ -1411,8 +1391,10 @@ fx_front.prototype.node_is_empty = function($n){
 };
 
 fx_front.prototype.hilight = function(container) {
+    
     container = container || $('html');
     $('*[data-has_var_in_att="1"]', container).addClass('fx_template_var_in_att');
+
     var fx_selector = '.fx_template_var, .fx_area, .fx_template_var_in_att, .fx_entity, .fx_infoblock, .fx_hidden_placeholded';
     var items = $(fx_selector, container).not('.fx_unselectable');
     if (container.not('.fx_unselectable').is(fx_selector)) {
@@ -1439,7 +1421,7 @@ fx_front.prototype.hilight = function(container) {
         items.removeClass('fx_accept_neighbours');
     }
     $('.fx_hilight_hover').removeClass('fx_hilight_hover');
-    
+
     items.filter('.fx_hidden_placeholded').removeClass('fx_hidden_placeholded').each(function() {
         var $mark = $(this).find('.fx_hidden_placeholder_mark');
         if ($mark.length) {
@@ -1476,6 +1458,7 @@ fx_front.prototype.hilight = function(container) {
     
     $('.fx_infoblock_hidden').show();
     items = $(items.get().reverse());
+    
     items.each(function(index, item) {
         var i = $(item);
         var meta = i.data('fx_controller_meta') || {};
@@ -1490,12 +1473,17 @@ fx_front.prototype.hilight = function(container) {
             i.addClass('fx_accept_content');
         }
         
-        var is_selectable = $fx.front.is_selectable(item);
+        // !!! slow !!!
+        //var is_selectable = $fx.front.is_selectable(item);
+        var is_selectable = true;
+        
         
         if (is_selectable || i.hasClass('fx_var_bound_to_entity') || i.hasClass('fx_infoblock_hidden')) {
             i.addClass('fx_hilight');
             // we add .fx_clearfix class to the nodes which are not floated but have floated children
             // so forcing them to have real size
+            
+            /*
             if (!i.css('float').match(/left|right/) && !i.css('display').match(/^inline/)) {
                 i.children().each(function() {
                     if ($(this).css('float').match(/left|right/)) {
@@ -1504,8 +1492,9 @@ fx_front.prototype.hilight = function(container) {
                     }
                 });
             }
+            */
             var hidden_placeholder = meta.hidden_placeholder;
-            if ($fx.front.node_is_empty(i) || i.is('.fx_infoblock_hidden')) {
+            if ( ($fx.front.node_is_empty(i) || i.is('.fx_infoblock_hidden') ) ) {
                 if ( i.hasClass('fx_template_var') ) {
                     var var_meta = i.data('fx_var');
                     hidden_placeholder = var_meta.label ? var_meta.label : var_meta.id; //i.data('fx_var').label;
@@ -1555,7 +1544,9 @@ fx_front.prototype.hilight = function(container) {
                 } else {
                     $placeholded.html(hidden_placeholder);
                 }
-            } else if (i.width() === 0 || i.height() === 0) {
+            }
+            /*
+            else if (i.width() === 0 || i.height() === 0) {
                 if ($fx.front.node_is_empty(i)) {
                     is_hidden = true;
                     var $parents = i.parents();
@@ -1576,12 +1567,13 @@ fx_front.prototype.hilight = function(container) {
                 }
                 i.parents().filter('.fx_hilight_empty').removeClass('fx_hilight_empty');
             }
+            */
         }
         if (i.is('.fx_area') && $fx.front.node_is_empty(i))  {
             $fx.front.hilight_area_empty(i, 'add');
         }
     });
-    
+
     if (mode === 'edit') {
         items.filter('.fx_entity').each(function(index, entity) { 
             var i = $(entity);
@@ -1600,12 +1592,9 @@ fx_front.prototype.hilight = function(container) {
     if (mode !== 'view') {
         items.filter('.fx_area').each(function(index, i) {
             var $area = $(i);
-            //if (mode === 'design' || $area.data('fx_area').id === 'content') {
-                $fx.front.create_inline_infoblock_adder( $area);
-            //}
+            $fx.front.create_inline_infoblock_adder( $area);
         });
     }
-    
     if ($fx.front.is_jquery_overriden()) {
         $('.fx_hilight').bind('click.fx_front', $fx.front.handle_click);
     }
@@ -1711,7 +1700,8 @@ fx_front.prototype.is_jquery_overriden = function() {
 };
 
 fx_front.prototype.load = function ( mode ) {
-    
+console.log('loding');
+console.time('load');
     if (typeof mode === 'undefined') {
         mode = $.cookie('fx_front_mode') || 'view';
     }
@@ -1768,6 +1758,7 @@ fx_front.prototype.load = function ( mode ) {
         $(this.mouseover_node).trigger('mouseover');
     }
     $('html').trigger('fx_set_front_mode', this.mode);
+console.timeEnd('load');
 };
 
 fx_front.prototype.get_edit_closure = function($entity, params) {
