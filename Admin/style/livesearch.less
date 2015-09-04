@@ -2,6 +2,15 @@
 
 @livesearch_bg_color:#E2E9FE;
 
+.ls_triangle_down(@size:5px; @color:@mid_color;) {
+    display: inline-block;
+    width: 0px;
+    height: 0px;
+    border-left: @size solid transparent;
+    border-right: @size solid transparent;
+    border-top: @size solid @color;
+}
+
 .livesearch {
     &, & * {
         box-sizing:border-box;
@@ -38,10 +47,10 @@
             top: 50%;
             margin-top: -3px;
             margin-left: -3px;
-            .fx_triangle_down();
+            .ls_triangle_down();
         }
         &:hover:after {
-            .fx_triangle_down(5px, #666);
+            .ls_triangle_down(5px, #666);
         }
     }
     
@@ -66,6 +75,7 @@
             width:4px;
             height:4px;
             -webkit-animation: livesearch_spinner 1s infinite linear;
+            box-sizing:content-box;
         }
     }
     
