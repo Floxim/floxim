@@ -1259,12 +1259,13 @@ span.fx_area_marker {
     z-index: 2;
     position: absolute;
     display:block;
+    /*
     .fx_closer {
         .fx_panel_closer_right();
         color: #000;
         opacity: 0.7;
     }
-    
+    */
     &__block {
         margin-left: 10px;
         margin-right:20px;
@@ -1273,10 +1274,31 @@ span.fx_area_marker {
     &__description {
         display: inline-block;
         vertical-align: middle;
-        max-width: 250px;
+        max-width: 290px;
         font-size: 13px;
         line-height: 150%;
         opacity:0.9;
+        font-weight:500;
+    }
+    
+    &__icon {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        vertical-align: middle;
+        background: url('images/sprite.png') no-repeat -1248px -12px;
+    }
+    &__body {
+        float:left;
+        width:70%;
+    }
+    &__closer {
+        float:right;
+        margin-top:10px;
+        margin-right:10px;
+        .fx_button-class-cancel {
+            border-color:transparent;
+        }
     }
 }
 

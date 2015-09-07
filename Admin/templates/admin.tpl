@@ -31,17 +31,17 @@
 <div class="fx-progress-line"></div>
 <div fx:b="fx-admin-panel" class="fx_overlay">
     <div fx:e="logo"><div class="fx_preloader"></div></div>
-    <div fx:if="$is_front" id="fx_admin_front_menu">
-        {apply menu_item each $modes with $class = 'fx_front_mode', $icon = $icon ? $icon : $key /}
-        {apply menu_item with $more_menu /}
-    </div>
     <div fx:if="$panel_title" fx:e="title">{$panel_title}</div>
-    <div fx:if="$main_menu" id="fx_admin_main_menu" class="fx_button_group">
+    <div id="fx_admin_main_menu" class="fx_button_group">
         <div class="fx_main_menu_expander"></div>
         <div class="fx_main_menu_items">
             {$main_menu || :menu_item /}
             {apply menu_item with $profile.logout /}
         </div>
+    </div>
+    <div fx:if="$is_front" id="fx_admin_front_menu">
+        {apply menu_item each $modes with $class = 'fx_front_mode' /}
+        {apply menu_item with $more_menu /}
     </div>
 </div>
 <div fx:if="$is_front" id="fx_admin_control" class="fx_overlay">

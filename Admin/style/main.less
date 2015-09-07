@@ -67,7 +67,7 @@ input {
 }
 
 #fx_admin_front_menu {
-    float:left;
+    float:right;
 }
 
 #fx_admin_additional_menu {
@@ -161,24 +161,33 @@ input {
     height: 59px;
     padding: 15px 25px;
     line-height: 29px;
-    border-left:1px solid #DDD;
+    //border-left:1px solid #DDD;
     vertical-align:top;
+    font-size:15px;
+    color:@main_color;
+    
+    &.fx_front_mode {
+        font-weight: 500;
+    }
     
     &, & a, &:visited {
-        color:#555;
         text-decoration: none;
     }
     
     &-active {
         //background:#f3f3f3;
-        background:#eee;
+        //background:#eee;
         padding-top:12px;
-        border-top:3px solid #2d63ff;
+        border-top:3px solid @overline_color;
+        color:@text_color;
     }
     
         
     .fx_dropdown {
         top:59px;
+        padding-top:10px;
+        padding-bottom:10px;
+        background:#FFF;
     }
     
     &.fx_dropdown__item {
@@ -188,6 +197,7 @@ input {
         padding-top:5px;
         padding-bottom:5px;
         float:none;
+        line-height: 150%;
     }
     
     &-has_dropdown {
@@ -207,11 +217,13 @@ input {
             position: relative;
             left:4px;
             top:-1px;
-            .fx_triangle_down(6px; #555);
+            .fx_triangle_down(5px; @light_color);
         }
+        /*
         &:hover:after {
-            .fx_triangle_down(6px; @button_color);
+            .fx_triangle_down(5px; @button_color);
         }
+        */
     }
 }
 
@@ -264,6 +276,7 @@ input {
     border:1px solid @mid_color;
     border-radius: 3px;
     font-weight:500;
+    font-size:15px;
     cursor:pointer;
     white-space:nowrap;
     

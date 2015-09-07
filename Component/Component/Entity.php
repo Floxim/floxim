@@ -392,7 +392,9 @@ class Entity extends System\Entity
                 'add_many' => 'plural.acc',
                 'one' => 'singular.nom',
                 'list' => 'plural.nom',
-                'with' => 'plural.inst'
+                'with' => 'plural.inst',
+                'in'    => 'singular.prep', // e.g. "All pages in this [type]"
+                'of'    => 'singular.gen'
             )
         );
         if (isset($declension_map[$lang])) {

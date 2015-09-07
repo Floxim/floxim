@@ -572,8 +572,11 @@ class Infoblock extends Admin
         $vals = array();
 
         foreach ($path as $i => $pi) {
-            $sep = str_repeat(" -- ", $i);
-            $pn = '"' . $pi['name'] . '"';
+            //$sep = str_repeat(" -- ", $i);
+            $sep  = str_repeat("&nbsp;", $i*6);
+            $pn = $pi['name'];
+            $pt = $pi->getComponent()->getItemName('one');
+            $pt_of = $pi->getComponent()->getItemName('of');
             $is_last = $i === $path_count - 1;
             $c_page_id = $pi['id'];
             if ($i === 0) {
@@ -586,27 +589,28 @@ class Infoblock extends Admin
                     );
                 }
             }
+            if ($i !== 0) {
+                $vals [] = array(
+                    $c_page_id . '-descendants-',
+                    $sep . fx::util()->ucfirst(sprintf(fx::alang('%s %s and children'), $pt, $pn))
+                );
+            }
             if ($is_last) {
                 $vals [] = array(
                     $c_page_id . '-this-',
-                    $sep . sprintf(fx::alang('%s only'), $pn)
+                    $sep . fx::util()->ucfirst(sprintf(fx::alang('%s %s only'), $pt, $pn))
                 );
             } else {
                 $vals [] = array(
                     $c_page_id . '-children-',
-                    $sep . sprintf(fx::alang('%s children only'), $pn)
+                    $sep . fx::util()->ucfirst(sprintf(fx::alang('%s %s children only'), $pt_of, $pn))
                 );
             }
-            if ($i !== 0) {
-                $vals [] = array(
-                    $c_page_id . '-descendants-',
-                    $sep . sprintf(fx::alang('%s and children'), $pn)
-                );
-            }
-            if (!$is_last) {
+            
+            if (!$is_last && $i !== 0) {
                 $vals [] = array(
                     $c_page_id . '-children-' . $c_type,
-                    $sep . sprintf(fx::alang('%s children of type %s'), $pn, $c_type_name)
+                    $sep . fx::util()->ucfirst(sprintf(fx::alang('%s %s children of type %s'), $pt_of, $pn, $c_type_name))
                 );
             }
         }

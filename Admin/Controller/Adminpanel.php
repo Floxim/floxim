@@ -29,13 +29,13 @@ class Adminpanel extends Admin
         
         $site = fx::env('site');
         if ($site) {
-            $main_menu['site'] = array(
-                'name' => fx::env('site')->getLocalDomain(),
-                'key'  => 'site',
-                'href' => '/'
-            );
             $other_sites = fx::data('site')->where('id', $site['id'], '!=')->all();
             if (count($other_sites) > 0) {
+                $main_menu['site'] = array(
+                    'name' => fx::env('site')->getLocalDomain(),
+                    'key'  => 'site',
+                    'href' => '/'
+                );
                 $main_menu['site']['children'] = array();
                 foreach ($other_sites as $other_site) {
                     $domain = $other_site->getLocalDomain();
@@ -56,15 +56,12 @@ class Adminpanel extends Admin
             'main_menu' => self::getMainMenu(),
             'more_menu' => self::getMoreMenu(),
             'modes' => array(
-                /*
                 "view" => array(
-                    "name" => fx::alang("View"),
+                    "name" => fx::alang("mode_view"),
                     "key" => "view"
                 ),
-                 * 
-                 */
                 "edit" => array(
-                    "name" => fx::alang("Edit"),
+                    "name" => fx::alang("mode_edit"),
                     "key" => "edit"
                 )/*, 
                 "design" => array(

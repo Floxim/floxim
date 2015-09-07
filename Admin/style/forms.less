@@ -53,8 +53,11 @@
             top:-8px;
             margin-bottom:-8px;
         }
-        .fx_tab_label {
-
+        .fx_admin_form__header {
+            min-height:60px;
+        }
+        .fx_admin_form__title {
+            margin-top:10px;
         }
     }
     
@@ -107,7 +110,7 @@
     .redactor_fx_wysiwyg, .fx_input {
         padding:8px 12px;
         border-radius:2px;
-        border:1px solid #cdcdcd;
+        border:1px solid #dddddd;
         &, &:focus, &:active {
             box-shadow:none;
         }
@@ -660,16 +663,30 @@
 }
 
 .fx_overlay .visual_wrapper .variant {
-    border: 1px solid #CCC;
-    border-radius: 2px;
-    padding: 8px 10px;
-    margin-right: 5px; 
+    border: 1px solid #dddddd;
+    border-right:none;
+    //border-radius: 2px;
+    padding: 8px 12px;
+    //margin-right: 5px; 
     display:inline-block; 
     cursor:pointer;
-}
-
-.fx_overlay .visual_wrapper .variant.active {
-    border:2px solid #000;
+    
+    &.active {
+        //border:2px solid #000;
+        background:#eaeaea;
+        color:#999999;
+    }
+    
+    &:first-of-type {
+        border-top-left-radius: 2px;
+        border-bottom-left-radius: 2px;
+    }
+    
+    &:last-child {
+        border-right:1px solid #dddddd;
+        border-top-right-radius: 2px;
+        border-bottom-right-radius: 2px;
+    }
 }
 
 .fx_popup {
@@ -746,6 +763,7 @@
     .fx_input_limit {
         width: 65px !important;
         display: inline-block;
+        margin-right:10px;
         &[disabled="disabled"] {
             width: 2px !important;
             padding-left: 0;
@@ -926,4 +944,60 @@
         display:none;
     }
     
+}
+
+.field_select {
+    select.fx_input {
+        appearance: none;
+        -webkit-appearance: none;
+        padding-right:30px;
+        padding-left:8px;
+        padding-top:7px;
+        padding-bottom:7px;
+        background:url('images/controls.png') no-repeat 100% 15px;
+    }
+    .input_container {
+        position:relative;
+    }
+    .fx_select_arrow {
+        .fx_triangle_down(5px; #999);
+        position:absolute;
+        top:17px;
+        right:15px;
+    }
+}
+
+.field_checkbox {
+    input[type=checkbox] {
+        /* original check box are push outside the viexport */
+        position: absolute;
+        left: -1000em;
+        
+        & + label {
+            font-size:15px;
+        }
+        
+        & + label:before {
+            content:'';
+            display: inline-block;
+            width  : 18px;
+            height : 18px;
+            background:url('images/controls.png') no-repeat 0 -38px;
+            margin-right:7px;
+            position:relative;
+            top:3px;
+        }
+        
+        &:checked + label:before {
+            background-position: 0 -145px;
+        }
+        
+        &:focus + label:before {
+            background-position: 0 -74px;
+        }
+        
+        &:focus:checked + label:before {
+            background-position: 0 -109px;
+        }
+    }
 }

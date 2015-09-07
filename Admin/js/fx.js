@@ -55,6 +55,11 @@ window.$fx = {
                         $dd.hide();
                     } else {
                         $dd.show();
+                        var rect =  $dd[0].getBoundingClientRect(),
+                            win_width = $(window).width();
+                        if (rect.right > win_width) {
+                            $dd.css('left', '-'+ (rect.right - win_width + 10)+'px');
+                        }
                         $('html').one('click', function() {
                             $dd.hide();
                         });

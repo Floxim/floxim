@@ -18,11 +18,16 @@ window.fx_front = function () {
     
     $('#fx_admin_front_menu').on('click.fx_mode_click', '.fx_front_mode', function() {
         var mode = $(this).data('key');
+        if (mode !== $fx.front.mode) {
+            $fx.front.load(mode);
+        }
+        /*
         if ($fx.front.mode === mode) {
             $fx.front.load('view');
         } else {
             $fx.front.load(mode);
         }
+        */
         return false;
     });
     
@@ -1700,11 +1705,23 @@ fx_front.prototype.is_jquery_overriden = function() {
 };
 
 fx_front.prototype.load = function ( mode ) {
-console.log('loding');
-console.time('load');
     if (typeof mode === 'undefined') {
         mode = $.cookie('fx_front_mode') || 'view';
     }
+    var panel_height = $fx.front.get_panel_height();
+    var $overlay = $('<div class="fx_switch_overlay"></div>').appendTo($('body'));
+    $overlay.css({
+        'z-index':100000,
+        background:'#FFF',
+        opacity:0.3,
+        position:'fixed',
+        top:panel_height,
+        left:0,
+        width:$(window).width(),
+        height:$(window).height() - panel_height
+    });/*.animate({
+        opacity:0.8
+    }, 100);*/
     
     $('body').removeClass('fx_mode_'+this.mode).addClass('fx_mode_'+mode);
     
@@ -1718,8 +1735,6 @@ console.time('load');
     $fx.front.outline_all_off();
     
     $fx.front.deselect_item();
-    
-    
     
     // remove floxim handlers
     if ($fx.front.is_jquery_overriden()) {
@@ -1758,7 +1773,16 @@ console.time('load');
         $(this.mouseover_node).trigger('mouseover');
     }
     $('html').trigger('fx_set_front_mode', this.mode);
-console.timeEnd('load');
+    $overlay.stop().animate(
+        {
+            opacity:0
+        }, 
+        600,
+        null,
+        function() {
+            $overlay.remove();
+        }
+    );
 };
 
 fx_front.prototype.get_edit_closure = function($entity, params) {
@@ -2245,17 +2269,20 @@ fx_front.prototype.start_placing_block = function($ib_node){
                     '</div>'+
                 '</div>'+
                 '<div class="fx_placer_panel__description">'+
-                    'Выберите место, куда нужно вставить блок, и нажмите &darr;'+
+                    $fx.lang('placer_panel_description')+
                 '</div>'+
             '</div>'+
-            '<div class="fx_closer">&times;</div>'+
+            //'<div class="fx_closer">&times;</div>'+
+            '<div class="fx_placer_panel__closer">'+
+                '<div class="fx_button fx_button-class-cancel">'+$fx.lang('cancel')+'</div>'+
+            '</div>'+
         '</div>');
     $('.fx-admin-panel').append($panel);
     
     $panel.find('.fx_placed_block_symbol').click(function() {
         $fx.front.scrollTo($ib_node);
     });
-    $('.fx_closer', $panel).click(function() {
+    $('.fx_placer_panel__closer', $panel).click(function() {
         $fx.front.stop_placing_block($ib_node);
     });
     $('body').on('keyup.fx_stop_placing_block', function(e) {

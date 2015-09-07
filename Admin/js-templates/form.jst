@@ -11,6 +11,7 @@ $('.input_container', html).append($t.jQuery('input', _c));
 
 <!--[form_row ? (_c.type == 'checkbox' || _c.type == 'bool') && typeof _c.values == 'undefined' && _c.context !== 'panel']-->
 <div class="field field_checkbox field_name__<?=_c.name?>">
+    <? _c.skip_label = true; ?>
     <?=$t.input(_c)?>
     <label style="display:inline;" for="<?=_c.name?>"><?=_c.label?></label>
 </div>
@@ -216,11 +217,6 @@ html.find('textarea.fx_code').each( function(){
 });
 
 <!--[input ? _c.type == 'select']-->
-<?
-if (_c.extendable) {
-    _c.values.fx_new = _c.extendable === true ? 'Add...' : _c.extendable;
-}
-?>
 <select 
     id="<?=_c.id? _c.id : _c.name?>"
     name="<?=_c.name+(_c.multiple? '[]' : '')?>"
@@ -250,15 +246,6 @@ if (_c.extendable) {
         }
     }?>
 </select>
-<?if (_c.extendable){?>
-    <input type="text" name="fx_new_<?=_c.name?>" class="new" style="display:none;" />
-<?}?>
-
-<!--jquery-->
-html.find('select.extendable').change(function() {
-    var new_inp = $(this).parent().find('input.new');
-    $(this).val() === 'fx_new' ? new_inp.show().focus() : new_inp.hide();
-});
 
 <!--[input ? _c.type == 'radio']-->
 <div class="fx_admin_group">
@@ -285,7 +272,11 @@ html.find('select.extendable').change(function() {
 <!--[input ? (_c.type == 'checkbox' || _c.type == 'bool') && typeof _c.values == 'undefined']-->
 <input type="hidden" name="<?=_c.name?>" value="0">
 <input type="checkbox" style="display:inline;" <?=$t.field_id_name(_c)?> value="1" <?=_c.value && _c.value !== '0' ? ' checked="checked"' : ''?> />
-
+<?
+if (!_c.skip_label) {
+    ?><label for="<?=_c.name?>"></label><? 
+} 
+?>
 
 <!--[input ? _c.type == 'checkbox' && typeof _c.values != 'undefined' ]-->
 <div class="fx_admin_group fx_admin_multi_checkbox">
@@ -438,10 +429,12 @@ html.on('fx_show_input fx_hide_input', recount_groups);
         <?=$t.field_id_name(_c)?> 
         <? if( !_c.value) {?>disabled="disabled"<?} else {?>value="<?=_c.value?>"<?}?>
          />
-    <label>
-        <input type="checkbox" <? if( !_c.value) {?>checked="checked"<?}?> class="fx_limit_all" />
-        <?= $fx.lang('All?') ?>
-    </label>
+    <span class="field_checkbox">
+        <input type="checkbox" id="fx_checkbox_limit_all" <? if( !_c.value) {?>checked="checked"<?}?> class="fx_limit_all" />
+        <label for="fx_checkbox_limit_all">
+            <?= $fx.lang('All?') ?>
+        </label>
+    </span>
 </div>
 
 <!--jquery-->

@@ -9,7 +9,7 @@
         "Design" : "Блоки",
         'More' : "Еще",
         'save' : 'Сохранить',
-        'cancel' : 'Отмена',
+        'cancel' : 'Отменить',
         'by default' : 'по умолчанию',
         'Find' : 'Найти',
         'Add' : 'Добавить',
@@ -34,6 +34,8 @@
         date_placeholder_y: 'гггг',
         date_placeholder_h: 'чч',
         date_placeholder_i: 'мм',
-        'Move': 'Переместить'
+        'Move': 'Переместить',
+        'placer_panel_description':'Выберите место, куда нужно поставить блок, '+
+                                    'и кликните по значку &laquo;<span class="fx_placer_panel__icon"></span>&raquo;'
     };
 })($fx);

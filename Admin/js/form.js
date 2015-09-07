@@ -30,7 +30,11 @@ fx_form = {
         $form.append('<iframe id="'+settings.form.target+'" name="'+settings.form.target+'" style="display:none;"></iframe>');
         $target.html('').append($form);
         
-        var $form_header = $('<div class="'+bl+'__header"><div class="'+bl+'__title">'+ (settings.header || '') +'</div></div>');
+        var $form_header = $(
+            '<div class="'+bl+'__header">'+
+                (settings.header ? '<div class="'+bl+'__title">'+ settings.header +'</div>' : '')+
+            '</div>'
+        );
         $form.append($form_header);
         
         var $form_body = $('<div class="'+bl+'__body"></div>');
