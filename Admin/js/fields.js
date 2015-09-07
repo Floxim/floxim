@@ -592,30 +592,55 @@ $html.on('paste.fx', '.fx_image_field .remote_file_location', function() {
     }, 50);
 });
 
+window.$fx_fields.parse_std_date = function(date_str) {
+    var parts = date_str.split(' ');
+    var date_parts = parts[0].split('-');
+    var time_parts = parts[1].split(':');
+    // year, month, date[, hours, minutes, seconds
+    var res = new Date(
+        date_parts[0],
+        date_parts[1]-1,
+        date_parts[2],
+        time_parts[0],
+        time_parts[1],
+        time_parts[2]
+    );
+    return res;
+};
+
 window.$fx_fields.handle_date_field = function(html) {
     var inp  = $('input.date_input', html);
 
-var export_parts = function() {
+function export_parts() {
     var res = '',
+        months = {
+            '01':'Jan', '02':'Feb', '03':'Mar', '04':'Apr', '05':'May', '06':'Jun',
+            '07':'Jul', '08':'Aug', '09':'Sep', '10':'Oct', '11':'Nov', '12':'Dec'
+        },
         filled = true;
-    $.each('y,m,d,h,i'.split(','), function(index, item) {
-        var c_val = $('.fx_date_part_'+item, html).val();
-        if (!c_val) {
-            if (item === 'h' || item === 'i') {
-                c_val = '00';
-            } else {
-                filled = false;
+    $.each(
+        'd,m,y,h,i'.split(','), 
+        function(index, item) {
+            var c_val = $('.fx_date_part_'+item, html).val();
+            if (!c_val) {
+                if (item === 'h' || item === 'i') {
+                    c_val = '00';
+                } else {
+                    filled = false;
+                }
             }
+            if (item === 'm') {
+                c_val = months[c_val];
+            }
+            res += c_val;
+            res += (index < 2 ? ' ' : index === 2 ? ' ' : ':');
         }
-        res += c_val;
-        res += (index < 2 ? '-' : index === 2 ? ' ' : ':');
-    });
+    );
     res += '00';
     if (filled) {
         var date = new Date(res);
         if (date && !isNaN(date.getTime())) {
             inp.val( format_date ( date ) );
-            //console.log(res, date, date.getTime());
         }
     }
 };

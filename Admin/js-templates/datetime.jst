@@ -10,7 +10,7 @@
         i:{min:0,max:59}
     };
     if (_c.value) {
-        var d = new Date(_c.value);
+        var d = $fx_fields.parse_std_date(_c.value);
         $.each(parts, function(p, pv) {
             if (p === 'h') {
                 var hours = d.getHours();
@@ -41,6 +41,7 @@
                     data-len="<?=meta.len || 2?>" 
                     data-max="<?=meta.max || ''?>"
                     data-min="<?=meta.min || '1'?>"
+                    size="<?=meta.len || 2?>"
                     value="<?=meta.val?>"
                     placeholder="<?=$fx.lang('date_placeholder_'+item)?>" /><?
             } else {

@@ -91,7 +91,7 @@ window.fx_eip = {
             case 'var':
                 formatted_value = value;
                 if (meta.type === 'datetime' && meta.format_modifier){
-                    var timestamp = (new Date(value)).getTime() / 1000;
+                    var timestamp = $fx_fields.parse_std_date(value).getTime() / 1000;
                     formatted_value = php_date_format(meta.format_modifier, timestamp);
                 }
                 $node.html(formatted_value);
