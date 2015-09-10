@@ -21,13 +21,6 @@ window.fx_front = function () {
         if (mode !== $fx.front.mode) {
             $fx.front.load(mode);
         }
-        /*
-        if ($fx.front.mode === mode) {
-            $fx.front.load('view');
-        } else {
-            $fx.front.load(mode);
-        }
-        */
         return false;
     });
     
@@ -313,13 +306,15 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
         function create_finish_form() {
             var form_data = {
                 header:$fx.lang('Adding') + ' '+placeholder_meta.placeholder_name,
+                
                 form_button:[
                     {
-                        key:'save',
-                        label:'Сохранить',
-                        type:'icon',
-                        icon:'done'
+                        key:'cancel'
                     },
+                    {
+                        key:'save'
+                    }
+                    /*,
                     {
                         key:'edit',
                         label:'Открыть большую форму',
@@ -327,14 +322,22 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
                         icon:'edit',
                         is_submit:false
                     }
+                    */
                 ],
                 fields:[
+                    {
+                        type:'icon_text',
+                        icon:'edit',
+                        label:$fx.lang('Edit in form')
+                    }
+                    /*,
                     {
                         name:'eip_fields_container',
                         type:'raw',
                         value:'<div class="fx_eip_fields_container"></div>',
                         wrap:false
                     }
+                    */
                 ],
                 onsubmit: function() {
                     var callback = null;
@@ -387,7 +390,7 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
                     hide_placeholder();
                 },
                 onready: function($form) {
-                    $form.find('.fx_admin_form__buttons .fx_icon-type-edit').click(function() {
+                    $form.find('.fx_button-icon-edit').click(function() {
                         $fx.front.get_edit_closure($placeholder)();
                     });
                 }
@@ -1297,7 +1300,7 @@ fx_front.prototype.select_item = function(node) {
     $fx.front.disable_hilight();
     
     $('html').on('keydown.fx_selected', function(e) {
-        if ($fx.front_panel.is_visible) {
+        if ($fx.front_panel.is_visible || $fx.front.hilight_disabled) {
             return;
         }
         // Escape
@@ -1839,9 +1842,9 @@ fx_front.prototype.get_edit_closure = function($entity, params) {
                             if (data.type === 'image' && data.var_type === 'content') {
                                 var $target_field = $form.find('.field_name__'+data.name);
                                 $target_field.on('fx_change_file', function(e) {
-                                    //console.log('fxchf', e);
-                                    console.log('apv', $c_node, data, e.upload_response.formatted_value);
-                                    fx_eip.append_value($c_node, data, e.upload_response.formatted_value);
+                                    if (e.upload_response) {
+                                        fx_eip.append_value($c_node, data, e.upload_response.formatted_value);
+                                    }
                                 });
                             }
                         });

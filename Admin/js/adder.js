@@ -35,7 +35,16 @@ fx_front.prototype.create_inline_infoblock_adder = function($node) {
         'infoblock'
     );
     
-    $button.attr('title', $fx.lang('Add new block'));
+    
+    $button.on('fx_place_adder', function() {
+        var $ib = $button.data('rel_node');
+        if (!$ib || !$ib.length) {
+            $button.attr('title', $fx.lang('Add new block'));
+            return;
+        }
+        var area = $ib.closest('.fx_area').data('fx_area');
+        $button.attr('title', $fx.lang('Add block to the %s area', area.name || area.id));
+    });
 
     $('.fx_adder_variant', $button).on('click', function() {
         $fx.front.add_infoblock_select_controller($node, $button.data('rel_node'), $button.data('rel_dir'));
@@ -783,40 +792,10 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
                         left:left
                     });
                 hide_title();
-                /*
-                clearTimeout(overlap_timeout);
-                // recount overlapping with infoblock adder
-                if (scope === 'entity' && $closest_area.length) {
-                    overlap_timeout = setTimeout(function() {
-                        
-                        var $ib_button = $closest_area.data('fx_inline_adder_infoblock'),
-                            $ib_plus = $ib_button.find('.fx_inline_adder__plus');
-                        
-                        //$ib_plus.css('transition', 'none');
-                        $ib_plus[0].style.transition = 'none';
-                        $ib_button.removeClass('fx_inline_adder-overlapped');
-                        
-                        var overlaps = false;
-                        if ((is_first && !is_after) || (is_last && is_after)) {
-                            var a = $ib_plus[0].getBoundingClientRect(),
-                                b = $plus[0].getBoundingClientRect();
-                                
-                            overlaps = 
-                                    a.left <= b.right &&
-                                    b.left <= a.right &&
-                                    a.top <= b.bottom &&
-                                    b.top <= a.bottom;
-                        }
-                        //$ib_plus.css('transition', null);
-                        $ib_plus[0].style.transition = null;
-                        $ib_button.toggleClass('fx_inline_adder-overlapped', overlaps);
-                            
-                    }, 1);
-                }
-                */
                 if ($plus.hasClass(bl+'__plus-with_variants')) {
                     place_title();
                 }
+                $button.trigger('fx_place_adder');
             }
         }
     }

@@ -1,5 +1,10 @@
 (function($){
 window.$fx_fields = {
+    
+    default:function(json){
+        return $t.jQuery('form_row', json);
+    },
+    
     html: function (json) {
       return json.html || json.value;  
     },
@@ -9,6 +14,70 @@ window.$fx_fields = {
             return $t.jQuery('form_row', json);
         }
         return json.value;
+    },
+    
+    group:function(json) {
+        var $row =  $t.jQuery('form_row', json),
+            b = 'fx-field-group',
+            exp_class = b+'_expanded',
+            $group = $('.'+b, $row),
+            $fields = $('.'+b+'__fields', $group);
+        
+        function expand() {
+            $group.addClass(exp_class);
+            var fields_height = $fields.height();
+            $fields.css({
+                overflow:'hidden',
+                height:0
+            }).animate(
+                {
+                    height:fields_height
+                },
+                300,
+                null,
+                function(){ 
+                    $fields.attr('style', '');
+                }
+            );
+        }
+        
+        function collapse() {
+            $fields.css({
+                overflow:'hidden'
+            }).animate(
+                {
+                    height:0
+                }, 
+                300, 
+                null, 
+                function() {
+                    $group.removeClass(exp_class);
+                    $fields.attr('style', '');
+                }
+            );
+            
+        }
+        
+        function toggle() {
+            if ($group.hasClass(exp_class)) {
+                collapse();
+            } else {
+                expand();
+            }
+        }
+        
+        $group
+            .find('.'+b+'__title')
+            .on('click', toggle)
+            .on('keydown', function(e) {
+                if (e.which === 13 || e.which === 32) {
+                    toggle();
+                    return false;
+                }
+                console.log(e.which);
+            });
+        
+        return $row;
     },
 
     label: function(json) {
@@ -149,7 +218,8 @@ window.$fx_fields = {
             tidyHtml:false,
             toolbarFixed:false,
             buttons: ['html', 'formatting',  'bold', 'italic', 'deleted',
-                    'unorderedlist', 'orderedlist', 'outdent', 'indent',
+                    'unorderedlist', 'orderedlist',
+                    //'outdent', 'indent',
                     'image', 'video', 'file', 'table', 'link', 'alignment', 'horizontalrule'],
             plugins: ['fontcolor']
         }, options);
@@ -512,13 +582,21 @@ function handle_upload(data, $block) {
     if ($panel.length === 0) {
         if (field_type === 'image') {
             $('.fx_preview img', $block).attr('src', data.path).show();
-        } else {
-            $('.fx_file_info', $block)
-                    .html(
-                        '<a href="'+data.path+'">'+data.filename+'</a>'+
-                        '<br /><span class="file_size">'+data.size+'</span>'
-                    );
         }
+        var $fi = $('.fx_file_info', $block);
+        
+        $('.fx_file_name', $fi)
+            .attr('href', data.path)
+            .text(data.filename);
+        
+        $('.fx_file_size', $fi)
+            .text(data.size);
+    
+        if (field_type === 'image') {
+            $('.fx_image_size')
+                .html(data.width+'&times;'+data.height);
+        }
+        
     }
     $('.fx_file_killer', $block).show();
     $('.fx_file_input', $block).hide();
@@ -556,7 +634,6 @@ $html.on('click.fx', '.fx_image_field .fx_file_uploader', function() {
 
 $html.on('click.fx', '.fx_image_field .fx_file_killer', function() {
    var $field = $(this).closest('.fx_image_field'); 
-   $('.fx_preview img', $field).hide();
    $('.real_value', $field).val('').trigger('fx_change_file');
    $('.fx_file_input', $field).show();
    $('.fx_preview', $field).removeClass('fx_preview_filled');
@@ -779,6 +856,5 @@ $('.fx_datepicker_icon', html).click(function() {
 });
 
 };
-
 
 })($fxj);

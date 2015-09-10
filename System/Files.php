@@ -793,7 +793,7 @@ class Files
             'image/tiff'  => 'tiff'
             // ... 
         );
-        $mime = strtolower($mime);
+        $mime = trim(strtolower($mime));
         return isset($map[$mime]) ? $map[$mime] : '';
     }
 
@@ -862,13 +862,18 @@ class Files
         $file_name = $name ? $name : fx::path()->fileName($file);
         $extension = fx::path()->fileExtension($file_name);
         if (!$extension || !in_array($extension, $this->allowed_extensions)) {
-            if (isset($headers['content-type'])) {
-                $mime = $headers['content_type'];
-                $extension = $this->getExtensionByMime($mime);
-                $file_name = preg_replace("~\..+?$~", '', $file_name);
-                $file_name .= '.' . $extension;
+            if (!isset($headers['content-type'])) {
+                return;
             }
+            $mime = $headers['content-type'];
+            $extension = $this->getExtensionByMime($mime);
+            if (!$extension || !in_array($extension, $this->allowed_extensions)) {
+                return;
+            }
+            $file_name = preg_replace("~\..+?$~", '', $file_name);
+            $file_name .= '.' . $extension;
         }
+        
         $put_file = $this->getPutFilename($dir, $file_name);
         $full_path = fx::path('@files/' . $dir . '/' . $put_file);
         $this->writefile($full_path, $file_data);
@@ -894,25 +899,34 @@ class Files
                 if (!$full_path) {
                     return;
                 }
-                $filename = fx::path()->fileName($full_path);
             }
         }
         
-        // default image resizer
-        $resize_config = fx::config('image.default_resize');
-        if ($resize_config && $this->isImage($full_path)) {
-            $thumb = new \Floxim\Floxim\System\Thumb($full_path, $resize_config);
-            $thumb->process($full_path);
-        }
-
-        $http_path = fx::path()->http($full_path);
-
-        return array(
-            'path'     => $http_path,
-            'filename' => $filename,
+        $result = array(
+            'filename' => fx::path()->fileName($full_path),
             'fullpath' => $full_path,
             'size'     => $this->readableSize(filesize($full_path))
         );
+        
+        // default image resizer
+        $resize_config = fx::config('image.default_resize');
+        if ($this->isImage($full_path)) {
+            $thumb = new \Floxim\Floxim\System\Thumb($full_path, $resize_config);
+            $img_info = $thumb->getInfo();
+            $result['is_image'] = true;
+            if ($img_info && isset($img_info['width']) && isset($img_info['height'])) {
+                $result['width'] = $img_info['width'];
+                $result['height'] = $img_info['height'];
+            }
+            if ($resize_config) {
+                $thumb->process($full_path);
+            }
+        }
+
+        $http_path = fx::path()->http($full_path);
+        $result['path'] = $http_path;
+        fx::log('upres', $result);
+        return $result;
     }
 
     protected function getPutFilename($dir, $name)

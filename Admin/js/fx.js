@@ -376,7 +376,13 @@ window.$fx = {
     },
               
     lang: function(str) {
-        return this.dictionary && this.dictionary[str] ? this.dictionary[str] : str;
+        var res = this.dictionary && this.dictionary[str] ? this.dictionary[str] : str;
+        if (arguments.length > 1) {
+            for (var i = 1; i < arguments.length; i++) {
+                res = res.replace(/\%s/, arguments[i]);
+            }
+        }
+        return res;
     },
     do_log : true,
     log : function () {

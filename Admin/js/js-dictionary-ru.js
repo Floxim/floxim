@@ -15,7 +15,7 @@
         'Add' : 'Добавить',
         'Delete' : 'Удалить',
         'Area %s is empty, you can add some blocks here.' : '&laquo;%s&raquo;&nbsp;&mdash;&nbsp;<a>добавить блок</a>',
-        'Add block to' : 'Добавить блок в',
+        'Add block to the %s area' : 'Добавить блок в область «%s»',
         'block' : 'блок',
         'Adding' : 'Добавляем',
         'Before': 'Перед',
@@ -36,6 +36,9 @@
         date_placeholder_i: 'мм',
         'Move': 'Переместить',
         'placer_panel_description':'Выберите место, куда нужно поставить блок, '+
-                                    'и кликните по значку &laquo;<span class="fx_placer_panel__icon"></span>&raquo;'
+                                    'и кликните по значку &laquo;<span class="fx_placer_panel__icon"></span>&raquo;',
+        'Load from web':'Загрузить из Интернета',
+        'paste URL':'Вставьте URL',
+        'Edit in form':'Редактировать'
     };
 })($fx);

@@ -82,6 +82,7 @@
                 $topbar.show();
                 $topbar.mod('style', c_panel.current_panel_style);
                 $form = $fx.form.create(data, $topbar);
+                /*
                 if (c_panel.current_panel_style === 'finish') {
                     var $closer = $('<div class="fx_admin_form__close_icon">&times;</div>');
                     $closer.insertBefore($form.children().first());
@@ -89,6 +90,7 @@
                         $form.trigger('fx_form_cancel');
                     });
                 }
+                */
             } else {
                 data.button_container = 'footer';
                 $sidebar.mod('style', c_panel.current_panel_style);

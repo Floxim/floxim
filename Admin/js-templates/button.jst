@@ -9,6 +9,7 @@ for (var i = 0; i < _c.buttons.length; i++) {
 <!--[input ? _c.type == 'button']-->
 <div 
     class="fx_button fx_button-in_group <?= _c.is_active ? 'fx_button-active' : ''?><?= _c.class ? ' fx_button-class-' + _c.class : '' ?>" 
+    tabindex="0"
     <?=$t.data_attr(_c)?>>
     <span><?=_c.label || ''?></span>
 </div>
@@ -17,8 +18,14 @@ for (var i = 0; i < _c.buttons.length; i++) {
 if (_c.options){ 
     html.on('click', function() {
         $fx.post(_c.options);
-    })
+    });
 }
+html.on('keydown', function(e) {
+    if (e.which === 32 || e.which === 13) {
+        html.click();
+        return false;
+    }
+});
 
 <!--[form_row ? _c.type == 'button' && _c.role == 'preset']-->
 <div class="field field_preset">

@@ -410,6 +410,25 @@ class Controller
                 }
             }
         }
+        foreach ($actions as $action => &$action_props) {
+            $action_name = fx::util()->underscoreToCamel($action);
+            
+            $settings_method = 'settings'.$action_name;
+            if (method_exists($this, $settings_method)) {
+                $action_props['settings'] = call_user_func(
+                    array($this, $settings_method), 
+                    isset($action_props['settings']) ? $action_props['settings'] : array()
+                );
+            }
+            
+            $config_method = 'config'.$action_name;
+            if (method_exists($this, $config_method)) {
+                $action_props = call_user_func(
+                    array($this, $config_method),
+                    $action_props
+                );
+            }
+        }
         unset($actions['.']);
         $this->_config_cache = array('actions' => $actions);
         return $searched_action ? $actions[$searched_action] : $this->_config_cache;

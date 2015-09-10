@@ -746,6 +746,37 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         $this->concat(func_get_args());
         return $this;
     }
+    
+    /**
+     * add items before specified index (for associative arrays)
+     * @param type $index
+     * @param type $data
+     * @return \Floxim\Floxim\System\Collection
+     */
+    public function addBeforeAssoc($index, $data)
+    {
+        $indexes = array_flip(array_keys($this->data));
+        if (!isset($indexes[$index])) {
+            return $this;
+        }
+        $offset = $indexes[$index];
+        $res = array_slice($this->data, 0, $offset, true);
+        foreach ($data as $k => $v) {
+            $res[$k] = $v;
+        }
+        $res += array_slice($this->data, $offset, null, true);
+        $this->data = $res;
+        return $this;
+    }
+    
+    public function addBefore($index, $data) 
+    {
+        if ($data instanceof Collection) {
+            $data = $data->getData();
+        }
+        array_splice($this->data, $index, 0, $data);
+        return $this;
+    }
 
     public function makeTree($parent_field = 'parent_id', $children_field = 'nested', $id_field = 'id')
     {

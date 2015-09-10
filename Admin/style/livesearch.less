@@ -187,7 +187,12 @@
     }
 }
 
-.fx_admin_form .fx_fieldset input.multisearch__input, .multisearch__item {
+.fx_admin_form .fx_fieldset, .fx_form_horizontal, .fx_form_vertical {
+    input.multisearch__input {
+        margin-bottom:4px;
+    }
+}
+.multisearch__item {
     margin-bottom:4px;
 }
 
@@ -232,7 +237,7 @@
     border: 1px solid @input_border_color;
     box-shadow: 1px 1px 15px rgba(0,0,0,0.3);
     display: none;
-    max-height: 205px;
+    max-height: 300px;
     min-width:150px;
     max-width: 500px;
     overflow: auto;

@@ -12,6 +12,7 @@ window.fx_livesearch = function (node) {
     
     $node.data('livesearch', this);
     var data_params = $node.data('params');
+    
     if (data_params) {
         this.datatype = data_params.content_type;
         this.count_show = data_params.count_show;
@@ -372,7 +373,7 @@ window.fx_livesearch = function (node) {
                 });
             }, 100);
         }
-        
+        console.log(inputs);
         inputs.each(function() {
             var id = $(this).val();
             livesearch.inpNames[id] = this.name;
@@ -838,12 +839,12 @@ window.fx_suggest = function(params) {
         }
         var html = '';
         $.each(res.results, function(index, item) {
-            html += '<div class="search_item" ';
+            var $item = $('<div class="search_item">'+item.name+'</div>');
             for (var prop in item) {
-                html += 'data-'+prop+'="'+item[prop]+'" ';
+                $item.attr('data-'+prop, item[prop]);
             }
-            html += "data-value='"+$.toJSON(item)+"' ";
-            html  += '>'+item.name+'</div>';
+            $item.attr('data-value', $.toJSON(item));
+            html += $item[0].outerHTML;
         });
         return html;
     };

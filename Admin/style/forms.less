@@ -38,6 +38,11 @@
         }
     }
     
+    &__footer_fields {
+        position:absolute;
+        right:30px;
+    }
+    
     &__buttons {
         &-in_header {
             position: absolute;
@@ -125,7 +130,7 @@
 }
 
 #fx_admin_content {
-    .fx_admin_form .field {
+    .fx_admin_form .fx_admin_form__body>.field {
         width:50%;
     }
     
@@ -158,21 +163,27 @@
 .fx_date_input() {
     .fx_date_parts {
         display:inline-block;
-        padding:3px 6px;
-        border:1px solid #999;
+        padding:7px 13px;
+        border:1px solid #dddddd;
+        border-radius:2px;
+        background:#FFF;
         &, input.fx_date_part {
             //font-family:monospace;
-            //font-size:13px;
+            font-size:15px;
             outline:none;
+        }
+        &__with_datepicker {
+            padding-right:50px;
+            margin-right:-22px;
         }
     }
     
     .fx_date_part {
-        //width:18px;
+        width:1.25em;
         border: none;
         text-align:center;
         &_y {
-            //width:30px;
+            width:2.5em;
         }
     }
 }
@@ -184,11 +195,14 @@
     
     .fx_datepicker_icon {
         display: inline-block;
-        width: 20px;
-        height: 23px;
+        width: 21px;
+        height: 24px;
         vertical-align: top;
         cursor: pointer;
-        background: url('images/images.png') no-repeat -682px 0px;
+        background: url('images/sprite.png') no-repeat -1690px -6px;
+        position:relative;
+        left:-15px;
+        top:3px;
     }
 }
 
@@ -264,11 +278,6 @@
         min-width:150px;
         width:auto;
         background:#FFF;
-        /*height: 28px;*/
-    }
-    .fx_image_field img {
-        max-height: 100px;
-        max-width: 150px;
     }
     .field_set .fx_image_field img {
         max-height:55px;
@@ -347,7 +356,7 @@
         margin-top:0;
     }
     .input_container {
-        margin-bottom:20px;
+        margin-bottom:30px;
     }
     .field_last .input_container {
         margin-bottom:0;
@@ -373,19 +382,22 @@
             display:block;
             position:absolute;
             visibility:hidden;
-            top:-32px;
+            top:-33px;
             height:32px;
-            left:0;
+            right:0;
+            left:initial;
         }
         &.fx_textarea_container_redactor_focused .redactor-toolbar {
             visibility:visible;
+            box-shadow:0px -1px 10px rgba(0,0,0,0.2)
         }
         .redactor-editor {
             &, p, li {
                 font-size:13px;
             }
             p, ul, ol, li {
-                margin:5px 0 !important;
+                margin-top:5px !important;
+                margin-bottom:5px !important;
             }
         }
     }
@@ -472,15 +484,23 @@
 }
 
 .fx_image_field {
-    img {
-        max-height:100px;
-        max-width:150px;
-        margin-right:10px;
-        //float:left;
+    .fx_preview img {
+        max-width:1px;
+        max-height:1px;
+        transition: all 0.5s ease;
+        border:1px solid #EEE;
+        display:block;
+        margin-top:0;
     }
     .fx_file_info {
-        margin-right:10px;
-        float:left;
+        margin-top: 10px;
+        display: none;
+        font-size: 13px;
+        color: #999;
+        a, span {
+            display:inline-block;
+            margin-right:15px;
+        }
     }
     .fx_admin_button_text, .remote_file_block {
         margin-right:10px;
@@ -488,63 +508,84 @@
     .fx_preview {
         position:relative;
         min-height:24px;
-        //max-width:120px;
-        &.fx_preview_filled.fx_preview_image {
-            .fx_file_controls {
-                background:#FFF;
-                visibility:hidden;
-            }
-            &:hover .fx_file_controls, &.fx_preview_active .fx_file_controls {
-                visibility:visible;
-            }
-        }
+        
     }
     .fx_file_controls {
-        position:absolute;
-        top:0;
-        left:0;
-        padding:2px 0;
         min-width:83px;
+        overflow:hidden;
+        border:1px solid #ececec;
+        border-radius:2px;
+        display:inline-block;
         a {
             cursor:pointer;
-            display:block;
-            float:left;
-        }
-        input.remote_file_location {
-            position: relative;
-            top: -3px;
-            left: -30px;
-            background: #FFF !important;
-            height: 30px;
-            margin-right: -30px;
         }
     }
-
-
-    .fx_remote_file_block {
+    
+    .fx_file_killer, .fx_remote_file_block, .fx_file_uploader {
+        display:block;
         float:left;
+        padding:2px 12px;
+        &:last-child {
+            border-right:none;
+        }
+    }
+    
+    .fx_file_uploader {
+        border-right:1px solid #ececec;
+    }
+    
+    .fx_file_killer {
+        display:none;
+    }
+    
+    
+    .fx_preview_filled {
+        .fx_file_killer {
+            display:block;
+        }
+        .fx_remote_file_block {
+            border-right:1px solid #ececec;
+        }
+        img {
+            max-height:140px;
+            max-width:200px;
+            margin-top:15px;
+        }
+        .fx_file_info {
+            display:inline-block;
+        }
+    }
+    
+    .fx_remote_file_block {
         font-size:12px;
         input.fx_input {
-            width:100px !important;
+            width:125px !important;
             display:none !important;
+            margin-bottom:0;
         }
         &.active {
             a {
-                //display:none;
+                display:none;
             }
             input.fx_input {
                 display:inline !important;
                 box-sizing: border-box;
+                padding-top: 5px;
+                padding-bottom:5px;
+                margin-top:1px;
+                border: none;
             }
-            margin-right:-30px;
+            //margin-right:-30px;
         }
         a {
             cursor:pointer;
         }
+        /*
         a, span {
             line-height:30px;
             vertical-align:middle;
         }
+        */
     }
 }
 
@@ -569,7 +610,6 @@
     margin-top:6px;
     border:1px solid #e1e1e1;
     padding:5px 3px 4px 3px;
-    font-size:11px;
 }
 
 .fx_node_panel .fx_input {
@@ -745,6 +785,9 @@
 }
 
 .field_joined_group {
+    
+    overflow:hidden;
+    
     .fx_group_label_separator {
         font-size:10px;
     }
@@ -1001,5 +1044,92 @@
         &:focus:checked + label:before {
             background-position: 0 -109px;
         }
+    }
+}
+
+.fx-field-group {
+    
+    &__fields {
+        display:none;
+        padding-top:20px;
+    }
+    
+    margin-bottom:20px;
+    
+    &__title {
+        display:block;
+        padding:10px 0;
+        position:relative;
+        background:#f7f7f7;
+        border:1px solid #f7f7f7;
+        cursor:pointer;
+        
+        &:focus, &:hover {
+            background:#f2f5ff;
+        }
+        &:focus {
+            border: 1px solid #aac0ff;
+            outline-color: #aac0ff;
+            outline-offset: -2px;
+            outline-style: auto;
+            outline-width: 5px;
+        }
+    }
+    
+    &__name {
+        color:@main_color;
+        font-weight:500;
+        display:inline-block;
+    }
+    
+    &__description {
+        display: inline-block;
+        font-size: 13px;
+        color: #999;
+        margin-left:10px;
+    }
+    &__title:hover &__description {
+        color:#b8c0da;
+    }
+    
+    &_expanded {
+        border-bottom:1px solid #CCC;
+        &:after {
+            content:'';
+            display:block;
+            width:1px;
+            height:1px;
+        }
+    }
+    
+    &_expanded &__fields {
+        display:block;
+    }
+    
+    &__expander {
+        position:absolute;
+        right:25px;
+        top:14px;
+        width:13px;
+        height:10px;
+        background:url('images/sprite.png') no-repeat -1813px -7px;
+    }
+    
+    &_expanded &__expander {
+        background-position:-1813px -26px;
+    }
+}
+
+.fx-side-panel {
+    .field_group {
+        margin-top:25px;
+        margin-left:-20px;
+        margin-right:-20px;
+    }
+    
+    .fx-field-group__title, 
+    .fx-field-group__fields {
+        padding-left:20px;
+        padding-right:20px;
     }
 }

@@ -280,7 +280,9 @@ input {
     cursor:pointer;
     white-space:nowrap;
     
-    text-transform:lowercase;
+    //text-transform:lowercase;
+    
+    transition:all 0.3s ease;
     
     &, &__extra {
         color:@button_color;
@@ -383,7 +385,11 @@ input {
     }
     
     &-with_icon {
-        padding:5px 5px 4px 5px;
+        padding:5px 15px 4px 10px;
+        border:none;
+        background:#ececec;
+        color:#555555;
+        font-weight: 500;
     }
 }
 
@@ -442,11 +448,11 @@ input {
     }
     
     &-type-paste_url {
-        background-position:-345px -2px;
+        background-position:-345px 0px;
     }
     
     &-type-delete_image {
-        background-position:-392px 0px;
+        background-position:-394px 0px;
     }
     
     &-type-follow {

@@ -646,7 +646,8 @@ fx_edit_in_place.prototype.add_panel_field = function(meta) {
     var $finish_form = this.node.data('fx_finish_form'),
         $field_container = null;
     if ($finish_form) {
-        $field_container = $finish_form.find('.fx_admin_form__body .fx_eip_fields_container');
+        //$field_container = $finish_form.find('.fx_admin_form__body .fx_eip_fields_container');
+        $field_container = $finish_form.find('.fx_admin_form__body');
     } else {
         var $panel = $fx.front.node_panel.get(this.node).$panel,
             npi = 'fx_node_panel__item';

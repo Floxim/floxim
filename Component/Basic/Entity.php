@@ -221,6 +221,10 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
         } else {
             $jsf = $field->getJsField($this);
         }
+        if ($field['keyword'] === 'is_published') {
+            $jsf['tab'] = 'footer';
+            $jsf['class'] = 'toggler';
+        }
         return $jsf;
     }
 
@@ -228,8 +232,8 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
     {
         $all_fields = $this->getFields();
         $form_fields = array();
-        $coms = array();
-        $content_com_id = fx::component('content')->get('id');
+        //$coms = array();
+        //$content_com_id = fx::component('content')->get('id');
         foreach ($all_fields as $field) {
             if (!$field->checkRights()) {
                 continue;
@@ -237,17 +241,6 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
             $jsf = $this->getFormField($field);
             if (!$jsf) {
                 continue;
-            }
-            if (!isset($jsf['tab']) || !$jsf['tab']) {
-                if ($field['form_tab']) {
-                    $jsf['tab'] = $field['form_tab'];
-                } else {
-                    $coms [$field['component_id']] = true;
-                    $jsf['tab'] = count($coms);
-                    if ($field['component_id'] !== $content_com_id) {
-                        $jsf['tab']--;
-                    }
-                }
             }
             $form_fields[] = $jsf;
         }

@@ -13,34 +13,41 @@ var value_is_emtpy = !c_value || ($fx && $fx.front && c_value === $fx.front.imag
     <div class="fx_preview 
                 <?= c_value ? 'fx_preview_filled' : ''?> 
                 fx_preview_<?=_c.type?>">
-        <? if (_c.type == 'image') {?>
-            <img <?=(c_value ? ' src="'+c_value+'"' : ' style="display:none;"')?> />
-        <? } else {?>
-            <span class="fx_file_info">
-            <? if (c_value) {?>
-                <a href="<?=_c.value.path?>"><?=_c.value.filename?></a>
-                <br /><span class="fx_file_size"><?=_c.value.size?></span>
-            <? } ?>
-            </span>
-        <?}?>
-        <span class="fx_file_controls">
+        
+        <div class="fx_file_controls">
             <a class="fx_file_uploader" title="<?= c_value ? $fx.lang('Change') : $fx.lang('Upload') ?>">
                 <span class="fx_icon fx_icon-type-upload"></span>
             </a>
             <span class="fx_remote_file_block">
-                <a class="fx_paste_link" title="<?=$fx.lang('paste URL')?>">
+                <a class="fx_paste_link" title="<?=$fx.lang('Load from web')?>">
                     <span class="fx_icon fx_icon-type-paste_url"></span>
                 </a>
                 <input class="remote_file_location fx_input" placeholder="<?=$fx.lang('paste URL')?>" />
             </span>
             <a class="fx_file_killer" 
-               style="display:<?=(!value_is_emtpy ? 'block' : 'none')?>" 
                title="<?=$fx.lang('Delete')?>">
                 <span class="fx_icon fx_icon-type-delete_image"></span>
             </a>
-        </span>
+        </div>
+        <div class="fx_preview_block">
+            <? if (_c.type == 'image') {?>
+                <img <?=(c_value ? ' src="'+c_value+'"' : ' style="display:none;"')?> />
+            <? } ?>
+            <span class="fx_file_info">
+                <?
+                    var cv = _c.value || {};
+                ?>
+                <a class="fx_file_name" href="<?=cv.path || ''?>" target="_blank"><?=cv.filename?></a>
+                <span class="fx_file_size"><?=cv.size?></span>
+                <? if (_c.type === 'image' ) { ?>
+                    <span class="fx_image_size">
+                        <?= cv.width ?>&times;<?= cv.height ?>
+                    </span>
+                <? } ?>
+            </span>
+        </div>
     </div>
     <div class="file_input" style="display:<?=(_c.path ? 'none' : 'block')?>">
-    	<input type="file" class="file" name="file" id="image_file_<?=_c.name.replace(/[^a-z0-9]+/g, '_')?>" />
+    	<input type="file" tabindex="-1" class="file" name="file" id="image_file_<?=_c.name.replace(/[^a-z0-9]+/g, '_')?>" />
     </div>
 </div>

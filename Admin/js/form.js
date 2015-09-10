@@ -77,12 +77,15 @@ fx_form = {
         }
         $.each(settings.fields, function(i, json) {
             var $target = $form_body;
-            if (json.tab === 'header') {
-                var $form_header = $form_body.closest('form').find('.'+bl+'__header'),
-                    $target = $form_header.find('.'+bl+'__header_fields');
+            if (json.group) {
+                $target = $('.fx-field-group_keyword_'+json.group+' .fx-field-group__fields', $form_body);
+            } else if (json.tab === 'header' || json.tab === 'footer') {
+                var $tab_container = $form_body.closest('form').find('.'+bl+'__'+json.tab),
+                    target_class = bl+'__'+json.tab+'_fields',
+                    $target = $tab_container.find('.'+target_class);
                 if ($target.length === 0) {
-                    $target = $('<div class="'+bl+'__header_fields"></div>');
-                    $form_header.children().first().before($target);
+                    $target = $('<div class="'+target_class+'"></div>');
+                    $tab_container.append($target);
                 }
                 
             } else if (use_tabs && json.tab !== undefined) {
@@ -150,7 +153,7 @@ fx_form = {
                 if (!submit_added) {
                     $form.append(
                         '<input '+
-                            ' type="submit" '+
+                            ' type="submit" tabindex="-1" '+
                             ' style="position:absolute; top:-10000px; left:-10000px" />'
                     );
                     submit_added = true;
@@ -373,8 +376,11 @@ fx_form = {
                 type = json.type;
                 break;
         }
-        
-        var node = $fx_fields[type](json);
+        var field_method = $fx_fields[type];
+        if (typeof field_method !== 'function') {
+            field_method = $fx_fields.default;
+        }
+        var node = field_method(json);
         switch (position) {
             case 'into':
                 target.append(node);

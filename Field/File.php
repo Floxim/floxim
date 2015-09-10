@@ -23,8 +23,6 @@ class File extends Baze
                 'filename' => fx::path()->fileName($abs),
                 'size'     => fx::files()->readableSize($abs)
             );
-            //$this->_js_field['filename'] = fx::path()->file_name($abs);
-            //$this->_js_field['size'] = fx::files()->readable_size($abs);
         }
         return $this->_js_field;
     }

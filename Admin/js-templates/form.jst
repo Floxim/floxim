@@ -26,8 +26,8 @@ $('.input_container', html).append($t.jQuery('input', _c));
     print($t.input({type:'hidden', name:_c.name,value:c_value}));
 ?>
 
-<!--[form_row ? _c.type == 'hidden' || _c.type == 'button' || _c.type == 'list' || _c.type == 'tree']-->
-<div class="<?=_c.type === 'hidden' ? 'field field_'+_c.type : ''?>"></div>
+<!--[form_row ? _c.type == 'hidden' || _c.type == 'button' || _c.type == 'list' || _c.type == 'tree' || _c.type == 'icon_text']-->
+<div class="<?=_c.type === 'hidden' ? 'field field_'+_c.type : 'field'?>"></div>
 
 <!--jquery-->
 html.append($t.jQuery('input', _c));
