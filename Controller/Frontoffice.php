@@ -36,6 +36,17 @@ class Frontoffice extends System\Controller
          }
     }
     
+    public function getInfoblock() 
+    {
+        return fx::data('infoblock', $this->getParam('infoblock_id'));
+    }
+    
+    public function isNewBlock()
+    {
+        $ib = $this->getInfoblock();
+        return !$ib || !$ib['id'];
+    }
+    
     protected function getProfiler()
     {
         $profile = fx::config('dev.profile_controllers');
