@@ -380,7 +380,7 @@ class Infoblock extends Admin
             'values' => array(),
             'labels' => array(
                 'name'       => fx::alang('Name', 'system'),
-                'type'       => fx::alang('Type', 'system'),
+                //'type'       => fx::alang('Type', 'system'),
                 //'visibility' => fx::alang('Visibility', 'system'),
                 'area'       => fx::alang('Area', 'system'),
             )
@@ -391,21 +391,13 @@ class Infoblock extends Admin
                 continue;
             }
             $vis = $ib->getVisual();
+            $action = $ib['controller'] . ':' . $ib['action'];
             $list['values'] [] = array(
                 'id'         => $ib['id'],
-                'name'       => $ib['name'],
-                'type'       => preg_replace("~^component_~", '', $ib['controller']) . '.' . $ib['action'],
-                /*
-                'visibility' => array(
-                    'field' => array(
-                        'name'   => 'visibility[' . $ib['id'] . ']',
-                        'type'   => 'hidden',
-                        'values' => $this->getScopeVisibilityOptions(),
-                        'value'  => $ib['scope']['visibility']
-                    )
-                ),
-                 * 
-                 */
+                'name'       => '<div class="fx-infoblock-list-item">'.
+                                    '<div class="fx-infoblock-list-item__name">'.$ib['name'].'</div>'.
+                                    '<div class="fx-infoblock-list-item__action">'.$action.'</span>'.
+                                '</div>',
                 'area'       => $vis['area']
             );
         }
@@ -416,7 +408,8 @@ class Infoblock extends Admin
         $fields[] = $this->ui->hidden('data_sent', 1);
         $res = array(
             'fields' => $fields,
-            'id'     => 'page_infoblocks'
+            'id'     => 'page_infoblocks',
+            'header' => fx::alang('Page infoblocks')
         );
         return $res;
     }

@@ -76,6 +76,10 @@
     &.fx_form_vertical &__footer {
         padding:20px 40px;
     }
+    
+    .fx_list_cell .fx_input {
+        margin-bottom:0;
+    }
 }
 
 
@@ -995,26 +999,15 @@
     
 }
 
-.field_select {
-    select.fx_input {
-        appearance: none;
-        -webkit-appearance: none;
-        -moz-appearance:none;
-        padding-right:30px;
-        padding-left:8px;
-        padding-top:7px;
-        padding-bottom:7px;
-        background:url('images/controls.png') no-repeat 100% 15px;
-    }
-    .input_container {
-        position:relative;
-    }
-    .fx_select_arrow {
-        .fx_triangle_down(5px; #999);
-        position:absolute;
-        top:17px;
-        right:15px;
-    }
+select.fx_input {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance:none;
+    padding-right:30px;
+    padding-left:8px;
+    padding-top:7px;
+    padding-bottom:7px;
+    background:url('images/controls.png') no-repeat 100% 15px;
 }
 
 .field_checkbox {
