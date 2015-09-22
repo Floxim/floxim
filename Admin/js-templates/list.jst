@@ -173,7 +173,6 @@ if (_c.is_sortable) {
         },
         items:'.fx_list_row',
         update: function(event, ui) {
-            console.log('updatng', event, ui, this);
             var pos = [];
             $('.fx_list_row', this).each(function() {
                 pos.push ( $(this).data('id') );
@@ -211,7 +210,6 @@ list.on('blur', '.fx_list_field_editable', function() {
     var data = $.extend(label.editable, {});
     data[field] = new_value;
     data.id = row_data.id;
-    console.log('saving', row_data[field], new_value, data);
     $fx.post_front(data, function() {
         row_data[field] = new_value;
         $row.data('inline_data', row_data);

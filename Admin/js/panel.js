@@ -244,6 +244,7 @@
             if (this.is_moving) {
                 return;
             }
+            
             var max_height = Math.round(
                 $(window).height() * 0.75
             );
@@ -254,6 +255,7 @@
             if (typeof panel_height === 'undefined' || panel_height === null) {
                 panel_height = Math.min(form_height, max_height);
             }
+            
             if (panel_height > 0) {
                 $topbar.mod('overflow', form_height <= panel_height ? 'hidden' : null);
             }
@@ -287,14 +289,9 @@
             
             var body_animate_props = {'margin-top':body_offset + 'px'};
             var $selected = $($fx.front.get_selected_item());
-            // 3642 - target value
-            // 
+
             if ($selected.length) {
-                //body_animate_props.scrollTop = $selected.offset().top;// + height_delta;
-                var scroll_top = $selected.offset().top - 100;
-                if (height_delta < 0) {
-                    scroll_top += height_delta - 100;
-                }
+                var scroll_top = $selected.offset().top - (panel_height + 50) + height_delta;
                 body_animate_props.scrollTop = scroll_top;
             }
             

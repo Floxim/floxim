@@ -426,15 +426,24 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
     }
     
     function handle_mouseover (e, $node) {
+        // the nested adder case
+        /*
         if ($(e.target).closest('.fx_has_inline_adder_'+scope)[0] !== $node[0] ) {
-            return;
+            console.log(
+                'closest mismatch',
+                $(e.target).closest('.fx_has_inline_adder_'+scope)[0],
+                $node[0],
+                e.target
+            );
+            //return;
         }
+        */
         if ($fx.front.is_adder_disabled(scope)) {
             return;
         }
         
         clearTimeout(out_timeout);
-        //$node.one('mouseout.fx_recount_adders_'+scope, function() {
+        
         var e_scope = 'mouseleave.fx_recount_adders_'+scope;
         $node.off(e_scope).on(e_scope, function(e) {
             var $leave_to = $(e.toElement);
@@ -449,7 +458,6 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
             return;
         }
         
-        
         var axis = $fx.front.get_list_orientation($entities);
         if (axis === null) {
             if ($entities.length > 0 && $entities.first().outerWidth() > $node.outerWidth() / 2) {
@@ -463,8 +471,7 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
         
         var offset = $node.offset();
         var css = {
-            //opacity:'0',
-            left:offset.left// - $plus.outerWidth()
+            left:offset.left
         };
         
         var is_fixed = $fx.front.is_fixed($node);
@@ -478,7 +485,6 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
         } else {
             css.top = offset.top;
         }
-        //css.top -= 8;
         
         if (css.left < 0) {
             css.left = 0;
@@ -489,13 +495,16 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
                 return;
             }
             $button.addClass(bl +'-visible');
+            
+            // hide all other buttons of the current scope
+            /*
             var button_node = $button[0];
             $('.'+bl+'-visible.'+bl+'-'+scope).each(function() {
                 if (this !== button_node) {
-                    //$(this).removeClass(bl+'-visible');
                     hide_button($(this));
                 }
             });
+            */
             $button.data({
                 rel_node:null,
                 offset_top:null
@@ -603,11 +612,6 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
                 }
             }
             
-            if ($node.closest('.layout-header').length) {
-                console.log(opacity);
-            }
-            
-            //$button.css('opacity', opacity);
             $plus.css('opacity', opacity);
             
             if ($button.data('rel_dir') === dir) {

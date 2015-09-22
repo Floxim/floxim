@@ -488,8 +488,7 @@ body:not(.fx_mode_edit) .fx_entity_hidden {
 }
 
 .fx_inplace_mark_block() {
-    display: block !important;
-    //width: 100% !important;
+    display: block;
     
     box-sizing: border-box !important;
     outline: 1px dotted #000;
@@ -1180,6 +1179,13 @@ span.fx_area_marker {
     z-index: 2;
     position: absolute;
     display:none;
+    
+    .fx_button {
+        position: absolute;
+        top: 50%;
+        right: 20px;
+        margin-top: -20px;
+    }
 }
 
 .fx_select_path_item {
@@ -1418,16 +1424,18 @@ span.fx_area_marker {
     display:block;
     float:left;
     background:#FFF;
-    border:1px solid #AAF;
+    border:1px solid #aac0ff;
     height:15px;
     margin-right:2%;
     &:last-child {
         margin-right:0;
     }
-    .search_item_active &, .monosearch__item & {
-        background:#AAF;
+    
+    .monosearch__item & ,
+    .search_item_active & { 
+        background:#aac0ff;
     }
     .monosearch__item & {
-        height:17px;
+        height:15px;
     }
 }

@@ -39,6 +39,9 @@
                                     'и кликните по значку &laquo;<span class="fx_placer_panel__icon"></span>&raquo;',
         'Load from web':'Загрузить из Интернета',
         'paste URL':'Вставьте URL',
-        'Edit in form':'Редактировать'
+        'Edit in form':'Редактировать',
+        '%s: <a>put the block here</a>.': '&laquo;%s&raquo;&nbsp;&mdash;&nbsp;<a>поставить блок сюда</a>',
+        'On': 'Вкл',
+        'Off': 'Выкл'
     };
 })($fx);

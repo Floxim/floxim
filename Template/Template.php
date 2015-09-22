@@ -11,6 +11,19 @@ class Template
     protected $parent = null;
     protected $level = 0;
     protected $admin_disabled = false;
+    protected $current_template_dir = null;
+    
+    public function getCurrentDir()
+    {
+        return $this->current_template_dir;
+    }
+    
+    public function getAllDirs()
+    {
+        $dirs = $this->parent ? $this->parent->getAllDirs() : array();
+        array_unshift($dirs, $this->getCurrentDir());
+        return $dirs;
+    }
     
     public $context;
 
@@ -73,12 +86,25 @@ class Template
             $this->parent->registerParam($name, $data);
             return;
         }
-        $this->template_params[$name] = $data;
+        if (isset($this->template_params[$name])) {
+            $this->template_params[$name] = array_merge(
+                $data,
+                $this->template_params[$name]
+            );
+        } else {
+            $this->template_params[$name] = $data;
+        }
     }
     
     public function getRegisteredParams()
     {
-        return $this->template_params;
+        $res = array();
+        foreach ($this->template_params as $pk => $pp) {
+            if (!$pp['is_forced']) {
+                $res[$pk] = $pp;
+            }
+        }
+        return $res;
     }
     
     public function getIcon($what_for)
@@ -365,6 +391,7 @@ class Template
             }
             if (!$this->parent) {
                 self::$count_replaces++;
+                fx::log('pre_ars', $result);
                 $result = Template::replaceAreas($result);
                 $result = Field::replaceFields($result);
             }

@@ -6,7 +6,10 @@ var bl = _c.is_multiple ? 'multisearch' : 'monosearch';
 <div class="livesearch <?=bl?>" 
     data-params="<?=$t.json_att(_c.params)?>" 
     data-prototype_name="<?=_c.name?>[prototype]<?=f_postfix?>"
-    data-is_multiple="<?=(_c.is_multiple ? 'Y' : 'N')?>">
+    data-is_multiple="<?=(_c.is_multiple ? 'Y' : 'N')?>"
+    <? if (!_c.is_multiple) {?>
+    data-allow_empty="<?=_c.allow_empty === false ? 'N' : 'Y'?>"
+    <? } ?>>
     <?
     if (_c.is_multiple) {
         if (_c.value && !_c.ajax_preload) {

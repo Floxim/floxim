@@ -188,8 +188,8 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
             } else {
                 $field_meta['type'] = $cf->type;
             }
-            if ($field_meta['type'] === 'html' && $cf['format']['nl2br']) {
-                $field_meta['linebreaks'] = true;
+            if ($field_meta['type'] === 'html') {
+                $field_meta['linebreaks'] = isset($cf['format']['nl2br']) && $cf['format']['nl2br'];
             }
             if ($cf->type === 'select') {
                 $field_meta['values'] = $cf->getSelectValues();
@@ -427,12 +427,14 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
             $att_fields []= $linker_field;
         }
         
+        /*
         if (!$this['id'] && (!$this['parent_id'] || !$this['infoblock_id'])) {
             $att_fields = array_merge(
                 $this->getStructureFields(),
                 $att_fields
             );
         }
+        */
         
         foreach ($att_fields as $field_key => $field_meta) {
             $field_meta['in_att'] = true;

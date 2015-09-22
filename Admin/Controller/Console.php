@@ -29,29 +29,31 @@ class Console extends Admin
         fx::page()->addJsFile(fx::path('@floxim') . '/Admin/js/console.js');
         return array('show_result' => 1);
     }
+    
+    protected static function preProcess($code)
+    {
+        $code = preg_replace("~^<\?(?:php)?~", '', $code);
+        $lines = explode("\n", $code);
+        foreach ($lines as &$line) {
+            if (preg_match("~^\s*>~", $line)) {
+                $line = preg_replace("~^\s*>~", 'fx::debug(', $line);
+                $line = preg_replace("~;\s*$~", '', $line);
+                $line .= ');';
+            }
+        }
+        $code = join("\n", $lines);
+        return $code;
+    }
 
     public function execute($input)
     {
         if ($input['console_text']) {
             ob_start();
             $code = $input['console_text'];
-            $code = preg_replace("~^<\?(?:php)?~", '', $code);
-            $lines = explode("\n", $code);
-            foreach ($lines as &$line) {
-                if (preg_match("~^\s*>~", $line)) {
-                    $line = preg_replace("~^\s*>~", 'fx::debug(', $line);
-                    $line = preg_replace("~;\s*$~", '', $line);
-                    $line .= ');';
-                }
-            }
-            $code = join("\n", $lines);
-            /*
-            ob_start();
-            fx::debug($code);
-            return array('result' => ob_get_clean());
-            */
+            
             fx::env('console', true);
             fx::config('dev.on', true);
+            $code = self::preProcess($code);
             eval($code);
             $res = ob_get_clean();
             return array(

@@ -229,6 +229,7 @@ class Controller
         
         // now - filtered
         $result = array();
+        $replace = array();
         foreach ($template_variants as $k => $tplv) {
             if (isset($tplv['is_abstract'])) {
                 continue;
@@ -276,8 +277,14 @@ class Controller
                 if ($theme_template && !$theme_template->isTemplateAllowed($tplv['full_id'])) {
                     continue;
                 }
-                $result [] = $tplv;
+                $result [$tplv['full_id']] = $tplv;
+                if ($tplv['is_preset_of'] && $tplv['replace_original']) {
+                    $replace []= $tplv['is_preset_of'];
+                }
             }
+        }
+        foreach ($replace as $rep_id ) {
+            unset($result[$rep_id]);
         }
         usort($result, function ($a, $b) {
             $action_diff = $b['action_match_rate'] - $a['action_match_rate'];

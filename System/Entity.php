@@ -66,34 +66,11 @@ abstract class Entity implements \ArrayAccess, Template\Entity
     }
 
     
-    /*
-     * these prop & method were used by ContextFast, and now it's deprecated
-     * 
-    protected $available_offset_keys_cache = null;
-    public function getAvailableOffsetKeys() 
-    {
-        if (is_null($this->available_offset_keys_cache)) {
-            $offsets = $this->getAvailableOffsets();
-            $this->available_offset_keys_cache = array();
-            foreach ($offsets as $k => $v) {
-                $this->available_offset_keys_cache[$k] = true;
-            }
-        }
-        return $this->available_offset_keys_cache;
-    }
-     * 
-     */
     
     protected static $offset_meta = array();
-    //protected $available_offsets_cache = null;
+    
     public function getAvailableOffsets()
     {
-        /*
-        if (!is_null($this->available_offsets_cache)) {
-            return $this->available_offsets_cache;
-        }
-         * 
-         */
         $c_class = get_called_class();
         if (!isset(self::$offset_meta[$c_class])) {
             $res = array();
@@ -115,12 +92,22 @@ abstract class Entity implements \ArrayAccess, Template\Entity
                     'type' => self::OFFSET_LANG
                 );
             }
+            
+            $entity_class = $c_class;
+            $reflection = new \ReflectionClass($entity_class);
+            $methods = $reflection->getMethods();
+            foreach ($methods as $method) {
+                if ($method::IS_PUBLIC && preg_match("~^_get(.+)$~", $method->name, $getter_offset)) {
+                    $getter_offset = fx::util()->camelToUnderscore($getter_offset[1]);
+                    $res[ $getter_offset ] = array(
+                        'type' => self::OFFSET_GETTER,
+                        'method' => $method->name
+                    );
+                }
+            }
+            
             self::$offset_meta[$c_class] = fx::collection($res);
         }
-        /*
-        $this->available_offsets_cache = self::$offset_meta[$c_class];
-         * 
-         */
         return self::$offset_meta[$c_class];
     }
 

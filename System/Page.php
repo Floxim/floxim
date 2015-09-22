@@ -70,7 +70,7 @@ class Page
             }
 
             if (!file_exists($full_target_path) || filemtime($full_source_path) > filemtime($full_target_path)) {
-                fx::profiler()->block('compile less ' . $file);
+                
                 $http_base = fx::path()->http(preg_replace("~[^/]+$~", '', $file));
 
                 $less = new \lessc();
@@ -81,7 +81,6 @@ class Page
 
                 $file_content = $less->compile($file_content);
                 fx::files()->writefile($full_target_path, $file_content);
-                fx::profiler()->stop();
             }
             $this->files_css[] = $target_path;
             $this->all_css[] = $target_path;
@@ -104,15 +103,21 @@ class Page
     {
         $lines = explode("\n", $string);
         $files = array();
+        if (is_string($template_dir)) {
+            $template_dir = array($template_dir);
+        }
         foreach ($lines as $l) {
             $l = trim($l);
             if (empty($l)) {
                 continue;
             }
             if (!preg_match("~^(/|https?://)~", $l)) {
-                $l = $template_dir.$l;
+                foreach ($template_dir as $c_dir) {
+                    $files[]= fx::path()->abs($c_dir.$l);
+                }
+            }else {
+                $files []= $l;
             }
-            $files[]= fx::path()->abs($l);
         }
         $this->addCssBundle($files);
     }
@@ -136,15 +141,15 @@ class Page
             }
             if (!preg_match("~^http://~i", $file)) {
                 $file_path = fx::path()->abs($file);
-                $c_modified = filemtime($file_path);
-                if ($c_modified > $last_modified) {
-                    $last_modified = $c_modified;
+                if (file_exists($file_path)) {
+                    $c_modified = filemtime($file_path);
+                    if ($c_modified > $last_modified) {
+                        $last_modified = $c_modified;
+                    }
                 }
             }
         }
         
-        //fx::log( date('r', filemtime($full_path)),  date('r', $last_modified), $files);
-
         if (!file_exists($full_path) || filemtime($full_path) < $last_modified) {
             $file_content = '';
             foreach ($files as $file) {
@@ -153,14 +158,19 @@ class Page
                 } else {
                     $http_base = fx::path()->http($file);
                     $http_base = preg_replace("~[^/]+$~", '', $http_base);
-                    $file_contents = file_get_contents(fx::path()->abs($file));
-                    $file_contents = $this->cssUrlReplace($file_contents, $http_base);
+                    $c_abs = fx::path()->abs($file);
+                    if (file_exists($c_abs)) {
+                        $file_contents = file_get_contents($c_abs);
+                        $file_contents = $this->cssUrlReplace($file_contents, $http_base);
+                        $file_contents = $this->lessImportUrlReplace($file_contents, $http_base);
+                    }
                 }
                 $file_content .= $file_contents . "\n";
             }
 
             if ($less_flag) {
                 $less = new \lessc();
+                $less->setImportDir(fx::path('@home'));
                 $file_content = $less->compile($file_content);
             }
 
@@ -179,6 +189,20 @@ class Page
         $this->files_css[] = $http_path;
     }
 
+    protected function lessImportUrlReplace($file_contents, $http_base) 
+    {
+        $http_base = preg_replace("~^/~", '', $http_base);
+        $res = preg_replace_callback(
+            "~@import (.+?);~", 
+            function ($matches) use ($http_base) {
+                $file = trim($matches[1], '"\'');
+                return '@import "'.$http_base.$file.'";';
+            },
+            $file_contents
+        );
+        return $res;
+    }
+    
     protected function cssUrlReplace($file, $http_base)
     {
         $file = preg_replace_callback(

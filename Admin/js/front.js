@@ -837,6 +837,7 @@ fx_front.prototype.add_infoblock_select_settings = function(data) {
         $fx.front.add_infoblock_select_controller($area_node);
     };
     var cancel_adding = function() {
+        $fx.front.deselect_item();
         $('.fx_infoblock_fake').remove();
         $fx.front.hilight();
     };
@@ -1049,6 +1050,7 @@ fx_front.prototype.is_var_bound_to_entity = function($node) {
     if (!$node.is(':visible')) {
         return false;
     }
+    
     var $entity = $node.closest('.fx_entity');
     
     if ($entity.length === 0) {
@@ -1060,7 +1062,10 @@ fx_front.prototype.is_var_bound_to_entity = function($node) {
         return true;
     }
     
-    if (!$node.is(':visible') || $('.fx_template_var', $entity).length > 1) {
+    if (
+        !$node.is(':visible') || 
+        ($node.is('.fx_template_var') && $('.fx_template_var', $entity).length > 1)
+    ) {
         return false;
     }
     
@@ -1116,22 +1121,28 @@ fx_front.prototype.get_select_path_panel = function() {
     if ($path_panel.length) {
         return $path_panel;
     }
-    $path_panel = $('<div class="fx_select_path_panel"></div>');
+    $path_panel = $(
+        '<div class="fx_select_path_panel">'+
+            '<div class="fx_select_path_panel__path"></div>'+
+            '<div class="fx_button fx_button-class-cancel">'+$fx.lang('cancel')+'</div>'+
+        '</div>'
+    );
+    $path_panel.find('.fx_button').click(function() {
+        fx_eip.cancel();
+    });
     $panel.append($path_panel);
     return $path_panel;
 };
 
 fx_front.prototype.draw_select_path = function($node) {
-    var $path_panel = $fx.front.get_select_path_panel();
-    $path_panel.html('');
+    var $path_panel = $fx.front.get_select_path_panel(),
+        $path_container = $path_panel.find('.fx_select_path_panel__path');
+        
+    $path_container.html('');
     var $path = $($node.parents().get().reverse()).add($node);
     
     if ($node.is('.fx_entity')) {
-        $node.find('.fx_var_bound_to_entity').each(function() {
-            if ( $(this).closest('.fx_entity')[0] === $node[0]) {
-                $path = $path.add( $(this) );
-            }
-        });
+        $path = $path.add( $fx.front.get_entity_bound_vars($node) );
     }
     
     var path_items = [],
@@ -1239,7 +1250,7 @@ fx_front.prototype.draw_select_path = function($node) {
                 $fx.front.scrollTo(item.node);
             });
         }
-        $path_panel.append($item);
+        $path_container.append($item);
     });
 };
 
@@ -1255,6 +1266,7 @@ fx_front.prototype.select_item = function(node) {
     var $node = $(node);
     this.draw_select_path($node);
     $node.addClass('fx_selected').trigger('fx_select');
+    $node.parents().add($node).addClass('fx_has_selection');
     
     $fx.front.outline_block_off($node);
     $fx.front.outline_block_off($node.find('.fx_hilight_hover'));
@@ -1292,11 +1304,15 @@ fx_front.prototype.select_item = function(node) {
         }
     }, 150);
     
-    // if you delete the selected node from the tree pull deselect_item()
-    $node.bind('remove.deselect_removed', function(e) {
-        $fx.front.deselect_item();
-    });
     
+    // if you delete the selected node from the tree pull deselect_item()
+    /*
+    $node.bind('remove.deselect_removed', function(e) {
+        console.log($node, e.target);
+        //$fx.front.deselect_item();
+    });
+    */
+   
     $fx.front.disable_hilight();
     
     $('html').on('keydown.fx_selected', function(e) {
@@ -1360,6 +1376,8 @@ fx_front.prototype.deselect_item = function() {
         if (desel_event.isDefaultPrevented()) {
             return;
         }
+        
+        $node.parents().add($node).removeClass('fx_has_selection');
         
         $node.off('.fx_recount_outlines');
         
@@ -1996,9 +2014,11 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
                 if ($b.hasClass('fx_icon-type-publish')) {
                     icon_set($b, true);
                     $publish_inp[0].checked = true;
+                    $publish_inp[0].setAttribute('checked', 'checked');
                 } else {
                     icon_set($b, false);
                     $publish_inp[0].checked = false;
+                    $publish_inp[0].removeAttribute('checked');
                 }
             }
         );
@@ -2064,36 +2084,44 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
     }
     
     
-    
+    /*
     function add_text_field_label(panel, $field_node) {
         var field_meta = $field_node.data('fx_var');
         if (!field_meta) {
             return;
         }
         if (field_meta.type === 'string' || field_meta.type === 'text' || field_meta.type === 'html') {
-            /*
             panel.$panel.append('<div class="fx_node_panel_separator"></div>');
             panel.add_label(
                 'Editing: '+field_meta.label
             );
-            */
         }
     }
+    */
     
     if (!$from_field) {
-        var $bound_to_edit = $([]);
-        $('.fx_var_bound_to_entity', $entity).each(function() {
-            var $bound = $(this);
-            if ($bound.closest('.fx_entity')[0] === entity) {
-                add_text_field_label(entity_panel, $bound);
-                $bound_to_edit = $bound_to_edit.add($bound);
-            }
-        });
+        var $bound_to_edit = $fx.front.get_entity_bound_vars($entity);
         $bound_to_edit.edit_in_place();
-    } else if ($from_field.is('.fx_template_var')) {
+    }/* else if ($from_field.is('.fx_template_var')) {
         var field_panel = $fx.front.node_panel.get($from_field);
-        add_text_field_label(field_panel, $from_field);
-    }
+        //add_text_field_label(field_panel, $from_field);
+    }*/
+};
+
+fx_front.prototype.get_entity_bound_vars = function($entity) {
+    var $bound_to_edit = $([]),
+        entity = $entity[0];
+        
+    $('.fx_template_var, .fx_template_var_in_att', entity).each(function() {
+        var $bound = $(this);
+        if (!$fx.front.is_var_bound_to_entity($bound)) {
+            return;
+        }
+        if ($bound.closest('.fx_entity')[0] === entity) {
+            $bound_to_edit = $bound_to_edit.add($bound);
+        }
+    });
+    return $bound_to_edit;
 };
 
 fx_front.prototype.extract_infoblock_visual_fields = function($ib_node, $form) {

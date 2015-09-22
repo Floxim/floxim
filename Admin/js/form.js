@@ -369,9 +369,6 @@ fx_form = {
             case 'textarea': case 'text':
                 type = 'textarea';      
                 break;
-            case 'bool':
-                type = 'checkbox';
-                break;
             default:
                 type = json.type;
                 break;

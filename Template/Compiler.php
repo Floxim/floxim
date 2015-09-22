@@ -162,31 +162,53 @@ class Compiler
     {
         $tpl_token = Token::create('{template}');
         $target_tpl = $token->getProp('template');
-        $tpl_token->setProp('is_preset_of', $target_tpl);
-        
-        if (preg_match("~[a-z0-9\._-]+?\:[a-z0-9_-]+$~", $target_tpl)) {
-            try {
-                $target_tpl_obj = fx::template($target_tpl);
-                if ($target_tpl_obj) {
-                    $info = $target_tpl_obj->getInfo();
-                    if (isset($info['of'])) {
-                        $tpl_token->setProp('of', $info['of']);
-                    }
-                }
-            } catch (\Exception $e) {
-                fx::log('Can not init target template', $token, $e);
-            }
-        }
         
         $id = preg_replace("~[^a-z0-9_]+~", '_', $target_tpl);
         if ( ($own_id = $token->getProp('id'))) {
             $id .= '_'.$own_id;
         }
         
+        $source_info = array();
+        if (preg_match("~[a-z0-9\._-]+?\:[a-z0-9_-]+$~", $target_tpl)) {
+            try {
+                $target_tpl_obj = fx::template($target_tpl);
+                if ($target_tpl_obj) {
+                    $source_info = $target_tpl_obj->getInfo();
+                }
+            } catch (\Exception $e) {
+                fx::log('Can not init target template', $token, $e);
+            }
+        } else {
+            if (isset($this->templates[$target_tpl])) {
+                $source_info = $this->templates[$target_tpl];
+            }
+            $target_tpl = $this->template_set_name.':'.$target_tpl;
+        }
+        
+        // copy these props from source template and/or preset token to the generated template
+        $passed_props = array('suit', 'of', 'size');
+        
+        foreach ($passed_props as $passed_prop) {
+            if (isset($source_info[$passed_prop])) {
+                $tpl_token->setProp($passed_prop, $source_info[$passed_prop]);
+            }
+        }
+        
+        if (isset($source_info['name'])) {
+            $tpl_token->setProp('name', $source_info['name']. ( $own_id ? '#'.$own_id : ''));
+        }
+        
+        $tpl_token->setProp('is_preset_of', $target_tpl);
+        
+        if ($token->getProp('replace')) {
+            $tpl_token->setProp('replace_original', true);
+        }
+        
+        
         $tpl_token->setProp('id', $id);
         
-        // copy this props to the generated template
-        $passed_props = array('name', 'suit', 'of', 'size');
+        $passed_props []= 'name';
+        
         foreach ($passed_props as $passed_prop) {
             if ( ($preset_prop = $token->getProp($passed_prop)) ) {
                 $tpl_token->setProp($passed_prop, $preset_prop);
@@ -196,7 +218,7 @@ class Compiler
         $apply = '{apply '.$token->getProp('template');
         $vars = array();
         foreach ($token->getChildren() as $child) {
-            if (in_array($child->name, array('js', 'css', 'param', 'if', 'else', 'elseif'))) {
+            if (in_array($child->name, array('js', 'css', 'param', 'if', 'else', 'elseif', 'set'))) {
                 $tpl_token->addChild($child);
                 continue;
             }
@@ -574,9 +596,9 @@ class Compiler
             } else {
                 $token->setProp('type', $token_type);
             }
-            //if ($linebreaks || $token_is_visual) {
-            $token->setProp('linebreaks', $linebreaks);
-            //}
+            if ($linebreaks || $token_is_visual) {
+                $token->setProp('linebreaks', $linebreaks);
+            }
         }
 
         // e.g. "name" or "image_".$context->get('id')
@@ -1246,7 +1268,8 @@ class Compiler
             }
         }
         $code .= $this->childrenToCode($token)."\n";
-        $code .= 'fx::page()->addCssBundleFromString(ob_get_clean(), $template_dir);'."\n";
+        $dirs = $token->getProp('extend') ? "\$this->getAllDirs()" : "\$template_dir";
+        $code .= 'fx::page()->addCssBundleFromString(ob_get_clean(), '.$dirs.');'."\n";
         return $code;
     }
 
@@ -1254,7 +1277,7 @@ class Compiler
     {
         $code = "<?php\n";
         $code .= 'if (!$context->isIdle()) {'."\n";
-        if ($token->getProp('bundle')) {
+        if ($token->getProp('bundle') || $token->getProp('extend')) {
             $code .= $this->cssBundleToCode($token);
         } else {
             foreach ($token->getChildren() as $set) {
@@ -1347,8 +1370,9 @@ class Compiler
             $code .= "\$context->set('".$name."', ".$val_var.");\n";
             $code .= "}\n";
         }
-        $code .= "if (\$_is_admin && (".$val_is_null." || \$context->getLastVarLevel() === 1  ) ) {\n";
+        $code .= "if (\$_is_admin ) {\n";
         $exported_props = array(
+            "'is_forced' => !".$val_is_null." && \$context->getLastVarLevel() !== 1",
             "'value' => ".$val_var
         );
         foreach ($props as $k => $v) {
@@ -1386,6 +1410,9 @@ class Compiler
             return;
         }
         $code  = '';
+        
+        $is_preset = $tpl_props['is_preset_of'];
+        
         $token = $tpl_props['_token'];
         if (!$token) {
             fx::log('No template token while processing template code', $tpl_props);
@@ -1443,10 +1470,14 @@ class Compiler
         $code .= "public function " . $method_name . '($context) {' . "\n";
         $code .= "fx::env()->addCurrentTemplate(\$this);\n";
 
-        if (strstr($children_code, "\$template_dir")) {
+        if ($is_preset) {
+            $code .= "\$this->context->push(array(), array('transparent' => true));\n";
+        }
+        //if (strstr($children_code, "\$template_dir")) {
             $template_dir = preg_replace("~[^/]+$~", '', $tpl_props['file']);
             $code .= "\$template_dir = '" . $template_dir . "';\n";
-        }
+            $code .= "\$this->current_template_dir = \$template_dir;\n";
+        //}
         $has_meta_var = strstr($children_code, "\$_is_wrapper_meta");
         $has_admin_var = strstr($children_code, "\$_is_admin") || $has_meta_var;
         if ($has_admin_var) {
@@ -1462,7 +1493,9 @@ class Compiler
         $is_subroot = $token->getProp('subroot') ? 'true' : 'false';
         $code .= "\t\$this->is_subroot = " . ($is_subroot) . ";\n";
         $code .= $children_code;
-        
+        if ($is_preset) {
+            $code .= "\$this->context->pop();\n";
+        }
         $code .= "fx::env()->popCurrentTemplate();\n";
         $code .= "\n}\n";
         /*
@@ -1615,6 +1648,7 @@ class Compiler
             'name'   => $name,
             'of'     => $of,
             'is_preset_of' => $token->getProp('is_preset_of'),
+            'replace_original' => $token->getProp('replace_original'),
             'is_abstract' => $token->getProp('is_abstract'),
             '_token' => $token
         );
@@ -1623,12 +1657,41 @@ class Compiler
 
     protected function registerTemplate(Token $token)
     {
+        $is_preset = false;
         if ($token->name === 'preset') {
             $token = $this->presetToTemplate($token);
-        }
-        if ($token->name != 'template') {
+            $is_preset = true;
+        } 
+        if (!$is_preset && $token->name != 'template') {
             return;
         }
+        if (!$is_preset && !$token->getProp('subroot')) {
+            $apply_token = null;
+            foreach ($token->getChildren() as $child) {
+                if ($child->name === 'call') {
+                    if ($apply_token === null) {
+                        $apply_token = $child;
+                    } else {
+                        // more than one {apply} in the block
+                        $apply_token = null;
+                        break;
+                    }
+                    continue;
+                } 
+                if (
+                    $child->name === 'var' ||
+                    ($child->name === 'code' && trim($child->getProp('value')) !== '')
+                ) {
+                    // some output found
+                    $apply_token = null;
+                    break;
+                }
+            }
+            if ($apply_token) {
+                $apply_token->setProp('extract_subroot', '$this->is_subroot');
+            }
+        }
+        
         
         $tpl_props = $this->getTemplateProps($token);
         

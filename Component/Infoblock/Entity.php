@@ -478,7 +478,7 @@ class Entity extends System\Entity implements Template\Entity
         try {
             $result = $tpl_wrap->render($wrap_params);
         } catch (\Exception $e) {
-            fx::log('error while wrapping', $e->getMessage());
+            fx::log('error while wrapping ib #'.$this['id'], $e->getMessage());
             $result = $output;
         }
         
@@ -599,5 +599,14 @@ class Entity extends System\Entity implements Template\Entity
             }
         }
         return array_unique($result_pages);
+    }
+    
+    public function _getShortType()
+    {
+        $ctr = $this['controller'];
+        if (!$ctr) {
+            return null;
+        }
+        return preg_replace('~.+\..+\.~', '', $ctr);
     }
 }

@@ -6,7 +6,13 @@ window.fx_livesearch = function (node) {
     this.$node = $node;
     
     this.isMultiple = $node.data('is_multiple') === 'Y';
+    this.allowEmpty = !this.isMultiple && $node.data('allow_empty') !== 'N';
+    
     var bl = this.isMultiple ? 'multisearch' : 'monosearch';
+    
+    if (!this.allowEmpty) {
+        $node.addClass(bl+'_no-empty');
+    }
     
     this.$container = this.$node.find('.'+bl+'__container');
     
@@ -233,6 +239,7 @@ window.fx_livesearch = function (node) {
         this.updateSortableAxis();
         if (!this.isMultiple) {
             this.disableAdd();
+            this.Suggest.currentId = id;
         } else {
             this.Suggest.setRequestParams(this.getSuggestParams());
         }
@@ -253,7 +260,13 @@ window.fx_livesearch = function (node) {
     this.addDisabled = false;
     this.disableAdd = function() {
         this.addDisabled = true;
-        this.$input.css({width:'1px',position:'absolute',left:'-10000px'});
+        if (this.allowEmpty) {
+            this.$input.css({
+                width:'1px',
+                position:'absolute',
+                left:'-10000px'
+            });
+        }
         this.Suggest.disabled = true;
         if (!this.isMultiple) {
             this.$node.addClass(bl+'_has-value');
@@ -300,7 +313,9 @@ window.fx_livesearch = function (node) {
             if (!this.isMultiple) {
                 this.$input.css('width', this.$container.width());
             }
-            item_node.hide();
+            if (this.allowEmpty) {
+                item_node.hide();
+            }
             var c_text = item_node.find('.'+bl+'__item-title').text();
             this.$input.val(c_text);
             this.enableAdd();
@@ -373,7 +388,6 @@ window.fx_livesearch = function (node) {
                 });
             }, 100);
         }
-        console.log(inputs);
         inputs.each(function() {
             var id = $(this).val();
             livesearch.inpNames[id] = this.name;
@@ -448,7 +462,6 @@ window.fx_livesearch = function (node) {
                 livesearch.$input.val(item_title);
             }
             livesearch.hideValue();
-            //$(this).select().trigger('keyup');
             $(this).select();
             livesearch.Suggest.Search('', {immediate:true});
         });
@@ -467,7 +480,7 @@ window.fx_livesearch = function (node) {
             livesearch.$container.removeClass('livesearch__container_focused');
             
             if (!livesearch.isMultiple) {
-                if (input_value !== '') {
+                if (input_value !== '' || !livesearch.allowEmpty) {
                     livesearch.showValue();
                 } else {
                     livesearch.removeValue( livesearch.getValueNode() );
@@ -526,6 +539,9 @@ window.fx_suggest = function(params) {
     this.offsetNode = params.offsetNode || this.input;
     this.preset_values = params.preset_values || [];
     this.boxVisible = false;
+    
+    this.currentId = null;
+    
     if (!fx_suggest.cache) {
         /**
          * Structure cache: {
@@ -689,7 +705,15 @@ window.fx_suggest = function(params) {
         if (resHtml) {
             Suggest.showBox();
             Suggest.box.html(resHtml);
-            Suggest.Select(Suggest.box.find('.search_item').first());
+            var selected_node = [];
+            if (Suggest.currentId) {
+                selected_node = Suggest.box.find('.search_item').filter('*[data-id="'+Suggest.currentId+'"]');
+            }
+            if (selected_node.length === 0) {
+                selected_node = Suggest.box.find('.search_item').first();
+            }
+            Suggest.Select(selected_node);
+            
         } else {
             Suggest.hideBox(false);
         }
@@ -704,6 +728,7 @@ window.fx_suggest = function(params) {
         params = params || {};
         
         if (this.preset_values && this.preset_values.length) {
+            this.Unlock();
             return this.getResultsFromPreset(term);
         }
 
@@ -711,6 +736,7 @@ window.fx_suggest = function(params) {
             dataType: Suggest.resultType,
             type: 'POST'
         };
+        
         var url;
         url = this.requestParams.url;
         request_params.url = url;

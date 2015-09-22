@@ -9,11 +9,13 @@
 <!--jquery-->
 $('.input_container', html).append($t.jQuery('input', _c));
 
-<!--[form_row ? (_c.type == 'checkbox' || _c.type == 'bool') && typeof _c.values == 'undefined' && _c.context !== 'panel']-->
-<div class="field field_checkbox field_name__<?=_c.name?>">
+<!--[form_row ? ( (_c.type == 'checkbox' && typeof _c.values == 'undefined') || _c.type == 'bool' ) && _c.context !== 'panel']-->
+<div class="field field_checkbox <?= _c.class_name ? ' field_class_'+_c.class_name : ''?> field_name__<?=_c.name?>">
     <? _c.skip_label = true; ?>
     <?=$t.input(_c)?>
+    <? if (_c.class !== 'toggler') {?>
     <label style="display:inline;" for="<?=_c.name?>"><?=_c.label?></label>
+    <? } ?>
 </div>
 
 <!--[form_row ? (_c.type == 'select' || _c.type == 'radio') && _c.hidden_on_one_value && !_c.extendable && _c.values && fx_object_length(_c.values) == 1]-->
@@ -27,7 +29,9 @@ $('.input_container', html).append($t.jQuery('input', _c));
 ?>
 
 <!--[form_row ? _c.type == 'hidden' || _c.type == 'button' || _c.type == 'list' || _c.type == 'tree' || _c.type == 'icon_text']-->
-<div class="<?=_c.type === 'hidden' ? 'field field_'+_c.type : 'field'?>"></div>
+<div class="field field_<?=_c.type?><?=_c.class_name ? ' '+_c.class_name : ''?> field_name__<?=_c.id || _c.name?>">
+    
+</div>
 
 <!--jquery-->
 html.append($t.jQuery('input', _c));
@@ -269,7 +273,7 @@ html.find('textarea.fx_code').each( function(){
     }?>
 </div>
 
-<!--[input ? (_c.type == 'checkbox' || _c.type == 'bool') && typeof _c.values == 'undefined']-->
+<!--[input ? (_c.type == 'checkbox' && typeof _c.values == 'undefined') || _c.type == 'bool']-->
 <input type="hidden" name="<?=_c.name?>" value="0">
 <input type="checkbox" style="display:inline;" <?=$t.field_id_name(_c)?> value="1" <?=_c.value && _c.value !== '0' ? ' checked="checked"' : ''?> />
 <?
@@ -277,6 +281,25 @@ if (!_c.skip_label) {
     ?><label for="<?=_c.name?>"></label><? 
 } 
 ?>
+
+<!--[input ? (_c.type === 'checkbox' || _c.type === 'bool') && _c.class === 'toggler']-->
+<?
+var on = _c.value && _c.value !== '0';
+?>
+<div class="fx_toggler fx_toggler_<?= on ? 'on' : 'off'?>">
+    <input type="hidden" <?=$t.field_id_name(_c)?> value="<?= on ? 1 : 0 ?>" />
+    <div class="fx_toggler__label">
+        <label><?=_c.label?></label>
+        <div class="fx_toggler__state_on"><?= $fx.lang('On') ?></div>
+        <div class="fx_toggler__state_off"><?= $fx.lang('Off') ?></div>
+    </div>
+    <div class="fx_toggler__control" tabindex="0">
+        <div class="fx_toggler__runner"></div>       
+    </div>
+</div>
+
+<!--priority-->
+2
 
 <!--[input ? _c.type == 'checkbox' && typeof _c.values != 'undefined' ]-->
 <div class="fx_admin_group fx_admin_multi_checkbox">

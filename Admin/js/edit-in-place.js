@@ -164,11 +164,7 @@ window.fx_eip = {
             fx_admin:true,
             page_id:$fx.front.get_page_id()
         };
-        /*
-        console.trace();
-        console.log(vars);
-        return;
-        */
+        
         var $adder_placeholder = $node.closest('.fx_entity_adder_placeholder'),
             entity_meta = $adder_placeholder.data('fx_entity_meta');
     
@@ -243,6 +239,15 @@ window.fx_eip = {
         } else {
             this.save();
         }
+    },
+    cancel: function() {
+        var $edited = $('.fx_edit_in_place');
+        $edited.each(function() {
+            var c_eip = $(this).data('edit_in_place');
+            c_eip.stop();
+            c_eip.restore();
+        });
+        $fx.front.deselect_item();
     }
 };
 
@@ -431,13 +436,7 @@ fx_edit_in_place.prototype.handle_keydown = function(e) {
             e.stopImmediatePropagation();
             return false;
         }
-        var $edited = $('.fx_edit_in_place');
-        $edited.each(function() {
-            var c_eip = $(this).data('edit_in_place');
-            c_eip.stop();
-            c_eip.restore();
-        });
-        $fx.front.deselect_item();
+        fx_eip.cancel();
         return false;
     }
     if (e.which === 13) {
@@ -800,7 +799,7 @@ fx_edit_in_place.prototype.get_vars = function() {
         }
         var old_value = pf_meta.value;
         var $c_input = null;
-        if (pf_meta.type === 'bool') {
+        if (pf_meta.type === 'bool' || pf_meta.type === 'checkbox') {
             $c_input = $('input[name="'+pf_meta['name']+'"][type="checkbox"]', pf);
             var new_value = $c_input.is(':checked') ? "1" : "0";
             if (old_value === null) {
@@ -958,7 +957,7 @@ fx_edit_in_place.prototype.make_wysiwyg = function () {
     if (!toolbar && this.node.closest('a, i, span, b, strong, em').length > 0) {
         toolbar = 'inline';
     }
-    if (toolbar === 'inline') {
+    if (toolbar === 'inline' && this.meta.linebreaks === undefined) {
         linebreaks = true;
     }
     $fx_fields.make_redactor($node, {

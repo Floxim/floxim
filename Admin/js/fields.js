@@ -74,7 +74,6 @@ window.$fx_fields = {
                     toggle();
                     return false;
                 }
-                console.log(e.which);
             });
         
         return $row;
@@ -117,9 +116,41 @@ window.$fx_fields = {
     radio_facet: function (json ) {
         return $t.jQuery('form_row', json);
     },
+    
+    bool:function(json) {
+        delete json.values;
+        json.type = 'checkbox';
+        return $fx_fields.checkbox(json);
+    },
 
     checkbox: function(json) {
-        return $t.jQuery('form_row', json);
+        var is_toggler = json.class === 'toggler';
+        if (is_toggler) {
+            json.class_name = json.class;
+        }
+        var $res = $t.jQuery('form_row', json);
+        if (is_toggler) {
+            var $toggler = $('.fx_toggler', $res),
+                $input = $('input', $res),
+                $control = $('.fx_toggler__control', $res);
+            function toggle() {
+                if ($toggler.hasClass('fx_toggler_on')) {
+                    $toggler.removeClass('fx_toggler_on').addClass('fx_toggler_off');
+                    $input.val(0);
+                } else {
+                    $toggler.removeClass('fx_toggler_off').addClass('fx_toggler_on');
+                    $input.val(1);
+                }
+                $control.focus();
+            }
+            $toggler.click(toggle).keydown(function(e) {
+                if (e.which === 13 || e.which === 32) {
+                    toggle();
+                    return false;
+                }
+            });
+        }
+        return $res;
     },
 
     color: function(json) {

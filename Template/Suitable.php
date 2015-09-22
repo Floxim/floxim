@@ -240,6 +240,9 @@ class Suitable
         $wrappers = array();
         
         $template_variants = $layout_tpl->getTemplateVariants();
+        
+        $replace = array();
+        
         foreach ($template_variants as $tplv) {
             $full_id = $tplv['full_id'];
             if ($tplv['of'] !== 'floxim.layout.wrapper:show') {
@@ -274,7 +277,13 @@ class Suitable
             }
             if ($size_ok) {
                 $wrappers[$full_id] = $tplv;
+                if ($tplv['is_preset_of'] && $tplv['replace_original']) {
+                    $replace []= $tplv['is_preset_of'];
+                }
             }
+        }
+        foreach ($replace as $replaced_id) {
+            unset($wrappers[$replaced_id]);
         }
         return $wrappers;
     }
