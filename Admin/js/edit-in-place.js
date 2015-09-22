@@ -292,7 +292,10 @@ function fx_edit_in_place( node ) {
         });
     }
     var $selected_entity = this.node.closest('.fx_entity');
-    $(this.node).closest('.fx_selected').one('fx_deselect.edit_in_place', function(e) {
+    $(this.node)
+    .closest('.fx_selected')
+    .off('fx_deselect.edit_in_place')
+    .one('fx_deselect.edit_in_place', function(e) {
         fx_eip.fix();
         eip.stop();
         
