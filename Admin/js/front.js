@@ -2159,6 +2159,14 @@ fx_front.prototype.extract_infoblock_visual_fields = function($ib_node, $form) {
 
             var $field = $fx.form.draw_field(meta, $rel_field, 'after');
             $field.addClass(field_class);
+            
+            // show tab label if the tab contained no visible fields
+            var $c_tab = $rel_field.closest('.fx_tab_data');
+            if ($c_tab.length) {
+                var tab_key = $c_tab.attr('class').match(/fx_tab_data-key-(.+)$/)[1];
+                var $tab_label = $form.find('.fx_tab_label[data-key="'+tab_key+'"]');
+                $tab_label.show();
+            }
             $rel_field = $field;
         });
     });

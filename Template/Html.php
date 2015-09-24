@@ -234,6 +234,10 @@ class Html
                 if (($area_size = $n->getAttribute('fx:size'))) {
                     $area .= 'size="' . $area_size . '" ';
                     $n->removeAttribute('fx:size');
+                } elseif (($area_size = $n->getAttribute('fx:area-size'))) {
+                    // use when fx:area and fx:template are placed on the same node
+                    $area .= 'size="' . $area_size . '" ';
+                    $n->removeAttribute('fx:area-size');
                 }
                 if (($area_suit = $n->getAttribute('fx:suit'))) {
                     $area .= 'suit="' . $area_suit . '" ';

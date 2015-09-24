@@ -115,6 +115,7 @@ class Compiler
         $code .= "foreach (\$block_parts['modifiers'] as \$mod) {\n";
         $code .= "echo \$block_parts['name'].'_'.\$mod.' ';\n";
         $code .= "}\n";
+        $code .= "echo join(' ', \$block_parts['plain']);\n";
         $code .= "?>";
         return $code;
     }
@@ -123,7 +124,9 @@ class Compiler
     {
         $code =  "<?php\n";
         $code .= "ob_start();\n";
+        $this->pushState('edit', false);
         $code .= $this->childrenToCode($token);
+        $this->popState('edit');
         $code .= '$el_string = ob_get_clean();'."\n";
         $code .= '$el_parts = \\Floxim\\Floxim\\Template\\Template::bemParseStr($el_string);'."\n";
         $code .= "\$full_name = \$this->bemGetBlock().'__'.\$el_parts['name'];\n";
@@ -131,6 +134,7 @@ class Compiler
         $code .= "foreach (\$el_parts['modifiers'] as \$mod) {\n";
         $code .= "echo \$full_name.'_'.\$mod.' ';\n";
         $code .= "}\n";
+        $code .= "echo join(' ', \$el_parts['plain']);\n";
         $code .= "?>";
         return $code;
     }
@@ -268,20 +272,12 @@ class Compiler
             return $this->tokenEachToCode($each_token);
         }
         $code = "<?php\n";
-        $tpl_name = $token->getProp('id');
-        // not a plain name
-        if (!preg_match("~^[a-z0-9_\,\.\:\@\#]+$~", $tpl_name)) {
-            $tpl_name = self::parseExpression($tpl_name);
-        }
         
-        if (!preg_match("~[\:\@]~", $tpl_name)) {
-           $tpl_name = $this->template_set_name . ":" . $tpl_name;
-        }
-        
-        
-        $tpl = '$tpl_' . $this->varialize($tpl_name);
         $is_apply = $token->getProp('apply');
-        //$code .= $tpl . '->setParent($this, ' . $inherit . ");\n";
+        
+        $tpl_name = $token->getProp('id');
+        $tpl = '$tpl_' . $this->varialize($tpl_name);
+        
         $call_children = $token->getChildren();
         /*
          * Converted:
@@ -390,6 +386,50 @@ class Compiler
         
         // ------------
         
+        $tpl_name_is_expression = !preg_match("~^[a-z0-9_\,\.\:\@\#]+$~", $tpl_name);
+        
+
+        
+        $loader = "\\Floxim\\Floxim\\Template\\Loader";
+        // not a plain name
+        if ($tpl_name_is_expression) {
+            $tpl_name = self::parseExpression($tpl_name);
+            $pn = $tpl.'_parsed';
+            $code .= $pn.' = '.$loader.'::parseTemplateName('.
+                    $tpl_name.', '.
+                    var_export($this->template_set_name,1).', '.
+                    var_export($this->is_aliased,1).");\n";
+            
+            $code .= $tpl." = ";
+            $code .= $loader."::loadTemplateVariant(".
+                        $pn.'["group"], '.
+                        $pn.'["action"], '.
+                        $context_var.', '.
+                        $pn.'["forced_group"], '.
+                        $pn.'["tags"]); '."\n";
+        } else {
+            $parsed_name = \Floxim\Floxim\Template\Loader::parseTemplateName(
+                $tpl_name, 
+                $this->template_set_name,
+                $this->is_aliased
+            );
+            foreach ($parsed_name as &$v) {
+                $v = var_export($v,1);
+            }
+            $code .= $tpl." = ";
+            $code .= $loader."::loadTemplateVariant(".
+                        $parsed_name['group'].", ".
+                        $parsed_name['action'].", ".
+                        $context_var.", ".
+                        $parsed_name['forced_group'].', '.
+                        $parsed_name['tags'].");\n";
+        }
+        
+        /*
+        if (!preg_match("~[\:\@]~", $tpl_name)) {
+           $tpl_name = $this->template_set_name . ":" . $tpl_name;
+        }
+        
         $tpl_at_parts = explode("@", $tpl_name);
         if (count($tpl_at_parts) === 1) {
             $forced_group = 'null';
@@ -414,11 +454,11 @@ class Compiler
         } else {
             $tags = 'null';
         }
-        //$code .= "fx::profiler()->tag('ltv ".$set_name.":".$action_name."');\n";
-        $code .= $tpl." = ";
-	$code .= "\\Floxim\\Floxim\\Template\\Loader";
-        $code .= "::loadTemplateVariant('".$set_name."', '".$action_name."', ".$context_var.", ".$forced_group.", ".$tags.");\n";
-        //$code .= "fx::profiler()->stop();\n";
+        */
+        
+        
+        
+        
         $code .= "if ( ".$tpl." ) {\n";
         $code .= "echo ".$tpl."->setParent(\$this)->render();\n";
         if ( ($subroot_var = $token->getProp('extract_subroot'))) {
@@ -426,8 +466,6 @@ class Compiler
         }
         $code .= "}\n";
         // ------------
-        
-        //$code .= 'echo fx::template(' . $tpl_name .  ', ' .$context_var . ")->setParent(\$this)->render();\n";
         
         // clear vars passed into child template from current context
         if ($is_apply && count($passed_vars) > 0) {

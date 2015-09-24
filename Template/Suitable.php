@@ -88,7 +88,7 @@ class Suitable
 
         $area_map = array();
         
-        if ($layout_ib->getVisual()->get('is_stub')) {
+        if ($layout_ib->getVisual()->get('is_stub') || !$layout_ib->getTemplate()) {
             $this->adjustLayoutVisual($layout_ib, $layout_id, $source_layout_id);
             $layout_visual = $layout_ib->getVisual();
             $area_map = $layout_visual['area_map'];

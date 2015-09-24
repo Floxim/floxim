@@ -121,7 +121,7 @@ class Front extends Base
             }
         }
         
-        if ($layout_ib->getVisual()->get('is_stub')) {
+        if ($layout_ib->getVisual()->get('is_stub') || !$layout_ib->getTemplate()) {
             $suitable = new Template\Suitable();
             //$infoblocks = $page->getPageInfoblocks();
             $infoblocks = fx::data('infoblock')->getForPage($page);
@@ -130,7 +130,7 @@ class Front extends Base
             $infoblocks->findRemove(function ($ib) use ($layout_ib) {
                 return $ib->isLayout() && $ib['id'] !== $layout_ib['id'];
             });
-
+            
             $suitable->suit($infoblocks, fx::env('layout_id'));
             return $infoblocks->findOne(function ($ib) {
                 return $ib->isLayout();

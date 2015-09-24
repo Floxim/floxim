@@ -29,6 +29,19 @@ class Page
         }
         return $this;
     }
+    
+    public function getLessCompiler()
+    {
+        $c = new \lessc();
+        $c->registerFunction("length", function($arg) {
+            if ($arg[0] !== 'list') {
+                return 0;
+            }
+            $res = count($arg[2]);
+            return $res;
+        });
+        return $c;
+    }
 
     /**
      * Get current meta tag page
@@ -73,7 +86,8 @@ class Page
                 
                 $http_base = fx::path()->http(preg_replace("~[^/]+$~", '', $file));
 
-                $less = new \lessc();
+                //$less = new \lessc();
+                $less = $this->getLessCompiler();
                 $less->setImportDir(dirname($full_source_path));
 
                 $file_content = file_get_contents($full_source_path);
@@ -124,7 +138,7 @@ class Page
 
     public function addCssBundle($files, $params = array())
     {
-
+        fx::log('bundl', $files);
         if (!isset($params['name'])) {
             $params['name'] = md5(join($files));
         }
@@ -169,7 +183,8 @@ class Page
             }
 
             if ($less_flag) {
-                $less = new \lessc();
+                //$less = new \lessc();
+                $less = $this->getLessCompiler();
                 $less->setImportDir(fx::path('@home'));
                 $file_content = $less->compile($file_content);
             }

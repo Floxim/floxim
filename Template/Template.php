@@ -50,8 +50,16 @@ class Template
         $str = preg_split("~\s+~", $str);
         $res = array(
             'name' => array_shift($str),
-            'modifiers' => $str
+            'modifiers' => array(),
+            'plain' => array()
         );
+        foreach ($str as $c) {
+            if ($c[0] === '.') {
+                $res['plain'][] = trim($c, '.');
+            } else {
+                $res['modifiers'][]= $c;
+            }
+        }
         return $res;
     }
     
@@ -258,6 +266,9 @@ class Template
      */
     public static function renderArea($area, $context, $mode = 'both')
     {
+        if (isset($area['size'])) {
+            $area['size'] = preg_replace("~[^a-z0-9]+~i", ',', $area['size']);
+        }
         $is_admin = fx::isAdmin();
         if ($mode != 'marker') {
             fx::trigger('render_area', array('area' => $area));
@@ -391,7 +402,6 @@ class Template
             }
             if (!$this->parent) {
                 self::$count_replaces++;
-                fx::log('pre_ars', $result);
                 $result = Template::replaceAreas($result);
                 $result = Field::replaceFields($result);
             }

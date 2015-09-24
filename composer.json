@@ -12,6 +12,7 @@
         "floxim/module-form" : "*",
         "floxim/cache" : "*",
         "leafo/lessphp": "0.4.0",
+        "oyejorge/less.php": "~1.5",
         "phpmailer/phpmailer": "5.2.8",
         "linkorb/jsmin-php": "dev-master"
     }

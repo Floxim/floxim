@@ -547,6 +547,7 @@ class Loader
         $tpl_of = 'false';
         if ($is_theme) {
             $tpl_id = '_layout_body';
+            $tpl_of = 'layout:show';
         } else {
             $file_tpl_name = null;
             preg_match('~([a-z0-9_]+)\.tpl$~', $file, $file_tpl_name);
@@ -557,5 +558,41 @@ class Loader
             $file_data .
             '{/template}';
         return $file_data;
+    }
+    
+    public static function parseTemplateName($name, $group_name, $is_aliased = false) {
+        if (!preg_match("~[\:\@]~", $name)) {
+           $name = $group_name . ":" . $name;
+        }
+        
+        $tpl_at_parts = explode("@", $name);
+        if (count($tpl_at_parts) === 1) {
+            $forced_group = null;
+            list($set_name, $action_name) = explode(":", $name);
+            // save @ for named ("aliased") template groups (like "@admin")
+            if ($set_name === $group_name && $is_aliased) {
+                $set_name = '@'.$set_name;
+            }
+        } else {
+            $forced_group = !empty($tpl_at_parts[0]) ? $tpl_at_parts[0] : $group_name;
+            $action_parts = explode(":", $tpl_at_parts[1]);
+            if (count($action_parts) === 1) {
+                array_unshift($action_parts, $forced_group);
+            }
+            list($set_name, $action_name) = $action_parts;
+        }
+        $tag_parts = explode("#", $action_name);
+        if (count($tag_parts) > 1) {
+            $action_name = $tag_parts[0];
+            $tags = explode(",", $tag_parts[1]);
+        } else {
+            $tags = null;
+        }
+        return array(
+            'group' => $set_name,
+            'action' => $action_name,
+            'forced_group' => $forced_group,
+            'tags' => $tags
+        );
     }
 }
