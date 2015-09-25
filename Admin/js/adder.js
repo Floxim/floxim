@@ -110,11 +110,14 @@ fx_front.prototype.destroy_all_infoblock_placers = function() {
 };
 
 fx_front.prototype.create_inline_entity_adder = function($node) {
-    var $placeholders = $node.data('fx_neighbour_placeholder');
+    var $placeholders = $node.data('fx_contained_placeholders');
+    if (!$placeholders) {
+        return;
+    }
     
     var $placeholder_mark = $node.is('.fx_hidden_placeholder_mark') ? $node : $('.fx_hidden_placeholder_mark', $node);
     var $placeholder_mark_td = $('td', $placeholder_mark); 
-    
+    //console.log($placeholder_mark, $node);
     if ($placeholder_mark.length) {
         var add_text = '. '+ $fx.lang('You can add %s here') + '.';
         add_text = add_text.replace(/\%s/, '<span class="fx_adder_variants"></span>');

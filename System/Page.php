@@ -15,11 +15,6 @@ class Page
     protected $files_css;
 
 
-    /**
-     * To install the meta-tag for the page
-     * @param string title, keywords, description
-     * @param string value
-     */
     public function setMetatags($item, $value, $post = '')
     {
         $item = 'seo_' . $item;
@@ -33,6 +28,7 @@ class Page
     public function getLessCompiler()
     {
         $c = new \lessc();
+        /*
         $c->registerFunction("length", function($arg) {
             if ($arg[0] !== 'list') {
                 return 0;
@@ -40,6 +36,8 @@ class Page
             $res = count($arg[2]);
             return $res;
         });
+         * 
+         */
         return $c;
     }
 
@@ -138,7 +136,6 @@ class Page
 
     public function addCssBundle($files, $params = array())
     {
-        fx::log('bundl', $files);
         if (!isset($params['name'])) {
             $params['name'] = md5(join($files));
         }

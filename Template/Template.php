@@ -386,10 +386,19 @@ class Template
         try {
             $this->$method($this->context);
         } catch (\Exception $e) {
-            fx::log(
-                'template exception', 
-                $e->getMessage()
-            );
+            if (preg_match("~Less_Exception~", get_class($e))) {
+                fx::log(
+                    'Less compiler exception', 
+                    get_class($this).':'.$method,
+                    $e->getMessage(), 
+                    $e->currentFile
+                );
+            } else {
+                fx::log(
+                    'template exception', 
+                    $e->getMessage()
+                );
+            }
         }
         $result = ob_get_clean();
         

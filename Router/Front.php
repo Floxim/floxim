@@ -20,7 +20,7 @@ class Front extends Base
         if (!$page) {
             return null;
         } else {
-			$url = preg_replace("~\?.+$~", '', $url);
+            $url = preg_replace("~\?.+$~", '', $url);
             if (
                 $url && !$page->hasVirtualPath() && urldecode($url) != $page['url']
             ) {
@@ -32,6 +32,9 @@ class Front extends Base
         fx::env('page', $page);
         fx::http()->status('200');
         $layout_ib = $this->getLayoutInfoblock($page);
+        fx::trigger('before_layout_render', array(
+            'layout_infoblock' => $layout_ib
+        ));
         $res = $layout_ib->render();
         return $res;
     }
