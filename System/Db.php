@@ -290,6 +290,19 @@ class Db extends \PDO
     }
     
     public function dump($params) {
+        $dump_path = fx::config('dev.mysqldump_path');
+        
+        if (!$dump_path) {
+            return;
+        }
+        
+        if (is_string($params)) {
+            $params = array('file' => $params);
+        }
+        if (!$params['file']) {
+            return;
+        }
+        $target_file = fx::path($params['file']);
         
         $params = array_merge(array(
             'data' => true,     // export data or not
@@ -299,10 +312,6 @@ class Db extends \PDO
             'tables' => array()
         ), $params);
         
-        $dump_path = fx::config('dev.mysqldump_path');
-        if (!$dump_path) {
-            return;
-        }
         $command = $dump_path.' -u'.fx::config('db.user').' -p'.fx::config('db.password').' --host='.fx::config('db.host');
         
         $command .= ' '.fx::config('db.name');
@@ -324,8 +333,26 @@ class Db extends \PDO
         foreach ($params['tables'] as $t) {
             $command .= ' '.$this->replacePrefix('{{'.$t.'}}');
         }
+        $do_gzip = (isset($params['gzip']) && $params['gzip']) || preg_match("~\.gz$~", $target_file);
+        if ($do_gzip) {
+            $target_file = preg_replace("~\.gz$~", '', $target_file);
+        }
+        $command .= ($params['add'] ? ' >> ' : ' > ').$target_file;
         
-        $command .= ($params['add'] ? ' >> ' : ' > ').$params['file'];
         exec($command);
+        
+        if ($do_gzip && file_exists($target_file)) {
+            $gzipped_file = $target_file.'.gz';
+            $gzipped = gzopen($gzipped_file, 'w');
+            $raw = fopen($target_file, 'r');
+            while (!feof($raw)) {
+                $s = fgets($raw, 4096);
+                gzputs($gzipped, $s, 4096);
+            }
+            fclose($raw);
+            gzclose($gzipped);
+            unlink($target_file);
+            return $gzipped_file;
+        }
     }
 }

@@ -401,9 +401,11 @@ class Entity extends System\Entity
             $map = $declension_map[$lang];
             if ($scenario && isset($map[$scenario])) {
                 $form = explode(".", $map[$scenario]);
-                $res = $decl[$form[1]][$form[0]];
-                if ($res) {
-                    return $res;
+                if (isset($decl[$form[1]]) && isset($decl[$form[1]][$form[0]])) {
+                    $res = $decl[$form[1]][$form[0]];
+                    if ($res) {
+                        return $res;
+                    }
                 }
             }
         }
