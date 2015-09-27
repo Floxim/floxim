@@ -310,7 +310,12 @@ class Suitable
             if (!$is_root_layout) {
                 $source_template_params = $layout_ib->getPropInherited('visual.template_visual', $source_layout_id);
             }
-            $old_areas = fx::template($source_template)->getAreas();
+            $old_template = fx::template($source_template);
+            if ($old_template) {
+                $old_areas = $old_template->getAreas();
+            } else {
+                $old_areas = array();
+            }
             
             $c_relevance = 0;
             $c_variant = null;
