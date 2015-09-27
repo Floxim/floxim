@@ -88,7 +88,7 @@ class Adminpanel extends Admin
     {
         $more_menu = array();
         $c_page = fx::env('page');
-        $more_menu[] = array(
+        $more_menu['edit_current_page'] = array(
             'name'   => fx::alang('Edit current page', 'system'),
             'button' => array(
                 'entity'       => 'content',
@@ -98,7 +98,7 @@ class Adminpanel extends Admin
             )
         );
 
-        $more_menu[] = array(
+        $more_menu['layout_settings'] = array(
             'name'   => fx::alang('Layout settings', 'system'),
             'button' => array(
                 'entity'  => 'infoblock',
@@ -106,7 +106,7 @@ class Adminpanel extends Admin
                 'page_id' => fx::env('page_id')
             )
         );
-        $more_menu[]= array(
+        $more_menu['switch_theme']= array(
             'name' => fx::alang('Change theme', 'system'),
             'button' => array(
                 'entity' => 'layout',
@@ -114,7 +114,7 @@ class Adminpanel extends Admin
                 'page_id' => fx::env('page_id')
             )
         );
-        $more_menu[] = array(
+        $more_menu['page_infoblocks'] = array(
             'name'   => fx::alang('Page infoblocks', 'system'),
             'button' => array(
                 'entity'  => 'infoblock',
@@ -122,7 +122,10 @@ class Adminpanel extends Admin
                 'page_id' => fx::env('page_id')
             )
         );
-        return array('name' => fx::alang('More'), 'children' => $more_menu);
+        $res = array('name' => fx::alang('More'), 'children' => $more_menu);
+        fx::trigger('admin_more_menu_ready', array('menu' => &$res));
+        $res['children'] = array_values($res['children']);
+        return $res;
     }
 
     public static function getButtons()

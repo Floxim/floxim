@@ -196,8 +196,9 @@ class Content extends Admin
                             $linked_com->getItemName('one')
                         );
             
-            $linked_section = $linked_entity->getPath()->copy()->reverse()->findOne(function($i) {
-                return $i->isInstanceOf('floxim.nav.section');
+            
+            $linked_section = $linked_entity->getPath()->copy()->reverse()->findOne(function($i) use ($linked_entity) {
+                return $i->isInstanceOf('floxim.nav.section') && $i['id'] !== $linked_entity['id'];
             });
             
             if ($linked_section) {

@@ -929,6 +929,14 @@ class Fx
         }
         call_user_func_array(array(self::$debugger, 'debug'), func_get_args());
     }
+    
+    public static function cdebug()
+    {
+        if (fx::env('console') !== true) {
+            return;
+        }
+        call_user_func_array('fx::debug', func_get_args());
+    }
 
     public static function log($what)
     {

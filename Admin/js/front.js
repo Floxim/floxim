@@ -338,15 +338,6 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
                     {
                         key:'save'
                     }
-                    /*,
-                    {
-                        key:'edit',
-                        label:'Открыть большую форму',
-                        type:'icon',
-                        icon:'edit',
-                        is_submit:false
-                    }
-                    */
                 ],
                 fields:[
                     {
@@ -354,14 +345,6 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
                         icon:'edit',
                         label:$fx.lang('Edit in form')
                     }
-                    /*,
-                    {
-                        name:'eip_fields_container',
-                        type:'raw',
-                        value:'<div class="fx_eip_fields_container"></div>',
-                        wrap:false
-                    }
-                    */
                 ],
                 onsubmit: function() {
                     var callback = null;
@@ -1255,18 +1238,19 @@ fx_front.prototype.select_item = function(node) {
         this.make_node_panel($node);
     }
     
-    if ($fx.front.mode === 'edit') {
-        if ($node.is('.fx_entity')) {
-            $fx.front.select_content_entity($node);
-        }
-        if ($node.is('.fx_template_var, .fx_template_var_in_att')) {
-            $node.edit_in_place();
-            var $closest_entity = $node.closest('.fx_entity');
-            if ($closest_entity.length && $closest_entity[0] !== $node[0]) {
-                $fx.front.select_content_entity($closest_entity, $node);
-            }
+    
+    if ($node.is('.fx_entity')) {
+        $fx.front.select_content_entity($node);
+    }
+
+    if ($node.is('.fx_template_var, .fx_template_var_in_att')) {
+        $node.edit_in_place();
+        var $closest_entity = $node.closest('.fx_entity');
+        if ($closest_entity.length && $closest_entity[0] !== $node[0]) {
+            $fx.front.select_content_entity($closest_entity, $node);
         }
     }
+    
     if ($node.is('.fx_infoblock')) {
         $fx.front.select_infoblock($node);
     }
@@ -1399,10 +1383,10 @@ fx_front.prototype.hilight = function(container) {
     
     container = container || $('html');
     
+    $('*[data-has_var_in_att="1"]', container).addClass('fx_template_var_in_att');
+    
     $fx.front.collect_adder_placeholders(container);
     
-    $('*[data-has_var_in_att="1"]', container).addClass('fx_template_var_in_att');
-
     var fx_selector = '.fx_template_var, .fx_area, .fx_template_var_in_att, .fx_entity, .fx_infoblock, .fx_hidden_placeholded';
     var items = $(fx_selector, container).not('.fx_unselectable');
     if (container.not('.fx_unselectable').is(fx_selector)) {

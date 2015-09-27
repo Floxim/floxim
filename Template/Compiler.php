@@ -166,6 +166,7 @@ class Compiler
     {
         $tpl_token = Token::create('{template}');
         $target_tpl = $token->getProp('template');
+        $full_target_tpl = $target_tpl;
         
         $id = preg_replace("~[^a-z0-9_]+~", '_', $target_tpl);
         if ( ($own_id = $token->getProp('id'))) {
@@ -183,10 +184,18 @@ class Compiler
                 fx::log('Can not init target template', $token, $e);
             }
         } else {
+            $full_target_tpl = $this->template_set_name.':'.$target_tpl;
             if (isset($this->templates[$target_tpl])) {
-                $source_info = $this->templates[$target_tpl];
+                $source_info =& $this->templates[$target_tpl];
+                if (!$own_id) {
+                    $source_hash = md5($source_info['_code'].$target_tpl);
+                    if (!isset($source_info['tags'])){
+                        $source_info['tags'] = array();
+                    }
+                    $source_info['tags'][]= $source_hash;
+                    $full_target_tpl .= '#'.$source_hash;
+                }
             }
-            $target_tpl = $this->template_set_name.':'.$target_tpl;
         }
         
         // copy these props from source template and/or preset token to the generated template
@@ -202,7 +211,7 @@ class Compiler
             $tpl_token->setProp('name', $source_info['name']. ( $own_id ? '#'.$own_id : ''));
         }
         
-        $tpl_token->setProp('is_preset_of', $target_tpl);
+        $tpl_token->setProp('is_preset_of', preg_replace("~\#.+$~", '', $full_target_tpl));
         
         if ($token->getProp('replace')) {
             $tpl_token->setProp('replace_original', true);
@@ -219,7 +228,8 @@ class Compiler
             }
         }
         
-        $apply = '{apply '.$token->getProp('template');
+        //$apply = '{apply '.$token->getProp('template');
+        $apply = '{apply '.$full_target_tpl;
         $vars = array();
         foreach ($token->getChildren() as $child) {
             if (in_array($child->name, array('js', 'css', 'param', 'if', 'else', 'elseif', 'set'))) {
@@ -628,7 +638,6 @@ class Compiler
                     $linebreaks = false;
                 }
             }
-            //fx::debug($token, $linebreaks, $token_is_visual);
             if (!$token_type) {
                 $token_type = 'string';
             } else {
