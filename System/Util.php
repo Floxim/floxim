@@ -463,7 +463,7 @@ class Util
         // export main content table
         fx::db()->dump(array(
             'tables' => array('floxim_main_content'),
-            'where' => 'site_id  = '.$site_id,
+            'where' => 'site_id  = '.$site_id." and type != 'floxim.user.user'",
             'schema' => false,
             'file' => $target_file,
             'add' => true
