@@ -517,6 +517,9 @@ class Thumb
             if (isset($prop_map[$prop])) {
                 $prop = $prop_map[$prop];
             }
+            if ($prop === 'crop-offset') {
+                $prop = 'crop_offset';
+            }
             $params[$prop] = $value;
         }
         return $params;
