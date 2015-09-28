@@ -327,7 +327,7 @@ class Util
             'component',
             'datatype',
             'field',
-            'floxim_user_user',
+            //'floxim_user_user',
             'lang',
             'lang_string',
             'layout',
@@ -372,12 +372,25 @@ class Util
             'add' => true
         ));
         
+        $cross_users = fx::data('floxim.user.user')->where('site_id',0)->all();
+        $user_tables = $this->getContentDumpTables($cross_users);
+        
+        foreach ($user_tables as $t => $item_ids) {
+            fx::db()->dump(array(
+                'tables' => array($t),
+                'where' => "id in (".join(', ', $item_ids).")", // 'floxim.user.user'",
+                'file' => $target_file,
+                'add' => true
+            ));
+        }
+        /*
         fx::db()->dump(array(
             'tables' => array('floxim_main_content'),
             'where' => "type = 'floxim.user.user'",
             'file' => $target_file,
             'add' => true
         ));
+        */
     }
     
     /**
@@ -471,25 +484,13 @@ class Util
         
         // get existing content items
         $items = fx::db()->getResults('select id, type from {{floxim_main_content}} where site_id = '.$site_id);
-        $items = fx::collection($items)->group('type');
-
-        $tables = array();
-
-        foreach ($items as $com_keyword => $data) {
-            $com = fx::component($com_keyword);
-            $com_tables = $com->getAllTables();
-            foreach ($com_tables as $t) {
-                if ($t === 'floxim_main_content') {
-                    continue;
-                }
-                if (!isset($tables[$t])) {
-                    $tables[$t] = array();
-                }
-                $tables[$t] = array_merge($tables[$t], $data->getValues('id'));
-            }
-        }
+        
+        $tables = $this->getContentDumpTables(fx::collection($items));
         
         foreach ($tables as $t => $item_ids) {
+            if ($t === 'floxim_main_content') {
+                continue;
+            }
             // export content table
             fx::db()->dump(array(
                 'tables' => array($t),
@@ -499,6 +500,24 @@ class Util
                 'add' => true
             ));
         }
+    }
+    
+    public function getContentDumpTables($items) 
+    {
+        $items = $items->group('type');
+        $tables = array();
+
+        foreach ($items as $com_keyword => $data) {
+            $com = fx::component($com_keyword);
+            $com_tables = $com->getAllTables();
+            foreach ($com_tables as $t) {
+                if (!isset($tables[$t])) {
+                    $tables[$t] = array();
+                }
+                $tables[$t] = array_merge($tables[$t], $data->getValues('id'));
+            }
+        }
+        return $tables;
     }
     
     function arrayLinear($arr) {
