@@ -867,6 +867,7 @@ class Fx
         return $util;
     }
 
+    /*
     public static function date($value, $format = 'Y-m-d H:i:s')
     {
         if (empty($value)) {
@@ -880,7 +881,89 @@ class Fx
         }
         return date($format, $value);
     }
-
+    */
+    
+    protected static function smartDateFormat($value, $format) {
+        $ru_month = function($date, $placeholder) {
+            $months = array (
+              1 => 'январь',
+              2 => 'февраль',
+              3 => 'март',
+              4 => 'апрель',
+              5 => 'май',
+              6 => 'июнь',
+              7 => 'июль',
+              8 => 'август',
+              9 => 'сентябрь',
+              10 => 'октябрь',
+              11 => 'ноябрь',
+              12 => 'декабрь'
+            );
+            $months_gen = array (
+              1 => 'января',
+              2 => 'февраля',
+              3 => 'марта',
+              4 => 'апреля',
+              5 => 'мая',
+              6 => 'июня',
+              7 => 'июля',
+              8 => 'августа',
+              9 => 'сентября',
+              10 => 'октября',
+              11 => 'ноября',
+              12 => 'декабря'
+            );
+            $parts = explode(":", $placeholder);
+            $arr = isset($parts[1]) && $parts[1] === 'gen' ? $months_gen : $months;
+            $month_num = (int) date('m', $date);
+            $month_name = $arr[$month_num];
+            if ( ucfirst($parts[0]) === $parts[0]) {
+                $month_name = fx::util()->ucfirst($month_name);
+            }
+            return $month_name;
+        };
+        $parts = preg_split("~(\%.+?\%)~", $format, -1, PREG_SPLIT_DELIM_CAPTURE);
+        $res = [];
+        foreach ($parts as $part) {
+            $is_special = preg_match("~\%(.+)\%~", $part, $placeholder);
+            if (!$is_special) {
+                $res []= date($part, $value);
+                continue;
+            }
+            $placeholder = $placeholder[1];
+            $chunk = '';
+            switch ($placeholder) {
+                case 'month:gen':
+                case 'Month:gen':
+                case 'month':
+                case 'Month':
+                    $chunk = $ru_month($value, $placeholder);
+                    break;
+            }
+            $res []= $chunk;
+        }
+        return join('', $res);
+    }
+    
+    public static function date($value = null, $format = 'Y-m-d H:i:s') {
+      if ($value === null) {
+        $value = time();
+      }
+      if (empty($value)) {
+        return $value;
+      }
+      if (!is_numeric($value)) {
+        $value = strtotime($value);
+      }
+      if (empty($value)) {
+        return $value;
+      }
+      if (!strstr($format, '%')) {
+        return date($format, $value);
+      }
+      return self::smartDateFormat($value, $format);
+    }
+    
     public static function image($value, $format)
     {
         try {
