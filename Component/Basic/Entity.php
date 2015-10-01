@@ -427,14 +427,13 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
             $att_fields []= $linker_field;
         }
         
-        /*
-        if (!$this['id'] && (!$this['parent_id'] || !$this['infoblock_id'])) {
+        
+        if (!$this['id'] && (!$this['parent_id'] || !$this['infoblock_id']) && !$this->hasPage()) {
             $att_fields = array_merge(
                 $this->getStructureFields(),
                 $att_fields
             );
         }
-        */
         
         foreach ($att_fields as $field_key => $field_meta) {
             $field_meta['in_att'] = true;

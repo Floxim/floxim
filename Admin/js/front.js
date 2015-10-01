@@ -3,6 +3,7 @@
 (function($) {
 
 window.fx_front = function () {
+    
     this.mode = '';
     $('html').on('mouseover.fx_front', function(e) {
         $fx.front.mouseover_node = e.target;
@@ -165,12 +166,17 @@ fx_front.prototype.handle_click = function(e) {
     if ($fx.front.mode === 'view' || $fx.front.select_disabled) {
         return;
     }
+    
     var $target = $(e.target);
     
     
     // don't remove selection when mousedown target doesn't match current click (mouseup) target
     // e.g. user tries to select some text and stops selection when pointer is outside the edited node
     if (e.target !== $fx.front.last_mousedown_node) {
+        if ($target.closest('a').length) {
+            console.log('skip from hk');
+            return false;
+        }
         return;
     }
     
@@ -292,10 +298,8 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
     var null_size = {width:'',height:''};
     
     if (placeholder_meta.add_to_top) {
-        console.log('att');
         $rel_node = $placeholder_parent.find('.fx_entity').first();
         rel_position = 'before';
-        console.log($rel_node);
     } else {
         $rel_node = $placeholder_parent.find('.fx_entity').last();
         rel_position = 'after';

@@ -1003,6 +1003,7 @@ fx_edit_in_place.prototype.make_wysiwyg = function () {
         linebreaks:linebreaks,
         placeholder:false,
         toolbarPreset: toolbar,
+        source:false,
         toolbarExternal: '.editor_panel',
         initCallback: function() {
             var $box = $node.closest('.redactor-box');
@@ -1089,7 +1090,7 @@ var smart_date_format = function(format, timestamp) {
         var names = $fx.lang(parts[1] === 'gen' ? 'months_gen' : 'months');
         var month_num = php_date_format('m', date) * 1;
         var month_name = names[month_num];
-        if ( parts[0].toUpperCase() === parts[0]) {
+        if ( parts[0][0].toUpperCase() === parts[0][0]) {
             month_name = month_name[0].slice(0,1).toUpperCase() + month_name.slice(1);
         }
         return month_name;
@@ -1098,7 +1099,7 @@ var smart_date_format = function(format, timestamp) {
         res = [];
     for (var i = 0; i< parts.length; i++) {
         var part = parts[i];
-        var placeholder = part.match(/\%(.+)\%/)
+        var placeholder = part.match(/\%(.+)\%/);
         if (!placeholder) {
             res.push(php_date_format(part, timestamp));
             continue;
