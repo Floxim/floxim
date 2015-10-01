@@ -92,7 +92,7 @@ window.fx_eip = {
                 formatted_value = value;
                 if (meta.type === 'datetime' && meta.format_modifier){
                     var timestamp = $fx_fields.parse_std_date(value).getTime() / 1000;
-                    formatted_value = php_date_format(meta.format_modifier, timestamp);
+                    formatted_value = fx_date_format(meta.format_modifier, timestamp);
                 }
                 $node.html(formatted_value);
                 if (formatted_value === '') {
@@ -375,7 +375,13 @@ fx_edit_in_place.prototype.start = function(meta) {
         if (meta.real_value !== undefined) {
             meta.initial_value = meta.real_value;
         } else if (meta.target_type === 'var') {
-            meta.initial_value = this.node.is('.fx_hidden_placeholded') ? '' : this.node.html();
+            if (this.node.is('.fx_hidden_placeholded')) {
+                meta.initial_value = '';
+            } else if ((meta.type === 'text' && meta.html && meta.html !== '0') || meta.type === 'html') {
+                meta.initial_value = this.node.html();
+            } else {
+                meta.initial_value = this.node.text();
+            }
         } else {
             meta.initial_value = meta.value;
         }
@@ -386,11 +392,16 @@ fx_edit_in_place.prototype.start = function(meta) {
     
     switch (meta.type) {
         case 'datetime':
-            this.add_panel_field(
+            var $field = this.add_panel_field(
                 $.extend({}, meta, {
                     value: meta.real_value
                 })
             );
+            var $date_inp = $('.date_input', $field);
+            $date_inp.on('change', function() {
+                //append_value: function($node, meta, value, formatted_value) {
+                fx_eip.append_value(edit_in_place.node, meta, $date_inp.val());
+            });
             break;
         case 'image': case 'file': 
             var field_meta = $.extend(
@@ -730,10 +741,12 @@ fx_edit_in_place.prototype.clear_redactor_val = function (v) {
     var r_blocks = '(comment|html|body|head|title|meta|style|script|link|iframe|table|thead|tfoot|caption|col|colgroup|tbody|tr|td|th|div|dl|dd|dt|ul|ol|li|select|option|form|map|area|blockquote|address|math|style|p|h[1-6]|hr|fieldset|legend|section|article|aside|hgroup|header|footer|nav|figure|figcaption|details|menu|summary)';
     var rex = new RegExp('[\\s\\t\\n\\r]*(</?'+r_blocks+'[^>]*?>)[\\s\\t\\n\\r]*', 'ig');
     v = v.replace(rex, '$1');
+    /*
     var $temp = $('<div contenteditable="true"></div>');
     $temp.html(v);
     v = $temp.html();
     $temp.remove();
+    */
     return v;
 };
 
@@ -745,6 +758,22 @@ fx_edit_in_place.prototype.clear_spaces = function(line) {
         }
     }
     return clear_val;
+};
+
+window.show_spaces = function() {
+    for (var j = 0; j < arguments.length; j++) {
+        var s = arguments[j];
+        var res = '';
+        for (var i = 0; i < s.length; i++) {
+            var ch = s[i];
+            if (ch.match(/\s/)) {
+                res += '['+ch.charCodeAt(0)+']';
+            } else {
+                res += ch;
+            }
+        }
+        console.log(res);
+    }
 };
 
 fx_edit_in_place.prototype.get_vars = function() {
@@ -764,7 +793,7 @@ fx_edit_in_place.prototype.get_vars = function() {
         var is_changed = false;
         if (this.is_wysiwyg) {
             var new_val = node.redactor('code.get');
-            new_val = $.trim(new_val);
+            //new_val = $.trim(new_val);
             var clear_new = this.clear_redactor_val(new_val);
             var clear_old = this.clear_redactor_val(saved_val);
             
@@ -781,6 +810,11 @@ fx_edit_in_place.prototype.get_vars = function() {
                 node.html('');
             }
             is_changed = new_val !== saved_val;
+            /*
+            if (is_changed) {
+                show_spaces(saved_val, new_val);
+            }
+            */
         }
 
         if (is_changed) {
@@ -951,7 +985,9 @@ fx_edit_in_place.prototype.make_wysiwyg = function () {
         $node.attr('id', 'stub'+Math.round(Math.random()*1000));
     }
     var $panel = $fx.front.get_node_panel();
-    $panel.append('<div class="editor_panel" />').show();
+    if ($panel) {
+    	$panel.append('<div class="editor_panel" />').show();
+    }
     var linebreaks = this.meta.var_type === 'visual';
     if (this.meta.linebreaks !== undefined) {
         linebreaks = !!this.meta.linebreaks;
@@ -1045,6 +1081,49 @@ $(function() {
         }
     }
 });
+
+var smart_date_format = function(format, timestamp) {
+    var ru_month = function(date, placeholder) {
+
+        var parts = placeholder.split(/\:/);
+        var names = $fx.lang(parts[1] === 'gen' ? 'months_gen' : 'months');
+        var month_num = php_date_format('m', date) * 1;
+        var month_name = names[month_num];
+        if ( parts[0].toUpperCase() === parts[0]) {
+            month_name = month_name[0].slice(0,1).toUpperCase() + month_name.slice(1);
+        }
+        return month_name;
+    };
+    var parts = format.split(/(\%.+?\%)/),
+        res = [];
+    for (var i = 0; i< parts.length; i++) {
+        var part = parts[i];
+        var placeholder = part.match(/\%(.+)\%/)
+        if (!placeholder) {
+            res.push(php_date_format(part, timestamp));
+            continue;
+        }
+        placeholder = placeholder[1];
+        var chunk = '';
+        switch (placeholder) {
+            case 'month:gen':
+            case 'Month:gen':
+            case 'month':
+            case 'Month':
+                chunk = ru_month(timestamp, placeholder);
+                break;
+        }
+        res.push(chunk);
+    }
+    return res.join('');
+};
+
+var fx_date_format = function(format, timestamp) {
+    if (format.indexOf('%') === -1) {
+        return php_date_format(format, timestamp);
+    }
+    return smart_date_format(format, timestamp);
+};
 
 var php_date_format = function ( format, timestamp ) {	// Format a local time/date
     // 
@@ -1233,5 +1312,36 @@ var php_date_format = function ( format, timestamp ) {	// Format a local time/da
             return ret;
     });
 };
+window.dumpSelection = function(name) {
+    var r = window.getSelection().getRangeAt(0),
+        rc = r.startContainer,
+        rcp = r.startContainer.parentNode;
+    console.group(name || 'selection', rcp);
+    for (var jj = 0; jj < rcp.childNodes.length; jj++)  {
+        var cn = rcp.childNodes[jj];
+        if (cn === rc) {
+            console.log('>>', cn.data ? '~'+cn.data+'~' :  cn, r.startOffset)
+        } else {
+            console.log(cn.data ? '~'+cn.data+'~' : cn);
+        }
+    }
+    console.groupEnd();
+};
 
+window.dumpNode = function(node, title) {
+	var r = window.getSelection().getRangeAt(0),
+        rc = r.startContainer;
+        
+	var indom = ' ('+$(node).closest('body') ? 'indom' : 'outofdom'+')';
+	console.group(node, title ? title : '', rc, r.startOffset, r.endOffset);
+	for (var jj = 0; jj < node.childNodes.length; jj++)  {
+        var cn = node.childNodes[jj];
+        if (cn === rc) {
+            console.log('>>', cn.data ? '~'+cn.data+'~' :  cn, r.startOffset)
+        } else {
+            console.log(cn.data ? '~'+cn.data+'~' : cn);
+        }
+    }
+    console.groupEnd();
+}
 })($fxj);

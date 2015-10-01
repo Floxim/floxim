@@ -923,7 +923,7 @@ class Fx
             return $month_name;
         };
         $parts = preg_split("~(\%.+?\%)~", $format, -1, PREG_SPLIT_DELIM_CAPTURE);
-        $res = [];
+        $res = array();
         foreach ($parts as $part) {
             $is_special = preg_match("~\%(.+)\%~", $part, $placeholder);
             if (!$is_special) {

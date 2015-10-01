@@ -236,6 +236,9 @@ class Page
 
     public function addJsFile($file)
     {
+        if (empty($file)) {
+            return;
+        }
         if (!preg_match("~^https?://~", $file)) {
             $file = fx::path()->http($file);
         }
@@ -275,7 +278,9 @@ class Page
 
         $http_files = array();
         foreach ($files as $f) {
-            $http_files[] = fx::path()->http($f);
+            if (!empty($f)) {
+                $http_files[] = fx::path()->http($f);
+            }
         }
         $this->all_js = array_merge($this->all_js, $http_files);
 

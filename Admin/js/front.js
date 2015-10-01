@@ -292,8 +292,13 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
     var null_size = {width:'',height:''};
     
     if (placeholder_meta.add_to_top) {
-        $rel_node = $placeholder.parent().find('.fx_entity').first();
+        console.log('att');
+        $rel_node = $placeholder_parent.find('.fx_entity').first();
         rel_position = 'before';
+        console.log($rel_node);
+    } else {
+        $rel_node = $placeholder_parent.find('.fx_entity').last();
+        rel_position = 'after';
     }
     
     if ($rel_node && $rel_node.data('fx_entity')) {
@@ -307,6 +312,7 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
             placeholder_meta.placeholder.__move_after = rel_id;
         }
     } else {
+        
         $placeholder_parent.append($placeholder);
     }
 
@@ -1536,11 +1542,6 @@ fx_front.prototype.hilight = function(container) {
         $fx.front.create_inline_entity_adder($(this));
     });
     
-    /*
-    if (mode === 'edit') {
-        $fx.front.collect_adder_placeholders(container);
-    } 
-    */
     if (mode !== 'view') {
         items.filter('.fx_area').each(function(index, i) {
             var $area = $(i);

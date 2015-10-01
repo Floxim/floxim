@@ -1,5 +1,6 @@
 (function($fx) {
     $fx.dictionary = {
+        lang:'en',
         date_order:'y-m-d h:i',
         date_placeholder_d: 'DD',
         date_placeholder_m: 'MM',

@@ -252,7 +252,10 @@ window.$fx_fields = {
                     'unorderedlist', 'orderedlist',
                     //'outdent', 'indent',
                     'image', 'video', 'file', 'table', 'link', 'alignment', 'horizontalrule'],
-            plugins: ['fontcolor']
+            plugins: ['fontcolor'],
+            cleanSpaces:false,
+            lang: $fx.lang('lang'),
+            formatting: ['p', 'h2', 'h3']
         }, options);
         
         if (options.toolbarPreset === 'inline') {
@@ -749,6 +752,7 @@ function export_parts() {
         var date = new Date(res);
         if (date && !isNaN(date.getTime())) {
             inp.val( format_date ( date ) );
+            inp.trigger('change');
         }
     }
 };

@@ -107,7 +107,7 @@ window.$fx = {
                     for (var i = 0; i < js_assets.length; i++) {
                         var asset = js_assets[i];
                         var is_loaded = $.inArray(asset, window.fx_assets_js);
-                        console.log('sys', asset, is_loaded, window.fx_assets_js);
+                        //console.log('sys', asset, is_loaded, window.fx_assets_js);
                         if (is_loaded !== -1) {
                             continue;
                         }

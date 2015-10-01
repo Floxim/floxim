@@ -112,14 +112,15 @@ class Admin extends System\Controller
     public static function addAdminFiles()
     {
         $path_floxim = fx::path('@floxim');
+        $lang = fx::config('lang.admin');
         $js_files = array(
             FX_JQUERY_PATH,
             $path_floxim . '/lib/js/jquery.bem.js', // https://github.com/zenwalker/jquery-bem
             $path_floxim . '/Admin/js/fxj.js',
             $path_floxim . '/Admin/js/fx.js',
-            $path_floxim . '/Admin/js/js-dictionary-' . fx::config('lang.admin'). '.js',
+            $path_floxim . '/Admin/js/js-dictionary-' . $lang . '.js',
             FX_JQUERY_UI_PATH,
-            //$path_floxim . '/lib/js/jquery.nestedSortable.js',
+            $lang === 'en' ? null : $path_floxim.'/lib/js/jquery.datepicker.'.$lang.'.js',
             $path_floxim . '/lib/js/jquery.ba-hashchange.min.js',
             $path_floxim . '/lib/js/jquery.json-2.3.js',
             $path_floxim . '/lib/js/ajaxfileupload.js',
@@ -131,7 +132,7 @@ class Admin extends System\Controller
             $path_floxim . '/Admin/js/adder.js',
             $path_floxim . '/Admin/js/buttons.js',
             $path_floxim . '/Admin/js/form.js',
-            $path_floxim . '/Admin/js/patch.js',
+            //$path_floxim . '/Admin/js/patch.js',
             $path_floxim . '/Admin/js/debug.js',
             $path_floxim . '/Admin/js/livesearch.js',
             $path_floxim . '/Admin/js/fields.js',
@@ -140,7 +141,9 @@ class Admin extends System\Controller
             $path_floxim . '/Admin/js/popup.js',
             $path_floxim . '/Admin/js/admin.js',
             $path_floxim . '/Admin/js/nav.js',
-            $path_floxim . '/lib/editors/redactor/redactor.js',
+            $path_floxim . '/lib/editors/redactor/redactor.patched.js',
+            //$path_floxim . '/lib/editors/redactor/redactor.js',
+            $lang === 'en' ? null : $path_floxim.'/lib/editors/redactor/langs/'.$lang.'.js',
             $path_floxim . '/lib/editors/redactor/fontcolor.js',
             $path_floxim . '/lib/codemirror/codemirror.all.min.js',
             $path_floxim . '/lib/js/jquery.form.js',
