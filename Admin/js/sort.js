@@ -167,14 +167,14 @@ $fx.sortable = {
                 }
                 $helper.offset(helper_offset);
                 if (is_moving) {
-                    console.log('ret mvng');
+                    //console.log('ret mvng');
                     return;
                 }
                 
                 var box = $helper[0].getBoundingClientRect();
                 var intersect = get_intersection(box);
                 if ( intersect.$node &&  intersect.rel_square > 0.5) {
-                    console.log('ok', intersect);
+                    //console.log('ok', intersect);
                     var old_rect = placeholder.getBoundingClientRect();
                     
                     if (intersect.x < 0) {
@@ -217,7 +217,7 @@ $fx.sortable = {
                         is_moving = false;
                     }, duration);
                 } else {
-                    console.log('not good', intersect);
+                    //console.log('not good', intersect);
                 } 
                 
             },

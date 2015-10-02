@@ -986,7 +986,7 @@ fx_edit_in_place.prototype.make_wysiwyg = function () {
     }
     var $panel = $fx.front.get_node_panel();
     if ($panel) {
-    	$panel.append('<div class="editor_panel" />').show();
+    	$panel.append('<div class="editor_panel fx_node_panel__item" />').show();
     }
     var linebreaks = this.meta.var_type === 'visual';
     if (this.meta.linebreaks !== undefined) {

@@ -300,9 +300,6 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
     if (placeholder_meta.add_to_top) {
         $rel_node = $placeholder_parent.find('.fx_entity').first();
         rel_position = 'before';
-    } else {
-        $rel_node = $placeholder_parent.find('.fx_entity').last();
-        rel_position = 'after';
     }
     
     if ($rel_node && $rel_node.data('fx_entity')) {
@@ -316,7 +313,7 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
             placeholder_meta.placeholder.__move_after = rel_id;
         }
     } else {
-        
+        console.log('use append', placeholder_meta);
         $placeholder_parent.append($placeholder);
     }
 
@@ -2009,11 +2006,22 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
     
     var $sortable_entities = $fx.front.get_sortable_entities($entity.parent());
     if ( $sortable_entities && ce_id ) {
+        function get_next_id($entity) {
+            var $next_entity = $entity.nextAll('.fx_entity').first(),
+                next_id = null;
+            if ($next_entity.length > 0) {
+                var next_data = $next_entity.data('fx_entity');
+                next_id = next_data[2] || next_data[0];
+            }
+            return next_id;
+        }
+        var current_next_id = get_next_id($entity);
         $fx.sortable.create({
             node:$entity,
             entities:$sortable_entities,
             onstart: function() {
                 fx_eip.stop();
+                $entity.trigger('fx_start_sorting');
                 $fx.front.outline_block_off($entity);
                 $fx.front.disable_node_panel();
                 $fx.front.disable_hilight();
@@ -2024,12 +2032,14 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
                 var data = $entity.data('fx_entity'),
                     id = data[2] || data[0],
                     type = data[3] || data[1];
+            
+                $entity.trigger('fx_stop_sorting');
 
-                var $next_entity = $entity.nextAll('.fx_entity').first(),
-                    next_id = null;
-                if ($next_entity.length > 0) {
-                    var next_data = $next_entity.data('fx_entity');
-                    next_id = next_data[2] || next_data[0];
+                var next_id = get_next_id($entity);
+                if (next_id === current_next_id) {
+                    $fx.front.enable_node_panel();
+                    $fx.front.enable_hilight();
+                    return;
                 }
                 
                 $fx.post({

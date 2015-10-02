@@ -2,6 +2,42 @@
 <div class="fx_controller_select">
     <input type="hidden" <?=$t.field_id_name(_c)?> class="tree_value_input" />
     <?
+    var children = _c.values;
+    ?>
+    <div class="fx_controller_list">
+        <?
+        for (var i = 0; i < children.length; i++){
+            var child = children[i];
+            var subs = child.children;
+            ?>
+            <div class="fx_controller_group">
+                <div class="fx_controller_group__title">
+                    <?= child.name ?>
+                </div>
+                <div class="fx_controller_group__children">
+                    <? for (var j = 0; j < subs.length; j++) { 
+                        var sub = subs[j]; 
+                        ?>
+                        <div class="fx_controller_variant" data-id="<?= sub.id ?>">
+                            <div class="fx_controller_variant__icon"></div>
+                            <div class="fx_controller_variant__title"><?= sub.name ?></div>
+                        </div>
+                    <? } ?>
+                </div>
+            </div>
+            <?
+        }
+        ?>
+    </div>
+</div>
+
+<!--jquery-->
+fx_controller_tree(html);
+
+<!--[input ? _c.type =='tree' && _c.name == '__controller']-->
+<div class="fx_controller_select">
+    <input type="hidden" <?=$t.field_id_name(_c)?> class="tree_value_input" />
+    <?
     var children = _c.children || _c.values;
     ?>
     <!--

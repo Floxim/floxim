@@ -12,6 +12,168 @@ class Infoblock extends Admin
 {
 
 
+    public function getAvailableBlocks($page, $area_meta = null)
+    {
+        $controllers = fx::data('component')->all();
+        $controllers->concat(fx::data('widget')->all());
+        
+        $result = array(
+            'controllers' => array(),
+            'actions' => array(),
+            'groups' => array(
+                'content' => array(
+                    'name' => 'Данные'
+                ),
+                'content:infoblock' => array(
+                    'name' => 'Новые данные',
+                    'description' => 'Добавьте пустой блок и заполните его новыми данными.'
+                ),
+                'content:filtered' => array(
+                    'name' => 'Данные по фильтру',
+                    'description' => 'Добавьте блок для показа существующих данных - всех, или ограниченных набором условий.'
+                ),
+                'content:selected' => array(
+                    'name' => 'Данные, отобранные вручную',
+                    'description' => 'Добавьте блок и внесите в него уже существующие данные, выбрав их из списка.'
+                ),
+                'widget' => array(
+                    'name' => 'Виджеты'
+                )
+            )
+        );
+        
+        foreach ($controllers as $c) {
+            
+            if (fx::config()->isBlockDisabled($c['keyword'])) {
+                continue;
+            }
+            
+            $type = $c instanceof Component\Entity ? 'component' : 'widget';
+            $keyword = $c['keyword'];
+            
+            $result['controllers'] [$keyword]= array(
+                'name'     => $c['name'],
+                'keyword' => $keyword,
+                'type' => $type
+            );
+            $ctrl = fx::controller($keyword);
+            $actions = $ctrl->getActions();
+            foreach ($actions as $action_code => $action_info) {
+                // do not show actions starting with "_"
+                if (preg_match("~^_~", $action_code)) {
+                    continue;
+                }
+                
+                if (fx::config()->isBlockDisabled($c['keyword'], $action_code)) {
+                    continue;
+                }
+                
+                if (isset($action_info['check_context'])) {
+                    $is_avail = call_user_func($action_info['check_context'], $page);
+                    if (!$is_avail) {
+                        continue;
+                    }
+                }
+                
+                $act_ctr = fx::controller($keyword . ':' . $action_code);
+                $act_templates = $act_ctr->getAvailableTemplates(fx::env('layout'), $area_meta);
+                if (count($act_templates) == 0) {
+                    continue;
+                }
+                
+                $action = array(
+                    'controller' => $keyword,
+                    'keyword' => $action_code,
+                    'name' => $action_info['name'],
+                    'id' => $keyword.':'.$action_code
+                );
+                
+                if (isset($action_info['group'])) {
+                    $action['group'] = $action_info['group'];
+                } elseif ($type === 'component' && preg_match("~^list_(.+)$~", $action_code, $list_type)) {
+                    $action['group'] = 'content';
+                    $list_type = $list_type[1];
+                    $action['subgroup'] = in_array($list_type, array('infoblock', 'selected')) ? $list_type : 'filtered';
+                } else {
+                    $action['group'] = 'widget';
+                }
+                if (empty($action['name'])) {
+                    $action['name'] = $action_code;
+                }
+                
+                $result['actions'] []= $action;
+            }
+        }
+        //fx::log($result);
+        return $result;
+    }
+    
+    protected function groupAvailableBlocksWithListTypesOnTop($data) 
+    {
+  	$groups = $data['groups'];
+        
+        foreach ($data['actions'] as $a) {
+            if ($a['subgroup']) {
+                $group_keyword = $a['group'].':'.$a['subgroup'];
+            } else {
+                $group_keyword = $a['group'];
+            }
+
+
+            $c_group = &$groups[$group_keyword];
+
+            if (!isset($c_group['children'])) {
+                $c_group['children'] = array();
+            }
+            if (isset($a['subgroup'])) {
+                $controller = $data['controllers'][$a['controller']];
+                $a['full_name'] = $a['name'];
+                $a['name'] = $controller['name'];
+            }
+            $c_group['children'][]= $a;
+        }
+        $res = array();
+        foreach ($groups as $gk => $g) {
+            if (!isset($g['children'])) {
+                continue;
+            }
+            $g['keyword'] = $gk;
+            $res[]= $g;
+        }
+        return $res;
+    }
+
+    function groupAvailableBlocksWithListTypesOnBottom($data) 
+    {
+        $groups = array();
+        foreach ($data['groups'] as $gk => $g) {
+          if (!preg_match("~\:~", $gk)) {
+            $groups[$gk]= $g;
+          }
+        }
+        foreach ($data['actions'] as $a) {
+            $c_group = &$groups[$a['group']];
+            if (!isset($c_group['children'])) {
+                    $c_group['children'] = array();
+            }
+            if (!isset($a['subgroup'])) {
+                    $c_group['children'] []= $a;
+                continue;
+            }
+            $com_keyword = $a['controller'];
+            if (!isset($c_group['children'][$com_keyword])) {
+                $com = $data['controllers'][$com_keyword];
+                $c_group['children'][$com_keyword] = $com;
+                $c_group['children'][$com_keyword]['children'] = array();
+            }
+            $c_group['children'][$com_keyword]['children'][]= $a;
+        }
+        foreach ($groups as &$g) {
+            $g['children'] = array_values($g['children']);
+        }
+        return $groups;
+    }
+    
     /**
      * Select a controller action
      */
@@ -39,15 +201,19 @@ class Infoblock extends Admin
         $page = fx::env('page');
 
         $area_meta = $input['area'];
+        
+        $blocks = $this->getAvailableBlocks($page, $area_meta);
+        $blocks = $this->groupAvailableBlocksWithListTypesOnTop($blocks);
 
         /* The list of controllers */
         $fields['controller'] = array(
             'type'   => 'tree',
             'name'   => 'controller',
-            'values' => array()
+            'values' => $blocks
         );
         
 
+        /*
         $controllers = fx::data('component')->all();
         
         $controllers->concat(fx::data('widget')->all());
@@ -134,6 +300,7 @@ class Infoblock extends Admin
                 $fields['controller']['values'][] = $c_item;
             }
         }
+        */
         
         $result = array(
             'fields'        => $fields,

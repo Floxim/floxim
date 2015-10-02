@@ -567,9 +567,17 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
     {
         $initial_key = key($this->data);
         $result = array();
+        $key_is_closure = $key_field instanceof \Closure;
         if ($field instanceof \Closure) {
             foreach ($this->data as $k => $v) {
-                $res_key = $key_field ? $v[$key_field] : $k;
+                if ($key_is_closure) {
+                    $res_key = call_user_func($key_field, $v, $k);
+                } else if ($key_field) {
+                    $res_key = $v[$key_field];
+                } else {
+                    $res_key = $k;
+                }
+                //$res_key = $key_field ? $v[$key_field] : $k;
                 $result[$res_key] = call_user_func($field, $v, $k);
             }
             if ($as_collection) {
@@ -581,7 +589,14 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         if (is_array($field)) {
             foreach ($field as $fd) {
                 foreach ($this->data as $k => $v) {
-                    $res_key = $key_field ? $v[$key_field] : $k;
+                    //$res_key = $key_field ? $v[$key_field] : $k;
+                    if ($key_is_closure) {
+                        $res_key = call_user_func($key_field, $v, $k);
+                    } else if ($key_field) {
+                        $res_key = $v[$key_field];
+                    } else {
+                        $res_key = $k;
+                    }
                     if ((is_array($v) || $v instanceof \ArrayAccess) && isset($v[$fd])) {
                         $result[$res_key][$fd] = $v[$fd];
                     } elseif (is_object($v) && isset($v->$fd)) {
@@ -599,7 +614,14 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
             return $result;
         }
         foreach ($this->data as $k => $v) {
-            $res_key = $key_field ? $v[$key_field] : $k;
+            //$res_key = $key_field ? $v[$key_field] : $k;
+            if ($key_is_closure) {
+                $res_key = call_user_func($key_field, $v, $k);
+            } else if ($key_field) {
+                $res_key = $v[$key_field];
+            } else {
+                $res_key = $k;
+            }
             if (
                 (is_array($v) || $v instanceof \ArrayAccess) 
                 // we add NULL anyway, so skip isset() for better performance

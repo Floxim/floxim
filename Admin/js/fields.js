@@ -695,9 +695,16 @@ $html.on('paste.fx', '.fx_image_field .remote_file_location', function() {
                 $inp.get(0).removeAttribute('disabled');
                 $inp.val('').blur();
             },
-            error: function() {
-                console.log('on err');
-                $inp.get(0).removeAttribute('disabled').val($fx.lang('error')).focus();
+            error: function( data ) {
+                
+                $inp.get(0).removeAttribute('disabled');
+                $inp.val('').focus();
+                var message = $fx.lang('Can not load this file');
+                if (data && data.error_text) {
+                    message += '<br />'+data.error_text;
+                }
+                $fx.alert(message, 'error');
+                console.log(arguments);
             }
         });
     }, 50);

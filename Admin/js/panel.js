@@ -342,6 +342,7 @@
             $fx.post(
                 form_options, 
                 function(json) {
+                    console.log(json);
                     $fx.front_panel.show_form(json, params);
                 }
             );

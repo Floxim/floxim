@@ -855,8 +855,8 @@ class Files
         
         $file_data = fx::http()->get($file, array(), array('timeout' => 10));
         $headers = fx::http()->getLastHeaders();
-        
-        if (!$file_data) {
+        $status = fx::http()->getLastStatus();
+        if (!$file_data || $status['status_code'] !== 200) {
             return;
         }
         $file_name = $name ? $name : fx::path()->fileName($file);
@@ -925,7 +925,6 @@ class Files
 
         $http_path = fx::path()->http($full_path);
         $result['path'] = $http_path;
-        fx::log('upres', $result);
         return $result;
     }
 

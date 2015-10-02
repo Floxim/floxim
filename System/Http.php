@@ -108,7 +108,7 @@ class Http
         preg_match("~\d\d\d~", $status, $status_code);
         return array(
             'status' => $status,
-            'status_code' => $status_code ? $status_code[1] : null
+            'status_code' => $status_code ? (int) $status_code[0] : null
         );
     }
     
