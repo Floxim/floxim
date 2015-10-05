@@ -22,7 +22,7 @@ class Front extends Base
         } else {
             $url = preg_replace("~\?.+$~", '', $url);
             if (
-                $url && !$page->hasVirtualPath() && urldecode($url) != $page['url']
+                $url && !$page->hasVirtualPath() && urldecode($url) != $page['url'] && $page['url'] !== '/404/'
             ) {
                 fx::http()->redirect($page['url'], 301);
                 exit;
