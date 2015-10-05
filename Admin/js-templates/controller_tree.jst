@@ -1,26 +1,40 @@
 <!--[input ? _c.type =='tree' && _c.name == 'controller']-->
-<div class="fx_controller_select">
+<?
+var b = 'fx-block-select';
+?>
+<div class="<?=b?>">
     <input type="hidden" <?=$t.field_id_name(_c)?> class="tree_value_input" />
     <?
     var children = _c.values;
     ?>
-    <div class="fx_controller_list">
+    <div class="<?=b?>__tab-labels">
+        <?
+        for (var i = 0; i < children.length; i++){
+            var child = children[i];
+            ?>
+            <div class="<?=b?>__tab-label <?= i === 0 ? ' '+b+'__tab-label_active' : ''?>">
+                <span class="<?=b?>__tab-icon <?=b?>__tab-icon_<?=child.keyword.replace(/\:/, '-')?>"></span>
+                <span class="<?=b?>__tab-name"><?= child.name ?></span>
+            </div>
+            <?
+        }?>
+    </div>
+    <div class="<?=b?>__tab-data">
         <?
         for (var i = 0; i < children.length; i++){
             var child = children[i];
             var subs = child.children;
             ?>
-            <div class="fx_controller_group">
-                <div class="fx_controller_group__title">
-                    <?= child.name ?>
+            <div class="<?=b?>__tab<?= i === 0 ? ' '+b+'__tab_active' : ''?>">
+                <div class="<?=b?>__tab-description">
+                    <?= child.description ?>
                 </div>
-                <div class="fx_controller_group__children">
+                <div class="<?=b?>__items">
                     <? for (var j = 0; j < subs.length; j++) { 
                         var sub = subs[j]; 
                         ?>
-                        <div class="fx_controller_variant" data-id="<?= sub.id ?>">
-                            <div class="fx_controller_variant__icon"></div>
-                            <div class="fx_controller_variant__title"><?= sub.name ?></div>
+                        <div class="<?=b?>__item" data-id="<?= sub.id ?>">
+                            <div class="<?=b?>__item-title"><?= sub.name ?></div>
                         </div>
                     <? } ?>
                 </div>

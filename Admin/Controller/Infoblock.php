@@ -30,7 +30,7 @@ class Infoblock extends Admin
                 ),
                 'content:filtered' => array(
                     'name' => 'Данные по фильтру',
-                    'description' => 'Добавьте блок для показа существующих данных - всех, или ограниченных набором условий.'
+                    'description' => 'Добавьте блок для отображения существующих данных&nbsp;&mdash; всех, или ограниченных набором условий.'
                 ),
                 'content:selected' => array(
                     'name' => 'Данные, отобранные вручную',
@@ -302,12 +302,11 @@ class Infoblock extends Admin
         }
         */
         
+        $this->response->addFormButton('cancel');
+        
         $result = array(
             'fields'        => $fields,
-            'header'        => fx::alang('Adding infoblock', 'system'),
-            'dialog_button' => array(
-                array('key' => 'save', 'text' => fx::alang('Next', 'system'))
-            )
+            'header'        => fx::alang('Adding infoblock', 'system')
         );
         return $result;
     }

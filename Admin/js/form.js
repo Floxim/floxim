@@ -196,12 +196,13 @@ fx_form = {
         
         $form.ajaxSubmit(function ( data ) {
             $fx.form.unlock_form($form);
-            try {
-                data = $.parseJSON( data );
-            } catch(e) {
-                //status_block.writeError(data);
-                $fx.show_status_text('responce parse error');
-                return false;
+            if (typeof data === 'string') {
+                try {
+                    data = $.parseJSON( data );
+                } catch(e) {
+                    $fx.alert('Responce parse error');
+                    return false;
+                }
             }
             $form.trigger('fx_form_sent', data);
             
@@ -347,6 +348,7 @@ fx_form = {
             }
             res.push(f);
         }
+        console.log('ijo', res);
         return res;
     },
 

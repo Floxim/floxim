@@ -5,13 +5,32 @@
 
 (function ($) {
 
-function init_ib_fields() {
-    $('.fx_field_limit').each(function() {
-        
-    });
-}
-
 window.fx_controller_tree = function(html) {
+    var b = 'fx-block-select',
+        $tab_labels = $('.'+b+'__tab-label', html),
+        $tabs = $('.'+b+'__tab', html);
+
+    $tab_labels.click(function() {
+        var $tab_label = $(this),
+            c_index = $tab_labels.index( $tab_label);
+        
+        $tab_labels.removeClass(b+'__tab-label_active');
+        $tabs.removeClass(b+'__tab_active');
+        $tab_label.addClass(b+'__tab-label_active');
+        $tabs.eq( c_index ).addClass(b+'__tab_active');
+    });
+    
+    $(html).on('click', '.'+b+'__item', function() {
+        var $item = $(this),
+            id = $item.data('id'),
+            $form = $item.closest('form'),
+            $inp = $form.find('.tree_value_input');
+        $inp.val(id);
+        $form.submit();
+    });
+};
+
+window._fx_controller_tree = function(html) {
     function select_variant($variant) {
         var id = $variant.data('id');
         var $input = $('.tree_value_input');
@@ -54,6 +73,7 @@ window.fx_controller_tree = function(html) {
     });
 };
 
+/*
 window._fx_controller_tree = function (html) {
     
     setTimeout(function() {
@@ -219,4 +239,6 @@ window.fx_controller_tree.get_color = function(item_id) {
     };
 };
     
+*/
+
 })($fxj);

@@ -551,7 +551,7 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
     "</style>").appendTo( $('head') );
    
     $n.addClass('fx_var_editable');
-    $n.attr('fx_placeholder', meta.label || meta.name || meta.id);
+    $n.attr('fx_placeholder', meta.placeholder || meta.label || meta.name || meta.id);
 
     if ( (meta.type === 'text' && meta.html && meta.html !== '0') || meta.type === 'html') {
         $n.data('fx_saved_value', $n.html());

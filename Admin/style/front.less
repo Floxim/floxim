@@ -1476,3 +1476,92 @@ span.fx_area_marker {
         margin-bottom: 3px;
     }
 }
+
+.fx-block-select {
+    &__tab-labels {
+        margin-left:-40px;
+        margin-right:-40px;
+        margin-top:-21px;
+        .fx_clearfix();
+    }
+    &__tab-icon {
+        height: 40px;
+        width: 40px;
+        display: block;
+        margin: 0 auto;
+        margin-bottom:3px;
+        //border: 1px solid #ccc;
+        background:url('images/sprite.png') no-repeat 0 0;
+        &_content-infoblock {
+            background-position:-944px -0px;
+        }
+        &_content-selected {
+            background-position:-986px -0px;
+        }
+        &_content-filtered {
+            background-position:-1025px -0px;
+        }
+        &_widget {
+            background-position:-1851px -0px;
+        }
+    }
+    &__tab-label:hover &__tab-icon, &__tab-label_active &__tab-icon {
+        &_content-infoblock {
+            background-position:-1062px 1px;
+        }
+        &_content-selected {
+            background-position:-1098px -0px;
+        }
+        &_content-filtered {
+            background-position:-1137px -0px;
+        }
+        &_widget {
+            background-position:-1901px -0px;
+        }
+    }
+    &__tab-label {
+        cursor:pointer;
+        height:90px;
+        width:25%;
+        float:left;
+        font-size:13px;
+        font-weight:500;
+        text-align:center;
+        padding:6px 10px 13px 10px;
+        border-top:1px solid #eaeaea;
+        border-bottom:1px solid #eaeaea;
+        &_active {
+            border-bottom:3px solid #ff5741;
+            background:#f7f7f7;
+        }
+    }
+    &__tab { 
+        display:none;
+        &_active {
+            display:block;
+        }
+    }
+    &__tab-description {
+        font-size: 13px;
+        font-weight: 500;
+        color: #fb526d;
+        margin: 25px 0;
+        line-height:170%;
+    }
+    
+    &__items {
+        margin:0 -40px;
+    }
+    
+    &__item {
+        padding:10px 40px;
+        cursor:pointer;
+        &:hover {
+            background:#f7f7f7;
+        }
+    }
+    
+    &__item-title {
+        font-size:18px;
+    }
+}

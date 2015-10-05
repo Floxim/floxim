@@ -1472,7 +1472,7 @@ fx_front.prototype.hilight = function(container) {
         if ( ($fx.front.node_is_empty(i) || i.is('.fx_infoblock_hidden') ) ) {
             if ( i.hasClass('fx_template_var') ) {
                 var var_meta = i.data('fx_var');
-                hidden_placeholder = var_meta.label ? var_meta.label : var_meta.id; //i.data('fx_var').label;
+                hidden_placeholder = var_meta.placeholder || var_meta.label || var_meta.id;
                 if (
                     var_meta.type === 'html' 
                     && !var_meta.linebreaks 

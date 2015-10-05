@@ -54,6 +54,7 @@ class Admin extends Base
         } catch (\Exception $e) {
             die("Error! Entity: " . htmlspecialchars($entity));
         }
+        header("Content-type: application/json; charset=utf-8");
         return $controller;
     }
 }

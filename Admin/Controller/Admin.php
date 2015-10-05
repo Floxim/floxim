@@ -61,7 +61,7 @@ class Admin extends System\Controller
                 $result['text'] = $this->getStatusText();
             }
         }
-
+        
         if ($this->response) {
             $result = array_merge($result ? $result : array(), $this->response->toArray());
         }

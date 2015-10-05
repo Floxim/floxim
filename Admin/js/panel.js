@@ -15,12 +15,7 @@
             var c_len = this.panels.length;
             return c_len ? this.panels[c_len - 1] : null;
         };
-        /*
-        this.is_visible = false;
-        this.current_panel_type = null;
-        this.current_panel_style = null;
-        this.current_params = {};
-        */
+
         this.show_form = function(data, params) {
             
             var c_panel = {};
@@ -65,7 +60,17 @@
                 data.form_button = ['save'];
             }
             if (c_panel.current_panel_style !== 'finish') {
-                data.form_button.unshift('cancel');
+                var has_cancel = false;
+                for (var i = 0; i < data.form_button.length; i++) {
+                    var cb = data.form_button[i];
+                    if (cb === 'cancel' || cb.key === 'cancel') {
+                        has_cancel = true;
+                        break;
+                    }
+                }
+                if (!has_cancel) {
+                    data.form_button.unshift('cancel');
+                }
             }
             data.class_name = 'fx_form_'+params.view;
             
@@ -105,6 +110,7 @@
                 }
                 $fx.front_panel.hide();
             }).on('fx_form_sent', function(e, data) {
+                console.log('form sent');
                 if (data.status === 'error') {
                     
                 } else {
@@ -170,7 +176,7 @@
                 'height':total_height
             });
             
-            if (form_height >= counted_body_height) {
+            if (form_height >= counted_body_height || true) {
                 $form_body.css({
                     height: counted_body_height+'px'
                 });
@@ -342,7 +348,6 @@
             $fx.post(
                 form_options, 
                 function(json) {
-                    console.log(json);
                     $fx.front_panel.show_form(json, params);
                 }
             );
