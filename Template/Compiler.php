@@ -1668,32 +1668,48 @@ class Compiler
             'grid'     => 'grid:show',
             'block'    => 'block:show' // no implementation yet
         );
-
+        
+        $of_priority = array();
+        
+                
         if ($of and $of != 'false') {
-            $of_parts = explode(',', $of);
-            array_walk($of_parts, function (&$v) {
-                $v = trim($v);
-            });
-            foreach ($of_parts as $key => $value) {
-                if (isset($of_map[$value])) {
-                    $value = $of_map[$value];
+            // $of is array when copied to {preset} from the extended template
+            if (!is_array($of)) {
+                $of_parts = explode(',', $of);
+                array_walk($of_parts, function (&$v) {
+                    $v = trim($v);
+                });
+                foreach ($of_parts as $key => $value) {
+                    $value_parts = explode('#', $value);
+                    if (count($value_parts) === 1) {
+                        $value_prior = 1;
+                    } else {
+                        $value = $value_parts[0];
+                        $value_prior = (int) $value_parts[1];
+                    }
+                    if (isset($of_map[$value])) {
+                        $value = $of_map[$value];
+                    }
+                    $c_of = explode(":", $value);
+                    // no component, e.g. fx:of="list"
+                    if (count($c_of) === 1) {
+                        $of_parts[$key] = fx::getComponentFullName($com_name).':'.$value;
+                    } else {
+                        $of_parts[$key] = fx::getComponentFullName($c_of[0]).':'.$c_of[1];
+                    }
+                    $of_priority[$of_parts[$key]] = $value_prior;
                 }
-                $c_of = explode(":", $value);
-                // no component, e.g. fx:of="list"
-                if (count($c_of) === 1) {
-                    $of_parts[$key] = fx::getComponentFullName($com_name).':'.$value;
-                } else {
-                    $of_parts[$key] = fx::getComponentFullName($c_of[0]).':'.$c_of[1];
-                }
+                $of = join(',', $of_parts);
+            } else {
+                $of_priority = $of;
             }
-            $of = join(',', $of_parts);
         } else {
-            $of = false;
+            $of = array();
         }
 
         $tpl_props += array(
             'name'   => $name,
-            'of'     => $of,
+            'of'     => $of_priority,
             'is_preset_of' => $token->getProp('is_preset_of'),
             'replace_original' => $token->getProp('replace_original'),
             'is_abstract' => $token->getProp('is_abstract'),

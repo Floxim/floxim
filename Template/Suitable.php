@@ -245,7 +245,7 @@ class Suitable
         
         foreach ($template_variants as $tplv) {
             $full_id = $tplv['full_id'];
-            if ($tplv['of'] !== 'floxim.layout.wrapper:show') {
+            if (!isset($tplv['of']['floxim.layout.wrapper:show'])) {
                 continue;
             }
             if (!isset($tplv['suit'])) {
