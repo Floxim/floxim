@@ -28,6 +28,9 @@ class Error extends Front
     }
     
     public function getPath($url, $site_id) {
-        return parent::getPath($this->getErrorPage($site_id)->get('url'), $site_id);
+        $error_page = $this->getErrorPage($site_id);
+        if ($error_page) {
+            return parent::getPath($error_page->get('url'), $site_id);
+        }
     }
 }
