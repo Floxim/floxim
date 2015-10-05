@@ -181,6 +181,7 @@ class Controller
     /*
      * Returns an array of templates that can be used for controller-action games
      * Call after the controller is initialized (action)
+     * @todo move it to Template\Suitable
      */
     public function getAvailableTemplates($layout_name = null, $area_meta = null)
     {
@@ -234,7 +235,7 @@ class Controller
             if (isset($tplv['is_abstract'])) {
                 continue;
             }
-            foreach (explode(",", $tplv['of']) as $tpl_of) {
+            foreach ($tplv['of'] as $tpl_of => $tpl_of_priority) {
                 $of_parts = explode(":", $tpl_of);
                 if (count($of_parts) != 2) {
                     continue;
@@ -264,7 +265,7 @@ class Controller
                     }
                 }
                 // if current layout is defined, we should rate layout templates greater than standard ones
-                $tplv['layout_match_rate'] = $layout_defined && preg_match("~^layout_~", $tplv['full_id']) ? 1 : 0;
+                $tplv['layout_match_rate'] = $layout_defined && preg_match("~^theme\.~", $tplv['full_id']) ? 1 : 0;
 
                 if ($area_size && isset($tplv['size'])) {
                     $size = Template\Suitable::getSize($tplv['size']);
@@ -276,6 +277,9 @@ class Controller
                 }
                 if ($theme_template && !$theme_template->isTemplateAllowed($tplv['full_id'])) {
                     continue;
+                }
+                if (!isset($tplv['of_priority']) || $tplv['of_priority'] < $tpl_of_priority) {
+                    $tplv['of_priority'] = $tpl_of_priority;
                 }
                 $result [$tplv['full_id']] = $tplv;
                 if ($tplv['is_preset_of'] && $tplv['replace_original']) {
@@ -291,12 +295,17 @@ class Controller
             if ($action_diff != 0) {
                 return $action_diff;
             }
+            $prior_diff = $b['of_priority'] - $a['of_priority'];
+            if ($prior_diff !== 0) {
+                return $prior_diff;
+            }
             $layout_diff = $b['layout_match_rate'] - $a['layout_match_rate'];
             if ($layout_diff != 0) {
                 return $layout_diff;
             }
             return 0;
         });
+        fx::cdebug($result);
         return $result;
     }
 
