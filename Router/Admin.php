@@ -10,7 +10,11 @@ class Admin extends Base
 
     public function route($url = null, $context = null)
     {
-        if ($url !== fx::config('path.admin')) {
+        $adm_path = fx::config('path.admin');
+        if (trim($url, '/') === trim($adm_path, '/') && $url !== $adm_path) {
+            fx::http()->redirect($adm_path, 301);
+        }
+        if ($url !== $adm_path) {
             return null;
         }
         $input = fx::input()->makeInput();
