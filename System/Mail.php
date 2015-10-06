@@ -219,7 +219,7 @@ class Mail
         return $this;
     }
 
-    protected function processTemplate()
+    public function processTemplate()
     {
         if (!$this->mail_template) {
             return;
@@ -229,9 +229,9 @@ class Mail
         $res = array();
         foreach ($props as $prop) {
             $prop_tpl = $tpl[$prop];
-            $tpl = fx::template()->virtual($prop_tpl);
-            $tpl->isAdmin(false);
-            $res[$prop] = $tpl->render($this->data);
+            $tpl_obj = fx::template()->virtual($prop_tpl);
+            $tpl_obj->isAdmin(false);
+            $res[$prop] = $tpl_obj->render($this->data);
         }
         $this->subject($res['subject']);
         $this->message($res['message']);
