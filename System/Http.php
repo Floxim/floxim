@@ -25,6 +25,17 @@ class Http
 
     public function redirect($target_url, $status = 301)
     {
+        if (fx::env('ajax')) {
+            ob_start();
+            ?>
+            <script type="text/javascript">
+            document.location.href = '<?= $target_url ?>';    
+            </script>
+            <?php
+            echo trim(ob_get_clean());
+            fx::complete();
+            die();
+        }
         $this->status($status);
         header("Location: " . $target_url);
         fx::complete();
