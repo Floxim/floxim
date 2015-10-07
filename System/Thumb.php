@@ -15,6 +15,10 @@ class Thumb
             throw new \Exception('Empty path');
         }
         $this->config = $this->readConfig($config);
+        
+        if (!isset($this->config['async'])) {
+            $this->config['async'] = true;
+        }
 
         $source_path = fx::path()->abs($source_http_path);
         if (!file_exists($source_path) || !is_file($source_path)) {
@@ -317,6 +321,7 @@ class Thumb
             'source_height' => $crop_height //int $src_h 
         );
         call_user_func_array('imagecopyresampled', $icr_args);
+        imagedestroy($this->image);
         $this->image = $target_i;
         return $this;
     }
@@ -353,7 +358,7 @@ class Thumb
             $params = $this->config;
         }
         $params = array_merge(array('quality' => 90), $params);
-
+        
         $type_props = null;
         if (isset($params['type'])) {
             $type_props = self::imageTypeByPath('pic.' . $params['type']);
@@ -372,20 +377,36 @@ class Thumb
         $quality = $params['quality'];
 
         if ($image_type == IMAGETYPE_PNG) {
-            $quality = 10 - round($quality / 10);
+            //$quality = 10 - round($quality / 10);
+            // this is not 'quality', but a compression level, the more is value the less is filesize
+            // png compression is always lossles
+            $quality = 9;
         }
+        $output = isset($this->config['output']);
         if ($target_path === false) {
             $target_path = $this->source_path;
-        } elseif ($target_path === null) {
+        } elseif ($target_path === null || $output) {
             header("Content-type: " . $this->info['mime']);
+            ob_end_clean();
         } else {
             fx::files()->mkdir(dirname($target_path));
         }
         if (!$this->image) {
             $this->loadImage();
         }
-        //fx::debug('sav', $this->info['save_func'], $quality);
+        
+        if ($save_function === 'imagejpeg') {
+            imageinterlace($this->image, true);
+        }
+        
+        // Save to file
         call_user_func($save_function, $this->image, $target_path, $quality);
+        
+        // Output to browser
+        if ($output && $target_path !== null){
+            fx::log('sending');
+            call_user_func($save_function, $this->image, null, $quality);
+        }
     }
 
     protected static $_types = array(
@@ -440,16 +461,25 @@ class Thumb
 
         $folder_name = array();
         foreach ($this->config as $key => $value) {
-            if ($value) {
+            if ($value && !in_array($key, array('async', 'output'))) {
                 $folder_name [] = $key . '-' . $value;
             }
         }
         $folder_name = join('.', $folder_name);
+        
+        fx::log($this->config, $folder_name);
 
         $rel_path = $folder_name . '/' . $rel_path;
         $full_path = fx::path('@thumbs/' . $rel_path);
         if (!file_exists($full_path)) {
-            $this->process($full_path);
+            if ($this->config['async']) {
+                $target_dir = dirname($full_path);
+                if (!file_exists($target_dir)) {
+                    fx::files()->mkdir($target_dir);
+                }
+            } else {
+                $this->process($full_path);
+            }
         }
         $path = fx::path()->http($full_path);
         return $path;
@@ -476,7 +506,7 @@ class Thumb
         return $res;
     }
 
-    protected function readConfig($config)
+    public static function readConfig($config)
     {
         if (is_array($config)) {
             return $config;
@@ -522,6 +552,9 @@ class Thumb
             }
             $params[$prop] = $value;
         }
+        if (isset($params['async'])) {
+            $params['async'] = $params['async'] === 'false' ? false : true;
+        }
         return $params;
     }
 
@@ -535,5 +568,13 @@ class Thumb
         }
         $this->config[$key] = $value;
         return $this;
+    }
+    
+    public function readConfigFromPathString($config)
+    {
+        $config = str_replace(".", ",", $config);
+        $config  = str_replace("-", ':', $config);
+        $config = preg_replace("~(min|max):(width|height)~", '$1-$2', $config);
+        return $config;
     }
 }

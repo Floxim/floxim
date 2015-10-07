@@ -970,6 +970,7 @@ class Fx
             $thumber = new Thumb($value, $format);
             $res = $thumber->getResultPath();
         } catch (\Exception $e) {
+            fx::log('img exception', $e->getMessage());
             $res = '';
         }
         return $res;
