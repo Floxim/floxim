@@ -235,6 +235,9 @@ class Controller
             if (isset($tplv['is_abstract'])) {
                 continue;
             }
+            if (!isset($tplv['of']) || !is_array($tplv['of'])) {
+                continue;
+            }
             foreach ($tplv['of'] as $tpl_of => $tpl_of_priority) {
                 $of_parts = explode(":", $tpl_of);
                 if (count($of_parts) != 2) {

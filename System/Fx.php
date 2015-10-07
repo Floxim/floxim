@@ -1067,7 +1067,7 @@ class Fx
      * @param array $data
      * @return \Floxim\Floxim\System\Mail
      */
-    public static function mail($params = null, $data = null)
+    public static function mail($params = null, $data = array())
     {
         $mailer = new Mail($params, $data);
         return $mailer;
