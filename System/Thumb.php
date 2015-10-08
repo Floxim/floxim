@@ -8,6 +8,8 @@ class Thumb
     protected $info = array();
     protected $image = null;
     protected $config = null;
+    
+    protected $source_http_path = null;
 
     public function __construct($source_http_path, $config = '')
     {
@@ -19,11 +21,15 @@ class Thumb
         if (!isset($this->config['async'])) {
             $this->config['async'] = true;
         }
+        
 
         $source_path = fx::path()->abs($source_http_path);
         if (!file_exists($source_path) || !is_file($source_path)) {
             throw new \Exception('File not found: ' . $source_path);
         }
+        
+        $this->source_http_path = $source_http_path;
+        
         $source_path = realpath($source_path);
 
         $this->source_path = $source_path;
@@ -457,7 +463,7 @@ class Thumb
 
     public function getResultPath()
     {
-        $rel_path = fx::path()->http($this->source_path);
+    	$rel_path = $this->source_http_path;
 
         $folder_name = array();
         foreach ($this->config as $key => $value) {
@@ -467,8 +473,6 @@ class Thumb
         }
         $folder_name = join('.', $folder_name);
         
-        fx::log($this->config, $folder_name);
-
         $rel_path = $folder_name . '/' . $rel_path;
         $full_path = fx::path('@thumbs/' . $rel_path);
         if (!file_exists($full_path)) {
@@ -478,7 +482,7 @@ class Thumb
                     fx::files()->mkdir($target_dir);
                 }
             } else {
-                $this->process($full_path);
+            	$this->process($full_path);
             }
         }
         $path = fx::path()->http($full_path);
