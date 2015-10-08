@@ -546,6 +546,7 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
             $fx.front_panel.hide();
         }
         $placeholder.data('fx_finish_form', null);
+        $placeholder.trigger('fx_before_hide_adder_placeholder');
         $placeholder
           .css(get_size())
           .animate(
@@ -579,6 +580,7 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
                 if (block_was_hidden) {
                     $hidden_block.addClass('fx_hidden_placeholded');
                 }
+                $placeholder.trigger('fx_after_hide_adder_placeholder');
                 $placeholder.remove();
                 $fx.front.enable_hilight();
             }
