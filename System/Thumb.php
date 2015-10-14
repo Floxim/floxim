@@ -410,7 +410,6 @@ class Thumb
         
         // Output to browser
         if ($output && $target_path !== null){
-            fx::log('sending');
             call_user_func($save_function, $this->image, null, $quality);
         }
     }
