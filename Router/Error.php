@@ -8,9 +8,9 @@ class Error extends Front
 {
     public function route($url = null, $context = null)
     {
-        $site_id = isset($context['site_id']) ? $context['site_id'] : fx::env('site');
+        $site_id = isset($context['site_id']) ? $context['site_id'] : fx::env('site_id');
         $error_page = $this->getErrorPage($site_id);
-        $ctr = fx::router('front')->route($error_page['url'], $context);
+        $ctr = fx::router('front')->route($error_page, $context);
         fx::http()->status('404');
         return $ctr;
     }

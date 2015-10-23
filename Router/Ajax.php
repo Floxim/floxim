@@ -20,7 +20,7 @@ class Ajax extends Base
         if ($c_url) {
             $_SERVER['REQUEST_URI'] = $c_url;
             
-            $base_path = fx::router()->getPath($c_url);
+            $base_path = fx::router()->getPath( fx::path()->removeBase($c_url) );
             if ($base_path) {
                 $page = $base_path->last();
                 fx::env('page', $page);

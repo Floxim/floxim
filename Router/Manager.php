@@ -48,7 +48,7 @@ class Manager
             return $a['priority'] - $b['priority'];
         });
     }
-
+    
     /**
      * Perform all registered routers, to return most suitable controller
      * @param string $url
@@ -60,7 +60,9 @@ class Manager
         if (is_null($url)) {
             $url = getenv('REQUEST_URI');
         }
-
+        
+        $url = fx::path()->removeBase($url);
+        
         if (!isset($context['site_id'])) {
             $env_site = fx::env('site');
             $context['site_id'] = $env_site ? $env_site['id'] : null;

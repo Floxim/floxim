@@ -30,33 +30,34 @@ class File extends Baze
     public function getSavestring(System\Entity $content = null)
     {
         $old_value = $content[$this['keyword']];
-        if ($old_value != $this->value) {
-            if (!empty($old_value)) {
-                $old_value = fx::path()->abs($old_value);
-                if (file_exists($old_value) && is_file($old_value)) {
-                    fx::files()->rm($old_value);
-                }
-            }
-            if (!empty($this->value)) {
-                $c_val = fx::path()->abs($this->value);
-                if (file_exists($c_val) && is_file($c_val)) {
-                    preg_match("~[^" . preg_quote(DIRECTORY_SEPARATOR) . ']+$~', $c_val, $fn);
-
-                    $path = fx::path()->http('@content_files/' . $content['site_id'].'/'.$content['type'] . '/' . $this['keyword'] . '/' . $fn[0]);
-
-                    $try = 0;
-                    while (fx::path()->exists($path)) {
-                        $file_name = preg_replace("~(\.[^\.]+)$~", "_" . $try . "\$1", $fn[0]);
-                        $try++;
-                        $path = fx::path()->http('@content_files/' .
-                            $content['type'] . '/' . $this['keyword'] . '/' . $file_name);
-                    }
-
-                    fx::files()->move($c_val, $path);
-                }
+        $old_path = FX_BASE_URL.$old_value;
+        
+        if ($old_path === $this->value) {
+            return $this->value;
+        }
+        $res = '';
+        if (!empty($this->value)) {
+            $c_val = fx::path()->abs($this->value);
+            if (file_exists($c_val) && is_file($c_val)) {
+                $file_name = fx::path()->fileName($c_val);
+                $path = fx::path(
+                    '@content_files/' . 
+                    $content['site_id'].'/'.
+                    $content['type'].'/'. 
+                    $this['keyword'].'/'.
+                    $file_name
+                );
+                $path = fx::files()->getPutFilePath($path);
+                fx::files()->move($c_val, $path);
+                $res = fx::path()->removeBase(fx::path()->http($path));
             }
         }
-        $res = isset($path) ? $path : $this->value;
+        if (!empty($old_value)) {
+            $old_value = fx::path()->abs($old_value);
+            if (file_exists($old_value) && is_file($old_value)) {
+                fx::files()->rm($old_value);
+            }
+        }
         return $res;
     }
 

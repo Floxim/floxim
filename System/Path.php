@@ -6,10 +6,20 @@ class Path
 {
 
     protected $root = '';
+    protected $ds_rex = null;
+    protected $root_rex = null;
 
     public function __construct()
     {
         $this->root = DOCUMENT_ROOT;
+        $this->ds_rex = "[" . preg_quote('\/') . "]";
+        $this->root_rex = preg_quote($this->root);
+        $this->root_len = mb_strlen($this->root);
+    }
+    
+    public function removeBase($url) {
+        $url = preg_replace('~^https?://[^/]+~', '', $url);
+        return mb_substr($url, mb_strlen(FX_BASE_URL));
     }
 
     protected $registry = array();
@@ -35,50 +45,75 @@ class Path
      */
     public function resolve($path)
     {
-        $parts = preg_split("~^(@[^\\\\/]+)~", $path, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
-        // copy for php 5.3 support
-        $registry = $this->registry;
-        $parts = array_map( function($value) use ($registry) {
-                preg_match("~@([^\\\\/]+)~", $value, $matches);
-                return (
-                    isset($matches[1])
-                        && $matches[1]
-                        && isset($registry[$matches[1]])
-                    ? $registry[$matches[1]]
-                    : $value
-                );
-            },
-            $parts
-        );
-
-        $res = preg_replace("~/{2,}~", '/', join("", $parts));
+        if ($path[0] !== '@') {
+            return $path;
+        }
+        
+        $parts = preg_split("~^(@)([^\\\\/]+)~", $path, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
+        
+        if (!isset($this->registry[$parts[1]])) {
+            throw \Exception('Alias @'.$parts[1].' is not registered');
+        }
+        $res = $this->registry[$parts[1]].$parts[2];
+        $res = preg_replace("~/{2,}~", '/', $res);
         return $res;
     }
 
     public function abs($path)
     {
-        $root = $this->root;
-        $do = function ($value) use ($root) {
-            $value = str_replace("/", DIRECTORY_SEPARATOR, trim($value));
-            $value = preg_replace("~^" . preg_quote($root) . "~", '', $value);
-            $value = trim($value, DIRECTORY_SEPARATOR);
-            $value = $root . DIRECTORY_SEPARATOR . $value;
-            $value = preg_replace("~" . preg_quote(DIRECTORY_SEPARATOR) . "+~", DIRECTORY_SEPARATOR, $value);
-            return $value;
-        };
-        
         if (is_array($path)) {
             $path = array_map(array($this, "resolve"), $path);
-            $path = array_map($do, $path);
+            $path = array_map(array($this, 'processAbs'), $path);
         } else {
-            $path = $do( $this->resolve($path) );
+            $path = $this->processAbs( $this->resolve($path) );
         }
         
         return $path;
     }
+    
+    protected function processAbs($value)
+    {
+        $value = str_replace("/", DIRECTORY_SEPARATOR, trim($value));
+        if (mb_substr($value, 0, $this->root_len) !== $this->root) {
+            $value = $this->root . DIRECTORY_SEPARATOR . trim($value, DIRECTORY_SEPARATOR);
+        }
+        //$value = preg_replace("~^" . preg_quote($root) . "~", '', $value);
+        //$value = trim($value, DIRECTORY_SEPARATOR);
+        //$value = $root . DIRECTORY_SEPARATOR . $value;
+        $value = preg_replace("~" . preg_quote(DIRECTORY_SEPARATOR) . "+~", DIRECTORY_SEPARATOR, $value);
+        return $value;
+    }
+    
+    protected function processHttp($value)
+    {
+        /*
+        if (preg_match("~^https?://~", $value)) {
+            return $value;
+        }
+        */
+        
+        //$value = preg_replace("~" . $this->ds_rex . "~", DIRECTORY_SEPARATOR, $value);
+        
+        if (mb_substr($value, 0, $this->root_len) === $this->root) {
+            $value = mb_substr($value, $this->root_len);
+        }
+        
+        //$value = preg_replace("~^" . $this->root_rex . "~", '', $value);
+        
+        if (DIRECTORY_SEPARATOR !== '/') {
+            $value = str_replace("\\", '/', $value);
+        }
+        
+        if (!preg_match("~^/~", $value)) {
+            $value = '/' . $value;
+        }
+        $value = preg_replace("~/+~", '/', $value);
+        return $value;
+    }
 
     public function http($path)
     {
+        /*
         $root = $this->root;
         $do = function ($value) use ($root) {
             if (preg_match("~^https?://~", $value)) {
@@ -94,12 +129,12 @@ class Path
             $value = preg_replace("~/+~", '/', $value);
             return $value;
         };
-        
+        */
         if (is_array($path)) {
             $path = array_map(array($this, "resolve"), $path);
-            $path = array_map($do, $path);
+            $path = array_map(array($this, 'processHttp'), $path);
         } else {
-            $path = $do( $this->resolve($path) );
+            $path = $this->processHttp( $this->resolve($path) );
         }
         
         return $path;
@@ -121,6 +156,43 @@ class Path
         $child = $this->abs($child);
         $parent = $this->abs($parent);
         return preg_match("~^" . preg_quote($parent) . "~", $child);
+    }
+    
+    public function parse($path) {
+        $res = array();
+        $path = preg_replace_callback(
+            "~\.([^\.]+)$~", 
+            function($match) use (&$res) {
+                $res['extension'] = $match[1];
+                return '';
+            },
+            $path
+        );
+        $path = preg_replace_callback(
+            "~([^/\\\]+)$~", 
+            function($match) use (&$res) {
+                $res['name'] = $match[1];
+                return '';
+            },
+            $path
+        );
+        $res['path'] = $path;
+        return $res;
+    }
+    
+    public function build($parts)
+    {
+        $res = '';
+        if (isset($parts['path'])) {
+            $res .= $parts['path'];
+        }
+        if (isset($parts['name'])) {
+            $res .= $parts['name'];
+        }
+        if (isset($parts['extension'])) {
+            $res .= '.'.$parts['extension'];
+        }
+        return $res;
     }
 
     public function fileName($path)

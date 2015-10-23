@@ -44,8 +44,8 @@ class Config
         'cache.gzip_bundles'         => true,
         'cache.meta'                 => true,
         'date.timezone'              => 'America/New_York',
-        'path.admin'                 => '/floxim/',
-        'image.max_filesize'         => 10485760 // ~10m
+        'image.max_filesize'         => 10485760, // ~10m,
+        'path.admin_dir_name'        => 'floxim'
     );
 
     public function __construct()
@@ -63,26 +63,29 @@ class Config
         ini_set("mbstring.internal_encoding", "UTF-8");
         ini_set("session.name", ini_get("session.hash_bits_per_character") >= 5 ? "sid" : "ced");
 
-
-        fx::path()->register('root', DOCUMENT_ROOT);
-        fx::path()->register('home', DOCUMENT_ROOT);
+        fx::path()->register('root', CMS_ROOT);
+        fx::path()->register('home', CMS_ROOT);
+        
+        define('FX_BASE_URL', fx::path()->http('@home'));
         
         $floxim_http_path = null;
         //  try to get correct case of floxim path
-        if (preg_match("~/vendor/floxim/floxim/~i", __FILE__, $floxim_http_path)) {
+        if (preg_match("~vendor/floxim/floxim/~i", __FILE__, $floxim_http_path)) {
             $floxim_http_path = $floxim_http_path[0];
         } else {
             // lower case by default
-            $floxim_http_path = '/vendor/floxim/floxim/';
+            $floxim_http_path = 'vendor/floxim/floxim/';
         }
         
-        fx::path()->register('floxim', $floxim_http_path);
+        fx::path()->register('floxim', '@home/'.$floxim_http_path);
         fx::path()->register('floxim_js', '@floxim/lib/js');
-        fx::path()->register('module', '/module/');
-        fx::path()->register('files', '/floxim_files/');
+        fx::path()->register('module', '@home/module/');
+        fx::path()->register('files', '@home/floxim_files/');
         fx::path()->register('log', fx::path('@files/log'));
         fx::path()->register('thumbs', fx::path('@files/fx_thumbs'));
         fx::path()->register('content_files', fx::path('@files/content'));
+        
+        $this->config['path.admin'] = fx::path()->http('@home/'.$this->config['path.admin_dir_name'].'/');
 
         $this->config['path.jquery'] = fx::path('@floxim/lib/js/jquery-1.9.1.min.js');
         $this->config['path.jquery.http'] = fx::path()->http('@floxim/lib/js/jquery-1.9.1.min.js');

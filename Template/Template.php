@@ -16,6 +16,7 @@ class Template
     public function getCurrentDir()
     {
         return $this->current_template_dir;
+        //return fx::path()->http('@home/'.$this->current_template_dir);
     }
     
     public function getAllDirs()

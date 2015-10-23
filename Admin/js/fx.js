@@ -162,13 +162,14 @@ window.$fx = {
     },
         
     parse_hash: function() {
-        if (!window.location.pathname.match(/^\/floxim\//)) {
+        var fx_path = $fx.settings.action_link;
+        if (window.location.pathname.slice(0, fx_path.length) !== fx_path) {
             $fx.mode = 'page';
             return;
         }
         var hash_to_parse = $fx.settings.hash !== undefined ? $fx.settings.hash : window.location.hash.slice(1);
         
-        if (hash_to_parse === '' && window.location.pathname === '/floxim/') {
+        if (hash_to_parse === '' && window.location.pathname === fx_path) {
             hash_to_parse = 'admin.administrate.site.all';
         }
         

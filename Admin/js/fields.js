@@ -245,7 +245,7 @@ window.$fx_fields = {
     },
     make_redactor: function($node, options) {
         options = $.extend({
-            imageUpload : '/vendor/Floxim/Floxim/Admin/Controller/redactor-upload.php',
+            imageUpload : document.baseURI + 'vendor/Floxim/Floxim/Admin/Controller/redactor-upload.php',
             tidyHtml:false,
             toolbarFixed:false,
             buttons: ['html', 'formatting',  'bold', 'italic', 'deleted',
@@ -651,7 +651,7 @@ $html.on('change.fx', '.fx_image_field input.file', function() {
     var format = $real_inp.data('format_modifier');
     
     $.ajaxFileUpload({
-        url:'/floxim/',
+        url: $fx.settings.action_link,
         secureuri:false,
         fileElementId:inp_id,
         dataType: 'json',
@@ -686,7 +686,7 @@ $html.on('paste.fx', '.fx_image_field .remote_file_location', function() {
         }
         $inp.attr('disabled', 'disabled').val($fx.lang('loading')+'...');
         $.ajax({
-            url:'/floxim/',
+            url:$fx.settings.action_link,
             type:'post',
             data: { entity:'file', fx_admin:1, action:'upload_save' , file:val, format:format},
             dataType: 'json',

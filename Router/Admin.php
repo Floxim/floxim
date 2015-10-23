@@ -10,9 +10,9 @@ class Admin extends Base
 
     public function route($url = null, $context = null)
     {
-        $adm_path = fx::config('path.admin');
+        $adm_path = '/'.fx::config('path.admin_dir_name').'/';
         if (trim($url, '/') === trim($adm_path, '/') && $url !== $adm_path) {
-            fx::http()->redirect($adm_path, 301);
+            fx::http()->redirect( fx::config('paht.admin'), 301);
         }
         if ($url !== $adm_path) {
             return null;
@@ -30,7 +30,7 @@ class Admin extends Base
         $base_url = fx::input()->fetchPost('_base_url');
         
         if ($base_url) {
-            $base_path = fx::router()->getPath($base_url);
+            $base_path = fx::router()->getPath( fx::path()->removeBase($base_url));
             if ($base_path) {
                 fx::env('page', $base_path->last());
             }
