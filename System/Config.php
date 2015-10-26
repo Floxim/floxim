@@ -62,11 +62,15 @@ class Config
         ini_set("session.hash_bits_per_character", "5");
         ini_set("mbstring.internal_encoding", "UTF-8");
         ini_set("session.name", ini_get("session.hash_bits_per_character") >= 5 ? "sid" : "ced");
+        
+        if (!defined('CMS_ROOT')) {
+            define('CMS_ROOT', DOCUMENT_ROOT);
+        }
 
         fx::path()->register('root', CMS_ROOT);
         fx::path()->register('home', CMS_ROOT);
         
-        define('FX_BASE_URL', fx::path()->http('@home'));
+        define('FX_BASE_URL', preg_replace("~/$~", '', fx::path()->http('@home')));
         
         $floxim_http_path = null;
         //  try to get correct case of floxim path

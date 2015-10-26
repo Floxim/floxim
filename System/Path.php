@@ -86,19 +86,9 @@ class Path
     
     protected function processHttp($value)
     {
-        /*
-        if (preg_match("~^https?://~", $value)) {
-            return $value;
-        }
-        */
-        
-        //$value = preg_replace("~" . $this->ds_rex . "~", DIRECTORY_SEPARATOR, $value);
-        
         if (mb_substr($value, 0, $this->root_len) === $this->root) {
             $value = mb_substr($value, $this->root_len);
         }
-        
-        //$value = preg_replace("~^" . $this->root_rex . "~", '', $value);
         
         if (DIRECTORY_SEPARATOR !== '/') {
             $value = str_replace("\\", '/', $value);
@@ -113,30 +103,12 @@ class Path
 
     public function http($path)
     {
-        /*
-        $root = $this->root;
-        $do = function ($value) use ($root) {
-            if (preg_match("~^https?://~", $value)) {
-                return $value;
-            }
-            $ds = "[" . preg_quote('\/') . "]";
-            $value = preg_replace("~" . $ds . "~", DIRECTORY_SEPARATOR, $value);
-            $value = preg_replace("~^" . preg_quote($root) . "~", '', $value);
-            $value = preg_replace("~" . $ds . "~", '/', $value);
-            if (!preg_match("~^/~", $value)) {
-                $value = '/' . $value;
-            }
-            $value = preg_replace("~/+~", '/', $value);
-            return $value;
-        };
-        */
         if (is_array($path)) {
             $path = array_map(array($this, "resolve"), $path);
             $path = array_map(array($this, 'processHttp'), $path);
         } else {
             $path = $this->processHttp( $this->resolve($path) );
         }
-        
         return $path;
     }
 
