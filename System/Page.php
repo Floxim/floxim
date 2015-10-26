@@ -399,6 +399,12 @@ class Page
         }
         return $r;
     }
+    
+    protected $base_url = null;
+    public function setBaseUrl($url)
+    {
+        $this->base_url = $url;
+    }
 
     public function postProcess($buffer)
     {
@@ -414,7 +420,7 @@ class Page
             $r .= '<meta name="keywords" content="'
                 . strip_tags($this->metatags['seo_keywords']) . '" />' . PHP_EOL;
         }
-        $r .= '<base href="'.FX_BASE_URL.'/" />';
+        $r .= '<base href="'.(is_null($this->base_url) ? FX_BASE_URL : $this->base_url).'/" />';
 
         $r .= $this->getAssetsCode();
 

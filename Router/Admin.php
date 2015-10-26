@@ -24,6 +24,7 @@ class Admin extends Base
         $action = fx::input()->fetchPost('action');
 
         if (!$entity || !$action) {
+            fx::page()->setBaseUrl(FX_BASE_URL . '/'. trim($adm_path, '/') );
             return new Controller\Admin();
         }
         
