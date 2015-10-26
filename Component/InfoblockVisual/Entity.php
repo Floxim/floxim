@@ -22,8 +22,11 @@ class Entity extends System\Entity
                 ->one();
             $this['priority'] = $last_vis['priority'] + 1;
         }
+        
+        fx::log($this);
 
         if ($this->needRecountFiles) {
+            fx::log('start recount');
             $this->recountFiles();
         }
     }
@@ -36,28 +39,35 @@ class Entity extends System\Entity
     public function recountFiles()
     {
         $modified_params = $this->getModifiedParams();
+        $fxPath = fx::path();
+        fx::log('modifiedss', $modified_params);
         foreach ($modified_params as $field => $params) {
             $all_params = $this[$field];
             foreach ($params as $pk => $pv) {
                 if (self::checkValueIsFile($pv['new'])) {
+                    fx::log($pv, 'is file');
                     $ib = $this['infoblock'];
                     $site_id = $ib ? $ib['site_id'] : fx::env('site_id');
 
-                    $file_name = fx::path()->fileName($pv['new']);
-                    $new_path = fx::path('@content_files/' . $site_id . '/visual/' . $file_name);
+                    $file_name = $fxPath->fileName($pv['new']);
+                    $new_path = $fxPath->abs('@content_files/' . $site_id . '/visual/' . $file_name);
                     
-                    $move_from = fx::path()->abs($pv['new']);
+                    $move_from = $fxPath->abs($pv['new']);
                     
                     if (file_exists($move_from)) {
                         fx::files()->move($move_from, $new_path);
-                        $all_params[$pk] = fx::path()->http($new_path);
+                        $all_params[$pk] = $fxPath->removeBase($fxPath->http($new_path));
                     }
                 }
-                if (self::checkValueIsFile($pv['old'])) {
-                    fx::files()->rm($pv['old']);
+                if ($pv['old']) {
+                    $old_path = $fxPath->abs(FX_BASE_URL.$pv['old']);
+                    if (self::checkValueIsFile($old_path)) {
+                        fx::files()->rm($old_path);
+                    }
                 }
             }
             $this[$field] = $all_params;
+            fx::log($all_params);
         }
     }
 
@@ -87,12 +97,12 @@ class Entity extends System\Entity
         return $res;
     }
 
-    protected static function checkValueIsFile($v)
+    public static function checkValueIsFile($v)
     {
         if (empty($v)) {
             return false;
         }
-        $files_path = fx::path('@content_files');
+        $files_path = fx::path('@files');
         $path = fx::path();
         return $path->isInside($v, $files_path) && $path->isFile($v);
     }

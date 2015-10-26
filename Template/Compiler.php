@@ -101,10 +101,39 @@ class Compiler
         return $token->getProp('value');
     }
     
+    // if all token's children have type=code, return concated string value
+    // otherwise return false
+    protected function childrenGetPlain(Token $token)
+    {
+        $res = '';
+        foreach ($token->getChildren() as $child) {
+            if ($child->name !== 'code') {
+                return false;
+            }
+            $res .= $child->getProp('value');
+        }
+        return $res;
+    }
+    
     protected function tokenBemBlockToCode($token)
     {
-        $code =  "<?php\n";
-        $code .= "ob_start();\n";
+        $code =  "<?php";
+        $str = $this->childrenGetPlain($token);
+        if ($str !== false) {
+            $block_parts = Template::bemParseStr($str);
+            $code .= " \$this->bemStartBlock('".$block_parts['name']."'); ";
+            $code .= "?>";
+            $class = $block_parts['name'].' ';
+            foreach ($block_parts['modifiers'] as $mod) {
+                $class .= $block_parts['name'].'_'.$mod.' ';
+            }
+            $class .= join(' ', $block_parts['plain']);
+            $class = trim($class);
+            $code .= $class;
+            return $code;
+        }
+        
+        $code .= "\nob_start();\n";
         $this->pushState('edit', false);
         $code .= $this->childrenToCode($token);
         $this->popState('edit');
@@ -120,10 +149,31 @@ class Compiler
         return $code;
     }
     
+    
     protected function tokenBemElementToCode($token)
     {
-        $code =  "<?php\n";
-        $code .= "ob_start();\n";
+        $code =  "<?php";
+        $str = $this->childrenGetPlain($token);
+        if ($str !== false) {
+            $el_parts = Template::bemParseStr($str);
+            $full_name = "\$this->bemGetBlock().'__".$el_parts['name']."'";
+            if (count($el_parts['modifiers']) === 0) {
+                $code .= ' echo '.$full_name.'; ?>';
+            } else {
+                $code .= " \$full_name = ".$full_name."; ";
+                $class = array("\$full_name");
+                foreach ($el_parts['modifiers'] as $mod) {
+                    $class []= "\$full_name.'_".$mod."'";
+                }
+                $code .= " echo ".join(".' '.", $class)."; ?>";
+            }
+            if (count($el_parts['plain']) > 0) {
+                $code .= ' '.join(' ', $el_parts['plain']);
+            }
+            return $code;
+            //$code .= "echo join(' ', \$el_parts['plain']);\n";
+        }
+        $code .= "\nob_start();\n";
         $this->pushState('edit', false);
         $code .= $this->childrenToCode($token);
         $this->popState('edit');
@@ -583,24 +633,38 @@ class Compiler
         }
         return $code;
     }
-
-    protected function makeFileCheck($var, $use_stub = false)
+    
+    public static function getStubImageUrl()
     {
+        static $stub = null;
+        if (is_null($stub)) {
+            $url = fx::path()->http('@floxim/Admin/style/images/no.gif');
+            $stub = substr($url, strlen(FX_BASE_URL));
+        }
+        return $stub;
+    }
 
+    protected function makeFileCheck($var, $use_stub = false, $add_template_dir = false)
+    {
         $code = $var . ' = trim(' . $var . ");\n";
-        //$code .= "if (!preg_match(\"~^###fxf\d+~\", ".$var.")) {\n";
-        $code .= "\nif (" . $var . " && !preg_match('~^(https?://|/)~', " . $var . ")) {\n";
-        $code .= $var . '= $template_dir.' . $var . ";\n";
-        $code .= "}\n";
+        if ($add_template_dir) {
+            $code .= "\nif (" . $var . " && !preg_match('~^(https?://|/)~', " . $var . ")) {\n";
+            $code .= $var . '= $template_dir.' . $var . ";\n";
+            $code .= "}\n";
+        }
 
-        $code .= 'if (!' . $var . ' || ( !preg_match("~^https?://~", ' . $var . ') && !file_exists(fx::path()->abs(preg_replace("~\?.+$~", "", ' . $var . '))) )) {' . "\n";
+        //$code .= 'if (!' . $var . ' || ( !preg_match("~^https?://~", ' . $var . ') && !file_exists(fx::path()->abs(preg_replace("~\?.+$~", "", ' . $var . '))) )) {' . "\n";
+        $code .= 'if (!'.$var.") {\n";
         if ($use_stub) {
-            $stub_image = fx::path()->http('@floxim/Admin/style/images/no.gif');
-            $code .= $var . "= \$_is_admin ? '" . $stub_image . "' : '';\n";
+            //$stub_image = fx::path()->http('@floxim/Admin/style/images/no.gif');
+            $stub_image = self::getStubImageUrl();
+            $code .= $var . "= \$_is_admin ? FX_BASE_URL.'" . $stub_image . "' : '';\n";
         } else {
             $code .= $var . "= '';\n";
         }
-        $code .= "}\n";
+        $code .= "} else {\n";
+        $code .= $var . " = FX_BASE_URL .".$var.";\n";
+        $code .= "}";
         //$code .= "}\n";
         return $code;
     }
@@ -733,7 +797,7 @@ class Compiler
             if ($real_val_defined) {
                 $code .= "\n" . $display_val_var . ' = ' . $default . ";\n";
                 if ($token_is_file) {
-                    $code .= $this->makeFileCheck($display_val_var, true);
+                    $code .= $this->makeFileCheck($display_val_var, true, true);
                 }
                 if ($token_is_visual) {
                     $code .= "\n" . '$context->set(' . $var_id . ',  ' . $display_val_var . ");\n";
@@ -806,12 +870,20 @@ class Compiler
             if (count($tp_parts) > 0) {
                 $meta_parts [] = "array(" . join(", ", $tp_parts) . ")";
             }
-            $meta_parts [] = '$_is_wrapper_meta';
+            
+            if ($token->getProp('var_type') === 'visual' || strstr($var_id, '%')) {
+                $meta_parts [] = '$_is_wrapper_meta';
+            }
             
             if ($real_val_defined) {
                 $meta_parts [] = 'array("real_value" => ' . $real_val_var . ')';
             }
-            $code .= 'array_merge(' . join(", ", $meta_parts) . ')';
+            if (count($meta_parts) > 1) {
+                $code .= 'array_merge(' . join(", ", $meta_parts) . ')';
+            } else {
+                $code .= $meta_parts[0];
+            }
+            
             $code .= "\n);\n";
         }
         $code .= "?>";
@@ -843,15 +915,20 @@ class Compiler
         return $var_meta_expr;
     }
 
-    protected function varialize($var)
+    protected function varialize($var, $save_name = false)
     {
-        //static $counter;
-        //return 'v'.$counter++;
-        return preg_replace("~^_+|_+$~", '',
+        static $counter = 0;
+        static $vars = array();
+        
+        if ($save_name) {
+            return preg_replace("~^_+|_+$~", '',
             preg_replace(
                 '~[^a-z0-9_]+~', '_',
                 preg_replace('~(?:\$this\->v|fx\:\:dig)~', '', $var)
             ));
+        }
+        $index = isset($vars[$var]) ? $vars[$var] : $counter++;
+        return 'v'.$index++;
     }
 
     protected function tokenWithEachToCode(Token $token)
@@ -1162,7 +1239,7 @@ class Compiler
             return $code;
         }
         
-        $var = $this->varialize($var);
+        $var = $this->varialize($var, true);
 
         if ($is_default) {
             $code .= "if (is_null(\$context->get('" . $var . "'))) {\n";
@@ -1520,11 +1597,13 @@ class Compiler
         if ($is_preset) {
             $code .= "\$this->context->push(array(), array('transparent' => true));\n";
         }
-        //if (strstr($children_code, "\$template_dir")) {
-            $template_dir = preg_replace("~[^/]+$~", '', $tpl_props['file']);
-            $code .= "\$template_dir = '" . $template_dir . "';\n";
-            $code .= "\$this->current_template_dir = \$template_dir;\n";
-        //}
+            
+        $template_dir = preg_replace("~[^/]+$~", '', $tpl_props['file']);
+        $template_dir = preg_replace("~^".fx::path()->http('@home')."~", '', $template_dir);
+        
+        $code .= "\$template_dir = FX_BASE_URL . '" . $template_dir . "';\n";
+        $code .= "\$this->current_template_dir = \$template_dir;\n";
+        
         $has_meta_var = strstr($children_code, "\$_is_wrapper_meta");
         $has_admin_var = strstr($children_code, "\$_is_admin") || $has_meta_var;
         if ($has_admin_var) {

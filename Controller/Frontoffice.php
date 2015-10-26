@@ -88,7 +88,7 @@ class Frontoffice extends System\Controller
         } elseif (is_array($form)) {
             $form = new Form\Form($form);
         }
-        $form['action'] = '/~ajax/';
+        $form['action'] = '~ajax/';
         $form['method'] = 'POST';
         $form['ajax'] = true;
         $form->addField(array(

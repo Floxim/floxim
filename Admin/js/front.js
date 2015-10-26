@@ -2553,8 +2553,8 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
     var xhr = $.ajax({
         type:'post',
         data:post_data,
-       url:'/~ib/'+meta.id+'@'+page_id,
-       success:function(res) {
+        url: document.baseURI+'~ib/'+meta.id+'@'+page_id,
+        success:function(res) {
            $fx.front.c_hover = null;
            $infoblock_node.off('click.fx_fake_click');
            $fx.front.deselect_item();

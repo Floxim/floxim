@@ -10,11 +10,20 @@ class Front extends Base
 
     public function route($url = null, $context = null)
     {
-        $path = fx::router()->getPath($url, $context['site_id']);
-        if (!$path) {
-            return;
+        if ($url instanceof \Floxim\Main\Page\Entity) {
+            $url = fx::collection(array($url));
         }
-        
+        if ($url instanceof \Floxim\Floxim\System\Collection) {
+            $path = $url;
+            $url = $path->last()->get('url');
+        } else {
+            $url = preg_replace("~^/~", '', $url);
+            $path = $this->getPath($url, $context['site_id']);
+            if (!$path) {
+                return;
+            }
+        }
+
         $page = $path->last();
         
         if (!$page) {
@@ -22,16 +31,21 @@ class Front extends Base
         } else {
             $url = preg_replace("~\?.+$~", '', $url);
             if (
-                $url && !$page->hasVirtualPath() && urldecode($url) != $page['url'] && $page['url'] !== '/404/'
+                $url && !$page->hasVirtualPath() && urldecode($url) != $page['url'] && $page['url'] !== '404/'
             ) {
                 fx::http()->redirect($page['url'], 301);
-                exit;
+                fx::debug($url, '!=', $page['url']);
+                die();
             }
         }
         
+        
+        
         fx::env('page', $page);
         fx::http()->status('200');
+        
         $layout_ib = $this->getLayoutInfoblock($page);
+        
         fx::trigger('before_layout_render', array(
             'layout_infoblock' => $layout_ib
         ));

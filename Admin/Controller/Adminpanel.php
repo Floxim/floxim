@@ -14,16 +14,18 @@ class Adminpanel extends Admin
     
     public static function getMainMenu()
     {
+        $adm = fx::config('path.admin');
+        
         $main_menu = array(
             'manage'  => array(
                 'name' => fx::alang('Management', 'system'),
                 'key'  => 'manage',
-                'href' => '/floxim/#admin.administrate.site.all'
+                'href' => $adm.'#admin.administrate.site.all'
             ),
             'develop' => array(
                 'name' => fx::alang('Development', 'system'),
                 'key'  => 'develop',
-                'href' => '/floxim/#admin.component.all'
+                'href' => $adm.'#admin.component.all'
             )
         );
         

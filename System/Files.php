@@ -856,7 +856,8 @@ class Files
         $file_data = fx::http()->get($file, array(), array('timeout' => 10));
         $headers = fx::http()->getLastHeaders();
         $status = fx::http()->getLastStatus();
-        if (!$file_data || $status['status_code'] !== 200) {
+        if (!$file_data || $status['status_code'] >= 400) {
+            fx::log($status, strlen($file_data));
             return;
         }
         $file_name = $name ? $name : fx::path()->fileName($file);
@@ -944,6 +945,23 @@ class Files
             $path = fx::path('@files/' . $dir . '/' . $c_name);
         }
         return fx::path()->fileName($path);
+    }
+    
+    public function getPutFilePath($path) 
+    {
+        $path = fx::path($path);
+        $parts = null;
+        $attempt = 0;
+        $name = null;
+        while (file_exists($path)) {
+            if (is_null($parts)) {
+                $parts = fx::path()->parse($path);
+                $name = $parts['name'];
+            }
+            $parts['name'] = $name.'_'.$attempt++;
+            $path = fx::path()->build($parts);
+        }
+        return $path;
     }
 
     private function tarCheck()

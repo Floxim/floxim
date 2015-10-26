@@ -323,6 +323,7 @@ class Controller
             $template = fx::template($template);
         }
         $res = $this->process();
+        
         $output = $template->render($res);
         $output = $this->postprocess($output);
         return $output;

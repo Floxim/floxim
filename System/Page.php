@@ -84,7 +84,6 @@ class Page
                 
                 $http_base = fx::path()->http(preg_replace("~[^/]+$~", '', $file));
 
-                //$less = new \lessc();
                 $less = $this->getLessCompiler();
                 $less->setImportDir(dirname($full_source_path));
 
@@ -180,10 +179,14 @@ class Page
             }
 
             if ($less_flag) {
-                //$less = new \lessc();
                 $less = $this->getLessCompiler();
-                $less->setImportDir(fx::path('@home'));
-                $file_content = $less->compile($file_content);
+                $less->setImportDir(DOCUMENT_ROOT);
+                try {
+                    $file_content = $less->compile($file_content);
+                } catch (\Exception $e) {
+                    fx::log('Less error while adding bundle', $e->getMessage(), $file_content, $files);
+                    $file_content = '';
+                }
             }
 
             $plain_path = preg_replace("~\.css\.gz$~", ".css", $full_path);
@@ -396,6 +399,12 @@ class Page
         }
         return $r;
     }
+    
+    protected $base_url = null;
+    public function setBaseUrl($url)
+    {
+        $this->base_url = $url;
+    }
 
     public function postProcess($buffer)
     {
@@ -411,6 +420,7 @@ class Page
             $r .= '<meta name="keywords" content="'
                 . strip_tags($this->metatags['seo_keywords']) . '" />' . PHP_EOL;
         }
+        $r .= '<base href="'.(is_null($this->base_url) ? FX_BASE_URL : $this->base_url).'/" />';
 
         $r .= $this->getAssetsCode();
 

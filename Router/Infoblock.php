@@ -17,7 +17,7 @@ class Infoblock extends Base
         $c_url = fx::input()->fetchGetPost('_ajax_base_url');
         if ($c_url) {
             $_SERVER['REQUEST_URI'] = $c_url;
-            $path = fx::router()->getPath($c_url);
+            $path = fx::router()->getPath( fx::path()->removeBase($c_url) );
             if ($path) {
                 fx::env('page', $path->last());
             } else {

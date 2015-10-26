@@ -128,7 +128,7 @@ class Loader
         } else {
             array_unshift($ns, 'module');
         }
-        return fx::path()->abs('/' . join("/", $ns));
+        return fx::path()->abs('@home/' . join("/", $ns));
     }
 
     public function addDefaultSourceDirs()
@@ -189,8 +189,14 @@ class Loader
         if (!$this->target_hash) {
             $this->recalcTargetHash();
         }
-        return $this->target_dir . '/' . preg_replace("~\.php$~", '.' . $this->target_hash . '.php',
-            $this->target_file);
+        $res = $this->target_dir . '/';
+        $res .= preg_replace(
+                    "~\.php$~", 
+                    '.' . $this->target_hash . '.php',
+                    $this->target_file
+                );
+        $res = fx::path($res);
+        return $res;
     }
 
     public function recalcTargetHash()
