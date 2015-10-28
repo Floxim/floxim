@@ -172,7 +172,7 @@ fx_front.prototype.handle_click = function(e) {
     
     // don't remove selection when mousedown target doesn't match current click (mouseup) target
     // e.g. user tries to select some text and stops selection when pointer is outside the edited node
-    if (e.target !== $fx.front.last_mousedown_node) {
+    if (e.target !== $fx.front.last_mousedown_node && !e.fxForced) {
         if ($target.closest('a').length) {
             console.log('skip from hk');
             return false;
@@ -223,19 +223,28 @@ fx_front.prototype.handle_click = function(e) {
         e.preventDefault();
         return;
     }
-    var $link = $target.closest('a[href]');
+    var $link = $target.closest('a[href], .fx_click_handler');
     $fx.front.select_item(closest_selectable);
     if ($link.length && $link.closest('.fx_entity_adder_placeholder').length === 0) {
-        var panel = $fx.front.node_panel.get();
-        panel.add_button(
-            {
-                type:'icon', 
-                keyword:'follow',
-                href:$link.attr('href')
-            }, 
+        var panel = $fx.front.node_panel.get(),
+            is_link = !$link.is('.fx_click_handler'),
+            button = {
+                type:'icon',
+                keyword:'follow'
+            };
+        if (is_link) {
+            button.href = $link.attr('href');
+        }
+        var $button = panel.add_button(
+            button, 
             null, 
             panel.$panel.find('>*:visible').first()
         );
+        if (!is_link) {
+            $button.click(function() {
+                $link.data('fx_click_handler')();
+            });
+        }
     }
     return false;
 };
@@ -1019,6 +1028,9 @@ fx_front.prototype.is_var_bound_to_entity = function($node) {
         return true;
     }
     if (!$node.is(':visible')) {
+        return false;
+    }
+    if ($node.is('.fx_entity')) {
         return false;
     }
     
@@ -1839,6 +1851,9 @@ fx_front.prototype.get_edit_closure = function($entity, params) {
                     $var_nodes.each(function() {
                         var $var_node = $(this),
                             var_meta = $var_node.data('fx_var');
+                        if (var_meta.var_type === 'visual') {
+                            return;
+                        }
                         var_meta.target_type = 'var';
                         $form.find('.field_name__'+var_meta.name).on('input keyup change', function(e) {
                             var $field = $(this),
