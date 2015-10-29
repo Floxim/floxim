@@ -1841,7 +1841,7 @@ fx_front.prototype.get_edit_closure = function($entity, params) {
                                 var $target_field = $form.find('.field_name__'+data.name);
                                 $target_field.on('fx_change_file', function(e) {
                                     if (e.upload_response) {
-                                        fx_eip.append_value($c_node, data, e.upload_response.formatted_value);
+                                        fx_eip.append_value($c_node, data, e.upload_response.path, e.upload_response.formatted_value);
                                     }
                                 });
                             }
@@ -2568,8 +2568,8 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
     var xhr = $.ajax({
         type:'post',
         data:post_data,
-        url: document.baseURI+'~ib/'+meta.id+'@'+page_id,
-        success:function(res) {
+       url: document.baseURI+'/~ib/'+meta.id+'@'+page_id,
+       success:function(res) {
            $fx.front.c_hover = null;
            $infoblock_node.off('click.fx_fake_click');
            $fx.front.deselect_item();
