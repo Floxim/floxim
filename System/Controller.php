@@ -308,7 +308,6 @@ class Controller
             }
             return 0;
         });
-        fx::cdebug($result);
         return $result;
     }
 

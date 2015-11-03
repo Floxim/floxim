@@ -401,6 +401,10 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
         }
         
         if ($linkers && $linkers->linkedBy) {
+            if (!$linker) {
+                fx::log($collection,$linkers);
+                return $entity_atts;
+            }
             $linker_field = $linker->getFieldMeta($linkers->linkedBy);
             $linker_collection_field = $linkers->selectField;
             

@@ -348,7 +348,6 @@ fx_form = {
             }
             res.push(f);
         }
-        console.log('ijo', res);
         return res;
     },
 

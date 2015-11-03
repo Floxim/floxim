@@ -975,6 +975,31 @@ class Fx
         }
         return $res;
     }
+    
+    public static function imageSize($value, $format = 'css') {
+        $f = fx::path($value);
+        if (!file_exists($f) || !is_file($f)) {
+            return '';
+        }
+        $size = getimagesize($f);
+        if (!$size) {
+            return '';
+        }
+        if (preg_match("~\%[wh]~", $format)) {
+            return str_replace("%w", $size[0], str_replace("%h", $size[1], $format));
+        }
+        switch ($format) {
+            case 'css':
+            default:
+                return 'width:'.$size[0].'px; height:'.$size[1].'px;';
+            case 'width':
+            case 'w':
+                return $size[0];
+            case 'height':
+            case 'h':
+                return $size[1];
+        }
+    }
 
     public static function version()
     {

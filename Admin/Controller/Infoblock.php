@@ -43,7 +43,6 @@ class Infoblock extends Admin
         );
         
         foreach ($controllers as $c) {
-            
             if (fx::config()->isBlockDisabled($c['keyword'])) {
                 continue;
             }

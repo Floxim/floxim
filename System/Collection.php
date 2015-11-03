@@ -44,6 +44,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         if (isset($this->relFinders)) {
             $collection->relFinders = $this->relFinders;
         }
+        $collection->filtered_by = $this->filtered_by;
         return $collection;
     }
     
@@ -141,6 +142,9 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
     public function find($field, $prop = null, $compare_type = null)
     {
         $fork = $this->fork();
+        if ($compare_type == self::FILTER_EQ || $compare_type === null) {
+            $fork->addFilter($field, $prop);
+        }
         if (count($this->data) == 0) {
             return $fork;
         }

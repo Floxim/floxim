@@ -322,8 +322,12 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
             placeholder_meta.placeholder.__move_after = rel_id;
         }
     } else {
-        console.log('use append', placeholder_meta);
-        $placeholder_parent.append($placeholder);
+        if ($placeholder_parent.is('.fx_pseudo_parent')) {
+            $placeholder_parent.before($placeholder);
+            $placeholder_parent.hide();
+        } else {
+            $placeholder_parent.append($placeholder);
+        }
     }
 
     show_placeholder();
@@ -1408,7 +1412,8 @@ fx_front.prototype.hilight = function(container) {
     
     $fx.front.collect_adder_placeholders(container);
     
-    var fx_selector = '.fx_template_var, .fx_area, .fx_template_var_in_att, .fx_entity, .fx_infoblock, .fx_hidden_placeholded';
+    var fx_selector = '.fx_template_var, .fx_area, .fx_template_var_in_att, .fx_entity, .fx_infoblock, '+
+                        '.fx_hidden_placeholded, .fx_adder_placeholder_container';
     var items = $(fx_selector, container).not('.fx_unselectable');
     if (container.not('.fx_unselectable').is(fx_selector)) {
         items = items.add(container);
@@ -1494,13 +1499,15 @@ fx_front.prototype.hilight = function(container) {
                 ) {
                     hidden_placeholder = '<p>'+hidden_placeholder+'</p>';
                 }
-            } else if (i.hasClass('fx_infoblock') && !hidden_placeholder) {
-                var ib_meta = i.data('fx_infoblock');
+            } else if (
+                i.is('.fx_infoblock, .fx_adder_placeholder_container')
+                && !hidden_placeholder 
+                && $('.fx_entity', i).length === 0
+            ) {
                 hidden_placeholder = $fx.lang('This block is empty');
             }
         }
         if (hidden_placeholder) {
-            //console.log('placeholded', i);
             var $adder_placeholder = null;
             /*,
                 $adder_placeholders = i.find('.fx_entity_adder_placeholder');
@@ -1548,7 +1555,7 @@ fx_front.prototype.hilight = function(container) {
             }
         }
             
-        if (i.is('.fx_area') && $fx.front.node_is_empty(i))  {
+        if (i.is('.fx_area') && $fx.front.node_is_empty(i) && $('.fx_infoblock', i).length === 0)  {
             $fx.front.hilight_area_empty(i, 'add');
         }
     });
@@ -1570,40 +1577,35 @@ fx_front.prototype.hilight = function(container) {
 };
 
 fx_front.prototype.collect_adder_placeholders = function($container) {
-    //console.log($container, $container.find('.fx_entity_adder_placeholder'));
     $container.find('.fx_entity_adder_placeholder').each(function(){
         var $placeholder = $(this),
-            $parent = $placeholder.parent();
+            $parent = $placeholder.parent(),
+            $placeholders = null;
+        
+        // this placeholder is already removed from dom on prev step
         if (!$parent.length) {
             return;
         }
-        var $placeholders = $parent.find('>.fx_entity_adder_placeholder');
+        
+        // entity and ib are on the same node
+        if ($placeholder.is('.fx_infoblock')) {
+            $parent = $('<div class="fx_pseudo_parent"></div>');
+            $parent
+                .addClass( $placeholder.attr('class') )
+                .removeClass('fx_template_var fx_sortable fx_entity_adder_placeholder fx_template_var_in_att')
+                .data('fx_infoblock', $placeholder.data('fx_infoblock'));
+            $placeholder.before($parent);
+            $placeholders = $placeholder;
+        } else {
+            $placeholders = $parent.find('>.fx_entity_adder_placeholder');
+        }
         $parent.find('>.fx_entity').addClass('fx_accept_neighbours');
         $parent.data('fx_contained_placeholders', $placeholders);
         $parent.addClass('fx_adder_placeholder_container');
-        //console.log($parent, $placeholders);
         $placeholders.each(function() {
            this.$fx_placeholder_parent =  $parent;
         });
         $placeholders.remove();
-    });
-    return;
-    $items.filter('.fx_entity').each(function() { 
-        var $entity = $(this);
-        if ($entity.hasClass('fx_accept_neighbours')) {
-            return;
-        }
-        var $entity_parent = $entity.parent();
-        var $placeholders = $entity_parent.find('>.fx_entity_adder_placeholder');
-        if ($placeholders.length > 0) {
-            $entity_parent.find('>.fx_entity').addClass('fx_accept_neighbours');
-            $entity_parent.data('fx_neighbour_placeholder', $placeholders);
-            $fx.front.create_inline_entity_adder($entity_parent);
-            $placeholders.each(function() {
-               this.$fx_placeholder_parent =  $entity_parent;
-            });
-            $placeholders.remove();
-        }
     });
 };
 
@@ -2948,10 +2950,11 @@ fx_front.prototype.outline_block = function(n, style, speed) {
             break;
         }
     };
-    var doc_width = $(document).width();
-    var doc_scroll = $(document).scrollTop();
-    var front_overlay = $fx.front.get_front_overlay();
-    var overlay_offset = parseInt(front_overlay.css('top'));
+    var doc_width = $(document).width(),
+        doc_height = $(document).height(),
+        doc_scroll = $(document).scrollTop(),
+        front_overlay = $fx.front.get_front_overlay(),
+        overlay_offset = parseInt(front_overlay.css('top'));
     
     var draw_lens = (style === 'selected_light') || (style === 'selected' && n.is('.fx_entity'));
     
@@ -3068,6 +3071,13 @@ fx_front.prototype.outline_block = function(n, style, speed) {
     if (pane_position==='fixed') {
         o.top -=$(window).scrollTop();
     }
+    
+    // if the node bottom is lower than doc height
+    // don't enlarge the doc by showing the pane
+    if (o.top + nh > doc_height) {
+        nh -= o.top + nh - doc_height + 5;
+    }
+    
     make_pane({
         top: o.top - size - g_offset,
         left:o.left - size - g_offset,

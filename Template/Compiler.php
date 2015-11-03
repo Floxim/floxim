@@ -1404,6 +1404,12 @@ class Compiler
         if ($token->getProp('bundle') || $token->getProp('extend')) {
             $code .= $this->cssBundleToCode($token);
         } else {
+            $media = $token->getProp('media');
+            if ($media) {
+                $file_params = ', array("media" => "'.$media.'")';
+            } else {
+                $file_params = '';
+            }
             foreach ($token->getChildren() as $set) {
                 $set = preg_split("~[\n]~", $set->getProp('value'));
                 foreach ($set as $file) {
@@ -1433,6 +1439,7 @@ class Compiler
                     if ($alias) {
                         $code .= "if (!fx::page()->hasFileAlias('" . $alias . "', '" . $type . "')) {\n";
                     }
+                    $res_string .= $file_params;
                     $code .= 'fx::page()->add' . fx::util()->underscoreToCamel($type) . 'File(' . $res_string . ");\n";
                     if ($alias) {
                         $code .= "fx::page()->hasFileAlias('" . $alias . "', '" . $type . "', true);\n";
@@ -1473,10 +1480,45 @@ class Compiler
         return $code;
     }
     
+    /**
+     * Very dirty method to parse css-like prop list, e.g. 
+     * key:value; other-key:Yet another value; and:'So on';
+     * @param type $s css-like prop list
+     * @return array
+     */
+    public static function parseCssLikeProps($s)
+    {
+        $res = array();
+        $parts = explode(";", $s);
+        foreach ($parts as $p) {
+            $p = trim($p);
+            preg_replace_callback(
+                    "~^([0-9a-z_-]+?):(.+)$~",
+                function($matches) use (&$res) {
+                    $res[$matches[1]] = trim($matches[2], "'\"");
+                },
+                $p
+            );
+        }
+        return $res;
+    }
+    
     protected function tokenParamToCode(Token $token)
     {
         $name = $token->getProp('name');
         $props = $token->getAllProps();
+        
+        if (!isset($props['type']) && isset($props['values'])) {
+            $props['type'] = 'select';
+        }
+        if ($props['type'] === 'select' && !preg_match("~^`~", $props['values'])) {
+            $props['values'] = self::parseCssLikeProps($props['values']);
+            if (!isset($props['default'])) {
+                $props['default'] = current(array_keys($props['values']));
+            }
+        }
+        fx::cdebug($props);
+        
         unset($props['name']);
         
         $val_var = "\$param__".$name."_value";
@@ -1501,7 +1543,9 @@ class Compiler
         );
         foreach ($props as $k => $v) {
             $c_prop = "'".$k."' => ";
-            if (preg_match("~^\`.+\`$~", $v)) {
+            if (!is_string($v)) {
+                $c_prop .= var_export($v, 1);
+            } elseif (preg_match("~^\`.+\`$~", $v)) {
                 $c_prop .= trim($v, '`');
             } else {
                 $c_prop .= "'".addslashes($v)."'";

@@ -174,8 +174,8 @@ class Token
         foreach ($this->props as $k => $v) {
             if (is_array($v)) {
                 $v = json_encode($v);
-                $v = str_replace("'", "\\'", $v);
             }
+            $v = str_replace("'", "\\'", $v);
             $res .= $k . "='" . $v . "' ";
         }
         $res .= $this->type == 'single' ? '/' : '';
@@ -216,7 +216,8 @@ class Token
                 'lang', 
                 'bem_block', 
                 'bem_element',
-                'param'
+                'param',
+                'preset'
             )
         ),
         'preset'  => array(
@@ -233,7 +234,21 @@ class Token
         ),
         'area'      => array(
             'type'     => 'both',
-            'contains' => array('code', 'template', 'var', 'lang', 'area', 'each', 'with_each', 'if', 'elseif', 'else', 'bem_block', 'bem_element')
+            'contains' => array(
+                'code', 
+                'template', 
+                'var', 
+                'lang', 
+                'area', 
+                'each', 
+                'with_each', 
+                'if', 
+                'elseif', 
+                'else', 
+                'bem_block', 
+                'bem_element',
+                'preset'
+            )
         ),
         'var'       => array(
             'type'     => 'both',

@@ -23,10 +23,7 @@ class Entity extends System\Entity
             $this['priority'] = $last_vis['priority'] + 1;
         }
         
-        fx::log($this);
-
         if ($this->needRecountFiles) {
-            fx::log('start recount');
             $this->recountFiles();
         }
     }
@@ -40,7 +37,6 @@ class Entity extends System\Entity
     {
         $modified_params = $this->getModifiedParams();
         $fxPath = fx::path();
-        fx::log('modifiedss', $modified_params);
         foreach ($modified_params as $field => $params) {
             $all_params = $this[$field];
             foreach ($params as $pk => $pv) {
@@ -67,7 +63,6 @@ class Entity extends System\Entity
                 }
             }
             $this[$field] = $all_params;
-            fx::log($all_params);
         }
     }
 

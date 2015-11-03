@@ -116,8 +116,13 @@ fx_front.prototype.create_inline_entity_adder = function($node) {
     }
     
     var $placeholder_mark = $node.is('.fx_hidden_placeholder_mark') ? $node : $('.fx_hidden_placeholder_mark', $node);
+    
+    if ($placeholder_mark.closest('.fx_adder_placeholder_container')[0] !== $node[0]) {
+        $placeholder_mark = $([]);
+    }
+    
     var $placeholder_mark_td = $('td', $placeholder_mark); 
-    //console.log($placeholder_mark, $node);
+    
     if ($placeholder_mark.length) {
         var add_text = '. '+ $fx.lang('You can add %s here') + '.';
         add_text = add_text.replace(/\%s/, '<span class="fx_adder_variants"></span>');
@@ -430,17 +435,6 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
     
     function handle_mouseover (e, $node) {
         // the nested adder case
-        /*
-        if ($(e.target).closest('.fx_has_inline_adder_'+scope)[0] !== $node[0] ) {
-            console.log(
-                'closest mismatch',
-                $(e.target).closest('.fx_has_inline_adder_'+scope)[0],
-                $node[0],
-                e.target
-            );
-            //return;
-        }
-        */
         if ($fx.front.is_adder_disabled(scope)) {
             return;
         }
@@ -543,7 +537,8 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
             over_timeout = null;
         }, 100);
         
-        var right_edge = $(window).width() - 20;
+        var right_edge = $(window).width() - 20,
+            bottom_edge = $(document).height() - 20;
         
         function get_margins($entity) {
             return {
@@ -777,6 +772,10 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
                 left = 0;
             } else if ( (left + $plus.outerWidth()/2) > right_edge) {
                 left = right_edge - $plus.outerWidth()/2;
+            }
+            
+            if (top + $plus.outerHeight()/2 > bottom_edge) {
+                top = bottom_edge - $plus.outerHeight() / 2;
             }
             
             top = Math.round(top);

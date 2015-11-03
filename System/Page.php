@@ -65,7 +65,7 @@ class Page
         }
     }
 
-    public function addCssFile($file)
+    public function addCssFile($file, $params = array())
     {
         if (preg_match("~\.less$~", $file)) {
 
@@ -89,16 +89,24 @@ class Page
 
                 $file_content = file_get_contents($full_source_path);
                 $file_content = $this->cssUrlReplace($file_content, $http_base);
-
+                
                 $file_content = $less->compile($file_content);
                 fx::files()->writefile($full_target_path, $file_content);
             }
-            $this->files_css[] = $target_path;
+            if (count($params) > 0) {
+                $file = array_merge($params, array('file' => $target_path));
+            } else {
+                $file = $target_path;
+            }
+            $this->files_css[] = $file;
             $this->all_css[] = $target_path;
             return;
         }
         if (!preg_match("~^https?://~", $file)) {
             $file = fx::path()->http($file);
+        }
+        if (count($params) > 0) {
+            $file = array_merge($params, array('file' => $file));
         }
         $this->files_css[] = $file;
     }
@@ -145,6 +153,9 @@ class Page
 
         $last_modified = 0;
         $less_flag = false;
+        
+        $files = array_unique($files);
+        
         foreach ($files as $file) {
             if (preg_match("~\.less$~", $file)) {
                 $less_flag = true;
@@ -371,9 +382,19 @@ class Page
     {
         $r = '';
         if ($this->files_css) {
-            $files_css = array_unique($this->files_css);
-            foreach ($files_css as $v) {
-                $r .= '<link rel="stylesheet" type="text/css" href="' . $v . '" />' . PHP_EOL;
+            $files_css = array();
+            foreach ($this->files_css as $f) {
+                if (!is_array($f)) {
+                    $f = array('file' => $f);
+                }
+                $files_css[$f['file']] = $f;
+            }
+            foreach ($files_css as $file => $file_info) {
+                $r .= '<link rel="stylesheet" type="text/css" href="' . $file . '" ';
+                if (isset($file_info['media'])) {
+                    $r .= ' media="('.$file_info['media'].')" ';
+                }
+                $r .= '/>' . PHP_EOL;
             }
         }
         if ($this->files_js) {
