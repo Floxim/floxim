@@ -135,7 +135,8 @@ class Entity extends System\Entity implements Template\Entity
         if (!is_array($c_params)) {
             $c_params = array();
         }
-        $this->data['params'] = array_merge($c_params, $params);
+        //$this->data['params'] = array_merge($c_params, $params);
+        $this['params'] = array_merge($c_params, $params);
         return $this;
     }
 

@@ -477,6 +477,7 @@ fx_form = {
 
                 if (par_inp.attr('type') === 'checkbox') {
                     var par_val = par_inp.get(0).checked * 1;
+                    pval = (pval === 'false' || pval === '0') ? 0 : 1;
                 } else {
                     var par_val = par_inp.val();
                 }
@@ -494,6 +495,7 @@ fx_form = {
                             var $inp_field_block = par_inp.closest('.field');
                             if ($inp_field_block.length) {
                                 do_show = $inp_field_block.css('display') !== 'none';
+                                console.log('swithc by vis');
                             }
                         }
                         break;
@@ -519,13 +521,14 @@ fx_form = {
                         do_show = !prex.test(par_val);
                         break;
                 }
+                console.log(par_val, pval, par_inp, do_show);
                 if (!do_show) {
                     return false;
                 }
             });
             var is_visible = _el.is(':visible');
             var $el_inp =  _el.find(':input');
-            
+            console.log($el_inp, is_visible, do_show);
             if (do_show && !is_visible) {
                 _el.show();
                 $el_inp.trigger('change').trigger('fx_show_input');
