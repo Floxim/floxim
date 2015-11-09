@@ -52,7 +52,7 @@ class Path
         $parts = preg_split("~^(@)([^\\\\/]+)~", $path, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
         
         if (!isset($this->registry[$parts[1]])) {
-            throw \Exception('Alias @'.$parts[1].' is not registered');
+            throw new \Exception('Alias @'.$parts[1].' is not registered');
         }
         $res = $this->registry[$parts[1]].$parts[2];
         $res = preg_replace("~/{2,}~", '/', $res);

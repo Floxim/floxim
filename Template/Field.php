@@ -57,7 +57,7 @@ class Field
         if (isset($this->_meta['in_att']) && $this->_meta['in_att'] && !isset($this->_meta['value'])) {
             $this->_meta['value'] = $val;
         }
-        //$this->_meta['value'] = $this->_value;
+        $this->_meta['stored_value'] = $this->_value;
         self::$replacements [] = array($this->_meta['id'], $this->_meta, $val);
         return '###fxf' . (self::$count_replacements++) . '###';
     }
@@ -103,6 +103,10 @@ class Field
                 
                 $meta_string = ' data-has_var_in_att="1" ';
                 foreach ($att_fields as $afk => $af) {
+                    if (!isset($af['real_value']) && !isset($af['value'])) {
+                        $af['value'] = $af['stored_value'];
+                    }
+                    unset($af['stored_value']);
                     $v = htmlentities(json_encode($af));
                     $v = str_replace("'", '&apos;', $v);
                     $v = str_replace("&quot;", '"', $v);
@@ -123,6 +127,7 @@ class Field
             function ($matches) {
                 $replacement = Field::$replacements[$matches[3]];
                 $tag = HtmlToken::createStandalone($matches[1]);
+                unset($replacement[1]['stored_value']);
                 $tag->addMeta(array(
                     'class'       => 'fx_template_var',
                     'data-fx_var' => $replacement[1]
@@ -152,6 +157,7 @@ class Field
                     $tag_name = Html::getWrapperTag($replacement[2]);
                 }
                 $tag = HtmlToken::createStandalone('<' . $tag_name . '>');
+                unset($replacement[1]['stored_value']);
                 $tag->addMeta(array(
                     'class'       => 'fx_template_var',
                     'data-fx_var' => $replacement[1]

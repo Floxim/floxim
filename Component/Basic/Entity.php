@@ -160,6 +160,9 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
             );
         } else {
             $cf = $fields[$field_keyword];
+            if ($cf['type_of_edit'] == Field\Entity::EDIT_NONE) {
+                return false;
+            }
             if (!$cf) {
                 $offsets = $this->getAvailableOffsets();
                 if (isset($offsets[$field_keyword])) {

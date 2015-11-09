@@ -857,7 +857,6 @@ class Files
         $headers = fx::http()->getLastHeaders();
         $status = fx::http()->getLastStatus();
         if (!$file_data || $status['status_code'] >= 400) {
-            fx::log($status, strlen($file_data));
             return;
         }
         $file_name = $name ? $name : fx::path()->fileName($file);
@@ -880,6 +879,27 @@ class Files
         $this->writefile($full_path, $file_data);
         return $full_path;
     }
+    
+    public function getInfo($full_path)
+    {
+        if (!file_exists($full_path)) {
+            return false;
+        }
+        $raw_size = filesize($full_path);
+        $result = array(
+            'filename' => fx::path()->fileName($full_path),
+            'fullpath' => $full_path,
+            'raw_size' => $raw_size,
+            'size'     => $this->readableSize($raw_size)
+        );
+        $img_size = $this->getImageSize($full_path);
+        if ($img_size) {
+            $result['is_image'] = true;
+            $result = array_merge($result, $img_size);
+        }
+        $result['path'] = fx::path()->http($full_path);
+        return $result;
+    }
 
     public function saveFile($file, $dir = '', $name = null)
     {
@@ -887,6 +907,12 @@ class Files
         if (is_array($file)) {
             $filename = $file['name'];
             $put_file = $this->getPutFilename($dir, $filename);
+            
+            $extension = fx::path()->fileExtension($put_file);
+            if (!$extension || !in_array($extension, $this->allowed_extensions)) {
+                return;
+            }
+            
             $full_path = fx::path('@files/' . $dir . '/' . $put_file);
             $this->mkdir(fx::path('@files/' . $dir));
             $res = move_uploaded_file($file['tmp_name'], $full_path);
@@ -903,29 +929,14 @@ class Files
             }
         }
         
-        $result = array(
-            'filename' => fx::path()->fileName($full_path),
-            'fullpath' => $full_path,
-            'size'     => $this->readableSize(filesize($full_path))
-        );
-        
         // default image resizer
         $resize_config = fx::config('image.default_resize');
-        if ($this->isImage($full_path)) {
+        if ($this->isImage($full_path) && $resize_config) {
             $thumb = new \Floxim\Floxim\System\Thumb($full_path, $resize_config);
-            $img_info = $thumb->getInfo();
-            $result['is_image'] = true;
-            if ($img_info && isset($img_info['width']) && isset($img_info['height'])) {
-                $result['width'] = $img_info['width'];
-                $result['height'] = $img_info['height'];
-            }
-            if ($resize_config) {
-                $thumb->process($full_path);
-            }
+            $thumb->process($full_path);
         }
-
-        $http_path = fx::path()->http($full_path);
-        $result['path'] = $http_path;
+        
+        $result = $this->getInfo($full_path);
         return $result;
     }
 
@@ -1128,6 +1139,22 @@ class Files
             default :
                 return "application/" . strtolower($fileSuffix[1]);
         }
+    }
+    
+    public function getImageSize($filename)
+    {
+        $is = @getimagesize($filename);
+        if (!$is ) {
+            return false;
+        }
+        // we want only gif, jpg and png
+        if (!in_array($is[2], array(1,2,3)) ) {
+            return false;
+        }
+        return array(
+            'width' => $is[0],
+            'height' => $is[1]
+        );
     }
 
     function isImage($filename) 
