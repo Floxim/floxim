@@ -121,6 +121,9 @@ class ContextFlex extends Context {
             return array();
         }
         for ($i = $this->level; $i >= 0; $i--) {
+            if (!isset($this->stack[$i])) {
+                continue;
+            }
             $e = $this->stack[$i];
             if ($e instanceof Entity && isset($e[$var_name])) {
                 $meta = $e->getFieldMeta($var_name);

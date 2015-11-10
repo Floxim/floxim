@@ -54,7 +54,7 @@ class Path
         if (!isset($this->registry[$parts[1]])) {
             throw new \Exception('Alias @'.$parts[1].' is not registered');
         }
-        $res = $this->registry[$parts[1]].$parts[2];
+        $res = $this->registry[$parts[1]]. (isset($parts[2]) ? $parts[2] : '');
         $res = preg_replace("~/{2,}~", '/', $res);
         return $res;
     }

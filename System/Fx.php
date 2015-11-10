@@ -522,7 +522,7 @@ class Fx
                 $arr[$pp] = $var_value;
                 return;
             }
-            $arr =& $arr[$pp];
+            @ $arr =& $arr[$pp];
         }
 
         if ($merge && is_array($arr) && is_array($var_value)) {

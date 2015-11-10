@@ -37,6 +37,9 @@ class Ajax extends Base
         // import layout template to recreate real env
         fx::router('front')->importLayoutTemplate();
         
+        $page_infoblocks = fx::router('front')->getPageInfoblocks($page_id, $layout_id);
+        fx::page()->setInfoblocks($page_infoblocks);
+        
         $controller_params = fx::input()->fetchGetPost('_ajax_controller_params');
         
         $c_infoblock_id = fx::input()->fetchGetPost('_ajax_infoblock_id');

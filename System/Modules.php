@@ -12,9 +12,15 @@ class Modules
             $all_modules_data = fx::collection();
             $vendor_dirs = glob(fx::path('@module/*'));
             foreach ($vendor_dirs as $vendor_dir) {
+                if (!is_dir($vendor_dir)) {
+                    continue;
+                }
                 $vendor_name = fx::path()->fileName($vendor_dir);
                 $vendor_modules = glob($vendor_dir.'/*');
                 foreach ($vendor_modules as $mod_dir) {
+                    if (!is_dir($mod_dir)) {
+                        continue;
+                    }
                     $module_name = fx::path()->fileName($mod_dir);
                     //fx::debug($vendor_name.'/'.$module_name);
                     $module = array(
