@@ -24,6 +24,27 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
         return $this;
     }
     
+    protected function beforeSave() {
+        $modified = $this->getModified();
+        foreach ($modified as $field_keyword) {
+            $field = $this->getField($field_keyword);
+            if (!$field instanceof \Floxim\Floxim\Field\File) {
+                continue;
+            }
+            $new_val = $this[$field_keyword];
+            if (!is_string($new_val) || !preg_match("~^https?://~", $new_val)) {
+                continue;
+            }
+            $file = fx::files()->saveRemoteFile($new_val, 'upload');
+            if (!$file) {
+                continue;
+            }
+            $field->setValue($file);
+            $this[$field_keyword] = $field->getSavestring($this);
+        }
+        return parent::beforeSave();
+    }
+    
     public function getAvailableOffsets() {
         return $this->available_offsets_cache;
     }

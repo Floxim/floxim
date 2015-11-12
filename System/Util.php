@@ -565,4 +565,93 @@ class Util
 			return($word[2]);
 	}
     }
+    
+    public function htmlEntitiesDecode($s)
+    {
+        // see: http://stackoverflow.com/a/7590056
+        $chars = array( 
+            128 => 8364, 
+            130 => 8218, 
+            131 => 402, 
+            132 => 8222, 
+            133 => 8230, 
+            134 => 8224, 
+            135 => 8225, 
+            136 => 710, 
+            137 => 8240, 
+            138 => 352, 
+            139 => 8249, 
+            140 => 338, 
+            142 => 381, 
+            145 => 8216, 
+            146 => 8217, 
+            147 => 8220, 
+            148 => 8221, 
+            149 => 8226, 
+            150 => 8211, 
+            151 => 8212, 
+            152 => 732, 
+            153 => 8482, 
+            154 => 353, 
+            155 => 8250, 
+            156 => 339, 
+            158 => 382, 
+            159 => 376
+        );
+        $s = preg_replace_callback(
+            '/&#([0-9a-fx]+);/mi',
+            function($ord) use ($chars) {
+                $ord = $ord[1];
+                if (preg_match('/^x([0-9a-f]+)$/i', $ord, $match)) {
+                    $ord = hexdec($match[1]);
+                } else {
+                    $ord = intval($ord);
+                }
+                if (isset($chars[$ord])) {
+                    $ord = $chars[$ord];
+                }
+
+                $no_bytes = 0;
+                $byte = array();
+
+                if ($ord < 128) {
+                    return chr($ord);
+                }
+                if ($ord < 2048) {
+                    $no_bytes = 2;
+                } elseif ($ord < 65536) {
+                    $no_bytes = 3;
+                } elseif ($ord < 1114112) {
+                    $no_bytes = 4;
+                } else {
+                    return;
+                }
+
+                switch($no_bytes) {
+                    case 2:
+                        $prefix = array(31, 192);
+                        break;
+                    case 3:
+                        $prefix = array(15, 224);
+                        break;
+                    case 4:
+                        $prefix = array(7, 240);
+                        break;
+                }
+
+                for ($i = 0; $i < $no_bytes; $i++) {
+                    $byte[$no_bytes - $i - 1] = (($ord & (63 * pow(2, 6 * $i))) / pow(2, 6 * $i)) & 63 | 128;
+                }
+                $byte[0] = ($byte[0] & $prefix[0]) | $prefix[1];
+                $ret = '';
+                for ($i = 0; $i < $no_bytes; $i++) {
+                    $ret .= chr($byte[$i]);
+                }
+                return $ret;
+            },
+            $s
+        );
+        $s = html_entity_decode($s, ENT_COMPAT | ENT_HTML401, 'utf-8');
+        return $s;
+    }
 }

@@ -1509,16 +1509,6 @@ fx_front.prototype.hilight = function(container) {
         }
         if (hidden_placeholder) {
             var $adder_placeholder = null;
-            /*,
-                $adder_placeholders = i.find('.fx_entity_adder_placeholder');
-
-            $adder_placeholders.each(function() {
-                if ($(this).closest('.fx_infoblock')[0] === i[0]) {
-                    $adder_placeholder = $(this);
-                    return false;
-                }
-            });
-            */
             var mark_tag = 'div',
                 mark_colspan = null;
                 
@@ -1538,20 +1528,22 @@ fx_front.prototype.hilight = function(container) {
             } else {
                 $placeholded = i;
             }
-            $placeholded.addClass('fx_hidden_placeholded');
-            var $children = $placeholded.children();
-            if ($children.length || $adder_placeholder) {
-                if (mark_tag === 'TR') {
-                    hidden_placeholder = '<td colspan="'+mark_colspan+'">'+hidden_placeholder+'</td>';
-                }
-                var $hidden_placeholder = $('<'+mark_tag+' class="fx_hidden_placeholder_mark">'+hidden_placeholder+'</'+mark_tag+'>');
-                if ($children.length) {
-                    $children.first().before($hidden_placeholder);
+            if (!$placeholded.hasClass('fx_hidden_placeholded')) {
+                $placeholded.addClass('fx_hidden_placeholded');
+                var $children = $placeholded.children();
+                if ($children.length || $adder_placeholder) {
+                    if (mark_tag === 'TR') {
+                        hidden_placeholder = '<td colspan="'+mark_colspan+'">'+hidden_placeholder+'</td>';
+                    }
+                    var $hidden_placeholder = $('<'+mark_tag+' class="fx_hidden_placeholder_mark">'+hidden_placeholder+'</'+mark_tag+'>');
+                    if ($children.length) {
+                        $children.first().before($hidden_placeholder);
+                    } else {
+                        $placeholded.append($hidden_placeholder);
+                    }
                 } else {
-                    $placeholded.append($hidden_placeholder);
+                    $placeholded.html(hidden_placeholder);
                 }
-            } else {
-                $placeholded.html(hidden_placeholder);
             }
         }
             

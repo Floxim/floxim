@@ -22,6 +22,8 @@ abstract class Entity implements \ArrayAccess, Template\Entity
     // Extra data from forms etc.
     protected $payload = array();
     
+    public $is_saved = null;
+    
     /** template entity interface */
     
 
@@ -58,6 +60,7 @@ abstract class Entity implements \ArrayAccess, Template\Entity
     public function __construct($input = array())
     {
         if (isset($input['data'])) {
+            $this->is_saved = isset($input['data']['id']);
             foreach ($input['data'] as $k => $v) {
                 $this[$k] = $v;
             }
@@ -140,6 +143,7 @@ abstract class Entity implements \ArrayAccess, Template\Entity
             }
             $id = $this->getFinder()->insert($this->data);
             $this->data['id'] = $id;
+            $this->is_saved = true;
             $this->saveMultiLinks();
             $this->afterInsert();
         }
@@ -502,7 +506,7 @@ abstract class Entity implements \ArrayAccess, Template\Entity
                 break;
         }
         
-        if (!$this->is_loaded) {
+        if (!$this->is_loaded && $this->is_saved) {
             $this->data[$offset] = $value;
             return;
         }
