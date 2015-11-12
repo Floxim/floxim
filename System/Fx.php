@@ -1054,6 +1054,18 @@ class Fx
         }
         call_user_func_array(array(self::$debugger, 'log'), func_get_args());
     }
+    
+    public static function logIf($cond, $what) {
+        $args = func_get_args();
+        $cond = array_shift($args);
+        if (!$cond) {
+            return;
+        }
+        if (is_null(self::$debugger)) {
+            self::$debugger = new Debug();
+        }
+        call_user_func_array(array(self::$debugger, 'log'), $args);
+    }
 
     public static function profiler()
     {
