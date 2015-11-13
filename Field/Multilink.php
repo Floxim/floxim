@@ -26,7 +26,6 @@ class Multilink extends Baze
             $rel = $this->getRelation();
             $related_relation = fx::data($rel[1])->relations();
             $linker_field = $related_relation[$rel[3]][2];
-
             $this->_js_field['name_postfix'] = $linker_field;
             if (isset($content[$this['keyword']])) {
                 $this->_js_field['value'] = array();
@@ -240,7 +239,6 @@ class Multilink extends Baze
             ),
             'value'  => $this['format']['render_type']
         );
-        fx::log($fields);
         return $fields;
     }
 
@@ -310,14 +308,16 @@ class Multilink extends Baze
         $new_value->linkers = new System\Collection();
         // Find the name for the field, for example "most part"
         // something strashnenko...
-        //$linker_com_name = preg_replace('~^content_~', '', $linker_data_type);
         $linker_com_name = $linker_data_type;
-        $end_link_field_name = fx::data('component', $linker_com_name)->getAllFields()->findOne(function ($i) use (
-            $linker_prop_name
-        ) {
-            //!!! some tin
-            return isset($i['format']['prop_name']) && $i['format']['prop_name'] == $linker_prop_name;
-        })->get('keyword');
+        $end_link_field_name = 
+            fx::component($linker_com_name)
+                ->getAllFields()
+                ->findOne(
+                    function ($i) use ( $linker_prop_name ) {
+                        return isset($i['format']['prop_name']) && $i['format']['prop_name'] == $linker_prop_name;
+                    }
+                )
+                ->get('keyword');
         $linked_infoblock_id = null;
         $linked_parent_id = null;
         foreach ($this->value as $item_props) {
@@ -327,7 +327,7 @@ class Multilink extends Baze
             $linker_item = null;
 
             if (is_array($linked_props)) {
-                if (!$linked_infoblock_id) {
+                if (!$linked_infoblock_id && $content instanceof \Floxim\Main\Content\Entity) {
                     $linked_infoblock_id = $content->getLinkFieldInfoblock($this['id']);
                 }
                 $linked_props['type'] = $linked_data_type;
@@ -352,6 +352,7 @@ class Multilink extends Baze
             $new_value[] = $linker_item[$linker_prop_name];
             $new_value->linkers [] = $linker_item;
         }
+        fx::log($content, $new_value);
         return $new_value;
     }
 

@@ -570,6 +570,8 @@ class Fx
         return call_user_func($callback, func_get_arg(1));
     }
     
+    protected static $module_manager = null;
+    
     public static function load($config = null)
     {
         if (!class_exists('fx')) {
@@ -589,11 +591,27 @@ class Fx
         self::loadComponents();
         
         // init modules
-        $moduleManager = new Modules();
-        $modules = $moduleManager->getAll();
+        self::$module_manager = new Modules();
+        $modules = self::$module_manager->getAll();
         foreach ($modules as $m) {
             if (isset($m['object'])) {
                 $m['object']->init();
+            }
+        }
+    }
+    
+    public static function module($keyword)
+    {
+        $modules = self::$module_manager->getAll();
+        $parts = explode(".", $keyword);
+        foreach ($parts as &$p) {
+            $p = fx::util()->underscoreToCamel($p);
+        }
+        $parts []= 'Module';
+        $class = join("\\", $parts);
+        foreach ($modules as $m) {
+            if (get_class($m['object']) === $class) {
+                return $m['object'];
             }
         }
     }
@@ -970,7 +988,7 @@ class Fx
             $thumber = new Thumb($value, $format);
             $res = $thumber->getResultPath();
         } catch (\Exception $e) {
-            fx::log('img exception', $e->getMessage());
+            fx::log('img exception', $e->getMessage(), fx::debug()->backtrace(false));
             $res = '';
         }
         return $res;

@@ -45,8 +45,6 @@ class Infoblock extends Base
         // import layout template to recreate real env
         fx::router('front')->importLayoutTemplate();
         
-
-
         // front end can try to reload the layout which is out of date
         // when updating from "layout settings" panel
         $infoblock = fx::data('infoblock', $ib_id);

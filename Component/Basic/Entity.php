@@ -564,4 +564,64 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
     {
         return $this->hasAvailableInfoblock();
     }
+    
+    /*
+     * Store multiple links, linked to the entity
+     */
+    protected function saveMultiLinks()
+    {
+        $link_fields =
+            $this->getFields()->
+            find('keyword', $this->modified)->
+            find('type', Field\Entity::FIELD_MULTILINK);
+        foreach ($link_fields as $link_field) {
+            $val = $this[$link_field['keyword']];
+            $relation = $link_field->getRelation();
+            $related_field_keyword = $relation[2];
+            
+            $test = $link_field['keyword'] === 'genres';
+            fx::logIf($test, $link_field, $relation, 'hm: '.System\Finder::HAS_MANY);
+            switch ($relation[0]) {
+                case System\Finder::HAS_MANY:
+                    fx::log('save hm');
+                    $old_data = isset($this->modified_data[$link_field['keyword']]) ?
+                        $this->modified_data[$link_field['keyword']] :
+                        new System\Collection();
+                    $c_priority = 0;
+                    foreach ($val as $linked_item) {
+                        $c_priority++;
+                        $linked_item[$related_field_keyword] = $this['id'];
+                        $linked_item['priority'] = $c_priority;
+                        $linked_item->save();
+                    }
+                    $old_data->findRemove('id', $val->getValues('id'));
+                    $old_data->apply(function ($i) {
+                        $i->delete();
+                    });
+                    break;
+                case System\Finder::MANY_MANY:
+                    $old_linkers = isset($this->modified_data[$link_field['keyword']]->linkers) ?
+                        $this->modified_data[$link_field['keyword']]->linkers :
+                        new System\Collection();
+
+                    // new linkers
+                    // must be set
+                    // @todo then we will cunning calculation
+                    if (!isset($val->linkers) || count($val->linkers) != count($val)) {
+                        throw new \Exception('Wrong linker map');
+                    }
+                    foreach ($val->linkers as $linker_obj) {
+                        $linker_obj[$related_field_keyword] = $this['id'];
+                        $linker_obj->save();
+                    }
+
+                    $old_linkers->findRemove('id', $val->linkers->getValues('id'));
+                    $old_linkers->apply(function ($i) {
+                        $i->delete();
+                    });
+                    break;
+            }
+        }
+    }
+
 }

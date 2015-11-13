@@ -392,8 +392,10 @@ class Content extends Admin
                         $val = mb_substr($val, 0, 150);
                         break;
                     case Field\Entity::FIELD_IMAGE:
-                        $val = fx::image($val, 'max-width:100px,max-height:50px');
-                        $val = '<img src="' . $val . '" alt="" />';
+                        if ($val) {
+                            $val = fx::image($val, 'max-width:100px,max-height:50px');
+                            $val = '<img src="' . $val . '" alt="" />';
+                        }
                         break;
                     case Field\Entity::FIELD_MULTILINK:
                         $val = fx::alang('%d items', 'system', count($val));

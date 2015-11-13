@@ -173,19 +173,21 @@ class Link extends Baze
     {
         if (is_array($this->value) && isset($this->value['title'])) {
             $title = $this->value['title'];
-            $entity_infoblock_id = isset($this->value['infoblock_id']) ? $this->value['infoblock_id'] : $content->getLinkFieldInfoblock($this['id']);
-
             $entity_params = array(
                 'name' => $title
             );
-            $entity_infoblock = null;
-            if ($entity_infoblock_id) {
-                $entity_infoblock = fx::data('infoblock', $entity_infoblock_id);
-                if ($entity_infoblock) {
-                    $entity_params += array(
-                        'infoblock_id' => $entity_infoblock_id,
-                        'parent_id'    => $entity_infoblock['page_id']
-                    );
+            
+            if ($content instanceof \Floxim\Main\Content\Entity) {
+                $entity_infoblock_id = isset($this->value['infoblock_id']) ? $this->value['infoblock_id'] : $content->getLinkFieldInfoblock($this['id']);
+                $entity_infoblock = null;
+                if ($entity_infoblock_id) {
+                    $entity_infoblock = fx::data('infoblock', $entity_infoblock_id);
+                    if ($entity_infoblock) {
+                        $entity_params += array(
+                            'infoblock_id' => $entity_infoblock_id,
+                            'parent_id'    => $entity_infoblock['page_id']
+                        );
+                    }
                 }
             }
             if (isset($this->value['parent_id'])) {
@@ -196,6 +198,7 @@ class Link extends Baze
             $entity = fx::data($entity_type)->create($entity_params);
             $entity_prop_name = $this['format']['prop_name'];
             $content[$entity_prop_name] = $entity;
+            fx::log($content, $entity_prop_name, fx::debug()->backtrace());
             return false;
         }
         return parent::getSavestring();

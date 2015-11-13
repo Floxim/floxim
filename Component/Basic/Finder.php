@@ -83,8 +83,46 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
         return $tables;
     }
 
+    static $stored_relations = array();
+    
+    public function relations()
+    {
+        $class = get_called_class();
+        if (isset(self::$stored_relations[$class])) {
+            return static::$stored_relations[$class];
+        }
+        
+        $relations = array();
+        $fields = fx::component($this->component_id)->
+                getAllFields()->
+                find('type', array(Field\Entity::FIELD_LINK, Field\Entity::FIELD_MULTILINK));
+        foreach ($fields as $f) {
+            if (!($relation = $f->getRelation())) {
+                continue;
+            }
+            switch ($f['type']) {
+                case Field\Entity::FIELD_LINK:
+                    $relations[$f->getPropName()] = $relation;
+                    break;
+                case Field\Entity::FIELD_MULTILINK:
+                    $relations[$f['keyword']] = $relation;
+                    break;
+            }
+        }
+        /*
+        $relations ['component'] = array(
+            self::BELONGS_TO,
+            'component',
+            'type',
+            'keyword'
+        );
+        */
+        self::$stored_relations[$class] = $relations;
+        return $relations;
+    }
+    
     protected $component_id = null;
-
+    
     public function __construct($table = null)
     {
         parent::__construct($table);
@@ -105,7 +143,13 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
 
     public function getComponent()
     {
-        return fx::component($this->component_id);
+        return fx::getComponentById($this->component_id);
+    }
+    
+    // array access: $com = $entity['component']
+    public function _getComponent()
+    {
+        return fx::getComponentById($this->component_id);
     }
     
         /**
@@ -118,8 +162,9 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
         $obj = parent::create($data);
 
         $component = fx::component($this->component_id);
-
-        $obj['created'] = date("Y-m-d H:i:s");
+        if (!isset($data['created'])) {
+            $obj['created'] = date("Y-m-d H:i:s");
+        }
         if ($component['keyword'] != 'floxim.user.user' && ($user = fx::env()->getUser())) {
             $obj['user_id'] = $user['id'];
         }

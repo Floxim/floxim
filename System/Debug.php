@@ -87,7 +87,7 @@ class Debug
      * @param int|bool $level how many trace levels to display or FALSE to show all
      * @return string Trace, each level separated by newline
      */
-    public static function backtrace($level = 3)
+    public static function backtrace($level = false)
     {
         $trace = debug_backtrace();
         if ($level !== false) {

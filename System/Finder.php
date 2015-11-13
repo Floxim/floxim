@@ -635,7 +635,14 @@ abstract class Finder
 
     protected function getDefaultRelationFinder($rel)
     {
-        return fx::data($rel[1]);
+        $finder = fx::data($rel[1]);
+        $finder->orderDefault();
+        return $finder;
+    }
+    
+    public function orderDefault()
+    {
+        
     }
 
     public function addRelated($rel_name, $entities, $rel_finder = null)
