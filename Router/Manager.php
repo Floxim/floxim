@@ -87,14 +87,14 @@ class Manager
     }
     
     public function getPath($url, $site_id = null) {
-        $url = preg_replace("~^/~", '', $url);
+        $url = fx::path()->removeBase($url);
         $url = preg_replace("~\#.*$~", '', $url);
         if (is_null($site_id)) {
             $site_id = fx::env('site_id');
         }
         // @todo check if url contains another host name
         $url = preg_replace("~^https?://.+?/~", '/', $url);
-        foreach ($this->routers as $r) {
+        foreach ($this->routers as $rk => $r) {
             $result = $r['router']->getPath($url, $site_id);
             if ($result) {
                 return $result;
@@ -108,7 +108,12 @@ class Manager
      */
     public function getRouter($router_name)
     {
+        if (isset($this->routers[$router_name])) {
+            return $this->routers[$router_name]['router'];
+        }
         $class = 'Floxim\\Floxim\\Router\\' . ucfirst($router_name);
-        return fx::dig($this->routers, $class . '.router');
+        if (isset($this->routers[$class])) {
+            return $this->routers[$class]['router'];
+        }
     }
 }

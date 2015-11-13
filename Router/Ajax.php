@@ -18,9 +18,11 @@ class Ajax extends Base
         $c_url = fx::input()->fetchGetPost('_ajax_base_url');
         
         if ($c_url) {
+            $c_url = preg_replace("~^https?://[^/]+~", '', $c_url);
+            
             $_SERVER['REQUEST_URI'] = $c_url;
             
-            $base_path = fx::router()->getPath( fx::path()->removeBase($c_url) );
+            $base_path = fx::router()->getPath( $c_url );
             if ($base_path) {
                 $page = $base_path->last();
                 fx::env('page', $page);
@@ -43,6 +45,7 @@ class Ajax extends Base
         $controller_params = fx::input()->fetchGetPost('_ajax_controller_params');
         
         $c_infoblock_id = fx::input()->fetchGetPost('_ajax_infoblock_id');
+        
         if ($c_infoblock_id) {
             $infoblock = fx::data('infoblock', $c_infoblock_id);
             if ($infoblock) {

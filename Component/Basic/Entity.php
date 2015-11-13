@@ -181,9 +181,6 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
             );
         } else {
             $cf = $fields[$field_keyword];
-            if ($cf['type_of_edit'] == Field\Entity::EDIT_NONE) {
-                return false;
-            }
             if (!$cf) {
                 $offsets = $this->getAvailableOffsets();
                 if (isset($offsets[$field_keyword])) {
@@ -204,6 +201,9 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
                 'name'            => $cf['keyword'],
                 'is_required'     => $cf['is_required']
             );
+            if ($cf && $cf['type_of_edit'] == Field\Entity::EDIT_NONE) {
+                $field_meta['editable'] = false;
+            }
         }
         $field_meta['label'] = $cf && $cf['name'] ? $cf['name'] : $field_keyword;
         if ($cf && $cf->type) {

@@ -134,7 +134,7 @@ class Field
                 ));
                 $tag = $tag->serialize();
                 Field::$fields_to_drop[] = $matches[3];
-                return $tag . $matches[2] . self::replaceFields($replacement[2]) . $matches[4];
+                return $tag . $matches[2] . Field::replaceFields($replacement[2]) . $matches[4];
             },
             $html
         );
@@ -164,7 +164,7 @@ class Field
                 ));
                 //fx_template_field::$replacements[$matches[1]] = null;
                 Field::$fields_to_drop [] = $matches[1];
-                $res = $tag->serialize() . self::replaceFields($replacement[2]) . '</' . $tag_name . '>';
+                $res = $tag->serialize() . Field::replaceFields($replacement[2]) . '</' . $tag_name . '>';
                 return $res;
             },
             $html
