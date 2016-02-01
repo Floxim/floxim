@@ -2,8 +2,6 @@
     
     function fx_front_panel() {
         var $topbar = $('.fx-top-panel'),
-            $sidebar = $('.fx-side-panel'),
-            $side_body = $('.fx-side-panel__body'),
             front_panel = this,
             duration = 300;
         
@@ -15,9 +13,19 @@
             var c_len = this.panels.length;
             return c_len ? this.panels[c_len - 1] : null;
         };
+        
+        this.init_sidebar = function(params) {
+            var style = params.current_panel_style || 'default',
+                $sidebar = $('<div class="fx-side-panel fx-side-panel_style_'+style+'"></div>'),
+                $sidebar_body = $('<div class="fx-side-panel__body"></div>');
+            $sidebar.append($sidebar_body);
+            $('#fx_admin_control').append($sidebar);
+            params.$container = $sidebar;
+            return $sidebar;
+        };
 
         this.show_form = function(data, params) {
-            
+            params = params || {};
             var c_panel = {};
             this.panels.push(c_panel);
             
@@ -51,7 +59,7 @@
                 c_panel.current_panel_type = 'top';
                 if (c_panel.current_panel_style !== 'finish') {
                     $.each(data.fields, function() {
-                        this.context = 'panel';
+                        this.view_context = 'panel';
                     });
                 }
             }
@@ -73,6 +81,13 @@
                 }
             }
             data.class_name = 'fx_form_'+params.view;
+            
+            if (params.onsubmit) {
+                data.onsubmit = [
+                    params.onsubmit,
+                    $fx_form.submit_handler
+                ];
+            }
             
             c_panel.current_params = params;
             
@@ -98,8 +113,9 @@
                 */
             } else {
                 data.button_container = 'footer';
-                $sidebar.mod('style', c_panel.current_panel_style);
-                $form = $fx.form.create(data, $side_body);
+                //$sidebar.mod('style', c_panel.current_panel_style);
+                front_panel.init_sidebar(c_panel);
+                $form = $fx.form.create(data, c_panel.$container.find('.fx-side-panel__body'));
             }
             
             c_panel.$form = $form;
@@ -110,20 +126,23 @@
                 }
                 $fx.front_panel.hide();
             }).on('fx_form_sent', function(e, data) {
-                console.log('form sent');
                 if (data.status === 'error') {
                     
                 } else {
                     $fx.front_panel.hide();
-                    if (params.onfinish) {
-                        params.onfinish(data);
+                    if (data.resume) {
+                        $fx.front_panel.show_form(data, params);
+                    } else {
+                        if (params.onfinish) {
+                            params.onfinish(data);
+                        }
                     }
                 }
             });
             setTimeout(function() {
                 var callback = function() {
                     if (!params.skip_focus) {
-                        var $first_inp = $(':input:visible', $form).first();
+                        var $first_inp = $(':input:visible, .monosearch_has-value .monosearch__container', $form).first();
                         if ($first_inp.length > 0 && $first_inp.attr('type') !== 'submit') {
                             $first_inp.focus();
                         }
@@ -131,6 +150,7 @@
                     if (params.onready) {
                         params.onready($form);
                     }
+                    $form.trigger('fx_panel_form_ready');
                 };
                 if (c_panel.current_panel_type === 'top') {
                     $topbar.css('visibility', 'visible');
@@ -158,7 +178,9 @@
         
         
         this.recount_sidebar = function() {
-            var $form = $('.fx_admin_form', $sidebar),
+            var c_panel = front_panel.get_current_panel(),
+                $sidebar = c_panel.$container,
+                $form = $('.fx_admin_form', $sidebar),
                 $form_header = $('.fx_admin_form__header', $form),
                 $form_footer = $('.fx_admin_form__footer', $form),
                 $form_body = $('.fx_admin_form__body', $form);
@@ -188,7 +210,8 @@
             var c_panel = this.get_current_panel(),
                 $body = $('body'),
                 style = c_panel.current_panel_style,
-                that = this;
+                that = this,
+                $sidebar = c_panel.$container;
             
             $sidebar.show();
             
@@ -207,7 +230,8 @@
                         }
                     );
                     $sidebar.css({
-                        right:'-' + ($sidebar.outerWidth() + 30)+'px'
+                        right:'-' + ($sidebar.outerWidth() + 30)+'px',
+                        'z-index': that.get_sidebars().length + 1
                     }).animate({
                         right:0
                     }, duration);
@@ -227,22 +251,45 @@
                     return;
             }
         };
+        this.get_sidebars = function() {
+            var res = [];
+            $.each(this.panels, function() {
+                if (this.current_panel_type === 'side') {
+                    res.push(this);
+                }
+            });
+            return res;
+        };
         
         this.hide_sidebar = function() {
-            $('body').css({
-                width:'',
-                overflow:''
-            });
-            var c_panel = this.get_current_panel();
-            if (c_panel.current_panel_style === 'default') {
-                $sidebar.animate({
-                    right:'-' + ($sidebar.outerWidth() + 30)+'px'
-                }, duration);
-            } else {
-                $sidebar.hide();
+            var is_last_sidebar = (this.get_sidebars().length === 1);
+            
+            if (is_last_sidebar) {
+                $('body').css({
+                    width:'',
+                    overflow:''
+                });
             }
-            $(window).off('resize.fx_recount_sidebar');
-            $('.fx_admin_form__body', $sidebar).off('resize');
+            
+            var c_panel = this.get_current_panel(),
+                $sidebar = c_panel.$container;
+            
+            if (c_panel.current_panel_style === 'default') {
+                $sidebar.animate(
+                    {
+                        right:'-' + ($sidebar.outerWidth() + 30)+'px'
+                    }, 
+                    duration,
+                    function() {
+                        $sidebar.remove();
+                    });
+            } else {
+                $sidebar.hide().remove();
+            }
+            if (is_last_sidebar) {
+                $(window).off('resize.fx_recount_sidebar');
+                $('.fx_admin_form__body', $sidebar).off('resize');
+            }
         };
         
         this.animate_panel_height = function(panel_height, callback) {
@@ -361,15 +408,18 @@
                 }
                 return;
             }
-            $fx.front.enable_select();
-            if (this.panels.length === 1) {
+            var is_last = this.panels.length === 1;
+            
+            // $fx.front.enable_select(); 
+            if (is_last) {
+                $fx.front.enable_select();
                 $('body').off('.fx_front_panel');
             }
             
             
             var callback = function() {
                 
-                if (!c_panel.current_params.keep_hilight_on) {
+                if (!c_panel.current_params.keep_hilight_on && is_last) {
                     $fx.front.enable_node_panel();
                     if (!$fx.front.get_selected_item()) {
                         $fx.front.enable_hilight();
@@ -381,11 +431,14 @@
                 that.panels.pop();
             };
             if (c_panel.current_panel_type === 'top') {
-                this.animate_panel_height(0, function () {
-                    $topbar.hide().html('');
-                    callback();
-                    c_panel.is_visible = false;
-                });
+                this.animate_panel_height(
+                    0, 
+                    function () {
+                        $topbar.hide().html('');
+                        callback();
+                        c_panel.is_visible = false;
+                    }
+                );
             } else {
                 this.hide_sidebar();
                 callback();

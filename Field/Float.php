@@ -2,14 +2,14 @@
 
 namespace Floxim\Floxim\Field;
 
-class Float extends Baze
+class Float extends \Floxim\Floxim\Component\Field\Entity
 {
     public function getJsField($content)
     {
-        parent::getJsField($content);
-        $this->_js_field['type'] = 'float';
+        $res = parent::getJsField($content);
+        $res['type'] = 'float';
 
-        return $this->_js_field;
+        return $res;
     }
     
     public function getSavestring() {
@@ -21,5 +21,10 @@ class Float extends Baze
     public function getSqlType()
     {
         return "DOUBLE";
+    }
+    
+    public function getCastType() 
+    {
+        return 'float';
     }
 }

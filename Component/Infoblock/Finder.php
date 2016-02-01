@@ -15,6 +15,16 @@ class Finder extends System\Finder
                 self::HAS_MANY,
                 'infoblock_visual',
                 'infoblock_id'
+            ),
+            'page' => array(
+                self::BELONGS_TO,
+                'floxim.main.content',
+                'page_id'
+            ),
+            'scope_entity' => array(
+                self::BELONGS_TO,
+                'scope',
+                'scope_id'
             )
         );
     }
@@ -38,7 +48,7 @@ class Finder extends System\Finder
 
     public function getForPage($page_id = null)
     {
-        $page = $page_id instanceof System\Entity ? $page_id : fx::data('page', $page_id);
+        $page = $page_id instanceof System\Entity ? $page_id : fx::data('floxim.main.page', $page_id);
         if (!$page) {
             return fx::collection();
         }
@@ -115,16 +125,18 @@ class Finder extends System\Finder
         return $infoblocks;
     }
     
-    public function whereContent($content_type = null, $with_parent_types = true) 
+    public function whereContent($content_type = null, $with_child_types = false) 
     {
         if ($content_type) {
             $com = fx::component($content_type);
-            if ($with_parent_types) {
-                $variants = $com->getChain()->getValues('keyword');
-                $this->where('controller', $variants);
-            } else {
-                $this->where('controller', $com['keyword']);
+            
+            $variants = $com->getChain()->getValues('keyword');
+            
+            if ($with_child_types) {
+                $variants = array_merge($variants, $com->getAllVariants()->getValues('keyword'));
             }
+            
+            $this->where('controller', $variants);
         }
         
         $this->where('action', 'list_infoblock');

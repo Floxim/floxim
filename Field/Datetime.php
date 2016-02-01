@@ -2,24 +2,29 @@
 
 namespace Floxim\Floxim\Field;
 
-class Datetime extends Baze
+class Datetime extends \Floxim\Floxim\Component\Field\Entity
 {
 
     protected $day = '', $month = '', $year = '', $hours = '', $minutes = '', $seconds = '';
 
     public function getJsField($content)
     {
-        parent::getJsField($content);
+        $res = parent::getJsField($content);
 
         $this->loadValuesByStr($content[$this['keyword']]);
-        $this->_js_field['day'] = $this->day;
-        $this->_js_field['month'] = $this->month;
-        $this->_js_field['year'] = $this->year;
-        $this->_js_field['hours'] = $this->hours;
-        $this->_js_field['minutes'] = $this->minutes;
-        $this->_js_field['seconds'] = $this->seconds;
-
-        return $this->_js_field;
+        
+        $res = array_merge(
+            $res,
+            array(
+               'day' => $this->day,
+               'month' => $this->month,
+               'year' => $this->year,
+               'hours' => $this->hours,
+               'minutes' => $this->minutes,
+               'seconds' => $this->seconds
+            )
+        );
+        return $res;
     }
 
     public function setValue($value)

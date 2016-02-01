@@ -30,13 +30,14 @@ class Debug
             $this->file = null;
         }
     }
-
+    
+    public function setDir($dir)
+    {
+        $this->dir = $dir;
+    }
 
     protected function getDir()
     {
-        if (is_null($this->dir)) {
-            $this->dir = fx::path('@log');
-        }
         return $this->dir;
     }
 
@@ -56,10 +57,19 @@ class Debug
     /**
      * Open log file and init index
      */
-    protected function startLog()
+    public function start()
     {
-        $this->file = fx::files()->open($this->getFileName(), 'w');
+        $file_name = $this->getFileName();
+        $this->file = fx::files()->open($file_name, 'w');
         register_shutdown_function(array($this, 'stopLog'));
+    }
+    
+    protected $metalog_handler = null;
+    protected function metaLog($msg) {
+        if (is_null($this->metalog_handler)) {
+            $this->metalog_handler = fopen(DOCUMENT_ROOT.'/floxim_files/log/metalog.txt', 'w');
+        }
+        fputs($this->metalog_handler, date('d.m.Y, H:i:s')."\n".$msg."\n\n---\n\n");
     }
     
     protected $stop_handlers = array();
@@ -170,8 +180,10 @@ class Debug
                 $post_params []= $post_key.':'. (is_scalar($post_value) ? mb_substr($post_value, 0, 20) : '[...]');
             }
             $log_header['method'] .= ' '.join(", ", $post_params);
+            $log_header['method'] = preg_replace("~[\n\r]~", ' ', $log_header['method']);
         }
-        fputs($fh_index, serialize($log_header) . "\n");
+        $serialized_header = serialize($log_header);
+        fputs($fh_index,  $serialized_header. "\n");
         fclose($fh_index);
         $this->setCount($c_count);
     }
@@ -243,6 +255,7 @@ class Debug
             return array();
         }
         $index = trim(file_get_contents($file));
+        
         if (strlen($index) == 0) {
             return array();
         }
@@ -341,7 +354,7 @@ class Debug
             return;
         }
         if (is_null($this->file)) {
-            $this->startLog();
+            $this->start();
         } else {
             fputs($this->file, $this->separator);
         }
@@ -411,22 +424,167 @@ class Debug
 
         $args = func_get_args();
         $items = array();
-        $light_mode = fx::config('dev.debug_light');
         foreach ($args as $a) {
-            $type = gettype($a);
-            if ($type == 'array' || $type == 'object') {
-                if ($light_mode) {
-                    $a = '['. ($type === 'object' ? get_class($a) : $type) .']';
-                } else {
-                    $a = print_r($a, 1);
-                }
-            }
-            $items[] = array($type, $a);
+            //$items[]= $a;
+            $items []= $this->toPlain($a);
         }
         return array($meta, $items);
     }
-
+    
+    const KEY_ARRAY_KEY = 0;
+    const KEY_PUBLIC = 1;
+    const KEY_PROTECTED = 2;
+    const KEY_PRIVATE = 3;
+    
+    protected $primitives = array(
+        'integer' => 0,
+        'double' => 1,
+        'string' => 2,
+        'array' => 3,
+        'boolean' => 4,
+        'null' => 5,
+        'resource' => 6,
+        '_link' => 7
+    );
+    
+    public function toJson($what) {
+        $plain = $this->toPlain($what);
+        return json_encode($plain, JSON_UNESCAPED_UNICODE);
+    }
+    
+    public function toPlain($what, &$index = array()) 
+    {
+        if (is_string($what)) {
+            return $what;
+        }
+        if (is_null($what)) {
+            return array($this->primitives['null']);
+        }
+        $res = array();
+        if (is_array($what)) {
+            $res[0] = $this->primitives['array'];
+            $res[1] = array();
+            foreach ($what as $key => $value) {
+                $res[1] []= array(
+                    $key,
+                    $this->toPlain($value, $index)
+                );
+            }
+        } elseif (is_object($what)) {
+            $found_keys = array_keys($index, $what, true);
+            if (count($found_keys) > 0) {
+                $res[0] = $this->primitives['_link'];
+                $res[1] = $found_keys[0];
+            } else {
+                $index []= $what;
+                $res[0] = get_class($what);
+                $res[1] = array();
+                $res[2] = count($index) - 1;
+                $atts = array();
+                if ($what instanceof \Traversable) {
+                    foreach ($what as $key => $value) {
+                        $atts[$key] = $value;
+                    }
+                } elseif ($what instanceof \Floxim\Floxim\System\Entity) {
+                    $atts = $what->get();
+                }
+                foreach ($atts as $key => $value) {
+                    $res[1] []= array(
+                        array(self::KEY_ARRAY_KEY, $key),
+                        $this->toPlain($value, $index)
+                    );
+                }
+                $r_object = new \ReflectionObject($what);
+                $props = $r_object->getProperties();
+                $res_props = array();
+                foreach ($props as $prop) {
+                    if ($prop->isStatic()) {
+                        continue;
+                    }
+                    if ($prop->isPrivate()) {
+                        $key_type = self::KEY_PRIVATE;
+                        $prop->setAccessible(true);
+                    } elseif ($prop->isProtected()) {
+                        $key_type = self::KEY_PROTECTED;
+                        $prop->setAccessible(true);
+                    } else {
+                        $key_type = self::KEY_PUBLIC;
+                    }
+                    
+                    $res_props[] = array(
+                        array($key_type, $prop->getName()),
+                        $this->toPlain($prop->getValue($what), $index)
+                    );
+                }
+                /*
+                usort($res_props, function($a, $b) {
+                    
+                });
+                 * 
+                 */
+                foreach ($res_props as $rp) {
+                    $res[1] []= $rp;
+                }
+            }
+        } else {
+            $res[0] = $this->primitives[strtolower(gettype($what))];
+            $res[1] = $what;
+        }
+        return $res;
+    }
+    
     protected function printEntry($e)
+    {
+        if (!is_array($e) || count($e) < 2) {
+            return;
+        }
+        $meta = $e[0];
+        $file = isset($meta['file']) ? $meta['file'] : false;
+        $line = isset($meta['line']) ? $meta['line'] : false;
+        static $is_first_entry = true;
+        ?>
+        <div class='fx_debug_entry'>
+            <div class='fx_debug_title'>
+                <?php echo $file; ?>
+                <?php if ($line !== false) {
+                    ?> at line <b><?php echo $line ?></b><?php
+                }
+                echo sprintf(
+                    ' (+%.5f, %.5f s, %s)',
+                    $meta['passed'],
+                    $meta['time'],
+                    self::convertMemory($meta['memory'])
+                );
+                ?>
+            </div>
+            <?php 
+            foreach ($e[1] as $item) {
+                //$json = $this->toJson($item);
+                $json = json_encode($item, JSON_UNESCAPED_UNICODE);
+                $id = md5($json);
+                ?>
+                <div class="fx-debug__data-entry" data-hash="<?=$id?>" style="display:none;"></div>
+                <script type="text/javascript">
+                    <?php
+                    if ($is_first_entry) {
+                        $is_first_entry = false;
+                        ?>
+                        if (!window.fx_debug_data) {
+                            window.fx_debug_data = {};
+                        }
+                        <?php
+                    }
+                    ?>
+                    window.fx_debug_data['<?=$id?>'] = <?= $json ?>;
+                </script>
+                <?php
+            }
+            ?>
+        </div>
+        <?php
+    }
+
+    protected function _printEntry($e)
     {
         $meta = $e[0];
         $file = isset($meta['file']) ? $meta['file'] : false;

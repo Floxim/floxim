@@ -25,6 +25,7 @@
                 var res = data;
             }
             $container.html(res);
+            $container.trigger('fx_render');
             $b.data('is_pending', false);
             $button_text.text(init_button_text);
         });

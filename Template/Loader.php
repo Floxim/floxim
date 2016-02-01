@@ -386,7 +386,7 @@ class Loader
         }
 
         $ttl = fx::config('templates.ttl');
-
+        
         // file is not created yet
         if (!file_exists($target_path)) {
             return false;
@@ -453,10 +453,12 @@ class Loader
         if (is_null($source)) {
             $source = $this->buildSource();
         }
+        
         $parser = new Parser();
         $tree = $parser->parse($source);
-
+        
         unset($parser);
+        
         $compiler = new Compiler();
         $compiler->addTemplateConfigEntries($this->config_entries);
         $res = $compiler->compile($tree, $this->getCompiledClassName());

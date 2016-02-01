@@ -4,7 +4,6 @@ var f_postfix = _c.name_postfix ? '['+_c.name_postfix+']' : '';
 var bl = _c.is_multiple ? 'multisearch' : 'monosearch';
 ?>
 <div class="livesearch <?=bl?>" 
-    data-params="<?=$t.json_att(_c.params)?>" 
     data-prototype_name="<?=_c.name?>[prototype]<?=f_postfix?>"
     data-is_multiple="<?=(_c.is_multiple ? 'Y' : 'N')?>"
     <? if (!_c.is_multiple) {?>
@@ -14,23 +13,28 @@ var bl = _c.is_multiple ? 'multisearch' : 'monosearch';
     if (_c.is_multiple) {
         if (_c.value && !_c.ajax_preload) {
             $.each(_c.value, function(vi, vv) {
+                var value_name = vv.name ? vv.name.replace(/\"/g, '&quot') : '';
                 ?><input class="preset_value" type="hidden" 
                     name="<?=_c.name?>[<?=vv.value_id?>]<?=f_postfix?>"
                     value="<?=vv.id?>"
-                    data-name="<?=vv.name?>" /><?
+                    data-name="<?=value_name?>" /><?
             });
         }
     } else {
         ?><input class="preset_value" type="hidden" <?=$t.field_id_name(_c)?>
-                <?if (_c.value) {?>
+                <?if (_c.value) {
+                var value_name = _c.value.name ? _c.value.name.replace(/\"/g, '&quot') : '';
+                if (_c.value.path) {
+                    ?> data-path="<?= $t.json_att(_c.value.path) ?>" <?
+                }
+                ?>
                 value="<?=_c.value.id || _c.value?>" 
-                data-name="<?=_c.value.name?>" 
-                <?}?>/><?
-                    
+                data-name="<?= value_name ?>" 
+                <?}?>/><?            
     }
     ?>
-    <div class="livesearch__container <?=bl?>__container">
-        <input type="text" class="livesearch__input <?=bl?>__input" />
+    <div class="livesearch__container <?=bl?>__container" <?= _c.is_multiple || !_c.value ? '' : 'tabindex="0"' ?>>
+        <input type="text" class="livesearch__input <?=bl?>__input" <?= _c.is_multiple || !_c.value ? '' : 'tabindex="-1"' ?>/>
         <div class="livesearch__control livesearch__control_arrow">
             
         </div>
@@ -40,6 +44,7 @@ var bl = _c.is_multiple ? 'multisearch' : 'monosearch';
 </div>
 
 <!--jquery-->
+html.data('params', _c.params);
 var ls = new fx_livesearch(html);
 html.data('livesearch', ls);
 

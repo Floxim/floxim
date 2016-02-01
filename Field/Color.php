@@ -2,7 +2,7 @@
 
 namespace Floxim\Floxim\Field;
 
-class Color extends Baze
+class Color extends \Floxim\Floxim\Component\Field\Entity
 {
     public function getSqlType()
     {

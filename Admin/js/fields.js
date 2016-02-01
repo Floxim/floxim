@@ -16,12 +16,44 @@ window.$fx_fields = {
         return json.value;
     },
     
+    row: function(json) {
+        if (json.type === undefined) {
+            json.type = 'input';
+        }
+        json.type = json.type.replace(/^field_/, '');
+        var type='';
+        switch(json.type) {
+            case 'hidden': case 'string': case 'short': case 'medium': case 'long': case 'int':
+                type = 'input';
+                break;
+            case 'textarea': case 'text':
+                type = 'textarea';      
+                break;
+            default:
+                type = json.type;
+                break;
+        }
+        if (!this[type]) {
+            type = 'default';
+        }
+        
+        var $node = this[type](json);
+        if (json.field_meta) {
+            $node.data('field_meta', json.field_meta);
+        }
+        return $node;
+    },
+    
     group:function(json) {
         var $row =  $t.jQuery('form_row', json),
             b = 'fx-field-group',
             exp_class = b+'_expanded',
             $group = $('.'+b, $row),
             $fields = $('.'+b+'__fields', $group);
+        
+        function is_expanded() {
+            return $group.hasClass(exp_class);
+        }
         
         function expand() {
             $group.addClass(exp_class);
@@ -59,7 +91,7 @@ window.$fx_fields = {
         }
         
         function toggle() {
-            if ($group.hasClass(exp_class)) {
+            if (is_expanded()) {
                 collapse();
             } else {
                 expand();
@@ -70,8 +102,19 @@ window.$fx_fields = {
             .find('.'+b+'__title')
             .on('click', toggle)
             .on('keydown', function(e) {
+                // enter or space - toggle
                 if (e.which === 13 || e.which === 32) {
                     toggle();
+                    return false;
+                }
+                // down or right - expand
+                if ( (e.which === 40 || e.which === 39) && !is_expanded()) {
+                    expand();
+                    return false;
+                }
+                // up left or escape - collapse
+                if ( (e.which === 37 || e.which === 38 || e.which === 27) && is_expanded()) {
+                    collapse();
                     return false;
                 }
             });
@@ -85,6 +128,17 @@ window.$fx_fields = {
 
     input: function(json) {
         return $t.jQuery('form_row', json);
+    },
+    
+    control: function(json) {
+        var type = json.type || 'string',
+            $res;
+        if (typeof this[type] === 'function') {
+            $res = this[type](json, 'input');
+        } else {
+            $res = $t.jQuery('input', json);
+        }
+        return $res;
     },
     
     number: function(json) {
@@ -113,8 +167,26 @@ window.$fx_fields = {
         return $t.jQuery('form_row', json);
     },
 
-    radio_facet: function (json ) {
-        return $t.jQuery('form_row', json);
+    radio_facet: function (json , template) {
+        template = template || 'form_row';
+        var $node = $t.jQuery(template, json),
+            cl = 'fx-radio-facet',
+            vcl = cl + '__variant';
+        function select_variant($variant) {
+            $('.'+vcl, $node).removeClass(vcl+'_active');
+            $variant.addClass(vcl+'_active');
+            $('input[type="hidden"]',$node).val($variant.data('value')).trigger('change');
+        }
+        $node.on('click', '.'+vcl, function() {
+            select_variant($(this));
+        });
+        $node.on('keydown', '.'+vcl, function(e) {
+            if (e.which === 13 || e.which === 32) {
+                select_variant($(this));
+                return false;
+            }
+        });
+        return $node;
     },
     
     bool:function(json) {
@@ -161,30 +233,57 @@ window.$fx_fields = {
         return $t.jQuery('form_row', json);
     },
 
-    livesearch: function(json) {
+    livesearch: function(json, template) {
+        template = template || 'form_row';
         json.params = json.params || {};
-        if (json.values) {
-            var vals = [];
-            $.each(json.values, function() {
-                var c_val = this;
-                // [ [id1, name1], [id2, name2] ]
-                if (this instanceof Array && this.length >= 2) {
-                    c_val = {
-                        id:this[0],
-                        name:this[1]
+        if (!json.type) {
+            json.type = 'livesearch';
+        }
+        
+        if (json.content_type && !json.params.content_type) {
+            json.params.content_type = json.content_type;
+        }
+        
+        function vals_to_obj(vals, path) {
+            var res = [];
+            if (path === undefined) {
+                path = [];
+            }
+            
+            for (var i = 0; i < vals.length; i++) {
+                var val = vals[i],
+                    res_val = val;
+                if (val instanceof Array && val.length >= 2) {
+                    res_val = {
+                        id:val[0],
+                        name:val[1]
                     };
+                    if (val.length > 2) {
+                        res_val =  $.extend({}, res_val, val[2]);
+                    }
                 }
-                vals.push(c_val);
-                if (json.value === c_val.id) {
-                    json.value = c_val;
+                if (json.value === res_val.id) {
+                    json.value = res_val;
+                    json.value.path = path.slice(0);
                 }
-            });
-            json.params.preset_values = vals;
+                path.push(res_val.name);
+                if (res_val.children && res_val.children.length) {
+                    res_val.children = vals_to_obj(res_val.children, path);
+                }
+                path.pop();
+                res.push(res_val);
+                
+            }
+            return res;
+        }
+        
+        if (json.values) {
+            json.params.preset_values = vals_to_obj(json.values);
         }
         if (json.allow_select_doubles) {
             json.params.allow_select_doubles = json.allow_select_doubles;
         }
-        var ls = $t.jQuery('form_row', json);
+        var ls = $t.jQuery(template, json);
         return ls;
     },
 
@@ -217,8 +316,9 @@ window.$fx_fields = {
         return $t.jQuery('form_row', json);
     },
 
-    datetime: function ( json ) {
-        return $t.jQuery('form_row', json);
+    datetime: function ( json , template) {
+        template = template || 'form_row';
+        return $t.jQuery(template, json);
     },
 
     float: function (json ) {
@@ -255,7 +355,8 @@ window.$fx_fields = {
             plugins: ['fontcolor'],
             cleanSpaces:false,
             lang: $fx.lang('lang'),
-            formatting: ['p', 'h2', 'h3']
+            formatting: ['p', 'h2', 'h3'],
+            tabKey:false
         }, options);
         
         if (options.toolbarPreset === 'inline') {
@@ -272,65 +373,81 @@ window.$fx_fields = {
         e.redactor_options = options;
         $node.trigger(e);
         $node.redactor(options);
-    }
-};
+    },
+    init_fieldset: function(html, _c) {
+        $('tbody.fx_fieldset_rows', html).sortable();
 
-window.$fx_fields.init_fieldset = function(html, _c) {
-    $('tbody.fx_fieldset_rows', html).sortable();
+        var fs = $('.fx_fieldset', html);
 
-    var fs = $('.fx_fieldset', html);
-
-    if (!_c.values) {
-        _c.values = _c.value || [];
-    }
-    var flag = false;
-    $.each(_c.values, function(row, val) {
-        var val_num = 0;
-        var inputs = [];
-        var row_index = val._index || row;
-        $.each(_c.tpl, function(tpl_index, tpl_props) {
-            inputs.push(
-                $.extend(
+        if (!_c.values) {
+            _c.values = _c.value || [];
+        }
+        var flag = false;
+        $.each(_c.values, function(row, val) {
+            var val_num = 0;
+            var inputs = [];
+            var row_index = val._index || row;
+            $.each(_c.tpl, function(tpl_index, tpl_props) {
+                var inp_props = $.extend(
                     {}, 
                     tpl_props, 
                     {
                         name:_c.name+'['+row_index+']['+tpl_props.name+']',
                         value:val[tpl_props.name]
                     }
-                )
-            );
+                );
+                if (tpl_props.type === 'radio' && !tpl_props.values) {
+                    inp_props.$input_node = $('<input type="radio" name="'+_c.name+'['+tpl_props.name+']" value="'+row_index+'" />');
+                    if (tpl_props.value == row_index) {
+                        inp_props.$input_node.attr('checked', 'checked');
+                    }
+                }
+                inputs.push(inp_props);
+            });
+            $('.fx_fieldset_rows', html).append($t.jQuery('fieldset_row', inputs, {index:row, set_field: _c}));
         });
-        $('.fx_fieldset_rows', html).append($t.jQuery('fieldset_row', inputs, {index:row, set_field: _c}));
-    });
-
-    fs.on('click', '.fx_fieldset_remove', function() {
-            $(this).parents('.fx_fieldset_row').remove();	
-    });
-    $('.fx_fieldset_add', fs).click( function() {
-        var fs = $(this).closest('.fx_fieldset');
-        var inputs = [];
-        var index = $('.fx_fieldset_row', fs).length + 1;
-        for (var i = 0; i < _c.tpl.length; i++) {
-            inputs.push( 
-                $.extend({}, _c.tpl[i], {
-                    name:_c.name+'[new_'+index+']['+_c.tpl[i].name+']'
-                })
-            );
+        function remove_row($row) {
+            var $next_row = $row.next('.fx_fieldset_row');
+            $row.remove();
+            if ($next_row.length > 0) {
+                $next_row.find(':input, .fx_fieldset_remove').first().focus();
+            } else {
+                $('.fx_fieldset_add', fs).focus();
+            }
         }
-        var new_row = $t.jQuery('fieldset_row', inputs, {index:index, set_field: _c});
-        $('.fx_fieldset_rows', fs).append(new_row);
-        new_row.find(':input:visible').first().focus();
-    });
-    /*
-    if (!flag) {
-        $('.fx_fieldset_add', fs).click();
-        $('.fx_fieldset_rows .fx_fieldset_row', fs).addClass('fake').one('change', function() {
-            $(this).removeClass('fake')
+        function add_row() {
+            var inputs = [];
+            var index = $('.fx_fieldset_row', fs).length + 1;
+            for (var i = 0; i < _c.tpl.length; i++) {
+                inputs.push( 
+                    $.extend({}, _c.tpl[i], {
+                        name:_c.name+'[new_'+index+']['+_c.tpl[i].name+']'
+                    })
+                );
+            }
+            var $new_row = $t.jQuery('fieldset_row', inputs, {index:index, set_field: _c});
+            $('.fx_fieldset_rows', fs).append($new_row);
+            $new_row.find(':input:visible').first().focus();
+        }
+        fs.on('click', '.fx_fieldset_remove', function() {
+            remove_row($(this).closest('.fx_fieldset_row'));
+        });
+        fs.on('keydown', '.fx_fieldset_remove', function(e) {
+            if (e.which === 32 || e.which === 13) {
+                remove_row($(this).closest('.fx_fieldset_row'));
+                return false;
+            }
+        });
+        $('.fx_fieldset_add', fs).click( function() {
+            add_row();
+        }).on('keydown', function(e) {
+            if (e.which === 32 || e.which === 13) {
+                add_row();
+            }
         });
     }
-    */
 };
-
+/*
 window.$fx_fields.init_condset = function(html, _c, _o) {
     var i = 0;
     var is_new_row = typeof _o.index === 'number';
@@ -581,19 +698,34 @@ window.$fx_fields.init_condset = function(html, _c, _o) {
     });
     set_saved();
 };
-
+*/
 // file field
 
 var $html = $('html');
-$html.on('click.fx', '.fx_image_field .fx_remote_file_block a',  function() {
-    var $block = $(this).closest('.fx_remote_file_block');
+$html.on('keydown', '.fx_image_field .fx_file_control', function(e) {
+    var $target = $(e.target);
+    // skip bubbled events
+    if (!$target.is('.fx_file_control')) {
+        return;
+    }
+    if (e.which === 32 || e.which === 13) {
+        $target.click();
+        return false;
+    }
+});
+
+$html.on('click.fx', '.fx_image_field .fx_remote_file_block',  function() {
+    var $block = $(this);
+    if ($block.is('active')) {
+        return;
+    }
     $block.addClass('active');
     $block.closest('.fx_preview').addClass('fx_preview_active');
     var $inp = $block.find('input');
     $inp.focus().off('keydown.fx_blur').on('keydown.fx_blur', function(e) {
         if (e.which === 27) {
             $(this).blur().trigger('change');
-            
+            $block.focus();
             return false;
         }
     }).trigger('change');
@@ -649,7 +781,6 @@ $html.on('change.fx', '.fx_image_field input.file', function() {
     var inp_id = $field.attr('id');
     var $real_inp = $('.real_value', $block);
     var format = $real_inp.data('format_modifier');
-    
     $.ajaxFileUpload({
         url: $fx.settings.action_link,
         secureuri:false,
@@ -663,7 +794,9 @@ $html.on('change.fx', '.fx_image_field input.file', function() {
 });
 
 $html.on('click.fx', '.fx_image_field .fx_file_uploader', function() {
-    $(this).closest('.fx_image_field').find('input.file').focus().click();
+    var $control = $(this);
+    $control.closest('.fx_image_field').find('input.file').focus().click();
+    $control.focus();
 });
 
 $html.on('click.fx', '.fx_image_field .fx_file_killer', function() {
@@ -672,6 +805,7 @@ $html.on('click.fx', '.fx_image_field .fx_file_killer', function() {
    $('.fx_file_input', $field).show();
    $('.fx_preview', $field).removeClass('fx_preview_filled');
    $(this).hide();
+   $field.find('.fx_file_control:visible').last().focus();
 });
 
 $html.on('paste.fx', '.fx_image_field .remote_file_location', function() {
@@ -704,7 +838,6 @@ $html.on('paste.fx', '.fx_image_field .remote_file_location', function() {
                     message += '<br />'+data.error_text;
                 }
                 $fx.alert(message, 'error');
-                console.log(arguments);
             }
         });
     }, 50);

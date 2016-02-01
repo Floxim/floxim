@@ -1,6 +1,7 @@
 <!--[input ? (_c.type == 'image' || _c.type == 'file')]-->
 <?
-var c_value = _c.value.path;
+var value_obj = _c.value || {};
+var c_value = value_obj.path;
 var value_is_emtpy = !c_value || ($fx && $fx.front && c_value === $fx.front.image_stub);
 ?>
 <div class="fx_image_field" data-field_type="<?=_c.type?>">
@@ -15,16 +16,15 @@ var value_is_emtpy = !c_value || ($fx && $fx.front && c_value === $fx.front.imag
                 fx_preview_<?=_c.type?>">
         
         <div class="fx_file_controls">
-            <a class="fx_file_uploader" title="<?= c_value ? $fx.lang('Upload other file') : $fx.lang('Upload') ?>">
+            <a class="fx_file_uploader fx_file_control" title="<?= c_value ? $fx.lang('Upload other file') : $fx.lang('Upload') ?>" tabindex="0">
                 <span class="fx_icon fx_icon-type-upload"></span>
             </a>
-            <span class="fx_remote_file_block">
-                <a class="fx_paste_link" title="<?=$fx.lang('Load from web')?>">
-                    <span class="fx_icon fx_icon-type-paste_url"></span>
-                </a>
+            <span class="fx_remote_file_block fx_file_control" tabindex="0" title="<?=$fx.lang('Load from web')?>">
+                <span class="fx_icon fx_icon-type-paste_url"></span>
                 <input class="remote_file_location fx_input" placeholder="<?=$fx.lang('paste URL')?>" />
             </span>
-            <a class="fx_file_killer" 
+            <a class="fx_file_killer fx_file_control" 
+               tabindex="0"
                title="<?=$fx.lang('Delete')?>">
                 <span class="fx_icon fx_icon-type-delete_image"></span>
             </a>
@@ -48,6 +48,13 @@ var value_is_emtpy = !c_value || ($fx && $fx.front && c_value === $fx.front.imag
         </div>
     </div>
     <div class="file_input" style="display:<?=(_c.path ? 'none' : 'block')?>">
-    	<input type="file" tabindex="-1" class="file" name="file" id="image_file_<?=_c.name.replace(/[^a-z0-9]+/g, '_')?>" />
+    	<input 
+            type="file"
+            tabindex="-1"
+            class="file" 
+            name="file"
+            id="image_file_<?=_c.name.replace(/[^a-z0-9]+/g, '_')?>" 
+            <? if (_c.type === 'image') { ?> accept="image/jpeg,image/gif,image/png" <?}?>
+            />
     </div>
 </div>

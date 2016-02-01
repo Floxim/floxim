@@ -1,5 +1,36 @@
 <!--[input ? _c.type == 'radio_facet']-->
 <?
+var cl = 'fx-radio-facet',
+    c_value = _c.value || _c.default,
+    cnt = 0;
+?>
+<div class="<?= cl ?>">
+    <input type="hidden" <?=$t.field_id_name(_c)?> value="<?=_c.value?>" />
+    <?
+        $.each(_c.values, function(i, v) {
+            var title = null;
+            if (! (v instanceof Array) ) {
+                var value = i,
+                    label = v;
+            } else {
+                var value = v[0],
+                    label = v[1];
+                if (v[2] && v[2].title) {
+                    title = v[2].title;
+                }
+            }
+            ?><span 
+                class="<?=cl?>__variant <?= value === c_value ? ' ' + cl +'__variant_active' : ''?>" 
+                data-value="<?= value ?>" 
+                tabindex="0"
+                title="<?= title || label ?>"
+                ><?= label ?></span><?
+        });
+    ?>
+</div>
+
+<!--[input ? _c.type == '_radio_facet']-->
+<?
 var c_val = _c.value !== undefined ? _c.value : fx_object_get_first_key(_c.values);
 ?>
 <div class="fx_admin_radio_facet">

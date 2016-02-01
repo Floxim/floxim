@@ -139,45 +139,56 @@ class Fx
         return $res;
     }
     
-    public static function getComponentFullName($name)
+    public static function getComponentFullName($com_name)
     {
-        return fx::cache('array')->remember(
-            'component_fullname_'.$name,
-            function() use ($name) {
-                $action = null;
-                $c_parts = explode(':', $name);
-                if (count($c_parts) == 2) {
-                    list($name, $action) = $c_parts;
-                }
-                $path = explode(".", $name);
-                if (count($path) === 1) {
-                    static $coms_by_module = null;
-                    if (is_null($coms_by_module)) {
-                        $coms_by_module = array();
-                        foreach (Fx::$floxim_components as $module => $coms) {
-                            foreach ($coms as $com) {
-                                $coms_by_module[$com] = $module;
-                            }
-                        }
-                    }
-
-                    $short_com_name = fx::util()->camelToUnderscore($path[0]);
-
-                    // one of floxim default modules
-                    if (isset($coms_by_module[$short_com_name])) {
-                        array_unshift($path, $coms_by_module[$short_com_name]);
-                    } else 
-                    // system component such as 'site', 'session' etc.
-                    {
-                        array_unshift($path, 'component');
+        static $cache = array();
+        if (isset($cache[$com_name])) {
+            return $cache[$com_name];
+        }
+        
+        static $coms_by_module = null;
+        
+        $name = $com_name;
+        $action = null;
+        $c_parts = explode(':', $name);
+        if (count($c_parts) == 2) {
+            list($name, $action) = $c_parts;
+        }
+        $path = explode(".", $name);
+        if (count($path) === 1) {
+            /*
+            if (is_null($coms_by_module)) {
+                $coms_by_module = array();
+                foreach (Fx::$floxim_components as $module => $coms) {
+                    foreach ($coms as $com) {
+                        $coms_by_module[$com] = $module;
                     }
                 }
-                if (count($path) === 2) {
-                    array_unshift($path, 'floxim');
-                }
-                return join(".", $path) . ($action ? ':' . $action : '');
             }
-        );
+
+            $short_com_name = fx::util()->camelToUnderscore($path[0]);
+
+            // one of floxim default modules
+            if (isset($coms_by_module[$short_com_name])) {
+                array_unshift($path, $coms_by_module[$short_com_name]);
+            } else 
+            // system component such as 'site', 'session' etc.
+            {
+                array_unshift($path, 'component');
+            }
+             * 
+             */
+            
+        }
+        /*
+        if (count($path) === 2) {
+            array_unshift($path, 'floxim');
+        }
+         * 
+         */
+        $res = join(".", $path) . ($action ? ':' . $action : '');
+        $cache[$com_name] = $res;
+        return $res;
     }
 
     public static function getComponentParts($name)
@@ -210,25 +221,40 @@ class Fx
      */
     public static function getComponentNamespace($name)
     {
-        return fx::cache('array')->remember( 
-            'component_namespace_'.strtolower($name), 
-            function() use ($name) {
-                $name = fx::getComponentFullName($name);
-                $path = explode(".", $name);
-                if ($path[0] === 'floxim' && $path[1] === 'component') {
-                    array_unshift($path, "floxim");
-                }
-                foreach ($path as &$part) {
-                    $chunks = explode("_", $part);
-                    foreach ($chunks as &$chunk) {
-                        $chunk = ucfirst($chunk);
-                    }
-                    $part = join('', $chunks);
-                }
-                $res = '\\' . join('\\', $path);
-                return $res;
+        static $ns_cache = array();
+        if (isset($ns_cache[$name])) {
+            return $ns_cache[$name];
+        }
+        
+        $full_name = fx::getComponentFullName($name);
+        $path = explode(".", $full_name);
+        /*
+        if ($path[0] === 'floxim' && $path[1] === 'component') {
+            array_unshift($path, "floxim");
+        }
+         * 
+         */
+        if (count($path) === 1) {
+            if (in_array($name, array('user', 'page','content'))) {
+                fx::log('oldstyle com', $name, fx::debug()->backtrace());
             }
-        );
+            $res = '\\Floxim\\Floxim\\Component\\' . fx::util()->underscoreToCamel($full_name);
+        } else {
+            foreach ($path as &$part) {
+                $part = fx::util()->underscoreToCamel($part);
+                /*
+                $chunks = explode("_", $part);
+                foreach ($chunks as &$chunk) {
+                    $chunk = fx::util()->underscoreToCamel($chunk);
+                }
+                $part = join('', $chunks);
+                 * 
+                 */
+            }
+            $res = '\\' . join('\\', $path);
+        }
+        $ns_cache[$name] = $res;
+        return $res;
     }
 
     public static function getComponentPath($name)
@@ -247,37 +273,52 @@ class Fx
         // Floxim\User\User\Controller
         // Vendor\Module\Component\[Controller|Finder|Entity]
         // Floxim\Floxim\Component\Component\[Entity|Finder]
+        
+        static $class_cache = array();
+        
+        if (isset($class_cache[$class])) {
+            return $class_cache[$class];
+        }
+        
         $path = explode('\\', $class);
         array_pop($path);
+        
         $path = array_map(function ($a) {
             return fx::util()->camelToUnderscore($a);
         }, $path);
         $name = join('.', $path);
+        $class_cache[$class] = $name;
+        /*
         if (strpos($name, 'floxim.floxim.component') === 0) {
             return $path[3];
         }
+         * 
+         */
         return $name;
     }
     
     public static function  data($datatype, $id = null)
     {
-
-        // fx::data($page) instead of $page_id
         if (is_object($id) && $id instanceof Entity) {
             return $id;
         }
-
+        
         $namespace = self::getComponentNamespace($datatype);
 
         $class_name = $namespace . '\\Finder';
         
         if (!class_exists($class_name)) {
-            fx::debug('no data class', $class_name, debug_backtrace());
+            fx::debug('no data class', $datatype, $class_name, debug_backtrace());
             throw new \Exception('Class not found: ' . $class_name . ' for ' . $datatype);
         }
-
+        
         $num_args = func_num_args();
+        
+        if ($num_args  === 2 && is_int($id) && ($entity = self::registry()->getEntity($datatype, $id))) {
+            return $entity;
+        }
 
+        /*
         if ($num_args > 1 && $class_name::isStaticCacheUsed()) {
             if (is_scalar($id)) {
                 $static_res = $class_name::getFromStaticCache($id);
@@ -286,9 +327,9 @@ class Fx
                 }
             }
         }
-
+        */
         $finder = new $class_name;
-
+        
         if ($num_args === 1) {
             return $finder;
         }
@@ -302,9 +343,9 @@ class Fx
     {
         if (is_numeric($type)) {
             if (func_num_args() === 1) {
-                return fx::data('content', $type);
+                return fx::data('floxim.main.content', $type);
             }
-            $type = fx::data('component', $type)->get('keyword');
+            $type = fx::component($type)->get('keyword');
         }
         $args = func_get_args();
         $args[0] = $type;
@@ -836,6 +877,16 @@ class Fx
         return self::$cache->getStorage($storageName, $params);
     }
     
+    protected static $registry = null;
+    
+    public static function registry()
+    {
+        if (is_null(self::$registry)) {
+            self::$registry = new RegistryManager();
+        }
+        return self::$registry;
+    }
+    
     /**
      * Get database schema
      * @param type $table
@@ -1042,19 +1093,26 @@ class Fx
     }
 
     protected static $debugger = null;
+    
+    protected static function getDebugger()
+    {
+        if (is_null(self::$debugger)) {
+            self::$debugger = new Debug();
+            self::$debugger->setDir(fx::path('@log'));
+        }
+        return self::$debugger;
+    }
 
     public static function debug($what = null)
     {
         if (!fx::config('dev.on') && func_num_args() > 0) {
             return;
         }
-        if (is_null(self::$debugger)) {
-            self::$debugger = new Debug();
-        }
+        $debugger = self::getDebugger();
         if (func_num_args() == 0) {
-            return self::$debugger;
+            return $debugger;
         }
-        call_user_func_array(array(self::$debugger, 'debug'), func_get_args());
+        call_user_func_array(array($debugger, 'debug'), func_get_args());
     }
     
     public static function cdebug()
@@ -1067,10 +1125,8 @@ class Fx
 
     public static function log($what)
     {
-        if (is_null(self::$debugger)) {
-            self::$debugger = new Debug();
-        }
-        call_user_func_array(array(self::$debugger, 'log'), func_get_args());
+        $debugger = self::getDebugger();
+        call_user_func_array(array($debugger, 'log'), func_get_args());
     }
     
     public static function logIf($cond, $what) {
@@ -1079,10 +1135,8 @@ class Fx
         if (!$cond) {
             return;
         }
-        if (is_null(self::$debugger)) {
-            self::$debugger = new Debug();
-        }
-        call_user_func_array(array(self::$debugger, 'log'), $args);
+        $debugger = self::getDebugger();
+        call_user_func_array(array($debugger, 'log'), $args);
     }
 
     public static function profiler()
@@ -1090,6 +1144,7 @@ class Fx
         static $profiler = null;
         if (is_null($profiler)) {
             $profiler = new Profiler();
+            self::debug()->start();
             self::debug()->onStop(function() use ($profiler) {
                 if ($profiler->hasData()) {
                     fx::log('%raw%'.$profiler->show(), $profiler->getSortedTags(), $profiler);

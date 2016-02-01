@@ -753,16 +753,24 @@ span.fx_area_marker {
         z-index:2;
     }
     
-    &__plus {
+    .black_plus() {
         opacity:0;
         width:34px;
         height:34px;
-        //border-radius: 20px;
         background:url('images/sprite.png') no-repeat -1554px -3px;
-        //box-shadow:1px 1px 8px rgba(0,0,0,0.55);
         position:absolute;
         margin-left:0;
         z-index:1;
+    }
+    
+    .blue_plus() {
+        width:24px;
+        height:24px;
+        background-position:-1480px -8px;
+    }
+    
+    &__plus {
+        .black_plus();
         
         // fixed label for non-sortable lists
         &_label {
@@ -784,27 +792,6 @@ span.fx_area_marker {
         margin-left:12px;
     }
     
-    
-    
-    &__plus_plus {
-        display:none !important;
-        width: 24px;
-        height: 24px;
-        border: 2px solid #FFF;
-        border-radius: 12px;
-        line-height: 0;
-        display: block;
-        font-weight: 300;
-        color: #FFF;
-        padding-left: 4px;
-        padding-top: 10px;
-        position: relative;
-        top: 8px;
-        left: 8px;
-        font-size: 22px;
-        margin:0;
-    }
-    
     &__plus-with_variants  {
         transform: rotate(45deg);
     }
@@ -815,16 +802,11 @@ span.fx_area_marker {
     
     
     &-entity &__plus {
-        width:24px;
-        height:24px;
+        .blue_plus();
     }
     
     &-infoblock&-outstanding &__plus {
         margin-left:0;
-    }
-    
-    &-entity &__plus {
-        background-position:-1480px -8px;
     }
     
     &-infoblock_placer &__plus {
@@ -841,14 +823,23 @@ span.fx_area_marker {
         background:#3167ff;
     }
     &-not_sortable &__plus_plus {
+        .black_plus();
+        .blue_plus();
         display: block !important;
+        opacity:1 !important;
         float:left;
+        margin-top: 7px;
+        margin-left: 8px;
+        border: 1px solid rgba(255,255,255,0.7);
+        border-radius: 14px;
+        width: 26px;
+        height: 26px;
     }
     
     &-not_sortable &__plus_label {
         white-space: nowrap;
         display: block;
-        margin-left: 40px;
+        margin-left: 45px;
         margin-top: 10px;
         margin-right: 15px;
         color: #FFF;
@@ -972,13 +963,14 @@ span.fx_area_marker {
     }
     
     &__body {
-        overflow: auto;
+        //overflow: auto;
     }
     
     &_style_alert {
         top:100px;
         right:40px;
-        width:450px;
+        min-width:450px;
+        width:auto;
         .fx_admin_form__header {
             border-bottom:none;
             padding-bottom:0;
@@ -1134,6 +1126,7 @@ span.fx_area_marker {
             padding-top: 10px;
             padding-bottom:10px;
             margin-right:20px;
+            margin-bottom:0;
             &:last-child {
                 margin-right: 0;
             }
@@ -1571,5 +1564,41 @@ span.fx_area_marker {
     
     &__item-title {
         font-size:18px;
+    }
+}
+
+.fx_form_config_start_icon {
+    position: absolute;
+    top: 17px;
+    right: 30px;
+}
+
+.fx_field_is_locked {
+    .fx_admin_form & {
+        max-height:1px;
+        overflow:hidden;
+        margin-bottom:0;
+        transition:all 0.8s ease;
+        opacity:0.5;
+    }
+}
+
+.fx_admin_form_configurable {
+    .fx_field_is_locked {
+        max-height:300px;
+        overflow:visible;
+    }
+    .field {
+        position:relative;
+    }
+    .fx_field_config_controls {
+        position:absolute;
+        top: -3px;
+        left: -35px;
+    }
+    .field_group>.fx_field_config_controls {
+        left: 5px;
+        top: 4px;
+        z-index: 1;
     }
 }

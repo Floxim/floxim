@@ -26,16 +26,30 @@ class Content extends Admin
             $content = fx::data($content_type, $input['content_id']);
         } else {
             $content_type = $input['content_type'];
-            $parent_page = fx::data('page', $input['parent_id']);
+            if (isset($input['parent_id'])) {
+                $parent_page = fx::data('floxim.main.content', $input['parent_id']);
+                $site_id = $parent_page['site_id'];
+            } else {
+                $site_id = fx::env('site_id');
+            }
             $content = fx::data($content_type)->create(array(
-                'parent_id'    => $input['parent_id'],
+                'parent_id'    => isset($input['parent_id']) ? $input['parent_id'] : null,
                 'infoblock_id' => $input['infoblock_id'],
-                'site_id'      => $parent_page['site_id']
+                'site_id'      => $site_id
             ));
             if (isset($input['placeholder_linker']) && is_array($input['placeholder_linker'])) {
                 $linker = fx::data($input['placeholder_linker']['type'])->create($input['placeholder_linker']);
                 $linker_field = $input['placeholder_linker']['_link_field'];
             }
+        }
+        
+        $res = array();
+        $com_item_name = fx::data('component', $content_type)->getItemName('add');
+        if (isset($input['content_id']) && $input['content_id']) {
+            $res['header'] = fx::alang('Editing ','system') 
+                            . ' <span title="#' . $input['content_id'] . '">' . $com_item_name . '</span>';
+        } else {
+            $res['header'] = fx::alang('Adding new ', 'system') . ' ' . $com_item_name;
         }
 
         $fields = array(
@@ -43,9 +57,18 @@ class Content extends Admin
             $this->ui->hidden('parent_id', $content['parent_id']),
             $this->ui->hidden('entity', 'content'),
             $this->ui->hidden('action', 'add_edit'),
-            $this->ui->hidden('data_sent', true),
             $this->ui->hidden('fx_admin', true)
         );
+        
+        if (!isset($input['infoblock_id']) && !$content['id']  && $content instanceof \Floxim\Main\Content\Entity) {
+            $ib_field = $content->getFormField('infoblock_id');
+            $fields []= $ib_field;
+            $res['fields'] = $fields;
+            $this->response->addFormButton(array('key' => 'save', 'label' => fx::alang('Continue')));
+            return $res;
+        }
+        
+        $fields []= $this->ui->hidden('data_sent', true);
         
         if ($linker) {
             $fields[]= $this->ui->hidden('placeholder_linker', serialize($input['placeholder_linker']));
@@ -80,12 +103,12 @@ class Content extends Admin
         }
 
         $this->response->addFields($fields);
+        
         if ($content->isInstanceOf('floxim.main.content')) {
             $this->response->addFields( $content->getStructureFields(), '', 'content' );
         }
         
         $content_fields = fx::collection($content->getFormFields());
-        
         $this->response->addFields($content_fields, '', 'content');
         
         $is_backoffice = isset($input['mode']) && $input['mode'] == 'backoffice';
@@ -97,8 +120,6 @@ class Content extends Admin
                 $this->ui->hidden('reload_url', $input['reload_url'])
             ));
         }
-
-        $res = array('status' => 'ok');
 
         if (isset($input['data_sent']) && $input['data_sent']) {
             $res['is_new'] = !$content['id'];
@@ -123,6 +144,7 @@ class Content extends Admin
                         $linker[$linker_field] = $content['id'];
                         $linker->save();
                     }
+                    $res['status'] = 'ok';
                 }  catch (\Exception $e) {
                     $res['status'] = 'error';
                     if ($e instanceof \Floxim\Floxim\System\Exception\EntityValidation) {
@@ -130,20 +152,9 @@ class Content extends Admin
                     }
                 }
             }
-        }
-        
-        $com_item_name = fx::data('component', $content_type)->getItemName('add');
-
-        if (isset($input['content_id']) && $input['content_id']) {
-            $res['header'] = fx::alang('Editing ',
-                    'system') . ' <span title="#' . $input['content_id'] . '">' . $com_item_name . '</span>';
         } else {
-            $res['header'] = fx::alang('Adding new ', 'system') . ' ' . $com_item_name;
-            if ($move_meta) {
-                //$res['header'] .= ' <span class="fx_header_notice">' . fx::alang($move_meta['type']) . ' ' . $move_meta['item']['name'] . '</span>';
-            }
+            $res['resume'] = true;
         }
-        //$res['view'] = 'cols';
         $this->response->addFormButton('save');
         return $res;
     }
@@ -210,9 +221,8 @@ class Content extends Admin
             }
             
             $alert .= '</p>';
-            //fx::log($linked_entity->getPath());
         } elseif ($content->isInstanceOf('floxim.main.content')) {
-            $all_descendants = fx::data('content')->descendantsOf($content)->all()->group('type');
+            $all_descendants = fx::data('floxim.main.content')->descendantsOf($content)->all()->group('type');
             $type_parts = array();
             foreach ($all_descendants as $descendants_type => $descendants) {
                 if ($descendants_type === 'floxim.main.linker') {
@@ -290,7 +300,7 @@ class Content extends Admin
         $content = fx::data($content_type)->where('id', $input['content_id'])->one();
         $next_id = isset($input['next_id']) ? $input['next_id'] : false;
 
-        $neighbours = fx::data('content')
+        $neighbours = fx::data('floxim.main.content')
                         ->where('parent_id', $content['parent_id'])
                         ->where('infoblock_id', $content['infoblock_id'])
                         ->where('id', $content['id'], '!=')
@@ -349,7 +359,7 @@ class Content extends Admin
             if ($f['keyword'] === 'parent_id' || $f['keyword'] === 'type' || $f['keyword'] === 'site_id') {
                 return false;
             }
-            return $f['type_of_edit'] == Field\Entity::EDIT_NONE;
+            return $f['is_editable'] == 0;
         });
 
         foreach ($fields as $f) {
@@ -380,24 +390,24 @@ class Content extends Admin
             foreach ($fields as $f) {
                 $val = $item[$f['keyword']];
                 switch ($f['type']) {
-                    case Field\Entity::FIELD_LINK:
+                    case 'link':
                         if ($val) {
                             $linked = fx::data($f->getRelatedType(), $val);
                             $val = $linked['name'];
                         }
                         break;
-                    case Field\Entity::FIELD_STRING:
-                    case Field\Entity::FIELD_TEXT:
+                    case 'string':
+                    case 'text':
                         $val = strip_tags($val);
                         $val = mb_substr($val, 0, 150);
                         break;
-                    case Field\Entity::FIELD_IMAGE:
+                    case 'image':
                         if ($val) {
                             $val = fx::image($val, 'max-width:100px,max-height:50px');
                             $val = '<img src="' . $val . '" alt="" />';
                         }
                         break;
-                    case Field\Entity::FIELD_MULTILINK:
+                    case 'multilink':
                         $val = fx::alang('%d items', 'system', count($val));
                         break;
                 }

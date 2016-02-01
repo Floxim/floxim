@@ -152,7 +152,6 @@ window.fx_eip = {
         if (vars.length === 0) {
             return vars;
         }
-        
         var $infoblock = $node.closest('.fx_infoblock'),
             ib_meta = $infoblock.data('fx_infoblock');
     
@@ -841,6 +840,8 @@ fx_edit_in_place.prototype.get_vars = function() {
             var new_value = $c_input.is(':checked') ? "1" : "0";
             if (old_value === null) {
                 old_value = '0';
+            } else {
+                old_value = old_value+'';
             }
         } else if (pf_meta.type === 'livesearch') {
             var livesearch = $('.livesearch', pf).data('livesearch');

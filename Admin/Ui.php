@@ -46,6 +46,9 @@ class Ui
 
     public function hidden($name, $value = 1)
     {
+        if (is_null($value)) {
+            $value = '';
+        }
         $ret = array('name' => $name, 'value' => $value, 'type' => 'hidden');
         return $ret;
     }

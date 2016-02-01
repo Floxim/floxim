@@ -28,15 +28,8 @@ class Admin extends Base
             return new Controller\Admin();
         }
         
-        $base_url = fx::input()->fetchPost('_base_url');
+        $this->registerUrlFromPost();
         
-        if ($base_url) {
-            $base_path = fx::router()->getPath( fx::path()->removeBase($base_url));
-            if ($base_path) {
-                fx::env('page', $base_path->last());
-            }
-        }
-
         fx::env('ajax', true);
 
         $posting = fx::input()->fetchPost('posting');

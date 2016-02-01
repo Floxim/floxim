@@ -1,0 +1,196 @@
+.fx-condition-builder {
+    
+    @color:#2d63ff;
+
+    &-group {
+        position: relative;
+        &__controls {
+            position: absolute;
+            text-align:center;
+            top: 50%;
+            background: @color;
+            border-radius: 3px;
+            color: #fff;
+            padding: 3px;
+            z-index:1;
+            line-height:18px;
+            padding-left:0;
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        &__add {
+            background: #FFF;
+            margin-left: 1px;
+            color: @color;
+            font-weight: bold;
+            font-family: arial;
+            padding: 3px 5px 2px 5px;
+            position: relative;
+            top: 1px;
+            border-radius: 2px;
+            cursor:pointer;
+        }
+        
+        &__logic {
+            width:40px;
+            display:inline-block;
+            cursor:pointer;
+        }
+        
+        &__groupper {
+            content: '';
+            display: block;
+            position: absolute;
+            border: 1px solid @color;
+            width: 13px;
+            height: 90%;
+            top: 0;
+            //left: 45px;
+            left:63px;
+            z-index: 0;
+            border-right: none;
+            border-top-left-radius: 5px;
+            border-bottom-left-radius: 5px;
+        }
+        
+        &__groupper, &__controls {
+            transition:all 0.3s ease;
+        }
+    }
+    
+    &__split {
+        font-size: 0px;
+        width: 25px;
+        height: 25px;
+        background: url('images/sprite.png') no-repeat -1967px -8px; 
+        cursor:pointer;
+    }
+    
+    &-group__controls &__split {
+        position:absolute;
+        left:-30px;
+        top:0px;
+        display:inline-block;
+    }
+    
+    &-cond {
+        z-index:1;
+        white-space:nowrap;
+        margin: 8px 5px;
+        display: block;
+        position:relative;
+        
+        & > * {
+            display:inline-block;
+            vertical-align: middle;
+            margin-right:10px;
+            line-height:0;
+            & > * {
+                line-height:initial;
+            }
+        }
+        &__invertor {
+            .field {
+                margin-bottom:4px;
+            }
+            /*
+            border: 0px solid #CCC;
+            line-height: 100%;
+            //padding: 10px 0 9px 0;
+            //width:60px;
+            text-align: center;
+            border-radius: 2px;
+            cursor: pointer;
+            color:#999;
+            background:#FFF;
+            position:relative;
+            */
+            
+            /*
+            transition: all 0.4s ease;
+            &:before, &:after {
+                content:'';
+                display:block;
+                position:absolute;
+                width:114%;
+                border-bottom: 1px solid #AAA;
+                opacity:1;
+                transition: all 0.4s ease;
+            }
+            &:before {
+                top: 16px;
+                left: -4px;
+                transform: rotate(-30deg);
+            }
+            &:after {
+                top: 16px;
+                left: -4px;
+                transform: rotate(30deg);
+            }
+            &_active {
+                background:#e2e9fe;
+                color:#000;
+                border-width: 1px;
+                &:before, &:after {
+                    width:0px;
+                    opacity:0.3;
+                    left:30px;
+                }
+            }
+            */
+        }
+        &__kill {
+            line-height: 15px;
+            cursor: pointer;
+            color: #F00;
+            font-size: 28px;
+            font-weight: 300;
+        }
+        .livesearch {
+            background:#FFF;
+            display:inline-block;
+            min-width:90px;
+            //max-width:300px;
+        }
+    }
+    
+    &-cond {
+        //margin-left:90px;
+        margin-left:75px;
+    }
+    &-group {
+        margin-left:105px;
+    }
+    
+    &>&-group, &>&-cond {
+        margin-left:0;
+    }
+    
+    .backline() {
+        &:before {
+            content:'';
+            display:block;
+            position: absolute;
+            top:50%;
+            left: -12px;
+            width: 12px;
+            border-bottom:1px solid @color;
+            z-index:0;
+        }
+    }
+    
+    &-group__controls, &-cond {
+        .backline();
+    }
+    &-group__controls:before {
+        left:-41px;
+    }
+    &-cond:first-child, 
+    &-cond:last-child,
+    &-group:first-child > &-group__controls,
+    &-group:last-child > &-group__controls {
+        &:before {
+            display: none;
+        }
+    }
+}

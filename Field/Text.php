@@ -4,32 +4,35 @@ namespace Floxim\Floxim\Field;
 
 use Floxim\Floxim\System\Fx as fx;
 
-class Text extends Baze
+class Text extends \Floxim\Floxim\Component\Field\Entity
 {
 
     public function getJsField($content)
     {
-        parent::getJsField($content);
+        $res = parent::getJsField($content);
         if (isset($this['format']) && isset($this['format']['html']) && $this['format']['html']) {
-            $this->_js_field['wysiwyg'] = true;
-            $this->_js_field['nl2br'] = $this['format']['nl2br'];
+            $res['wysiwyg'] = true;
+            $res['nl2br'] = $this['format']['nl2br'];
         }
 
-        return $this->_js_field;
+        return $res;
+    }
+    
+    public function getCastType() 
+    {
+        return 'string';
     }
 
     public function formatSettings()
     {
         $fields = array(
-            array(
+            'html' => array(
                 'type'  => 'checkbox',
-                'name'  => 'format[html]',
                 'label' => fx::alang('allow HTML tags', 'system'),
                 'value' => $this['format']['html']
             ),
-            array(
+            'nl2br' => array(
                 'type'  => 'checkbox',
-                'name'  => 'format[nl2br]',
                 'label' => fx::alang('replace newline to br', 'system'),
                 'value' => $this['format']['nl2br']
             )

@@ -86,8 +86,7 @@ class Component extends Admin
 
     public function getComponentSubmenu($component)
     {
-        // todo: psr0 need verify
-        $entity_code = fx::getComponentNameByClass(get_class($component));
+        $entity_code = $component instanceof \Floxim\Floxim\Component\Component\Entity ? 'component' : 'widget';
 
         $titles = array(
             'component' => array(
@@ -110,19 +109,6 @@ class Component extends Admin
                 'url'    => $entity_code . '.edit(' . $component['id'] . ',' . $code . ')',
                 'parent' => null
             );
-            if ($code == 'fields') {
-                /*
-                foreach ($component->fields() as $v) {
-                    $res['field-' . $v['id']] = array(
-                        'title'  => $v['name'],
-                        'code'   => 'field-' . $v['id'],
-                        'url'    => 'component.edit(' . $component['id'] . ',edit_field,' . $v['id'] . ')',
-                        'parent' => 'fields'
-                    );
-                }
-                 * 
-                 */
-            }
         }
         return $res;
     }
@@ -270,11 +256,18 @@ class Component extends Admin
         );
         return (empty($key) ? $arr : $arr[$key]);
     }
+    
+    protected static function getEntityType() 
+    {
+        $c = get_called_class();
+        return preg_match("~Component~", $c) ? 'component' : 'widget';
+    }
 
     public static function makeBreadcrumb($component, $action, $breadcrumb)
     {
         // todo: psr0 need verify
-        $entity_code = fx::getComponentNameByClass(get_class($component));
+        $entity_code = static::getEntityType(); 
+        //fx::getComponentNameByClass(get_class($component));
         $submenu = self::getComponentSubmenu($component);
         $submenu_first = current($submenu);
         $breadcrumb->addItem(self::entityTypes($entity_code), '#admin.' . $entity_code . '.all');
@@ -362,8 +355,8 @@ class Component extends Admin
     public function addField($component)
     {
         $controller = new Field(array(
-            'to_id'     => $component['id'],
-            'to_entity' => 'component',
+            'component_id'     => $component['id'],
+            //'to_entity' => 'component',
             'do_return' => true
         ), 'add');
         $this->response->breadcrumb->addItem(fx::alang('Fields', 'system'),
@@ -594,14 +587,27 @@ class Component extends Admin
 
     public function editField($component)
     {
-        $controller = new Field();
+        
+        $component_id = $this->input['params'][0];
         $field_id = $this->input['params'][2];
-
+        
+        $ctx = isset($this->input['field_context']) ? $this->input['field_context'] : array();
+        
         $field = fx::data('field', $field_id);
-
-        $result = $controller->edit(array('id' => $field_id));
-        $result['form_button'] = array('save');
-
+        
+        $controller = new Field();
+        
+        $ctr_params = array_merge(
+            array('infoblock_id' => null, 'entity_id' => null, 'entity_type' => null),
+            array(
+                'component_id' => $component_id,
+                'field_id' => $field_id
+            ),
+            $ctx
+        );
+        
+        $result = $controller->edit($ctr_params);
+        
         $submenu = self::getComponentSubmenu($component);
         $this->response->breadcrumb->addItem($submenu['fields']['title'], $submenu['fields']['url']);
 

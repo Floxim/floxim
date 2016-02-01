@@ -5,7 +5,7 @@ namespace Floxim\Floxim\Field;
 use Floxim\Floxim\System;
 use Floxim\Floxim\System\Fx as fx;
 
-class Link extends Baze
+class Link extends \Floxim\Floxim\Component\Field\Entity
 {
 
     public function validateValue($value)
@@ -27,6 +27,10 @@ class Link extends Baze
     {
         return "INT";
     }
+    
+    public function getCastType() {
+        return 'int';
+    }
 
     public function formatSettings()
     {
@@ -38,30 +42,22 @@ class Link extends Baze
             array('infoblock', 'Infoblock'),
             array('lang', 'Language')
         ));
-        $fields[] = array(
-            'id'     => 'format[target]',
-            'name'   => 'format[target]',
+        $fields['target'] = array(
             'label'  => fx::alang('Links to', 'system'),
             'type'   => 'select',
             'values' => $comp_values,
             'value'  => $this['format']['target'] ? $this['format']['target'] : ''
         );
-        $fields[] = array(
-            'id'    => 'format[prop_name]',
-            'name'  => 'format[prop_name]',
+        $fields['prop_name'] = array(
             'label' => fx::alang('Key name for the property', 'system'),
-            'value' => $this->getPropName()
+            'value' => $this->getPropertyName()
         );
-        $fields[] = array(
-            'id'    => 'format[is_parent]',
-            'name'  => 'format[is_parent]',
-            'label' => fx::alang('Bind value to the parent', 'system'),
-            'type'  => 'checkbox',
-            'value' => $this['format']['is_parent']
+        $fields['cascade_delete']= array(
+            'label' => fx::alang('Cascade delete', 'system'),
+            'value' => $this['format']['cascade_delete'],
+            'type' => 'checkbox'
         );
-        $fields[] = array(
-            'id'     => 'format[render_type]',
-            'name'   => 'format[render_type]',
+        $fields['render_type'] = array(
             'label'  => fx::alang('Render type', 'system'),
             'type'   => 'select',
             'values' => array(
@@ -73,60 +69,75 @@ class Link extends Baze
         return $fields;
     }
 
-    public function getPropName()
+    public function getPropertyName()
     {
         if ($this['format']['prop_name']) {
             return $this['format']['prop_name'];
         }
-        if ($this['name']) {
-            return preg_replace("~_id$~", '', $this['name']);
+        if ($this['keyword']) {
+            return preg_replace("~_id$~", '', $this['keyword']);
         }
         return '';
     }
-
-    public function getJsField($content, $with_values = true)
+    
+    public function getTargetFinder($content)
     {
-        parent::getJsField($content);
-        $target_content = $this->getTargetName();
-        
+        $target_com = $this->getTargetName();
+        $finder = fx::data($target_com);
+        $method_name = 'getRelationFinder'. fx::util()->underscoreToCamel($this['keyword']);
+        if (method_exists($content, $method_name)) {
+            $finder = call_user_func(array($content, $method_name), $finder);
+        }
+        return $finder;
+    }
 
+    public function getJsField($content)
+    {
+        $res = parent::getJsField($content);
+        //$target_com_keyword = $this->getTargetName();
+        
+        $finder = $this->getTargetFinder($content);
+        
         if ($this['format']['render_type'] == 'livesearch') {
-            $this->_js_field['type'] = 'livesearch';
-            $this->_js_field['params'] = array('content_type' => $target_content);
+            $res['type'] = 'livesearch';
+            $res['params'] = array(
+                //'content_type' => $target_com_keyword
+                'relation_field_id' => $this['id'],
+                'entity_id' => $content['id'],
+                'send_form' => true
+            );
             $c_val = $content[$this['keyword']];
             if ($c_val) {
-                $c_val_obj = fx::data($target_content)->where('id', $c_val)->one();
+                $c_val_obj = $finder->getById($c_val);
                 if ($c_val_obj) {
-                    $this->_js_field['value'] = array(
+                    $res['value'] = array(
                         'id'   => $c_val_obj['id'],
                         'name' => $c_val_obj['name']
                     );
+                } else {
+                    unset($res['value']);
                 }
             }
-            return $this->_js_field;
-        }
-
-        $this->_js_field['type'] = 'select';
+        } else {
+            $res['type'] = 'select';
         
-        if (!$with_values) {
-            return $this->_js_field;
-        }
-        
-        $finder = fx::data($target_content);
-        
-        $name_prop = $finder->getNameField();
-        
-        if (!$name_prop) {
-            if ($target_content !== 'lang') {
-                $finder->where('site_id', $content['site_id']);
-                $name_prop = 'name';
-            } else {
-                $name_prop = 'en_name';
+            
+            $name_prop = $finder->getNameField();
+            /*
+            if (!$name_prop) {
+                if ($target_content !== 'lang') {
+                    $finder->where('site_id', $content['site_id']);
+                    $name_prop = 'name';
+                } else {
+                    $name_prop = 'en_name';
+                }
             }
+             * 
+             */
+            $val_items = $finder->all();
+            $res['values'] = $val_items->getValues($name_prop, 'id');
         }
-        $val_items = $finder->all();
-        $this->_js_field['values'] = $val_items->getValues($name_prop, 'id');
-        return $this->_js_field;
+        return $res;
     }
 
     public function getTargetName()

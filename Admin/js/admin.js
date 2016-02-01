@@ -57,11 +57,14 @@ fx_admin.prototype.load_page = function ( data ) {
     data.form = {
         id:'fx_admin_content_form'
     };
-    $('#fx_admin_content').fx_create_form(data);
+    var $container = $('#fx_admin_content');
+    $container.fx_create_form(data);
+    $container.trigger('fx_render');
     function set_admin_content_height() {
-        $('#fx_admin_content').height( 
+        $('#fx_admin_content').height(
                 $(window).height() - $("#fx_admin_content").offset().top
         );
+        document.body.scrollTop = 0;
     }
     setTimeout(
         set_admin_content_height,

@@ -485,47 +485,12 @@ class Compiler
                         $parsed_name['tags'].");\n";
         }
         
-        /*
-        if (!preg_match("~[\:\@]~", $tpl_name)) {
-           $tpl_name = $this->template_set_name . ":" . $tpl_name;
-        }
-        
-        $tpl_at_parts = explode("@", $tpl_name);
-        if (count($tpl_at_parts) === 1) {
-            $forced_group = 'null';
-            list($set_name, $action_name) = explode(":", $tpl_name);
-            // save @ for named ("aliased") template groups (like "@admin")
-            if ($set_name === $this->template_set_name && $this->is_aliased) {
-                $set_name = '@'.$set_name;
-            }
-        } else {
-            $forced_group = !empty($tpl_at_parts[0]) ? $tpl_at_parts[0] : $this->template_set_name;
-            $action_parts = explode(":", $tpl_at_parts[1]);
-            if (count($action_parts) === 1) {
-                    array_unshift($action_parts, $forced_group);
-            }
-            list($set_name, $action_name) = $action_parts;
-            $forced_group = "'".$forced_group."'";
-        }
-        $tag_parts = explode("#", $action_name);
-        if (count($tag_parts) > 1) {
-            $action_name = $tag_parts[0];
-            $tags = "array('".join("', '", explode(",", $tag_parts[1]))."')";
-        } else {
-            $tags = 'null';
-        }
-        */
-        
-        
-        
-        
         $code .= "if ( ".$tpl." ) {\n";
         $code .= "echo ".$tpl."->setParent(\$this)->render();\n";
         if ( ($subroot_var = $token->getProp('extract_subroot'))) {
             $code .= $subroot_var. " = ".$tpl."->is_subroot;\n";
         }
         $code .= "}\n";
-        // ------------
         
         // clear vars passed into child template from current context
         if ($is_apply && count($passed_vars) > 0) {
@@ -1517,7 +1482,6 @@ class Compiler
                 $props['default'] = current(array_keys($props['values']));
             }
         }
-        fx::cdebug($props);
         
         unset($props['name']);
         
@@ -1925,7 +1889,7 @@ class Compiler
         $this->template_set_name = $tree->getProp('name');
         $this->is_aliased = $tree->getProp('is_aliased') == 'true';
         $this->collectTemplates($tree);
-        //ob_start();
+        
         $code = '';
         $code .= "<?php\n";
         $code .= 'class ' . $class_name . " extends \\Floxim\\Floxim\\Template\\Template {\n";

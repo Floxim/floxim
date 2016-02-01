@@ -16,13 +16,20 @@ class Db extends \PDO
     protected $query_type;
     // the total number of requests
     protected $num_queries;
+    
+    protected $db_name = null;
 
-    public function __construct()
+    public function __construct($dsn = null, $user = null, $password = null)
     {
+        $dsn = is_null($dsn) ? fx::config('db.dsn') : $dsn;
+        $user = is_null($user) ? fx::config('db.user') : $user;
+        $password = is_null($password) ? fx::config('db.password') : $password;
         try {
-            parent::__construct(fx::config('db.dsn'), fx::config('db.user'), fx::config('db.password'));
+            parent::__construct($dsn, $user, $password);
             $prefix = fx::config('db.prefix');
             $this->prefix = $prefix ? $prefix . '_'  : '';
+            $this->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+            $this->db_name = fx::config('db.name');
         } catch (\Exception $e) {
             echo $e->getMessage();
         }
@@ -119,12 +126,19 @@ class Db extends \PDO
             );
         }
         $trace_rex = fx::config('dev.log_sql_backtrace');
-        if ($trace_rex) {
-            if ($trace_rex[0] === '~' && preg_match($trace_rex, $statement)) {
-                fx::log($trace_rex, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
-            } elseif (strstr($statement, $trace_rex)) {
-                fx::log($trace_rex, debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
-            }
+        if (
+            $trace_rex
+            && 
+            (
+                ($trace_rex[0] === '~' && preg_match($trace_rex, $statement)) ||
+                strstr($statement, $trace_rex)
+            )
+        ) {
+            fx::log(
+                $trace_rex, 
+                $statement, 
+                fx::debug()->backtrace()
+            );
         }
         if (!fx::config('dev.log_sql')) {
             return $this->last_result;
@@ -143,7 +157,61 @@ class Db extends \PDO
         return $this->last_result;
     }
     
-    public function getSchema() {
+    public function loadSchema() 
+    {
+        $prefix = $this->prefix;
+        $db_name = $this->db_name;
+        
+        $cols = fx::db()->getResults(
+            'select 
+            COLUMNS.TABLE_NAME as `table`,
+            COLUMNS.COLUMN_NAME as `field`,
+            COLUMNS.COLUMN_TYPE as `type`
+
+            from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = "'.$db_name.'"'
+        );
+
+        $prefix_rex = "~^".$prefix."~";
+
+        $res = fx::collection($cols)
+                ->group(
+                    function ($t) use ($prefix_rex) {
+                        $table_name = preg_replace($prefix_rex, '', $t['table']);
+                        return $table_name;
+                    }
+                )
+                ->apply(
+                    function($table) {
+                        return $table->getValues(
+                            function($f) {
+                              unset($f['table']);
+                              return $f;
+                            }, 
+                            'field'
+                        );
+                    }
+                );
+        return $res;
+    }
+    
+    public function getSchema() 
+    {
+        $that = $this;
+        return fx::cache('meta')->remember(
+            'schema', 
+            function() use ($that) {
+                return $that->loadSchema();
+            },
+            -1
+        );
+    }
+    
+    /**
+     * old getSchema() method based on SHOW TABLES  / SHOW COLUMNS queries
+     * replaced by more effective implementation based on INFORMATION_SCHEMA queries
+     * @return array
+     */
+    protected function getSchemaByShowTables() {
         $db = $this;
         return fx::cache('meta')->remember(
             'schema', 
@@ -156,7 +224,7 @@ class Db extends \PDO
                 }
                 return $res;
             },
-            60*60
+            -1
         );
     }
 

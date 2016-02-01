@@ -14,17 +14,59 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
     protected $available_offsets_cache = null;
     //protected $available_offset_keys_cache = null;
     
-    public function __construct($input = array())
+    public function __construct($data = array(), $component_id = null)
     {
-        if ($input['component_id']) {
-            $this->component_id = $input['component_id'];
-        }
-        parent::__construct($input);
-        $this->available_offsets_cache = fx::getComponentById($this->component_id)->getAvailableEntityOffsets();
+        $this->component_id = $component_id;
+        $this->available_offsets_cache = fx::getComponentById($component_id)->getAvailableEntityOffsets();
+        parent::__construct($data);
         return $this;
     }
     
-    protected function beforeSave() {
+    /*
+    protected function saveLinks()
+    {
+        $link_fields = $this->getFields()->find('type', 'link');
+        foreach ($link_fields as $lf) {
+            $lf_prop = $lf['format']['prop_name'];
+            if (
+                isset($this->data[$lf_prop]) &&
+                $this[$lf_prop] instanceof Entity &&
+                empty($this[$lf['keyword']])
+            ) {
+                if (!$this[$lf_prop]['id']) {
+                    $this[$lf_prop]->save();
+                }
+                $this[$lf['keyword']] = $this[$lf_prop]['id'];
+            }
+        }
+    }
+    */
+    public function getCascadeLinkingEntities()
+    {
+        $entity = $this;
+        $link_fields = fx::data('field')->all()->find( 
+            function($f) use ($entity) {
+                if ( $f['type'] != 'link') {
+                    return false;
+                }
+                if (!isset($f['format']['cascade_delete']) || !$f['format']['cascade_delete']) {
+                    return false;
+                }
+                $linked_com = fx::getComponentById($f['format']['target']);
+                return $entity->isInstanceOf($linked_com['keyword']);
+            }
+        );
+        $res = fx::collection();
+        foreach  ($link_fields as $lf) {
+            $finder = fx::data( $lf['component']->get('keyword') );
+            $items = $finder->where($lf['keyword'], $this['id'])->all();
+            $res = $res->concat($items);
+        }
+        return $res;
+    }
+    
+    protected function saveFiles()
+    {
         $modified = $this->getModified();
         foreach ($modified as $field_keyword) {
             $field = $this->getField($field_keyword);
@@ -42,6 +84,11 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
             $field->setValue($file);
             $this[$field_keyword] = $field->getSavestring($this);
         }
+    }
+    
+    protected function beforeSave() {
+        $this->saveFiles();
+        //$this->saveLinks();
         return parent::beforeSave();
     }
     
@@ -128,7 +175,7 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
             $field_keyword = $field['keyword'];
             unset($val_keys[array_search($field_keyword, $val_keys)]);
             if (!isset($values[$field_keyword])) {
-                if ($field['type'] == Field\Entity::FIELD_MULTILINK) {
+                if ($field['type'] == 'multilink') {
                     $value = array();
                 } else {
                     continue;
@@ -201,25 +248,25 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
                 'name'            => $cf['keyword'],
                 'is_required'     => $cf['is_required']
             );
-            if ($cf && $cf['type_of_edit'] == Field\Entity::EDIT_NONE) {
+            if ($cf && !$cf['is_editable']) {
                 $field_meta['editable'] = false;
             }
         }
         $field_meta['label'] = $cf && $cf['name'] ? $cf['name'] : $field_keyword;
-        if ($cf && $cf->type) {
-            if ($cf->type === 'text') {
+        if ($cf && $cf['type']) {
+            if ($cf['type'] === 'text') {
                 $field_meta['type'] = isset($cf['format']['html']) && $cf['format']['html'] ? 'html' : 'text';
             } else {
-                $field_meta['type'] = $cf->type;
+                $field_meta['type'] = $cf['type'];
             }
             if ($field_meta['type'] === 'html') {
                 $field_meta['linebreaks'] = isset($cf['format']['nl2br']) && $cf['format']['nl2br'];
             }
-            if ($cf->type === 'select') {
+            if ($cf['type'] === 'select') {
                 $field_meta['values'] = $cf->getSelectValues();
                 $field_meta['value'] = $this[$cf['keyword']];
             }
-            if ($cf->type === 'link') {
+            if ($cf['type'] === 'link') {
                 $field_meta = array_merge(
                     $field_meta,
                     $cf->getJsField($this)
@@ -229,14 +276,14 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
         return $field_meta;
     }
     
-    public function getFormField($field_or_keyword)
+    public function getFormField($field)
     {
-        if (is_string($field_or_keyword)) {
-            $field = $this->getField($field_or_keyword);
-        } else {
-            $field = $field_or_keyword;
+        if (is_string($field)) {
+            $field =  $this->getField($field);
         }
-        if ($field['type_of_edit'] == Field\Entity::EDIT_NONE) {
+        $is_editable = $field['is_editable'];
+        
+        if (!$is_editable && !$field['parent_field_id']) {
             return;
         }
         $field_method = 'getFormField' . fx::util()->underscoreToCamel($field['keyword'], true);
@@ -256,35 +303,39 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
     {
         $all_fields = $this->getFields();
         $form_fields = array();
-        //$coms = array();
-        //$content_com_id = fx::component('content')->get('id');
         foreach ($all_fields as $field) {
-            if (!$field->checkRights()) {
-                continue;
-            }
             $jsf = $this->getFormField($field);
             if (!$jsf) {
                 continue;
             }
+            if ($field['group_id']) {
+                $group_field = fx::data('field', $field['group_id']);
+                $jsf['group'] = $group_field['keyword'];
+            }
             $form_fields[] = $jsf;
         }
-        $form_fields = fx::collection($form_fields);
+        $form_fields = fx::collection($form_fields)->sort('priority');
         return $form_fields;
     }
     
     
     public function getFields()
     {
-        $com_id = $this->component_id;
-
-        if (!isset(self::$content_fields_by_component[$com_id])) {
+        $com_id = $this->getComponentId();
+        $infoblock_id = $this['infoblock_id'];
+        static $cache = array();
+        $cc = $com_id.'/'.$infoblock_id;
+        //if (!isset(self::$content_fields_by_component[$com_id])) {
+        if (!isset($cache[$cc])) {
             $fields = array();
-            foreach ($this->getComponent()->getAllFields() as $f) {
-                $fields[$f['keyword']] = $f;
+            foreach ($this->getComponent()->getAllFields() as $field) {
+                $proper_field = $field->getForContext($infoblock_id, $com_id);
+                $fields[$field['keyword']] = $proper_field;
             }
-            self::$content_fields_by_component[$com_id] = fx::collection($fields);
+            $cache[$cc] = fx::collection($fields);
         }
-        return self::$content_fields_by_component[$com_id];
+        return $cache[$cc];
+        //return self::$content_fields_by_component[$com_id];
     }
 
     public function hasField($field_keyword)
@@ -295,21 +346,29 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
     
     public function getField($field_keyword) {
         $fields = $this->getFields();
-        return isset($fields[$field_keyword]) ? $fields[$field_keyword] : null;
+        if (!isset($fields[$field_keyword])) {
+            return null;
+        }
+        return $fields[$field_keyword];
     }
     
     protected function afterDelete() {
         parent::afterDelete();
         // delete images and files when deleting content
         $image_fields = $this->getFields()->find('type', array(
-            Field\Entity::FIELD_IMAGE,
-            Field\Entity::FIELD_FILE
+            'image',
+            'file'
         ));
         foreach ($image_fields as $f) {
             $c_prop = $this[$f['keyword']];
             if (fx::path()->isFile($c_prop)) {
                 fx::files()->rm($c_prop);
             }
+        }
+        // cascade delete for linking items
+        $linking = $this->getCascadeLinkingEntities();
+        foreach ($linking as $l) {
+            $l->delete();
         }
     }
     
@@ -319,8 +378,8 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
         $image_fields = $this->getFields()->
             find('keyword', $this->modified)->
             find('type', array(
-                Field\Entity::FIELD_IMAGE,
-                Field\Entity::FIELD_FILE
+                'image',
+                'file'
             ));
 
         foreach ($image_fields as $img_field) {
@@ -542,21 +601,6 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
     
     public function hasAvailableInfoblock()
     {
-        if ($this['infoblock_id']) {
-            return true;
-        }
-        
-        $structure_fields = $this->getStructureFields();
-                    
-        if (
-            (
-                !isset($structure_fields['infoblock_id']) || 
-                count($structure_fields['infoblock_id']['values']) === 0
-            ) 
-            && !$this->canHaveNoInfoblock()
-        ) {
-            return false;
-        }
         return true;
     }
     
@@ -564,64 +608,4 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
     {
         return $this->hasAvailableInfoblock();
     }
-    
-    /*
-     * Store multiple links, linked to the entity
-     */
-    protected function saveMultiLinks()
-    {
-        $link_fields =
-            $this->getFields()->
-            find('keyword', $this->modified)->
-            find('type', Field\Entity::FIELD_MULTILINK);
-        foreach ($link_fields as $link_field) {
-            $val = $this[$link_field['keyword']];
-            $relation = $link_field->getRelation();
-            $related_field_keyword = $relation[2];
-            
-            $test = $link_field['keyword'] === 'genres';
-            fx::logIf($test, $link_field, $relation, 'hm: '.System\Finder::HAS_MANY);
-            switch ($relation[0]) {
-                case System\Finder::HAS_MANY:
-                    fx::log('save hm');
-                    $old_data = isset($this->modified_data[$link_field['keyword']]) ?
-                        $this->modified_data[$link_field['keyword']] :
-                        new System\Collection();
-                    $c_priority = 0;
-                    foreach ($val as $linked_item) {
-                        $c_priority++;
-                        $linked_item[$related_field_keyword] = $this['id'];
-                        $linked_item['priority'] = $c_priority;
-                        $linked_item->save();
-                    }
-                    $old_data->findRemove('id', $val->getValues('id'));
-                    $old_data->apply(function ($i) {
-                        $i->delete();
-                    });
-                    break;
-                case System\Finder::MANY_MANY:
-                    $old_linkers = isset($this->modified_data[$link_field['keyword']]->linkers) ?
-                        $this->modified_data[$link_field['keyword']]->linkers :
-                        new System\Collection();
-
-                    // new linkers
-                    // must be set
-                    // @todo then we will cunning calculation
-                    if (!isset($val->linkers) || count($val->linkers) != count($val)) {
-                        throw new \Exception('Wrong linker map');
-                    }
-                    foreach ($val->linkers as $linker_obj) {
-                        $linker_obj[$related_field_keyword] = $this['id'];
-                        $linker_obj->save();
-                    }
-
-                    $old_linkers->findRemove('id', $val->linkers->getValues('id'));
-                    $old_linkers->apply(function ($i) {
-                        $i->delete();
-                    });
-                    break;
-            }
-        }
-    }
-
 }

@@ -5,26 +5,26 @@ namespace Floxim\Floxim\Field;
 use Floxim\Floxim\System;
 use Floxim\Floxim\System\Fx as fx;
 
-class File extends Baze
+class File extends \Floxim\Floxim\Component\Field\Entity
 {
 
     protected $_to_delete_id = 0;
 
     public function getJsField($content)
     {
-        parent::getJsField($content);
-        $this->_js_field['type'] = 'file';
-        $this->_js_field['field_id'] = $this['id'];
-        $val = $this->_js_field['value'];
+        $res = parent::getJsField($content);
+        $res['type'] = 'file';
+        $res['field_id'] = $this['id'];
+        $val = $res['value'];
         $abs = fx::path()->abs($val);
         if (fx::path()->exists($abs)) {
-            $this->_js_field['value'] = array(
+            $res['value'] = array(
                 'path'     => $val,
                 'filename' => fx::path()->fileName($abs),
                 'size'     => fx::files()->readableSize($abs)
             );
         }
-        return $this->_js_field;
+        return $res;
     }
 
     public function getSavestring(System\Entity $content = null)

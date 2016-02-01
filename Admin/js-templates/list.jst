@@ -163,24 +163,32 @@ if (_c.is_sortable) {
         placeholder: 'fx_sortable_placeholder',
         axis: 'y',
         cursor: 'move',
-        start: function(event, ui){ 
-            return;
-                var h = ui.item.height();
-                if ( h < 5  ) {
-                        h = 50;
-                }
-                ui.placeholder.height(h); 
-        },
         items:'.fx_list_row',
         update: function(event, ui) {
+            var sort_params = _c.sort_params || {};
+            if (sort_params.mode === 'relative') {
+                console.log(event, ui, _c);
+                var $item = ui.item,
+                    $prev = $item.prev('.fx_list_row').first(),
+                    post_data = {
+                        entity: _c.entity,
+                        action: 'move',
+                        id: $item.data('id'),
+                        move_after: $prev.length ? $prev.data('id') : null
+                    };
+                post_data = $.extend(post_data, sort_params);
+                $fx.post_front(post_data);
+                console.log(post_data);
+                return;
+            }
             var pos = [];
             $('.fx_list_row', this).each(function() {
                 pos.push ( $(this).data('id') );
             });
             var post = {
-                    'entity': _c.entity,
-                    'action': 'move',
-                    'positions': pos
+                'entity': _c.entity,
+                'action': 'move',
+                'positions': pos
             };
             $fx.post_front(post);
         }
@@ -197,7 +205,7 @@ list.on('blur', '.fx_list_field_editable', function() {
     if (!label || !label.editable) {
         return;
     }
-    var new_value = $inp.text();
+    var new_value = $inp.html();
     if (new_value === '...') {
         new_value = null;
     }

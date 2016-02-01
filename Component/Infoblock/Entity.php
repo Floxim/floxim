@@ -62,7 +62,7 @@ class Entity extends System\Entity implements Template\Entity
 
     public function getOwnedContent()
     {
-        $content = fx::data('content')->where('infoblock_id', $this['id'])->all();
+        $content = fx::data('floxim.main.content')->where('infoblock_id', $this['id'])->all();
         return $content;
     }
 
@@ -587,7 +587,7 @@ class Entity extends System\Entity implements Template\Entity
             /**
              * All descendants
              */
-            $finder = fx::data('content')->descendantsOf($page_id);
+            $finder = fx::data('floxim.main.content')->descendantsOf($page_id);
             if ($scope_page_type) {
                 $finder->where('type', $scope_page_type);
             }

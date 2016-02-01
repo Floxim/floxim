@@ -30,6 +30,24 @@ class Env
     {
         $this->current['site'] = $env;
     }
+    
+    public function getUrl() {
+        if (isset($this->current['url'])) {
+            return $this->current['url'];
+        }
+        if ( ($page = $this->getPage() ) ) {
+            return $page['url'];
+        }
+        return fx::path()->removeBase($_SERVER['REQUEST_URI']);
+    }
+    
+    public function setUrl($url) {
+        $this->current['url'] = $url;
+    }
+    
+    public function getPath() {
+        return fx::router()->getPath($this->getUrl());
+    }
 
 
     /**
@@ -64,7 +82,7 @@ class Env
     public function setPage($page)
     {
         if (is_numeric($page)) {
-            $page = fx::data('page', $page);
+            $page = fx::data('floxim.main.page', $page);
         }
         $this->current['page'] = $page;
     }
@@ -80,7 +98,7 @@ class Env
             return $this->current['page']->get('id');
         }
         if (isset($this->current['page_id'])) {
-            $this->current['page'] = fx::data('page', $this->current['page_id']);
+            $this->current['page'] = fx::data('floxim.main.page', $this->current['page_id']);
             return $this->current['page_id'];
         }
         return null;
@@ -119,7 +137,7 @@ class Env
     {
         if (!isset($this->current['home_id'])) {
             $site = $this->getSite();
-            $home_page = fx::data('page')
+            $home_page = fx::data('floxim.main.page')
                 ->where('parent_id', 0)
                 ->where('site_id', $site['id'])
                 ->one();
@@ -142,7 +160,7 @@ class Env
             }
             $page_id = $this->getPageId();
             if ($page_id) {
-                $page = fx::data('page', $page_id);
+                $page = fx::data('floxim.main.page', $page_id);
                 if ($page['layout_id']) {
                     $this->current['layout'] = $page['layout_id'];
                 }
@@ -220,5 +238,61 @@ class Env
             return null;
         }
         return end($this->current_template_stack);
+    }
+    
+    public function getFieldsForFilter()
+    {
+        $context = array();
+        $page = $this->getPage();
+        if ($page) {
+            $page_field = $page->getComponent()->getFieldForFilter('context.page');
+            $page_field['name'] = 'Текущая страница';
+            $context []= $page_field;
+            /*
+            $context []= array(
+                'id' => 'context.page',
+                'name' => 'Текущая страница',
+                'type' => 'entity',
+                'entity_type' => $page['type'],
+                'children' => $page->getComponent()->getFieldsForFilter('context.page')
+            );
+             * 
+             */
+        }
+        $user_field = fx::component('floxim.user.user')->getFieldForFilter('context.user');
+        $user_field['name'] = 'Текущий пользователь';
+        $context []= $user_field;
+        /*
+        $context []= array(
+            'id' => 'context.user',
+            'name' => 'Текущий пользователь',
+            'type' => 'entity',
+            'children' => fx::component('floxim.user.user')->getFieldsForFilter('context.user')
+        );
+         * 
+         */
+        return $context;
+    }
+    
+    public function getContextProp($prop) {
+        $parts = explode(".", $prop);
+        $obj_key = array_shift($parts);
+        $obj = $this->get($obj_key);
+        if (!$obj) {
+            return null;
+        }
+        while (count($parts) > 0) {
+            $part = array_shift($parts);
+            if (  !(is_array($obj) || ($obj instanceof \ArrayAccess)) || !isset($obj[$part])) {
+                return null;
+            }
+            $obj = $obj[$part];
+        }
+        return $obj;
+    }
+    
+    public function getLang()
+    {
+        return fx::config('lang.admin');
     }
 }

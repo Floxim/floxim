@@ -51,9 +51,53 @@ fx_form = {
         
         var onsubmit = options.onsubmit || $fx_form.submit_handler;
         
-        $form.off('submit.fx_submit').on('submit.fx_submit', onsubmit);
-
+        if (typeof onsubmit === 'function') {
+            onsubmit = [ onsubmit ];
+        }
+        
+        $form.off('submit.fx_submit');
+        for (var i = 0; i < onsubmit.length; i++ ) {
+            $form.on('submit.fx_submit', onsubmit[i])
+        }
+        
+        if (settings.lockable) {
+            $fx_form.handle_lockable($form);
+        }
+        $form.trigger('fx_adm_form_created', settings);
         return $form;
+    },
+    // find fields that are placed before containing group and put it right after it
+    sort_fields: function(fields) {
+        var groups = {},
+            fields_with_lost_group = [];
+        for (var i = 0 ; i < fields.length; i++) {
+            var f = fields[i];
+            if (f.type === 'group') {
+                groups[f.keyword] = f;
+            }
+            if (f.group && !groups[f.group]) {
+                fields_with_lost_group.push( f );
+            }
+        }
+        if (fields_with_lost_group.length === 0) {
+            return fields;
+        }
+        function get_priority(f) {
+            var p = f.priority || 0;
+            if (f.group && fields_with_lost_group.indexOf(f) !== -1) {
+                p = get_priority(groups[f.group]) + p*0.000001;
+            }
+            return p;
+        }
+        for (var i = 0; i < fields_with_lost_group.length; i++) {
+            var cf = fields_with_lost_group[i];
+            cf.group_priority = groups[cf.group].priority;
+        }
+        var res = fields.sort(function(a, b) {
+            return get_priority(a) - get_priority(b);
+        });
+        console.log('strd', res);
+        return res;
     },
     draw_fields: function(settings, $form_body) {
         if (settings.fields === undefined) {
@@ -75,10 +119,12 @@ fx_form = {
         if ($fx.mode !== 'page') {
             $fx.buttons.draw_buttons(settings.buttons);
         }
-        $.each(settings.fields, function(i, json) {
+        var rendered_groups = {},
+            sorted_fields = this.sort_fields(settings.fields);
+        $.each(sorted_fields, function(i, json) {
             var $target = $form_body;
-            if (json.group) {
-                $target = $('.fx-field-group_keyword_'+json.group+' .fx-field-group__fields', $form_body);
+            if (json.group) {            
+                $target = rendered_groups[json.group];
             } else if (json.tab === 'header' || json.tab === 'footer') {
                 var $tab_container = $form_body.closest('form').find('.'+bl+'__'+json.tab),
                     target_class = bl+'__'+json.tab+'_fields',
@@ -94,7 +140,13 @@ fx_form = {
                     $target.data('tab_label').show();
                 }
             }
-            $fx_form.draw_field(json, $target);
+            if (settings.lockable) {
+                json.form_is_lockable = true;
+            }
+            var $field_node = $fx_form.draw_field(json, $target);
+            if (json.type === 'group') {
+                rendered_groups[json.keyword] = $field_node.find('.fx-field-group__fields');
+            }
         });
         
         $('.fx_tab_data .field:last-child', $form_body).addClass('field_last');
@@ -131,7 +183,7 @@ fx_form = {
             if (options.key ==='cancel') {
                 options['class'] = 'cancel';
                 options.is_submit = false;
-            } else {
+            } else if (options.is_active !== false) {
                 options.is_active = true;
             }
             var b = $t.jQuery('input', options);
@@ -215,7 +267,7 @@ fx_form = {
                 //status_block.writeError( data );
                 if (data.errors.length) {
                     $.each(data.errors, function() {
-                        $fx.alert(this.error, 'error', 3);
+                        $fx.alert(this.error || this.text, 'error', 3);
                     });
                 } else {
                     $fx.alert('Error!', 'error', 3);
@@ -230,6 +282,7 @@ fx_form = {
                 }
             }
             if (data.reload) {
+                $fx.form.lock_form($form);
                 $fx.reload(data.reload);
             } else if (data.show_result) {
                 $fx.admin.load_page(data);
@@ -351,37 +404,46 @@ fx_form = {
         return res;
     },
 
-    draw_field: function(json, target, position) {
+    draw_field: function(json, $target, position) {
+        if (json.form_is_lockable && json.type !== 'hidden') {
+
+            var $lock_group = $(
+                    '<div class="fx_lock_group">'+
+                        '<div class="fx_lock_control"></div>'+
+                        '<div class="fx_lock_container"></div>'+
+                    '</div>');
+            $target.append($lock_group);
+            $target = $('.fx_lock_container', $lock_group);
+            if (json.locked !== undefined) {
+                var locker_name = json.name;
+                if (locker_name.match(/\]$/)) {
+                    locker_name = locker_name.replace(/\]$/, '__is_locked]');
+                } else {
+                    locker_name += '__is_locked';
+                }
+                var $control = $fx_fields.input({
+                    type: 'checkbox',
+                    name: locker_name,
+                    class_name:'locker',
+                    value: json.locked
+                });
+                if (json.locked) {
+                    json.disabled = true;
+                }
+                $('.fx_lock_control', $lock_group).append($control);
+            }
+        }
         position = position || 'into';
         var $rel_node = null;
         if (position !== 'into') {
-            $rel_node = target;
-            target = $rel_node.parent();
+            $rel_node = $target;
+            $target = $rel_node.parent();
         }
-        if (json.type === undefined) {
-            json.type = 'input';
-        }
-        json.type = json.type.replace(/^field_/, '');
-        var type='';
-        switch(json.type) {
-            case 'hidden': case 'string': case 'short': case 'medium': case 'long': case 'int':
-                type = 'input';
-                break;
-            case 'textarea': case 'text':
-                type = 'textarea';      
-                break;
-            default:
-                type = json.type;
-                break;
-        }
-        var field_method = $fx_fields[type];
-        if (typeof field_method !== 'function') {
-            field_method = $fx_fields.default;
-        }
-        var node = field_method(json);
+        
+        var node = $fx_fields.row(json);
         switch (position) {
             case 'into':
-                target.append(node);
+                $target.append(node);
                 break;
             case 'before':
                 node.insertBefore($rel_node);
@@ -398,19 +460,23 @@ fx_form = {
         // ajax change
         if (json.post && json.type !== 'button') {
             // creating container for extra json-loaded fields
-            var post_container = $('<div class="container"></div>').appendTo(target);
+            var post_container = $('<div class="container"></div>').appendTo($target);
             
             node.on('change', function(){
-                var form_vals = {};
-                $('input, textarea, select', node.closest('form')).each(function(){
-                    var c_field_name = $(this).attr('name');
-                    var c_field_type = $(this).attr('type');
+                var form_vals = {},
+                    $form = node.closest('form'),
+                    $inputs = $('input, textarea, select', $form)
+                $inputs.each(function(){
+                    var $inp = $(this),
+                        c_field_name = $inp.attr('name'),
+                        c_field_type = $inp.attr('type');
+                    
                     if (c_field_name !== 'posting' && c_field_type !== 'button') {
                         var val;
                         if (c_field_type === 'radio') {
-                            val = $('input[name="'+$(this).attr('name')+'"]:checked').val();
+                            val = $('input[name="'+c_field_name+'"]:checked').val();
                         } else {
-                            val = $(this).val();
+                            val = $inp.val();
                         }
                         form_vals[c_field_name] = val;
                     }
@@ -418,138 +484,295 @@ fx_form = {
                 var data_to_post = $.extend({}, form_vals, json.post);
                 $fx.post(data_to_post, function(fields){
                     post_container.html('');
+                    if (fields.fields) {
+                        for (var i = 0 ; i < fields.fields.length; i ++ ) {
+                            var c_field = fields.fields[i];
+                            if (c_field.locked !== undefined){
+                                fields.lockable = true;
+                                break;
+                            }
+                        }
+                    }
                     $fx_form.draw_fields(fields, post_container);
                 });
             });
-            node.trigger('change');
+            // delay change event to let following fields render themselves before initial data is sent
+            setTimeout(function() {
+                node.trigger('change');
+            }, 50);
         }
         if (json.parent) {
-            this.add_parent_condition(json.parent, node, target);
+            this.add_parent_condition(json.parent, node, $target);
         } else if (json.type === 'joined_group') {
             $.each(json.fields, function() {
                 if (this.parent && this.$input) {
-                    $fx_form.add_parent_condition(this.parent, this.$input, target);
+                    $fx_form.add_parent_condition(this.parent, this.$input, $target);
                 }
             });
+        }
+        if (json.values_filter) {
+            if (!json.all_values) {
+                json.all_values = json.values;
+            }
+            this.bind_values_filter(node, json, $target);
         }
         return node;
     },
-
-    add_parent_condition: function(parent, _el, container) {
-        if (parent instanceof Array) {
-            parent = {};
-            parent[parent[0]] = parent[1];
-        } else if (typeof parent === 'string') {
-            var obj = {};
-            obj[parent] = '!=0';
-            parent = obj;
-        }
-       
-        var check_parent_state = function() {
-            var do_show = true;
-            $.each(parent, function(pkey, pval) {
-                // convert checked value to string
-                // because input value is always returned as a string
-                pval = pval+'';
-                var pexp = '==';
-                if (/^!=/.test(pval)) {
-                    pval = pval.replace(/^!=/, '');
-                    pexp = '!=';
-                } else if (/^\~/.test(pval)) {
-                    pval = pval.replace(/^\~/, '');
-                    pexp = 'regexp';
-                } else if (/^\!\~/.test(pval)) {
-                    pval = pval.replace(/^\!\~/, '');
-                    pexp = 'not_regexp';
-                }
-                var par_inp = $(':input[name="'+pkey+'"]', container);
-                if (par_inp.length === 0) {
-                    return;
-                }
-                
-                // checkbox & hidden couple
-                if (par_inp.length > 1) {
-                    var $par_chb = par_inp.filter('input[type="checkbox"]');
-                    if ($par_chb.length) {
-                        par_inp = $par_chb;
+    
+    bind_values_filter: function($field, json, $container) {
+        var all_conds = [],
+            that = this,
+            filters = json.values_filter;
+        
+        // collect all conditions to one collection to make a single handler
+        $.each(filters, function (val, filter) {
+            var filter_conds = that.make_conditions(filter);
+            for (var i = 0; i < filter_conds.length; i++) {
+                all_conds.push( filter_conds[i] );
+            }
+        });
+        
+        var handler = this.bind_conditions(
+            all_conds, 
+            $container,
+            function () {
+                var new_vals = [],
+                    new_vals_hash = '';
+                for (var i = 0; i < json.all_values.length; i++) {
+                    var c_val = json.all_values[i],
+                        c_val_name = c_val[0];
+                    if (!filters[c_val_name]) {
+                        new_vals.push(c_val);
+                        new_vals_hash += c_val_name+'';
+                        continue;
+                    }
+                    var value_avail = that.check_conditions(filters[c_val_name], $container);
+                    if (value_avail) {
+                        new_vals.push(c_val);
+                        new_vals_hash += c_val_name+'';
                     }
                 }
-
-                if (par_inp.attr('type') === 'checkbox') {
-                    var par_val = par_inp.get(0).checked * 1;
-                    pval = (pval === 'false' || pval === '0') ? 0 : 1;
-                } else {
-                    var par_val = par_inp.val();
+                var is_diff = json.values.length !== new_vals.length,
+                    old_vals_hash = '';
+                if (!is_diff) {
+                    for (var i = 0; i < json.values.length; i++) {
+                        old_vals_hash += json.values[i][0]+'';
+                    }
+                    is_diff = old_vals_hash !== new_vals_hash;
                 }
-                
-                if (par_inp.attr('type') === 'radio') {
-                    par_val = $(':input[name="'+pkey+'"]:checked').val();
+                if (is_diff) {
+                    that.draw_field($.extend({}, json, {values:new_vals}), $field, 'before');
+                    var $livesearch = $field.find('.livesearch');
+                    if ($livesearch.length) {
+                        $livesearch.data('livesearch').destroy();
+                    }
+                    $field.remove();
+                    handler.unbind();
                 }
-                switch (pexp) {
-                    case '==':
-                        do_show = par_val === pval;
-                        // check parent visibility
-                        // jquery 'is visible' magic doesn't work with input[type=hidden]
-                        // so we invent our own magic!
-                        if (do_show) {
-                            var $inp_field_block = par_inp.closest('.field');
-                            if ($inp_field_block.length) {
-                                do_show = $inp_field_block.css('display') !== 'none';
-                                console.log('swithc by vis');
-                            }
-                        }
-                        break;
-                    case '!=':
-                        if (
-                            par_inp.css('display') === 'none' ||
-                            par_inp.closest('.field').css('display') === 'none'
-                            ) {
-                            do_show = true;
-                        } else {
-                            if (typeof pval === 'string' && pval.match(/^[0-9]+$/)) {
-                                pval = pval*1;
-                            }
-                            do_show = (par_val !== pval);
-                        }
-                        break;
-                    case 'regexp':
-                        var prex = new RegExp(pval);
-                        do_show = prex.test(par_val);
-                        break;
-                    case 'not_regexp':
-                        var prex = new RegExp(pval);
-                        do_show = !prex.test(par_val);
-                        break;
-                }
-                console.log(par_val, pval, par_inp, do_show);
-                if (!do_show) {
-                    return false;
-                }
-            });
-            var is_visible = _el.is(':visible');
-            var $el_inp =  _el.find(':input');
-            console.log($el_inp, is_visible, do_show);
-            if (do_show && !is_visible) {
-                _el.show();
-                $el_inp.trigger('change').trigger('fx_show_input');
-            } else if (!do_show && is_visible) {
-                _el.hide();
-                $el_inp.trigger('change').trigger('fx_hide_input');
             }
+        );
+    },
+    
+    make_conditions: function(conds) {
+        var res = [];
+        if (typeof conds === 'string') {
+            res.push(
+                [conds, null, 'not_empty']
+            );
+            return res;
+        }
+        if (conds instanceof Array) {
+            if (typeof conds[0] === 'string') {
+                res.push(conds);
+            } else {
+                res = conds;
+            }
+        } else if (typeof conds === 'object') {
+            $.each(conds, function(index, item) {
+                res.push([index, item]);
+            });
+        }
+        for (var i = 0; i < res.length; i++) {
+            var cond = res[i];
+            if (cond.length === 1){
+                cond[1] = null;
+                cond[2] = 'not_empty';
+            } else if (cond.length === 2) {
+                var test_value = cond[1];
+                if (/^!=/.test(test_value)) {
+                    cond[1] = test_value.replace(/^!=/, '');
+                    cond[2] = '!=';
+                } else if (/^\~/.test(test_value)) {
+                    cond[1] = new RegExp(test_value.replace(/^\~/, ''));
+                    cond[2] = 'regexp';
+                } else if (/^\!\~/.test(test_value)) {
+                    cond[1] = new RegExp(test_value.replace(/^\!\~/, ''));
+                    cond[2] = 'not_regexp';
+                } else if (cond[1] instanceof Array) {
+                    cond[2] = 'in';
+                } else {
+                    cond[2] = '==';
+                }
+            }
+        }
+        return res;
+    },
+    
+    check_condition: function(cond, value) {
+        var arg = cond[1],
+            op = cond[2];
+        
+        switch (op) {
+            case 'empty':
+                return !value;
+            case 'not_empty':
+                return !!value;
+            case 'regexp':
+                return arg.test(value);
+            case 'not_regexp':
+                return !arg.test(value);
+            case '==':
+                return arg == value;
+            case '!=':
+                return arg != value;
+            case 'in':
+                for (var i = 0; i < arg.length; i++) {
+                    if (arg[i] == value) {
+                        return true;
+                    }
+                }
+                return false;
+        }
+        return true;
+    },
+    
+    get_value: function($inp) {
+        if (!$inp || !$inp.length) {
+            return false;
+        }
+        var inp_type = $inp.attr('type'),
+            val;
+        if (inp_type === 'radio') {
+            var $current = $inp.closest('form').find('input[name="'+$inp.attr('name')+'"]:checked');
+            val = $current.val();
+        }  else if (inp_type === 'checkbox') {
+            val = $inp.is('checked') ? ($inp.attr('value') || '1') : false;
+        } else {
+            val = $inp.val();
+        }
+        return val;
+    },
+    
+    check_conditions: function(conds, $container) {
+        var result = true;
+        for (var i = 0 ; i < conds.length; i++) {
+            var $inp = $container.find('*[name="'+conds[i][0]+'"]');
+
+            var value = this.get_value($inp);
+            var check_result = this.check_condition(conds[i], value);
+            if (!check_result) {
+                result = false;
+                break;
+            }
+        }
+        return result;
+    },
+    
+    // fetch name from input - handle livesearch with no value
+    get_input_name: function($inp) {
+        if ($inp.is('.monosearch__input') || $inp.is('.livesearch')) {
+            var ls = $inp.closest('.livesearch').data('livesearch');
+            return ls.getInputName();
+        }
+        return $inp.attr('name');
+    },
+    
+    bind_conditions: function( conds, $container, callback) {
+        var that = this;
+    
+        conds = this.make_conditions(conds);
+        
+        var handled_input_names = {};
+        for (var i = 0; i < conds.length; i++ ) {
+            handled_input_names[ conds[i][0] ] = true;
+        }
+        
+        var change_handler = function(e) {
+            var $changed_inp = $(e.target),
+                changed_inp_name = that.get_input_name($changed_inp);
+            console.log('changed', changed_inp_name);
+            // changed input is not mentioned in any rule
+            if (!handled_input_names[ changed_inp_name ]) {
+                return;
+            }
+            callback(conds, $container, $changed_inp);
         };
-        _el.hide();
-        var parent_selector = [];
-        $.each(parent, function(pkey, pval) {
-            parent_selector.push(':input[name="'+pkey+'"]');
+        
+        $container.on('change', change_handler);
+        // initial call
+        setTimeout(
+            function() {
+                callback(conds, $container);
+            },
+            1
+        );
+        change_handler.unbind = function() {
+            $container.off('change', change_handler);
+        };
+        return change_handler;
+    },
+
+    //add_parent_condition: function(parent, _el, container) {
+    add_parent_condition: function(conds, $field, $container) {
+        var that = this;
+        var handler = this.bind_conditions(
+            conds, 
+            $container, 
+            function(conds, $container) {
+                // unbind handler if the field has been removed from DOM
+                if ($field.closest($container).length === 0) {
+                    handler.unbind();
+                    return;
+                }
+                var res = that.check_conditions(conds, $container);
+                $field.toggleClass('fx_field_hidden_by_condition', !res);
+            }
+        );
+    },
+    handle_lockable: function($form) {
+        function get_inputs($group) {
+            return $('.fx_lock_container :input:not([type="hidden"])', $group);
+        }
+        function lock_inputs($group) {
+            var $inp = get_inputs($group);
+            $inp.attr('disabled', 'disabled');
+            $('.fx_lock_container', $group).addClass('fx_lock_container__locked');
+        }
+        function unlock_inputs($group) {
+            var $inp = get_inputs($group);
+            $inp.attr('disabled', null);
+            $('.fx_lock_container', $group).removeClass('fx_lock_container__locked');
+        }
+        $form
+            .off('.fx_lockable')
+            .on(
+                'change.fx_lockable', 
+                '.fx_lock_control', 
+                function(e) {
+                    var $ctr = $(e.target),
+                        $group = $ctr.closest('.fx_lock_group'),
+                        locked = e.target.checked;
+                    locked ? lock_inputs($group) : unlock_inputs($group);
+                }
+            );
+        var $checked_lockers = $('.fx_lock_control input[checked="checked"]', $form);
+        $checked_lockers.each(function() {
+            var $group = $(this).closest('.fx_lock_group');
+            lock_inputs($group);
         });
-        parent_selector = parent_selector.join(', ', parent_selector);
-
-        $(container).on('change', parent_selector, check_parent_state);
-
-        setTimeout(function() {
-            check_parent_state.apply($(parent_selector).get(0));
-        }, 1);
     }
+    
+    
 };
 })(jQuery);
 
@@ -559,6 +782,36 @@ $fx.form = window.fx_form = window.$fx_form = fx_form;
     $.fn.fx_create_form = function(options) {
         $fx_form.create(options, this);
         return this;
+    };
+    
+    $.fn.formToHash = function() {
+        var $form = this,
+            data = $form.formToArray(),
+            res = {};
+        for (var i = 0; i < data.length; i++) {
+            var f = data[i],
+                name = f.name,
+                value = f.value,
+                name_path_parts = name.match(/\[.+?\]/g);
+            if (name_path_parts) {
+                var name_base = name.replace(/\[.+/, ''),
+                    name_path = [name_base];
+                for (var j = 0; j < name_path_parts.length; j++) {
+                    name_path.push(name_path_parts[j].replace(/[\[\]]/g, ''))
+                }
+                var c_res = res;
+                for (var j = 0; j < name_path.length; j++) {
+                    var part = name_path[j];
+                    if (!c_res[part]) {
+                        c_res[part] = j === name_path.length - 1 ? value : {};
+                    }
+                    c_res = c_res[part];
+                }
+            } else {
+                res[name] = value;
+            }
+        }
+        return res;
     };
 
     $.fn.writeError = function(message){

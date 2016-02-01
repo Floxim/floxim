@@ -71,8 +71,21 @@ class Entity extends System\Entity
                 $offsets[$keyword] = array(
                     'type' => self::OFFSET_FIELD
                 );
-                if ( $f->getTypeKeyword() === 'select') {
+                $cast = $f->getCastType();
+                if ($cast) {
+                    $offsets[$keyword]['cast'] = $cast;
+                }
+                if ( $f['type'] === 'select') {
                     $vals = array();
+                    foreach ($f['select_values'] as $val) {
+                        $vals[$val['keyword']] = $val['id'];
+                    }
+                    $offsets[$keyword.'_entity'] = array(
+                        'type' => self::OFFSET_SELECT,
+                        'values' => $vals,
+                        'real_offset' => $keyword
+                    );
+                    /*
                     foreach ($f['format']['values'] as $val) {
                         $vals[$val['id']] = $val['value'];
                     }
@@ -81,6 +94,8 @@ class Entity extends System\Entity
                         'values' => $vals,
                         'real_offset' => $keyword
                     );
+                     * 
+                     */
                 }
             }
 
@@ -215,7 +230,12 @@ class Entity extends System\Entity
         if (is_null($this->all_fields)) {
             $fields = new System\Collection();
             foreach ($this->getChain() as $component) {
-                $fields->concat($component->fields());
+                $com_fields = $component->fields();
+                foreach ($com_fields as $com_field) {
+                    if (!$com_field['infoblock_id']) {
+                        $fields[$com_field['keyword']] = $com_field;
+                    }
+                }
             }
             $fields->indexUnique('keyword');
             $this->all_fields = $fields;
@@ -282,6 +302,7 @@ class Entity extends System\Entity
             $q = 'update {{'.$root->getContentTable().'}} set type = "'.$root['keyword'].'"';
             fx::db()->query($q);
         }
+        fx::cache('meta')->delete('schema');
     }
     
     public function getRootComponent()
@@ -370,6 +391,22 @@ class Entity extends System\Entity
         }
         return $res;
     }
+    
+    public function isInstanceOfComponent($com)
+    {
+        if (is_scalar($com)) {
+            $com = fx::component($com);
+        }
+        if (!$com) {
+            return false;
+        }
+        if ($com['id'] === $this['id']) {
+            return true;
+        }
+        $com_children = $com->getAllChildren();
+        $is_child = $com_children->findOne('id', $this['id']);
+        return (bool) $is_child;
+    }
 
     /**
      * Get collection of all component's descendants and the component itself
@@ -412,5 +449,64 @@ class Entity extends System\Entity
         
         $item_name = $this['item_name'];
         return empty($item_name) ? $this['name'] : $item_name;
+    }
+    
+    public function getFieldForFilter($keyword) {
+        return array(
+            'keyword' => $keyword,
+            'name' => fx::util()->ucfirst($this->getItemName()),
+            'type' => 'entity',
+            'is_page'  => $this->isInstanceOfComponent('floxim.main.page'),
+            'content_type' => $this['keyword'],
+            'children' => $this->getFieldsForFilter($keyword)
+        );
+    }
+    
+    public function getFieldsForFilter($prefix = 'entity', $c_level = 0) {
+        $fields = $this->getAllFields()->find('is_editable', 1);
+        
+        $entity_fields = array();
+        foreach ($fields as $f) {
+            if (
+                in_array($f['type'], array('group')) 
+            ) {
+                continue;
+            }
+            $res_f = array(
+                'name' => $f['name'],
+                'keyword' => $prefix.'.'.$f['keyword'],
+                'type' => $f['type'],
+                'id' => $f['id']
+            );
+            switch ($f['type']) {
+                case 'link':
+                case 'multilink':
+                    $target_keyword = $f->getTargetName();
+                    /*
+                    if ($f['keyword'] === 'parent_id') {
+                        $target_is_page = true;
+                    } else {
+                        $target_is_page = fx::data($target_keyword) instanceof \Floxim\Main\Page\Finder;
+                    }
+                    $res_f['is_page'] = $target_is_page;
+                     * 
+                     */
+                    $res_f['real_keyword'] = $res_f['keyword'];
+                    $res_f['keyword'] = $prefix.'.'.$f->getPropertyName();
+                    $res_f['content_type'] = $target_keyword;
+                    $res_f['linking_entity_type'] = $this['keyword'];
+                    if ($c_level < 1) {
+                        $target_com = fx::getComponentByKeyword($target_keyword);
+                        if ($target_com) {
+                            $res_f['children'] = $target_com->getFieldsForFilter($res_f['keyword'], $c_level + 1);
+                            $res_f['collapsed'] = true;
+                        }
+                    }
+                    $res_f['type'] = 'entity';
+                    break;
+            }
+            $entity_fields []= $res_f;
+        }
+        return $entity_fields;
     }
 }

@@ -19,7 +19,7 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
         if (count($types_by_id) == 0) {
             return $data;
         }
-        $base_component = fx::component($this->component_id);
+        $base_component = $this->getComponent();
         $base_type = $base_component['keyword'];
         $base_table = $base_component->getContentTable();
         $types = array();
@@ -66,93 +66,99 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
         return $data;
     }
 
-    protected static $_com_tables_cache = array();
-
-    public function getTables()
+    public static function getTables() 
     {
-        if (isset(self::$_com_tables_cache[$this->component_id])) {
-            $cached = self::$_com_tables_cache[$this->component_id];
-            return $cached;
+        static $cache = array();
+        $class = get_called_class();
+        if (isset($cache[$class])){
+            return $cache[$class];
         }
-        $chain = $this->getComponent()->getChain();
         $tables = array();
-        foreach ($chain as $comp) {
-            $tables [] = $comp->getContentTable();
+        $chain = static::getComponent()->getChain();
+        foreach ($chain as $com) {
+            $tables []= $com->getContentTable();
         }
-        self::$_com_tables_cache[$this->component_id] = $tables;
+        $cache[$class] = $tables;
         return $tables;
     }
-
-    static $stored_relations = array();
     
+    
+
     public function relations()
     {
+        static $cache = array();
         $class = get_called_class();
-        if (isset(self::$stored_relations[$class])) {
-            return static::$stored_relations[$class];
+        if (isset($cache[$class])) {
+            return $cache[$class];
         }
-        
+
         $relations = array();
-        $fields = fx::component($this->component_id)->
-                getAllFields()->
-                find('type', array(Field\Entity::FIELD_LINK, Field\Entity::FIELD_MULTILINK));
+        $fields = $this->getComponent()
+                       ->getAllFields()
+                        ->find(
+                            'type', 
+                            array(
+                                'link', 'multilink'
+                            )
+                        );
         foreach ($fields as $f) {
             if (!($relation = $f->getRelation())) {
                 continue;
             }
             switch ($f['type']) {
-                case Field\Entity::FIELD_LINK:
-                    $relations[$f->getPropName()] = $relation;
+                case 'link': case 'multilink':
+                    $relations[$f->getPropertyName()] = $relation;
                     break;
-                case Field\Entity::FIELD_MULTILINK:
+                /*
+                case 'multilink':
                     $relations[$f['keyword']] = $relation;
                     break;
+                 * 
+                 */
             }
         }
-        /*
-        $relations ['component'] = array(
-            self::BELONGS_TO,
-            'component',
-            'type',
-            'keyword'
-        );
-        */
-        self::$stored_relations[$class] = $relations;
+        $cache[$class] = $relations;
         return $relations;
     }
     
-    protected $component_id = null;
-    
-    public function __construct($table = null)
+    public static function getTable() 
     {
-        parent::__construct($table);
-
-        $this->setComponent(fx::getComponentNameByClass(get_class($this)));
-    }
-
-    public function setComponent($component_id_or_code)
-    {
-        $component = fx::component($component_id_or_code);
-        if (!$component) {
-            die("Component not found: " . $component_id_or_code);
+        static $cache = array();
+        $class = get_called_class();
+        if (isset($cache[$class])){
+            return $cache[$class];
         }
-        $this->component_id = $component['id'];
-        $this->table = $component->getContentTable();
-        return $this;
-    }
-
-    public function getComponent()
-    {
-        return fx::getComponentById($this->component_id);
+        $table = static::getComponent()->getContentTable();
+        $cache[$class] = $table;
+        return $table;
     }
     
-    // array access: $com = $entity['component']
-    public function _getComponent()
+    public static function getKeyword() 
     {
-        return fx::getComponentById($this->component_id);
+        static $cache = array();
+        $class = get_called_class();
+        if (isset($cache[$class])){
+            return $cache[$class];
+        }
+        $keyword = static::getComponent()->get('keyword');
+        $cache[$class] = $keyword;
+        return $keyword;
     }
     
-        /**
+    public static function getComponent()
+    {
+        static $cache = array();
+        $class = get_called_class();
+        if (isset($cache[$class])){
+            return $cache[$class];
+        }
+        $com_keyword = fx::getComponentNameByClass($class);
+        $com = fx::getComponentByKeyword($com_keyword);
+        $cache[$class] = $com;
+        return $com;
+    }
+    
+    /**
      * Create new content entity
      * @param array $data Initial params
      * @return New content entity (not saved yet, without ID)
@@ -161,7 +167,7 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
     {
         $obj = parent::create($data);
 
-        $component = fx::component($this->component_id);
+        $component = static::getComponent();
         if (!isset($data['created'])) {
             $obj['created'] = date("Y-m-d H:i:s");
         }
@@ -178,7 +184,7 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
                 continue;
             }
             if (!isset($data[$f['keyword']])) {
-                if ($f['type'] == Field\Entity::FIELD_DATETIME) {
+                if ($f['type'] === 'datetime') {
                     $obj[$f['keyword']] = date('Y-m-d H:i:s');
                 } else {
                     $obj[$f['keyword']] = $f['default'];
@@ -188,24 +194,17 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
         return $obj;
     }
     
-    protected static $content_classes = array();
-
     public function getEntityClassName($data = null)
     {
-        if (!is_null($data) && isset($data['type'])) {
-            $c_type = $data['type'];
-        } else {
-            $component = fx::component($this->component_id);
-            $c_type = $component['keyword'];
-        }
-        
-        if (isset(Finder::$content_classes[$c_type])) {
-            return Finder::$content_classes[$c_type];
+        $c_type = !is_null($data) && isset($data['type']) ? $data['type'] : static::getKeyword();
+        static $cache = array();
+        if (isset($cache[$c_type])) {
+            return $cache[$c_type];
         }
         
         $class_namespace = fx::getComponentNamespace($c_type);
         $class_name = $class_namespace.'\\Entity';
-        Finder::$content_classes[$c_type] = $class_name;
+        $cache[$c_type] = $class_name;
         return $class_name;
     }
 
@@ -216,29 +215,49 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
      */
     public function entity($data = array())
     {
-        if (isset($data['id'])) {
-            $cached = static::getFromStaticCache($data['id']);
-            if ($cached) {
-                return $cached;
-            }
-        }
         
+        $id = isset($data['id']) ? $data['id'] : null;
+        
+        $registry = $this->getRegistry();
+        
+        if ( $id && ($obj = $registry->get($id)) ) {
+            return $obj;
+        }
         $classname = $this->getEntityClassName($data);
         
+        
         if (isset($data['type'])) {
-            $com = fx::getComponentByKeyword($data['type']);
-            $component_id = $com['id'];
+            $component_id = fx::getComponentByKeyword($data['type'])->offsetGet('id');
         } else {
-            $component_id = $this->component_id;
+            $component_id = $this->getComponent()->offsetGet('id');
         }
         
-        $obj = new $classname(array(
-            'data'         => $data,
-            'component_id' => $component_id
-        ));
-        
-        $this->addToStaticCache($obj);
+        $obj = new $classname($data, $component_id);
+        if ($id) {
+            $this->registerEntity($obj, $id);
+        }
         return $obj;
+    }
+    
+    public function registerEntity($entity, $id)
+    {
+        static $cache = array();
+        $class = get_called_class();
+        if (isset($cache[$class])) {
+            foreach ($cache[$class] as $registry) {
+                $registry->register($entity, $id);
+            }
+            return;
+        } 
+        
+        $registries = array();
+        $chain = $this->getComponent()->getChain();
+        foreach ($chain as $com) {
+            $registry = fx::data($com['keyword'])->getRegistry();
+            $registries [$com['keyword']]= $registry;
+            $registry->register($entity, $id);
+        }
+        $cache[$class] = $registries;
     }
     
     
@@ -368,7 +387,7 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
     protected function setStatement($data)
     {
         $res = array();
-        $chain = fx::component($this->component_id)->getChain();
+        $chain = $this->getComponent()->getChain();
         foreach ($chain as $level_component) {
             $table_res = array();
             $fields = $level_component->fields();

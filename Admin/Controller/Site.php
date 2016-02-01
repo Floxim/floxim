@@ -86,13 +86,13 @@ class Site extends Admin
 
         $site->save();
 
-        $index_page = fx::data('page')->create(array(
+        $index_page = fx::data('floxim.main.page')->create(array(
             'name'    => fx::alang('Cover Page', 'system'),
             'url'     => '/',
             'site_id' => $site['id']
         ))->save();
 
-        $error_page = fx::data('page')->create(array(
+        $error_page = fx::data('floxim.main.page')->create(array(
             'name'      => fx::alang('Page not found', 'system'),
             'url'       => '/404',
             'site_id'   => $site['id'],

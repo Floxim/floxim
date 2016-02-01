@@ -2,7 +2,7 @@
 
 namespace Floxim\Floxim\Field;
 
-class Int extends Baze
+class Int extends \Floxim\Floxim\Component\Field\Entity
 {
 
     public function validateValue($value)
@@ -20,5 +20,10 @@ class Int extends Baze
     public function getSqlType()
     {
         return "INT";
+    }
+    
+    public function getCastType() 
+    {
+        return 'int';
     }
 }

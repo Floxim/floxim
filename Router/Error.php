@@ -21,7 +21,7 @@ class Error extends Front
             $site_id = fx::env('site_id');
         }
         $error_page = fx::data(
-            'page',
+            'floxim.main.page',
             fx::data('site', $site_id)->get('error_page_id')
         );
         return $error_page;

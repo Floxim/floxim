@@ -132,9 +132,9 @@ class Admin extends System\Controller
             $path_floxim . '/Admin/js/adder.js',
             $path_floxim . '/Admin/js/buttons.js',
             $path_floxim . '/Admin/js/form.js',
-            //$path_floxim . '/Admin/js/patch.js',
             $path_floxim . '/Admin/js/debug.js',
             $path_floxim . '/Admin/js/livesearch.js',
+            $path_floxim . '/Admin/js/suggest.js',
             $path_floxim . '/Admin/js/fields.js',
             $path_floxim . '/Admin/js/edit-in-place.js',
             $path_floxim . '/Admin/js/panel.js',
@@ -152,6 +152,7 @@ class Admin extends System\Controller
             $path_floxim . '/lib/js/jquery.scrollTo.js',
             $path_floxim . '/Admin/js/map.js',
             $path_floxim . '/Admin/js/node-panel.js',
+            $path_floxim . '/Admin/js/condition-builder.js',
             $path_floxim . '/Admin/js/infoblock.js' // infoblock form overrides
         );
         $page = fx::page();
@@ -174,7 +175,8 @@ class Admin extends System\Controller
             $path_floxim . '/Admin/style/front.less',
             $path_floxim . '/Admin/style/livesearch.less',
             $path_floxim . '/Admin/style/debug.less',
-            $path_floxim . '/lib/codemirror/codemirror.css'
+            $path_floxim . '/lib/codemirror/codemirror.css',
+            $path_floxim . '/Admin/style/condition-builder.less',
         ), array('name' => 'admin_less'));
     }
 
@@ -204,10 +206,32 @@ class Admin extends System\Controller
         }
         return fx::page()->postProcess($res);
     }
+    
+    /**
+     * pass entity type, entity id and previous item id:
+     * {
+     *  action: "move"
+     *  component_id: 23
+     *  entity: "field"
+     *  id: 431
+     *  mode: "relative"
+     *  move_after: 347
+     * }
+     */
+    public function move($input)
+    {
+        $finder = fx::data($input['entity']);
+        $finder->moveAfter($input['id'], $input['move_after'], $input['params']);
+    }
 
-
+    /**
+     * old move implementation - pass all sorted items
+     */
     public function moveSave($input)
     {
+        if (isset($input['mode']) && $input['mode'] === 'relative') {
+            return $this->move($input);
+        }
 
         $entity = $this->entity_type;
 

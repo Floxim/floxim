@@ -22,7 +22,19 @@ abstract class Entity implements \ArrayAccess, Template\Entity
     // Extra data from forms etc.
     protected $payload = array();
     
-    public $is_saved = null;
+    protected $is_saved = null;
+    
+    protected $is_deleted = false;
+    
+    public function isSaved() 
+    {
+        return $this->is_saved;
+    }
+    
+    public function isDeleted()
+    {
+        return $this->is_deleted;
+    }
     
     /** template entity interface */
     
@@ -57,13 +69,11 @@ abstract class Entity implements \ArrayAccess, Template\Entity
 
     protected $is_loaded = false;
 
-    public function __construct($input = array())
+    public function __construct($data = array())
     {
-        if (isset($input['data'])) {
-            $this->is_saved = isset($input['data']['id']);
-            foreach ($input['data'] as $k => $v) {
-                $this[$k] = $v;
-            }
+        $this->is_saved = isset($data['id']);
+        foreach ($data as $k => $v) {
+            $this->offsetSet($k, $v);
         }
         $this->is_loaded = true;
     }
@@ -189,19 +199,91 @@ abstract class Entity implements \ArrayAccess, Template\Entity
         }
         $this->validate_errors[] = $error;
     }
-
+    
+    protected function saveLinks()
+    {
+        $relations = $this->getFinder()->relations();
+        foreach ($relations as $relation_code => $relation) {
+            if ( $relation[0] !== Finder::BELONGS_TO || !isset($this->data[$relation_code])) {
+                continue;
+            }
+            
+            $val = $this->data[$relation_code];
+            
+            if (!$val instanceof Entity) {
+                continue;
+            }
+            $related_field_keyword = $relation[2];
+            $val_id = $val['id'];
+            if (!$val->isDeleted()) {
+                $val->save();
+                $val_id = $val['id'];
+            } else {
+                $val_id = null;
+            }
+            $this[$related_field_keyword] = $val_id;
+        }
+    }
 
     /*
-     * Saves the fields links is determined in fx_data_content
+     * Saves attached multiple links (objects linking to this one)
      */
     protected function saveMultiLinks()
     {
+        $relations = $this->getFinder()->relations();
+        foreach ($relations as $relation_code => $relation) {
+            if (!isset($this->data[$relation_code])) {
+                continue;
+            }
+            
+            $val = $this->data[$relation_code];
+            $related_field_keyword = $relation[2];
+            
+            switch ($relation[0]) {
+                case Finder::HAS_MANY:
+                    $old_data = isset($this->modified_data[$relation_code]) ?
+                        $this->modified_data[$relation_code] :
+                        new Collection();
+                    $c_priority = 0;
+                    foreach ($val as $linked_item) {
+                        $c_priority++;
+                        $linked_item[$related_field_keyword] = $this['id'];
+                        $linked_item['priority'] = $c_priority;
+                        $linked_item->save();
+                    }
+                    $old_data->findRemove('id', $val->getValues('id'));
+                    $old_data->apply(function ($i) {
+                        $i->delete();
+                    });
+                    break;
+                case Finder::MANY_MANY:
+                    $old_linkers = isset($this->modified_data[$relation_code]->linkers) ?
+                        $this->modified_data[$relation_code]->linkers :
+                        new Collection();
 
+                    // new linkers
+                    // must be set
+                    // @todo then we will cunning calculation
+                    if (!isset($val->linkers) || count($val->linkers) != count($val)) {
+                        throw new \Exception('Wrong linker map');
+                    }
+                    foreach ($val->linkers as $linker_obj) {
+                        $linker_obj[$related_field_keyword] = $this['id'];
+                        $linker_obj->save();
+                    }
+
+                    $old_linkers->findRemove('id', $val->linkers->getValues('id'));
+                    $old_linkers->apply(function ($i) {
+                        $i->delete();
+                    });
+                    break;
+            }
+        }
     }
 
     protected function beforeSave()
     {
-
+        $this->saveLinks();
     }
 
     protected function afterSave()
@@ -229,18 +311,39 @@ abstract class Entity implements \ArrayAccess, Template\Entity
             }
             return $this->offsetGet($prop_name);
         }
-        return $this->data;
+        
+        $offsets = $this->getAvailableOffsets();
+        $res = array();
+        foreach ($offsets as $offset => $offset_meta) {
+            $o_type = $offset_meta['type'];
+            if ($o_type === self::OFFSET_GETTER) {
+                continue;
+            }
+            if ( ($o_type === self::OFFSET_RELATION || $o_type === self::OFFSET_SELECT) && !isset($this->data[$offset])) {
+                continue;
+            }
+            $res[$offset] = $this->offsetGet($offset);
+        }
+        return $res;
+    }
+    
+    public function unloadRelation($offset)
+    {
+        if (isset($this->data[$offset])) {
+            unset($this->data[$offset]);
+            $this->setNotModified($offset);
+        }
     }
 
-    public function set($item, $value = '')
+    public function set($prop, $value = '')
     {
-        if (is_array($item) || $item instanceof \Traversable) {
-            foreach ($item as $k => $v) {
+        if (is_array($prop) || $prop instanceof \Traversable) {
+            foreach ($prop as $k => $v) {
                 $this->set($k, $v);
             }
             return $this;
         }
-        $this->offsetSet($item, $value);
+        $this->offsetSet($prop, $value);
         return $this;
     }
 
@@ -270,6 +373,7 @@ abstract class Entity implements \ArrayAccess, Template\Entity
         $pk = $this->getPk();
         $this->beforeDelete();
         $this->getFinder()->delete($pk, $this->data[$pk]);
+        $this->is_deleted = true;
         $this->modified_data = $this->data;
         fx::trigger('after_delete', array('entity' => $this));
         $this->afterDelete();
@@ -401,7 +505,6 @@ abstract class Entity implements \ArrayAccess, Template\Entity
     protected static function isTemplateVar($var)
     {
         return $var[0] === '%';
-        return mb_substr($var, 0, 1) === '%';
     }
     
     protected $allowTemplateOverride = true;
@@ -454,7 +557,7 @@ abstract class Entity implements \ArrayAccess, Template\Entity
         
         // multi-lang value
         if ($offset_type === self::OFFSET_LANG) {
-            $lang_offset = $offset . '_' . fx::config('lang.admin');
+            $lang_offset = $offset . '_' . fx::env()->getLang();
             if (!empty($this->data[$lang_offset])) {
                 return $this->data[$lang_offset];
             }
@@ -473,7 +576,30 @@ abstract class Entity implements \ArrayAccess, Template\Entity
         
         if ($offset_type === self::OFFSET_SELECT) {
             $real_value = $this->data[$offset_meta['real_offset']];
-            return $offset_meta['values'][$real_value];
+            $value_entity_id = $offset_meta['values'][$real_value];
+            return fx::data('select_value')->getById($value_entity_id);
+        }
+    }
+    
+        
+    public function getReal($offset)
+    {
+        //if (isset($this->data[$offset])) {
+        if (array_key_exists($offset, $this->data)) {
+            return $this->data[$offset];
+        }
+        $offsets = $this->getAvailableOffsets();
+        $offset_meta = isset($offsets[$offset]) ? $offsets[$offset] : null;
+        if (!$offset_meta) {
+            return;
+        }
+        
+        // multi-lang value
+        if ($offset_meta['type'] === self::OFFSET_LANG) {
+            $lang_offset = $offset . '_' . fx::config('lang.admin');
+            if (array_key_exists($lang_offset, $this->data)) {
+                return $this->data[$lang_offset];
+            }
         }
     }
 
@@ -488,6 +614,22 @@ abstract class Entity implements \ArrayAccess, Template\Entity
         if (isset($offsets[$offset])) {
             $offset_meta = $offsets[$offset];
             $offset_type = $offset_meta['type'];
+            if ($value !== null && isset($offset_meta['cast'])) {
+                switch ($offset_meta['cast']) {
+                    case 'int':
+                        $value = (int) $value;
+                        break;
+                    case 'float':
+                        $value = (float) $value;
+                        break;
+                    case 'boolean':
+                        $value = (boolean) $value;
+                        break;
+                    case 'string':
+                        $value = (string) $value;
+                        break;
+                }
+            }
         }
         
         switch($offset_type) {
@@ -511,7 +653,6 @@ abstract class Entity implements \ArrayAccess, Template\Entity
             return;
         }
         
-        // use non-strict '==' because int values from db becomes strings - should be fixed
         if ($offset_exists && $this->data[$offset] == $value) {
             return;
         }
@@ -618,6 +759,29 @@ abstract class Entity implements \ArrayAccess, Template\Entity
     public function getModified()
     {
         return $this->modified;
+    }
+    
+    public function __wakeup() {
+        $id = $this['id'];
+        if ($id) {
+            $f = $this->getFinder();
+            $f->registerEntity($this, $id);
+        }
+    }
+    
+    public function getName()
+    {
+        $name = '';
+        if (isset($this['name'])) {
+            $name = $this['name'];
+        } 
+        if (!$name && isset($this['keyword'])) {
+            $name = $this['keyword'];
+        }
+        if (!$name) {
+            $name = $this->getType().' #'. ($this['id'] ? $this['id'] : 'new');
+        }
+        return $name;
     }
 }
 

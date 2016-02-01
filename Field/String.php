@@ -4,7 +4,7 @@ namespace Floxim\Floxim\Field;
 
 use Floxim\Floxim\System\Fx as fx;
 
-class String extends Baze
+class String extends \Floxim\Floxim\Component\Field\Entity
 {
 
     public function formatSettings()
@@ -17,6 +17,11 @@ class String extends Baze
             )
         );
         return $fields;
+    }
+    
+    public function getCastType() 
+    {
+        return 'string';
     }
 
     public function getSqlType()

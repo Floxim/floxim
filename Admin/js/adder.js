@@ -246,7 +246,7 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
         '<div class="'+bl+' '+bl+'-'+(!is_sortable ? 'not_sortable' : scope)+' fx_overlay">'+
             '<div class="'+bl+'__line"></div>'+
             '<div class="'+bl+'__title">'+title+'</div>'+
-            '<div class="'+bl+'__plus"><span class="'+bl+'__plus_plus">+</span></div>'+
+            '<div class="'+bl+'__plus"><span class="'+bl+'__plus_plus"></span></div>'+
         '</div>'
     );
     
@@ -255,9 +255,6 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
         $line = $('.'+bl+'__line', $button);
     
     $button.data('title_node', $title);
-    
-    
-    //var $entities = $node.find(neighbour_selector).filter(':not(.fx_entity_adder_placeholder)');
     
     $adder_overlay.append($button);
     $node.data('fx_inline_adder_'+scope, $button).addClass('fx_has_inline_adder fx_has_inline_adder_'+scope);
@@ -576,7 +573,8 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
                 return;
             }
             
-            var entity_index = $entities.index($entity);
+            var entity_index = $entities.index($entity),
+                count_entities = $entities.length;
             
             if (!$entity.length || entity_index === -1) {
                 return;
@@ -592,7 +590,9 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
                 size = axis === 'x' ? e_width : e_height,
                 diff = axis === 'x' ? (e_left - left) : (e_top - top),
                 is_after = size / 2 < diff,
-                dir = is_after ? 'after' : 'before';
+                dir = is_after ? 'after' : 'before',
+                entity_is_first = entity_index === 0,
+                entity_is_last = entity_index === count_entities - 1;
                 /*
                 is_first = entity_index === 0,
                 is_last = entity_index === $entities.length - 1;
@@ -725,8 +725,12 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
                 } else {
                     left -= distance/2;
                 }
-                
-                left -= b_size/2;
+                if (! (entity_is_last && is_after) ) {
+                    left -= b_size/2;
+                }
+                if (entity_is_first && !is_after) {
+                    left -= b_size/2;
+                }
                 
                 var n_height = $neighbour.length ? $neighbour.outerHeight() : e_height;
                 

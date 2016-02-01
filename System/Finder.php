@@ -13,10 +13,8 @@ abstract class Finder
     protected $table;
     protected $pk = 'id';
     protected $order = array();
-    //protected $classname;
-    protected $serialized = array();
+    
     protected $json_encode = array();
-    protected $sql_function = array();
 
     protected $limit;
     protected $where = array();
@@ -28,6 +26,29 @@ abstract class Finder
     const HAS_MANY = 1;
     const HAS_ONE = 2;
     const MANY_MANY = 3;
+    
+    public static function getInstance()
+    {
+        $class = get_called_class();
+        $instance = new $class();
+        return $instance;
+    }
+    
+    public static function getRegistry() {
+        static $cache = array();
+        $class = get_called_class();
+        if (isset($cache[$class])) {
+            return $cache[$class];
+        }
+        $keyword = static::getKeyword();
+        $registry = fx::registry()->get($keyword);
+        $cache[$class] = $registry;
+        return $registry;
+    }
+    
+    public static function getKeyword() {
+        return static::getTable();
+    }
 
     protected function livesearchApplyTerms($terms)
     {
@@ -108,16 +129,14 @@ abstract class Finder
         return $fields;
     }
     
-    public function getTable()
-    {
-        return $this->table;
-    }
-
     /*
      * @return \Floxim\Floxim\System\Collection
      */
-    public function all()
+    public function all($limit = null)
     {
+        if (!is_null($limit)) {
+            $this->limit($limit);
+        }
         if (static::isStaticCacheUsed() && static::$fullStaticCache && count($this->where) === 0 && count($this->order) === 0) {
             return static::getStaticCache();
         }
@@ -125,8 +144,11 @@ abstract class Finder
         return $data;
     }
 
-    public function one()
+    public function one($id = null)
     {
+        if (func_num_args() === 1) {
+            return $this->getById($id);
+        }
         $this->limit(1);
         $data = $this->getEntities();
         return isset($data[0]) ? $data[0] : false;
@@ -204,18 +226,35 @@ abstract class Finder
 
     protected function prepareCondition($field, $value, $type)
     {
-        if (is_array($field)) {
-            foreach ($field as $n => $c_cond) {
-                $field[$n] = $this->prepareCondition($c_cond[0], $c_cond[1], $c_cond[2]);
+        if ($type && is_string($type)) {
+            $type = strtoupper($type);
+        }
+        if (is_array($field) ) {
+            if ($type === 'AND' || $type === 'OR') {
+                foreach ($field as $n => $c_cond) {
+                    $field[$n] = $this->prepareCondition($c_cond[0], $c_cond[1], $c_cond[2]);
+                }
+                return array($field, $value, $type);
             }
-            return array($field, $value, $type);
+            if ($type === 'NOT') {
+                $res = array(
+                    call_user_func_array( array($this, 'prepareCondition'), $field ),
+                    $value,
+                    $type
+                );
+                return $res;
+            }
         }
         $original_field = $field;
         if (strstr($field, '.')) {
             $field = $this->prepareComplexField($field, 'where');
         } elseif (preg_match("~^[a-z0-9_-]~", $field)) {
             $table = $this->getColTable($field, false);
+            if (in_array($field, $this->getMultiLangFields())) {
+                $field = $field.'_'.fx::env()->getLang();
+            }
             $field = '{{' . $table . '}}.' . $field;
+            
         }
         if (is_array($value) && count($value) == 1 && ($type == '=' || $type == 'IN')) {
             $value = current($value);
@@ -231,13 +270,56 @@ abstract class Finder
             return $this->where;
         }
         
-        if ($num_args === 1 && strtolower($field) === 'false') {
-            $field = null;
-            $value = 'FALSE';
-            $type = 'RAW';
+        if ( $num_args === 1 ) {
+            
+            if ( (is_string($field) && strtolower($field) === 'false') || $field === false) {
+                $field = null;
+                $value = 'FALSE';
+                $type = 'RAW';
+            } elseif ((is_string($field) && strtolower($field) === 'true') || $field === true) {
+                $field = null;
+                $value = 'TRUE';
+                $type = 'RAW';
+            } elseif (is_array($field)) {
+                call_user_func_array( array($this, 'where'), $field);
+                return $this;
+            }
         }
         $cond = $this->prepareCondition($field, $value, $type);
         $this->where [] = $cond;
+        return $this;
+    }
+    
+    public function whereIsNull($field) 
+    {
+        $this->where($field, false, 'is null');
+        return $this;
+    }
+    
+    public function whereIsNotNull($field) 
+    {
+        $this->where($field, false, 'is not null');
+        return $this;
+    }
+    
+    public function without($rel_name)
+    {
+        $rel = $this->getRelation($rel_name);
+        switch ($rel[0]) {
+            case self::BELONGS_TO:
+                $rel_finder = fx::data($rel[1]);
+                $rel_table = $rel_finder->getTable();
+                $rel_alias = 'tbl__without_'.$rel_name;
+                $linking_field = $rel[2];
+                $our_table = $this->getColTable($linking_field);
+                $this->join(
+                    array($rel_table, $rel_alias),
+                    $rel_alias.'.id = {{'.$our_table.'}}.'.$linking_field,
+                    'left'
+                );
+                $this->where($rel_alias.'.id', null, 'is null');
+                break;
+        }
         return $this;
     }
 
@@ -283,6 +365,28 @@ abstract class Finder
                 $this->order []= "`".$field."` ".$direction;
             }
         }
+        return $this;
+    }
+    
+    /**
+     * shortcut for $finder->order($field, 'asc')
+     * @param string $field
+     * @return \Floxim\Floxim\System\Finder
+     */
+    public function asc($field)
+    {
+        $this->order($field, 'asc');
+        return $this;
+    }
+    
+    /**
+     * shortcut for $finder->order($field, 'desc')
+     * @param string $field
+     * @return \Floxim\Floxim\System\Finder
+     */
+    public function desc($field)
+    {
+        $this->order($field, 'desc');
         return $this;
     }
     
@@ -392,7 +496,7 @@ abstract class Finder
             foreach ($this->where as $cond) {
                 $conds [] = $this->makeCond($cond, $base_table);
             }
-            $q .= "\n WHERE " . join(" AND ", $conds);
+            $q .= "\n WHERE " . join("\n AND ", $conds);
         }
         if (count($this->group) > 0) {
             $q .= "\n GROUP BY " . join(", ", $this->group);
@@ -435,6 +539,8 @@ abstract class Finder
 
         // column-link
         $link_col = $rel[2];
+        
+        $table = static::getTable();
 
         switch ($rel[0]) {
             case Finder::BELONGS_TO:
@@ -463,10 +569,10 @@ abstract class Finder
                 unset($finder_tables[$their_table_key[0]]);
                 $this->join(
                     array($their_table, $joined_alias),
-                    $joined_alias . '.' . $link_col . ' = {{' . $this->table . '}}.id',
+                    $joined_alias . '.' . $link_col . ' = {{' . $table . '}}.id',
                     $join_type
                 );
-                $this->group('{{' . $this->table . '}}.id');
+                $this->group('{{' . $table . '}}.id');
                 foreach ($finder_tables as $t) {
                     $alias = $rel_name . '__' . $t;
                     $this->join(
@@ -483,10 +589,10 @@ abstract class Finder
                 unset($finder_tables[$linker_table_key[0]]);
                 $this->join(
                     array($linker_table, $joined_alias),
-                    $joined_alias . '.' . $link_col . ' = {{' . $this->table . '}}.id',
+                    $joined_alias . '.' . $link_col . ' = {{' . $table . '}}.id',
                     $join_type
                 );
-                $this->group('{{' . $this->table . '}}.id');
+                $this->group('{{' . $table . '}}.id');
                 foreach ($finder_tables as $t) {
                     $alias = $rel_name . '_linker__' . $t;
                     $this->join(
@@ -520,7 +626,13 @@ abstract class Finder
 
     protected function makeCond($cond, $base_table)
     {
-        if (strtoupper($cond[2]) === 'OR') {
+        $op = strtoupper($cond[2]);
+        if ($op === 'NOT') {
+            $cond_str = $this->makeCond($cond[0], $base_table);
+            $res_str = ' NOT (' . $cond_str . ') ';
+            return $res_str;
+        }
+        if ($op === 'OR' || $op === 'AND') {
             $parts = array();
             foreach ($cond[0] as $sub_cond) {
                 if (!isset($sub_cond[2])) {
@@ -531,7 +643,7 @@ abstract class Finder
             if (count($parts) == 0) {
                 return ' FALSE';
             }
-            return " (" . join(" OR ", $parts) . ") ";
+            return " (" . join(" ".$op." ", $parts) . ") ";
         }
         if (strtoupper($cond[2]) === 'RAW') {
             $field_name = $cond[0];
@@ -555,6 +667,13 @@ abstract class Finder
                 return $i instanceof Entity ? $i['id'] : (int)$i;
             })->unique()->getData();
         }
+        
+        if ( in_array($type, array('IN', 'NOT IN') )) {
+            if (is_scalar($value)) {
+                $type = $type === 'IN' ? '=' : '!=';
+            }
+        }
+        
         if (is_array($value)) {
             if (count($value) == 0) {
                 return 'FALSE';
@@ -591,12 +710,6 @@ abstract class Finder
         $objs = array();
         $non_scalar_fields = $this->getNonScalarFields();
         foreach ($res as $v) {
-            // don't forget serialized
-            foreach ($this->serialized as $serialized_field_name) {
-                if (isset($v[$serialized_field_name])) {
-                    $v[$serialized_field_name] = unserialize($v[$serialized_field_name]);
-                }
-            }
             // don't forget json decode
             foreach ($non_scalar_fields as $json_field_name) {
                 if (isset($v[$json_field_name])) {
@@ -647,7 +760,6 @@ abstract class Finder
 
     public function addRelated($rel_name, $entities, $rel_finder = null)
     {
-        
         $relations = $this->relations();
         if (!isset($relations[$rel_name])) {
             return;
@@ -660,7 +772,7 @@ abstract class Finder
         if (!$rel_finder) {
             $rel_finder = $this->getDefaultRelationFinder($rel);
         }
-
+        
         // e.g. $rel = array(fx_data::HAS_MANY, 'field', 'component_id');
         switch ($rel_type) {
             case self::BELONGS_TO:
@@ -733,34 +845,36 @@ abstract class Finder
             $this->addRelated($rel_name, $entities, $rel_finder);
         }
     }
-
-    public function __construct($table = null)
+    
+    public static function getTable()
     {
-        if (!$table) {
-            $class = get_class($this);
-            if ($class[0] == '\\') {
-                $class = substr($class, 1);
-            }
-
-            /**
-             * vendor.module.component - finder component - \Vendor\Module\Component\[Name]\Finder
-             * component - finder system component - \Floxim\Floxim\Component\[Name]\Finder
-             */
-            if (preg_match('#^Floxim\\\Floxim\\\Component\\\([\w]+)\\\Finder$#i', $class, $match)) {
-                // component
-                $table = fx::util()->camelToUnderscore($match[1]);
-            } elseif (preg_match('#^([\w]+)\\\([\w]+)\\\([\w]+)\\\Finder$#i', $class, $match)) {
-                // vendor_module_component
-                // todo: psr0 need verify
-                $table = strtolower($match[1]) . '_' . strtolower($match[2]) . '_' . strtolower($match[3]);
-            }
+        static $cache = array();
+        $class = get_called_class();
+        if (isset($cache[$class])) {
+            return $cache[$class];
         }
-        $this->table = $table;
+        $table = fx::util()->camelToUnderscore(substr($class, 24, -7));
+        $cache[$class] = $table;
+        return $table;
+    }
+    /*
+    public function getTable() {
+        return $this->table;
+    }
+    */
+    public function __construct()
+    {
+        /*
+        if (!$this->table) {
+            $this->table = static::getClassTable();
+        }
+         * 
+         */
     }
 
-    public function getTables()
+    public static function getTables()
     {
-        return array($this->table);
+        return array(static::getTable());
     }
 
     /**
@@ -798,6 +912,10 @@ abstract class Finder
      */
     public function getById($id)
     {
+        $stored = $this->getRegistry()->get($id);
+        if ($stored) {
+            return $stored;
+        }
         return $this->where('id', $id)->one();
     }
 
@@ -841,24 +959,37 @@ abstract class Finder
      */
     public function entity($data = array())
     {
+        /*
         if (static::isStaticCacheUsed() && isset($data['id'])) {
             $cached = static::getFromStaticCache($data['id']);
             if ($cached) {
                 return $cached;
             }
         }
-        
+        */
+        $registry = $this->getRegistry();
+        $id = isset($data['id']) ? $data['id'] : null;
+        if ( $id && ($obj = $registry->get($id)) ) {
+            return $obj;
+        }
         $classname = $this->getEntityClassName($data);
-        $obj = new $classname(array('data' => $data));
-        $this->addToStaticCache($obj);
+        
+        $obj = new $classname($data);
+        if ($id) {
+            $registry->register($obj, $id);
+        }
         return $obj;
+    }
+    
+    public function registerEntity($obj, $id) {
+        $this->getRegistry()->register($obj, $id);
     }
 
     public function insert($data)
     {
         $set = $this->setStatement($data);
         if ($set) {
-            fx::db()->query("INSERT INTO `{{" . $this->table . "}}` SET " . join(",", $set));
+            fx::db()->query("INSERT INTO `{{" . static::getTable() . "}}` SET " . join(",", $set));
             $id = fx::db()->insertId();
         }
 
@@ -876,7 +1007,7 @@ abstract class Finder
 
         if ($update) {
             fx::db()->query(
-                "UPDATE `{{" . $this->table . "}}` SET " . join(',', $update) . " " .
+                "UPDATE `{{" . static::getTable() . "}}` SET " . join(',', $update) . " " .
                 ($wh ? "\n WHERE " . join(' AND ', $wh) : "") . " "
             );
         }
@@ -902,7 +1033,7 @@ abstract class Finder
             $where = "\n WHERE " . join(" AND ", $where);
         }
 
-        fx::db()->getResults("DELETE FROM `{{" . $this->table . "}}`" . $where);
+        fx::db()->getResults("DELETE FROM `{{" . static::getTable() . "}}`" . $where);
     }
 
     public function getParent($item)
@@ -917,7 +1048,7 @@ abstract class Finder
 
     public function nextPriority()
     {
-        return fx::db()->getVar("SELECT MAX(`priority`)+1 FROM `{{" . $this->table . "}}`");
+        return fx::db()->getVar("SELECT MAX(`priority`)+1 FROM `{{" . static::getTable() . "}}`");
     }
 
     /**
@@ -933,7 +1064,7 @@ abstract class Finder
     protected function getColumns($table = null)
     {
         if (!$table) {
-            $table = $this->table;
+            $table = static::getTable();
         }
         $schema = fx::schema($table);
         return $schema ? array_keys($schema) : null;
@@ -952,15 +1083,13 @@ abstract class Finder
             if (!in_array($k, $cols)) {
                 continue;
             }
-            if (in_array($k, $this->serialized)) {
-                $v = serialize($v);
-            }
             if (in_array($k, $encoded_fields)) {
                 $v = json_encode($v);
             }
-            $str = "'" . fx::db()->escape($v) . "' ";
-            if (isset($this->sql_function[$k])) {
-                $str = $this->sql_function[$k] . "(" . $str . ")";
+            if ($v === null) {
+                $str = 'NULL';
+            } else {
+                $str = "'" . fx::db()->escape($v) . "' ";
             }
 
             $set[] = "`" . fx::db()->escape($k) . "` = " . $str;
@@ -996,7 +1125,8 @@ abstract class Finder
                     $class_name::$isStaticCacheUsed = true;
                     return $res;
                 },
-                static::$storeStaticCache ? 60 * 60 : false
+                //static::$storeStaticCache ? 60 * 60 : false
+                static::$storeStaticCache ? -1 : false
             );
         }
         return new Collection();
@@ -1107,5 +1237,145 @@ abstract class Finder
             $this->where('false');
         }
         return $this;
+    }
+    
+    public function moveAfter($what_id, $after_what_id, $params)
+    {
+        
+    }
+    
+    public function processCondition($cond) {
+        
+        $op_parts = explode(".", $cond['type']);
+        $op = $op_parts[0];
+        $op_type = isset($op_parts[1]) ? $op_parts[1] : 'value';
+        
+        if ( ($op === 'is_in' || $op === 'is_not_in') && $cond['real_field']) {
+            $cond['field'] = $cond['real_field'];
+        }
+        
+        if (isset($cond['field'])) {
+            $field_parts = explode(".", $cond['field'], 2);
+            $scope = $field_parts[0];
+            $field = isset($field_parts[1]) ? $field_parts[1] : null;
+            if ($scope !== 'entity') {
+                return;
+            }
+        }
+        $value = $cond['value'];
+        
+        
+        if ($op_type === 'context') {
+            $value = preg_replace("~^context\.~", '', $value);
+            $value = fx::env()->getContextProp($value);
+        } elseif ($op_type === 'expression') {
+            $value = fx::env()->getContextProp($value);
+        }
+        
+        $res = null;
+
+        switch ($op) {
+            case 'group':
+                $conds = array();
+                foreach ($cond['values'] as $val) {
+                    $conds []= self::processCondition($val);
+                }
+                $res = array(
+                    $conds,
+                    null,
+                    $cond['logic']
+                );
+                break;
+            case 'is_in':
+                if ($field === null) {
+                    $field = 'id';
+                }
+                if ($value instanceof \Floxim\Floxim\System\Entity) {
+                    $value = $value['id'];
+                }
+                $res = array(
+                    $field,
+                    $value,
+                    'IN'
+                );
+                break;
+            case 'is_true':
+                $res = array(
+                    $field,
+                    1,
+                    $value ? '=' : '!='
+                );
+                break;
+            case 'contains':
+                $res = array(
+                    $field,
+                    '%'.$value.'%',
+                    'LIKE'
+                );
+                break;
+            case 'less':
+                $res = array(
+                    $field,
+                    $value,
+                    '<'
+                );
+                break;
+            case 'greater':
+                $res = array(
+                    $field,
+                    $value,
+                    '>'
+                );
+                break;
+            case 'equals':
+                $res = array(
+                    $field,
+                    $value,
+                    '='
+                );
+                break;
+            case 'has_type':
+                fx::cdebug($value);
+                
+                //$res = $this->conditionIs($value);
+                break;
+            case 'has':
+                $res = array(
+                    array(
+                        array($field, '', $value ? '!=' : '='),
+                        array($field, null, $value ? 'IS NOT NULL' : 'IS NULL'),
+                    ),
+                    null,
+                    $value ? 'AND' : 'OR'
+                );
+                break;
+            default:
+                $method = 'processCondition'. fx::util()->underscoreToCamel($op);
+                if (method_exists($this, $method)) {
+                    $res = $this->$method($field, $value);
+                }
+                break;
+        }
+        if (isset($cond['inverted']) && $cond['inverted']) {
+            $res = array($res, null, 'NOT');
+        }
+        fx::cdebug($res, $cond);
+        return $res;
+    }
+    
+    public function applyConditions($conds) {
+        if ($conds['type'] === 'group' && $conds['logic'] === 'AND') {
+            foreach ($conds['values'] as $cond) {
+                $this->where( $this->processCondition($cond) );
+            }
+            return $this;
+        }
+        $this->where( $this->processCondition($conds));
+        return $this;
+    }
+    
+    public function conditionIs($type)
+    {
+        return array($type === self::getKeyword());
     }
 }

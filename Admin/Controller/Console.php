@@ -36,6 +36,7 @@ class Console extends Admin
         $lines = explode("\n", $code);
         foreach ($lines as &$line) {
             if (preg_match("~^\s*>~", $line)) {
+                $line = preg_replace("~[\r]~", '', $line);
                 $line = preg_replace("~^\s*>~", 'fx::debug(', $line);
                 $line = preg_replace("~;\s*$~", '', $line);
                 $line .= ');';

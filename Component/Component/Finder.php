@@ -170,6 +170,9 @@ class Finder extends System\Finder
         // get all components
         $collection = parent::loadFullDataForCache();
         
+        // load all fields with all children
+        fx::data('field')->with('child_fields')->all();
+        
         fx::registerComponents($collection);
         
         // set it as current finder cache
@@ -188,7 +191,5 @@ class Finder extends System\Finder
     public static function dropStoredStaticCache()
     {
         parent::dropStoredStaticCache();
-        fx::cache('meta')->delete('schema');
     }
-
 }

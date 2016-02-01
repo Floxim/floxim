@@ -103,7 +103,6 @@ class Infoblock extends Admin
                 $result['actions'] []= $action;
             }
         }
-        //fx::log($result);
         return $result;
     }
     
@@ -211,96 +210,6 @@ class Infoblock extends Admin
             'values' => $blocks
         );
         
-
-        /*
-        $controllers = fx::data('component')->all();
-        
-        $controllers->concat(fx::data('widget')->all());
-        
-        
-        
-        foreach ($controllers as $c) {
-            
-            if (fx::config()->isBlockDisabled($c['keyword'])) {
-                continue;
-            }
-            
-            $controller_type = $c instanceof Component\Entity ? 'component' : 'widget';
-            // todo: psr0 need verify
-            $controller_name = $c['keyword'];
-            $c_item = array(
-                'data'     => $c['name'],
-                'metadata' => array('id' => $controller_name),
-                'children' => array()
-            );
-            $ctrl = fx::controller($controller_name);
-            $actions = $ctrl->getActions();
-            foreach ($actions as $action_code => $action_info) {
-                $action_info = array_merge(array(
-                        'icon'=>'',
-                        'icon_extra' => '',
-                        'description' => ''
-                    ), $action_info
-                );
-                // do not show actions starting with "_"
-                if (preg_match("~^_~", $action_code)) {
-                    continue;
-                }
-                
-                if (fx::config()->isBlockDisabled($c['keyword'], $action_code)) {
-                    continue;
-                }
-                
-                if (isset($action_info['check_context'])) {
-                    $is_avail = call_user_func($action_info['check_context'], $page);
-                    if (!$is_avail) {
-                        continue;
-                    }
-                }
-                
-                $act_ctr = fx::controller($controller_name . ':' . $action_code);
-                $act_templates = $act_ctr->getAvailableTemplates(fx::env('layout'), $area_meta);
-                if (count($act_templates) == 0) {
-                    continue;
-                }
-                if (!isset($action_info['name'])) {
-                    $action_info['name'] = $c['name'];
-                }
-
-                $action_name = $action_info['name'];
-                switch ($controller_type) {
-                    case 'widget':
-                        $action_type = 'widget';
-                        break;
-                    case 'component':
-                        if (preg_match('~^list_(selected|filter)~', $action_code)) {
-                            $action_type = 'mirror';
-                        } elseif (preg_match('~^list_infoblock~', $action_code)) {
-                            $action_type = 'content';
-                        } else {
-                            $action_type = 'widget';
-                        }
-                        break;
-                }
-                
-                $c_item['children'][] = array(
-                    'data'     => $action_name,
-                    'metadata' => array(
-                        // todo: psr0 need verify
-                        'id'          => $c['keyword'] . ':' . $action_code,
-                        'description' => $action_info['description'],
-                        'type'        => $action_type,
-                        'icon'        => $action_info['icon'],
-                        'icon_extra'  => $action_info['icon_extra'],
-                    )
-                );
-            }
-            if (count($c_item['children']) > 0) {
-                $fields['controller']['values'][] = $c_item;
-            }
-        }
-        */
-        
         $this->response->addFormButton('cancel');
         
         $result = array(
@@ -405,7 +314,7 @@ class Infoblock extends Admin
                 'label' => fx::alang('Block name', 'system'),
                 'name'  => 'name',
                 'value' => $infoblock['name'],
-                'tip'   => $infoblock['controller'] . '.' . $infoblock['action'],
+                'tip'   => $infoblock['controller'] . '.' . $infoblock['action'] . ' | '. ($infoblock['id'] ? $infoblock['id'] : 'new'),
                 'tab' => 'settings'
             )
         ));
@@ -432,6 +341,19 @@ class Infoblock extends Admin
         );
 
         if (isset($input['settings_sent']) && $input['settings_sent'] == 'true') {
+            $scope_data = $input['scope'];
+            fx::log($input, $scope_data);
+            $infoblock['scope_type'] = $scope_data['type'];
+            if ($scope_data['type'] === 'custom') {
+                $scope_params = json_decode($scope_data['params'], true);
+                if (isset($scope_params['id']) && is_numeric($scope_params['id']) ) {
+                    $scope = fx::data('scope', (int) $scope_params['id']);
+                } else {
+                    $scope = fx::data('scope')->create();
+                }
+                $scope['conditions'] = $scope_params['conditions'];
+                $infoblock['scope_entity'] = $scope;
+            }
             $infoblock['name'] = $input['name'];
             $action_params = array();
             if ($settings && is_array($settings)) {
@@ -636,7 +558,7 @@ class Infoblock extends Admin
         $old_layout = $visual['template'];
         $new_layout = $input['visual']['template'];
 
-        $c_page = fx::data('page', $input['page_id']);
+        $c_page = fx::data('floxim.main.page', $input['page_id']);
 
         if ($old_layout == $new_layout && $old_scope == $new_scope) {
             return;
@@ -695,6 +617,29 @@ class Infoblock extends Admin
             $visual->save();
         }
     }
+    
+    protected function getScopeFields(CompInfoblock\Entity $infoblock, \Floxim\Main\Content\Entity $c_page)
+    {
+        $fields = array(
+            array(
+                'type'   => 'livesearch',
+                'label'  => fx::alang('Scope'),
+                'name'   => 'type',
+                'values' => array(
+                    array('one_page', 'Только эта страница'),
+                    array('all_pages', 'Все страницы'),
+                    array('custom', 'Настроить...')
+                ),
+                'value'  => $infoblock['scope_type'] ? $infoblock['scope_type'] : 'one_page'
+            ),
+            array(
+                'type' => 'hidden',
+                'name' => 'params'
+            )
+        );
+        return $fields;
+        
+    }
 
     /*
      * Receipt of the form fields tab "Where show"
@@ -702,7 +647,7 @@ class Infoblock extends Admin
      * @param fx_content_page $c_page - page, where he opened the window settings
      */
 
-    protected function getScopeFields(CompInfoblock\Entity $infoblock, \Floxim\Main\Content\Entity $c_page)
+    protected function _getScopeFields(CompInfoblock\Entity $infoblock, \Floxim\Main\Content\Entity $c_page)
     {
 
         $fields = array();
@@ -711,7 +656,7 @@ class Infoblock extends Admin
 
         //$path_ids = $c_page->getParentIds();
         $path_ids = $c_page->getPath()->getValues('id');
-        $path = fx::data('page', $path_ids);
+        $path = fx::data('floxim.main.page', $path_ids);
         if (!$path->findOne('id', $c_page['id'])) {
             $path [] = $c_page;
         }
@@ -857,7 +802,7 @@ class Infoblock extends Admin
         $wrappers = array();
         $c_wrapper = '';
         if (!$force_wrapper) {
-            $wrappers[''] = fx::alang('With no wrapper', 'system');
+            $wrappers[]= array('', '-', array('title' => fx::alang('With no wrapper', 'system')));
             if ($i2l['id'] || !$default_wrapper) {
                 $c_wrapper = $i2l['wrapper'];
             } else {
@@ -869,10 +814,11 @@ class Infoblock extends Admin
         $layout_tpl = fx::template('theme.' . $layout_name);
         if ($layout_tpl) {
             $avail_wrappers = \Floxim\Floxim\Template\Suitable::getAvailableWrappers($layout_tpl, $area_meta);
+            $cnt = 0;
             foreach ($avail_wrappers as $avail_wrapper) {
-                $wrappers[$avail_wrapper['full_id']] = $avail_wrapper['name'];
+                $cnt++;
+                $wrappers[]= array($avail_wrapper['full_id'], $cnt,  array('title' => $avail_wrapper['name']));
             }
-            //$wrappers = array_merge($wrappers, $avail_wrappers);
         }
 
         // Collect the available templates
@@ -903,7 +849,7 @@ class Infoblock extends Admin
             $fields [] = array(
                 'label'     => fx::alang('Wrapper', 'system'),
                 'name'      => 'wrapper',
-                'type'      => 'select',
+                'type'      => 'radio_facet',
                 //'join_with' => 'template',
                 'values'    => $wrappers,
                 'value'     => $c_wrapper
@@ -1154,7 +1100,7 @@ class Infoblock extends Admin
                 
                 
                 $ids = $ib_content->getValues('id');
-                $nested_query = fx::data('content')
+                $nested_query = fx::data('floxim.main.content')
                     ->descendantsOf($ids, false)
                     ->group('type')
                     ->select('type')
@@ -1303,5 +1249,48 @@ class Infoblock extends Admin
             WHERE id = '" . $vis['id'] . "'");
 
         return array('status' => 'ok');
+    }
+    
+    public function scope($input) 
+    {
+        fx::log($input);
+        if (isset($input['params']) && isset($input['params'][0])) {
+            $input['infoblock_id'] = $input['params'][0];
+        }
+        if (isset($input['infoblock_id'])) {
+            $ib = fx::data('infoblock', $input['infoblock_id']);
+            $scope = $ib['scope_entity'];
+        } else {
+            $scope = fx::data('scope')->create();
+        }
+        $fields = array();
+        
+        $fields []= array(
+            'name' => 'scope[id]',
+            'type' => 'hidden',
+            'value' => $scope['id']
+        );
+        
+        $fields []= array(
+            'name' => 'scope[conditions]',
+            'type' => 'condition',
+            'fields' => array(
+                fx::component('floxim.main.page')->getFieldForFilter('entity')
+            ),
+            'value' => $scope['conditions'],
+            'label' => false
+        );
+        
+        $q_field = array(
+            'type' => 'radio_facet',
+            'label' => 'quick select',
+            'values' => fx::env()->getPath()->getValues(function($v) {
+                return array($v['id'], $v->getName());
+            })
+        );
+        
+        return array(
+            'fields' => $fields
+        );
     }
 }

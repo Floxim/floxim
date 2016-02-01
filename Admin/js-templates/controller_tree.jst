@@ -216,28 +216,3 @@ fx_controller_tree(html);
         </div>
     </div>
 </div>
-
-<!--[input ? _c.type =='select' && _c.name == 'visual[wrapper]']-->
-<div class="visual_wrapper">
-    <input type="hidden" <?=$t.field_id_name(_c)?> value="<?=_c.value?>" />
-    <?
-        var cnt = 0;
-        $.each(_c.values, function(i, v) {
-            ?><span 
-                class="variant<?=i === _c.value ? ' active' : ''?>" 
-                data-value="<?=i?>" title="<?=i?>"><?=i === '' ? '-' : cnt?></span><?
-            cnt++;
-        });
-    ?>
-</div>
-
-<!--jquery-->
-
-html.on('click', '.variant', function() {
-    $('.variant', html).removeClass('active');
-    $(this).addClass('active');
-    $('input[type="hidden"]',html).val($(this).data('value')).trigger('change');
-});
-
-<!--priority-->
-2

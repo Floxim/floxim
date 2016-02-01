@@ -29,7 +29,7 @@ class Entity extends System\Entity
 
     protected function deleteContent()
     {
-        $content = fx::data('content')->where('site_id', $this['id'])->all();
+        $content = fx::data('floxim.main.content')->where('site_id', $this['id'])->all();
         foreach ($content as $content_item) {
             $content_item->delete();
         }

@@ -93,7 +93,6 @@ class Manager
             $site_id = fx::env('site_id');
         }
         // @todo check if url contains another host name
-        $url = preg_replace("~^https?://.+?/~", '/', $url);
         foreach ($this->routers as $rk => $r) {
             $result = $r['router']->getPath($url, $site_id);
             if ($result) {

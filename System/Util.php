@@ -654,4 +654,34 @@ class Util
         $s = html_entity_decode($s, ENT_COMPAT | ENT_HTML401, 'utf-8');
         return $s;
     }
+    
+    public function toArray($what, &$index = array(), $path = '') 
+    {
+        
+        if (is_scalar($what)) {
+            throw new \Exception('Can not convert scalar value to array');
+        }
+        $res = array();
+        if (is_object($what)) {
+            $found_keys = array_keys($index, $what);
+            if (count($found_keys) > 0) {
+                return '@@'.$found_keys[0];
+            }
+            //$obj_index = count($index);
+            $obj_index = $path;
+            $index [$obj_index]= $what;
+            if ($what instanceof \Floxim\Floxim\System\Collection) {
+                $what = $what->getData();
+            } elseif ($what instanceof \Floxim\Floxim\System\Entity){
+                $what = $what->get();
+            }
+            $what['@@index'] = $obj_index;
+        }
+        if (is_array($what)) {
+            foreach ($what as $k => $v) {
+                $res[$k] = is_scalar($v) ? $v : $this->toArray($v, $index, $path.'/'.$k);
+            }
+        }
+        return $res;
+    }
 }

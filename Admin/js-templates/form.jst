@@ -1,5 +1,15 @@
 <!--[form_row]-->
-<div class="field field_<?=_c.type?><?=_c.class_name ? ' '+_c.class_name : ''?> field_name__<?=_c.id || _c.name?>">
+<?
+var c_class = 'field field_'+_c.type;
+if (_c.class_name) {
+    c_class += ' '+_c.class_name;
+}
+c_class += ' field_name__'+(_c.id || _c.name);
+if (_c.lock_edit) {
+    c_class += ' fx_field_is_locked';
+}
+?>
+<div class="<?= c_class ?>">
     <?if (_c.type !== 'raw') {?>
         <?=$t.label(_c)?>
     <?}?>
@@ -9,12 +19,25 @@
 <!--jquery-->
 $('.input_container', html).append($t.jQuery('input', _c));
 
-<!--[form_row ? ( (_c.type == 'checkbox' && typeof _c.values == 'undefined') || _c.type == 'bool' ) && _c.context !== 'panel']-->
-<div class="field field_checkbox <?= _c.class_name ? ' field_class_'+_c.class_name : ''?> field_name__<?=_c.name?>">
+<!--[form_row ? ( (_c.type == 'checkbox' && typeof _c.values == 'undefined') || _c.type == 'bool' ) && _c.view_context !== 'panel']-->
+<?
+var c_class = 'field field_checkbox';
+if (_c.class_name) {
+    c_class += ' field_class_'+_c.class_name;
+}
+c_class += ' field_name__'+(_c.id || _c.name);
+if (_c.lock_edit) {
+    c_class += ' fx_field_is_locked';
+}
+if (!_c.id) {
+    _c.id = 'checkbox_'+Math.round(Math.random() * 10000);
+}
+?>
+<div class="<?= c_class ?>">
     <? _c.skip_label = true; ?>
     <?=$t.input(_c)?>
     <? if (_c.class !== 'toggler') {?>
-    <label style="display:inline;" for="<?=_c.name?>"><?=_c.label?></label>
+    <label style="display:inline;" for="<?= _c.name || _c.id ?>"><?=_c.label?></label>
     <? } ?>
 </div>
 
@@ -45,12 +68,14 @@ print('data-', (_o && _o.key != undefined ? _o.key : 'inline'),	 '="', $t.clear(
 ?>
 
 <!--[label]-->
+<? if (_c.label !== false && _c.label !== '') { ?>
 <div class="form_label">
     <label for="<?=_c.name?>" title="<?=_c.tip?>"><?=_c.label?></label>
     <?if (_c.current) {?>
         <span class="fx_admin_current"> (<?=$fx.lang('by default')?> &mdash; <?=_c.current?>)</span>
     <?}?>
 </div>
+<? } ?>
 
 <!--[field_label]-->
 <label class="<?=_c.status ? 'ui-corner-all ui-state-'+_c.status : ''?>">
@@ -58,7 +83,7 @@ print('data-', (_o && _o.key != undefined ? _o.key : 'inline'),	 '="', $t.clear(
 </label>
 
 <!--[field_id_name]-->
-name="<?=_c.name?>" id="<?=_c.name?>"
+name="<?=_c.name?>" id="<?=_c.name || _c.id?>"
 
 <!--[input]-->
 	<input 
@@ -82,19 +107,12 @@ var c_val = _c.value || '';
 c_val = $t.clear(c_val);
 ?>
 <div class="fx_textarea_container">
-<?
-_o.hide_in_panel = _c.context == 'panel' && _c.wysiwyg;
-if (_o.hide_in_panel) {
-    ?><a class="fx_panel_text_expander" title="Click here to edit">...</a><?
-}
-?>
 <textarea 
     <?=$t.field_id_name(_c)?>
     class="<?=
         _c.wysiwyg ? 'fx_wysiwyg redactor_editor_styled ' : 'fx_input'
         ?> <?=
         _c.code ? 'fx_code fx_code_'+_c.code : ''?>"
-    <?if (_o.hide_in_panel) {?> style="display:none;"<?}?>
         ><?=c_val?></textarea>
 </div>
 
@@ -110,7 +128,7 @@ if (_o.hide_in_panel) {
     set_snippet(_c.value);
 }
 
-if (_c.context !== 'panel') {
+if (_c.view_context !== 'panel') {
     setTimeout(function() {
         $fx_fields.make_redactor(
             $('textarea.fx_wysiwyg', html), 
@@ -125,6 +143,9 @@ if (_c.context !== 'panel') {
         $toolbar.attr('style', '');
             
         $editor.on('focus', function() {
+            if ($container.closest('#fx_admin_control').length === 0) {
+                return;
+            }
             $container.addClass('fx_textarea_container_redactor_focused').css('height', '');
             var $buttons = $toolbar.find('>li');
             var toolbar_width = $buttons.length * $buttons.first().outerWidth();
@@ -225,6 +246,7 @@ html.find('textarea.fx_code').each( function(){
     id="<?=_c.id? _c.id : _c.name?>"
     name="<?=_c.name+(_c.multiple? '[]' : '')?>"
     class="fx_input<?=_c.inline ? ' inline' : ''?> <?=_c.extendable ? ' extendable' : ''?>"
+    <?= _c.disabled ? ' disabled="disabled" ' : ''?>
     <?=_c.multiple ? ' multiple="multiple"' : ''?>>
     <?
     if (_c.values instanceof Array) {
@@ -255,10 +277,20 @@ html.find('textarea.fx_code').each( function(){
 <div class="fx_admin_group">
     <?
     var i = 0;
-    for (var vk in _c.values) {
-        if (typeof _c.values[vk] == 'string') {
-            i++;
-            var is_checked = (_c.value && _c.value == vk) || (!_c.value && _c.selected_first && i == 1);?>
+    if (! (_c.values instanceof Array) ) {
+        var values = [];
+        for (var vk in _c.values) {
+            values.push([vk, _c.values[vk]]);
+        }
+    } else {
+        values = _c.values;
+    }
+    var c_value = _c.value || _c.default;
+    for (var i = 0; i < values.length; i++) {
+        var vk = values[i][0],
+            vv = values[i][1],
+            is_checked = (c_value == vk) || (!c_value && _c.selected_first && i == 1);
+        ?>
             <label class="fx_admin_radio_label">
                 <input 
                     type="radio" 
@@ -266,19 +298,23 @@ html.find('textarea.fx_code').each( function(){
                     id="<?=_c.name+'_'+vk?>"
                     name="<?=_c.name?>"
                     <?=is_checked  ? ' checked="checked"' : ''?>>
-                    <?=_c.values[vk]?>
+                    <?=vv?>
             </label>
         <?
-        }
     }?>
 </div>
 
 <!--[input ? (_c.type == 'checkbox' && typeof _c.values == 'undefined') || _c.type == 'bool']-->
 <input type="hidden" name="<?=_c.name?>" value="0">
-<input type="checkbox" style="display:inline;" <?=$t.field_id_name(_c)?> value="1" <?=_c.value && _c.value !== '0' ? ' checked="checked"' : ''?> />
+<input 
+    type="checkbox"
+    style="display:inline;" 
+    <?=$t.field_id_name(_c)?> 
+    value="1" <?=_c.value && _c.value !== '0' ? ' checked="checked"' : ''?> 
+    <?= _c.disabled ? ' disabled="disabled" ' : '' ?> />
 <?
 if (!_c.skip_label) {
-    ?><label for="<?=_c.name?>"></label><? 
+    ?><label for="<?=_c.id?>"></label><? 
 } 
 ?>
 
@@ -424,7 +460,8 @@ $labels.on('click', function() {
 var $containers = html.find('.fx_group_input');
 
 $.each(_c.fields, function(index, item) {
-    var $input_node = $t.jQuery('form_row', item);
+    //var $input_node = $t.jQuery('form_row', item);
+    var $input_node = $fx_fields.row(item);
     item.$input = $input_node;
     $containers.eq(index).append($input_node );
 });
@@ -495,3 +532,9 @@ html.on('change', '.fx_limit_all', function() {
 
 <!--[input ? _c.type == 'raw']-->
 <div class="field_raw__value field_raw__name-<?=_c.name?>"><?= _c.value ?></div>
+
+<!--[input ? _c.type == 'condition']-->
+<div></div>
+
+<!--jquery-->
+new conditions_builder( $.extend({}, _c, {$node: html}) );

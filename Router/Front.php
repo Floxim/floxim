@@ -17,7 +17,6 @@ class Front extends Base
             $path = $url;
             $url = $path->last()->get('url');
         } else {
-            $url = preg_replace("~^/~", '', $url);
             $path = $this->getPath($url, $context['site_id']);
             if (!$path) {
                 return;
@@ -28,18 +27,11 @@ class Front extends Base
         
         if (!$page) {
             return null;
-        } else {
-            $url = preg_replace("~\?.+$~", '', $url);
-            if (
-                $url && !$page->hasVirtualPath() && urldecode($url) != $page['url'] && $page['url'] !== '404/'
-            ) {
-                fx::http()->redirect($page['url'], 301);
-                fx::debug($url, '!=', $page['url']);
-                die();
-            }
         }
         
-        
+        /**
+         * @todo: check if the URL is canonical and add <link rel="canonical" /> to header if required
+         */
         
         fx::env('page', $page);
         fx::http()->status('200');
@@ -53,8 +45,16 @@ class Front extends Base
         return $res;
     }
     
+    public function normalizeUrl($url)
+    {
+        //$url = preg_replace("~^/~", '', $url);
+        $url = urldecode($url);
+        return $url;
+    }
+    
     public function getPath($url, $site_id) {
-        $page = fx::data('page')->getByUrl(urldecode($url), $site_id);
+        $url = $this->normalizeUrl($url);
+        $page = fx::data('floxim.main.page')->getByUrl($url, $site_id);
         if (!$page) {
             return false;
         }
@@ -73,7 +73,7 @@ class Front extends Base
             return $this->_ib_cache[$cache_key];
         }
 
-        $c_page = $page_id === fx::env('page_id') ? fx::env('page') : fx::data('page', $page_id);
+        $c_page = $page_id === fx::env('page_id') ? fx::env('page') : fx::data('floxim.main.page', $page_id);
         
         $infoblocks = fx::data('infoblock')
             ->getForPage($c_page)

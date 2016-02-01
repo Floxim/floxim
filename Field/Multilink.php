@@ -6,7 +6,7 @@ use Floxim\Floxim\System;
 use Floxim\Floxim\Component\Field;
 use Floxim\Floxim\System\Fx as fx;
 
-class Multilink extends Baze
+class Multilink extends \Floxim\Floxim\Component\Field\Entity
 {
     public function getSqlType()
     {
@@ -15,23 +15,23 @@ class Multilink extends Baze
 
     public function getJsField($content)
     {
-        parent::getJsField($content);
+        $res = parent::getJsField($content);
         $render_type = $this['format']['render_type'];
         if ($render_type == 'livesearch') {
-            $this->_js_field['type'] = 'livesearch';
-            $this->_js_field['is_multiple'] = true;
-            $this->_js_field['params'] = array(
+            $res['type'] = 'livesearch';
+            $res['is_multiple'] = true;
+            $res['params'] = array(
                 'content_type' => $this->getEndDataType()
             );
             $rel = $this->getRelation();
             $related_relation = fx::data($rel[1])->relations();
             $linker_field = $related_relation[$rel[3]][2];
-            $this->_js_field['name_postfix'] = $linker_field;
+            $res['name_postfix'] = $linker_field;
             if (isset($content[$this['keyword']])) {
-                $this->_js_field['value'] = array();
+                $res['value'] = array();
                 $linkers = $content[$this['keyword']]->linkers;
                 foreach ($content[$this['keyword']] as $num => $v) {
-                    $this->_js_field['value'] [] = array(
+                    $res['value'] [] = array(
                         'id'       => $v['id'],
                         'name'     => $v['name'],
                         'value_id' => $linkers[$num]['id']
@@ -42,8 +42,8 @@ class Multilink extends Baze
             $rel = $this->getRelation();
             $entity = fx::data($rel[1])->create();
             $entity_fields = $entity->getFormFields();
-            $this->_js_field['tpl'] = array();
-            $this->_js_field['labels'] = array();
+            $res['tpl'] = array();
+            $res['labels'] = array();
 
             foreach ($entity_fields as $ef) {
                 if ($ef['name'] == $rel[2]) {
@@ -53,10 +53,10 @@ class Multilink extends Baze
                 if ($ef['name'] == 'is_published') {
                     continue;
                 }
-                $this->_js_field['tpl'] [] = $ef;
-                $this->_js_field['labels'] [] = $ef['label'];
+                $res['tpl'] [] = $ef;
+                $res['labels'] [] = $ef['label'];
             }
-            $this->_js_field['values'] = array();
+            $res['values'] = array();
             if (isset($content[$this['keyword']])) {
                 if ($rel[0] === System\Finder::HAS_MANY) {
                     $linkers = $content[$this['keyword']];
@@ -78,16 +78,77 @@ class Multilink extends Baze
                         // form field has "name" prop instead of "keyword"
                         $val_array [$lf['name']] = $lf['value'];
                     }
-                    $this->_js_field['values'] [] = $val_array;
+                    $res['values'] [] = $val_array;
                 }
             }
-            $this->_js_field['type'] = 'set';
+            $res['type'] = 'set';
         }
-        return $this->_js_field;
+        return $res;
     }
 
     public function formatSettings()
     {
+        $fields = array();
+        $com = $this['component'];
+        $com_variant_ids = $com->getChain()->getValues('id');
+
+        $field_filters = array();
+        $avail_coms = array();
+
+        $linking_fields = fx::data('field')
+            ->where('type', 'link')
+            ->whereIsNull('parent_field_id')
+            ->all();
+
+        $linking_field_values = array();
+        
+        foreach ($linking_fields as $f) {
+            $target_id = (int) $f['format']['target'];
+            if (!in_array($target_id, $com_variant_ids)) {
+                continue;
+            }
+            $owner_variant_ids = $f['component']->getAllVariants()->getValues('id');
+            $field_filters[$f['id']] = array(array('format[linking_component_id]', $owner_variant_ids));
+            $avail_coms = array_merge($avail_coms, $owner_variant_ids);
+            $linking_field_values []= array($f['id'], $f['component']['name'].' &rarr; '.$f['name']);
+        }
+        $avail_coms = array_flip(array_unique($avail_coms));
+        
+        foreach ($field_filters as $field_id => $field_filter) {
+            if (count($avail_coms) === count($field_filter[0][1])) {
+                unset($field_filters[$field_id]);
+            }
+        }
+
+        $all_coms = fx::collection(fx::data('component')->getSelectValues());
+        
+        $com_values = $all_coms
+            ->findRemove(
+                function($e) use ($avail_coms) {
+                    return !isset($avail_coms[$e[0]]);
+                }
+            )
+            ->getData();
+
+        $fields[]= array(
+            'name' => 'linking_component_id',
+            'label' => 'Тип связанных объектов',
+            'type' => 'livesearch',
+            'values' => $com_values
+        );
+
+        $fields[]= array(
+            'name' => 'linking_field_id',
+            'label' => 'Ссылающееся поле',
+            'type' => 'livesearch',
+            'parent' => array('format[linking_component_id]'),
+            'values' => $linking_field_values,
+            'values_filter' => $field_filters
+        );
+
+        return $fields;
+        
+        
         $fields = array();
 
         if (!$this['component_id']) {
@@ -97,8 +158,10 @@ class Multilink extends Baze
         $com = fx::data('component', $this['component_id']);
         $chain = $com->getChain();
         $chain_ids = $chain->getValues('id');
-        $link_fields = fx::data('field')->where('type', Field\Entity::FIELD_LINK)->where('component_id', 0,
-            '!=')->all();
+        $link_fields = fx::data('field')
+            ->where('type', 'link')
+            ->where('component_id', 0, '!=')
+            ->all();
 
         // select from the available fields-links
         $linking_field_values = array();
@@ -135,8 +198,10 @@ class Multilink extends Baze
 
                     // For links many_many relations
                     // get the field-component links that point to other components
-                    $linking_component_links = $linking_component->getAllFields()->find('type',
-                        Field\Entity::FIELD_LINK)->find('id', $lf['id'], '!=');
+                    $linking_component_links = $linking_component
+                            ->getAllFields()
+                            ->find('type', 'link')
+                            ->find('id', $lf['id'], '!=');
 
                     // exclude fields, connected to the parent
                     if ($lf['format']['is_parent']) {
@@ -352,7 +417,6 @@ class Multilink extends Baze
             $new_value[] = $linker_item[$linker_prop_name];
             $new_value->linkers [] = $linker_item;
         }
-        fx::log($content, $new_value);
         return $new_value;
     }
 
@@ -404,11 +468,8 @@ class Multilink extends Baze
             return $relation[4];
         }
     }
-
-    /*
-     * Get the referenced component field
-     */
-    public function getRelatedComponent()
+    
+    public function getTargetName()
     {
         $rel = $this->getRelation();
         switch ($rel[0]) {
@@ -419,6 +480,26 @@ class Multilink extends Baze
                 $content_type = $rel[4];
                 break;
         }
+        return $content_type;
+    }
+    
+    public function getTargetFinder($content)
+    {
+        $target_com = $this->getTargetName();
+        $finder = fx::data($target_com);
+        $method_name = 'getRelationFinder'. fx::util()->underscoreToCamel($this['keyword']);
+        if (method_exists($content, $method_name)) {
+            $finder = call_user_func(array($content, $method_name), $finder);
+        }
+        return $finder;
+    }
+
+    /*
+     * Get the referenced component field
+     */
+    public function getRelatedComponent()
+    {
+        $content_type = $this->getTargetName();
         return fx::data('component', $content_type);
     }
 
@@ -450,9 +531,14 @@ class Multilink extends Baze
             System\Finder::MANY_MANY,
             $first_type,
             $direct_target_field['keyword'],
-            $end_target_field->getPropName(),
+            $end_target_field->getPropertyName(),
             $end_type,
             $end_target_field['keyword']
         );
+    }
+    
+    public function getPropertyName()
+    {
+        return $this['keyword'];
     }
 }

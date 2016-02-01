@@ -69,7 +69,7 @@ class Layout extends System\Controller
         if ($this->_layout) {
             return $this->_layout;
         }
-        $page = fx::data('page', $this->getParam('page_id'));
+        $page = fx::data('floxim.main.page', $this->getParam('page_id'));
         if ($page['layout_id']) {
             $layout_id = $page['layout_id'];
         } else {

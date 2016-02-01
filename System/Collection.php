@@ -861,6 +861,10 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
 
     public function offsetExists($offset)
     {
+        if (!is_scalar($offset)) {
+            //fx::log($offset, fx::debug()->backtrace());
+            return false;
+        }
         return array_key_exists($offset, $this->data);
     }
 
@@ -871,6 +875,13 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
 
     public function offsetGet($offset)
     {
+        return isset($this->data[$offset]) ? $this->data[$offset] : null;
+    }
+    
+    public function get($offset) {
+        if (!is_scalar($offset)) {
+            fx::log('nuups', $offset, fx::debug()->backtrace());
+        }
         return isset($this->data[$offset]) ? $this->data[$offset] : null;
     }
 }

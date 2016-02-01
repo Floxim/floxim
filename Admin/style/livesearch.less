@@ -178,6 +178,7 @@
         box-shadow: none;
         height: 27px;
         min-width: 30px;
+        background:transparent;
     }
 }
 
@@ -193,7 +194,8 @@
 
 .monosearch {
     &__container {
-        padding:5px;
+        //padding:5px;
+        padding:4px 5px 3px 5px;
         padding-right:30px;
         cursor:text;
     }
@@ -203,19 +205,39 @@
     }
     
     &__input, &__item-title {
-        //height: 25px;
+        background:transparent;
         padding: 5px 7px;
         display: inline-block;
         font-size: 14px;
         line-height:100%;
-        max-width:300px;
+        max-width:600px;
         overflow: hidden;
+    }
+    
+    &__item-title {
+        padding-top:6px;
+        padding-bottom:6px;
+        line-height:15px;
+        white-space:nowrap;
+    }
+    
+    &__item-path {
+        vertical-align: top;
+        display: inline-block;
+        padding-top: 6px;
+        padding-bottom: 6px;
+        line-height: 15px;
+        white-space: nowrap;
+        font-size: 11px;
+        color: #666;
     }
     
     &__input {
         display: block;
-        width: 100%;
+        //width: 100%;
         border: none;
+        //padding-top:4px;
+        padding-top:5px;
         &, &:focus {
             outline: 0;
             -webkit-box-shadow: none;
@@ -252,18 +274,55 @@
     box-shadow: 1px 1px 15px rgba(0,0,0,0.3);
     display: none;
     max-height: 300px;
-    min-width:150px;
-    max-width: 500px;
+    min-width:260px;
+    max-width: 700px;
     overflow: auto;
     z-index: 88889;
-    div {
+    .search_item {
         cursor: pointer;
         color: #000;
         font-size: 14px;
         padding:6px 8px;
     }
+    
+    .search_group_collapsed {
+        & > .search_group_children {
+            display:none;
+        }
+    }
+    .search_group_children {
+        //padding-left:20px;
+    }
     .search_item_active {
         background: #f2f5ff;
         color:@button_color;
+    }
+    .search_item_disabled {
+        color:#999; 
+    }
+    .search_item_level {
+        &_1 {
+            padding-left:25px;
+        }
+        &_2 {
+            padding-left:50px;
+        }
+        &_3 {
+            padding-left:75px;
+        }
+        &_4 {
+            padding-left:100px;
+        }
+    }
+    
+    .search_group_toggler {
+        color:#AAA;
+        font-size:12px;
+        display:inline-block;
+        margin-left:5px;
+        padding:0 5px;
+        &:hover {
+            color:@button_color;
+        }
     }
 }
