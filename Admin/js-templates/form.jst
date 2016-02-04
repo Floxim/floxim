@@ -314,7 +314,7 @@ html.find('textarea.fx_code').each( function(){
     <?= _c.disabled ? ' disabled="disabled" ' : '' ?> />
 <?
 if (!_c.skip_label) {
-    ?><label for="<?=_c.id?>"></label><? 
+    ?><label for="<?=_c.name || _c.id?>"></label><? 
 } 
 ?>
 

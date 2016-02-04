@@ -891,7 +891,7 @@ class Fx
      * Get database schema
      * @param type $table
      */
-    public static function schema($table = null)
+    public static function schema($table = null, $add_prefix = true)
     {
         static $schema = null;
         if (is_null($schema)) {
@@ -900,6 +900,10 @@ class Fx
         if (func_num_args() === 0) {
             return $schema;
         }
+        if ($table && $add_prefix) {
+            $table = fx::db()->getPrefix().$table;
+        }
+        
         if (isset($schema[$table])) {
             return $schema[$table];
         }
@@ -935,22 +939,6 @@ class Fx
         }
         return $util;
     }
-
-    /*
-    public static function date($value, $format = 'Y-m-d H:i:s')
-    {
-        if (empty($value)) {
-            return $value;
-        }
-        if (!is_numeric($value)) {
-            $value = strtotime($value);
-        }
-        if (empty($value)) {
-            return $value;
-        }
-        return date($format, $value);
-    }
-    */
     
     protected static function smartDateFormat($value, $format) {
         $ru_month = function($date, $placeholder) {
@@ -1014,6 +1002,11 @@ class Fx
         return join('', $res);
     }
     
+    public static function cb($arg) {
+        fx::log('unknown callback', $arg, fx::debug()->backtrace());
+        return $arg;
+    }
+    
     public static function date($value = null, $format = 'Y-m-d H:i:s') {
       if ($value === null) {
         $value = time();
@@ -1031,6 +1024,15 @@ class Fx
         return date($format, $value);
       }
       return self::smartDateFormat($value, $format);
+    }
+    
+    public static function timestamp($value = null)
+    {
+        if (is_null($value)) {
+            return time();
+        }
+        $res = self::date($value, 'U') * 1;
+        return $res;
     }
     
     public static function image($value, $format)

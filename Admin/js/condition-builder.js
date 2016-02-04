@@ -41,21 +41,27 @@ window.conditions_builder = function(params) {
             ['less', {value_type:'datetime', get_value: get_date_value}]
         ],
         bool:['is_true'],
-        image:['has'],
-        file:['has'],
+        image:['defined'],
+        file:['defined'],
         select:[]
     };
     
-    var select_livesearch = function(field_props) {
-        return $fx_fields.livesearch({
+    var select_livesearch = function(field_props, value) {
+        var field = {
             is_multiple: 'true',
             params: {
                 content_type: 'select_value',
+                id_field: 'keyword',
                 conditions: [
                     ['field_id', field_props.id]
                 ]
             }
-        }, 'input');
+        };
+        if (value && value.length) {
+            field.value = value;
+            field.ajax_preload = true;
+        }
+        return $fx_fields.livesearch(field, 'input');
     };
     
     field_operators.select.push( ['is_in', {value_type:select_livesearch}] );
@@ -80,30 +86,32 @@ window.conditions_builder = function(params) {
         has_type: {
             name:'имеет тип',
             value_type: function(field_props, value) {
-                console.log(field_props);
                 var field = {
                     is_multiple:true,
-                    content_type:'component'
+                    content_type:'component',
+                    params: {
+                        id_field:'keyword'
+                    }
                 };
+                if (field_props.content_type) {
+                    field.params.conditions = [ [null, field_props.content_type, 'is'] ];
+                }
                 if (value && value.length) {
                     field.value = value;
                     field.ajax_preload = true;
                 }
                 return $fx_fields.livesearch(field, 'input');
+            },
+            test: function(field_props) {
+                return field_props.has_types;
             }
         },
-        has: {
-            name:'',
+        defined: {
+            name:'задано',
             value_type: function() {
-                return $fx_fields.control({
-                    type:'radio_facet',
-                    values: [
-                        [1, 'есть'],
-                        [0, 'нет']
-                    ],
-                    value:1
-                });
-            }
+                return false;
+            },
+            invertable: false
         },
         greater: {name:'больше'},
         less: {name:'меньше'},
@@ -119,7 +127,7 @@ window.conditions_builder = function(params) {
         is_under: {
             name: 'находится внутри',
             test: function(field_props) {
-                return !field_props.content_type || field_props.content_type !== 'infoblock';
+                return field_props.has_tree;
             },
             value_type: function(field_props, value) {
                 var field = {
@@ -446,7 +454,7 @@ window.conditions_builder = function(params) {
                     }
                 );
             }
-            if (op.allow_expression && that.context) {
+            if (false && op.allow_expression && that.context) {
                 op.children.push(
                     {
                         id:op.keyword + '.expression',
@@ -457,15 +465,14 @@ window.conditions_builder = function(params) {
             
             vals.push(op);
         }
+        
+        var op_value = value && value.type ? value.type : vals[0].id;
         var $control = $fx_fields.livesearch({
             type:'livesearch',
             values: vals,
-            value: value && value.type ? value.type : vals[0][0]
+            value: op_value
         },'input');
         
-        if (ops.length === 1 && ops[0].name === '') {
-            $control.css('display', 'none');
-        }
         $container.append($control);
         
         function redrawValue(value) {

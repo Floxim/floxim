@@ -34,14 +34,15 @@ class Db extends \PDO
             echo $e->getMessage();
         }
     }
+    
+    public function getPrefix()
+    {
+        return $this->prefix;
+    }
 
     public function escape($str)
     {
         return addslashes($str);
-        //$str = $this->quote($str);
-        // hack! what for???
-        // $str = trim($str, "'");
-        return $str;
     }
 
     public function prepare($str)
@@ -159,7 +160,7 @@ class Db extends \PDO
     
     public function loadSchema() 
     {
-        $prefix = $this->prefix;
+        //$prefix = $this->prefix;
         $db_name = $this->db_name;
         
         $cols = fx::db()->getResults(
@@ -171,12 +172,13 @@ class Db extends \PDO
             from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = "'.$db_name.'"'
         );
 
-        $prefix_rex = "~^".$prefix."~";
+        //$prefix_rex = "~^".$prefix."~";
 
         $res = fx::collection($cols)
                 ->group(
-                    function ($t) use ($prefix_rex) {
-                        $table_name = preg_replace($prefix_rex, '', $t['table']);
+                    function ($t) {
+                        //$table_name = preg_replace($prefix_rex, '', $t['table']);
+                        $table_name = $t['table'];
                         return $table_name;
                     }
                 )
@@ -399,7 +401,8 @@ class Db extends \PDO
         }
         
         foreach ($params['tables'] as $t) {
-            $command .= ' '.$this->replacePrefix('{{'.$t.'}}');
+            //$command .= ' '.$this->replacePrefix('{{'.$t.'}}');
+            $command .= ' '.$t;
         }
         $do_gzip = (isset($params['gzip']) && $params['gzip']) || preg_match("~\.gz$~", $target_file);
         if ($do_gzip) {

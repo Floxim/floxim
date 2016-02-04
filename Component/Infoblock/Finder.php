@@ -45,6 +45,33 @@ class Finder extends System\Finder
             return $this->create(array('id' => $id));
         }
     }
+    
+    public function getForPath($path)
+    {
+        //$ids = $path->getValues('id');
+        $current_page = $path->last();
+        $this->whereOr(
+            array('scope_type', array('all_pages', 'custom')),
+            array(
+                array(
+                    array('scope_type', 'one_page'),
+                    array('page_id', $current_page['id']),
+                ),
+                null,
+                'AND'
+            )
+        );
+        $this->with('scope_entity');
+        $blocks = $this->all();
+        $res = fx::collection();
+        foreach ($blocks as $block) {
+            if ($block['scope_type'] === 'custom' && !$block['scope_entity']->checkPath($path)) {
+                continue;
+            }
+            $res[]= $block;
+        }
+        return $res;
+    }
 
     public function getForPage($page_id = null)
     {

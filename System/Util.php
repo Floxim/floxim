@@ -327,7 +327,7 @@ class Util
             'component',
             'datatype',
             'field',
-            //'floxim_user_user',
+            'scope',
             'lang',
             'lang_string',
             'layout',
@@ -335,14 +335,22 @@ class Util
             'option',
             'patch',
             'patch_migration',
-            'widget'
+            'widget',
+            'select_value'
         );
         
         if ($type === 'meta') {
             return $meta;
         }
         
-        $all = array_keys(fx::schema());
+        $all_db = fx::schema()->keys();
+        $all = array();
+        $prefix_rex = "~^".preg_quote(fx::db()->getPrefix())."~";
+        foreach ($all_db as $table_name) {
+            if (preg_match($prefix_rex, $table_name)) {
+                $all []= $table_name;
+            }
+        }
         
         // do not export content table, it needs special treatment
         $meta []= 'floxim_main_content'; 

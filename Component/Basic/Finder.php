@@ -82,7 +82,26 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
         return $tables;
     }
     
-    
+    protected function prepareComplexField($field, $operator = 'where')
+    {
+        if (!strstr($field, ':')) {
+            return parent::prepareComplexField($field, $operator);
+        }
+        $parts = explode(".", $field, 2);
+        $subtype = str_replace(":", ".", $parts[0]);
+        $field_keyword = $parts[1];
+        $sub_finder = fx::data($subtype);
+        $sub_rels = $sub_finder->relations();
+        if (isset($sub_rels[$field_keyword])) {
+            fx::cdebug($this, $sub_rels[$field_keyword]);
+            
+        } else {
+            $subtype_table = $sub_finder->getColTable($field_keyword);
+            $alias = 'self__'.$subtype_table;
+            $this->join(array($subtype_table, $alias), $alias.'.id = {{'.$this->getTable().'}}.id', 'left');
+        }
+        return $alias.'.`'.$field_keyword.'`';
+    }
 
     public function relations()
     {

@@ -490,8 +490,34 @@ class Page
     }
 
     protected $areas_cache = array();
-
+    
     public function getAreaInfoblocks($area_id)
+    {
+        $layout_id = fx::env('layout_id');
+        $path = fx::env('path');
+        //$ibs = fx::data('infoblock')->with('visuals')->getForPath($path);
+        $ibs = $this->getInfoblocks($path);
+        $filtered = $ibs->find(function($ib) use ($area_id) {
+            return $ib->getVisual()->get('area') === $area_id;
+        });
+        return $filtered;
+    }
+    
+    public function getInfoblocks($path = null)
+    {
+        if (is_null($path)) {
+            $path = fx::env('path');
+        }
+        static $cache = array();
+        $hash = join('.', $path->getValues('id'));
+        if (!isset($cache[$hash])) {
+            $ibs = fx::data('infoblock')->with('visuals')->getForPath($path);
+            $cache[$hash] = $ibs;
+        }
+        return $cache[$hash];
+    }
+
+    public function _getAreaInfoblocks($area_id)
     {
         // do nothing if the areas are not loaded yet
         if (is_null($this->areas)) {

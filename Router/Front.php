@@ -36,7 +36,14 @@ class Front extends Base
         fx::env('page', $page);
         fx::http()->status('200');
         
-        $layout_ib = $this->getLayoutInfoblock($page);
+        $ibs = fx::data('infoblock')->getForPath($path);
+        $layout_ib = $ibs->findOne(function($ib) {
+            return $ib['controller'] === 'layout' && $ib['action'] === 'show';
+        });
+        
+        
+        
+        //$layout_ib = $this->getLayoutInfoblock($page);
         
         fx::trigger('before_layout_render', array(
             'layout_infoblock' => $layout_ib

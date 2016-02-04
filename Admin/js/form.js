@@ -96,7 +96,6 @@ fx_form = {
         var res = fields.sort(function(a, b) {
             return get_priority(a) - get_priority(b);
         });
-        console.log('strd', res);
         return res;
     },
     draw_fields: function(settings, $form_body) {
@@ -650,13 +649,21 @@ fx_form = {
         if (!$inp || !$inp.length) {
             return false;
         }
+        
+        // smart checkbox
+        if ($inp.length === 2) {
+            var $checkbox = $inp.filter('[type="checkbox"]');
+            if ($checkbox.length) {
+                $inp = $checkbox;
+            }
+        }
         var inp_type = $inp.attr('type'),
             val;
         if (inp_type === 'radio') {
             var $current = $inp.closest('form').find('input[name="'+$inp.attr('name')+'"]:checked');
             val = $current.val();
         }  else if (inp_type === 'checkbox') {
-            val = $inp.is('checked') ? ($inp.attr('value') || '1') : false;
+            val = $inp.is(':checked') ? ($inp.attr('value') || '1') : false;
         } else {
             val = $inp.val();
         }
@@ -700,7 +707,7 @@ fx_form = {
         var change_handler = function(e) {
             var $changed_inp = $(e.target),
                 changed_inp_name = that.get_input_name($changed_inp);
-            console.log('changed', changed_inp_name);
+            
             // changed input is not mentioned in any rule
             if (!handled_input_names[ changed_inp_name ]) {
                 return;

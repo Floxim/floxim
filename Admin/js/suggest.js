@@ -37,7 +37,7 @@ window.fx_suggest = function(params) {
     this.input = params.input;
     this.setRequestParams(params.requestParams);
     this.onSelect = params.onSelect;
-    this.minTermLength = typeof params.minTermLength == 'undefined' ? 1 : params.minTermLength;
+    this.minTermLength = typeof params.minTermLength === 'undefined' ? 1 : params.minTermLength;
     this.resultType = params.resultType || 'html';
     this.offsetNode = params.offsetNode || this.input;
     this.preset_values = params.preset_values || [];
@@ -113,6 +113,9 @@ window.fx_suggest = function(params) {
                 case 13:
                     var csi = Suggest.getActiveItem();
                     if (Suggest.locked) {
+                        return false;
+                    }
+                    if (csi.is('.search_item_disabled')) {
                         return false;
                     }
                     if (csi.length === 1) {
@@ -588,8 +591,11 @@ window.fx_suggest = function(params) {
         $('body').append(this.box);
         
         this.box.on('click', '.search_item', function() {
-            Suggest.onSelect($(this));
-            Suggest.hideBox();
+            var $item = $(this);
+            if (!$item.is('.search_item_disabled')) {
+                Suggest.onSelect($item);
+                Suggest.hideBox();
+            }
             return false;
         });
         

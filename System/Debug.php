@@ -394,22 +394,32 @@ class Debug
 
     protected function entry()
     {
+        $args = func_get_args();
+        
         $c_time = microtime(true);
         $memory = memory_get_usage(true);
 
-        $backtrace = array_slice(debug_backtrace(), 4, 2);
-
+        $backtrace = debug_backtrace();
+        
+        //$args []= $backtrace;
+        
+        $is_cdebug = isset($backtrace[6]) && isset($backtrace[6]['function']) && $backtrace[6]['function'] === 'cdebug';
+        $backtrace = array_slice($backtrace, $is_cdebug ? 6 : 4, 2);
+        
         $meta = array(
             'time'   => $c_time - $this->start_time,
             'passed' => $c_time - $this->last_time,
             'memory' => $memory
         );
         $this->last_time = $c_time;
+        
+        
+        
         if (isset($backtrace[0]['file'])) {
             $meta['file'] = $backtrace[0]['file'];
             $meta['line'] = $backtrace[0]['line'];
         }
-
+        
         $caller = '';
         if (isset($backtrace[1])) {
             if (isset($backtrace[1]['class'])) {
@@ -422,7 +432,7 @@ class Debug
         }
         $meta['caller'] = $caller;
 
-        $args = func_get_args();
+        
         $items = array();
         foreach ($args as $a) {
             //$items[]= $a;

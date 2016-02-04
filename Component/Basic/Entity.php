@@ -22,25 +22,6 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
         return $this;
     }
     
-    /*
-    protected function saveLinks()
-    {
-        $link_fields = $this->getFields()->find('type', 'link');
-        foreach ($link_fields as $lf) {
-            $lf_prop = $lf['format']['prop_name'];
-            if (
-                isset($this->data[$lf_prop]) &&
-                $this[$lf_prop] instanceof Entity &&
-                empty($this[$lf['keyword']])
-            ) {
-                if (!$this[$lf_prop]['id']) {
-                    $this[$lf_prop]->save();
-                }
-                $this[$lf['keyword']] = $this[$lf_prop]['id'];
-            }
-        }
-    }
-    */
     public function getCascadeLinkingEntities()
     {
         $entity = $this;

@@ -174,7 +174,6 @@ fx_front.prototype.handle_click = function(e) {
     // e.g. user tries to select some text and stops selection when pointer is outside the edited node
     if (e.target !== $fx.front.last_mousedown_node && !e.fxForced) {
         if ($target.closest('a').length) {
-            console.log('skip from hk');
             return false;
         }
         return;
@@ -2139,7 +2138,7 @@ fx_front.prototype.extract_infoblock_visual_fields = function($ib_node, $form) {
                 });
                 meta.parent = real_parent;
             }
-
+            
             var $field = $fx.form.draw_field(meta, $rel_field, 'after');
             $field.addClass(field_class);
             

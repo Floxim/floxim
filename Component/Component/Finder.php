@@ -192,4 +192,10 @@ class Finder extends System\Finder
     {
         parent::dropStoredStaticCache();
     }
+    
+    public function processConditionIs($field, $value) {
+        $com = fx::getComponentByKeyword($value);
+        $ids = $com->getAllVariants()->getValues('id');
+        return array('id', $ids);
+    }
 }

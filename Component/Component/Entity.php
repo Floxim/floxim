@@ -85,17 +85,6 @@ class Entity extends System\Entity
                         'values' => $vals,
                         'real_offset' => $keyword
                     );
-                    /*
-                    foreach ($f['format']['values'] as $val) {
-                        $vals[$val['id']] = $val['value'];
-                    }
-                    $offsets[$keyword.'_name'] = array(
-                        'type' => self::OFFSET_SELECT,
-                        'values' => $vals,
-                        'real_offset' => $keyword
-                    );
-                     * 
-                     */
                 }
             }
 
@@ -458,12 +447,33 @@ class Entity extends System\Entity
             'type' => 'entity',
             'is_page'  => $this->isInstanceOfComponent('floxim.main.page'),
             'content_type' => $this['keyword'],
-            'children' => $this->getFieldsForFilter($keyword)
+            'children' => $this->getFieldsForFilter($keyword),
+            'has_types' => count ( $this->getAllVariants() ) > 1,
+            'has_tree' => $this->isInstanceOfComponent('floxim.main.content')
         );
     }
     
-    public function getFieldsForFilter($prefix = 'entity', $c_level = 0) {
-        $fields = $this->getAllFields()->find('is_editable', 1);
+    public function getFieldsForFilter($prefix = 'entity', $c_level = 0, $own_only = false) {
+        
+        if ($own_only) {
+            $fields = $this->fields()->find(function($f) {
+                return !$f['parent_field_id'];
+            });
+        } else {
+            $fields = $this->getAllFields();
+        }
+                
+        $fields = $fields->find(function($f) {
+            if ($f['is_editable']) {
+                return true;
+            }
+            if ($f['type'] === 'datetime') {
+                return true;
+            }
+            return false;
+        });
+        
+        
         
         $entity_fields = array();
         foreach ($fields as $f) {
@@ -482,15 +492,6 @@ class Entity extends System\Entity
                 case 'link':
                 case 'multilink':
                     $target_keyword = $f->getTargetName();
-                    /*
-                    if ($f['keyword'] === 'parent_id') {
-                        $target_is_page = true;
-                    } else {
-                        $target_is_page = fx::data($target_keyword) instanceof \Floxim\Main\Page\Finder;
-                    }
-                    $res_f['is_page'] = $target_is_page;
-                     * 
-                     */
                     $res_f['real_keyword'] = $res_f['keyword'];
                     $res_f['keyword'] = $prefix.'.'.$f->getPropertyName();
                     $res_f['content_type'] = $target_keyword;
@@ -501,11 +502,40 @@ class Entity extends System\Entity
                             $res_f['children'] = $target_com->getFieldsForFilter($res_f['keyword'], $c_level + 1);
                             $res_f['collapsed'] = true;
                         }
+                        $res_f['has_types'] = $target_com && count ( $target_com->getAllVariants() ) > 1;
+                        $res_f['has_tree'] = $target_com && $target_com->isInstanceOfComponent('floxim.main.content');
                     }
                     $res_f['type'] = 'entity';
                     break;
             }
             $entity_fields []= $res_f;
+        }
+        
+        if ($c_level === 0) {
+            $child_coms = $this->getAllChildren();
+            foreach ($child_coms as $child_com) {
+                $child_com_prefix = $prefix.':'.str_replace('.', ':', $child_com['keyword']);
+                $child_com_fields = $child_com->getFieldsForFilter($child_com_prefix, 1, true);
+                // temporary remove relation fields
+                // @todo: implement queries like $f->where('[floxim.blog.news'].tags', $tag_id)
+                $child_com_fields_with_no_links = array();
+                foreach ( $child_com_fields as $child_com_field) {
+                    if (!in_array($child_com_field['type'], array('entity'))) {
+                        $child_com_fields_with_no_links []= $child_com_field;
+                    }
+                }
+                if (count($child_com_fields_with_no_links) > 0) {
+                    $res_f = array(
+                        'type' => 'subtype',
+                        'collapsed' => true,
+                        'children' => $child_com_fields_with_no_links,
+                        'name' => '['.fx::util()->ucfirst($child_com->getItemName('one')).']',
+                        'id' => $child_com_prefix,
+                        'disabled' => true
+                    );
+                    $entity_fields[]= $res_f;
+                }
+            }
         }
         return $entity_fields;
     }

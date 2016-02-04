@@ -342,7 +342,6 @@ class Infoblock extends Admin
 
         if (isset($input['settings_sent']) && $input['settings_sent'] == 'true') {
             $scope_data = $input['scope'];
-            fx::log($input, $scope_data);
             $infoblock['scope_type'] = $scope_data['type'];
             if ($scope_data['type'] === 'custom') {
                 $scope_params = json_decode($scope_data['params'], true);
@@ -1253,7 +1252,6 @@ class Infoblock extends Admin
     
     public function scope($input) 
     {
-        fx::log($input);
         if (isset($input['params']) && isset($input['params'][0])) {
             $input['infoblock_id'] = $input['params'][0];
         }
@@ -1264,6 +1262,16 @@ class Infoblock extends Admin
             $scope = fx::data('scope')->create();
         }
         $fields = array();
+        
+        $q_field = array(
+            'type' => 'radio_facet',
+            'label' => 'quick select',
+            'values' => fx::env()->getPath()->getValues(function($v) {
+                return array($v['id'], $v->getName());
+            })
+        );
+            
+        $fields []= $q_field;
         
         $fields []= array(
             'name' => 'scope[id]',
@@ -1281,13 +1289,7 @@ class Infoblock extends Admin
             'label' => false
         );
         
-        $q_field = array(
-            'type' => 'radio_facet',
-            'label' => 'quick select',
-            'values' => fx::env()->getPath()->getValues(function($v) {
-                return array($v['id'], $v->getName());
-            })
-        );
+        fx::log($fields);
         
         return array(
             'fields' => $fields

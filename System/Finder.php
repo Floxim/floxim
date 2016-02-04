@@ -56,8 +56,30 @@ abstract class Finder
             $this->where('name', '%' . $tp . '%', 'LIKE');
         }
     }
+    
+    public function livesearchApplyConditions($conds) 
+    {
+        foreach ($conds as $cond_field => $cond_val) {
+            if (is_numeric($cond_field) && is_array($cond_val)) {
+                $op = isset($cond_val[2]) ? $cond_val[2] : '=';
+                if (preg_match("~^[a-z_]+$~", $op)) {
+                    $method = 'processCondition'. fx::util()->underscoreToCamel($op);
+                    if (method_exists($this, $method)) {
+                        $cond = $this->$method($cond_val[0], $cond_val[1]);
+                        $this->where( $cond );
+                        continue;
+                    }
+                }
+                $this->where($cond_val[0], $cond_val[1], isset($cond_val[2]) ? $cond_val[2] : '=');
+            } elseif (is_array($cond_val)) {
+                $this->where($cond_field, $cond_val[0], $cond_val[1]);
+            } else {
+                $this->where($cond_field, $cond_val);
+            }
+        }
+    }
 
-    public function livesearch($term = null, $limit = null)
+    public function livesearch($term = null, $limit = null, $id_field = 'id')
     {
         if (!isset($term)) {
             return;
@@ -88,7 +110,12 @@ abstract class Finder
             }
             $c_res = array();
             foreach ($props as $prop) {
-                $c_res[$prop] = $i[$prop];
+                $c_res[$prop] = $prop === 'id' ? $i[$id_field] : $i[$prop];
+            }
+            // @todo: use real prop keyword instead of aliased id
+            if ($id_field !== 'id') {
+                $c_res[$id_field] = $i[$id_field];
+                $c_res['_real_id'] = $i['id'];
             }
             $res['results'][] = $c_res;
         }
@@ -512,6 +539,45 @@ abstract class Finder
         }
         return $q;
     }
+    
+    /**
+     * parse complex field name, smth like 'parent[my.app.artist].styles.name[foo.bar]'
+     * @param string $f 
+     * @return array
+     */
+    public function parseFieldString($f)
+    {
+        $f = preg_replace_callback( 
+            "~\[.+?\]~",
+            function($m) {
+                return str_replace(".", ':', $m[0]);
+            },
+            $f
+        );
+
+        $parts = explode(".", $f);
+
+        $path = array();
+
+        foreach ($parts as $p) {
+                $subtype = null;
+            $field = preg_replace_callback(
+              "~\[(.+?)\]~",
+              function($m) use (&$subtype) {
+                  $subtype = str_replace(":", '.', $m[1]);
+                  return '';
+              },
+              $p
+            );
+            $path []= array('field' => $field, 'subtype' => $subtype);
+        }
+        return $path;
+    }
+    
+    public function getFieldTable($field)
+    {
+        $path = $this->parseFieldString($field);
+    }
 
     protected $joins = array();
 
@@ -530,7 +596,7 @@ abstract class Finder
 
     // inner join fx_content as user__fx_content on fx_content.user_id = user__fx_content.id
     // todo: psr0 need fix
-    protected function joinWith($with, $join_type = 'inner')
+    public function joinWith($with, $join_type = 'inner')
     {
         $rel_name = $with[0];
         $finder = $with[1];
@@ -746,7 +812,7 @@ abstract class Finder
         return $data;
     }
 
-    protected function getDefaultRelationFinder($rel)
+    public function getDefaultRelationFinder($rel)
     {
         $finder = fx::data($rel[1]);
         $finder->orderDefault();
@@ -959,14 +1025,6 @@ abstract class Finder
      */
     public function entity($data = array())
     {
-        /*
-        if (static::isStaticCacheUsed() && isset($data['id'])) {
-            $cached = static::getFromStaticCache($data['id']);
-            if ($cached) {
-                return $cached;
-            }
-        }
-        */
         $registry = $this->getRegistry();
         $id = isset($data['id']) ? $data['id'] : null;
         if ( $id && ($obj = $registry->get($id)) ) {
@@ -1245,7 +1303,6 @@ abstract class Finder
     }
     
     public function processCondition($cond) {
-        
         $op_parts = explode(".", $cond['type']);
         $op = $op_parts[0];
         $op_type = isset($op_parts[1]) ? $op_parts[1] : 'value';
@@ -1258,6 +1315,12 @@ abstract class Finder
             $field_parts = explode(".", $cond['field'], 2);
             $scope = $field_parts[0];
             $field = isset($field_parts[1]) ? $field_parts[1] : null;
+            
+            if (strstr($scope, ':')) {
+                $scope_parts = explode(":", $scope, 2);
+                $scope = $scope_parts[0];
+                $field = $scope_parts[1].'.'.$field;
+            }
             if ($scope !== 'entity') {
                 return;
             }
@@ -1313,6 +1376,16 @@ abstract class Finder
                     'LIKE'
                 );
                 break;
+            case 'defined':
+                $res = array(
+                    array(
+                        array($field, null, 'IS NOT NULL'),
+                        array($field, '', '!=')
+                    ),
+                    null,
+                    'AND'
+                );
+                break;
             case 'less':
                 $res = array(
                     $field,
@@ -1335,9 +1408,7 @@ abstract class Finder
                 );
                 break;
             case 'has_type':
-                fx::cdebug($value);
-                
-                //$res = $this->conditionIs($value);
+                $res = $this->conditionIs($value);
                 break;
             case 'has':
                 $res = array(
@@ -1359,7 +1430,6 @@ abstract class Finder
         if (isset($cond['inverted']) && $cond['inverted']) {
             $res = array($res, null, 'NOT');
         }
-        fx::cdebug($res, $cond);
         return $res;
     }
     
@@ -1371,6 +1441,7 @@ abstract class Finder
             return $this;
         }
         $this->where( $this->processCondition($conds));
+        fx::cdebug($this->showQuery());
         return $this;
     }
     

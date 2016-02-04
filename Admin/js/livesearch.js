@@ -146,15 +146,17 @@ window.fx_livesearch = function (node) {
     
     this.loadValues = function(ids) {
         if (typeof ids === 'string') {
-            ids = [ ids * 1];
+            //ids = [ ids * 1];
+            ids = [ids];
         }
         if (!(ids instanceof Array) || ids.length === 0) {
             return;
         }
         var params = this.getSuggestParams();
-		params.data.ids = ids;
-		params.data.term = null;
-		params.data.limit = null;
+        params.data.ids = ids;
+        params.data.term = null;
+        params.data.limit = null;
+        
         $.ajax({
             url:params.url,
             type:'post',
