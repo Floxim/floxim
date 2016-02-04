@@ -409,7 +409,7 @@ class Db extends \PDO
             $target_file = preg_replace("~\.gz$~", '', $target_file);
         }
         $command .= ($params['add'] ? ' >> ' : ' > ').$target_file;
-        
+        fx::cdebug($command);
         exec($command);
         
         if ($do_gzip && file_exists($target_file)) {

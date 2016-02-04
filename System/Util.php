@@ -327,7 +327,6 @@ class Util
             'component',
             'datatype',
             'field',
-            'scope',
             'lang',
             'lang_string',
             'layout',
@@ -338,6 +337,10 @@ class Util
             'widget',
             'select_value'
         );
+        
+        foreach ($meta as &$table) {
+            $table = fx::db()->getPrefix().$table;
+        }
         
         if ($type === 'meta') {
             return $meta;
@@ -362,8 +365,14 @@ class Util
      * Create SQL dump file for empty system with no site-related data
      * @param type $target_file
      */
-    public function dumpMeta($target_file = null) 
+    public function dumpMeta($target_file = null, $options = array()) 
     {
+        $options = array_merge(
+            array(
+                'with_users' => true
+            ),
+            $options
+        );
         if (!$target_file) {
             $target_file = fx::path('/install/floxim_meta.sql');
         }
@@ -380,25 +389,19 @@ class Util
             'add' => true
         ));
         
-        $cross_users = fx::data('floxim.user.user')->where('site_id',0)->all();
-        $user_tables = $this->getContentDumpTables($cross_users);
-        
-        foreach ($user_tables as $t => $item_ids) {
-            fx::db()->dump(array(
-                'tables' => array($t),
-                'where' => "id in (".join(', ', $item_ids).")", // 'floxim.user.user'",
-                'file' => $target_file,
-                'add' => true
-            ));
+        if ($options['with_users']) {
+            $cross_users = fx::data('floxim.user.user')->where('site_id',0)->all();
+            $user_tables = $this->getContentDumpTables($cross_users);
+
+            foreach ($user_tables as $t => $item_ids) {
+                fx::db()->dump(array(
+                    'tables' => array($t),
+                    'where' => "id in (".join(', ', $item_ids).")", // 'floxim.user.user'",
+                    'file' => $target_file,
+                    'add' => true
+                ));
+            }
         }
-        /*
-        fx::db()->dump(array(
-            'tables' => array('floxim_main_content'),
-            'where' => "type = 'floxim.user.user'",
-            'file' => $target_file,
-            'add' => true
-        ));
-        */
     }
     
     /**
@@ -519,6 +522,7 @@ class Util
             $com = fx::component($com_keyword);
             $com_tables = $com->getAllTables();
             foreach ($com_tables as $t) {
+                $t = fx::db()->getPrefix().$t;
                 if (!isset($tables[$t])) {
                     $tables[$t] = array();
                 }
