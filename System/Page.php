@@ -456,9 +456,12 @@ class Page
         //$buffer = preg_replace("~<head(\s[^>]*?|)>~", '$0'.$r, $buffer);
         $buffer = preg_replace("~<title>.+</title>~i", '', $buffer);
         $buffer = preg_replace("~</head\s*?>~i", $r . '$0', $buffer);
-
+        
         if (count($this->after_body)) {
             $after_body = $this->after_body;
+            if (!stristr($buffer, '<body')) {
+                $buffer = str_replace("</html", '<body> </body></html', $buffer);
+            }
             $buffer = preg_replace_callback(
                 '~<body[^>]*?>~i',
                 function ($body) use ($after_body) {
@@ -513,6 +516,16 @@ class Page
         if (!isset($cache[$hash])) {
             $ibs = fx::data('infoblock')->with('visuals')->getForPath($path);
             $cache[$hash] = $ibs;
+            foreach ($ibs  as $ib) {
+                if ($ib->getVisual()->get('is_stub')) {
+                    $suitable = new \Floxim\Floxim\Template\Suitable();
+                    $suitable->suit($ibs, fx::env('layout_id'));
+                    break;
+                }
+            }
+            $ibs->sort(function($ib) {
+                return $ib->getVisual()->get('priority');
+            });
         }
         return $cache[$hash];
     }

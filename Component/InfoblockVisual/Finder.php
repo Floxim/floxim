@@ -13,7 +13,6 @@ class Finder extends System\Finder
         // todo: psr0 need verify
         $this->classname = 'fx_infoblock_visual';
         $this->json_encode = array('wrapper_visual', 'template_visual');
-        $this->order('priority');
     }
 
     public function getForInfoblocks(System\Collection $infoblocks, $layout_id)

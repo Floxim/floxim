@@ -610,4 +610,9 @@ class Entity extends System\Entity implements Template\Entity
         }
         return preg_replace('~.+\..+\.~', '', $ctr);
     }
+    
+    public function getParentFinderConditions()
+    {
+        return $this->initController()->getParentFinderConditions();
+    }
 }

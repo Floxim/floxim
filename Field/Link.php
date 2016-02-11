@@ -10,6 +10,9 @@ class Link extends \Floxim\Floxim\Component\Field\Entity
 
     public function validateValue($value)
     {
+        if ($value === 'null') {
+            $value = null;
+        }
         if (!parent::validateValue($value)) {
             return false;
         }
@@ -17,6 +20,7 @@ class Link extends \Floxim\Floxim\Component\Field\Entity
             return true;
         }
         if ($value && ($value != strval(intval($value)))) {
+            fx::log('value should be INT or NULL', $value, $this);
             $this->error = sprintf(FX_FRONT_FIELD_INT_ENTER_INTEGER, $this['description']);
             return false;
         }
@@ -104,7 +108,8 @@ class Link extends \Floxim\Floxim\Component\Field\Entity
                 //'content_type' => $target_com_keyword
                 'relation_field_id' => $this['id'],
                 'entity_id' => $content['id'],
-                'send_form' => true
+                'send_form' => true,
+                'hidden_on_one_value' => true
             );
             $c_val = $content[$this['keyword']];
             if ($c_val) {

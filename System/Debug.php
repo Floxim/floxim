@@ -384,7 +384,8 @@ class Debug
             fx::page()->addJsFile(fx::path('@floxim/Admin/js/fxj.js'));
             fx::page()->addJsFile(fx::path('@floxim/Admin/js/debug.js'));
             register_shutdown_function(function () {
-                if (!fx::env()->get('complete_ok')) {
+                if (!fx::env()->get('complete_ok') && !fx::env('ajax')) {
+                    echo "incompl!!!";
                     echo fx::page()->getAssetsCode();
                 }
             });

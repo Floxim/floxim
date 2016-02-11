@@ -100,8 +100,8 @@ window.fx_debug_draw = function(data, $target) {
     }
     
     function make_expandable($node, data, $title) {
-        var type = get_type(data);
         
+        var type = get_type(data);
         if (type === '_link') {
             var link_id = data[1],
                 is_recursive = data[2];
@@ -118,7 +118,7 @@ window.fx_debug_draw = function(data, $target) {
             return;
         }
         $node.addClass('fx-debug__expandable fx-debug__expandable_collapsed');
-        $node.data('debug_data', data);
+        $node.data('debug_data', $.extend({}, data));
         $title.addClass('fx-debug__expander');
     }
     
@@ -167,6 +167,9 @@ window.fx_debug_draw = function(data, $target) {
     
     function draw_children(data, $target) {
         if ($target.data('debug_children')) {
+            return;
+        }
+        if (!data || !data[1]) {
             return;
         }
         var subs = data[1],
@@ -225,7 +228,6 @@ window.fx_debug_draw = function(data, $target) {
     entry.toggle_item = function($item) {
         var data = $item.data('debug_data'),
             col_class = 'fx-debug__expandable_collapsed';
-        
         if (!$item.hasClass(col_class)) {
             $item.addClass(col_class);
             return;
@@ -240,14 +242,7 @@ window.fx_debug_draw = function(data, $target) {
 
 function fx_debug_init($container) {
     $('.fx-debug__data-entry', $container).each(function() {
-        /*
-        try {
-            var data = $.parseJSON(this.innerText);
-        } catch(e) {
-            console.log('invalid json', e, this.innerText);
-            return;
-        }
-        */
+        
         
         var $entry = $(this),
             hash = $entry.data('hash'),

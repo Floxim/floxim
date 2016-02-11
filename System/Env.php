@@ -89,7 +89,16 @@ class Env
 
     public function getPage()
     {
-        return isset($this->current['page']) ? $this->current['page'] : null;
+        if (isset($this->current['page'])) {
+            return $this->current['page'];
+        }
+        if (isset($this->current['url'])) {
+            $page = fx::data('floxim.main.page', $this->current['url']);
+            if ($page) {
+                $this->setPage($page);
+                return $page;
+            }
+        }
     }
 
     public function getPageId()
@@ -166,7 +175,10 @@ class Env
                 }
             }
             if (!isset($this->current['layout'])) {
-                $this->current['layout'] = $this->getSite()->get('layout_id');
+                $site = $this->getSite();
+                if ($site) {
+                    $this->current['layout'] = $site['layout_id'];
+                }
             }
             if (!isset($this->current['layout'])) {
                 $this->current['layout'] = fx::data('layout')->one()->get('id');

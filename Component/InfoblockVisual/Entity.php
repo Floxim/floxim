@@ -13,16 +13,6 @@ class Entity extends System\Entity
     {
         parent::beforeSave();
         unset($this['is_stub']);
-        if (!$this['priority'] && $this['layout_id']) {
-            $last_vis = fx::data('infoblock_visual')
-                ->where('layout_id', $this['layout_id'])
-                ->where('area', $this['area'])
-                ->order(null)
-                ->order('priority', 'desc')
-                ->one();
-            $this['priority'] = $last_vis['priority'] + 1;
-        }
-        
         if ($this->needRecountFiles) {
             $this->recountFiles();
         }

@@ -204,19 +204,32 @@
         cursor:pointer;
     }
     
+    &_has-value &__input {
+        position: absolute;
+        left:-10000px;
+    }
+    
     &__input, &__item-title {
         background:transparent;
         padding: 5px 7px;
         display: inline-block;
-        font-size: 14px;
         line-height:100%;
         max-width:600px;
         overflow: hidden;
+        padding-right:0;
+        &, .fx_form_vertical &, .fx_form_horizontal & {
+            font-size: 14px;
+        }
+    }
+    &__input {
+        //transition: width 0.2s ease;
+        margin-right:-10px !important;
     }
     
     &__item-title {
         padding-top:6px;
         padding-bottom:6px;
+        padding-right:0;
         line-height:15px;
         white-space:nowrap;
     }
@@ -246,7 +259,7 @@
     }
     &__item {
         // input right extra width
-        padding-right:20px;
+        // padding-right:20px;
         line-height:0px;
     }
     &_no-empty &__input {

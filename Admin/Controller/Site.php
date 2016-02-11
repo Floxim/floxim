@@ -106,13 +106,14 @@ class Site extends Admin
             'controller' => 'layout',
             'action'     => 'show',
             'name'       => 'Layout',
-            'site_id'    => $site['id']
+            'site_id'    => $site['id'],
+            'scope_type' => 'all_pages'
         ))->save();
         $site->save();
         fx::input()->setCookie('fx_target_location', '/floxim/#admin.site.all');
         $result = array(
             'status' => 'ok',
-            'reload' => '/~ajax/user:cross_site_auth_form'
+            'reload' => '/~ajax/floxim.user.user:cross_site_auth_form'
         );
         return $result;
     }

@@ -283,17 +283,15 @@ class Fx
         $path = explode('\\', $class);
         array_pop($path);
         
-        $path = array_map(function ($a) {
-            return fx::util()->camelToUnderscore($a);
-        }, $path);
-        $name = join('.', $path);
-        $class_cache[$class] = $name;
-        /*
-        if (strpos($name, 'floxim.floxim.component') === 0) {
-            return $path[3];
+        if ($path[0] === 'Floxim' && $path[1] === 'Floxim' && $path[2] === 'Component') {
+            $name = fx::util()->camelToUnderscore($path[3]);
+        } else {
+            $path = array_map(function ($a) {
+                return fx::util()->camelToUnderscore($a);
+            }, $path);
+            $name = join('.', $path);
         }
-         * 
-         */
+        $class_cache[$class] = $name;
         return $name;
     }
     
@@ -308,7 +306,7 @@ class Fx
         $class_name = $namespace . '\\Finder';
         
         if (!class_exists($class_name)) {
-            fx::debug('no data class', $datatype, $class_name, debug_backtrace());
+            fx::log('no data class', $datatype, $class_name, fx::debug()->backtrace());
             throw new \Exception('Class not found: ' . $class_name . ' for ' . $datatype);
         }
         
@@ -459,13 +457,15 @@ class Fx
          */
         if ($c_parts[0] == 'admin') {
             $c_name = isset($c_parts[1]) ? $c_parts[1] : 'Admin';
-            $c_class = 'Admin\\Controller\\' . ucfirst($c_name);
+            $c_class = '\\Floxim\\Floxim\\Admin\\Controller\\' . ucfirst($c_name);
             if (class_exists($c_class)) {
                 $controller_instance = new $c_class($input, $action);
                 return $controller_instance;
             }
+            fx::debug(func_get_args(), fx::debug()->backtrace());
             die("Failed loading controller class " . $c_class);
         }
+        fx::debug(func_get_args(), fx::debug()->backtrace());
         die("Failed loading class controller " . $controller);
     }
 
@@ -708,7 +708,13 @@ class Fx
         static $lang = null;
         if (!$lang) {
             $lang = fx::data('lang_string');
-            $lang->setLang(fx::env()->getSite()->get('language'));
+            $site = fx::env()->getSite();
+            if ($site) {
+                $lang_keyword = $site['language'];
+            } else {
+                $lang_keyword = 'en';
+            }
+            $lang->setLang($lang_keyword);
         }
         if ($string === null) {
             return $lang;
@@ -1096,7 +1102,7 @@ class Fx
 
     protected static $debugger = null;
     
-    protected static function getDebugger()
+    public static function getDebugger()
     {
         if (is_null(self::$debugger)) {
             self::$debugger = new Debug();

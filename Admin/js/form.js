@@ -503,12 +503,22 @@ fx_form = {
         if (json.parent) {
             this.add_parent_condition(json.parent, node, $target);
         } else if (json.type === 'joined_group') {
+            /*
             $.each(json.fields, function() {
                 if (this.parent && this.$input) {
                     $fx_form.add_parent_condition(this.parent, this.$input, $target);
                 }
+                if (this.values_filter) {
+                    console.log(this);
+                    if (!this.all_values) {
+                        this.all_values = this.values;
+                    }
+                    $fx_form.bind_values_filter(this.$input, this, $target);
+                }
             });
+            */
         }
+        //console.log(json);
         if (json.values_filter) {
             if (!json.all_values) {
                 json.all_values = json.values;
@@ -530,6 +540,8 @@ fx_form = {
                 all_conds.push( filter_conds[i] );
             }
         });
+        
+        $container = $container.closest('form');
         
         var handler = this.bind_conditions(
             all_conds, 
@@ -560,11 +572,17 @@ fx_form = {
                     is_diff = old_vals_hash !== new_vals_hash;
                 }
                 if (is_diff) {
-                    that.draw_field($.extend({}, json, {values:new_vals}), $field, 'before');
-                    var $livesearch = $field.find('.livesearch');
+                    var $livesearch = $field.find('.livesearch'),
+                        prev_value;
                     if ($livesearch.length) {
-                        $livesearch.data('livesearch').destroy();
+                        var ls = $livesearch.data('livesearch');
+                        prev_value = ls.getValue();
+                        ls.destroy();
                     }
+                    var new_params = $.extend({}, json, {values:new_vals});
+                    new_params.value = new_vals[0][0];
+                    var $new_field = that.draw_field(new_params, $field, 'before');
+                    $new_field.find('input[type="hidden"]').trigger('change');
                     $field.remove();
                     handler.unbind();
                 }
@@ -732,6 +750,7 @@ fx_form = {
     //add_parent_condition: function(parent, _el, container) {
     add_parent_condition: function(conds, $field, $container) {
         var that = this;
+        $container = $container.closest('form');
         var handler = this.bind_conditions(
             conds, 
             $container, 

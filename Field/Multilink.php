@@ -524,9 +524,15 @@ class Multilink extends \Floxim\Floxim\Component\Field\Entity
 
         $end_target_field = fx::data('field', $this['format']['mm_field']);
         $end_datatype = fx::component($this['format']['mm_datatype']);
+        
+        
+        
+        if (!$end_target_field || !$end_datatype) {
+            return false;
+        }
 
         $end_type = $end_datatype['keyword'];
-
+        
         return array(
             System\Finder::MANY_MANY,
             $first_type,

@@ -5,7 +5,7 @@
             front_panel = this,
             duration = 300;
         
-        var body_default_margin = null;
+        var body_default_padding = null;
         
         this.panels = [];
         
@@ -81,6 +81,9 @@
                 }
             }
             data.class_name = 'fx_form_'+params.view;
+            if (params.form_class) {
+                data.class_name += ' '+params.form_class;
+            }
             
             if (params.onsubmit) {
                 data.onsubmit = [
@@ -102,21 +105,16 @@
                 $topbar.show();
                 $topbar.mod('style', c_panel.current_panel_style);
                 $form = $fx.form.create(data, $topbar);
-                /*
-                if (c_panel.current_panel_style === 'finish') {
-                    var $closer = $('<div class="fx_admin_form__close_icon">&times;</div>');
-                    $closer.insertBefore($form.children().first());
-                    $closer.on('click', function() {
-                        $form.trigger('fx_form_cancel');
-                    });
-                }
-                */
             } else {
                 data.button_container = 'footer';
-                //$sidebar.mod('style', c_panel.current_panel_style);
                 front_panel.init_sidebar(c_panel);
                 $form = $fx.form.create(data, c_panel.$container.find('.fx-side-panel__body'));
             }
+            
+            if (params.is_fluid) {
+                c_panel.$container.addClass('fx-side-panel_fluid');
+            }
+            
             
             c_panel.$form = $form;
             
@@ -319,12 +317,12 @@
             if (panel_height === $topbar.height()) {
                 return;
             }
-            if (body_default_margin === null) {
-                body_default_margin = parseInt($('body').css('margin-top'));
+            if (body_default_padding === null) {
+                body_default_padding = parseInt($('body').css('padding-top'));
             }
-            var body_offset = panel_height === 0 ? body_default_margin : panel_height;
+            var body_offset = panel_height === 0 ? body_default_padding : panel_height;
             
-            var height_delta = body_offset - parseInt($('body').css('margin-top'));
+            var height_delta = body_offset - parseInt($('body').css('padding-top'));
             this.is_moving = true;
             
             $topbar.animate(
@@ -340,7 +338,7 @@
                 }
             );
             
-            var body_animate_props = {'margin-top':body_offset + 'px'};
+            var body_animate_props = {'padding-top':body_offset + 'px'};
             var $selected = $($fx.front.get_selected_item());
 
             if ($selected.length) {

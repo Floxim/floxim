@@ -251,15 +251,45 @@ abstract class Finder
         return $field;
     }
 
-    protected function prepareCondition($field, $value, $type)
+    protected function prepareCondition($field, $value = null, $type = '=')
     {
+        $num_args = func_num_args();
+        if ($num_args === 2 && is_string($field) && $value === null) {
+            $type = 'IS NULL';
+        }
+        
+        if ( $num_args === 1 ) {
+            if (is_array($field)) {
+                $is_group = true;
+                // if one of array items is scalar, this is not a group
+                foreach ($field as $subfield) {
+                    if (is_scalar($subfield)) {
+                        $is_group = false;
+                        break;
+                    }
+                }
+                if (!$is_group) {
+                    return call_user_func_array( array($this, 'prepareCondition'), $field);
+                }
+                $type = 'AND';
+            } else {
+                $type = 'RAW';
+                if ( strtolower($field) === 'false' || $field === false) {
+                    $value = 'FALSE';
+                    $field = null;
+                } elseif ( strtolower($field) === 'true' || $field === true ) {
+                    $value = 'TRUE';
+                    $field = null;
+                }
+            }
+        }
         if ($type && is_string($type)) {
             $type = strtoupper($type);
         }
         if (is_array($field) ) {
             if ($type === 'AND' || $type === 'OR') {
                 foreach ($field as $n => $c_cond) {
-                    $field[$n] = $this->prepareCondition($c_cond[0], $c_cond[1], $c_cond[2]);
+                    $field[$n] = call_user_func_array( array($this, 'prepareCondition'), $c_cond );
                 }
                 return array($field, $value, $type);
             }
@@ -273,6 +303,10 @@ abstract class Finder
             }
         }
         $original_field = $field;
+        $rels = $this->relations();
+        if (isset($rels[$field])) {
+            $field = $field.'.id';
+        }
         if (strstr($field, '.')) {
             $field = $this->prepareComplexField($field, 'where');
         } elseif (preg_match("~^[a-z0-9_-]~", $field)) {
@@ -297,23 +331,8 @@ abstract class Finder
             return $this->where;
         }
         
-        if ( $num_args === 1 ) {
-            
-            if ( (is_string($field) && strtolower($field) === 'false') || $field === false) {
-                $field = null;
-                $value = 'FALSE';
-                $type = 'RAW';
-            } elseif ((is_string($field) && strtolower($field) === 'true') || $field === true) {
-                $field = null;
-                $value = 'TRUE';
-                $type = 'RAW';
-            } elseif (is_array($field)) {
-                call_user_func_array( array($this, 'where'), $field);
-                return $this;
-            }
-        }
-        $cond = $this->prepareCondition($field, $value, $type);
-        $this->where [] = $cond;
+        $this->where []= call_user_func_array( array($this, 'prepareCondition'), func_get_args() );
+        
         return $this;
     }
     
@@ -877,7 +896,6 @@ abstract class Finder
                     $end_finder = fx::data($end_rel_datatype);
                 }
 
-
                 $rel_finder
                     ->with($end_rel, $end_finder)
                     ->where($rel_field, $entities->getValues('id'));
@@ -1297,9 +1315,105 @@ abstract class Finder
         return $this;
     }
     
-    public function moveAfter($what_id, $after_what_id, $params)
+    public function moveFirst($entity)
     {
+        // put $entity to the beginning
+        $first_entity = $this
+            ->getInstance()
+            ->where('priority', null, 'is not null')
+            ->order('priority')
+            ->one();
+        // $entity is already the first one
+        if ($first_entity['id'] === $entity['id']) {
+            return $entity;
+        }
+        $first_priority = $first_entity ? $first_entity['priority'] : 1;
+        $entity->set('priority', $first_priority - 1);
+    }
+    
+    public function moveLast($entity)
+    {
+        // put $entity to the end
+        $last_entity = $this
+            ->getInstance()
+            ->where('priority', null, 'is not null')
+            ->order('priority', 'desc')
+            ->one();
+        // $entity is already the last one
+        if ($last_entity['id'] === $entity['id']) {
+            return;
+        }
+        $last_priority = $last_entity ? $last_entity['priority'] : -1;
+        $entity->set('priority', $last_priority + 1);
+    }
+    
+    /**
+     * Move $entity after $prev_entity
+     * @param mixed $entity entity or id
+     * @param mixed $prev_entity previous entity or id
+     * @return Entity the moved entity 
+     */
+    public function moveAfter($entity, $prev_entity)
+    {
+        if (! $entity instanceof Entity) {
+            $entity = $this->getInstance()->getById($entity);
+        }
+        if (! $prev_entity instanceof Entity) {
+            $prev_entity = $this->getInstance()->getById($prev_entity);
+        }
+        if ($entity['id'] === $prev_entity['id']) {
+            return;
+        }
         
+        $prev_priority = $prev_entity['priority'];
+        
+        $next_entity = $this
+            ->getInstance()
+            ->order('priority')
+            ->where('priority', $prev_priority, '>')
+            ->one();
+        
+        $next_priority = $next_entity ? $next_entity['priority'] : $prev_priority + 2;
+        
+        $entity['priority'] = ($prev_priority + $next_priority) / 2;
+    }
+    
+    public function moveBefore($entity, $next_entity)
+    {
+        if (! $entity instanceof Entity) {
+            $entity = $this->getInstance()->getById($entity);
+        }
+        if (! $next_entity instanceof Entity) {
+            $next_entity = $this->getInstance()->getById($next_entity);
+        }
+        if ($entity['id'] === $next_entity['id']) {
+            return;
+        }
+        
+        $next_priority = $next_entity['priority'];
+        
+        $prev_entity = $this
+            ->getInstance()
+            ->order('priority', 'desc')
+            ->where('priority', $next_priority, '<')
+            ->one();
+        
+        $prev_priority = $prev_entity ? $prev_entity['priority'] : $next_priority - 2;
+        
+        $entity['priority'] = ($prev_priority + $next_priority) / 2;
+    }
+    
+    public function normalizePriority() {
+        $this->order(null)->order('priority')->select('id')->select('priority');
+        $query = $this->buildQuery();
+        $res = fx::db()->getResults($query);
+        $n = 0;
+        $table = $this->getColTable('priority');
+        foreach ($res as $r) {
+            $q = 'update {{'.$table.'}} set priority = '.$n.' where id = '.$r['id'];
+            $n++;
+            fx::db()->query($q);
+        }
     }
     
     public function processCondition($cond) {
@@ -1441,7 +1555,6 @@ abstract class Finder
             return $this;
         }
         $this->where( $this->processCondition($conds));
-        fx::cdebug($this->showQuery());
         return $this;
     }
     

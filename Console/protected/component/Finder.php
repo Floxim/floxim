@@ -1,9 +1,9 @@
 <?php
-namespace {Vendor}\{Module}\{Component};
+namespace {Namespace};
 
 use Floxim\Floxim\System\Fx as fx;
 
-class Finder extends {ParentClassFinder} 
+class Finder extends {ParentNamespace}\Finder 
 {
 
 }

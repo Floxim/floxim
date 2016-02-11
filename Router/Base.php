@@ -27,7 +27,9 @@ abstract class Base
         if ($base_url) {
             fx::env()->setUrl(fx::path()->removeBase($base_url));
             $path = fx::env()->getPath();
-            fx::env()->setPage($path->last());
+            if ($path) {
+                fx::env()->setPage($path->last());
+            }
         }
         return $base_url;
     }

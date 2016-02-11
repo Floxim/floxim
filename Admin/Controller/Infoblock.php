@@ -77,6 +77,7 @@ class Infoblock extends Admin
                 $act_ctr = fx::controller($keyword . ':' . $action_code);
                 $act_templates = $act_ctr->getAvailableTemplates(fx::env('layout'), $area_meta);
                 if (count($act_templates) == 0) {
+                    //fx::cdebug('no templates', $keyword . ':' . $action_code);
                     continue;
                 }
                 
@@ -301,12 +302,10 @@ class Infoblock extends Admin
         }
         $this->response->addTabs(array(
             'settings' => array(
-                'label' => fx::alang('Settings'),
-                //'icon' => 'settings'
+                'label' => fx::alang('Settings')
             ),
             'design' => array(
-                'label' => fx::alang('Design settings'),
-                //'icon' => 'design'
+                'label' => fx::alang('Design settings')
             )
         ));
         $this->response->addFields(array(
@@ -323,13 +322,13 @@ class Infoblock extends Admin
         $scope_fields = $this->getScopeFields($infoblock, $c_page);
         $this->response->addFields(
             $scope_fields, 
-            'settings', //'header', 
+            'settings',
             'scope'
         );
 
         $this->response->addFields(
             $settings, 
-            'settings', // 'header', // tab
+            'settings',
             'params'
         );
 
@@ -343,15 +342,24 @@ class Infoblock extends Admin
         if (isset($input['settings_sent']) && $input['settings_sent'] == 'true') {
             $scope_data = $input['scope'];
             $infoblock['scope_type'] = $scope_data['type'];
-            if ($scope_data['type'] === 'custom') {
-                $scope_params = json_decode($scope_data['params'], true);
-                if (isset($scope_params['id']) && is_numeric($scope_params['id']) ) {
-                    $scope = fx::data('scope', (int) $scope_params['id']);
-                } else {
-                    $scope = fx::data('scope')->create();
-                }
-                $scope['conditions'] = $scope_params['conditions'];
-                $infoblock['scope_entity'] = $scope;
+            switch ($scope_data['type']) {
+                case 'custom':
+                    $scope_params = json_decode($scope_data['params'], true);
+                    if (isset($scope_params['id']) && is_numeric($scope_params['id']) ) {
+                        $scope = fx::data('scope', (int) $scope_params['id']);
+                    } else {
+                        $scope = fx::data('scope')->create();
+                    }
+                    $scope['conditions'] = $scope_params['conditions'];
+                    $infoblock['scope_entity'] = $scope;
+                    $infoblock['page_id'] = null;
+                    break;
+                case 'one_page':
+                    $infoblock['page_id'] = fx::env('page_id');
+                    break;
+                case 'all_pages':
+                    $infoblock['page_id'] = null;
+                    break;
             }
             $infoblock['name'] = $input['name'];
             $action_params = array();
@@ -371,20 +379,6 @@ class Infoblock extends Admin
             $infoblock['params'] = $action_params;
             if (isset($controller) && $controller instanceof System\Controller) {
                 $controller->setInput($action_params);
-            }
-
-            $infoblock->setScopeString($input['scope']['complex_scope']);
-            $infoblock->digSet('scope.visibility', $input['scope']['visibility']);
-            
-            if ($update_priority) {
-                $next_vis = fx::data('infoblock_visual')
-                    ->where('area', $area_meta['id'])
-                    ->where('infoblock.site_id', $site_id)
-                    ->where('priority', $i2l['priority'], '>=')
-                    ->all();
-                $next_vis->apply(function($vis) {
-                    $vis->set('priority', $vis['priority'] + 1)->save();
-                });
             }
 
             $i2l['wrapper'] = fx::dig($input, 'visual.wrapper');
@@ -416,9 +410,6 @@ class Infoblock extends Admin
             $this->response->setProp('infoblock_id', $infoblock['id']);
             return;
         }
-
-        //$actions = $controller->getActions();
-
         $fields = array(
             $this->ui->hidden('entity', 'infoblock'),
             $this->ui->hidden('action', 'select_settings'),
@@ -617,163 +608,112 @@ class Infoblock extends Admin
         }
     }
     
-    protected function getScopeFields(CompInfoblock\Entity $infoblock, \Floxim\Main\Content\Entity $c_page)
+    protected function getScopeTypeField($infoblock)
     {
-        $fields = array(
-            array(
-                'type'   => 'livesearch',
-                'label'  => fx::alang('Scope'),
-                'name'   => 'type',
-                'values' => array(
-                    array('one_page', 'Только эта страница'),
-                    array('all_pages', 'Все страницы'),
-                    array('custom', 'Настроить...')
-                ),
-                'value'  => $infoblock['scope_type'] ? $infoblock['scope_type'] : 'one_page'
+        return array(
+            'type'   => 'livesearch',
+            'label'  => fx::alang('Scope'),
+            'name'   => 'type',
+            'values' => array(
+                array('one_page', 'Только эта страница'),
+                array('all_pages', 'Все страницы'),
+                array('custom', 'Настроить...')
             ),
+            'value'  => $infoblock['scope_type'] ? $infoblock['scope_type'] : 'one_page'
+        );
+    }
+    
+    protected function getScopeFields(CompInfoblock\Entity $infoblock)
+    {
+        $scope = $infoblock['scope_entity'];
+        $fields = array(
+            $this->getScopeTypeField($infoblock),
             array(
                 'type' => 'hidden',
-                'name' => 'params'
+                'name' => 'params',
+                'value' => $scope ? json_encode(array('id' => $scope['id'], 'conditions' => $scope['conditions'])) : null
             )
         );
         return $fields;
         
     }
-
-    /*
-     * Receipt of the form fields tab "Where show"
-     * @param fx_infoblock $infoblock - information block whose looking for a suitable place
-     * @param fx_content_page $c_page - page, where he opened the window settings
-     */
-
-    protected function _getScopeFields(CompInfoblock\Entity $infoblock, \Floxim\Main\Content\Entity $c_page)
+    public function scope($input) 
     {
-
+        if (isset($input['params']) && isset($input['params'][0])) {
+            $input['infoblock_id'] = $input['params'][0];
+        }
+        if (isset($input['infoblock_id'])) {
+            $ib = fx::data('infoblock', $input['infoblock_id']);
+            $scope = $ib['scope_entity'];
+        }
+        if (!$scope) {
+            $scope = fx::data('scope')->create();
+        }
         $fields = array();
-        // format: [page_id]-[descendants|children|this]-[|type_id]
-
-
-        //$path_ids = $c_page->getParentIds();
-        $path_ids = $c_page->getPath()->getValues('id');
-        $path = fx::data('floxim.main.page', $path_ids);
-        if (!$path->findOne('id', $c_page['id'])) {
-            $path [] = $c_page;
+        
+        $has_type_field = isset($input['force_scope_type']);
+        if ($has_type_field) {
+            $type_field = $this->getScopeTypeField($ib);
+            $type_field['tab'] = 'header';
+            $type_field['values'][2][1] = 'Специальные условия';
+            $fields []= $type_field;
         }
-        $path_count = count($path);
-        $c_type = $c_page['type'];
-        $page_com = fx::data('component', $c_page['type']);
-        $c_type_name = $page_com->getItemName('one');
-
-        $container_infoblock = null;
-        if ($infoblock['container_infoblock_id']) {
-            $container_infoblock = fx::data('infoblock', $infoblock['container_infoblock_id']);
+        
+        // re-edit
+        if (isset($input['conditions'])) {
+            $scope['conditions'] = $input['conditions'];
         }
-
-        $c_scope_code = $infoblock->getScopeString();
-
-        $vals = array();
-
-        foreach ($path as $i => $pi) {
-            //$sep = str_repeat(" -- ", $i);
-            $sep  = str_repeat("&nbsp;", $i*6);
-            $pn = $pi['name'];
-            $pt = $pi->getComponent()->getItemName('one');
-            $pt_of = $pi->getComponent()->getItemName('of');
-            $is_last = $i === $path_count - 1;
-            $c_page_id = $pi['id'];
-            if ($i === 0) {
-                $c_page_id = fx::env('site')->get('index_page_id');
-                $vals [] = array($c_page_id . '-descendants-', fx::alang('All pages'));
-                if ($path_count > 1) {
-                    $vals [] = array(
-                        $c_page_id . '-children-' . $c_type,
-                        sprintf(fx::alang('All pages of type %s'), $c_type_name)
-                    );
-                }
-            }
-            if ($i !== 0) {
-                $vals [] = array(
-                    $c_page_id . '-descendants-',
-                    $sep . fx::util()->ucfirst(sprintf(fx::alang('%s %s and children'), $pt, $pn))
-                );
-            }
-            if ($is_last) {
-                $vals [] = array(
-                    $c_page_id . '-this-',
-                    $sep . fx::util()->ucfirst(sprintf(fx::alang('%s %s only'), $pt, $pn))
-                );
-            } else {
-                $vals [] = array(
-                    $c_page_id . '-children-',
-                    $sep . fx::util()->ucfirst(sprintf(fx::alang('%s %s children only'), $pt_of, $pn))
-                );
-            }
+        
+        $path = fx::env()->getPath();
+        $scope_page_id = $scope->getScopePageId($path);
+        
+        $q_field = array(
+            'type' => 'radio_facet',
+            'label' => 'Быстрый выбор',
+            'name' => 'scope[page_id]',
+            'values' => $path->getValues(function($v) {
+                return array($v['id'], $v->getName());
+            }),
+            'value' => $scope_page_id
+        );
             
-            if (!$is_last && $i !== 0) {
-                $vals [] = array(
-                    $c_page_id . '-children-' . $c_type,
-                    $sep . fx::util()->ucfirst(sprintf(fx::alang('%s %s children of type %s'), $pt_of, $pn, $c_type_name))
-                );
-            }
+        if ($has_type_field) {
+            $q_field['parent'] = array(
+                array('type', 'custom')
+            );
         }
-
-        // can be set to "hidden" later
-        $scope_field_type = 'select';
-
-        if (!$infoblock['id']) {
-            if ($container_infoblock) {
-                $c_scope_code = $container_infoblock->getScopeString();
-                if ($container_infoblock['scope']['pages'] === 'this') {
-                    $scope_field_type = 'hidden';
-                }
-            } else {
-                $ctr = $infoblock->initController();
-                $cfg = $ctr->getConfig(true);
-                if (isset($cfg['default_scope'])) {
-                    $c_scope_code = is_callable($cfg['default_scope']) 
-                                        ? call_user_func($cfg['default_scope'])
-                                        : $cfg['default_scope'];
-                    
-                    if ($c_scope_code === 'this') {
-                        $c_scope_code = fx::env('page_id').'-this-';
-                    } elseif ($c_scope_code === 'all') {
-                        $c_scope_code = fx::env('site')->get('index_page_id').'-descendants-';
-                    }
-                }
-            }
+            
+        $fields []= $q_field;
+        
+        $fields []= array(
+            'name' => 'scope[id]',
+            'type' => 'hidden',
+            'value' => $scope['id']
+        );
+        
+        $cond_field = array(
+            'name' => 'scope[conditions]',
+            'type' => 'condition',
+            'fields' => array(
+                fx::component('floxim.main.page')->getFieldForFilter('entity')
+            ),
+            'value' => $scope['conditions'],
+            'label' => false
+        );
+        
+        if ($has_type_field) {
+            $cond_field['parent'] = array(
+                array('type', 'custom')
+            );
         }
-
-        $fields [] = array(
-            'type'   => $scope_field_type,
-            'label'  => fx::alang('Scope'),
-            'name'   => 'complex_scope',
-            'values' => $vals,
-            'value'  => $c_scope_code
-        );
-        $fields ['visibility'] = array(
-            'type'      => 'hidden',
-            'label'     => 'Visibility',
-            'name'      => 'visibility',
-            //'join_with' => 'complex_scope',
-            //'values'    => $this->getScopeVisibilityOptions(),
-            'value'     => $infoblock['scope']['visibility']
-        );
-        return $fields;
-    }
-
-    protected function getScopeVisibilityOptions()
-    {
+        $fields[]= $cond_field;
+        
         return array(
-            'all'    => 'Everybody',
-            'admin'  => 'Admins',
-            'guests' => 'Guests',
-            'nobody' => 'Nobody'
+            'fields' => $fields,
+            'header' => 'Где показывать блок?'
         );
     }
 
-    /*
-     * Receipt of the form fields for the tab "How to show"
-     */
     protected function getFormatFields(CompInfoblock\Entity $infoblock, $area_meta = null)
     {
         $i2l = $infoblock->getVisual();
@@ -1027,17 +967,6 @@ class Infoblock extends Admin
                 'name'   => 'content_handle',
                 'type'   => 'hidden',
                 'value' => 'delete'
-                /*
-                ,
-                'label'  => fx::alang('The infoblock contains some content',
-                        'system') . ', <b>' . $ib_content->length . '</b> ' . fx::alang('items. What should we do with them?',
-                        'system'),
-                'values' => array(
-                    'unbind' => fx::alang('Unbind/Hide', 'system'),
-                    'delete' => fx::alang('Delete', 'system')
-                )
-                 * 
-                 */
             );
         }
         
@@ -1200,99 +1129,24 @@ class Infoblock extends Admin
         if (!$infoblock) {
             return;
         }
-
-        // move from region to region
-        // need to rearrange the blocks from the old area
-        // until very stupidly, in order
-        if ($vis['area'] != $input['area']) {
-            $source_vis = $this->getAreaVisual($vis['area'], $vis['layout_id'], $infoblock['site_id']);
-            $cpos = 1;
-            foreach ($source_vis as $csv) {
-                if ($csv['id'] == $vis['id']) {
-                    continue;
-                }
-                fx::db()->query("UPDATE {{infoblock_visual}}
-                    SET priority = '" . $cpos . "'
-                    WHERE id = '" . $csv['id'] . "'");
-                $cpos++;
-            }
-        }
-
-        $target_vis = $this->getAreaVisual($input['area'], $vis['layout_id'], $infoblock['site_id']);
-
-        $next_visual_id = isset($input['next_visual_id']) ? $input['next_visual_id'] : null;
-
-        $cpos = 1;
-        $new_priority = null;
-        foreach ($target_vis as $ctv) {
-            if ($ctv['id'] == $vis['id']) {
-                continue;
-            }
-            if ($ctv['id'] == $next_visual_id) {
-                $new_priority = $cpos;
-                $cpos++;
-            }
-            if ($ctv['priority'] != $cpos) {
-                fx::db()->query("UPDATE {{infoblock_visual}}
-                    SET priority = '" . $cpos . "'
-                    WHERE id = '" . $ctv['id'] . "'");
-            }
-            $cpos++;
-        }
-        if (!$new_priority) {
-            $new_priority = $cpos;
-        }
-
-        fx::db()->query("UPDATE {{infoblock_visual}}
-            SET priority = '" . $new_priority . "', area = '" . $input['area'] . "'
-            WHERE id = '" . $vis['id'] . "'");
-
-        return array('status' => 'ok');
-    }
-    
-    public function scope($input) 
-    {
-        if (isset($input['params']) && isset($input['params'][0])) {
-            $input['infoblock_id'] = $input['params'][0];
-        }
-        if (isset($input['infoblock_id'])) {
-            $ib = fx::data('infoblock', $input['infoblock_id']);
-            $scope = $ib['scope_entity'];
+        
+        if (isset($input['next_visual_id'])) {
+            $next_vis = fx::data('infoblock_visual', $input['next_visual_id']);
         } else {
-            $scope = fx::data('scope')->create();
+            $next_vis = fx::data('infoblock_visual')
+                ->where('layout_id', $vis['layout_id'])
+                ->where('infoblock.site_id' , $infoblock['id'])
+                ->where('area', $input['area'])
+                ->order('priority')
+                ->one();
         }
-        $fields = array();
-        
-        $q_field = array(
-            'type' => 'radio_facet',
-            'label' => 'quick select',
-            'values' => fx::env()->getPath()->getValues(function($v) {
-                return array($v['id'], $v->getName());
-            })
-        );
-            
-        $fields []= $q_field;
-        
-        $fields []= array(
-            'name' => 'scope[id]',
-            'type' => 'hidden',
-            'value' => $scope['id']
-        );
-        
-        $fields []= array(
-            'name' => 'scope[conditions]',
-            'type' => 'condition',
-            'fields' => array(
-                fx::component('floxim.main.page')->getFieldForFilter('entity')
-            ),
-            'value' => $scope['conditions'],
-            'label' => false
-        );
-        
-        fx::log($fields);
-        
-        return array(
-            'fields' => $fields
-        );
+        $finder = fx::data('infoblock_visual');
+        if (!$next_vis) {
+            $finder->moveLast($vis);
+        } else {
+            $finder->moveBefore($vis, $next_vis);
+        }
+        $vis['area'] = $input['area'];
+        $vis->save();
     }
 }

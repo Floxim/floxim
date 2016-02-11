@@ -55,8 +55,11 @@ class Layout extends System\Controller
             $page = fx::env('page');
             $meta_title = empty($page['title']) ? $page['name'] : $page['title'];
             $this->showAdminPanel();
-            $html = fx::page()->setMetatags('title', $meta_title)->setMetatags('description',
-                $page['description'])->setMetatags('keywords', $page['keywords'])->postProcess($html);
+            $html = fx::page()
+                ->setMetatags('title', $meta_title)
+                ->setMetatags('description', $page['description'])
+                ->setMetatags('keywords', $page['keywords'])
+                ->postProcess($html);
         }
         return $html;
     }

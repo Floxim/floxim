@@ -727,6 +727,8 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
                 }
                 if (! (entity_is_last && is_after) ) {
                     left -= b_size/2;
+                } else if (scope === 'infoblock') {
+                    left += b_size/2;
                 }
                 if (entity_is_first && !is_after) {
                     left -= b_size/2;

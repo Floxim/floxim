@@ -116,19 +116,16 @@ class Finder extends System\Finder
             $prev_entity = $this->getInstance()->getById($after_what_id);
             if ($prev_entity) {
                 $prev_priority = $prev_entity['priority'];
-                fx::log('prev', $prev_priority, $prev_entity);
             }
         }
         $field_to_move = $this->getFieldImplementation($what_id, $params);
         $next_priority = $prev_priority + 1; // default for last item
-        $next_entity = $this->where('priority', $prev_priority, '>')->one();
+        $next_entity = $this->getInstance()->where('priority', $prev_priority, '>')->one();
         if ($next_entity) {
             $next_priority = $next_entity['priority'];
-            fx::log('next', $next_priority, $next_entity);
         }
         $field_to_move['priority'] = ($prev_priority + $next_priority) / 2;
         $field_to_move->save();
-        fx::log($field_to_move, $what_id, $after_what_id, $params);
         return $field_to_move;
     }
 }

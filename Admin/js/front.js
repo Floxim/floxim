@@ -19,6 +19,7 @@ window.fx_front = function () {
     
     $('#fx_admin_front_menu').on('click.fx_mode_click', '.fx_front_mode', function() {
         var mode = $(this).data('key');
+        console.log('clcmkd', mode, $fx.front.mode);
         if (mode !== $fx.front.mode) {
             $fx.front.load(mode);
         }
@@ -2692,7 +2693,8 @@ fx_front.prototype.get_panel_height = function() {
 
 fx_front.prototype.move_down_body = function () {
     var panel_height = this.get_panel_height();
-    $('body').css('margin-top', '').css('margin-top','+='+panel_height+'px');
+    //$('body').css('margin-top', '').css('margin-top','+='+panel_height+'px');
+    $('body').css('padding-top', '').css('padding-top','+='+panel_height+'px');
     $('.fx_top_fixed').css('top', '+='+panel_height+'px').css('z-index', 2674);
 };
 

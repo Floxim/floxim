@@ -36,11 +36,16 @@ class Front extends Base
         fx::env('page', $page);
         fx::http()->status('200');
         
+        
+        $layout_ib = fx::page()->getInfoblocks($path)->findOne(function($ib) {
+            return $ib->isLayout();
+        });
+        /*
         $ibs = fx::data('infoblock')->getForPath($path);
         $layout_ib = $ibs->findOne(function($ib) {
             return $ib['controller'] === 'layout' && $ib['action'] === 'show';
         });
-        
+        */
         
         
         //$layout_ib = $this->getLayoutInfoblock($page);

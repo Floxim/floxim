@@ -10,15 +10,23 @@ class Error extends Front
     {
         $site_id = isset($context['site_id']) ? $context['site_id'] : fx::env('site_id');
         $error_page = $this->getErrorPage($site_id);
-        $ctr = fx::router('front')->route($error_page, $context);
+        if ($error_page) {
+            $res = fx::router('front')->route($error_page, $context);
+        } else {
+            $res = 'Page not found';
+        }
+        
         fx::http()->status('404');
-        return $ctr;
+        return $res;
     }
     
     public function getErrorPage($site_id = null) 
     {
         if (is_null($site_id)) {
             $site_id = fx::env('site_id');
+        }
+        if (!$site_id) {
+            return null;
         }
         $error_page = fx::data(
             'floxim.main.page',

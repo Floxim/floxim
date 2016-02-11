@@ -7,6 +7,7 @@ window.fx_livesearch = function (node) {
     
     this.isMultiple = $node.data('is_multiple') === 'Y';
     this.allowEmpty = !this.isMultiple && $node.data('allow_empty') !== 'N';
+    this.allowEmpty = true;
     
     var bl = this.isMultiple ? 'multisearch' : 'monosearch';
     
@@ -226,6 +227,18 @@ window.fx_livesearch = function (node) {
         return false;
     };
     
+    this.setValue = function (id) {
+        if (this.isMultiple || !this.preset_values) {
+            return;
+        }
+        for (var i = 0; i < this.preset_values.length; i++) {
+            var cv = this.preset_values[i];
+            if (cv.id === id) {
+                this.addValue(cv);
+            }
+        }
+    };
+    
     // now adding all together
     this.addValue = function(value, path) {
         var     id = value.id,
@@ -289,11 +302,11 @@ window.fx_livesearch = function (node) {
     this.disableAdd = function() {
         this.addDisabled = true;
         if (this.allowEmpty) {
-            this.$input.css({
+            this.$input.attr('tabindex', '-1');/*.css({
                 width:'1px',
                 position:'absolute',
                 left:'-10000px'
-            }).attr('tabindex', '-1');
+            });*/
         }
         this.Suggest.disabled = true;
         if (!this.isMultiple) {
@@ -304,7 +317,6 @@ window.fx_livesearch = function (node) {
     
     this.enableAdd = function() {
         this.addDisabled = false;
-        this.$input.attr('style', '');
         this.Suggest.disabled = false;
         this.$node.removeClass(bl+'_has-value');
         this.recountInputWidth();
@@ -324,7 +336,7 @@ window.fx_livesearch = function (node) {
             this.$node.trigger('change');
         }
         this.updateSortableAxis();
-        this.recountInputWidth();
+        //this.recountInputWidth();
     };
     
     this.getValueNode = function() {
@@ -339,19 +351,20 @@ window.fx_livesearch = function (node) {
     };
     
     this.hideValue = function() {
-        var item_node = this.getValueNode();
-        if (item_node) {
-            if (!this.isMultiple) {
-                this.$input.css('width', this.$container.width());
-                this.$container.attr('tabindex', null);
-            }
-            if (this.allowEmpty) {
-                item_node.hide();
-            }
-            var c_text = item_node.find('.'+bl+'__item-title').text();
-            this.$input.val(c_text);
-            this.enableAdd();
+        var $item_node = this.getValueNode();
+        if (!$item_node || !$item_node.length) {
+            return;
         }
+        if (!this.isMultiple) {
+            this.$input.css('width', this.$container.width());
+            this.$container.attr('tabindex', null);
+        }
+        if (this.allowEmpty) {
+            $item_node.hide();
+        }
+        var c_text = $item_node.find('.'+bl+'__item-title').text();
+        this.$input.val(c_text);
+        this.enableAdd();
     };
     
     this.showValue = function() {
@@ -373,7 +386,8 @@ window.fx_livesearch = function (node) {
             padding:livesearch.$input.css('padding')
         });
         livesearch.$proto_node.html(v);
-        var width = livesearch.$proto_node.outerWidth() + 20;
+        var extra_right = 10; // 20
+        var width = livesearch.$proto_node.outerWidth() + extra_right;
         livesearch.$input.css({width:width+'px'});
     };
     
@@ -505,7 +519,7 @@ window.fx_livesearch = function (node) {
             opacity:0
         });
         $('body').append(this.$proto_node);
-        this.$input.on('keypress keyup keydown focus', function() {
+        this.$input.on('keypress keyup keydown', function() {
             livesearch.recountInputWidth();
         });
         

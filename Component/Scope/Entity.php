@@ -14,6 +14,30 @@ class Entity extends \Floxim\Floxim\System\Entity {
         return $res;
     }
     
+    public function getScopePageId($path)
+    {
+        $ids = $path->getValues('id');
+        $conds = $this->getConditions();
+        if (!$conds) {
+            return null;
+        }
+        if ($conds['type'] === 'group') {
+            $conds = $conds['values'];
+        } else {
+            $conds = array($conds);
+        }
+        foreach ($conds as $c) {
+            if ($c['field'] === 'entity' && !$c['inverted']) {
+                foreach ($ids as $id) {
+                    if (in_array($id, $c['value'])) {
+                        return $id;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+    
     public function checkCondition(&$cond, $path) 
     {
         if ($cond['type'] === 'group') {

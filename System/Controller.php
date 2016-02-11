@@ -231,11 +231,22 @@ class Controller
         // now - filtered
         $result = array();
         $replace = array();
+        
+        $test = $this instanceof \Floxim\Nav\Section\Controller;
+        $db = function() use ($test) {
+            if ($test && fx::env('console')) {
+                call_user_func_array(array(fx::getDebugger(), 'debug'), func_get_args());
+            }
+        };
+        
+        $db('hm', $template_variants);
+        
         foreach ($template_variants as $k => $tplv) {
             if (isset($tplv['is_abstract'])) {
                 continue;
             }
             if (!isset($tplv['of']) || !is_array($tplv['of'])) {
+                $db('no of');
                 continue;
             }
             foreach ($tplv['of'] as $tpl_of => $tpl_of_priority) {
@@ -247,6 +258,7 @@ class Controller
 
                 $tpl_of_action = fx::util()->underscoreToCamel($tpl_of_action, false);
                 if (!in_array($tpl_of_controller, $controller_variants)) {
+                    $db('novar', $tpl_of_controller, $controller_variants, $tplv['full_id']);
                     continue;
                 }
 

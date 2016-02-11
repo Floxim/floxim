@@ -59,6 +59,7 @@ class Component extends Console\Command
     {
         $source_path = fx::path('@floxim/Console/protected/component');
         $component_path = $com->getPath();
+        fx::log($com, $component_path);
         $file_list = $this->buildFileList($source_path, $component_path);
         foreach ($file_list as &$file_data) {
             $file_data['callback_content'] = function ($content) use ($com) {
@@ -80,6 +81,8 @@ class Component extends Console\Command
             'Vendor'                => $com->getVendorName(),
             'Module'                => $com->getModuleName(),
             'Component'             => $com->getOwnName(),
+            'Namespace'             => substr($com->getNamespace(), 1),
+            'ParentNamespace'       => $par_ns,
             'ParentClassEntity'     => $par_ns . '\\Entity',
             'ParentClassFinder'     => $par_ns . '\\Finder',
             'ParentClassController' => $par_ns . '\\Controller'

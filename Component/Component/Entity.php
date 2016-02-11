@@ -87,30 +87,33 @@ class Entity extends System\Entity
                     );
                 }
             }
+            try {
+                $finder = fx::data($this['keyword']);
+                $relations = $finder->relations();
 
-            $finder = fx::data($this['keyword']);
-            $relations = $finder->relations();
-
-            foreach ($relations as $rel_code => $rel) {
-                $offsets[$rel_code] = array(
-                    'type' => self::OFFSET_RELATION,
-                    'relation' => $rel
-                );
-            }
-
-            $entity_class = $finder->getEntityClassName();
-            $reflection = new \ReflectionClass($entity_class);
-            $methods = $reflection->getMethods();
-            foreach ($methods as $method) {
-                if ($method::IS_PUBLIC && preg_match("~^_get(.+)$~", $method->name, $getter_offset)) {
-                    $getter_offset = fx::util()->camelToUnderscore($getter_offset[1]);
-                    $offsets[ $getter_offset ] = array(
-                        'type' => self::OFFSET_GETTER,
-                        'method' => $method->name
+                foreach ($relations as $rel_code => $rel) {
+                    $offsets[$rel_code] = array(
+                        'type' => self::OFFSET_RELATION,
+                        'relation' => $rel
                     );
                 }
+
+                $entity_class = $finder->getEntityClassName();
+                $reflection = new \ReflectionClass($entity_class);
+                $methods = $reflection->getMethods();
+                foreach ($methods as $method) {
+                    if ($method::IS_PUBLIC && preg_match("~^_get(.+)$~", $method->name, $getter_offset)) {
+                        $getter_offset = fx::util()->camelToUnderscore($getter_offset[1]);
+                        $offsets[ $getter_offset ] = array(
+                            'type' => self::OFFSET_GETTER,
+                            'method' => $method->name
+                        );
+                    }
+                }
+                $this->entity_offsets = fx::collection($offsets);
+            } catch (\Exception $e) {
+                fx::log($e->getMessage(), $this['keyword']);
             }
-            $this->entity_offsets = fx::collection($offsets);
         }
         return $this->entity_offsets;
     }
@@ -158,7 +161,11 @@ class Entity extends System\Entity
 
     public function getPath()
     {
-        return fx::path('@module/' . fx::getComponentPath($this['keyword']));
+        $kw = $this['keyword'];
+        if (strstr($kw, '.')) {
+            return fx::path('@module/' . fx::getComponentPath($kw));
+        }
+        return fx::path('@floxim/Component/'.fx::util()->underscoreToCamel($kw));
     }
 
     public function validate()

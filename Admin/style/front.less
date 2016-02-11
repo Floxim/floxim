@@ -949,10 +949,16 @@ span.fx_area_marker {
 .fx-side-panel {
     background: #FFF;
     width: 40%;
+    min-width:500px;
     position: absolute;
     top: 0;
     right: -42%;
     box-shadow: -3px 1px 20px rgba(0,0,0,0.3);
+    
+    &.fx-side-panel_fluid {
+        width:auto;
+        min-width:40%;
+    }
     
     &__footer {
         padding: 10px 20px;

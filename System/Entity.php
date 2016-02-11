@@ -88,7 +88,9 @@ abstract class Entity implements \ArrayAccess, Template\Entity
         if (!isset(self::$offset_meta[$c_class])) {
             $res = array();
             $finder = $this->getFinder();
-            $db_fields = array_keys(fx::schema($finder->getTable()));
+            $table = $finder->getTable();
+            $table_schema = fx::schema($table);
+            $db_fields = array_keys($table_schema);
             foreach ($db_fields as $field) {
                 $res[$field] = array(
                     'type' => self::OFFSET_FIELD

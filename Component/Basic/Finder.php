@@ -92,9 +92,9 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
         $field_keyword = $parts[1];
         $sub_finder = fx::data($subtype);
         $sub_rels = $sub_finder->relations();
+        // @todo: smth. like $f->where('parent.tags', 123) 
         if (isset($sub_rels[$field_keyword])) {
-            fx::cdebug($this, $sub_rels[$field_keyword]);
-            
+            fx::cdebug($this, $sub_rels[$field_keyword]);    
         } else {
             $subtype_table = $sub_finder->getColTable($field_keyword);
             $alias = 'self__'.$subtype_table;
@@ -124,17 +124,7 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
             if (!($relation = $f->getRelation())) {
                 continue;
             }
-            switch ($f['type']) {
-                case 'link': case 'multilink':
-                    $relations[$f->getPropertyName()] = $relation;
-                    break;
-                /*
-                case 'multilink':
-                    $relations[$f['keyword']] = $relation;
-                    break;
-                 * 
-                 */
-            }
+            $relations[$f->getPropertyName()] = $relation;
         }
         $cache[$class] = $relations;
         return $relations;
@@ -195,7 +185,10 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
         }
         $obj['type'] = $component['keyword'];
         if (!isset($data['site_id'])) {
-            $obj['site_id'] = fx::env('site')->get('id');
+            $site = fx::env('site');
+            if ($site) {
+                $obj['site_id'] = $site['id'];
+            }
         }
         $fields = $component->getAllFields()->find('default', '', System\Collection::FILTER_NEQ);
         foreach ($fields as $f) {

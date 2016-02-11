@@ -61,7 +61,13 @@ class Finder extends System\Finder
 
     public function getByKey($session_key)
     {
-        return $this->where('session_key', $session_key)->where('site_id', array(fx::env('site_id'), 0))->one();
+        $res = $this
+            ->where('session_key', $session_key)
+            ->whereOr(
+                array('site_id', fx::env('site_id')),
+                array('site_id', null, 'IS NULL')
+            )->one();
+        return $res;
     }
 
     public function stop()

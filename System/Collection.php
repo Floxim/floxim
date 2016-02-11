@@ -884,4 +884,21 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         }
         return isset($this->data[$offset]) ? $this->data[$offset] : null;
     }
+    
+    public function random($count = 1)
+    {
+        if (count($this->data) === 0) {
+            return null;
+        }
+        $keys = array_rand($this->data, $count);
+        if ($count === 1) {
+            return $this[$keys];
+        }
+        $res = fx::collection();
+        foreach ($keys as $k) {
+            $res[]= $this[$k];
+        }
+        return $res;
+        
+    }
 }

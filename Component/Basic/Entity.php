@@ -39,9 +39,13 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
         );
         $res = fx::collection();
         foreach  ($link_fields as $lf) {
-            $finder = fx::data( $lf['component']->get('keyword') );
-            $items = $finder->where($lf['keyword'], $this['id'])->all();
-            $res = $res->concat($items);
+            try {
+                $finder = fx::data( $lf['component']->get('keyword') );
+                $items = $finder->where($lf['keyword'], $this['id'])->all();
+                $res = $res->concat($items);
+            } catch (\Exception $e) {
+                fx::log($e);
+            }
         }
         return $res;
     }

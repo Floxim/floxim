@@ -1,6 +1,6 @@
 (function() {
     
-window.conditions_builder = function(params) {
+window.condition_builder = function(params) {
     var that = this;
     var cl = 'fx-condition-builder';
     this.fields = params.fields || {};
@@ -11,6 +11,8 @@ window.conditions_builder = function(params) {
     this.$node = params.$node;
     this.name = params.name;
     this.context = params.context;
+    
+    this.$node.data('condition_builder', this);
     
     function get_date_value($control) {
         var res = $control.find('.date_input').val();
@@ -704,6 +706,13 @@ window.conditions_builder = function(params) {
             that.recountGrouppers();
         }, 100);
     };
+    
+    this.redraw = function(new_value) {
+        this.value = new_value;
+        this.$node.html('');
+        this.init();
+    };
+    
     
     this.$node.addClass(cl);
     

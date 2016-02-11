@@ -41,7 +41,7 @@ if (!_c.id) {
     <? } ?>
 </div>
 
-<!--[form_row ? (_c.type == 'select' || _c.type == 'radio') && _c.hidden_on_one_value && !_c.extendable && _c.values && fx_object_length(_c.values) == 1]-->
+<!--[form_row ? _c.type.match(/^(select|radio|livesearch)$/) && _c.hidden_on_one_value && _c.values && _c.values.length === 1]-->
 <?
     var c_value = null;
     $.each(_c.values, function() {
@@ -461,9 +461,10 @@ var $containers = html.find('.fx_group_input');
 
 $.each(_c.fields, function(index, item) {
     //var $input_node = $t.jQuery('form_row', item);
-    var $input_node = $fx_fields.row(item);
+    //var $input_node = $fx_fields.row(item);
+    var $input_node = $fx_form.draw_field(item, $containers.eq(index));
     item.$input = $input_node;
-    $containers.eq(index).append($input_node );
+    //$containers.eq(index).append($input_node );
 });
 
 function recount_groups() {
@@ -537,4 +538,4 @@ html.on('change', '.fx_limit_all', function() {
 <div></div>
 
 <!--jquery-->
-new conditions_builder( $.extend({}, _c, {$node: html}) );
+new condition_builder( $.extend({}, _c, {$node: html}) );

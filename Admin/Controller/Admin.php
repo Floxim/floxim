@@ -90,22 +90,26 @@ class Admin extends System\Controller
         $field = array(
             'name'   => 'vendor',
             'label'  => fx::alang('Vendor', 'system'),
-            'type'   => 'select',
+            'type'   => 'livesearch',
             'values' => array()
         );
         $vendor = fx::config('dev.vendor');
-        $vendor = explode(",", $vendor);
-        foreach ($vendor as $num => $part) {
+        if (!is_array($vendor)) {
+            $vendor = explode(",", $vendor);
+        }
+        $vendor [] = 'my';
+        foreach ($vendor as $num => &$part) {
             $part = trim($part);
             if (empty($part)) {
                 unset($vendor[$num]);
             }
+            $part = fx::util()->underscoreToCamel($part, true);
         }
-        $vendor [] = 'my';
+        $vendor = array_unique($vendor);
         foreach ($vendor as $v) {
-            $v = fx::util()->underscoreToCamel($v, true);
-            $field['values'][$v] = $v;
+            $field['values'][]= array($v, $v);
         }
+        $field['value'] = $vendor[0];
         return $field;
     }
 
@@ -193,12 +197,13 @@ class Admin extends System\Controller
             $js_config = new FxAdmin\Configjs();
             fx::page()->addJsText("\$fx.init(" . $js_config->getConfig() . ");");
         } else {
-            $auth_form = fx::controller('user:auth_form')->render('user:auth_form');
+            $auth_form = fx::controller('floxim.user.user:auth_form')->render('floxim.user.user:auth_form');
 
             $recover_form = fx::controller(
-                    'user:recover_form',
-                    array('email' => isset($_POST['email']) ? $_POST['email'] : null)
-                )->render('user:recover_form');
+                'floxim.user.user:recover_form',
+                array('email' => isset($_POST['email']) ? $_POST['email'] : null)
+            );
+            $recover_form = $recover_form->render('floxim.user.user:recover_form');
             $res = fx::template('@admin:authorize')->render(array(
                 'auth_form'    => $auth_form,
                 'recover_form' => $recover_form

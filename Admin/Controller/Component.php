@@ -135,57 +135,96 @@ class Component extends Admin
         $vf = $this->getVendorField();
         $fields [] = $vf;
         $vendors = $vf['values'];
-        foreach ($vendors as $v) {
+        $module_field = array(
+            'label' => 'Module',
+            'type' => 'livesearch',
+            'name' => 'module',
+            'join_with' => 'vendor',
+            'join_type' => 'line',
+            'hidden_on_one_value' => true
+        );
+        $filter = array();
+        $modules = array();
+        foreach ($vendors as $vendor_val) {
+            $v =  $vendor_val[0];
             $path = fx::path()->abs('/module/' . $v) . '/*';
             $module_dirs = glob($path);
-            $modules = array();
-            if ($module_dirs) {
-                foreach ($module_dirs as $md) {
-                    $md = fx::path()->fileName($md);
-                    $modules[] = array($v . '.' . $md, $md);
-                }
+            
+            if (!$module_dirs) {
+                continue;
             }
-            $modules [] = array('new', '-- New --');
-            $fields [] = array(
-                'type'                => 'select',
-                'label'               => 'Module',
-                'name'                => $v . '__module',
-                'join_with'           => 'vendor',
-                'join_type'           => 'line',
-                'parent'              => array('vendor' => $v),
-                'values'              => $modules,
-                'hidden_on_one_value' => true
-            );
-            $fields [] = array(
-                'type'   => 'string',
-                'label'  => 'New module name',
-                'name'   => $v . '__new_module',
-                'parent' => array($v . '__module' => 'new', 'vendor' => $v)
-            );
+            $vendor_modules = array();
+            if ($v === 'Floxim') {
+                $vendor_modules []= array('System', '[System]');
+            }
+            foreach ($module_dirs as $md) {
+                if (!is_dir($md)) {
+                    continue;
+                }
+                $md = fx::path()->fileName($md);
+                $module_keyword = fx::util()->camelToUnderscore($md);
+                $vendor_modules[]= array($module_keyword, $md);
+            }
+            
+            foreach ($vendor_modules as $vm) {
+                $module_keyword = $vm[0];
+                if (!isset($filter[$module_keyword])) {
+                    $filter[$module_keyword] = array(
+                        array(
+                            'vendor',
+                            array()
+                        )
+                    );
+                }
+                $filter[$module_keyword][0][1][]= $v;
+                $modules[]= $vm;
+            }
         }
+        $modules [] = array('new', '-- New --');
+        $module_field['values'] = $modules;
+        $module_field['values_filter'] = $filter;
+        $fields []= $module_field;
+        $fields [] = array(
+            'type'   => 'string',
+            'label'  => 'New module name',
+            'name'   => 'new_module',
+            'parent' => array('module' => 'new')
+        );
         return $fields;
     }
 
     protected function getFullKeyword($input)
     {
+        fx::log($input);
         $keyword = trim($input['keyword']);
 
         if (!$keyword && $input['name']) {
             $keyword = fx::util()->strToKeyword($input['name']);
         }
-
+        
         $vendor = $input['vendor'];
-        $module = $input[$vendor . '__module'];
+        $module = $input['module'];
+        
         if ($module === 'new') {
-            $module = $vendor . '.' . fx::util()->strToKeyword($input[$vendor . '__new_module']);
+            $module = fx::util()->strToKeyword($input['new_module']);
         }
-        $keyword = $module . '.' . $keyword;
-        $parts = explode(".", $keyword);
+
+        $parts = array(
+            'vendor' => $vendor,
+            'module' => $module,
+            'keyword' => $keyword
+        );
+        
         foreach ($parts as &$p) {
             $p = fx::util()->camelToUnderscore($p);
         }
-        $keyword = join('.', $parts);
-        return $keyword;
+        
+        // special system components have "vendor.module" no prefix
+        if ($parts['vendor'] === 'floxim' && $parts['module'] === 'system') {
+            return $parts['keyword'];
+        }
+        
+        return join(".", $parts);
     }
 
     public function add($input)
@@ -285,10 +324,8 @@ class Component extends Admin
 
 
         $data['keyword'] = $this->getFullKeyword($input);
-
-
+        
         $data['parent_id'] = $input['parent_id'];
-        //$data['item_name'] = $input['item_name'];
 
         $res_create = fx::data('component')->createFull($data);
         if (!$res_create['validate_result']) {
