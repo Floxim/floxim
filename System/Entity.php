@@ -90,6 +90,9 @@ abstract class Entity implements \ArrayAccess, Template\Entity
             $finder = $this->getFinder();
             $table = $finder->getTable();
             $table_schema = fx::schema($table);
+            if (!$table_schema) {
+                return $res;
+            }
             $db_fields = array_keys($table_schema);
             foreach ($db_fields as $field) {
                 $res[$field] = array(
@@ -694,7 +697,6 @@ abstract class Entity implements \ArrayAccess, Template\Entity
         if (is_null($this->type_keyword)) {
             $class = array_reverse(explode("\\", get_class($this)));
             $type = $class[1];
-            //$this->type_keyword = strtolower($type);
             $this->type_keyword = fx::util()->camelToUnderscore($type);
         }
         return $this->type_keyword;
