@@ -13,6 +13,17 @@ class Finder extends System\Finder
         parent::__construct();
         $this->order[] = 'priority asc';
     }
+    
+    public function relations()
+    {
+        return array(
+            'theme' => array(
+                self::BELONGS_TO,
+                'layout',
+                'layout_id'
+            )
+        );
+    }
 
     public function getById($id)
     {

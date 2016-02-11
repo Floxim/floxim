@@ -19,20 +19,23 @@ class Site extends Admin
         $list['labels'] = array(
             'name'     => fx::alang('Site name', 'system'),
             'domain'   => fx::alang('Domain', 'system'),
-            'language' => fx::alang('Language', 'system')
+            'language' => fx::alang('Language', 'system'),
+            'theme'    => fx::alang('Theme')
         );
 
         $list['values'] = array();
         $list['entity'] = 'site';
         foreach ($sites as $v) {
+            $theme_name = $v['theme']['name'];
             $r = array(
                 'id'       => $v['id'],
-                'domain'   => $v['domain'],
+                'domain'   => '<a href="http://'.$v['domain'].'" target="_blank">'.$v['domain'].'</a>',
                 'name'     => array(
                     'url'  => 'site.settings(' . $v['id'] . ')',
                     'name' => $v['name']
                 ),
-                'language' => $v['language']
+                'language' => $v['language'],
+                'theme'    => $theme_name
             );
             $list['values'][] = $r;
         }

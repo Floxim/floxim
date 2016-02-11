@@ -48,8 +48,8 @@ class Finder extends System\Finder
     
     public function getForPath($path)
     {
-        //$ids = $path->getValues('id');
         $current_page = $path->last();
+        $this->where('site_id', $current_page['site_id']);
         $this->whereOr(
             array('scope_type', array('all_pages', 'custom')),
             array(
