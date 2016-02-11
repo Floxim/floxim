@@ -32,6 +32,6 @@ class Image extends \Floxim\Floxim\Field\File
     {
         static $num = 1;
         $num = $num === 1 ? 2 : 1;
-        return '/vendor/Floxim/Floxim/Admin/style/images/stub_' . $num . '.jpg';
+        return fx::path()->http('@floxim/Admin/style/images/stub_' . $num . '.jpg');
     }
 }
