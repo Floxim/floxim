@@ -694,7 +694,8 @@ abstract class Entity implements \ArrayAccess, Template\Entity
         if (is_null($this->type_keyword)) {
             $class = array_reverse(explode("\\", get_class($this)));
             $type = $class[1];
-            $this->type_keyword = strtolower($type);
+            //$this->type_keyword = strtolower($type);
+            $this->type_keyword = fx::util()->camelToUnderscore($type);
         }
         return $this->type_keyword;
     }
