@@ -39,9 +39,7 @@
             
             // disable hilight & select, hide node panel
             if (!params.keep_hilight_on) {
-                $fx.front.disable_hilight();
-                $fx.front.disable_select();
-                $fx.front.disable_node_panel();
+                $fx.front.freeze();
             }
             
             this.stop();
@@ -418,19 +416,17 @@
             var callback = function() {
                 var reset_hilight = true;
                 if (!is_last) {
-                    var prev_panel = that.panels[that.panels.length - 1];
-                    reset_hilight = !prev_panel.current_params.keep_hilight_on;
+                    var prev_panel = that.panels[that.panels.length - 2];
+                    reset_hilight = prev_panel.current_params.keep_hilight_on;
+                    console.log('prev', prev_panel, reset_hilight, that.panels);
                 } else {
                     reset_hilight = !c_panel.current_params.keep_hilight_on;
+                    console.log('curr', c_panel, reset_hilight);
                 }
                 
                 //if (!c_panel.current_params.keep_hilight_on && is_last) {
                 if (reset_hilight) {
-                    $fx.front.enable_node_panel();
-                    $fx.front.enable_select();
-                    //if (!$fx.front.get_selected_item()) {
-                        $fx.front.enable_hilight();
-                    //}
+                    $fx.front.unfreeze();
                 }
                 if (callback_final) {
                     callback_final();

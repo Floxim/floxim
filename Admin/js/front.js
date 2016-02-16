@@ -248,6 +248,22 @@ fx_front.prototype.handle_click = function(e) {
     return false;
 };
 
+fx_front.prototype.freeze = function() {
+    this.disable_hilight();
+    this.disable_select();
+    this.disable_node_panel();
+    console.log('freeze');
+};
+
+fx_front.prototype.unfreeze = function() {
+    this.enable_node_panel();
+    this.enable_select();
+    if (!this.get_selected_item()) {
+        this.enable_hilight();
+    }
+    console.log('un-freeze');
+};
+
 fx_front.prototype.disable_hilight = function() {
     this.hilight_disabled = true;
     $('.fx_front_overlay .fx_inline_adder-visible').each(function() {
@@ -661,9 +677,10 @@ fx_front.prototype.get_page_id = function() {
  */
 
 fx_front.prototype.add_infoblock_select_controller = function($node, $rel_node, rel_position) {
-    var $area_node = $node.closest('.fx_area');
-    var container_infoblock = $node.closest('.fx_infoblock').not('body').data('fx_infoblock');
-    var area_meta = $fx.front.get_area_meta($area_node);
+    var $area_node = $node.closest('.fx_area'),
+        container_infoblock = $node.closest('.fx_infoblock').not('body').data('fx_infoblock'),
+        area_meta = $fx.front.get_area_meta($area_node),
+        place_params = {};
     
     if ($rel_node && $rel_node.length) {
         var $stub = $(
@@ -673,6 +690,8 @@ fx_front.prototype.add_infoblock_select_controller = function($node, $rel_node, 
         );
         rel_position === 'after' ? $rel_node.after($stub) : $rel_node.before($stub);
         $fx.front.select_item($stub[0]);
+        place_params = $fx.front.get_infoblock_place_params($stub);
+        
     } else {
         $fx.front.select_item($area_node[0]);
     }
@@ -686,10 +705,7 @@ fx_front.prototype.add_infoblock_select_controller = function($node, $rel_node, 
         fx_admin:true
     };
     
-    if ($rel_node && $rel_node.data('fx_infoblock')) {
-        form_data.rel_infoblock_id = $rel_node.data('fx_infoblock').id;
-        form_data.rel_position = rel_position;
-    }
+    form_data = $.extend(place_params, form_data);
     
     $fx.front_panel.load_form(form_data, {
         view:'vertical',
@@ -3056,9 +3072,8 @@ fx_front.prototype.outline_block = function(n, style, speed) {
             
             var win_size = {
                 width:$(document).width(),
-                //height:$(document).height()
-                // $('body').height()
-                height: Math.max(win_height, body_height) + $('body').offset().top
+                //height: Math.max(win_height, body_height) + $('body').offset().top
+                height: $(document).height()
             };
             switch(type) {
                 case 'top':

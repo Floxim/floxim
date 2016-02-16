@@ -216,12 +216,8 @@ class Infoblock extends Admin
             $this->ui->hidden('container_infoblock_id', $input['container_infoblock_id']),
         );
         
-        if (isset($input['rel_infoblock_id'])) {
-            $fields []= $this->ui->hidden('rel_infoblock_id', $input['rel_infoblock_id']);
-            $fields []= $this->ui->hidden(
-                'rel_position', 
-                isset($input['rel_position']) ? $input['rel_position'] : 'after'
-            );
+        if (isset($input['next_visual_id'])) {
+            $fields []= $this->ui->hidden('next_visual_id', $input['next_visual_id']);
         }
 
         $page = fx::env('page');
@@ -270,13 +266,9 @@ class Infoblock extends Admin
         // The current, editable InfoBlock
         $infoblock = null;
         
-        if (isset($input['rel_infoblock_id'])) {
+        if (isset($input['next_visual_id'])) {
             $this->response->addFields(array(
-                $this->ui->hidden('rel_infoblock_id', $input['rel_infoblock_id']),
-                $this->ui->hidden(
-                    'rel_position', 
-                    isset($input['rel_position']) ? $input['rel_position'] : 'after'
-                )
+                $this->ui->hidden('next_visual_id', $input['next_visual_id'])
             ));
         }
         
@@ -305,16 +297,10 @@ class Infoblock extends Admin
                 'area'      => $area_meta['id'],
                 'layout_id' => fx::env('layout')
             ));
-            if (isset($input['rel_infoblock_id']) && $input['rel_infoblock_id']) {
-                $rel_vis = fx::data('infoblock_visual')
-                    ->where('infoblock_id', $input['rel_infoblock_id'])
-                    ->where('layout_id', $i2l['layout_id'])
-                    ->one();
-                if ($rel_vis) {
-                    $input['rel_position'] === 'after' ? $i2l->moveAfter($rel_vis) : $i2l->moveBefore($rel_vis);
-                } else {
-                    $i2l->moveLast();
-                }
+            if (isset($input['next_visual_id']) && $input['next_visual_id']) {
+                $i2l->moveBefore($input['next_visual_id']);
+            } else {
+                $i2l->moveLast();
             }
             $infoblock->setVisual($i2l);
         }
