@@ -883,7 +883,7 @@ class Infoblock extends Admin
         $preset_id = null;
         
         if ($ib_is_preset) {
-            $preset_id = $ib['id'];
+            $preset_id = (int) $ib['id'];
             $ib = $ib->createFromPreset();
             if (isset($input['preset_params'])) {
                 $ib_visual = $ib->getVisual();
@@ -895,6 +895,7 @@ class Infoblock extends Admin
                 }
             }
             $ib->save();
+            fx::log('created from preset', $ib, $preset_id);
         }
         
         if ($ib->isLayout()) {
@@ -977,6 +978,9 @@ class Infoblock extends Admin
             try {
                 if ($ib_is_preset && $c['infoblock_id'] === $preset_id) {
                     $c['infoblock_id'] = $ib['id'];
+                    fx::log('set ib', $c);
+                } else {
+                    fx::log('not prst', $ib_is_preset, $c['infoblock_id'], $preset_id);
                 }
                 $c->save();
                 $result['saved_entities'][]= $c->get();
