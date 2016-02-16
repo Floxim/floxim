@@ -30,11 +30,52 @@ window.fx_controller_tree = function(html) {
     });
 };
 
+window.fx_preset_tree = function(html) {
+    html.on('click', '.fx-block-presets__preset', function() {
+        var $preset = $(this),
+            $form = $preset.closest('form'),
+            id = $preset.data('id'),
+            $inp = $('.fx-block-presets__input', $form);
+        $inp.val(id);
+        $form.submit();
+    });
+};
+
+function handle_favorites($form) {
+    /*
+    var $fav_button = $('.fx_button_key_favorite', $form);
+    $fav_button.on('click', function() {
+        $fx.front_panel.show_form(
+            {
+                fields:[
+                    {
+                        name:'name',
+                        label:'Preset name',
+                        type:'string'
+                    }
+                ]
+            },
+            {
+                style:'alert',
+                onsubmit: function(e) {
+                    e.stopImmediatePropagation();
+                    $form.append('<input type="hidden" name="is_preset" value="1" />');
+                    $form.append('<input type="hidden" name="preset_name" value="1" />');
+                }
+            }
+        );
+        return false;
+    });
+    */
+}
+
 $('html').on('fx_panel_form_ready', function(e) {
     var $form = $(e.target),
         $scope_inp = $('input[name="scope[type]"]', $form),
         $scope_params_inp = $('input[name="scope[params]"]', $form);
         
+    handle_favorites($form);
+    
     if ($scope_inp.length === 0 ){ 
         return;
     }
@@ -157,7 +198,6 @@ $('html').on('fx_panel_form_ready', function(e) {
                     }
                     cond_builder.redraw(new_cond);
                     last_page_id = c_page_id;
-                    console.log(new_cond);
                 });
             },
             onsubmit: function(e) {

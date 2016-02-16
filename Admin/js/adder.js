@@ -43,7 +43,9 @@ fx_front.prototype.create_inline_infoblock_adder = function($node) {
             return;
         }
         var area = $ib.closest('.fx_area').data('fx_area');
-        $button.attr('title', $fx.lang('Add block to the %s area', area.name || area.id));
+        if (area) {
+            $button.attr('title', $fx.lang('Add block to the %s area', area.name || area.id));
+        }
     });
 
     $('.fx_adder_variant', $button).on('click', function() {
@@ -80,7 +82,6 @@ fx_front.prototype.create_inline_infoblock_placer = function($node, $ib_node) {
     $('.fx_adder_variant', $button).on('click', function(e) {
         var $rel = $button.data('rel_node'), 
             dir = $button.data('rel_dir');
-            
         $fx.front.place_block($ib_node, $rel, dir);
         return false;
     });

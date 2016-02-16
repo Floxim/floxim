@@ -22,7 +22,7 @@ class Entity extends System\Entity
     {
         $this->needRecountFiles = $need;
     }
-
+    
     public function recountFiles()
     {
         $modified_params = $this->getModifiedParams();

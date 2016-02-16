@@ -1314,7 +1314,7 @@ abstract class Finder
         }
         return $this;
     }
-    
+    /*
     public function moveFirst($entity)
     {
         // put $entity to the beginning
@@ -1347,12 +1347,6 @@ abstract class Finder
         $entity->set('priority', $last_priority + 1);
     }
     
-    /**
-     * Move $entity after $prev_entity
-     * @param mixed $entity entity or id
-     * @param mixed $prev_entity previous entity or id
-     * @return Entity the moved entity 
-     */
     public function moveAfter($entity, $prev_entity)
     {
         if (! $entity instanceof Entity) {
@@ -1402,6 +1396,9 @@ abstract class Finder
         
         $entity['priority'] = ($prev_priority + $next_priority) / 2;
     }
+     * 
+     * 
+     */
     
     public function normalizePriority() {
         $this->order(null)->order('priority')->select('id')->select('priority');

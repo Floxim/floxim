@@ -416,12 +416,21 @@
             
             
             var callback = function() {
+                var reset_hilight = true;
+                if (!is_last) {
+                    var prev_panel = that.panels[that.panels.length - 1];
+                    reset_hilight = !prev_panel.current_params.keep_hilight_on;
+                } else {
+                    reset_hilight = !c_panel.current_params.keep_hilight_on;
+                }
                 
-                if (!c_panel.current_params.keep_hilight_on && is_last) {
+                //if (!c_panel.current_params.keep_hilight_on && is_last) {
+                if (reset_hilight) {
                     $fx.front.enable_node_panel();
-                    if (!$fx.front.get_selected_item()) {
+                    $fx.front.enable_select();
+                    //if (!$fx.front.get_selected_item()) {
                         $fx.front.enable_hilight();
-                    }
+                    //}
                 }
                 if (callback_final) {
                     callback_final();

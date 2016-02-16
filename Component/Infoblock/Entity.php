@@ -11,6 +11,15 @@ class Entity extends System\Entity implements Template\Entity
 {
 
     protected $_visual = array();
+    
+    public function beforeSave() {
+        if ($this['is_preset']) {
+            $this['site_id'] = null;
+            $this['page_id'] = null;
+            $this['scope_id'] = null;
+        }
+        return parent::beforeSave();
+    }
 
     public function setVisual(Component\InfoblockVisual\Entity $visual)
     {
@@ -23,8 +32,7 @@ class Entity extends System\Entity implements Template\Entity
             $layout_id = fx::env('layout');
         }
         if (!isset($this->_visual[$layout_id])) {
-            $stored = fx::data('infoblock_visual')->where('infoblock_id', $this['id'])->where('layout_id',
-                $layout_id)->one();
+            $stored = $this['visuals']->findOne('layout_id', $layout_id);
             if ($stored) {
                 $this->_visual[$layout_id] = $stored;
             } else {
@@ -35,7 +43,9 @@ class Entity extends System\Entity implements Template\Entity
                 if (($ib_id = $this->get('id'))) {
                     $i2l_params['infoblock_id'] = $ib_id;
                 }
-                $this->_visual[$layout_id] = fx::data('infoblock_visual')->create($i2l_params);
+                $i2l = fx::data('infoblock_visual')->create($i2l_params);
+                $this->_visual[$layout_id] = $i2l;
+                $this['visuals'][]= $i2l;
             }
         }
         return $this->_visual[$layout_id];
@@ -135,7 +145,6 @@ class Entity extends System\Entity implements Template\Entity
         if (!is_array($c_params)) {
             $c_params = array();
         }
-        //$this->data['params'] = array_merge($c_params, $params);
         $this['params'] = array_merge($c_params, $params);
         return $this;
     }
@@ -511,6 +520,10 @@ class Entity extends System\Entity implements Template\Entity
 
         $ib_info['controller'] = $this->getPropInherited('controller') . ':' . $this->getPropInherited('action');
         $ib_info['name'] = $this['name'];
+        
+        if ($this['is_preset']) {
+            $ib_info['is_preset'] = true;
+        }
 
         $meta = array(
             'data-fx_infoblock' => $ib_info, // todo: psr0 need fix
@@ -614,5 +627,29 @@ class Entity extends System\Entity implements Template\Entity
     public function getParentFinderConditions()
     {
         return $this->initController()->getParentFinderConditions();
+    }
+    
+    public function createFromPreset()
+    {
+        if (!$this['is_preset']) {
+            return;
+        }
+        $ib_params = $this->get();
+        unset($ib_params['id']);
+        unset($ib_params['is_preset']);
+        $new_ib = $this->getFinder()->create( $ib_params );
+        $c_page = fx::env('page');
+        if ($c_page) {
+            $new_ib['page_id'] = $c_page['id'];
+            $new_ib['site_id'] = $c_page['site_id'];
+        }
+        $vis = $this->getVisual();
+        $vis_params = $vis->get();
+        unset($vis_params['id']);
+        unset($vis_params['infoblock_id']);
+        $new_vis = $vis->getFinder()->create($vis_params);
+        //$new_ib->setVisual($new_vis);
+        $new_ib['visuals'] = fx::collection($new_vis);
+        return $new_ib;
     }
 }

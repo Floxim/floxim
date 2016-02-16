@@ -546,4 +546,9 @@ class Entity extends System\Entity
         }
         return $entity_fields;
     }
+    
+    public function getEntityFinder()
+    {
+        return fx::data($this['keyword']);
+    }
 }

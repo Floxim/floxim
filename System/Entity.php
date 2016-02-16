@@ -649,6 +649,21 @@ abstract class Entity implements \ArrayAccess, Template\Entity
                     if ($c_rel_field && $value_id) {
                         $this[$c_rel_field] = $value_id;
                     }
+                    // adding not saved entity, check inverse relation
+                    // commented because seems to be buggy and dive into recursion sometimes
+                    /*
+                    if (!$value_id) {
+                        $inv_relations = $value->getFinder()->relations();
+                        foreach ($inv_relations as $inv_rel_key => $inv_rel) {
+                            if ($inv_rel[2] === $c_rel_field && $inv_rel[0] === Finder::HAS_MANY && $this->isInstanceOf($inv_rel[1])) {
+                                $c_inv_value = $value[$inv_rel_key];
+                                $c_inv_value[]= $this;
+                                break;
+                            }
+                        }
+                    }
+                     * 
+                     */
                 }
                 break;
         }
@@ -787,6 +802,80 @@ abstract class Entity implements \ArrayAccess, Template\Entity
             $name = $this->getType().' #'. ($this['id'] ? $this['id'] : 'new');
         }
         return $name;
+    }
+    
+    public function moveBefore($next_entity)
+    {
+        if (! $next_entity instanceof Entity) {
+            $next_entity = $this->getFinder()->getById($next_entity);
+        }
+        if ($this['id'] === $next_entity['id']) {
+            return;
+        }
+        
+        $next_priority = $next_entity['priority'];
+        
+        $prev_entity = $this
+            ->getFinder()
+            ->order('priority', 'desc')
+            ->where('priority', $next_priority, '<')
+            ->one();
+        
+        $prev_priority = $prev_entity ? $prev_entity['priority'] : $next_priority - 2;
+        
+        $this['priority'] = ($prev_priority + $next_priority) / 2;
+    }
+    
+    public function moveAfter($prev_entity)
+    {
+        if (! $prev_entity instanceof Entity) {
+            $prev_entity = $this->getFinder()->getById($prev_entity);
+        }
+        if ($this['id'] === $prev_entity['id']) {
+            return;
+        }
+        
+        $prev_priority = $prev_entity['priority'];
+        
+        $next_entity = $this
+            ->getFinder()
+            ->order('priority')
+            ->where('priority', $prev_priority, '>')
+            ->one();
+        
+        $next_priority = $next_entity ? $next_entity['priority'] : $prev_priority + 2;
+        
+        $this['priority'] = ($prev_priority + $next_priority) / 2;
+    }
+    
+    public function moveFirst()
+    {
+        // put $entity to the beginning
+        $first_entity = $this
+            ->getFinder()
+            ->where('priority', null, 'is not null')
+            ->order('priority')
+            ->one();
+        if (!$first_entity) {
+            $this['priority'] = 0;
+            return;
+        }
+        $this->moveBefore($first_entity);
+    }
+    
+    public function moveLast()
+    {
+        // put $entity to the end
+        $last_entity = $this
+            ->getFinder()
+            ->where('priority', null, 'is not null')
+            ->order('priority', 'desc')
+            ->one();
+        if (!$last_entity) {
+            $this['priority'] = 0;
+            return;
+        }
+        $this->moveAfter($last_entity);
     }
 }
 

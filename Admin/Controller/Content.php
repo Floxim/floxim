@@ -32,9 +32,16 @@ class Content extends Admin
             } else {
                 $site_id = fx::env('site_id');
             }
+            $infoblock_id = null;
+            if (isset($input['infoblock_id'])) {
+                $infoblock = fx::data('infoblock', $input['infoblock_id']);
+                if ($infoblock) {
+                    $infoblock_id = $infoblock['id'];
+                }
+            }
             $content = fx::data($content_type)->create(array(
                 'parent_id'    => isset($input['parent_id']) ? $input['parent_id'] : null,
-                'infoblock_id' => $input['infoblock_id'],
+                'infoblock_id' => $infoblock_id,
                 'site_id'      => $site_id
             ));
             if (isset($input['placeholder_linker']) && is_array($input['placeholder_linker'])) {
@@ -59,6 +66,10 @@ class Content extends Admin
             $this->ui->hidden('action', 'add_edit'),
             $this->ui->hidden('fx_admin', true)
         );
+        
+        if (isset($input['preset_params'])) {
+            $fields []= $this->ui->hidden('preset_params', $input['preset_params']);
+        }
         
         if (!isset($input['infoblock_id']) && !$content['id']  && $content instanceof \Floxim\Main\Content\Entity) {
             $avail_infoblocks = $content->getRelationFinderInfoblockId()->all();
@@ -138,6 +149,25 @@ class Content extends Admin
                     }
                 }
                 try {
+                    if (isset($content['infoblock_id']) && $content['infoblock_id']) {
+                        $infoblock = fx::data('infoblock', $content['infoblock_id']);
+                        if ($infoblock['is_preset']) {
+                            if (isset($input['preset_params'])) {
+                                $preset_params = json_decode($input['preset_params'], true);
+                                $ib_visual = $infoblock->getVisual();
+                                $ib_visual['area'] = $preset_params['area'];
+                                if (isset($preset_params['next_visual_id'])) {
+                                    $ib_visual->moveBefore($preset_params['next_visual_id']);
+                                } else {
+                                    $ib_visual->moveFirst();
+                                }
+                            }
+                            $infoblock = $infoblock->createFromPreset();
+                            $infoblock->save();
+                            $res['real_infoblock_id'] = $infoblock['id'];
+                            $content['infoblock_id'] = $infoblock['id'];
+                        }
+                    }
                     $content->save();
                     $res['saved_id'] = $content['id'];
                     if ($is_backoffice) {
@@ -200,6 +230,8 @@ class Content extends Admin
         
         $is_linker = $content->isInstanceOf('floxim.main.linker');
         
+        $delete_impossible = false;
+        
         if ($is_linker) {
             $linked_entity = $content['content'];
             $linked_com = $linked_entity->getComponent();
@@ -225,20 +257,26 @@ class Content extends Admin
             
             $alert .= '</p>';
         } elseif ($content->isInstanceOf('floxim.main.content')) {
-            $all_descendants = fx::data('floxim.main.content')->descendantsOf($content)->all()->group('type');
-            $type_parts = array();
-            foreach ($all_descendants as $descendants_type => $descendants) {
-                if ($descendants_type === 'floxim.main.linker') {
-                    continue;
+            $site = fx::env('site');
+            if ($site && $site['index_page_id'] === $content['id']) {
+                $delete_impossible = true;
+                $alert = '<p>Нельзя удалить главную страницу!</p>';
+            } else {
+                $all_descendants = fx::data('floxim.main.content')->descendantsOf($content)->all()->group('type');
+                $type_parts = array();
+                foreach ($all_descendants as $descendants_type => $descendants) {
+                    if ($descendants_type === 'floxim.main.linker') {
+                        continue;
+                    }
+                    $descendants_com = fx::component($descendants_type);
+                    $type_parts []= count($descendants).' '.
+                                    fx::util()->getDeclensionByNumber($descendants_com['declension'], count($descendants));
                 }
-                $descendants_com = fx::component($descendants_type);
-                $type_parts []= count($descendants).' '.
-                                fx::util()->getDeclensionByNumber($descendants_com['declension'], count($descendants));
-            }
-            if (count($type_parts) > 0) {
-                $com_name = fx::util()->ucfirst($content->getComponent()->getItemName('one'));
-                $alert = '<p>'.$com_name.' содержит данные, они также будут удалены:</p>';
-                $alert .= '<ul><li>'.join('</li><li>', $type_parts).'</li></ul>';
+                if (count($type_parts) > 0) {
+                    $com_name = fx::util()->ucfirst($content->getComponent()->getItemName('one'));
+                    $alert = '<p>'.$com_name.' содержит данные, они также будут удалены:</p>';
+                    $alert .= '<ul><li>'.join('</li><li>', $type_parts).'</li></ul>';
+                }
             }
         }
         
@@ -249,8 +287,14 @@ class Content extends Admin
                 'html' => '<div class="fx_delete_alert">'.$alert.'</div>'
             );
         }
-
+        
         $this->response->addFields($fields);
+        
+        if ($delete_impossible) {
+            $this->response->addFormButton('cancel');
+            return;
+        }
+        
         $this->response->addFormButton(array('key' => 'save', 'class' => 'delete', 'label' => fx::alang('Delete')));
         if (isset($input['delete_confirm']) && $input['delete_confirm']) {
             $response = array('status' => 'ok');

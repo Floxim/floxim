@@ -216,3 +216,24 @@ fx_controller_tree(html);
         </div>
     </div>
 </div>
+
+<!--[input ? _c.type =='tree' && _c.name == 'preset_id']-->
+<?
+var b = 'fx-block-presets';
+?>
+<div class="<?=b?>">
+    <input type="hidden" <?=$t.field_id_name(_c)?> class="<?=b?>__input" />
+    <?
+    for (var i = 0; i < _c.values.length; i++) {
+        var v = _c.values[i];
+        ?>
+        <div class="<?=b?>__preset" data-id="<?= v[0] ?>">
+            <?= v[1] ?>
+        </div>
+    <?
+    }
+    ?>
+</div>
+
+<!--jquery-->
+fx_preset_tree(html);

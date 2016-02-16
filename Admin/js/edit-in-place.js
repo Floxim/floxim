@@ -164,6 +164,11 @@ window.fx_eip = {
             page_id:$fx.front.get_page_id()
         };
         
+        var preset_params = $infoblock.data('fx_preset_params');
+        if (preset_params) {
+            post_data.preset_params = preset_params;
+        }
+        
         var $adder_placeholder = $node.closest('.fx_entity_adder_placeholder'),
             entity_meta = $adder_placeholder.data('fx_entity_meta');
     
@@ -187,8 +192,12 @@ window.fx_eip = {
         $fx.front.disable_infoblock($infoblock);
         
         if (!callback) {
-            callback = function() {
-                $fx.front.reload_infoblock($infoblock[0]);
+            callback = function(res) {
+                var ib_reload_data = {};
+                if (res.real_infoblock_id) {
+                    ib_reload_data.real_infoblock_id = res.real_infoblock_id;
+                }
+                $fx.front.reload_infoblock($infoblock[0], null, ib_reload_data);
             };
         }
 

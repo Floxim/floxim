@@ -8,7 +8,10 @@ for (var i = 0; i < _c.buttons.length; i++) {
 
 <!--[input ? _c.type == 'button']-->
 <div 
-    class="fx_button fx_button-in_group <?= _c.is_active ? 'fx_button-active' : ''?><?= _c.class ? ' fx_button-class-' + _c.class : '' ?>" 
+    class="fx_button fx_button-in_group 
+            <?= _c.is_active ? 'fx_button-active' : ''?>
+            <?= _c.class ? ' fx_button-class-' + _c.class : '' ?>
+            <?= _c.key ? ' fx_button_key_'+_c.key : '' ?>" 
     tabindex="0"
     <?=$t.data_attr(_c)?>>
     <span><?=_c.label || ''?></span>

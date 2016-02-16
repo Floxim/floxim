@@ -19,7 +19,6 @@ window.fx_front = function () {
     
     $('#fx_admin_front_menu').on('click.fx_mode_click', '.fx_front_mode', function() {
         var mode = $(this).data('key');
-        console.log('clcmkd', mode, $fx.front.mode);
         if (mode !== $fx.front.mode) {
             $fx.front.load(mode);
         }
@@ -698,8 +697,67 @@ fx_front.prototype.add_infoblock_select_controller = function($node, $rel_node, 
             $('.fx_infoblock_stub').remove();
             $fx.front.deselect_item();
         },
-        onfinish: $fx.front.add_infoblock_select_settings
+        onfinish: function(data) {
+            
+            if (data.preset_id) {
+                var $ib_node = $(data.html);
+                $fx.front.append_ib_node($area_node, $ib_node);
+                $fx.front.hilight($ib_node);
+                $ib_node.trigger('fx_infoblock_loaded');
+                $ib_node.css('opacity', $fx.front.disabled_infoblock_opacity).animate({opacity: 1},250);
+                
+                $('.fx_infoblock_stub', $area_node).remove();
+                
+                var preset_params = $fx.front.get_infoblock_place_params($ib_node);
+
+                $ib_node.data('fx_preset_params', preset_params);
+                
+                $ib_node.on('fx_after_hide_adder_placeholder', function() {
+                    $fx.front.outline_block_off($ib_node);
+                    $ib_node.remove();
+                    $fx.front.hilight();
+                });
+                
+                $ib_node.find('.fx_adder_variant').first().click();
+            } else {
+                return $fx.front.add_infoblock_select_settings(data);
+            }
+        }
     });
+};
+
+fx_front.prototype.append_ib_node = function ($area_node, $ib_node) {
+    // try to replace stub
+    var $stub = $('.fx_infoblock_stub', $area_node);
+    if ($stub.length) {
+        $stub.before($ib_node);
+        $stub.addClass('fx_infoblock_stub_hidden');
+        return;
+    }
+
+    // try to find last infoblock inside area
+    // and add new after it
+    var $last_ib = null;
+    $('.fx_infoblock', $area_node).each(function () {
+        if ($(this).closest('.fx_area').get(0) !== $area_node.get(0)) {
+            return;
+        }
+        $last_ib = $(this);
+    });
+    if ($last_ib) {
+        $last_ib.after($ib_node);
+        return;
+    }
+    var $marker = $('.fx_area_marker', $area_node);
+    if ($marker.length > 0) {
+        $marker.after($ib_node);
+        return;
+    }
+
+    if ($area_node.hasClass('fx_hidden_placeholded')) {
+        $area_node.removeClass('fx_hidden_placeholded').html('');
+    }
+    $area_node.append($ib_node);
 };
 
 fx_front.prototype.add_infoblock_select_settings = function(data) {
@@ -728,13 +786,6 @@ fx_front.prototype.add_infoblock_select_settings = function(data) {
                     
                     var new_cm = new_ib_node.data('fx_controller_meta');
                     if (new_cm && new_cm.accept_content) {
-                        /*
-                        var first_meta = new_cm.accept_content[0];
-                        var adder_closure = $fx.front.get_panel_adder_closure(first_meta);
-                        //$fx.front.load('edit');
-                        $fx.front.select_item(new_ib_node.get(0));
-                        adder_closure();
-                        */
                         // @todo: init adder
                         return;
                     } else {
@@ -746,7 +797,7 @@ fx_front.prototype.add_infoblock_select_settings = function(data) {
             );
         },
         onready:function($form) {
-           var back = $('.fx_admin_form__header a.back', $form);
+            var back = $('.fx_admin_form__header a.back', $form);
             back.on('click.fx_front', function() {
                 infoblock_back();
                 cancel_adding();
@@ -755,40 +806,7 @@ fx_front.prototype.add_infoblock_select_settings = function(data) {
             // creating infoblock preview
             $fx.front.deselect_item();
             
-            var append_ib_node = function ($area_node, $ib_node) {
-                
-                // try to replace stub
-                var $stub = $('.fx_infoblock_stub', $area_node);
-                if ($stub.length) {
-                    $stub.before($ib_node);
-                    $stub.addClass('fx_infoblock_stub_hidden');
-                    return;
-                }
-                
-                // try to find last infoblock inside area
-                // and add new after it
-                var $last_ib = null;
-                $('.fx_infoblock', $area_node).each(function () {
-                    if ($(this).closest('.fx_area').get(0) !== $area_node.get(0)) {
-                        return;
-                    }
-                    $last_ib = $(this);
-                });
-                if ($last_ib) {
-                    $last_ib.after($ib_node);
-                    return;
-                }
-                var $marker = $('.fx_area_marker', $area_node);
-                if ($marker.length > 0) {
-                    $marker.after($ib_node);
-                    return;
-                }
-                
-                if ($area_node.hasClass('fx_hidden_placeholded')) {
-                    $area_node.removeClass('fx_hidden_placeholded').html('');
-                }
-                $area_node.append($ib_node);
-            };
+            
             
             var add_fake_ib = function (callback) {
                 var $c_ib_node = $('<div class="fx_infoblock fx_infoblock_fake" />');
@@ -813,7 +831,7 @@ fx_front.prototype.add_infoblock_select_settings = function(data) {
                     );
                     return;
                 }
-                append_ib_node($area_node, $c_ib_node);
+                $fx.front.append_ib_node($area_node, $c_ib_node);
                 $c_ib_node.data('fx_infoblock', {id:'fake'});
                 $form.data('ib_node', $c_ib_node);
                 $form.data('is_waiting', false);
@@ -1793,7 +1811,10 @@ fx_front.prototype.get_edit_closure = function($entity, params) {
         } else if (placeholder_data) {
             edit_action_params = $.extend(edit_action_params, placeholder_data);
         }
-        
+        var preset_params = $ib_node.data('fx_preset_params');
+        if (preset_params) {
+            edit_action_params.preset_params = JSON.stringify(preset_params);
+        }
         fx_eip.fix();
         var entity_values = fx_eip.get_values(ce_id);
         
@@ -1859,7 +1880,11 @@ fx_front.prototype.get_edit_closure = function($entity, params) {
                 },
                 onfinish: function(res) {
                     fx_eip.stop();
-                    $fx.front.reload_infoblock($ib_node);
+                    var ib_reload_params = {};
+                    if (res.real_infoblock_id) {
+                        ib_reload_params.real_infoblock_id = res.real_infoblock_id;
+                    }
+                    $fx.front.reload_infoblock($ib_node, null, ib_reload_params);
                     $fx.front_panel.hide();
                 },
                 oncancel: function() {
@@ -2180,7 +2205,8 @@ fx_front.prototype.select_infoblock = function($node, panel) {
         var area_meta = $fx.front.get_area_meta($area_node);
         
         var is_waiting = false, 
-            ib_loader = null;
+            ib_loader = null,
+            has_changes = false;
             
         $fx.front_panel.load_form({
             entity:'infoblock',
@@ -2201,7 +2227,7 @@ fx_front.prototype.select_infoblock = function($node, panel) {
                 var c_data = $form.serialize();
                 
                 $form.on('change.fx_front', function(e) {
-                    if (e.target.name === 'livesearch_input' || e.target.name === 'scope[complex_scope]') {
+                    if (e.target.name === 'livesearch_input' || e.target.name === 'scope[type]') {
                         return;
                     }
                     var new_data = $form.serialize();
@@ -2216,6 +2242,7 @@ fx_front.prototype.select_infoblock = function($node, panel) {
                     ib_loader = $fx.front.reload_infoblock(
                         $form.data('ib_node'), 
                         function($new_ib_node) {
+                            has_changes = true;
                             $form.data('ib_node', $new_ib_node);
                             $fx.front.extract_infoblock_visual_fields($new_ib_node, $form);
                             is_waiting = false;
@@ -2225,7 +2252,9 @@ fx_front.prototype.select_infoblock = function($node, panel) {
                 });
             },
             oncancel:function($form) {
-                $fx.front.reload_infoblock($form.data('ib_node'));
+                if (has_changes) {
+                    $fx.front.reload_infoblock($form.data('ib_node'));
+                }
             }
         });
     });
@@ -2325,6 +2354,26 @@ fx_front.prototype.stop_placing_block = function($ib_node) {
     $('.fx_placer_panel').remove();
 };
 
+fx_front.prototype.get_infoblock_place_params = function($ib_node) {
+    var params = {
+        area:$ib_node.closest('.fx_area').data('fx_area').id
+    };
+    var $ib_container = $ib_node.parent().closest('.fx_infoblock_wrapper, .fx_infoblock');
+    if ($ib_container.length === 0 || $ib_container.is('.fx_infoblock')) {
+        $ib_container = $ib_node;
+    }
+    var $next_ib = $ib_container.next();
+    if (!$next_ib.is('.fx_infoblock')) {
+        $next_ib = $next_ib.find('.fx_infoblock').first();
+    }
+    if ($next_ib.length > 0) {
+        var next_data = $next_ib.data('fx_infoblock');
+        params.next_infoblock_id = next_data.id;
+        params.next_visual_id = next_data.visual_id;
+    }
+    return params;
+};
+
 fx_front.prototype.place_block = function($ib_node, $rel_node, dir) {
     var $old_area = $ib_node.closest('.fx_area');
     if (dir === 'before') {
@@ -2344,19 +2393,14 @@ fx_front.prototype.place_block = function($ib_node, $rel_node, dir) {
     var ib_data = $ib_node.data('fx_infoblock'),
         params = {
             entity:'infoblock',
-            action:'move',
-            area:$ib_node.closest('.fx_area').data('fx_area').id
+            action:'move'
         };
 
     params.infoblock_id = ib_data.id;
     params.visual_id = ib_data.visual_id;
-
-    var $next_ib = $ib_node.next('.fx_infoblock');
-    if ($next_ib.length > 0) {
-        var next_data = $next_ib.data('fx_infoblock');
-        params.next_infoblock_id = next_data.id;
-        params.next_visual_id = next_data.visual_id;
-    }
+    
+    params = $.extend(params, $fx.front.get_infoblock_place_params($ib_node));
+    
     $fx.post(params, function(res) {
         $fx.front.reload_layout();
     });
@@ -2550,10 +2594,11 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
     if(selected.length > 0) {
          selected_selector = selected.first().generate_selector(ib_parent);
     }
+    var real_infoblock_id = (extra_data || {}).real_infoblock_id || meta.id;
     var xhr = $.ajax({
         type:'post',
         data:post_data,
-       url: document.baseURI+'~ib/'+meta.id+'@'+page_id,
+       url: document.baseURI+'~ib/'+real_infoblock_id+'@'+page_id,
        success:function(res) {
            $fx.front.c_hover = null;
            $infoblock_node.off('click.fx_fake_click');

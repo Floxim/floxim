@@ -567,8 +567,11 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         return $vals;
     }
 
-    public function getValues($field, $key_field = null, $as_collection = false)
+    public function getValues($field = null, $key_field = null, $as_collection = false)
     {
+        if (func_num_args() === 0) {
+            return array_values($this->data);
+        }
         $initial_key = key($this->data);
         $result = array();
         $key_is_closure = $key_field instanceof \Closure;

@@ -256,9 +256,17 @@ window.fx_livesearch = function (node) {
         if (!input_name) {
             input_name = this.getInputName(id);
         }
-        if (!this.isMultiple && this.getValues().length > 0) {
-            this.removeValue(this.getValueNode(), true);
-            //return;
+        if (!this.isMultiple) {
+            var current_value = this.getValue();
+            if (current_value !== null) {
+                // value did not changed
+                if (current_value === id) {
+                    this.showValue();
+                    return;
+                }
+                // remove old value
+                this.removeValue(this.getValueNode(), true);
+            }
         }
         
         var res_value = id;
