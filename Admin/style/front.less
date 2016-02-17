@@ -77,22 +77,30 @@
     //background-color:@pane_color_hover_dark;
 }
 
+.fx_horizontal_dash(@light; @dark; @size) {
+    background-image: -webkit-linear-gradient(left, @light 50%, @dark 50%);
+    background-image:    -moz-linear-gradient(left, @light 50%, @dark 50%);
+    background-image:     -ms-linear-gradient(left, @light 50%, @dark 50%);
+    background-image:      -o-linear-gradient(left, @light 50%, @dark 50%);
+    background-image:         linear-gradient(left, @light 50%, @dark 50%);
+    background-size: @size*3 @size;
+}
+
+.fx_vertical_dash(@light; @dark; @size) {
+    background-image: -webkit-linear-gradient(@light 50%, @dark 50%);
+    background-image:    -moz-linear-gradient(@light 50%, @dark 50%);
+    background-image:     -ms-linear-gradient(@light 50%, @dark 50%);
+    background-image:      -o-linear-gradient(@light 50%, @dark 50%);
+    background-image:         linear-gradient(@light 50%, @dark 50%);
+    background-size: @size @size*3;
+}
+
 .fx_outliner (@light:transparent; @dark; @size:3px; @shadow:6px; @shadow-color:rgba(50, 50, 50, 0.6) ) {
     &.fx_outline_pane_top, &.fx_outline_pane_bottom {
-        background-image: -webkit-linear-gradient(left, @light 50%, @dark 50%);
-        background-image:    -moz-linear-gradient(left, @light 50%, @dark 50%);
-        background-image:     -ms-linear-gradient(left, @light 50%, @dark 50%);
-        background-image:      -o-linear-gradient(left, @light 50%, @dark 50%);
-        background-image:         linear-gradient(left, @light 50%, @dark 50%);
-        background-size: @size*3 @size;
+        .fx_horizontal_dash(@light; @dark; @size);
     }
     &.fx_outline_pane_left, &.fx_outline_pane_right {
-        background-image: -webkit-linear-gradient(@light 50%, @dark 50%);
-        background-image:    -moz-linear-gradient(@light 50%, @dark 50%);
-        background-image:     -ms-linear-gradient(@light 50%, @dark 50%);
-        background-image:      -o-linear-gradient(@light 50%, @dark 50%);
-        background-image:         linear-gradient(@light 50%, @dark 50%);
-        background-size: @size @size*3;
+        .fx_vertical_dash(@light; @dark; @size);
     }
     &.fx_outline_pane_top {
         box-shadow: 0px -@shadow @shadow*3 @shadow-color;
@@ -863,6 +871,13 @@ span.fx_area_marker {
     
     &-infoblock &__line {
         background:#000;
+    }
+    
+    &-infoblock&-horizontal &__line {
+        .fx_horizontal_dash(#FFF; #000; 6px);
+    }
+    &-infoblock&-vertical &__line {
+        .fx_vertical_dash(#FFF; #000; 6px);
     }
     
     &-infoblock_placer &__line {

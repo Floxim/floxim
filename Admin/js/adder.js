@@ -440,13 +440,19 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
         clearTimeout(out_timeout);
         
         var e_scope = 'mouseleave.fx_recount_adders_'+scope;
-        $node.off(e_scope).on(e_scope, function(e) {
+        var handle_mouseleave = function(e) {
+            /*
             var $leave_to = $(e.toElement);
+            console.log('trig hml', e.target);
             if ($leave_to.is('.fx_outline_pane') || $leave_to.closest('.'+bl).length > 0) {
+                console.log('skip mouslev', bl);
+                $leave_to.off(e_scope).on(e_scope, handle_mouseleave);
                 return;
             }
+            */
             hide_button_timeout();
-        });
+        };
+        $node.off(e_scope).on(e_scope, handle_mouseleave);
         
         
         if ($button.is('.'+bl+'-visible')) {

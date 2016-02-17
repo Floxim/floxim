@@ -252,7 +252,6 @@ fx_front.prototype.freeze = function() {
     this.disable_hilight();
     this.disable_select();
     this.disable_node_panel();
-    console.log('freeze');
 };
 
 fx_front.prototype.unfreeze = function() {
@@ -261,7 +260,6 @@ fx_front.prototype.unfreeze = function() {
     if (!this.get_selected_item()) {
         this.enable_hilight();
     }
-    console.log('un-freeze');
 };
 
 fx_front.prototype.disable_hilight = function() {

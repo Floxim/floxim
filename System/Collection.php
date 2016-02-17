@@ -577,6 +577,10 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         $key_is_closure = $key_field instanceof \Closure;
         if ($field instanceof \Closure) {
             foreach ($this->data as $k => $v) {
+                if ($key_field === false) {
+                    $result[] = call_user_func($field, $v, $k);
+                    continue;
+                }
                 if ($key_is_closure) {
                     $res_key = call_user_func($key_field, $v, $k);
                 } else if ($key_field) {
@@ -584,7 +588,6 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
                 } else {
                     $res_key = $k;
                 }
-                //$res_key = $key_field ? $v[$key_field] : $k;
                 $result[$res_key] = call_user_func($field, $v, $k);
             }
             if ($as_collection) {
@@ -596,7 +599,6 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         if (is_array($field)) {
             foreach ($field as $fd) {
                 foreach ($this->data as $k => $v) {
-                    //$res_key = $key_field ? $v[$key_field] : $k;
                     if ($key_is_closure) {
                         $res_key = call_user_func($key_field, $v, $k);
                     } else if ($key_field) {
@@ -613,7 +615,9 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
                     }
                 }
             }
-
+            if ($key_field === false) {
+                $result = array_values($result);
+            }
             if ($as_collection) {
                 $result = new Collection($result);
             }
@@ -621,7 +625,6 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
             return $result;
         }
         foreach ($this->data as $k => $v) {
-            //$res_key = $key_field ? $v[$key_field] : $k;
             if ($key_is_closure) {
                 $res_key = call_user_func($key_field, $v, $k);
             } else if ($key_field) {
@@ -640,6 +643,9 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
             } else {
                 $result[$res_key] = null;
             }
+        }
+        if ($key_field === false) {
+            $result = array_values($result);
         }
         if ($as_collection) {
             $result = new Collection($result);

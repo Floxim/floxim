@@ -427,7 +427,11 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
         );
         
         if (!$this->isVisible()) {
-            $entity_atts['class'] .= ' fx_entity_hidden'.(!$collection || count($collection) === 1 ? '_single' : '');
+            $is_single = 
+                !$collection || 
+                count($collection) === 1 || 
+                (isset($collection->show_hidden_items) && $collection->show_hidden_items);
+            $entity_atts['class'] .= ' fx_entity_hidden'.( $is_single ? '_single' : '');
         }
         
         $com = $this->getComponent();

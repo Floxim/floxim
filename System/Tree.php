@@ -18,6 +18,9 @@ class Tree extends Collection {
         $data->fork($this);
         $this->childrenKey = $children_key;
         $this->extraRootIds = $extra_root_ids;
+        foreach ($data as $item) {
+            unset($item[$children_key]);
+        }
         $this->build($data);
     }
     

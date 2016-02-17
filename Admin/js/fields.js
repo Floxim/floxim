@@ -253,6 +253,7 @@ window.$fx_fields = {
             for (var i = 0; i < vals.length; i++) {
                 var val = vals[i],
                     res_val = val;
+                
                 if (val instanceof Array && val.length >= 2) {
                     res_val = {
                         id:val[0],

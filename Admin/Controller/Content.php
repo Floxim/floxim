@@ -73,12 +73,30 @@ class Content extends Admin
         
         if (!isset($input['infoblock_id']) && !$content['id']  && $content instanceof \Floxim\Main\Content\Entity) {
             $avail_infoblocks = $content->getRelationFinderInfoblockId()->all();
-            if (count($avail_infoblocks)) {
+            
+            $avail_infoblocks = $content->filterAvailableInfoblocksByParent($avail_infoblocks, $content['parent_id']);
+            
+            if (count($avail_infoblocks) > 1) {
                 $ib_field = $content->getFormField('infoblock_id');
+                $ib_field['values'] = $avail_infoblocks->getValues(
+                    function($ib) {
+                        return array($ib['id'], $ib['name']);
+                    },
+                    false
+                );
+                $ib_field['value'] = $avail_infoblocks->first()->get('id');
                 $fields []= $ib_field;
                 $res['fields'] = $fields;
                 $this->response->addFormButton(array('key' => 'save', 'label' => fx::alang('Continue')));
                 return $res;
+            } elseif (count($avail_infoblocks) === 1) {
+                $avail_infoblock_id = $avail_infoblocks->first()->get('id');
+                $fields []= array(
+                    'type' => 'hidden',
+                    'name' => 'infoblock_id',
+                    'value' => $avail_infoblock_id
+                );
+                $content['infoblock_id'] = $avail_infoblock_id;
             }
         }
         

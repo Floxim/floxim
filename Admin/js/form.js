@@ -252,6 +252,7 @@ fx_form = {
                     data = $.parseJSON( data );
                 } catch(e) {
                     $fx.alert('Responce parse error');
+                    console.log(data, e);
                     return false;
                 }
             }

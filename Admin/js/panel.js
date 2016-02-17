@@ -418,13 +418,10 @@
                 if (!is_last) {
                     var prev_panel = that.panels[that.panels.length - 2];
                     reset_hilight = prev_panel.current_params.keep_hilight_on;
-                    console.log('prev', prev_panel, reset_hilight, that.panels);
                 } else {
                     reset_hilight = !c_panel.current_params.keep_hilight_on;
-                    console.log('curr', c_panel, reset_hilight);
                 }
                 
-                //if (!c_panel.current_params.keep_hilight_on && is_last) {
                 if (reset_hilight) {
                     $fx.front.unfreeze();
                 }

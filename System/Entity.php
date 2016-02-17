@@ -131,6 +131,11 @@ abstract class Entity implements \ArrayAccess, Template\Entity
 
     public function save()
     {
+        // protect entity against recursion caused by link/multilink fields
+        if (isset($this->now_saving)) {
+            return $this;
+        }
+        $this->now_saving = true;
         fx::trigger('before_save', array('entity' => $this));
         $this->beforeSave();
         $pk = $this->getPk();
@@ -139,6 +144,7 @@ abstract class Entity implements \ArrayAccess, Template\Entity
             $this->beforeUpdate();
             if ($this->validate() === false) {
                 $this->throwInvalid();
+                unset($this->now_saving);
                 return false;
             }
             // updated only fields that have changed
@@ -154,6 +160,7 @@ abstract class Entity implements \ArrayAccess, Template\Entity
             $this->beforeInsert();
             if ($this->validate() === false) {
                 $this->throwInvalid();
+                unset($this->now_saving);
                 return false;
             }
             $id = $this->getFinder()->insert($this->data);
@@ -167,6 +174,7 @@ abstract class Entity implements \ArrayAccess, Template\Entity
         $this->modified = array();
         $this->modified_data = array();
         $this->afterSaveDone();
+        unset($this->now_saving);
         return $this;
     }
     
@@ -535,8 +543,6 @@ abstract class Entity implements \ArrayAccess, Template\Entity
                 }
             }
         }
-        
-        
         
         $offset_type = null;
         $offsets = $this->getAvailableOffsets();
