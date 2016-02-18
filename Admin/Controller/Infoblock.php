@@ -77,7 +77,6 @@ class Infoblock extends Admin
                 $act_ctr = fx::controller($keyword . ':' . $action_code);
                 $act_templates = $act_ctr->getAvailableTemplates(fx::env('layout'), $area_meta);
                 if (count($act_templates) == 0) {
-                    //fx::cdebug('no templates', $keyword . ':' . $action_code);
                     continue;
                 }
                 
