@@ -963,10 +963,8 @@ class Infoblock extends Admin
             try {
                 if ($ib_is_preset && $c['infoblock_id'] === $preset_id) {
                     $c['infoblock_id'] = $ib['id'];
-                    fx::log('set ib', $c);
-                } else {
-                    fx::log('not prst', $ib_is_preset, $c['infoblock_id'], $preset_id);
                 }
+                fx::log('saving', $c, $input);
                 $c->save();
                 $result['saved_entities'][]= $c->get();
                 if ($cid == 'new') {

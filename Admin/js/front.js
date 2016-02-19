@@ -1830,11 +1830,14 @@ fx_front.prototype.get_edit_closure = function($entity, params) {
             edit_action_params.preset_params = JSON.stringify(preset_params);
         }
         fx_eip.fix();
+        
         var entity_values = fx_eip.get_values(ce_id);
         
         $fx.front.disable_node_panel();
         
-        $fx.front.select_item($entity);
+        if ($entity[0] !== $fx.front.get_selected_item()) {
+            $fx.front.select_item($entity);
+        }
         
         fx_eip.stop();
         

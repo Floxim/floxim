@@ -39,4 +39,9 @@ class Text extends \Floxim\Floxim\Component\Field\Entity
         );
         return $fields;
     }
+    
+    public function getSqlType()
+    {
+        return "MEDIUMTEXT";
+    }
 }

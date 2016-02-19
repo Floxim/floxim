@@ -496,13 +496,7 @@ fx_edit_in_place.prototype.is_text_empty = function(text) {
 fx_edit_in_place.prototype.start_content_editable = function(meta) {
     var $n = this.node;
     this.is_content_editable = true;
-    /*
-    if (!$($fx.front.get_selected_item()).hasClass('fx_entity')) {
-        setTimeout(function() {
-            $fx.front.stop_entities_sortable();
-        }, 50);
-    }
-    */
+    
     if ($n.hasClass('fx_hidden_placeholded')) {
         $n.data('was_placeholded_by', this.node.html());
         $n.removeClass('fx_hidden_placeholded');
@@ -729,6 +723,10 @@ fx_edit_in_place.prototype.stop = function() {
     $('*').off('.edit_in_place');
     this.node.blur();
     this.stopped = true;
+    if (!window.stopped) {
+        window.stopped = [];
+    }
+    window.stopped.push(this);
     var was_placeholded_by = this.node.data('was_placeholded_by'),
         c_text = this.node.text();
     
