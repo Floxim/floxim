@@ -1358,7 +1358,8 @@ class Compiler
         }
         $code .= $this->childrenToCode($token)."\n";
         $dirs = $token->getProp('extend') ? "\$this->getAllDirs()" : "\$template_dir";
-        $code .= 'fx::page()->addCssBundleFromString(ob_get_clean(), '.$dirs.');'."\n";
+        $bundle_params = var_export(array('name' => $token->getProp('bundle')), true);
+        $code .= 'fx::page()->addCssBundleFromString(ob_get_clean(), '.$dirs.', '.$bundle_params.');'."\n";
         return $code;
     }
 

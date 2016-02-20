@@ -163,9 +163,11 @@ class Env
     public function getLayout()
     {
         if (!isset($this->current['layout'])) {
-            if ( ($preview_id = self::getLayoutPreview()) ) {
-                $this->current['layout'] = $preview_id;
-                return $preview_id;
+            $layout_preview = self::getLayoutPreview();
+            if ( $layout_preview ) {
+                $this->current['layout'] = $layout_preview[0];
+                $this->current['layout_style_variant'] = $layout_preview[1];
+                return $layout_preview[0];
             }
             $page_id = $this->getPageId();
             if ($page_id) {
@@ -178,6 +180,7 @@ class Env
                 $site = $this->getSite();
                 if ($site) {
                     $this->current['layout'] = $site['layout_id'];
+                    $this->current['layout_style_variant'] = $site['layout_style_variant'];
                 }
             }
             if (!isset($this->current['layout'])) {
@@ -185,6 +188,12 @@ class Env
             }
         }
         return $this->current['layout'];
+    }
+    
+    public function getLayoutStyleVariant()
+    {
+        $this->getLayout();
+        return isset($this->current['layout_style_variant']) ? $this->current['layout_style_variant'] : null;
     }
     
     protected static function getLayoutPreviewCookieName($site_id = null)
@@ -199,22 +208,28 @@ class Env
      * 
      * @param type $layout_id drop cookie if false
      */
-    public function setLayoutPreview($layout_id)
+    public function setLayoutPreview($layout_id, $style_variant = 'default')
     {
         if ($layout_id === false) {
             $cookie_time = time() - 60*60*60;
             unset($this->current['layout']);
+            unset($this->current['layout_style_variant']);
         } else {
             $this->current['layout'] = $layout_id;
+            $this->current['layout_style_variant'] = $style_variant;
             $cookie_time = time() + 60*60*24*365;
         }
-        setcookie(self::getLayoutPreviewCookieName(), $layout_id, $cookie_time, '/');
+        setcookie(self::getLayoutPreviewCookieName(), $layout_id.':'.$style_variant, $cookie_time, '/');
     }
     
     public function getLayoutPreview()
     {
         $cookie = self::getLayoutPreviewCookieName();
-        return isset($_COOKIE[$cookie]) ? $_COOKIE[$cookie] : null;
+        $value = isset($_COOKIE[$cookie]) ? $_COOKIE[$cookie] : null;
+        if ($value) {
+            $value = explode(":", $value);
+        }
+        return $value;
     }
 
     public function getLayoutId()

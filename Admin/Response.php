@@ -18,13 +18,14 @@ class Response
     protected $entity;
     protected $props = array();
 
-    protected $status, $status_text, $error_fields, $reload;
+    protected $status, $status_text, $error_fields, $reload, $request;
 
     public function __construct($input)
     {
         $this->submenu = new Submenu(isset($input['menu_id']) ? $input['menu_id'] : null);
         $this->breadcrumb = new Breadcrumb();
         $this->dialog = new Dialog();
+        $this->request = $input;
     }
     
     protected $buttons_action;
@@ -95,6 +96,10 @@ class Response
 
         if ($this->props) {
             $result['props'] = $this->props;
+        }
+        
+        if ($this->request) {
+            $result['request'] = $this->request;
         }
 
         return $result;

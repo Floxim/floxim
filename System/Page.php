@@ -118,7 +118,7 @@ class Page
         $this->all_js = array();
     }
     
-    public function addCssBundleFromString($string, $template_dir)
+    public function addCssBundleFromString($string, $template_dir, $params = array())
     {
         $lines = explode("\n", $string);
         $files = array();
@@ -138,7 +138,7 @@ class Page
                 $files []= $l;
             }
         }
-        $this->addCssBundle($files);
+        $this->addCssBundle($files, $params);
     }
 
     public function addCssBundle($files, $params = array())
@@ -146,7 +146,19 @@ class Page
         if (!isset($params['name'])) {
             $params['name'] = md5(join($files));
         }
+        $bundle_name = $params['name'];
         $params['name'] .= '.css.gz';
+        
+        if ($bundle_name === 'basic') {
+            $current_layout = fx::data('layout', fx::env()->getLayout());
+            $current_style_variant = fx::env()->getLayoutStyleVariant();
+            if ($current_style_variant && $current_style_variant != 'default') {
+                $current_layout_template = fx::template('theme.'.$current_layout['keyword']);
+                $current_layout_dir = end($current_layout_template->getTemplateSourceDirs());
+                $files []= fx::path($current_layout_dir.'/'.$current_style_variant.'.vars.less');
+            }
+            $params['name'] = md5(join($files)).'.'.$params['name'];
+        }
 
         $http_path = fx::path()->http('@files/asset_cache/' . $params['name']);
         $full_path = fx::path()->abs($http_path);

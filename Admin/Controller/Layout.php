@@ -177,19 +177,45 @@ class Layout extends Admin
         
         $current_preview = fx::env()->getLayoutPreview();
         
+        $variants = array(
+            array('default', fx::alang('Default'))
+        );
+        $variants_filter = array();
+        
         foreach ($layouts as $layout) {
             $layouts_select[] = array(
                 $layout['id'], 
                 $layout['name'] . ($current_preview == $layout['id'] ? ' ('.fx::alang('Preview').')' : '')
             );
+            $tpl = fx::template('theme.'.$layout['keyword']);
+            $tpl_variants = $tpl->getStyleVariants();
+            foreach ($tpl_variants as $tpl_variant) {
+                if (!isset($variants_filter[$tpl_variant])) {
+                    $variants []= array($tpl_variant, $tpl_variant);
+                    $variants_filter[$tpl_variant] = array();
+                }
+                $variants_filter[$tpl_variant] []= array('layout_id', $layout['id']);
+            }
         }
 
         $fields [] = array(
             'name'   => 'layout_id',
-            'type'   => 'select',
+            'type'   => 'livesearch',
             'values' => $layouts_select,
             'value'  => fx::env('layout_id'),
             'label'  => fx::alang('Layout', 'system')
+        );
+        
+        
+        $current_variant = fx::env()->getLayoutStyleVariant();
+        
+        $fields []= array(
+            'name' => 'style_variant',
+            'label' => 'Вариант стилей',
+            'values' => $variants,
+            'values_filter' => $variants_filter,
+            'type' => 'livesearch',
+            'value' => $current_variant ? $current_variant : 'default'
         );
         
         $fields[]= $this->ui->hidden('settings_sent', 'true');
@@ -213,11 +239,12 @@ class Layout extends Admin
         
         if (isset($input['settings_sent'])) {
             if ($input['pressed_button'] == 'preview') {
-                fx::env()->setLayoutPreview($input['layout_id']);
+                fx::env()->setLayoutPreview($input['layout_id'], $input['style_variant']);
             } else {
-                if (!$current_preview || $current_preview != $real_layout_id) {
-                    fx::env('site')->set('layout_id', $input['layout_id'])->save();
-                }
+                $site = fx::env('site');
+                $site['layout_id'] = $input['layout_id'];
+                $site['layout_style_variant'] = $input['style_variant'];
+                $site->save();
                 if ($current_preview) {
                     fx::env()->setLayoutPreview(false);
                 }

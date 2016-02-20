@@ -539,4 +539,20 @@ class Template
         }
         return $res;
     }
+    
+    public function getStyleVariants()
+    {
+        $dir = end($this->getTemplateSourceDirs());
+        $mask = fx::path($dir .'/*.vars.less' );
+        $variants = array();
+        $files = glob( $mask );
+        if (!$files) {
+            return array();
+        }
+        foreach ($files as $f) {
+            preg_match("~([a-z0-9_-])\.vars.less~i", $f, $variant_name);
+            $variants []= $variant_name[1];
+        }
+        return $variants;
+    }
 }

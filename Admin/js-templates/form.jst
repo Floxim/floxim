@@ -129,7 +129,7 @@ if (_o.hide_in_panel) {
 }
 
 if (_c.view_context !== 'panel') {
-    setTimeout(function() {
+    //setTimeout(function() {
         $fx_fields.make_redactor(
             $('textarea.fx_wysiwyg', html), 
             {buttonSource:true, linebreaks: (_c.nl2br && _c.nl2br !== '0')}
@@ -167,7 +167,7 @@ if (_c.view_context !== 'panel') {
                 }
             },10);
         });
-    },50);
+    //},50);
 } else {
     var expander = $('.fx_panel_text_expander', html);
     expander.click(function() {
