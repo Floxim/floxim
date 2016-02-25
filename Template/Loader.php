@@ -379,7 +379,7 @@ class Loader
     {
 
         $cache = fx::config('templates.cache');
-
+        
         // template caching is disabled
         if (!$cache) {
             return false;

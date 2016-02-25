@@ -160,12 +160,12 @@ class Env
         return ($user = $this->getUser()) ? $user->isAdmin() : false;
     }
 
-    public function getLayout()
+    public function getLayoutId()
     {
-        if (!isset($this->current['layout'])) {
+        if (!isset($this->current['layout_id'])) {
             $layout_preview = self::getLayoutPreview();
             if ( $layout_preview ) {
-                $this->current['layout'] = $layout_preview[0];
+                $this->current['layout_id'] = $layout_preview[0];
                 $this->current['layout_style_variant'] = $layout_preview[1];
                 return $layout_preview[0];
             }
@@ -173,26 +173,26 @@ class Env
             if ($page_id) {
                 $page = fx::data('floxim.main.page', $page_id);
                 if ($page['layout_id']) {
-                    $this->current['layout'] = $page['layout_id'];
+                    $this->current['layout_id'] = $page['layout_id'];
                 }
             }
-            if (!isset($this->current['layout'])) {
+            if (!isset($this->current['layout_id'])) {
                 $site = $this->getSite();
                 if ($site) {
-                    $this->current['layout'] = $site['layout_id'];
+                    $this->current['layout_id'] = $site['layout_id'];
                     $this->current['layout_style_variant'] = $site['layout_style_variant'];
                 }
             }
-            if (!isset($this->current['layout'])) {
-                $this->current['layout'] = fx::data('layout')->one()->get('id');
+            if (!isset($this->current['layout_id'])) {
+                $this->current['layout_id'] = fx::data('layout')->one()->get('id');
             }
         }
-        return $this->current['layout'];
+        return $this->current['layout_id'];
     }
     
     public function getLayoutStyleVariant()
     {
-        $this->getLayout();
+        $this->getLayoutId();
         return isset($this->current['layout_style_variant']) ? $this->current['layout_style_variant'] : null;
     }
     
@@ -212,10 +212,10 @@ class Env
     {
         if ($layout_id === false) {
             $cookie_time = time() - 60*60*60;
-            unset($this->current['layout']);
+            unset($this->current['layout_id']);
             unset($this->current['layout_style_variant']);
         } else {
-            $this->current['layout'] = $layout_id;
+            $this->current['layout_id'] = $layout_id;
             $this->current['layout_style_variant'] = $style_variant;
             $cookie_time = time() + 60*60*24*365;
         }
@@ -232,9 +232,19 @@ class Env
         return $value;
     }
 
-    public function getLayoutId()
+    public function getLayout()
     {
-        return $this->getLayout();
+        $id =  $this->getLayoutId();
+        if ($id) {
+            return fx::data('layout', $id);
+        }
+    }
+    
+    public function getLayoutTemplate()
+    {
+        $layout = $this->getLayout();
+        $tpl = fx::template('theme.'.$layout['keyword']);
+        return $tpl;
     }
 
     protected $current_template_stack = array();

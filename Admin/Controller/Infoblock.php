@@ -75,7 +75,7 @@ class Infoblock extends Admin
                 }
                 
                 $act_ctr = fx::controller($keyword . ':' . $action_code);
-                $act_templates = $act_ctr->getAvailableTemplates(fx::env('layout'), $area_meta);
+                $act_templates = $act_ctr->getAvailableTemplates(fx::env('layout_id'), $area_meta);
                 if (count($act_templates) == 0) {
                     continue;
                 }
@@ -294,7 +294,7 @@ class Infoblock extends Admin
             ));
             $i2l = fx::data('infoblock_visual')->create(array(
                 'area'      => $area_meta['id'],
-                'layout_id' => fx::env('layout')
+                'layout_id' => fx::env('layout_id')
             ));
             if (isset($input['next_visual_id']) && $input['next_visual_id']) {
                 $i2l->moveBefore($input['next_visual_id']);
@@ -822,6 +822,7 @@ class Infoblock extends Admin
             }
         }
 
+        /*
         if (count($templates) == 1) {
             $fields [] = array(
                 'name'  => 'template',
@@ -829,6 +830,8 @@ class Infoblock extends Admin
                 'value' => $templates[0][0]
             );
         } else {
+         * 
+         */
             $fields [] = array(
                 'label'  => fx::alang('Template', 'system'),
                 'name'   => 'template',
@@ -836,7 +839,7 @@ class Infoblock extends Admin
                 'values' => $templates,
                 'value'  => $i2l['template']
             );
-        }
+        //}
         if ($controller_name != 'layout' && (count($wrappers) > 1 || !isset($wrappers['']))) {
             $fields [] = array(
                 'label'     => fx::alang('Wrapper', 'system'),
@@ -880,7 +883,6 @@ class Infoblock extends Admin
                 }
             }
             $ib->save();
-            fx::log('created from preset', $ib, $preset_id);
         }
         
         if ($ib->isLayout()) {
@@ -964,7 +966,6 @@ class Infoblock extends Admin
                 if ($ib_is_preset && $c['infoblock_id'] === $preset_id) {
                     $c['infoblock_id'] = $ib['id'];
                 }
-                fx::log('saving', $c, $input);
                 $c->save();
                 $result['saved_entities'][]= $c->get();
                 if ($cid == 'new') {
@@ -1199,13 +1200,10 @@ class Infoblock extends Admin
             return;
         }
         $vis['area'] = $input['area'];
-        fx::log('moving vis', $vis, $input);
         if (isset($input['next_visual_id'])) {
             $vis->moveBefore($input['next_visual_id']);
-            fx::log('place before', $vis, $input['next_visual_id']);
         } else {
             $vis->moveLast();
-            fx::log('place last', $vis);
         }
         $vis->save();
     }

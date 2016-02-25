@@ -16,7 +16,6 @@ class Config
         'DIRCHMOD'                   => 0755,
         'HTTP_ROOT_PATH'             => '/floxim/',
         'HTTP_FILES_PATH'            => '/floxim_files/',
-        'HTTP_LAYOUT_PATH'           => '/layout/',
         'SESSION_KEY'                => '_fx_cms_',
         'HTTP_MODULE_PATH'           => '',
         'DOCUMENT_ROOT'              => '',

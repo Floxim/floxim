@@ -40,15 +40,6 @@ class Front extends Base
         $layout_ib = fx::page()->getInfoblocks($path)->findOne(function($ib) {
             return $ib->isLayout();
         });
-        /*
-        $ibs = fx::data('infoblock')->getForPath($path);
-        $layout_ib = $ibs->findOne(function($ib) {
-            return $ib['controller'] === 'layout' && $ib['action'] === 'show';
-        });
-        */
-        
-        
-        //$layout_ib = $this->getLayoutInfoblock($page);
         
         fx::trigger('before_layout_render', array(
             'layout_infoblock' => $layout_ib
@@ -78,7 +69,7 @@ class Front extends Base
     public function  getPageInfoblocks($page_id, $layout_id = null)
     {
         if (is_null($layout_id)) {
-            $layout_id = fx::env('layout');
+            $layout_id = fx::env('layout_id');
         }
         $cache_key = $page_id . '.' . $layout_id;
         if (isset($this->_ib_cache[$cache_key])) {

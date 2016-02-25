@@ -167,21 +167,31 @@ class Admin extends System\Controller
         $page->addCssFile('https://fonts.googleapis.com/css?family=Roboto:400,500,400italic,500italic,700,700italic&subset=latin,cyrillic');
         
         // todo: need fix path for css - now used server path
-        $page->addCssBundle(array(
-            $path_floxim . '/lib/editors/redactor/redactor.css',
-        ));
+        $page->addCssBundle(
+            array(
+                $path_floxim . '/lib/editors/redactor/redactor.css',
+            ),
+            array(
+                'name' => 'redactor'
+            )
+        );
 
-        $page->addCssBundle(array(
-            $path_floxim . '/Admin/style/mixins.less',
-            $path_floxim . '/Admin/style/main.less',
-            $path_floxim . '/Admin/style/backoffice.less',
-            $path_floxim . '/Admin/style/forms.less',
-            $path_floxim . '/Admin/style/front.less',
-            $path_floxim . '/Admin/style/livesearch.less',
-            $path_floxim . '/Admin/style/debug.less',
-            $path_floxim . '/lib/codemirror/codemirror.css',
-            $path_floxim . '/Admin/style/condition-builder.less',
-        ), array('name' => 'admin_less'));
+        $page->addCssBundle(
+            array(
+                $path_floxim . '/Admin/style/mixins.less',
+                $path_floxim . '/Admin/style/main.less',
+                $path_floxim . '/Admin/style/backoffice.less',
+                $path_floxim . '/Admin/style/forms.less',
+                $path_floxim . '/Admin/style/front.less',
+                $path_floxim . '/Admin/style/livesearch.less',
+                $path_floxim . '/Admin/style/debug.less',
+                $path_floxim . '/lib/codemirror/codemirror.css',
+                $path_floxim . '/Admin/style/condition-builder.less',
+            ), 
+            array(
+                'name' => 'admin_less'
+            )
+        );
     }
 
     /**

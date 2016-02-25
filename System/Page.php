@@ -28,16 +28,6 @@ class Page
     public function getLessCompiler()
     {
         $c = new \lessc();
-        /*
-        $c->registerFunction("length", function($arg) {
-            if ($arg[0] !== 'list') {
-                return 0;
-            }
-            $res = count($arg[2]);
-            return $res;
-        });
-         * 
-         */
         return $c;
     }
 
@@ -48,11 +38,26 @@ class Page
      */
     public function getMetatags($item = '')
     {
-        $item = 'seo_' . $item;
         if ($item) {
+            $item = 'seo_' . $item;
             return isset($this->metatags[$item]) ? $this->metatags[$item] : null;
         }
         return $this->metatags;
+    }
+    
+    public function getBundleManager()
+    {
+        static $bundleManager = null;
+        if (is_null($bundleManager)) {
+            $bundleManager = new \Floxim\Floxim\Asset\Manager();
+        }
+        return $bundleManager;
+    }
+    
+    public function addToBundle($files, $bundle_keyword)
+    {
+        fx::log($files, $bundle_keyword);
+        $this->getBundleManager()->addToBundle($files, $bundle_keyword);
     }
 
     public function addFile($file)
@@ -130,6 +135,10 @@ class Page
             if (empty($l)) {
                 continue;
             }
+            if (preg_match("~^https?://~i", $l)) {
+                $this->addCssFile($l);
+                continue;
+            }
             if (!preg_match("~^(/|https?://)~", $l)) {
                 foreach ($template_dir as $c_dir) {
                     $files[]= fx::path()->abs($c_dir.$l);
@@ -147,10 +156,18 @@ class Page
             $params['name'] = md5(join($files));
         }
         $bundle_name = $params['name'];
+        
+        $manager = $this->getBundleManager();
+        $bundle = $manager->getBundle('css', $bundle_name);
+        $bundle->push($files);
+        $this->files_css[]= $bundle;
+        //$manager->addToBundle($files, $bundle_name);
+        return;
+        
         $params['name'] .= '.css.gz';
         
         if ($bundle_name === 'basic') {
-            $current_layout = fx::data('layout', fx::env()->getLayout());
+            $current_layout = fx::data('layout', fx::env('layout_id'));
             $current_style_variant = fx::env()->getLayoutStyleVariant();
             if ($current_style_variant && $current_style_variant != 'default') {
                 $current_layout_template = fx::template('theme.'.$current_layout['keyword']);
@@ -396,6 +413,12 @@ class Page
         if ($this->files_css) {
             $files_css = array();
             foreach ($this->files_css as $f) {
+                if ($f instanceof \Floxim\Floxim\Asset\Bundle) {
+                    $f->save();
+                    $f = array(
+                        'file' => fx::path()->http($f->getFilePath())
+                    );
+                }
                 if (!is_array($f)) {
                     $f = array('file' => $f);
                 }

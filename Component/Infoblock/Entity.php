@@ -29,7 +29,7 @@ class Entity extends System\Entity implements Template\Entity
     public function getVisual($layout_id = null)
     {
         if (!$layout_id) {
-            $layout_id = fx::env('layout');
+            $layout_id = fx::env('layout_id');
         }
         if (!isset($this->_visual[$layout_id])) {
             $stored = $this['visuals']->findOne('layout_id', $layout_id);
@@ -450,7 +450,7 @@ class Entity extends System\Entity implements Template\Entity
             $this->output_cache = $tpl->render($tpl_params);
         } catch (\Exception $e) {
             fx::log('error while rendering...', $e->getMessage());
-            $this->output_cache = $is_admin ? 'Error, see logs' : '';
+            $this->output_cache = $is_admin ? 'Error, see logs' : ';(';
         }
         if ($is_admin) {
             $this->infoblock_meta['template_params'] = $tpl->getRegisteredParams();

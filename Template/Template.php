@@ -360,13 +360,13 @@ class Template
         if (count($data) > 0) {
             $this->context->push($data);
         }
-        
         ob_start();
         if (!is_null($this->forced_method)){
             $method = $this->forced_method;
         } else {
             $method = self::getActionMethod($this->action, $this->context);
             if (!$method) {
+                fx::log('unknown template method', get_class($this) . '.' . $this->action, $this);
                 throw new \Exception('No template: ' . get_class($this) . '.' . $this->action);
             }
         }
@@ -436,6 +436,7 @@ class Template
     public function getInfo()
     {
         if (!$this->action) {
+            fx::log('no tpl action', $this);
             throw new \Exception('Specify template action/variant before getting info');
         }
         foreach (static::$templates as $tpl) {
@@ -554,5 +555,48 @@ class Template
             $variants []= $variant_name[1];
         }
         return $variants;
+    }
+    
+    public function collectStyles($mask)
+    {
+        $dirs = array_values($this->getTemplateSourceDirs());
+        $layout_template = fx::env()->getLayoutTemplate();
+        $theme_dirs = $layout_template->getTemplateSourceDirs();
+        foreach ($theme_dirs as $td) {
+            $dirs []= $td;
+        }
+        $res = array();
+        $rex = "~".str_replace("*", "([a-z0-9\-]+)", $mask)."~";
+        foreach ($dirs as $dir) {
+            $dir_mask = fx::path($dir.'/'.$mask);
+            $files = glob($dir_mask);
+            if (!$files) {
+                continue;
+            }
+            foreach ($files as $f) {
+                $style_keyword = null;
+                preg_match($rex, $f, $style_keyword);
+                $style_keyword = $style_keyword[1];
+                if (!isset($res[$style_keyword])) {
+                    $res[$style_keyword] = array(
+                        'name' => $style_keyword,
+                        'keyword' => $style_keyword,
+                        'files' => array()
+                    );
+                }
+                $res[$style_keyword]['files'][]= $f;
+            }
+        }
+        return $res;
+    }
+    
+    public function collectStyleValues($mask)
+    {
+        $res = $this->collectStyles($mask);
+        $vals = array();
+        foreach ($res as $style_info) {
+            $vals []= array($style_info['keyword'], $style_info['name']);
+        }
+        return $vals;
     }
 }

@@ -278,7 +278,6 @@ class Compiler
             }
         }
         
-        //$apply = '{apply '.$token->getProp('template');
         $apply = '{apply '.$full_target_tpl;
         $vars = array();
         foreach ($token->getChildren() as $child) {
@@ -1367,6 +1366,9 @@ class Compiler
     {
         $code = "<?php\n";
         $code .= 'if (!$context->isIdle()) {'."\n";
+        if (!$token->getProp('bundle') && $type === 'css') {
+            $token->setProp('bundle', 'default');
+        }
         if ($token->getProp('bundle') || $token->getProp('extend')) {
             $code .= $this->cssBundleToCode($token);
         } else {
@@ -1473,7 +1475,8 @@ class Compiler
     {
         $name = $token->getProp('name');
         $props = $token->getAllProps();
-        
+        $exported_props = array();
+                
         if (!isset($props['type']) && isset($props['values'])) {
             $props['type'] = 'select';
         }
@@ -1492,20 +1495,48 @@ class Compiler
         $code .= $val_var." = \$context->get('".$name."');\n";
         $val_is_null = $val_var."_is_null";
         $code .= $val_is_null . " = is_null(".$val_var.");\n";
+        
+        $is_style = $props['type'] === 'style';
+        if ($is_style) {
+            $props['type'] = 'select';
+            $mask = $props['mask'];
+            unset($props['mask']);
+            $styles_var = "\$param__".$name.'_styles';
+            $first_style_var = $styles_var.'_first';
+            $code .= $styles_var ." = \$this->collectStyles('".$mask."');\n";
+            
+            $code .= $first_style_var." = null;\n";
+            $code .= 'if ('.$val_is_null.' && count('.$styles_var.') > 0) {'."\n";
+            $code .= $first_style_var." = current(".$styles_var.");\n";
+            $code .= $first_style_var." = ".$first_style_var."['keyword'];\n";
+            $code .= "}\n";
+            $default_val = $first_style_var;
+            $exported_props[]= "'label' => 'Style'";
+            $exported_props[]= "'values' => \$this->collectStyleValues('".$mask."')";
+
+        }
+
         if (isset($props['default'])) {
             // handle computable defaults
             $default_val = "'".$props['default']."'";
             
+        }
+        if (isset($default_val)) {
             $code .= "if (".$val_is_null.") {\n";
             $code .= $val_var." = ".$default_val.";\n";
             $code .= "\$context->set('".$name."', ".$val_var.");\n";
             $code .= "}\n";
         }
+        if ($is_style) {
+            $code .= 'fx::page()->addToBundle('.$styles_var.'['.$val_var.']["files"], "default");'."\n";
+        }
+        $exported_props [] = "'is_forced' => !".$val_is_null." && \$context->getLastVarLevel() !== 1";
+        
+        
+        $exported_props[]= "'value' => ".$val_var;
+        
         $code .= "if (\$_is_admin ) {\n";
-        $exported_props = array(
-            "'is_forced' => !".$val_is_null." && \$context->getLastVarLevel() !== 1",
-            "'value' => ".$val_var
-        );
+        
         foreach ($props as $k => $v) {
             $c_prop = "'".$k."' => ";
             if (!is_string($v)) {

@@ -38,7 +38,7 @@ class Infoblock extends Base
 
         $page_infoblocks = fx::router('front')->getPageInfoblocks(
             $page_id,
-            fx::env('layout')
+            fx::env('layout_id')
         );
         fx::page()->setInfoblocks($page_infoblocks);
         
