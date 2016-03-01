@@ -16,15 +16,24 @@ class File extends \Floxim\Floxim\Component\Field\Entity
         $res['type'] = 'file';
         $res['field_id'] = $this['id'];
         $val = $res['value'];
-        $abs = fx::path()->abs($val);
-        if (fx::path()->exists($abs)) {
-            $res['value'] = array(
-                'path'     => $val,
-                'filename' => fx::path()->fileName($abs),
-                'size'     => fx::files()->readableSize($abs)
-            );
+        $val_array = static::prepareValue($val);
+        if ($val_array) {
+            $res['value'] = $val_array;
         }
         return $res;
+    }
+    
+    public static function prepareValue($val) 
+    {
+        $abs = fx::path()->abs($val);
+        if (!fx::path()->exists($abs)) {
+            return;
+        }
+        return array(
+            'path'     => $val,
+            'filename' => fx::path()->fileName($abs),
+            'size'     => fx::files()->readableSize($abs)
+        );
     }
 
     public function getSavestring(System\Entity $content = null)

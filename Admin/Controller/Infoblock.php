@@ -803,10 +803,17 @@ class Infoblock extends Admin
         }
 
         // Collect available wrappers
-        $layout_tpl = fx::template('theme.' . $layout_name);
-        if ($layout_tpl) {
-            $avail_wrappers = \Floxim\Floxim\Template\Suitable::getAvailableWrappers($layout_tpl, $area_meta);
-            $cnt = 0;
+        $wrapper_sources = array(
+            'floxim.layout.wrapper',
+            'theme.' . $layout_name,
+        );
+        $cnt = 0;
+        foreach ($wrapper_sources as $wrapper_source_keyword) {
+            $wrapper_tpl = fx::template($wrapper_source_keyword);
+            if (!$wrapper_tpl) {
+                continue;
+            }
+            $avail_wrappers = \Floxim\Floxim\Template\Suitable::getAvailableWrappers($wrapper_tpl, $area_meta);
             foreach ($avail_wrappers as $avail_wrapper) {
                 $cnt++;
                 $wrappers[]= array($avail_wrapper['full_id'], $cnt,  array('title' => $avail_wrapper['name']));
@@ -929,6 +936,13 @@ class Infoblock extends Admin
         }
 
         if (isset($vars['content'])) {
+            foreach ($vars['content'] as $vn => $v) {
+                if (!isset($v['var']['content_type_id']) && isset($v['var']['content_type'])) {
+                    $var_com = fx::getComponentByKeyword($v['var']['content_type']);
+                    $v['var']['content_type_id'] = $var_com['id'];
+                    $vars['content'][$vn] = $v;
+                }
+            }
             $content_groups = $vars['content']->group(function ($v) {
                 $vid = $v['var']['content_id'];
                 if (!$vid) {

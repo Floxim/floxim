@@ -464,6 +464,8 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
         
         $block_mark.slideUp(speed/1.5);
         
+        var initial_style_att = $placeholder.attr('style');
+        
         $placeholder
           .css({width:0,height:0})
           .animate(
@@ -472,6 +474,7 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
             null,
             function() {
                 $placeholder.css(null_size);
+                $placeholder.attr('style', initial_style_att);
                 $placeholder.trigger('fx_after_show_adder_placeholder');
                 var $placeholder_focus = $placeholder,
                     // select "name" field if exists, else - first visible editable
@@ -1500,12 +1503,14 @@ fx_front.prototype.collect_adder_placeholders = function($container) {
         } else {
             $placeholders = $parent.find('>.fx_entity_adder_placeholder');
         }
-        $parent.find('>.fx_entity').addClass('fx_accept_neighbours');
-        $parent.data('fx_contained_placeholders', $placeholders);
-        $parent.addClass('fx_adder_placeholder_container');
-        $placeholders.each(function() {
-           this.$fx_placeholder_parent =  $parent;
-        });
+        if (!$parent.is('.fx_no_add') || $parent.find('>.fx_entity:not(.fx_entity_adder_placeholder)').length === 0) {
+            $parent.find('>.fx_entity').addClass('fx_accept_neighbours');
+            $parent.data('fx_contained_placeholders', $placeholders);
+            $parent.addClass('fx_adder_placeholder_container');
+            $placeholders.each(function() {
+               this.$fx_placeholder_parent =  $parent;
+            });
+        }
         $placeholders.remove();
     });
 };
@@ -1569,7 +1574,7 @@ fx_front.prototype.get_list_orientation = function($entities) {
         var tag = $c_entity[0].nodeName;
         $clone = $('<'+tag
                     +' class="'+$c_entity.attr('class')+'" '
-                    +' style="width:50px; height:50px; opacity:0;">'+
+                    +' style="width:250px; height:50px; opacity:0;">'+
                     '</'+tag+'>');
         $c_entity.after($clone);
         $entities_visible = $entities_visible.add($clone);

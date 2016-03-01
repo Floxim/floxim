@@ -11,6 +11,7 @@ class Image extends \Floxim\Floxim\Field\File
     {
         $f = parent::getJsField($content);
         $f['type'] = 'image';
+        /*
         if (isset($f['value']) && isset($f['value']['path']) && $f['value']['path']) {
             $thumb = new \Floxim\Floxim\System\Thumb($f['value']['path']);
             $info = $thumb->getInfo();
@@ -24,8 +25,28 @@ class Image extends \Floxim\Floxim\Field\File
                 );
             }
         }
-
+        */
         return $f;
+    }
+    
+    public static function prepareValue($val) {
+        $res = parent::prepareValue($val);
+        if (!$res || !is_array($res) || !isset($res['path'])) {
+            $res;
+        }
+        $abs = $res['path'];
+        $thumb = new \Floxim\Floxim\System\Thumb($abs);
+        $info = $thumb->getInfo();
+        if ($info && isset($info['width']) && isset($info['height'])) {
+            $res = array_merge(
+                $res,
+                array(
+                    'width' => $info['width'],
+                    'height' => $info['height']
+                )
+            );
+        }
+        return $res;
     }
 
     public function fakeValue()

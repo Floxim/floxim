@@ -16,7 +16,6 @@ class LessBundle extends Bundle {
         );
         $parser = new \Less_Parser($options);
         $files = array_unique($this->files);
-        fx::log('compiling less from files', $files);
         foreach ($files as $f) {
             $dir = fx::path()->http(dirname($f));
             $parser->parseFile($f, $dir);
@@ -24,7 +23,7 @@ class LessBundle extends Bundle {
         try {
             return $parser->getCss();
         } catch (\Less_Exception_Compiler $e) {
-            fx::debug($e, $parser);
+            fx::log($e, $parser);
         }
     }
     

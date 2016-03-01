@@ -1536,12 +1536,12 @@ class Compiler
         $exported_props[]= "'value' => ".$val_var;
         
         $code .= "if (\$_is_admin ) {\n";
-        
+
         foreach ($props as $k => $v) {
             $c_prop = "'".$k."' => ";
             if (!is_string($v)) {
                 $c_prop .= var_export($v, 1);
-            } elseif (preg_match("~^\`.+\`$~", $v)) {
+            } elseif (preg_match("~^\`.+\`$~s", $v)) {
                 $c_prop .= trim($v, '`');
             } else {
                 $c_prop .= "'".addslashes($v)."'";

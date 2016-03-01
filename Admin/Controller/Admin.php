@@ -186,7 +186,7 @@ class Admin extends System\Controller
                 $path_floxim . '/Admin/style/livesearch.less',
                 $path_floxim . '/Admin/style/debug.less',
                 $path_floxim . '/lib/codemirror/codemirror.css',
-                $path_floxim . '/Admin/style/condition-builder.less',
+                $path_floxim . '/Admin/style/condition-builder.less'
             ), 
             array(
                 'name' => 'admin_less'

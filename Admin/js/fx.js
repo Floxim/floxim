@@ -129,7 +129,9 @@ window.$fx = {
                     css_assets = $.parseJSON(css_assets);
                     for (var i = 0; i < css_assets.length; i++) {
                         var asset = css_assets[i];
-                        $('head').append('<link type="text/css" rel="stylesheet" href="'+asset+'" />');
+                        if ($('link[href="'+asset+'"]').length === 0) {
+                            $('head').append('<link type="text/css" rel="stylesheet" href="'+asset+'" />');
+                        }
                     }
                 }
             });

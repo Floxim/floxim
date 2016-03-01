@@ -12,7 +12,7 @@ class Page
     
     protected $files_js;
     
-    protected $files_css;
+    protected $files_css = array();
 
 
     public function setMetatags($item, $value, $post = '')
@@ -56,7 +56,6 @@ class Page
     
     public function addToBundle($files, $bundle_keyword)
     {
-        fx::log($files, $bundle_keyword);
         $this->getBundleManager()->addToBundle($files, $bundle_keyword);
     }
 
@@ -160,7 +159,9 @@ class Page
         $manager = $this->getBundleManager();
         $bundle = $manager->getBundle('css', $bundle_name);
         $bundle->push($files);
-        $this->files_css[]= $bundle;
+        if (!in_array($bundle, $this->files_css)) {
+            $this->files_css[]= $bundle;
+        }
         //$manager->addToBundle($files, $bundle_name);
         return;
         
@@ -404,34 +405,40 @@ class Page
     public function addAssetsAjax()
     {
         fx::http()->header('fx_assets_js', $this->files_js);
-        fx::http()->header('fx_assets_css', $this->files_css);
+        $files_css = array_keys($this->getCssFilesFinal());
+        fx::http()->header('fx_assets_css', $files_css);
+    }
+    
+    public function getCssFilesFinal() 
+    {
+        $res = array();
+        foreach ($this->files_css as $f) {
+            if ($f instanceof \Floxim\Floxim\Asset\Bundle) {
+                $f->save();
+                $f = array(
+                    'file' => fx::path()->http($f->getFilePath())
+                );
+            }
+            if (!is_array($f)) {
+                $f = array('file' => $f);
+            }
+            $res[$f['file']] = $f;
+        }
+        return $res;
     }
 
     public function getAssetsCode()
     {
         $r = '';
-        if ($this->files_css) {
-            $files_css = array();
-            foreach ($this->files_css as $f) {
-                if ($f instanceof \Floxim\Floxim\Asset\Bundle) {
-                    $f->save();
-                    $f = array(
-                        'file' => fx::path()->http($f->getFilePath())
-                    );
-                }
-                if (!is_array($f)) {
-                    $f = array('file' => $f);
-                }
-                $files_css[$f['file']] = $f;
+        $files_css = $this->getCssFilesFinal();
+        foreach ($files_css as $file => $file_info) {
+            $r .= '<link rel="stylesheet" type="text/css" href="' . $file . '" ';
+            if (isset($file_info['media'])) {
+                $r .= ' media="('.$file_info['media'].')" ';
             }
-            foreach ($files_css as $file => $file_info) {
-                $r .= '<link rel="stylesheet" type="text/css" href="' . $file . '" ';
-                if (isset($file_info['media'])) {
-                    $r .= ' media="('.$file_info['media'].')" ';
-                }
-                $r .= '/>' . PHP_EOL;
-            }
+            $r .= '/>' . PHP_EOL;
         }
+        
         if ($this->files_js) {
             $files_js = array_unique($this->files_js);
 
@@ -479,7 +486,7 @@ class Page
         $r .= '<base href="'.(is_null($this->base_url) ? FX_BASE_URL : $this->base_url).'/" />';
 
         $r .= $this->getAssetsCode();
-
+        
         if (!preg_match("~<head(\s[^>]*?|)>~i", $buffer)) {
             if (preg_match("~<html[^>]*?>~i", $buffer)) {
                 $buffer = preg_replace("~<html[^>]*?>~i", '$0<head> </head>', $buffer);
@@ -531,13 +538,14 @@ class Page
     
     public function getAreaInfoblocks($area_id)
     {
-        $layout_id = fx::env('layout_id');
         $path = fx::env('path');
-        //$ibs = fx::data('infoblock')->with('visuals')->getForPath($path);
+        
         $ibs = $this->getInfoblocks($path);
+        
         $filtered = $ibs->find(function($ib) use ($area_id) {
             return $ib->getVisual()->get('area') === $area_id;
         });
+        
         return $filtered;
     }
     

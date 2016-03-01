@@ -90,12 +90,6 @@ class Config
         
         $this->config['path.admin'] = fx::path()->http('@home/'.$this->config['path.admin_dir_name'].'/');
 
-        /*
-        $this->config['path.jquery'] = fx::path('@floxim/lib/js/jquery-1.9.1.min.js');
-        $this->config['path.jquery.http'] = fx::path()->http('@floxim/lib/js/jquery-1.9.1.min.js');
-        $this->config['path.jquery-ui'] = fx::path('@floxim/lib/js/jquery-ui-1.10.3.custom.min.js');
-        */
-        
         $this->config['path.jquery'] = fx::path('@floxim/lib/js/jquery-1.11.3.min.js');
         $this->config['path.jquery.http'] = fx::path()->http($this->config['path.jquery']);
         $this->config['path.jquery-ui'] = fx::path('@floxim/lib/js/jquery-ui-1.10.3.custom.min.js');

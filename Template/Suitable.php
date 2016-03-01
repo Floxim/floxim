@@ -262,7 +262,18 @@ class Suitable
                 if (in_array('local', $tplv_suit)) {
                     $tplv_suit []= $tplv['area'];
                 }
-                if (!in_array($area_meta['id'], $tplv_suit)) {
+                $matched_mask = false;
+                foreach ($tplv_suit as $tplv_suit_area) {
+                    if (preg_match("~\*$~", $tplv_suit_area)) {
+                        $tplv_suit_area_rex = "~^".preg_quote(  mb_substr($tplv_suit_area, 0, -1) ).'~';
+                        fx::log($tplv_suit_area_rex, $area_meta['id']);
+                        if (preg_match($tplv_suit_area_rex, $area_meta['id'])) {
+                            $matched_mask = true;
+                            break;
+                        }
+                    }
+                }
+                if (!$matched_mask && !in_array($area_meta['id'], $tplv_suit)) {
                     continue;
                 }
             }

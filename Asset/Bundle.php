@@ -12,6 +12,7 @@ abstract class Bundle {
     protected $version = null;
     protected $dir;
     protected $is_new = false;
+    protected $has_new_files = false;
 
     public function __construct($keyword, $params = array()) 
     {
@@ -49,7 +50,7 @@ abstract class Bundle {
     
     public function isFresh()
     {
-        if ($this->is_new) {
+        if ($this->is_new || $this->has_new_files) {
             return false;
         }
         $saved_time = (int) $this->version;
@@ -73,6 +74,9 @@ abstract class Bundle {
     {
         foreach ($files as $file) {
             $this->processFile($file);
+            if (!$this->has_new_files && !in_array($file, $this->files)) {
+                $this->has_new_files = true;
+            }
             $this->files[] = $file;
         }
     }
@@ -110,6 +114,8 @@ abstract class Bundle {
         file_put_contents($meta_path, $meta_content);
         $target_path = $this->getFilePath();
         file_put_contents($target_path, $content);
+        $this->is_new = false;
+        $this->has_new_files = false;
     }
     
 }

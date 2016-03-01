@@ -17,7 +17,7 @@ class Entity extends System\Entity
             $this->recountFiles();
         }
     }
-
+    
     public function setNeedRecountFiles($need)
     {
         $this->needRecountFiles = $need;

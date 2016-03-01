@@ -261,7 +261,9 @@ abstract class Entity implements \ArrayAccess, Template\Entity
                     foreach ($val as $linked_item) {
                         $c_priority++;
                         $linked_item[$related_field_keyword] = $this['id'];
-                        $linked_item['priority'] = $c_priority;
+                        if ($linked_item instanceof \Floxim\Main\Content\Entity) {
+                            $linked_item['priority'] = $c_priority;
+                        }
                         $linked_item->save();
                     }
                     $old_data->findRemove('id', $val->getValues('id'));
