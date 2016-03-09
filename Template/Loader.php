@@ -426,12 +426,14 @@ class Loader
             $source = fx::files()->readfile($source);
         }
         $count_virtual++;
-        $this->setTemplateName('virtual_' . $count_virtual);
+        $tpl_name = 'virtual_' . $count_virtual;
+        $this->setTemplateName($tpl_name);
         $src = $this->buildSource(array('/dev/null/virtual.tpl' => $source));
         $php = $this->compile($src);
 
         $this->runEval($php);
         $classname = $this->getCompiledClassName();
+        self::$imported_classes[$tpl_name] = $classname;
         $tpl = new $classname(is_null($action) ? 'virtual' : $action);
         $tpl->source = $src;
         $tpl->compiled = $php;

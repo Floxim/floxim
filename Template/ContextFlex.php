@@ -5,7 +5,10 @@ namespace Floxim\Floxim\Template;
 use Floxim\Floxim\System\Fx as fx;
 
 class ContextFlex extends Context {
+    
     public $vars = array();
+    
+    protected $var_props = array();
     
     public function getFromTop($var)
     {
@@ -19,7 +22,7 @@ class ContextFlex extends Context {
         return $this->last_var_level;
     }
     
-    public function push($data = array(), $meta = array()) {
+    public function push($data = array(), $meta = array(), $var_props = array()) {
         
         $l = ++$this->level;
         
@@ -32,6 +35,7 @@ class ContextFlex extends Context {
             $meta
         );
         //$this->vars[$l] = array();
+        $this->var_props[$l] = $var_props;
         $this->misses[$l] = array();
     }
     
@@ -39,25 +43,30 @@ class ContextFlex extends Context {
         unset($this->stack[$this->level]);
         $meta = $this->meta[$this->level];
         unset($this->meta[$this->level]);
-        //unset($this->vars[$this->level]);
         unset($this->misses[$this->level]);
+        unset($this->var_props[$this->level]);
         $this->level--;
         if ($meta['autopop']) {
             $this->pop();
         }
     }
     
-    public function set($var, $val)
+    public function set($var, $val, $meta = null)
     {   
         if ($this->level === 0 || !is_array($this->stack[$this->level])) {
-            $this->push(array($var => $val), array('transparent' => true, 'autopop' => true));
+            $this->push(
+                array($var => $val), 
+                array('transparent' => true, 'autopop' => true),
+                $meta ? array($var => $meta) : array()
+            );
             return;
         }
         
         $this->stack[$this->level][$var] = $val;
+        if ($meta) {
+            $this->var_props[$this->level][$var] = $meta;
+        }
         unset($this->misses[$this->level][$var]);
-        //$this->vars[$this->level][$var]= $this->level;
-        //$this->vars[$this->level][$var]= $val;
     }
     
     protected $misses = array();
@@ -128,6 +137,9 @@ class ContextFlex extends Context {
             if ($e instanceof Entity && isset($e[$var_name])) {
                 $meta = $e->getFieldMeta($var_name);
                 return is_array($meta) ? $meta : array();
+            }
+            if (isset($this->var_props[$i][$var_name])) {
+                return $this->var_props[$i][$var_name];
             }
         }
         return array();

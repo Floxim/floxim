@@ -490,7 +490,6 @@ window.fx_suggest = function(params) {
             $box =  this.box,
             scroll_top = $box.scrollTop();
         
-        
         if (!$node.is(':visible')) {
             $box.hide();
             return;
@@ -519,7 +518,8 @@ window.fx_suggest = function(params) {
             css.top = rect.top + rect.height + 5;
         }
         css.left = rect.left;
-        css.width = rect.width;
+        //css.width = rect.width;
+        css['min-width'] = rect.width;
         $box.css(css);
         $box.scrollTop(scroll_top);
     };

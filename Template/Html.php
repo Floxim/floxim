@@ -357,7 +357,6 @@ class Html
             
         });
         $res = $tree->serialize();
-        //fx::log($res);
         return $res;
     }
 
@@ -409,12 +408,13 @@ class Html
                     $stack_last = end($stack);
                     if (!$stack_last) {
                         fx::log("fx_template_html tree error", $tokens, $root);
-                        echo fx_debug(
+                        fx::debug(
                             "fx_template_html error: stack empty, trying to add: ",
                             '#' . $token_index,
                             $token,
                             $tokens,
-                            $root);
+                            $root
+                        );
                         echo "fx_template_html error: stack empty, trying to add: ";
                         echo "<pre>" . htmlspecialchars(print_r($token, 1)) . "</pre>";
                         die();

@@ -21,7 +21,7 @@ class HtmlToken
     {
         $token = new self();
         $single = array('input', 'img', 'link', 'br', 'meta');
-        if (preg_match("~^<(/?)([a-z0-9]+).*?(/?)>$~is", $source, $parts)) {
+        if (preg_match("~^<(/?)([a-z0-9\:]+).*?(/?)>$~is", $source, $parts)) {
             $token->name = strtolower($parts[2]);
             $token->original_name = $parts[2];
             if (in_array($token->name, $single) || $parts[3]) {
@@ -123,6 +123,15 @@ class HtmlToken
                 $omit_var_name = '$omit_' . md5($this->omit);
                 $res .= '<?php ' . $omit_var_name . ' = ' . $this->omit . '; if (!' . $omit_var_name . ') {?>';
             }
+        }
+        if ($this->hasAttribute('fx:element-name')) {
+            $el_name = $this->getAttribute('fx:element-name');
+            $el_name_var = '$el_name_'.md5($el_name);
+            $res .= '<?php ob_start();?>';
+            $res .= $el_name;
+            $res .= '<?php '.$el_name_var.' = ob_get_clean();?>';
+            $this->original_name = '<'.'?= '.$el_name_var. '?>';
+            $this->removeAttribute('fx:element-name');
         }
         $tag_start = '';
         if ($this->name != 'root' && !$omit) {

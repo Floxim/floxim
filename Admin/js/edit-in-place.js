@@ -3,6 +3,11 @@
 
 $.fn.edit_in_place = function(command) {
     var $nodes = this;
+    if ($fx.front.is_frozen) {
+        return;
+    }
+    console.log('start eip', $fx.front.is_frozen);
+    console.trace();
     $nodes.each(function() {
         var $node = $(this);
         
@@ -87,13 +92,16 @@ window.fx_eip = {
         if (!meta.target_type && meta.inatt) {
             meta.target_type = 'att';
         }
+        console.log(meta.target_type+'!');
         switch (meta.target_type) {
             case 'var':
+                
                 formatted_value = value;
                 if (meta.type === 'datetime' && meta.format_modifier){
                     var timestamp = $fx_fields.parse_std_date(value).getTime() / 1000;
                     formatted_value = fx_date_format(meta.format_modifier, timestamp);
                 }
+                
                 $node.html(formatted_value);
                 if (formatted_value === '') {
                     $node.addClass('fx_hidden_placeholded');

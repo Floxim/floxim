@@ -5,6 +5,7 @@
 window.fx_front = function () {
     
     this.mode = '';
+    this.is_frozen = false;
     $('html').on('mouseover.fx_front', function(e) {
         $fx.front.mouseover_node = e.target;
     });
@@ -163,8 +164,12 @@ fx_front.prototype.handle_mouseover = function(e) {
 
 fx_front.prototype.handle_click = function(e) {
     
-    if ($fx.front.mode === 'view' || $fx.front.select_disabled) {
+    if ($fx.front.mode === 'view') {
         return;
+    }
+    
+    if ($fx.front.select_disabled) {
+        return false;
     }
     
     var $target = $(e.target);
@@ -252,6 +257,7 @@ fx_front.prototype.freeze = function() {
     this.disable_hilight();
     this.disable_select();
     this.disable_node_panel();
+    this.is_frozen = true;
 };
 
 fx_front.prototype.unfreeze = function() {
@@ -260,6 +266,7 @@ fx_front.prototype.unfreeze = function() {
     if (!this.get_selected_item()) {
         this.enable_hilight();
     }
+    this.is_frozen = false;
 };
 
 fx_front.prototype.disable_hilight = function() {
@@ -1858,6 +1865,7 @@ fx_front.prototype.get_edit_closure = function($entity, params) {
             {
                 onready: function($form) {
                     $fx.front.make_content_form_editable($form);
+                    
                     fx_eip.stop();
                     var $att_var_nodes = $entity.descendant_or_self('*[data-has_var_in_att]');
                     $att_var_nodes.each(function() {
@@ -2173,6 +2181,8 @@ fx_front.prototype.extract_infoblock_visual_fields = function($ib_node, $form) {
                     view_context:'panel'
                 }
             );
+    
+            //console.log(meta);
     
             if (meta.parent) {
                 if (typeof meta.parent === 'string') {
@@ -2649,6 +2659,9 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
                $new_infoblock_node.removeClass('fx_infoblock_disabled');
            } else {
                var $new_infoblock_node = $( $.trim(res) );
+               if ($new_infoblock_node.length > 0) {
+                   $new_infoblock_node = $new_infoblock_node.filter('.fx_infoblock').first();
+               }
                $infoblock_node.hide();
                $infoblock_node.before($new_infoblock_node);
                $infoblock_node.remove();

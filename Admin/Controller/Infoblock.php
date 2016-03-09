@@ -487,7 +487,8 @@ class Infoblock extends Admin
         
         $c_page = fx::env('page');
 
-        $infoblocks = fx::data('infoblock')->getForPage($c_page);
+        //$infoblocks = fx::data('infoblock')->getForPage($c_page);
+        $infoblocks = fx::page()->getInfoblocks();
 
         if ($input['data_sent']) {
             foreach ($infoblocks as $ib) {

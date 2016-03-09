@@ -378,7 +378,9 @@ class Compiler
                 if ($alias == '$') {
                     continue;
                 }
-                $passed_vars [trim($alias, '$')] = array('string', $this->parseExpression($var));
+                $expr_with_meta = $this->parseExpressionWithMeta($var);
+                $passed_vars [trim($alias, '$')] = array('string', $expr_with_meta[0], $expr_with_meta[1]);
+                //$passed_vars [trim($alias, '$')] = array('string', $this->parseExpression($var));
             }
         }
         foreach ($token->getChildren() as $param_var_token) {
@@ -387,6 +389,7 @@ class Compiler
                 continue;
             }
             $value_to_set = '';
+            $meta_to_set = null;
             if ($param_var_token->hasChildren()) {
                 // pass the inner html code
                 $value_to_set .= "ob_start();\n";
@@ -395,10 +398,11 @@ class Compiler
                 $passed_value_type = 'buffer';
             } elseif (($select_att = $param_var_token->getProp('select'))) {
                 // pass the result of executing the php code
-                $value_to_set = self::parseExpression($select_att);
+                //$value_to_set = self::parseExpression($select_att);
+                list($value_to_set, $meta_to_set) = $this->parseExpressionWithMeta($select_att);
                 $passed_value_type = 'string';
             }
-            $passed_vars[$param_var_token->getProp('id')] = array($passed_value_type, $value_to_set);
+            $passed_vars[$param_var_token->getProp('id')] = array($passed_value_type, $value_to_set, $meta_to_set);
         }
         $switch_context_local = $switch_context && count($passed_vars) > 0;
         if ($is_apply) {
@@ -419,16 +423,30 @@ class Compiler
         
         if (count($passed_vars) > 0) {
             $tpl_passed = $tpl."_passed";
-            $code .=  $tpl_passed ." = array();\n";
+            $tpl_passed_props = $tpl_passed .'_props';
+            $code .= $tpl_passed ." = array();\n";
+            $code .= $tpl_passed_props ." = array();\n";
+            
+            $with_passed_props = array();
             foreach ($passed_vars as $passed_var_key => $passed_var) {
                 switch ($passed_var[0]) {
                     case 'string': default:
                         $code .= $tpl_passed."['".$passed_var_key."'] = ".$passed_var[1].";\n";
+                        if (isset($passed_var[2]) && $passed_var[2]) {
+                            $with_passed_props [$passed_var_key] = $passed_var;
+                        }
                         break;
                     case 'buffer':
                         $code .= $passed_var[1];
                         $code .= $tpl_passed."['".$passed_var_key."'] = ob_get_clean();\n";
                 }
+            }
+            if (count($with_passed_props) > 0) {
+                $code .= "if (\$_is_admin) {\n";
+                foreach ($with_passed_props as $passed_var_key => $passed_var) {
+                    $code .= $tpl_passed_props ."['".$passed_var_key."'] = ".$passed_var[2].";\n";
+                }
+                $code .= "}\n";
             }
             // passed vars calculated, clear context
             if ($switch_context_local) {
@@ -440,7 +458,7 @@ class Compiler
         }
         
         if (isset($tpl_passed)) {
-            $code .= $context_var."->push(".$tpl_passed.", array('transparent' => true));\n";
+            $code .= $context_var."->push(".$tpl_passed.", array('transparent' => true), ".$tpl_passed_props.");\n";
         }
         
         // ------------
@@ -501,6 +519,20 @@ class Compiler
         }
         $code .= "\n?>";
         return $code;
+    }
+    
+    public function parseExpressionWithMeta($str)
+    {
+        $ep = self::getExpressionParser();
+        $expr_token = $ep->parse($str);
+        $expr = $ep->compile($expr_token);
+        $var_token = $expr_token->last_child;
+        if (strstr($str, '$')) {
+            $meta = $this->getVarMetaExpression($var_token, $ep);
+        } else {
+            $meta = null;
+        }
+        return array($expr, $meta);
     }
 
     public function parseExpression($str)
@@ -706,7 +738,7 @@ class Compiler
             $real_val_defined = true;
         }
 
-        $var_meta_expr = $this->getVarMetaExpression($token, $var_token, $ep);
+        $var_meta_expr = $this->getVarMetaExpression($var_token, $ep);
 
         if ($has_default) {
             $code .= "\nif (is_null(" . $real_val_var . ") || " . $real_val_var . " == '') {\n";
@@ -854,7 +886,7 @@ class Compiler
         return $code;
     }
 
-    protected function getVarMetaExpression($token, $var_token, $ep)
+    protected function getVarMetaExpression($var_token, $ep)
     {
         // Expression to get var meta
         $var_meta_expr = '$context->getVarMeta(';
@@ -874,7 +906,8 @@ class Compiler
             $var_meta_expr .= '"' . $prop_name . '", ' . $ep->compile($var_token);
             $var_meta_expr .= ')';
         } else {
-            $var_meta_expr .= '"' . $token->getProp('id') . '")';
+            //$var_meta_expr .= '"' . $var_name . '")';
+            $var_meta_expr .= '"' . $var_token->name[0] . '")';
         }
         return $var_meta_expr;
     }
@@ -1183,8 +1216,12 @@ class Compiler
         
         $var = $token->getProp('var');
         
+        $meta = null;
+        
         if ($token->getProp('value')) {
-            $value = self::parseExpression($token->getProp('value'));
+            //$value = self::parseExpression($token->getProp('value'));
+            $value_with_meta = $this->parseExpressionWithMeta($token->getProp('value'));
+            list($value, $meta) = $value_with_meta;
         } else {
             $code .= "ob_start();\n";
             $code .= $this->childrenToCode($token);
@@ -1209,7 +1246,7 @@ class Compiler
             $code .= "if (is_null(\$context->get('" . $var . "'))) {\n";
         }
 
-        $code .= '$context->set("' . $var . '", ' . $value . ');' . "\n";
+        $code .= '$context->set("' . $var . '", ' . $value . ($meta ? ", ".$meta : '') . ');' . "\n";
         if ($is_default) {
             $code .= "}\n";
         }

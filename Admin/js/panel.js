@@ -222,7 +222,9 @@
                     $(window).on(
                         'resize.fx_recount_sidebar', 
                         function(e) {
-                            that.recount_sidebar(e);
+                            if (e.target === window) {
+                                that.recount_sidebar(e);
+                            }
                         }
                     );
                     $sidebar.css({

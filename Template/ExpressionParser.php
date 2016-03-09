@@ -161,6 +161,7 @@ class ExpressionParser extends Fsm
             $this->popState();
             $this->popStack();
         } while ($this->state == self::VAR_NAME);
+        
         if ($ch == ']') {
             $this->endArr();
         } else {
@@ -206,7 +207,6 @@ class ExpressionParser extends Fsm
 
     public function readCode($ch)
     {
-
         if ($ch == '.') {
             $next = $this->getNext(2);
             $back = $this->getPrev();
@@ -437,4 +437,3 @@ class ExpressionParser extends Fsm
         return $res;
     }
 }
-

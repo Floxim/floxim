@@ -7,7 +7,7 @@ var bl = _c.is_multiple ? 'multisearch' : 'monosearch';
     data-prototype_name="<?=_c.name?>[prototype]<?=f_postfix?>"
     data-is_multiple="<?=(_c.is_multiple ? 'Y' : 'N')?>"
     <? if (!_c.is_multiple) {?>
-    data-allow_empty="<?=_c.allow_empty === false ? 'N' : 'Y'?>"
+    data-allow_empty="<?= (_c.allow_empty === false || _c.allow_empty === 'N') ? 'N' : 'Y'?>"
     <? } ?>>
     <?
     if (_c.is_multiple) {

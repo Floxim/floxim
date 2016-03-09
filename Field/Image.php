@@ -11,28 +11,13 @@ class Image extends \Floxim\Floxim\Field\File
     {
         $f = parent::getJsField($content);
         $f['type'] = 'image';
-        /*
-        if (isset($f['value']) && isset($f['value']['path']) && $f['value']['path']) {
-            $thumb = new \Floxim\Floxim\System\Thumb($f['value']['path']);
-            $info = $thumb->getInfo();
-            if ($info && isset($info['width']) && isset($info['height'])) {
-                $f['value'] = array_merge(
-                    $f['value'],
-                    array(
-                        'width' => $info['width'],
-                        'height' => $info['height']
-                    )
-                );
-            }
-        }
-        */
         return $f;
     }
     
     public static function prepareValue($val) {
         $res = parent::prepareValue($val);
-        if (!$res || !is_array($res) || !isset($res['path'])) {
-            $res;
+        if (!$res || !is_array($res) || !isset($res['path']) || empty($res['path'])) {
+            return $res;
         }
         $abs = $res['path'];
         $thumb = new \Floxim\Floxim\System\Thumb($abs);

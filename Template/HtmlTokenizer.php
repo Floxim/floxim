@@ -2,6 +2,8 @@
 
 namespace Floxim\Floxim\Template;
 
+use \Floxim\Floxim\System\Fx as fx;
+
 class HtmlTokenizer extends Fsm
 {
     const TEXT = 1;
@@ -49,7 +51,7 @@ class HtmlTokenizer extends Fsm
 
     public function getSplitRegexp()
     {
-        return "~(\-\->|<!\-\-|<[a-z0-9\/]+|>|\{\*|\*\}|<\?|\?>|[\{\}]|[\'\"]|\s*=\s*[\'\"]?|\s+)~";
+        return "~(\-\->|<!\-\-|<[a-z0-9\:\/]+|>|\{\*|\*\}|<\?|\?>|[\{\}]|[\'\"]|\s*=\s*[\'\"]?|\s+)~";
     }
 
     public function parse($string)

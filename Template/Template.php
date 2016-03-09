@@ -98,7 +98,6 @@ class Template
         if ($data['type'] === 'image' && isset($data['value']) && is_string($data['value']) && !empty($data['value'])) {
             $data['value'] = \Floxim\Floxim\Field\Image::prepareValue($data['value']);
         }
-        fx::log('reg param goon', $name, $data);
         if (isset($this->template_params[$name])) {
             $this->template_params[$name] = array_merge(
                 $data,

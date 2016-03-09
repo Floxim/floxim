@@ -279,7 +279,14 @@ window.$fx_fields = {
         }
         
         if (json.values) {
-            json.params.preset_values = vals_to_obj(json.values);
+            var preset_vals = json.values;
+            if ( ! (json.values instanceof Array) ) {
+                preset_vals = [];
+                $.each(json.values, function(k, v) {
+                    preset_vals.push([k, v]);
+                });
+            }
+            json.params.preset_values = vals_to_obj(preset_vals);
         }
         if (json.allow_select_doubles) {
             json.params.allow_select_doubles = json.allow_select_doubles;

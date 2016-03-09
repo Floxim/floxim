@@ -7,7 +7,7 @@ window.fx_livesearch = function (node) {
     
     this.isMultiple = $node.data('is_multiple') === 'Y';
     this.allowEmpty = !this.isMultiple && $node.data('allow_empty') !== 'N';
-    this.allowEmpty = true;
+    //this.allowEmpty = true;
     
     var bl = this.isMultiple ? 'multisearch' : 'monosearch';
     
