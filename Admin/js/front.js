@@ -168,11 +168,12 @@ fx_front.prototype.handle_click = function(e) {
         return;
     }
     
-    if ($fx.front.select_disabled) {
-        return false;
-    }
     
     var $target = $(e.target);
+    
+    if ($fx.front.select_disabled && $target.closest('.fx_overlay').length === 0) {
+        return false;
+    }
     
     
     // don't remove selection when mousedown target doesn't match current click (mouseup) target

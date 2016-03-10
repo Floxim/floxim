@@ -167,14 +167,7 @@ class Admin extends System\Controller
         $page->addCssFile('https://fonts.googleapis.com/css?family=Roboto:400,500,400italic,500italic,700,700italic&subset=latin,cyrillic');
         
         // todo: need fix path for css - now used server path
-        $page->addCssBundle(
-            array(
-                $path_floxim . '/lib/editors/redactor/redactor.css',
-            ),
-            array(
-                'name' => 'redactor'
-            )
-        );
+        $page->addCssFile( $path_floxim . '/lib/editors/redactor/redactor.css' );
 
         $page->addCssBundle(
             array(

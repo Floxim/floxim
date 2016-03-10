@@ -6,8 +6,6 @@ $.fn.edit_in_place = function(command) {
     if ($fx.front.is_frozen) {
         return;
     }
-    console.log('start eip', $fx.front.is_frozen);
-    console.trace();
     $nodes.each(function() {
         var $node = $(this);
         
@@ -92,7 +90,6 @@ window.fx_eip = {
         if (!meta.target_type && meta.inatt) {
             meta.target_type = 'att';
         }
-        console.log(meta.target_type+'!');
         switch (meta.target_type) {
             case 'var':
                 
