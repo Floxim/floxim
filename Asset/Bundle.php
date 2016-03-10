@@ -104,6 +104,7 @@ abstract class Bundle {
             $this->delete();
             $this->version = time();
         }
+        fx::files()->mkdir($this->dir);
         $content = $this->getBundleContent();
         $meta = array(
             'version' => $this->version,
