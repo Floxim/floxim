@@ -697,7 +697,7 @@ class Util
         return $res;
     }
     
-    public function getStatus() 
+    public function gitStatus() 
     {
         $repo_dirs = array();
         $walker = function($path) use (&$repo_dirs, &$walker) {
