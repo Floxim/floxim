@@ -180,24 +180,44 @@ class Response
         }
         if ($prefix) {
             foreach ($fields as &$field) {
-                $field['name'] = $prefix . '[' . $field['name'] . ']';
-                if (isset($field['parent']) && is_array($field['parent'])) {
-                    $np = array();
-                    foreach ($field['parent'] as $pkey => $pval) {
-                        if (preg_match("~\[~", $pkey)) {
-                            $np[$pkey] = $pval;
-                        } else {
-                            $np[$prefix . '[' . $pkey . ']'] = $pval;
-                        }
-                    }
-                    $field['parent'] = $np;
-                }
-                if (isset($field['join_with']) && !preg_match("~\[~", $field['join_with'])) {
-                    $field['join_with'] = $prefix . '[' . $field['join_with'] . ']';
-                }
+                $field = self::addFieldPrefix($field, $prefix);
+                        
             }
         }
         $this->fields = array_merge($this->fields, $fields);
+    }
+    
+    
+    public static function addFieldPrefix($field, $prefix)
+    {
+        $alt_name = preg_replace_callback(
+            "~^([^\[]+)~", 
+            function($m) {
+                return '[' . $m[1] . ']';
+            },
+            $field['name']
+        );
+        $field['name'] = $prefix . $alt_name;
+        if (isset($field['parent']) && is_array($field['parent'])) {
+            $np = array();
+            foreach ($field['parent'] as $pkey => $pval) {
+                if (preg_match("~\[~", $pkey)) {
+                    $np[$pkey] = $pval;
+                } else {
+                    $np[$prefix . '[' . $pkey . ']'] = $pval;
+                }
+            }
+            $field['parent'] = $np;
+        }
+        if (isset($field['join_with']) && !preg_match("~\[~", $field['join_with'])) {
+            $field['join_with'] = $prefix . '[' . $field['join_with'] . ']';
+        }
+        if ($field['type'] === 'group' && isset($field['fields'])) {
+            foreach ($field['fields'] as &$subf) {
+                $subf = self::addFieldPrefix($subf, $prefix);
+            }
+        }
+        return $field;
     }
 
 

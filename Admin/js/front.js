@@ -1454,7 +1454,7 @@ fx_front.prototype.hilight = function(container) {
             if (!$placeholded.hasClass('fx_hidden_placeholded')) {
                 $placeholded.addClass('fx_hidden_placeholded');
                 var $children = $placeholded.children();
-                if ($children.length || $adder_placeholder) {
+                if ( ($children.length || $adder_placeholder) && !$placeholded.hasClass('fx_template_var') ) {
                     if (mark_tag === 'TR') {
                         hidden_placeholder = '<td colspan="'+mark_colspan+'">'+hidden_placeholder+'</td>';
                     }

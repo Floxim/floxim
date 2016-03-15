@@ -563,7 +563,9 @@ window.fx_livesearch = function (node) {
             livesearch.$container.removeClass('livesearch__container_focused');
             
             if (!livesearch.isMultiple) {
-                if (input_value !== '' || !livesearch.allowEmpty) {
+                if (input_value && livesearch.allow_new) {
+                    livesearch.addValue({id:false, name:input_value});
+                } else if (input_value !== '' || !livesearch.allowEmpty) {
                     livesearch.showValue();
                 } else {
                     livesearch.removeValue( livesearch.getValueNode() );

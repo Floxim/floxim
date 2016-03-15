@@ -1,12 +1,22 @@
 (function($) {
-    window.fx_google_map_field = function($field) {
+    window.fx_google_map_field = function($field, params) {
         var $map_container = $('.map_container', $field);
+            
+    
+        /*
         var popup = new $fx.popup({
             target:$('.map_link', $field),
             ok_button:false
         });
-        popup.$body.append($map_container);
-        $field.append(popup.$node);
+        */
+       
+        if (params.name.match(/\]$/)) {
+            params.lat_field = params.name.replace(/\[[^\]]+\]$/, '[' + params.lat_field + ']');
+            params.lon_field = params.name.replace(/\[[^\]]+\]$/, '[' + params.lon_field + ']');
+        }
+        
+        //popup.$body.append($map_container);
+        //$field.append(popup.$node);
         
         // validate google
         function init_gmap() {
@@ -19,11 +29,15 @@
                         mapTypeId : google.maps.MapTypeId.ROADMAP
                     }
                 ),
+                $form = $field.closest('form'),
                 $address_input = $('.map_address_input', $field),
-                $lat_input = $('.map_lat_input', $field),
-                $lon_input = $('.map_lon_input', $field),
+                $lat_input = $(':input[name="'+params.lat_field+'"]', $form),
+                $lon_input = $(':input[name="'+params.lon_field+'"]', $form),
                 autocomplete = new google.maps.places.Autocomplete( 
-                    $address_input[0]
+                    $address_input[0],
+                    {
+                        //types: ['address']
+                    }
                 ),
                 marker = new google.maps.Marker({
                     draggable: true,
@@ -69,6 +83,7 @@
                 
             });
             $field.on('click', '.map_link', function() {
+                /*
                 if (popup.$node.is(':visible')) {
                     popup.hide();
                 } else {
@@ -77,6 +92,7 @@
                     var position = marker.getPosition();
                     map.setCenter( new google.maps.LatLng( position.lat(), position.lng()));
                 }
+                */
             });
             var init_lat = $lat_input.val(),
                 init_lon = $lon_input.val();
@@ -95,6 +111,5 @@
         } else {
             setTimeout(init_gmap, 200);
         }
-        console.log('inited');
     };
 })(jQuery);

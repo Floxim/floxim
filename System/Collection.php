@@ -215,6 +215,9 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         if (count($this->data) == 0) {
             return false;
         }
+        if ($compare_type === '!=') {
+            $compare_type = self::FILTER_NEQ;
+        }
         if (is_null($prop)) {
             $compare_type = is_callable($field) ? self::FILTER_CALLBACK : self::FILTER_EXISTS;
         } elseif (is_null($compare_type)) {
@@ -223,6 +226,9 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
             } else {
                 $compare_type = self::FILTER_EQ;
             }
+        }
+        if (is_array($prop) && $compare_type === self::FILTER_NEQ) {
+            $compare_type = self::FILTER_NOT_IN;
         }
         $initial_key = key($this->data);
         if ($compare_type === self::FILTER_EQ) {
@@ -254,6 +260,16 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         if ($compare_type == self::FILTER_IN) {
             foreach ($this->data as $item) {
                 if (in_array($item[$field], $prop)) {
+                    $this->setPosition($initial_key);
+                    return $item;
+                }
+            }
+            $this->setPosition($initial_key);
+            return false;
+        }
+        if ($compare_type == self::FILTER_NOT_IN) {
+            foreach ($this->data as $item) {
+                if (!in_array($item[$field], $prop)) {
                     $this->setPosition($initial_key);
                     return $item;
                 }
@@ -314,6 +330,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
     const FILTER_CALLBACK = 3;
     const FILTER_IN = 4;
     const FILTER_NEQ = 5;
+    const FILTER_NOT_IN = 6;
 
     public function unique($field = null)
     {

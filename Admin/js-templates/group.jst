@@ -2,7 +2,7 @@
 <?
 var b = 'fx-field-group';
 ?>
-<div class="<?=b?> <?=b?>_keyword_<?=_c.keyword?>">
+<div class="<?=b?> <?=b?>_keyword_<?=_c.keyword?> <?= _c.is_expanded ? 'fx-field-group_expanded' : '' ?> ">
     <div class="<?=b?>__title" tabindex="0">
         <div class="<?=b?>__name"><?= _c.label ?></div>
         <?if (_c.description) {?>
