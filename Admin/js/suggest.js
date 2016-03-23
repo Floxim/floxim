@@ -444,7 +444,17 @@ window.fx_suggest = function(params) {
     
     this.renderItem = function(item, level) {
         level = level || 0;
-        var $item = $('<div class="search_item">'+item.name+'</div>');
+        var item_html = '';
+        if (item.path && item.path.length) {
+            item_html += '<span class="search_item__path">';
+            $.each(item.path, function() {
+                item_html += '<span class="search_item__path-chunk">'+this+'</span>';
+                item_html += '<span class="search_item__path-separator">&#9657;</span>';
+            });
+            item_html += '</span>';
+        }
+        item_html += '<span class="search_item__name">'+item.name+'</span>';
+        var $item = $('<div class="search_item">'+item_html+'</div>');
         if (level > 0) {
             $item.addClass('search_item_level_'+level);
         }

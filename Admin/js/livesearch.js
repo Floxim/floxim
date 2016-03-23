@@ -118,17 +118,21 @@ window.fx_livesearch = function (node) {
         return null;
     };
     
-    this.Select = function(n) {
-        var value = n.data('value');
-        if (n.hasClass('add_item')){
+    this.Select = function($n) {
+        var value = $n.data('value');
+        if ($n.hasClass('add_item')){
             return;
         }
-        var $groups = n.parent().parents('.search_group'),
-            path = [];
-        $groups.each(function() {
-            path.push( $(this).find(">.search_item").data('name') );
-        });
-        path = path.reverse();
+        
+        var path = $n.data('path');
+        if (!path) {
+            var $groups = $n.parent().parents('.search_group'),
+                path = [];
+            $groups.each(function() {
+                path.push( $(this).find(">.search_item").data('name') );
+            });
+            path = path.reverse();
+        }
         livesearch.addValue(value, path);
         if (livesearch.isMultiple) {
             livesearch.$input.val('').focus().trigger('keyup');

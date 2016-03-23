@@ -281,6 +281,13 @@ class Loader
             return new $tpl_class(null, $context);
         }
         
+        // forced templates declared by {use}
+        if ($context && ($forced_parts = $context->getForcedTemplate($name.':'.$action)) ) {
+            $force_group = $forced_parts[0];
+            $name = $force_group;
+            $action = $forced_parts[1];
+        }
+        
         // if group is forced
         if ($force_group) {
             $tpl_class = self::import($force_group);

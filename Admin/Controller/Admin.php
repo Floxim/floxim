@@ -146,7 +146,7 @@ class Admin extends System\Controller
             $path_floxim . '/Admin/js/admin.js',
             $path_floxim . '/Admin/js/nav.js',
             $path_floxim . '/lib/editors/redactor/redactor.patched.js',
-            //$path_floxim . '/lib/editors/redactor/redactor.js',
+            //$path_floxim . '/lib/editors/redactor/redactor.min.js',
             $lang === 'en' ? null : $path_floxim.'/lib/editors/redactor/langs/'.$lang.'.js',
             $path_floxim . '/lib/editors/redactor/fontcolor.js',
             $path_floxim . '/lib/codemirror/codemirror.all.min.js',

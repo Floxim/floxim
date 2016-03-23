@@ -67,9 +67,21 @@ class Http
         header($name . ": " . $value);
     }
     
-    public function get($url, $headers = array(), $context_options = array())
+    public function get($url, $headers = null, $context_options = array())
     {
         $header_string = '';
+        if (is_null($headers) ) {
+            $headers = array(
+                'Connection' => 'keep-alive',
+                'Pragma' => 'no-cache',
+                'Cache-Control' => 'no-cache',
+                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*'.'/'.'*;q=0.8',
+                'Upgrade-Insecure-Requests' => '1',
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.111 YaBrowser/16.2.0.3539 Safari/537.36',
+                'Accept-Encoding' => 'gzip, deflate, sdch',
+                'Accept-Language' => 'ru,en;q=0.8,fr;q=0.6'
+            );
+        }
         if (is_array($headers)) {
             foreach ($headers as $h => $v) {
                 $header_string .= $h.': '.$v."\r\n";

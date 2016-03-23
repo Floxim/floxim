@@ -79,7 +79,7 @@ abstract class Finder
         }
     }
 
-    public function livesearch($term = null, $limit = null, $id_field = 'id')
+    public function livesearch($term = '', $limit = null, $id_field = 'id')
     {
         if (!isset($term)) {
             return;
@@ -104,6 +104,7 @@ abstract class Finder
         if (isset($this->_livesearch_props) && is_array($this->_livesearch_props)) {
             $props = array_merge($props, $this->_livesearch_props);
         }
+        
         foreach ($items as $i) {
             if (!$i['name']) {
                 continue;
@@ -117,6 +118,13 @@ abstract class Finder
                 $c_res[$id_field] = $i[$id_field];
                 $c_res['_real_id'] = $i['id'];
             }
+            if ($i instanceof \Floxim\Main\Content\Entity && ($parent_entity = $i['parent'])) {
+                $site = fx::data('site', $i['site_id']);
+                if (!$site || $parent_entity['id'] !== $site['index_page_id']) {
+                    $c_res['path'] = array( $parent_entity->getName() );
+                }
+            }
+            
             $res['results'][] = $c_res;
         }
         return $res;

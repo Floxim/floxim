@@ -144,4 +144,34 @@ class Context {
         }
         return ob_get_clean();
     }
+    
+    protected $forced_templates = array();
+    
+    // use $template_id as $target_id
+    public function pushForcedTemplate($target_id, $template_id)
+    {
+        if (!isset($this->forced_templates[$target_id])) {
+            $this->forced_templates[$target_id] = array();
+        }
+        $this->forced_templates[$target_id][]= explode(":", $template_id);
+    }
+    
+    public function popForcedTemplate($target_id)
+    {
+        if (!isset($this->forced_templates[$target_id])) {
+            return;
+        }
+        array_pop($this->forced_templates[$target_id]);
+    }
+    
+    public function getForcedTemplate($target_id)
+    {
+        if (
+            !isset($this->forced_templates[$target_id]) 
+            || count($this->forced_templates[$target_id]) === 0 
+        ) {
+            return null;
+        }
+        return end($this->forced_templates[$target_id]);
+    }
 }

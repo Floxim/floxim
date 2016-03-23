@@ -215,7 +215,15 @@ class Compiler
     protected function presetToTemplate(Token $token)
     {
         $tpl_token = Token::create('{template}');
+        
         $target_tpl = $token->getProp('template');
+        if (!$target_tpl) {
+            $complex_id = $token->getProp('id');
+            $complex_id_parts = null;
+            preg_match("~([a-z0-9\.\_\-\:]+)\#?([a-z0-9_-]+)?~", $complex_id, $complex_id_parts);
+            $target_tpl = $complex_id_parts[1];
+            $token->setProp('id', $complex_id_parts[2]);
+        }
         $full_target_tpl = $target_tpl;
         
         $id = preg_replace("~[^a-z0-9_]+~", '_', $target_tpl);
@@ -280,8 +288,13 @@ class Compiler
         
         $apply = '{apply '.$full_target_tpl;
         $vars = array();
+        $use_tokens = array();
         foreach ($token->getChildren() as $child) {
-            if (in_array($child->name, array('js', 'css', 'param', 'if', 'else', 'elseif', 'set'))) {
+            if ($child->name === 'use') {
+                $use_tokens []= $child;
+                continue;
+            }
+            if (in_array($child->name, array('js', 'css', 'param', 'if', 'else', 'elseif', 'set', 'use'))) {
                 $tpl_token->addChild($child);
                 continue;
             }
@@ -313,7 +326,19 @@ class Compiler
         $apply .= '/}';
         $apply_token = Token::create($apply);
         $apply_token->setProp('extract_subroot', '$this->is_subroot');
+        
+        foreach ($use_tokens as $use_token) {
+            $apply_token->addChild($use_token);
+        }
+        
         $tpl_token->addChild($apply_token);
+        /*
+        foreach ($use_tokens as $use_token) {
+            $stop_token = Token::create('{use stop="'.$use_token->getProp('as').'" /}');
+            $tpl_token->addChild($stop_token);
+        }
+         * 
+         */
         return $tpl_token;
     }
 
@@ -345,8 +370,13 @@ class Compiler
          * {call id="wrap"}{var id="content"}<div>Something</div>{/var}{/call}
          */
         $has_content_param = false;
+        $use_tokens = array();
         foreach ($call_children as $call_child) {
             if ($call_child->name == 'code' && $call_child->isEmpty()) {
+                continue;
+            }
+            if ( $call_child->name == 'use' ) {
+                $use_tokens []= $call_child;
                 continue;
             }
             if ($call_child->name != 'var') {
@@ -416,6 +446,8 @@ class Compiler
             }
         }
         
+        
+        
         // switch context to calculate passed vars inside it
         if ($switch_context_local) {
             $code .= '$context->push(' . $new_context_expression . ");\n";
@@ -465,11 +497,13 @@ class Compiler
         
         $tpl_name_is_expression = !preg_match("~^[a-z0-9_\,\.\:\@\#]+$~", $tpl_name);
         
-
-        
         $loader = "\\Floxim\\Floxim\\Template\\Loader";
         // not a plain name
         if ($tpl_name_is_expression) {
+            
+            // do not allow {use ...} if the called template name is expression
+            $use_tokens = array();
+            
             $tpl_name = self::parseExpression($tpl_name);
             $pn = $tpl.'_parsed';
             $code .= $pn.' = '.$loader.'::parseTemplateName('.
@@ -490,9 +524,23 @@ class Compiler
                 $this->template_set_name,
                 $this->is_aliased
             );
+            
+            if (count($use_tokens) > 0) {
+                $code .= '?>';
+                foreach ($use_tokens as $use_token) {
+                    $use_as = $use_token->getProp('as');
+                    if (!strstr($use_as, ':')) {
+                        $use_token->setProp('as', $parsed_name['group'].':'.$use_as);
+                    }
+                    $code .= $this->tokenUseToCode($use_token);
+                }
+                $code .= "<?php\n";
+            }
+            
             foreach ($parsed_name as &$v) {
                 $v = var_export($v,1);
             }
+            
             $code .= $tpl." = ";
             $code .= $loader."::loadTemplateVariant(".
                         $parsed_name['group'].", ".
@@ -508,6 +556,14 @@ class Compiler
             $code .= $subroot_var. " = ".$tpl."->is_subroot;\n";
         }
         $code .= "}\n";
+        
+        if (count($use_tokens) > 0) {
+            $code .= "?>";
+            foreach ($use_tokens as $use_token) {
+                $code .= $this->tokenUseToCode(Token::create('{use stop="'.$use_token->getProp('as').'" /}'));
+            }
+            $code .= "<?php\n";
+        }
         
         // clear vars passed into child template from current context
         if ($is_apply && count($passed_vars) > 0) {
@@ -634,7 +690,7 @@ class Compiler
     {
         static $stub = null;
         if (is_null($stub)) {
-            $url = fx::path()->http('@floxim/Admin/style/images/no.gif');
+            $url = fx::path()->http('@floxim/Admin/style/images/no.png');
             $stub = substr($url, strlen(FX_BASE_URL));
         }
         return $stub;
@@ -1202,6 +1258,10 @@ class Compiler
     protected function tokenTemplateToCode($token)
     {
         $this->registerTemplate($token);
+        if ($token->getProp('apply') === 'true') {
+            $apply_token = Token::create('{apply '.$token->getProp('id'). ' /}');
+            return $this->tokenCallToCode($apply_token);
+        }
     }
     
     
@@ -1548,7 +1608,9 @@ class Compiler
             $code .= $first_style_var." = ".$first_style_var."['keyword'];\n";
             $code .= "}\n";
             $default_val = $first_style_var;
-            $exported_props[]= "'label' => 'Style'";
+            if (!isset($props['label'])) {
+                $exported_props[]= "'label' => fx::alang('Style')";
+            }
             $exported_props[]= "'values' => \$this->collectStyleValues('".$mask."')";
 
         }
@@ -1873,6 +1935,37 @@ class Compiler
         );
         return $tpl_props;
     }
+    
+    protected function tokenUseToCode(Token $token)
+    {
+        $code = '<?php'."\n";
+        
+        $context_var = $token->getProp('context_var');
+        if (!$context_var) {
+            $context_var = '$context';
+        }
+        
+        if ( ($stop = $token->getProp('stop'))) {
+            $code .= $context_var."->popForcedTemplate('".$stop."');\n";
+            $code .= "?>";
+            return $code;
+        }
+        $template_id = $token->getProp('id');
+        if (!$template_id) {
+            $template_id = 'used_as_'.str_replace(':', '_', $token->getProp('as'));
+            $template_id = str_replace('.', '_', $template_id);
+            $token->setProp('id', $template_id);
+            $this->registerTemplate($token);
+        }
+        
+        if (!strstr($template_id, ':')) {
+            $template_id = $this->template_set_name.':'.$template_id;
+        }
+        
+        $code .= $context_var."->pushForcedTemplate('".$token->getProp('as')."', '".$template_id."');\n";
+        $code .= "?>";
+        return $code;
+    }
 
     protected function registerTemplate(Token $token)
     {
@@ -1881,7 +1974,8 @@ class Compiler
             $token = $this->presetToTemplate($token);
             $is_preset = true;
         } 
-        if (!$is_preset && $token->name != 'template') {
+        
+        if (!$is_preset && !in_array($token->name, array('template', 'use')) ) {
             return;
         }
         if (!$is_preset && !$token->getProp('subroot')) {

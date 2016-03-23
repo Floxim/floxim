@@ -103,7 +103,8 @@ class Token
             $source = preg_replace_callback(
                 "~([a-z0-9\.\_\-\:]+)\#?([a-z0-9_-]+)?~", 
                 function($m) {
-                    return 'template="'.trim($m[1]).'" id="'.trim($m[2]).'"';
+                    return 'id="'.$m[0].'"';
+                    //return 'template="'.trim($m[1]).'" preset_id="'.trim($m[2]).'"';
                 },
                 $source,
                 1
@@ -217,13 +218,16 @@ class Token
                 'bem_block', 
                 'bem_element',
                 'param',
-                'preset'
+                'preset',
+                'use'
             )
         ),
         'preset'  => array(
             'type'     => 'double',
             'contains' => array(
-                'code'
+                'code',
+                'set',
+                'use'
             )
         ),
         'param' => array(
@@ -256,7 +260,38 @@ class Token
         ),
         'call'      => array(
             'type'     => 'both',
-            'contains' => array('var', 'lang', 'each', 'if', 'apply', 'call', 'with_each', 'with', 'bem_block', 'bem_element')
+            'contains' => array(
+                'var', 
+                'lang', 
+                'each', 
+                'if', 
+                'apply', 
+                'call', 
+                'with_each', 
+                'with', 
+                'bem_block', 
+                'bem_element',
+                'use'
+            )
+        ),
+        'use' => array(
+            'type' => 'double',
+            'contains' => array(
+                'code',
+                'template',
+                'area',
+                'var',
+                'call',
+                'each',
+                'if',
+                'with_each',
+                'separator',
+                'with',
+                'lang', 
+                'bem_block', 
+                'bem_element',
+                'param'
+            )
         ),
         'templates' => array(
             'type'     => 'double',

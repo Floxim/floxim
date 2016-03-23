@@ -346,6 +346,9 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
         if ($placeholder_parent.is('.fx_pseudo_parent')) {
             $placeholder_parent.before($placeholder);
             $placeholder_parent.hide();
+            $placeholder.on('fx_infoblock_unloaded', function() {
+                $placeholder_parent.remove();
+            });
         } else {
             $placeholder_parent.append($placeholder);
         }
@@ -1488,6 +1491,8 @@ fx_front.prototype.hilight = function(container) {
     $('.fx_hilight_outline .fx_hilight').addClass('fx_hilight_outline');
 };
 
+//window.fx_no_hide=1;
+
 fx_front.prototype.collect_adder_placeholders = function($container) {
     $container.find('.fx_entity_adder_placeholder').each(function(){
         var $placeholder = $(this),
@@ -1511,7 +1516,15 @@ fx_front.prototype.collect_adder_placeholders = function($container) {
         } else {
             $placeholders = $parent.find('>.fx_entity_adder_placeholder');
         }
-        if (!$parent.is('.fx_no_add') || $parent.find('>.fx_entity:not(.fx_entity_adder_placeholder)').length === 0) {
+        var $existing_entity = $parent.find('>.fx_entity:not(.fx_entity_adder_placeholder)');
+        
+        if ( 
+            (
+                !$parent.is('.fx_no_add') 
+                && !$existing_entity.is('.fx_infoblock.fx_no_add')
+            ) 
+            || $existing_entity.length === 0
+        ) {
             $parent.find('>.fx_entity').addClass('fx_accept_neighbours');
             $parent.data('fx_contained_placeholders', $placeholders);
             $parent.addClass('fx_adder_placeholder_container');
@@ -2460,126 +2473,6 @@ fx_front.prototype.set_mode_edit = function () {
     });
 };
 
-/*
-fx_front.prototype._start_areas_sortable = function() {
-    var $areas = $('.fx_area'),
-        $ibs = $('.fx_infoblock').not('.fx_infoblock_fake').not('body');
-    $ibs.each(function() {
-        var $par = $(this).parent();
-        if (!$par.hasClass('.fx_area')) {
-            $areas = $areas.add($par);
-        }
-    });
-    
-    
-    var $c_selected = $($fx.front.get_selected_item());
-    
-    $areas.each(function() {
-        var $area = $(this);
-        $area.addClass('fx_area_sortable');
-        var sortable = new Sortable(this, {
-            group:'fx_areas',
-            scroll:true,
-            scrollSensitivity: 100, // px, how near the mouse must be to an edge to start scrolling.
-            scrollSpeed: 40,
-            animation: 350,
-            onStart: function() {
-                
-                $fx.front.outline_block_off($c_selected);
-                $fx.front.disable_hilight();
-                $fx.front.get_node_panel().hide();
-                $areas.addClass('fx_area_target');
-            },
-            onEnd: function() {
-                $areas.removeClass('fx_area_target');
-                $fx.front.enable_hilight();
-                $fx.front.select_item($c_selected);
-            },
-            ghostClass:'ui-sortable-helper'
-        });
-        $area.data('sortable', sortable);
-    });
-};
-
-
-fx_front.prototype.start_areas_sortable = function() {
-    var $iblocks = $('.fx_infoblock').not('.fx_infoblock_fake').not('body');
-    $iblocks.each(function() {
-        var $p = $(this).parent();
-        if ($p.hasClass('fx_area_sortable')) {
-            return;
-        }
-        $p.addClass('fx_area_sortable');
-    });
-    $('.fx_area').each(function () {
-        var $area = $(this);
-        if (!$area.hasClass('fx_area_sortable') && $('.fx_infoblock', $area).length === 0) {
-            $area.addClass('fx_area_sortable');
-        }
-    });
-    $('.fx_area_sortable').each(function(){
-        var cp = $(this);
-        cp.sortable({
-            items:'>.fx_infoblock',
-            connectWith:'.fx_area_sortable',
-            placeholder: "fx_infoblock_placeholder",
-            distance:35,
-            start:function(e, ui) {
-                $('.fx_area_sortable').addClass('fx_area_target');
-                cp.trigger('fx_start_sort_infoblocks');
-                cp.sortable('refreshPositions');
-                var ph = ui.placeholder;
-                var item = ui.item;
-                ph.css({
-                    'min-height':'30px',
-                    height:item.outerHeight(),
-                    overflow:'hidden'
-                });
-                var $c_selected = $($fx.front.get_selected_item());
-                $fx.front.outline_block_off($c_selected);
-                $fx.front.disable_hilight();
-                $fx.front.get_node_panel().hide();
-            },
-            stop:function(e, ui) {
-                $('.fx_area_sortable').removeClass('fx_area_target');
-                cp.trigger('fx_stop_sort_infoblocks');
-                var ce = ui.item;
-                var ce_data = ce.data('fx_infoblock');
-                $fx.front.outline_block_off(ce);
-                $fx.front.outline_block(ce, 'selected');
-
-                var params = {
-                    entity:'infoblock',
-                    action:'move',
-                    area:ce.closest('.fx_area').data('fx_area').id
-                };
-
-                params.infoblock_id = ce_data.id;
-                params.visual_id = ce_data.visual_id;
-
-                var next_e = ce.next('.fx_infoblock');
-                if (next_e.length > 0) {
-                    var next_data = next_e.data('fx_infoblock');
-                    params.next_infoblock_id = next_data.id;
-                    params.next_visual_id = next_data.visual_id;
-                }
-                $fx.front.stop_areas_sortable();
-                $fx.front.start_areas_sortable();
-                $fx.post(params, function(res) {
-                    $fx.front.reload_layout();
-                });
-            }
-        });
-    });
-};
-fx_front.prototype.stop_areas_sortable = function() {
-    $('.fx_area_sortable').
-            sortable('destroy').
-            removeClass('fx_area_sortable');
-};
-                                
-*/
-
 fx_front.prototype.set_mode_design = function() {
     $fx.panel.one('fx.startsetmode', function() {
         $('html').off('.fx_design_mode');
@@ -2665,6 +2558,7 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
                }
                $infoblock_node.hide();
                $infoblock_node.before($new_infoblock_node);
+               $infoblock_node.trigger('fx_infoblock_unloaded');
                $infoblock_node.remove();
            }
            
@@ -2723,7 +2617,8 @@ fx_front.prototype.scrollTo = function($node, if_invisible, callback) {
     if ($fx.front.is_fixed($node)) {
         return;
     }
-    var body_offset = parseInt($('body').css('margin-top'));
+    //var body_offset = parseInt($('body').css('margin-top'));
+    var body_offset = parseInt($('body').css('padding-top'));
     var top_offset = $node.offset().top - body_offset - 50;
     var move = true;
     var st = $(document).scrollTop();
@@ -2936,7 +2831,8 @@ fx_front.prototype.outline_block = function(n, style, speed) {
         },
         selected_light: {
             size:1,
-            offset:0 // 6 for visible
+            offset_x:0, // 6 for visible
+            offset_y:0
         }
     };
     
@@ -2944,7 +2840,8 @@ fx_front.prototype.outline_block = function(n, style, speed) {
         {
             recount:true,
             size:2,
-            offset:2
+            offset_x:2,
+            offset_y:0
         }, 
         styles[style]
     );
@@ -2968,7 +2865,10 @@ fx_front.prototype.outline_block = function(n, style, speed) {
             $fx.front.outline_block(n, style);
             $fx.front.recount_node_panel();
         };
-        n.off('.fx_recount_outlines').on('resize.fx_recount_outlines keydown.fx_recount_outlines', recount_outlines);
+        n.off('.fx_recount_outlines').on(
+            'resize.fx_recount_outlines',// keydown.fx_recount_outlines', 
+            recount_outlines
+        );
     }
     
     if (!n.is(':visible')) {
@@ -3016,7 +2916,6 @@ fx_front.prototype.outline_block = function(n, style, speed) {
     };
     var doc_width = $(document).width(),
         doc_height = $(document).height(),
-        doc_scroll = $(document).scrollTop(),
         front_overlay = $fx.front.get_front_overlay(),
         overlay_offset = parseInt(front_overlay.css('top'));
     
@@ -3027,11 +2926,19 @@ fx_front.prototype.outline_block = function(n, style, speed) {
     if (draw_lens) {
         n.data('fx_has_lens', true);
         $.each(panes, function(index, pane) {
-            var $lens = $(pane).data('lens');
+            var $pane = $(pane),
+                $lens = $pane.data('lens');
+            
+            $pane.css({
+                width:'1px',
+                height:'1px',
+                top:0
+            });
             if ($lens) {
                 $lens.css({
                     width:'1px',
-                    height:'1px'
+                    height:'1px',
+                    top:0
                 });
             }
         });
@@ -3078,7 +2985,6 @@ fx_front.prototype.outline_block = function(n, style, speed) {
         $pane_node.css(css);
         
         if (draw_lens){
-            //var $lens = $('<div class="fx_lens"></div>');
             var $lens = $pane_node.data('lens');
             if (!$lens || $lens.length === 0) {
                 $lens = $('<div class="fx_lens fx_lens_'+type+'"></div>').appendTo(front_overlay);
@@ -3087,14 +2993,11 @@ fx_front.prototype.outline_block = function(n, style, speed) {
             var lens_css = {
                 'z-index':css['z-index'] - 1
             };
-            var win_height = $(window).height(),
-                body_height = $('body').height();
-            
             var win_size = {
                 width:$(document).width(),
-                //height: Math.max(win_height, body_height) + $('body').offset().top
                 height: $(document).height()
             };
+            
             switch(type) {
                 case 'top':
                     lens_css.width = win_size.width;
@@ -3120,16 +3023,15 @@ fx_front.prototype.outline_block = function(n, style, speed) {
                     break;
             }
             if (pane_position === 'fixed') {
-                //lens_css.top -= doc_scroll;
                 lens_css.position = 'fixed';
             }
             
             $lens.css(lens_css);
-            //$pane_node.hide();
         }
         return $pane_node;
     }
-    var g_offset = params.offset;
+    var offset_x = params.offset_x,
+        offset_y = params.offset_y;
     
     if (pane_position==='fixed') {
         o.top -=$(window).scrollTop();
@@ -3141,30 +3043,36 @@ fx_front.prototype.outline_block = function(n, style, speed) {
         nh -= o.top + nh - doc_height + 5;
     }
     
+    var box_width = nw + offset_x*2,
+        box_height = (nh + size*2 + offset_y*2);
+    
     make_pane({
-        top: o.top - size - g_offset,
-        left:o.left - size - g_offset,
-        width:(nw + g_offset*2),
+        top: o.top - size - offset_y,
+        left:o.left - size - offset_y,
+        //width:(nw + offset_x*2),
+        width:box_width,
         height:size
     }, 'top');
     make_pane({
-        top:o.top + nh + g_offset,
-        left:o.left - size - g_offset,
-        width: nw + g_offset*2,
+        top:o.top + nh + offset_y,
+        left:o.left - size - offset_x,
+        //width: nw + g_offset*2,
+        width:box_width,
         height:size
     }, 'bottom');
     make_pane({
-        top: (o.top - size - g_offset),
-        left:o.left - size - g_offset,
+        top: (o.top - size - offset_y),
+        left:o.left - size - offset_x,
         width:size ,
-        height: (nh + size*2 + g_offset*2)
+        //height: (nh + size*2 + g_offset*2)
+        height:box_height
         
     }, 'left');
     make_pane({
-        top:o.top - size - g_offset,
-        left:o.left + nw + g_offset - size,
+        top:o.top - size - offset_y,
+        left:o.left + nw + offset_x - size,
         width:size,
-        height: (nh + size*2 + g_offset*2) 
+        height: box_height
     }, 'right');
     if (speed) {
         var $panes = $([]);

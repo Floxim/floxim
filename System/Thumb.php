@@ -403,6 +403,8 @@ class Thumb
         
         if ($save_function === 'imagejpeg') {
             imageinterlace($this->image, true);
+        } elseif ($save_function === 'imagepng' && preg_match("~no\.png~", $target_path)) {
+            imagetruecolortopalette($this->image, true, 2);
         }
         
         // Save to file

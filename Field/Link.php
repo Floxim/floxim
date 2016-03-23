@@ -88,6 +88,9 @@ class Link extends \Floxim\Floxim\Component\Field\Entity
     {
         $target_com = $this->getTargetName();
         $finder = fx::data($target_com);
+        if (isset($content['site_id']) && $finder instanceof \Floxim\Main\Content\Finder) {
+            $finder->where('site_id', $content['site_id']);
+        }
         $method_name = 'getRelationFinder'. fx::util()->underscoreToCamel($this['keyword']);
         if (method_exists($content, $method_name)) {
             $finder = call_user_func(array($content, $method_name), $finder);
@@ -113,12 +116,10 @@ class Link extends \Floxim\Floxim\Component\Field\Entity
             );
             $c_val = $content[$this['keyword']];
             if ($c_val) {
-                $c_val_obj = $finder->getById($c_val);
-                if ($c_val_obj) {
-                    $res['value'] = array(
-                        'id'   => $c_val_obj['id'],
-                        'name' => $c_val_obj['name']
-                    );
+                $c_vals = $finder->where('id', $c_val)->livesearch();
+                $c_val_data = current($c_vals['results']);
+                if ($c_val_data) {
+                    $res['value'] = $c_val_data;
                 } else {
                     unset($res['value']);
                 }
@@ -126,19 +127,8 @@ class Link extends \Floxim\Floxim\Component\Field\Entity
         } else {
             $res['type'] = 'select';
         
-            
             $name_prop = $finder->getNameField();
-            /*
-            if (!$name_prop) {
-                if ($target_content !== 'lang') {
-                    $finder->where('site_id', $content['site_id']);
-                    $name_prop = 'name';
-                } else {
-                    $name_prop = 'en_name';
-                }
-            }
-             * 
-             */
+            
             $val_items = $finder->all();
             $res['values'] = $val_items->getValues($name_prop, 'id');
         }

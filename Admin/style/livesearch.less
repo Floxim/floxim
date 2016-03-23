@@ -298,6 +298,26 @@
         padding:6px 8px;
     }
     
+    .search_item__path-chunk, 
+    .search_item__path-separator 
+    {
+        font-size:11px;
+        color:#666;    
+    }
+    
+    .search_item {
+        &__path-chunk, &__path-separator, &__name {
+            display:inline-block;
+            vertical-align:middle;
+        }
+    }
+    
+    .search_item__path-separator {
+        display:inline-block;
+        margin:0 6px;
+        font-size:15px;
+    }
+    
     .search_group_collapsed {
         & > .search_group_children {
             display:none;

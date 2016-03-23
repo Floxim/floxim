@@ -741,18 +741,27 @@ span.fx_area_marker {
     position:absolute;
 }
 
+.fx_infoblock {
+    //outline:1px solid #F00;
+}
+
 .fx_inline_adder {
     position:absolute;
     opacity:0;
     visibility:hidden;
-    //transition:opacity 0.2s ease;
     cursor:pointer;
     
-    //display: block;
-    //z-index:10000;
+    //outline:1px dotted #666;
+    
+    &-vertical {
+        width:0;
+    }
+    
+    &-horizontal {
+        height:0;
+    }
     
     &-visible {
-        //display:block;
         visibility:visible;
         opacity:1;
     }
@@ -761,24 +770,21 @@ span.fx_area_marker {
         z-index:2;
     }
     
-    .black_plus() {
-        opacity:0;
-        width:34px;
-        height:34px;
-        background:url('images/sprite.png') no-repeat -1554px -3px;
-        position:absolute;
-        margin-left:0;
-        z-index:1;
-    }
     
     .blue_plus() {
-        width:24px;
-        height:24px;
         background-position:-1480px -8px;
     }
     
     &__plus {
-        .black_plus();
+        
+        opacity:0;
+        width:34px;
+        height:34px;
+        position:absolute;
+        z-index:1;
+        
+        background-image:url('images/sprite.png');
+        background-repeat:no-repeat;
         
         // fixed label for non-sortable lists
         &_label {
@@ -792,30 +798,98 @@ span.fx_area_marker {
         }
     }
     
+    &_placed &__plus {
+        transition:margin 0.15s ease;
+    }
+    
+    &__line {
+        background:@button_color;
+        position: absolute;
+        visibility:hidden;
+    }
+    
+    &-horizontal &__plus {
+        bottom:-2px;
+        left:50%;
+        margin-left:-18px;
+    }
+    
+    &-horizontal &__line {
+        width:100%;
+        height:2px;
+        bottom:0;
+        left:0;
+    }
+    
+    &-horizontal&-dir_after &__plus {
+        bottom:auto;
+        top:-2px;
+        transform:rotate(180deg);
+    }
+    
+    &-horizontal&-dir_after &__line {
+        bottom:auto;
+        top:0;
+    }
+    
+    &-vertical &__plus {
+        transform:rotate(270deg);
+        right:-2px;
+        top:50%;
+        margin-top:-18px;
+    }
+    
+    &-vertical&-dir_after &__plus {
+        right:auto;
+        left:-2px;
+        transform:rotate(90deg);
+    }
+    
+    &-vertical &__line {
+        top:0;
+        display:inline-block;
+        height:100%;
+    }
+    
+    &-horizontal&_overlapper &__plus {
+        margin-left:-34px;
+    }
+    
+    &-horizontal&_overlapped &__plus {
+        margin-left:0;
+    }
+    
+    &-vertical&_overlapper &__plus {
+        margin-top:-34px;
+    }
+    
+    &-vertical&_overlapped &__plus {
+        margin-top:0;
+    }
+    
+    &-infoblock &__plus {
+        background-position:-2105px 3px;
+        transform:rotate(0deg);
+    }
+    
+    &-entity &__plus {
+        background-position:-2171px 3px;
+    }
+    
     &-infoblock&-horizontal &__plus {
-        margin-left:-17px;
+        //margin-left:-17px;
     }
     
     &-entity&-horizontal &__plus, &-entity&-horizontal &__title {
-        margin-left:12px;
+        //margin-left:12px;
     }
     
-    &__plus-with_variants  {
-        transform: rotate(45deg);
-    }
-    
+    /*
     &-not_sortable &__plus-with_variants {
         transform:none;
     }
+    */
     
-    
-    &-entity &__plus {
-        .blue_plus();
-    }
-    
-    &-infoblock&-outstanding &__plus {
-        margin-left:0;
-    }
     
     &-infoblock_placer &__plus {
         width:40px;
@@ -831,7 +905,7 @@ span.fx_area_marker {
         background:#3167ff;
     }
     &-not_sortable &__plus_plus {
-        .black_plus();
+        background:url('images/sprite.png') no-repeat;
         .blue_plus();
         display: block !important;
         opacity:1 !important;
@@ -854,14 +928,6 @@ span.fx_area_marker {
         font-style: normal;
     }
     
-    
-    &__line {
-        background:@button_color;
-        position: absolute;
-        top:0;
-        left:0;
-        visibility:hidden;
-    }
     &:hover, &:hover &__plus {
         opacity:1 !important;
     }
@@ -933,6 +999,21 @@ span.fx_area_marker {
     }
     &_hover &__title {
         display: inline-block;
+    }
+    
+    
+    &-entity &__plus-with_variants  {
+        background-position:-1470px 2px;
+    }
+    
+    &-entity&-horizontal &__plus-with_variants {
+        transform: rotate(45deg) !important;
+        top:-23px !important;
+    }
+    
+    &-entity&-vertical &__plus-with_variants {
+        transform:rotate(-45deg) !important;
+        left:-23px !important;
     }
 }
 

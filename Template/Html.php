@@ -149,13 +149,17 @@ class Html
                     $tpl_test = preg_replace("~[\r\n]~", ' ', $tpl_test[1]);
                     $tpl_id = preg_replace("~\[.+?\]~s", '', $tpl_id);
                 }
-
-
+                
                 $tpl_macro_tag = '{template id="' . $tpl_id . '" ';
                 if ($macro_id) {
                     $tpl_macro_tag .= ' is_macro="true" ';
                 }
                 $tpl_macro_tag .= $subroot;
+                
+                if ($n->hasAttribute('fx:apply')) {
+                    $tpl_macro_tag .= ' apply="true" ';
+                    $n->removeAttribute('fx:apply');
+                }
                 
                 if ($n->hasAttribute('fx:abstract')) {
                     $tpl_macro_tag .= ' is_abstract="true" ';
