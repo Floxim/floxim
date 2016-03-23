@@ -144,7 +144,13 @@ fx_form = {
             }
             var $field_node = $fx_form.draw_field(json, $target);
             if (json.type === 'group') {
-                rendered_groups[json.keyword] = $field_node.find('.fx-field-group__fields');
+                var $group_fields_container = $field_node.find('.fx-field-group__fields');
+                rendered_groups[json.keyword] = $group_fields_container;
+                if (json.fields) {
+                    $.each(json.fields, function(index, field) {
+                        $fx_form.draw_field(field, $group_fields_container);
+                    });
+                }
             }
         });
         

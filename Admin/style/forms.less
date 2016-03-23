@@ -811,15 +811,31 @@
 // Google maps input
 
 .fx_map_field {
-    .fx_input.map_address_input {
-        width:400px !important;
-        max-width:400px !important;
-    }
-    .map_container {
-        position:absolute;
-        z-index:10000;
+    position:relative;
+    .map_link {
+        position: absolute;
+        top: 9px;
+        right: -25px;
+        background: #fff;
+        font-size:11px;
         display:none;
     }
+    .fx_input.map_address_input {
+        //width:400px !important;
+        //max-width:400px !important;
+        font-size:13px;
+    }
+}
+
+.field_map .map_container {
+    //position:absolute;
+    //z-index:10000;
+    //display:none;
+    //border:1px solid #CCC; 
+    //width:400px; 
+    height:300px; 
+    margin-top:10px;
+    box-sizing:border-box;
 }
 
 .pac-container {

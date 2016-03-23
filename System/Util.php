@@ -288,6 +288,9 @@ class Util
 
     public function camelToUnderscore($string)
     {
+        if (!is_string($string)) {
+            fx::log(fx::debug()->backtrace());
+        }
         return strtolower(preg_replace('/([a-z])([A-Z])/', '$1_$2', $string));
     }
 
@@ -695,5 +698,42 @@ class Util
             }
         }
         return $res;
+    }
+    
+    public function gitStatus() 
+    {
+        $repo_dirs = array();
+        $walker = function($path) use (&$repo_dirs, &$walker) {
+            if (file_exists($path.'/.git') && is_dir($path.'/.git')) {
+                $repo_dirs []= $path;
+            }
+            $subs = glob($path.'/*');
+            if (!$subs) {
+                return;
+            }
+            foreach ($subs as $sub) {
+                if (is_dir($sub)) {
+                    $walker($sub);
+                }
+            }
+        };
+        $walker(DOCUMENT_ROOT);
+        
+        foreach ($repo_dirs as $rd) {
+            chdir($rd);
+            $res = shell_exec('git status');
+            if (
+                strstr($res, 'nothing to commit, working directory clean')
+                && strstr($res, 'Your branch is up-to-date')
+            ) {
+                continue;
+            }
+            echo "<hr>";
+            echo "<b>".fx::path()->http($rd)."</b>";
+            echo "<pre style='font-size:11px;'>".$res."</pre>";
+            
+            //fx::cdebug($rd, $res);
+        }
+        //fx::cdebug($repo_dirs);
     }
 }

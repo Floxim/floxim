@@ -66,7 +66,8 @@ class Link extends \Floxim\Floxim\Component\Field\Entity
             'type'   => 'select',
             'values' => array(
                 'livesearch' => fx::alang('Live search', 'system'),
-                'select'     => fx::alang('Simple select', 'system')
+                'select'     => fx::alang('Simple select', 'system'),
+                'group'    => 'Field group'
             ),
             'value'  => $this['format']['render_type']
         );
@@ -105,7 +106,9 @@ class Link extends \Floxim\Floxim\Component\Field\Entity
         
         $finder = $this->getTargetFinder($content);
         
-        if ($this['format']['render_type'] == 'livesearch') {
+        $render_type = $this['format']['render_type'];
+        
+        if ($render_type == 'livesearch') {
             $res['type'] = 'livesearch';
             $res['params'] = array(
                 //'content_type' => $target_com_keyword
@@ -124,13 +127,36 @@ class Link extends \Floxim\Floxim\Component\Field\Entity
                     unset($res['value']);
                 }
             }
-        } else {
+        } elseif ($render_type === 'select') {
             $res['type'] = 'select';
-        
             $name_prop = $finder->getNameField();
-            
             $val_items = $finder->all();
             $res['values'] = $val_items->getValues($name_prop, 'id');
+        } elseif ($render_type === 'group') {
+            $res['type'] = 'group';
+            $res['is_expanded'] = true;
+            $linked_entity = $content[ $this->getPropertyName() ];
+            if (!$linked_entity) {
+                $rel_finder = $this->getTargetFinder($content);
+                $linked_entity = $rel_finder->create();
+            }
+            $fields = $linked_entity->getFormFields()->getValues();
+            
+            if ($linked_entity['id']) {
+                $fields[]= array(
+                    'name' => 'id',
+                    'id' => 'id',
+                    'type' => 'hidden',
+                    'value' => $linked_entity['id']
+                );
+            }
+            
+            $base_name = $this->getPropertyName();
+            foreach ($fields as &$f) {
+                $f['name'] = $base_name. '['.$f['name'].']';
+                $f['id'] = $f['name'];
+            }
+            $res['fields'] = $fields;
         }
         return $res;
     }
@@ -178,6 +204,7 @@ class Link extends \Floxim\Floxim\Component\Field\Entity
     public function getSavestring($content)
     {
         if (is_array($this->value) && isset($this->value['title'])) {
+            fx::log($this);
             $title = $this->value['title'];
             $entity_params = array(
                 'name' => $title

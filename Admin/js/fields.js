@@ -342,7 +342,7 @@ window.$fx_fields = {
     },
     map: function (json) {
         var $field = $t.jQuery('form_row', json);
-        new fx_google_map_field($field);
+        new fx_google_map_field($field, json);
         return $field;
     },
     joined_group: function(json) {

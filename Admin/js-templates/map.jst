@@ -3,15 +3,9 @@
     
     <input 
         type="text" 
-        name="<?=_c.name?>[address]" 
+        name="<?=_c.name?>" 
         class="fx_input map_address_input" 
-        value="<?=_c.value ? _c.value.address : ''?>" />
+        value="<?=_c.value ?>" />
     <a class="map_link">map</a>
-    <div class="map_container" style="border:1px solid #CCC; width:400px; height:300px; box-sizing:border-box;">
-    
-    </div>
-    <input type="hidden" name="<?=_c.name?>[lat]" class="map_lat_input" 
-        value="<?=_c.value ? _c.value.lat : ''?>" />
-    <input type="hidden" name="<?=_c.name?>[lon]" class="map_lon_input" 
-        value="<?=_c.value ? _c.value.lon : ''?>" />
+    <div class="map_container"></div>
 </div>

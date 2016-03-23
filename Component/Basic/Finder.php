@@ -331,6 +331,9 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
     protected function  compileSetStatement($props)
     {
         $res = array();
+        if (!is_array($props)) {
+            fx::log($props, fx::debug()->backtrace());
+        }
         foreach ($props as $p => $v) {
             $res [] = $p . ' = ' . $v;
         }

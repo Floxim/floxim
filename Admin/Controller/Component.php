@@ -195,7 +195,6 @@ class Component extends Admin
 
     protected function getFullKeyword($input)
     {
-        fx::log($input);
         $keyword = trim($input['keyword']);
 
         if (!$keyword && $input['name']) {

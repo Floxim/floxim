@@ -162,6 +162,22 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
             if (!isset($values[$field_keyword])) {
                 if ($field['type'] == 'multilink') {
                     $value = array();
+                } elseif ($field['type'] === 'link') {
+                    $prop_name = $field->getPropertyName();
+                    if (!isset($values[$prop_name])) {
+                        continue;
+                    }
+                    $linked_entity_props = $values[$prop_name];
+                    $linked_entity_type = $field->getTargetName();
+                    if (isset($linked_entity_props['id'])) {
+                        $linked_entity = fx::data($linked_entity_type, $linked_entity_props['id']);
+                    } else {
+                        $linked_entity = fx::data($linked_entity_type)->create();
+                    }
+                    $linked_entity->setFieldValues($linked_entity_props);
+                    $this[$prop_name] = $linked_entity;
+                    unset($val_keys[$prop_name]);
+                    continue;
                 } else {
                     continue;
                 }
@@ -403,6 +419,11 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
 
     public function getForcedEditableFields() {
         return array();
+    }
+    
+    public function isVisible()
+    {
+        return true;
     }
     
     public function getTemplateRecordAtts($collection, $index)

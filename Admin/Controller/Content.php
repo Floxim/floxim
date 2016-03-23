@@ -51,7 +51,7 @@ class Content extends Admin
         }
         
         $res = array();
-        $com_item_name = fx::data('component', $content_type)->getItemName('add');
+        $com_item_name = fx::getComponentByKeyword($content_type)->getItemName('add');
         if (isset($input['content_id']) && $input['content_id']) {
             $res['header'] = fx::alang('Editing ','system') 
                             . ' <span title="#' . $input['content_id'] . '">' . $com_item_name . '</span>';
@@ -155,6 +155,7 @@ class Content extends Admin
 
         if (isset($input['data_sent']) && $input['data_sent']) {
             $res['is_new'] = !$content['id'];
+            fx::log($input['content']);
             $set_res = $content->setFieldValues($input['content']);
             if (is_array($set_res) && isset($set_res['status']) && $set_res['status'] === 'error') {
                 $res['status'] = 'error';
@@ -411,7 +412,7 @@ class Content extends Admin
             $list['labels']['type'] = 'Type';
         }
 
-        $com = fx::data('component', $content_type);
+        $com = fx::getComponentByKeyword($content_type);
         
         $fields = $com->getAllFields();
         
@@ -459,6 +460,9 @@ class Content extends Admin
                         if ($val) {
                             $linked = fx::data($f->getRelatedType(), $val);
                             $val = $linked['name'];
+                            if ($linked['url']) {
+                                $val .= ' <a target="_blank" style="text-decoration:none;" href="'.$linked['url'].'">&rarr;</a>';
+                            }
                         }
                         break;
                     case 'string':
