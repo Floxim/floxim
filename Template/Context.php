@@ -23,7 +23,7 @@ class Context {
     
     public function getFrom($item, $key)
     {
-        return $item[$key];
+        return isset($item[$key]) ? $item[$key] : null;
     }
     
     public static function create($data = null) {

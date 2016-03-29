@@ -449,9 +449,11 @@ class Util
             $target_file = fx::path()->abs($dir.'/data.sql');
         }
         
+        $prefix = fx::db()->getPrefix();
+        
         // export the site
         fx::db()->dump(array(
-            'tables' => array('site'),
+            'tables' => array($prefix.'site'),
             'where' => 'id = '.$site_id,
             'schema' => false,
             'file' => $target_file
@@ -459,7 +461,7 @@ class Util
         
         // export infoblocks
         fx::db()->dump(array(
-            'tables' => array('infoblock'),
+            'tables' => array($prefix.'infoblock'),
             'where' => 'site_id = '.$site_id,
             'schema' => false,
             'file' => $target_file,
@@ -468,7 +470,7 @@ class Util
         
         // export URL aliases
         fx::db()->dump(array(
-            'tables' => array('url_alias'),
+            'tables' => array($prefix.'url_alias'),
             'where' => 'site_id = '.$site_id,
             'schema' => false,
             'file' => $target_file,
@@ -479,7 +481,7 @@ class Util
         $infoblock_ids = fx::data('infoblock')->where('site_id', $site_id)->all()->getValues('id');
         
         fx::db()->dump(array(
-            'tables' => array('infoblock_visual'),
+            'tables' => array($prefix.'infoblock_visual'),
             'where' => 'infoblock_id IN ('.join(", ", $infoblock_ids).')',
             'schema' => false,
             'file' => $target_file,
@@ -489,7 +491,7 @@ class Util
         
         // export main content table
         fx::db()->dump(array(
-            'tables' => array('floxim_main_content'),
+            'tables' => array($prefix.'floxim_main_content'),
             'where' => 'site_id  = '.$site_id,
             'schema' => false,
             'file' => $target_file,
@@ -502,7 +504,7 @@ class Util
         $tables = $this->getContentDumpTables(fx::collection($items));
         
         foreach ($tables as $t => $item_ids) {
-            if ($t === 'floxim_main_content') {
+            if ($t === $prefix.'floxim_main_content') {
                 continue;
             }
             // export content table
