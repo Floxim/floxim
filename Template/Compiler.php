@@ -222,7 +222,9 @@ class Compiler
             $complex_id_parts = null;
             preg_match("~([a-z0-9\.\_\-\:]+)\#?([a-z0-9_-]+)?~", $complex_id, $complex_id_parts);
             $target_tpl = $complex_id_parts[1];
-            $token->setProp('id', $complex_id_parts[2]);
+            if (isset($complex_id_parts[2])) {
+                $token->setProp('id', $complex_id_parts[2]);
+            }
         }
         $full_target_tpl = $target_tpl;
         
@@ -962,7 +964,9 @@ class Compiler
             $var_meta_expr .= '"' . $prop_name . '", ' . $ep->compile($var_token);
             $var_meta_expr .= ')';
         } else {
-            //$var_meta_expr .= '"' . $var_name . '")';
+            if (!isset($var_token->name) || !isset($var_token->name[0])) {
+                return 'null';
+            }
             $var_meta_expr .= '"' . $var_token->name[0] . '")';
         }
         return $var_meta_expr;

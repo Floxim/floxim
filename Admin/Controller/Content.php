@@ -17,7 +17,7 @@ class Content extends Admin
         $linker = null;
         $linker_field = null;
         
-        if (is_string($input['placeholder_linker'])) {
+        if (isset($input['placeholder_linker']) && is_string($input['placeholder_linker'])) {
             $input['placeholder_linker'] = unserialize($input['placeholder_linker']);
         }
         

@@ -294,6 +294,9 @@ class Debug
     {
         $found = fx::collection($found)->getValues('id', 'id');
         $files = glob($this->getDir()."/log_*");
+        if (!$files) {
+            return array();
+        }
         $res = array();
         foreach ($files as $file) {
             preg_match("~log_([^\.]+)~", $file, $id);
