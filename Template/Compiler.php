@@ -966,7 +966,7 @@ class Compiler
             $var_meta_expr .= ')';
         } else {
             if (!isset($var_token->name) || !isset($var_token->name[0])) {
-                return 'null';
+                return 'array()';
             }
             $var_meta_expr .= '"' . $var_token->name[0] . '")';
         }
