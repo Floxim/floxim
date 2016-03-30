@@ -222,9 +222,10 @@ class Compiler
             $complex_id_parts = null;
             preg_match("~([a-z0-9\.\_\-\:]+)\#?([a-z0-9_-]+)?~", $complex_id, $complex_id_parts);
             $target_tpl = $complex_id_parts[1];
-            if (isset($complex_id_parts[2])) {
-                $token->setProp('id', $complex_id_parts[2]);
-            }
+            $token->setProp(
+                'id', 
+                isset($complex_id_parts[2]) ? $complex_id_parts[2] : ''
+            );
         }
         $full_target_tpl = $target_tpl;
         
