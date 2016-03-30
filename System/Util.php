@@ -478,7 +478,9 @@ class Util
         ));
         
         // export infoblock_visual
-        $infoblock_ids = fx::data('infoblock')->where('site_id', $site_id)->all()->getValues('id');
+        $infoblocks = fx::data('infoblock')->where('site_id', $site_id)->all();
+        
+        $infoblock_ids = $infoblocks->getValues('id');
         
         fx::db()->dump(array(
             'tables' => array($prefix.'infoblock_visual'),
@@ -488,6 +490,15 @@ class Util
             'add' => true
         ));
         
+        $scope_ids = $infoblocks->find('scope_type', 'custom')->getValues('scope_id');
+        
+        fx::db()->dump(array(
+            'tables' => array($prefix.'scope'),
+            'where' => 'id IN ('.join(", ", $scope_ids).')',
+            'schema' => false,
+            'file' => $target_file,
+            'add' => true
+        ));
         
         // export main content table
         fx::db()->dump(array(

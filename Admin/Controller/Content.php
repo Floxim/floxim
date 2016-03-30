@@ -155,7 +155,6 @@ class Content extends Admin
 
         if (isset($input['data_sent']) && $input['data_sent']) {
             $res['is_new'] = !$content['id'];
-            fx::log($input['content']);
             $set_res = $content->setFieldValues($input['content']);
             if (is_array($set_res) && isset($set_res['status']) && $set_res['status'] === 'error') {
                 $res['status'] = 'error';
@@ -405,7 +404,8 @@ class Content extends Admin
             'type'   => 'list',
             'values' => array(),
             'labels' => array('id' => 'ID'),
-            'entity' => 'content'
+            'entity' => 'content',
+            'confirm_delete' => false
         );
         
         if ($content_type === 'content') {

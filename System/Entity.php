@@ -142,7 +142,7 @@ abstract class Entity implements \ArrayAccess, Template\Entity
         // update
         if (isset($this->data[$pk]) && $this->data[$pk]) {
             $this->beforeUpdate();
-            if ($this->validate() === false) {
+            if (!$this->isValid()) {
                 $this->throwInvalid();
                 unset($this->now_saving);
                 return false;
@@ -158,7 +158,7 @@ abstract class Entity implements \ArrayAccess, Template\Entity
         } // insert
         else {
             $this->beforeInsert();
-            if ($this->validate() === false) {
+            if (!$this->isValid()) {
                 $this->throwInvalid();
                 unset($this->now_saving);
                 return false;
@@ -190,7 +190,7 @@ abstract class Entity implements \ArrayAccess, Template\Entity
     protected function throwInvalid()
     {
         $exception = new Exception\EntityValidation(
-            fx::lang("Unable to save entity \"" . $this->getType() . "\"")
+            "Unable to save entity \"" . $this->getType() . "\""
         );
         $exception->entity = $this;
         $exception->addErrors($this->validate_errors);
@@ -398,10 +398,16 @@ abstract class Entity implements \ArrayAccess, Template\Entity
     {
         return $type === $this->getType();
     }
-
+    
     public function validate()
     {
-        return count($this->validate_errors) == 0;
+        
+    }
+
+    public function isValid()
+    {
+        $validation_res = $this->validate();
+        return count($this->validate_errors) === 0 && $validation_res !== false;
     }
 
     public function loadFromForm($form, $fields = null)
@@ -454,7 +460,7 @@ abstract class Entity implements \ArrayAccess, Template\Entity
             throw new \Exception('No form to validate with');
         }
         $this->loadFromForm($form, $fields);
-        if (!$this->validate()) {
+        if (!$this->isValid()) {
             $this->throwInvalid();
             return false;
         }
