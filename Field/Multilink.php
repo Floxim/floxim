@@ -148,7 +148,7 @@ class Multilink extends \Floxim\Floxim\Component\Field\Entity
 
         return $fields;
         
-        
+        /*
         $fields = array();
 
         if (!$this['component_id']) {
@@ -305,6 +305,8 @@ class Multilink extends \Floxim\Floxim\Component\Field\Entity
             'value'  => $this['format']['render_type']
         );
         return $fields;
+         * 
+         */
     }
 
     public function setValue($value)
@@ -315,6 +317,10 @@ class Multilink extends \Floxim\Floxim\Component\Field\Entity
     protected function beforeSave()
     {
         if ($this->isModified('format') || !$this['id']) {
+            $format = $this['format'];
+            $format['linking_datatype'] = $format['linking_component_id'];
+            $format['linking_field'] = $format['linking_field_id'];
+            /*
             $c_lf = $this['format']['linking_field'];
             $c_ldt = $this['format']['linking_field_' . $c_lf . '_datatype'];
             if ($c_ldt) {
@@ -330,6 +336,8 @@ class Multilink extends \Floxim\Floxim\Component\Field\Entity
                 }
                 $this['format'] = $format;
             }
+             * 
+             */
             $this['format'] = $format;
         }
         parent::beforeSave();

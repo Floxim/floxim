@@ -1471,7 +1471,7 @@ class Compiler
         if (!$token->getProp('bundle') && $type === 'css') {
             $token->setProp('bundle', 'default');
         }
-        if ($token->getProp('bundle') || $token->getProp('extend')) {
+        if ( ($token->getProp('bundle') && $token->getProp('bundle') !== 'false') || $token->getProp('extend')) {
             $code .= $this->cssBundleToCode($token);
         } else {
             $media = $token->getProp('media');
