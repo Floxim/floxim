@@ -811,25 +811,14 @@ fx_front.prototype.add_infoblock_select_settings = function(data) {
                     if (new_ib_node.length === 0) {
                         return;
                     }
-                    
-                    /*
-                    var new_cm = new_ib_node.data('fx_controller_meta');
-                    if (new_cm && new_cm.accept_content) {
-                        // @todo: init adder
-                        return;
-                    } else {
-                    */
-                        setTimeout(function() {
-                            var $adder = new_ib_node.find('.fx_adder_variant');
-                            if ($adder.length === 1) {
-                                $adder.click();
-                            } else {
-                                $fx.front.select_item(new_ib_node.get(0));
-                            }
-                        },100);
-                    /*
-                    }
-                    */
+                    setTimeout(function() {
+                        var $adder = new_ib_node.find('.fx_adder_variant');
+                        if ($adder.length === 1) {
+                            $adder.click();
+                        } else {
+                            $fx.front.select_item(new_ib_node.get(0));
+                        }
+                    },100);
                 }
             );
         },
