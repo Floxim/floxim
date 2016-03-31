@@ -9,7 +9,7 @@ class User extends Admin
 
     public function all()
     {
-        $users = fx::data('user')->all();
+        $users = fx::data('floxim.user.user')->all();
         $result = array('type' => 'list', 'filter' => true, 'tpl' => 'imgh');
         $result['labels'] = array();
         $result['labels'] = array(
@@ -58,7 +58,7 @@ class User extends Admin
 
     public function editSave($input)
     {
-        $info = fx::data('user', $input['id']);
+        $info = fx::data('floxim.user.user', $input['id']);
         return $this->save($input, $info);
     }
 
@@ -90,7 +90,7 @@ class User extends Admin
             }
 
             if ($result['status'] != 'error') {
-                $info = fx::data('user')->create(array(
+                $info = fx::data('floxim.user.user')->create(array(
                     'checked' => 1,
                     'created' => date("Y-m-d H:i:s")
                 ));
@@ -128,7 +128,7 @@ class User extends Admin
 
     public function edit($input)
     {
-        $info = fx::data('user', $input['params'][0]);
+        $info = fx::data('floxim.user.user', $input['params'][0]);
         $fields = $this->form($info);
         $fields[] = $this->ui->hidden('action', 'edit');
         $fields[] = $this->ui->hidden('id', $info['id']);
@@ -159,7 +159,7 @@ class User extends Admin
         if (!$user['id'] || !$user['is_admin']) {
             return true;
         }
-        $another_admin = fx::data('user')->where('is_admin', 1)->where('id', $user['id'], '!=')->one();
+        $another_admin = fx::data('floxim.user.user')->where('is_admin', 1)->where('id', $user['id'], '!=')->one();
         return $another_admin ? true : false;
     }
 
@@ -187,7 +187,7 @@ class User extends Admin
 
     public function deleteSave($input)
     {
-        fx::data('user', $input['id'])->delete();
+        fx::data('floxim.user.user', $input['id'])->delete();
         return array('status' => 'ok');
     }
 
