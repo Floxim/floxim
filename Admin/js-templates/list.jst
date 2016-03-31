@@ -80,7 +80,10 @@ if (_c.values) {
 </div>
 
 <!--jquery-->
+
 var list =  html;
+
+html.data('fx_list', _c);
 
 $('.fx_list_filter input', list).keyup(function(){
     var t = $(this).val().toLowerCase();

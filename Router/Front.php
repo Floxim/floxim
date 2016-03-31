@@ -66,10 +66,13 @@ class Front extends Base
 
     protected $_ib_cache = array();
 
-    public function  getPageInfoblocks($page_id, $layout_id = null)
+    public function  getPageInfoblocks($page_id = null, $layout_id = null)
     {
         if (is_null($layout_id)) {
             $layout_id = fx::env('layout_id');
+        }
+        if (is_null($page_id)) {
+            $page_id = fx::env('page_id');
         }
         $cache_key = $page_id . '.' . $layout_id;
         if (isset($this->_ib_cache[$cache_key])) {

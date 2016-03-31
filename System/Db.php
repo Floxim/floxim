@@ -42,6 +42,10 @@ class Db extends \PDO
 
     public function escape($str)
     {
+        if (!is_scalar($str)) {
+            fx::log(debug_backtrace());
+            $str = '';
+        }
         return addslashes($str);
     }
 

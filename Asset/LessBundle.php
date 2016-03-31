@@ -18,7 +18,9 @@ class LessBundle extends Bundle {
         $files = array_unique($this->files);
         foreach ($files as $f) {
             $dir = fx::path()->http(dirname($f));
-            $parser->parseFile($f, $dir);
+            if (file_exists($f)) {
+                $parser->parseFile($f, $dir);
+            }
         }
         try {
             return $parser->getCss();

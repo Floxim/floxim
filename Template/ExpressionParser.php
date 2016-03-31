@@ -210,7 +210,7 @@ class ExpressionParser extends Fsm
         if ($ch == '.') {
             $next = $this->getNext(2);
             $back = $this->getPrev();
-            if ($next[1] === '(' && !preg_match("~\s~", $next[0]) && !preg_match("~\s~", $back[0])) {
+            if (isset($next[1]) && $next[1] === '(' && !preg_match("~\s~", $next[0]) && !preg_match("~\s~", $back[0])) {
                 $ch = '->';
             }
         }

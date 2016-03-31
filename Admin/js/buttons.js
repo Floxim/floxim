@@ -163,11 +163,28 @@ fx_buttons.prototype.handle = function ( button, button_data ) {
     if (button === 'delete') {
         button = {key:button, params:button_data.params};
     }
-    if (button.key === 'delete' && confirm('Are you sure?')) {
+    if (button.key === 'delete') {
+        
         var sel = $('.fx_admin_selected');
         if (sel.length === 0) {
             return;
         }
+        
+        var skip_confirm = false;
+        
+        var $list = sel.closest('.fx_list');
+        
+        if ($list.length) {
+            var list_data = $list.data('fx_list');
+            if (list_data && list_data.confirm_delete === false) {
+                skip_confirm = true;
+            }
+        }
+        
+        if (!skip_confirm && !confirm('Are you sure?')) {
+            return;
+        }
+        
         var cid = sel.data('id');
         if (cid.name) {
             cid = cid.name;

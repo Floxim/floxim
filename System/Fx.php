@@ -651,7 +651,7 @@ class Fx
         $parts []= 'Module';
         $class = join("\\", $parts);
         foreach ($modules as $m) {
-            if (get_class($m['object']) === $class) {
+            if (isset($m['object']) && get_class($m['object']) === $class) {
                 return $m['object'];
             }
         }

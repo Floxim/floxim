@@ -446,8 +446,8 @@ class Infoblock extends Admin
             $this->ui->hidden('action', 'select_settings'),
             $this->ui->hidden('fx_admin', true),
             $this->ui->hidden('settings_sent', 'true'),
-            $this->ui->hidden('controller', $input['controller']),
-            $this->ui->hidden('page_id', $input['page_id']),
+            $this->ui->hidden('controller', isset($input['controller']) ? $input['controller'] : ''),
+            $this->ui->hidden('page_id', isset($input['page_id']) ? $input['page_id'] : ''),
             $this->ui->hidden('area', serialize($area_meta)),
             $this->ui->hidden('id', isset($input['id']) ? $input['id'] : ''),
             $this->ui->hidden('mode', isset($input['mode']) ? $input['mode'] : '')

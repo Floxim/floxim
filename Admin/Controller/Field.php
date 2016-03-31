@@ -209,7 +209,7 @@ class Field extends Admin
             'type' => 'checkbox',
             'label' => fx::alang('Is editable', 'system'),
             'locked' => $field->getReal('is_editable') === null,
-            'value' => $field['is_editable']
+            'value' => !$parent_field && !$field['id'] ? true : $field['is_editable']
         );
 
         $fields[] = $this->ui->hidden('posting');

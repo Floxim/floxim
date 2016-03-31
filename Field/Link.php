@@ -57,7 +57,8 @@ class Link extends \Floxim\Floxim\Component\Field\Entity
             'value' => $this->getPropertyName()
         );
         $fields['cascade_delete']= array(
-            'label' => fx::alang('Cascade delete', 'system'),
+            //'label' => fx::alang('Cascade delete', 'system'),
+            'label' => 'Удалять '.$this['component']->getItemName('add').' при удалении объекта, на который ведет ссылка',
             'value' => $this['format']['cascade_delete'],
             'type' => 'checkbox'
         );

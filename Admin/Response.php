@@ -212,7 +212,7 @@ class Response
         if (isset($field['join_with']) && !preg_match("~\[~", $field['join_with'])) {
             $field['join_with'] = $prefix . '[' . $field['join_with'] . ']';
         }
-        if ($field['type'] === 'group' && isset($field['fields'])) {
+        if (isset($field['type']) && $field['type'] === 'group' && isset($field['fields'])) {
             foreach ($field['fields'] as &$subf) {
                 $subf = self::addFieldPrefix($subf, $prefix);
             }

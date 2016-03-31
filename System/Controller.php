@@ -185,7 +185,6 @@ class Controller
      */
     public function getAvailableTemplates($layout_name = null, $area_meta = null)
     {
-        fx::log($layout_name, $area_meta);
         $area_size = Template\Suitable::getSize($area_meta['size']);
         $layout_defined = !is_null($layout_name);
         if (is_numeric($layout_name)) {
