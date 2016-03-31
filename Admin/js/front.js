@@ -812,15 +812,24 @@ fx_front.prototype.add_infoblock_select_settings = function(data) {
                         return;
                     }
                     
+                    /*
                     var new_cm = new_ib_node.data('fx_controller_meta');
                     if (new_cm && new_cm.accept_content) {
                         // @todo: init adder
                         return;
                     } else {
+                    */
                         setTimeout(function() {
-                            $fx.front.select_item(new_ib_node.get(0));
+                            var $adder = new_ib_node.find('.fx_adder_variant');
+                            if ($adder.length === 1) {
+                                $adder.click();
+                            } else {
+                                $fx.front.select_item(new_ib_node.get(0));
+                            }
                         },100);
+                    /*
                     }
+                    */
                 }
             );
         },
@@ -1509,7 +1518,7 @@ fx_front.prototype.collect_adder_placeholders = function($container) {
             $parent = $('<div class="fx_pseudo_parent"></div>');
             $parent
                 .addClass( $placeholder.attr('class') )
-                .removeClass('fx_template_var fx_sortable fx_entity_adder_placeholder fx_template_var_in_att')
+                .removeClass('fx_template_var fx_entity fx_sortable fx_entity_adder_placeholder fx_template_var_in_att')
                 .data('fx_infoblock', $placeholder.data('fx_infoblock'));
             $placeholder.before($parent);
             $placeholders = $placeholder;

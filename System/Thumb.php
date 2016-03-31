@@ -516,6 +516,13 @@ class Thumb
         if (is_array($config)) {
             return $config;
         }
+        $config = preg_replace_callback(
+            "~(\d+)px~", 
+            function($m) {
+                return $m[1];
+            },
+            $config
+        );
         $prop_map = array(
             'w'    => 'width',
             'h'    => 'height',
