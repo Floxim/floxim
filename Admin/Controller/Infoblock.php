@@ -737,7 +737,7 @@ class Infoblock extends Admin
             );
         }
             
-        $fields []= $q_field;
+        //$fields []= $q_field;
         
         $fields []= array(
             'name' => 'scope[id]',

@@ -12,7 +12,7 @@ class TokenAttParser extends Fsm
         return $res;
     }
 
-    public $split_regexp = '~((?<!\\\["\'])|\s+|[a-z0-9_-]+\=|\|)~s';
+    public $split_regexp = '~(\\\"|(?<!\\\["\'])|\s+|[a-z0-9_-]+\=|\|)~s';
 
     const INIT = 1;
     const ATT_NAME = 2;

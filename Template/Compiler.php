@@ -101,6 +101,18 @@ class Compiler
         return $token->getProp('value');
     }
     
+    protected function tokenPrintToCode($token)
+    {
+        $expression = $token->getProp('expression');
+        $expression = str_replace('\\"', '"', $expression);
+        $ep = $this->getExpressionParser();
+        $res = $ep->build($expression);
+        $code = '<'."?php\n";
+        $code .= 'echo '.$res.";\n";
+        $code .= '?>';
+        return $code;
+    }
+    
     // if all token's children have type=code, return concated string value
     // otherwise return false
     protected function childrenGetPlain(Token $token)

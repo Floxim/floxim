@@ -63,7 +63,9 @@ window.condition_builder = function(params) {
             field.value = value;
             field.ajax_preload = true;
         }
-        return $fx_fields.livesearch(field, 'input');
+        var $control = $fx_fields.livesearch(field, 'input');
+        $control.data('value_type_hash', 'livesearch_select_'+field_props.id);
+        return $control;
     };
     
     field_operators.select.push( ['is_in', {value_type:select_livesearch}] );
@@ -75,7 +77,7 @@ window.condition_builder = function(params) {
         is_true: {
             name:'',
             value_type: function() {
-                return $fx_fields.control({
+                var $control = $fx_fields.control({
                     type:'radio_facet',
                     values: [
                         [1, 'да'],
@@ -83,26 +85,32 @@ window.condition_builder = function(params) {
                     ],
                     value:1
                 });
+                $control.data('value_type_hash', 'is_true');
+                return $control;
             }
         },
         has_type: {
             name:'имеет тип',
             value_type: function(field_props, value) {
                 var field = {
-                    is_multiple:true,
-                    content_type:'component',
-                    params: {
-                        id_field:'keyword'
-                    }
-                };
+                        is_multiple:true,
+                        content_type:'component',
+                        params: {
+                            id_field:'keyword'
+                        }
+                    },
+                    type_hash = 'livesearch_type';
                 if (field_props.content_type) {
                     field.params.conditions = [ [null, field_props.content_type, 'is'] ];
+                    type_hash += '_'+field_props.content_type;
                 }
                 if (value && value.length) {
                     field.value = value;
                     field.ajax_preload = true;
                 }
-                return $fx_fields.livesearch(field, 'input');
+                var $control = $fx_fields.livesearch(field, 'input');
+                $control.data('value_type_hash', type_hash);
+                return $control;
             },
             test: function(field_props) {
                 return field_props.has_types;
@@ -117,15 +125,6 @@ window.condition_builder = function(params) {
         },
         greater: {name:'больше'},
         less: {name:'меньше'},
-        match_cond: {
-            name:'соответствует условию',
-            value_type: function() {
-                return $fx_fields.control({
-                    type:'condition',
-                    fields: that.fields
-                });
-            }
-        },
         is_under: {
             name: 'находится внутри',
             test: function(field_props) {
@@ -140,7 +139,9 @@ window.condition_builder = function(params) {
                     field.value = value;
                     field.ajax_preload = true;
                 }
-                return $fx_fields.livesearch(field, 'input');
+                var $control = $fx_fields.livesearch(field, 'input');
+                $control.data('value_type_hash', 'livesearch_page');
+                return $control;
             }
         }
     };
@@ -149,21 +150,29 @@ window.condition_builder = function(params) {
     
     operators.is_in.value_type = function(field_props, value) {
         var params = {
-            is_multiple: 'true',
-            params: {}
-        };
+                is_multiple: 'true',
+                params: {}
+            },
+            type_hash = 'livesearch_page';
+        
         // field is relation
         if (field_props.linking_entity_type) {
             params.params.relation_field_id = field_props.id;
             params.params.linking_entity_type = field_props.linking_entity_type;
+            type_hash += '_rf_'+field_props.id;
         } else if (field_props.content_type) {
             params.params.content_type = field_props.content_type;
+            if (field_props.content_type !== 'floxim.main.page') {
+                type_hash += '_ct_'+field_props.content_type;
+            }
         }
         if (value && value.length) {
             params.ajax_preload = true;
             params.value = value;
         }
-        return $fx_fields.livesearch(params, 'input');
+        var $control = $fx_fields.livesearch(params, 'input');
+        $control.data('value_type_hash', type_hash);
+        return $control;
     };
     
     function getFieldOperators(field_type) {
@@ -391,7 +400,8 @@ window.condition_builder = function(params) {
         var $container = $('.'+cl+'-cond__value', $cond),
             value_type = op.value_type === undefined ? 'string' : op.value_type,
             $control,
-            $current_control = $cond.data('current_value_control');
+            $current_control = $cond.data('current_value_control'),
+            current_control_type = $current_control && $current_control.length ? $current_control.data('value_type_hash') : null;
         
         var op_type = op.id.match(/\.(.+)$/);
         if (op_type) {
@@ -420,18 +430,28 @@ window.condition_builder = function(params) {
                     params.value = value.value;
                 }
                 $control = $fx_fields.control(params);
+                $control.data('value_type_hash', value_type);
             } else if (typeof value_type === 'function') {
                 $control = value_type(field_props, value && value.value ? value.value : undefined);
             }
         }
-        $container.html('').append($control);
-        $cond.data('current_value_control', $control);
+        var new_control_type = $control ? $control.data('value_type_hash') : null;
+        var need_redraw = !new_control_type 
+                            || !current_control_type 
+                            || (new_control_type !== current_control_type);
+        
+        if (need_redraw) {
+            $container.html('').append($control);
+            $cond.data('current_value_control', $control);
+        }
     };
     
     this.drawOperators = function($cond, current_field, value) {
         var $container = $('.'+cl+'-cond__operator', $cond);
         
         $container.html('');
+        
+        $cond.removeClass(cl+'-cond_has-op');
         
         if (!current_field) {
             return;
@@ -468,7 +488,19 @@ window.condition_builder = function(params) {
             vals.push(op);
         }
         
-        var op_value = value && value.type ? value.type : vals[0].id;
+        var op_value = value && value.type ? value.type : vals[0].id,
+            op_value_exists = false;
+        for (var i = 0; i < vals.length; i++) {
+            if (vals[i].id === op_value) {
+                op_value_exists = true;
+                break;
+            }
+        }
+        if (!op_value_exists) {
+            op_value = vals[0].id;
+            value = undefined;
+        }
+        
         var $control = $fx_fields.livesearch({
             type:'livesearch',
             values: vals,
@@ -476,6 +508,17 @@ window.condition_builder = function(params) {
         },'input');
         
         $container.append($control);
+        
+        if (vals.length) {
+            if (vals.length < 1 || vals[0].name !== '') {
+                $cond.addClass(cl+'-cond_has-op');
+                
+            } 
+            if (vals.length === 1 && vals[0].name !== '') {
+                $container.append('<span class="'+cl+'-cond__op-name">'+vals[0].name+'</span>');
+                $control.css('display', 'none');
+            }
+        }
         
         function redrawValue(value) {
             var op_keyword = $control.data('livesearch').getValue(),
@@ -653,6 +696,8 @@ window.condition_builder = function(params) {
         if ( $items.length === 1 ) {
             $group.before($items);
             $group.remove();
+        } else if ($items.length === 0) {
+            this.redraw();
         }
         this.recountGrouppers();
     };
@@ -696,8 +741,13 @@ window.condition_builder = function(params) {
         this.$input = $('<input type="hidden" name="'+this.name+'" />');
         this.$node.append(this.$input);
         if (!this.value) {
-            var $init_cond = this.drawCondition();
-            this.$node.append($init_cond);
+            var $initer = $('<a class="'+cl+'__initer">Добавить условие</a>');
+            $initer.click(function() {
+                var $init_cond = that.drawCondition();
+                that.$node.append($init_cond);
+                $initer.remove();
+            });
+            this.$node.append($initer);
             return;
         }
         this.$input.val( JSON.stringify(this.value) );

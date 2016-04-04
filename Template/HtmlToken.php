@@ -134,7 +134,15 @@ class HtmlToken
             $this->removeAttribute('fx:element-name');
         }
         $tag_start = '';
+        $hide_empty = $this->hasAttribute('fx:hide-empty') && isset($this->children) && count($this->children) > 0;
         if ($this->name != 'root' && !$omit) {
+            if ($hide_empty) {
+                $this->addClass('fx-hide-empty');
+                $this->node_id = md5(rand(0,999999999).time());
+                $hide_empty = true;
+                $this->removeAttribute('fx:hide-empty');
+                $res .= "<?php\nob_start();?>";
+            }
             if (isset($this->attributes) && isset($this->attributes_modified)) {
                 $tag_start .= '<' . $this->original_name;
                 foreach ($this->attributes as $att_name => $att_val) {
@@ -164,6 +172,9 @@ class HtmlToken
         }
 
         $res .= $tag_start;
+        if ($hide_empty) {
+            $res .= "<?php \$start_".$this->node_id." = ob_get_clean(); ob_start(); ?>";
+        }
         if ($omit_conditional) {
             $res .= '<?php } ?>';
         }
@@ -174,6 +185,13 @@ class HtmlToken
                 $res .= $child->serialize();
             }
         }
+        if ($hide_empty) {
+            $res .= "<?php \n\$data_".$this->node_id ." = ob_get_clean();\n";
+            $res .= "if (trim(\$data_".$this->node_id .") !== '') {\n";
+            $res .= "echo \$start_".$this->node_id.";\n";
+            $res .= "echo \$data_".$this->node_id.";\n";
+            $res .= "?>";
+        }
         if ($this->type == 'open' && $this->name != 'root' && !$omit) {
             if ($omit_conditional) {
                 $res .= '<?php if (!' . $omit_var_name . ') {?>';
@@ -183,6 +201,9 @@ class HtmlToken
             if ($omit_conditional) {
                 $res .= '<?php } ?>';
             }
+        }
+        if ($hide_empty) {
+            $res .= "<?php \n}\n ?>";
         }
         return $res;
     }

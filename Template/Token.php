@@ -53,6 +53,9 @@ class Token
             );
             $source = trim($source);
             $is_param = true;
+        } elseif ($first_char === '=') {
+            $source = preg_replace("~^=~", 'print ', $source);
+            $name = 'print';
         } else {
             preg_match("~^[^\s\/\\|}]+~", $source, $name);
             $name = $name[0];
@@ -97,6 +100,11 @@ class Token
             $type = 'open';
         } else {
             $type = 'unknown';
+        }
+        
+        if ($name === 'print' && !preg_match("~expression\s*?=~",$source)) {
+            $source = preg_replace('~([^\\\])"~', '$1\\"', $source);
+            $source = ' expression="'.$source.'" ';
         }
         
         if ($name === 'preset' && $type !== 'close' && !preg_match("~id\s*?=~", $source)) {

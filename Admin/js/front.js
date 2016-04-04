@@ -1342,6 +1342,22 @@ fx_front.prototype.hilight = function(container) {
     if (container.not('.fx_unselectable').is(fx_selector)) {
         items = items.add(container);
     }
+    
+    var $hide_empty = container.descendant_or_self('.fx-hide-empty');
+    $hide_empty.each(function() {
+        var $el = $(this),
+            has_visible_children = false;
+        $el.children().each(function() {
+            if (!$(this).hasClass('fx_view_hidden')) {
+                has_visible_children = true;
+                return false;
+            }
+        });
+        if (!has_visible_children) {
+            $el.addClass('fx_view_hidden');
+        }
+    });
+    
     $('.fx_has_inline_adder', container)
         .off('.fx_recount_adders_entity')
         .off('.fx_recount_adders_infoblock')

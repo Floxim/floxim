@@ -93,51 +93,6 @@
             .field {
                 margin-bottom:4px;
             }
-            /*
-            border: 0px solid #CCC;
-            line-height: 100%;
-            //padding: 10px 0 9px 0;
-            //width:60px;
-            text-align: center;
-            border-radius: 2px;
-            cursor: pointer;
-            color:#999;
-            background:#FFF;
-            position:relative;
-            */
-            
-            /*
-            transition: all 0.4s ease;
-            &:before, &:after {
-                content:'';
-                display:block;
-                position:absolute;
-                width:114%;
-                border-bottom: 1px solid #AAA;
-                opacity:1;
-                transition: all 0.4s ease;
-            }
-            &:before {
-                top: 16px;
-                left: -4px;
-                transform: rotate(-30deg);
-            }
-            &:after {
-                top: 16px;
-                left: -4px;
-                transform: rotate(30deg);
-            }
-            &_active {
-                background:#e2e9fe;
-                color:#000;
-                border-width: 1px;
-                &:before, &:after {
-                    width:0px;
-                    opacity:0.3;
-                    left:30px;
-                }
-            }
-            */
         }
         &__kill {
             line-height: 15px;
@@ -151,6 +106,12 @@
             display:inline-block;
             min-width:90px;
             //max-width:300px;
+        }
+        & > &__invertor, & > &__operator {
+            display:none;
+        }
+        &_has-op > &__invertor, &_has-op > &__operator {
+            display:inline-block;
         }
     }
     

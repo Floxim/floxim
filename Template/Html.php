@@ -324,6 +324,16 @@ class Html
                 $n->removeAttribute('fx:else');
                 $n->wrap('{else}', '{/else}');
             }
+            if ($n->name === 'fx:a') {
+                if (!$n->hasAttribute('href')) {
+                    $n->setAttribute('href', '{$url}');
+                }
+                $url_value = preg_replace("~^\{|\}$~", '', $n->getAttribute('href'));
+                $n->setAttribute('fx:element-name', '{= '.$url_value. ' ? "a" : "span" /}');
+                $n->removeAttribute('href');
+                $n->setAttribute('{if '.$url_value.'}href', '{= '.$url_value.' /}');
+                $n->setAttribute('#inj100', '{/if}');
+            }
             if ($n->hasAttribute('fx:add')) {
                 $add_mode = $n->getAttribute('fx:add');
 
