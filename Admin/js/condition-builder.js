@@ -441,6 +441,21 @@ window.condition_builder = function(params) {
                             || (new_control_type !== current_control_type);
         
         if (need_redraw) {
+            //console.log($current_control, $control);
+            if ($current_control && $control) {
+                var current_livesearch = $current_control.data('livesearch');
+                var new_livesearch = $control.data('livesearch');
+                //console.log(current_livesearch, new_livesearch );
+                if (
+                    current_livesearch && new_livesearch 
+                    && current_livesearch.isMultiple && new_livesearch.isMultiple
+                ) {
+                    var old_value = current_livesearch.getValues();
+                    if (old_value) {
+                        new_livesearch.loadValues(old_value);
+                    }
+                }
+            }
             $container.html('').append($control);
             $cond.data('current_value_control', $control);
         }

@@ -887,11 +887,19 @@ class Compiler
             
             // default formatters for date and image
             if (count($modifiers) === 1) {
-                if (!$modifiers[0]['name'] && isset($modifiers[0]['args'][0])) {
+                $c_modifier = $modifiers[0];
+                $is_formatter = !$c_modifier['name'] || in_array($c_modifier['name'], array('fx::date', 'fx::image'));
+                if ($is_formatter && isset($c_modifier['args'][0])) {
+                    $token->setProp('format_modifier', trim($c_modifier['args'][0], '"\''));
+                }
+                /*
+                if (!$modifiers[0]['name'] && ) {
                     $token->setProp('format_modifier', trim($modifiers[0]['args'][0], '"\''));
                 } elseif (in_array($modifiers[0]['name'], array('fx::date', 'fx::image'))) {
                     $token->setProp('format_modifier', $modifiers[0]['args'][0]);
                 }
+                 * 
+                 */
             }
         }
         

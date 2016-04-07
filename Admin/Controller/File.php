@@ -18,7 +18,8 @@ class File extends Admin
             fx::http()->status(500);
         }
         if (isset($input['format']) && !empty($input['format']) && isset($result['path'])) {
-            $result['formatted_value'] = fx::image($result['path'], $input['format']);
+            $format = trim($input['format'], "'");
+            $result['formatted_value'] = fx::image($result['path'], $format);
         }
         return $result;
     }
