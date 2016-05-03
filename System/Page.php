@@ -155,6 +155,13 @@ class Page
             $params['name'] = md5(join($files));
         }
         $bundle_name = $params['name'];
+        if ($bundle_name === 'auto') {
+            $bundle_name = fx::env('css_bundle');
+        }
+        
+        if ($bundle_name === 'none') {
+            return;
+        }
         
         $manager = $this->getBundleManager();
         $bundle = $manager->getBundle('css', $bundle_name);
@@ -162,87 +169,6 @@ class Page
         if (!in_array($bundle, $this->files_css)) {
             $this->files_css[]= $bundle;
         }
-        //$manager->addToBundle($files, $bundle_name);
-        return;
-        
-        $params['name'] .= '.css.gz';
-        
-        if ($bundle_name === 'basic') {
-            $current_layout = fx::data('layout', fx::env('layout_id'));
-            $current_style_variant = fx::env()->getLayoutStyleVariant();
-            if ($current_style_variant && $current_style_variant != 'default') {
-                $current_layout_template = fx::template('theme.'.$current_layout['keyword']);
-                $current_layout_dir = end($current_layout_template->getTemplateSourceDirs());
-                $files []= fx::path($current_layout_dir.'/'.$current_style_variant.'.vars.less');
-            }
-            $params['name'] = md5(join($files)).'.'.$params['name'];
-        }
-
-        $http_path = fx::path()->http('@files/asset_cache/' . $params['name']);
-        $full_path = fx::path()->abs($http_path);
-
-        $last_modified = 0;
-        $less_flag = false;
-        
-        $files = array_unique($files);
-        
-        foreach ($files as $file) {
-            if (preg_match("~\.less$~", $file)) {
-                $less_flag = true;
-            }
-            if (!preg_match("~^http://~i", $file)) {
-                $file_path = fx::path()->abs($file);
-                if (file_exists($file_path)) {
-                    $c_modified = filemtime($file_path);
-                    if ($c_modified > $last_modified) {
-                        $last_modified = $c_modified;
-                    }
-                }
-            }
-        }
-        
-        if (!file_exists($full_path) || filemtime($full_path) < $last_modified) {
-            $file_content = '';
-            foreach ($files as $file) {
-                if (preg_match("~^http://~i", $file)) {
-                    $file_contents = file_get_contents($file);
-                } else {
-                    $http_base = fx::path()->http($file);
-                    $http_base = preg_replace("~[^/]+$~", '', $http_base);
-                    $c_abs = fx::path()->abs($file);
-                    if (file_exists($c_abs)) {
-                        $file_contents = file_get_contents($c_abs);
-                        $file_contents = $this->cssUrlReplace($file_contents, $http_base);
-                        $file_contents = $this->lessImportUrlReplace($file_contents, $http_base);
-                    }
-                }
-                $file_content .= $file_contents . "\n";
-            }
-
-            if ($less_flag) {
-                $less = $this->getLessCompiler();
-                $less->setImportDir(DOCUMENT_ROOT);
-                try {
-                    $file_content = $less->compile($file_content);
-                } catch (\Exception $e) {
-                    fx::log('Less error while adding bundle', $e->getMessage(), $file_content, $files);
-                    $file_content = '';
-                }
-            }
-
-            $plain_path = preg_replace("~\.css\.gz$~", ".css", $full_path);
-            // directory should be created here:
-            fx::files()->writefile($plain_path, $file_content);
-
-            $fh = gzopen($full_path, 'wb5');
-            gzwrite($fh, $file_content);
-            gzclose($fh);
-        }
-
-        if (!$this->acceptGzip()) {
-            $http_path = preg_replace("~\.css\.gz$~", ".css", $http_path);
-        }
-        $this->files_css[] = $http_path;
     }
 
     protected function lessImportUrlReplace($file_contents, $http_base) 
@@ -499,6 +425,12 @@ class Page
         $buffer = preg_replace("~<title>.+</title>~i", '', $buffer);
         $buffer = preg_replace("~</head\s*?>~i", $r . '$0', $buffer);
         
+        $this->setAfterBody( 
+            \Floxim\Floxim\Asset\Fonts::getLoaderJS(
+                fx::env('layout')->getUsedFonts()
+            ) 
+        );
+        
         if (count($this->after_body)) {
             $after_body = $this->after_body;
             if (!stristr($buffer, '<body')) {
@@ -571,6 +503,13 @@ class Page
             });
         }
         return $cache[$hash];
+    }
+    
+    public function getLayoutInfoblock($path = null)
+    {
+        return $this->getInfoblocks($path)->findOne(function($ib) {
+            return $ib->isLayout();
+        });
     }
 
     public function _getAreaInfoblocks($area_id)

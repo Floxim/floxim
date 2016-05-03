@@ -13,6 +13,8 @@ abstract class Bundle {
     protected $dir;
     protected $is_new = false;
     protected $has_new_files = false;
+    
+    protected $meta = array();
 
     public function __construct($keyword, $params = array()) 
     {
@@ -26,7 +28,13 @@ abstract class Bundle {
             $meta = include($meta_path);
             $this->files = $meta['files'];
             $this->version = $meta['version'];
+            $this->meta = $meta;
         }
+    }
+    
+    public function getMeta()
+    {
+        return $this->meta;
     }
     
     protected function getHash()
@@ -65,7 +73,6 @@ abstract class Bundle {
     
     public function getFilePath()
     {
-        
         return fx::path($this->getDirPath().'/'.$this->keyword.'.'.$this->getHash().'.'.$this->version.'.'.$this->type);
     }
 
@@ -93,7 +100,7 @@ abstract class Bundle {
         unlink($this->getMetaPath());
     }
     
-    protected abstract function getBundleContent();
+    public abstract function getBundleContent();
     
     public function save()
     {
@@ -108,8 +115,11 @@ abstract class Bundle {
         $content = $this->getBundleContent();
         $meta = array(
             'version' => $this->version,
-            'files' => $this->files
+            'files' => array_unique($this->files)
         );
+        
+        $meta = array_merge($this->meta, $meta);
+        
         $meta_content = '<?'."php\nreturn ".var_export($meta, true).';';
         $meta_path = $this->getMetaPath();
         file_put_contents($meta_path, $meta_content);

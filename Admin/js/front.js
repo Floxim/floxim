@@ -295,6 +295,22 @@ fx_front.prototype.enable_select = function(){
 
 fx_front.prototype.get_area_meta = function($area_node) {
     var meta = $area_node.data('fx_area') || {};
+    if (typeof meta.scope === 'undefined') {
+        var $parent_area = $area_node.parents('.fx_area');
+        if ($parent_area.length) {
+            var parent_meta = this.get_area_meta($parent_area);
+            if (typeof parent_meta.scope !== 'undefined') {
+                meta.scope = parent_meta.scope;
+            }
+        }
+    }
+    var $container_ib = $area_node.closest('.fx_infoblock');
+    if ($container_ib.length) {
+        var container_meta = $container_ib.data('fx_infoblock');
+        if (container_meta) {
+            meta.container_scope_type = container_meta.scope_type;
+        }
+    }
     if (typeof meta.size === 'undefined') {
         // It would be nice to calculate
         var full_size = 1000;
@@ -1131,16 +1147,28 @@ fx_front.prototype.draw_select_path = function($node) {
                 is_active:is_active
             });
         }
-        /*
-        if ($cp.is('.fx_area')) {
-            var area_meta = $cp.data('fx_area');
+        if ($cp.is('.fx-container') && !$cp.is('.fx_infoblock') && !$cp.is('.fx_entity')) {
+            var container_data = $cp.data('fx_container'),
+                container_name = container_data.name;
+            
+            if ($cp.is('.fx_area')) {
+                var area_meta = $cp.data('fx_area');
+                if (area_meta.name) {
+                    container_name = area_meta.name;
+                }
+            } else if (container_name === 'layout') {
+                container_name = 'Страница';
+            }
             path_items.push({
-                type:'Область',
-                label:area_meta.name || area_meta.id,
-                node:$cp
+                type:'Контейнер',
+                label: container_name,
+                node:$cp,
+                controls:[
+                    
+                ],
+                is_active:is_active
             });
         }
-        */
     });
     if (path_items.length === 0) {
         return;
@@ -1265,6 +1293,159 @@ fx_front.prototype.select_item = function(node) {
     });
     
     $node.closest('.fx_entity_hidden').addClass('fx_entity_hidden-selected');
+    
+    if ($node.is('.fx-container')) {
+        $fx.front.select_container($node);
+    }
+};
+
+
+fx_front.prototype.select_container = function($node) {
+    var node_panel = this.node_panel.get($node);
+    var $ib = $node.closest('.fx_infoblock'),
+        ib_meta = $ib.data('fx_infoblock'),
+        container_meta = $node.data('fx_container');
+
+    node_panel.add_button(
+        {
+            keyword:'container',
+            type:'icon',
+            title:'Размеры, отступы, фон...'
+        }, 
+        function() {
+            $fx.front_panel.load_form({
+                entity:'infoblock',
+                action:'container_settings',
+                container_meta: JSON.stringify(container_meta),
+                id:ib_meta.id,
+                visual_id:ib_meta.visual_id,
+                page_id: $fx.front.get_page_id(),
+                fx_admin:true
+            }, {
+                view:'horizontal',
+                onfinish:function() {
+                    $fx.front.reload_infoblock($('.fx_infoblock_'+ib_meta.id));
+                },
+                onready:function($form) {
+                    $form.data('ib_node', $ib);
+                    
+                    $form.on('change.fx_front fx_change_file.fx_front', function(e) {
+                        if (e.target.name === 'livesearch_input' || e.target.name === 'scope[type]') {
+                            return;
+                        }
+                        var data = $form.serializeArray(),
+                            vars = {},
+                            rex = new RegExp('^container_' + container_meta.name+'_(.+)');
+                        for (var i = 0; i < data.length; i++) {
+                            var prop_name = data[i].name.match(rex);
+                            if (!prop_name) {
+                                continue;
+                            }
+                            prop_name = prop_name[1];
+                            vars[prop_name] = data[i].value;
+                        }
+                        $fx.front.append_container_styles($node, vars);
+                        $fx.front.append_container_classes($node, vars);
+                    });
+                }
+            });
+        }
+    );
+};
+
+fx_front.prototype.append_container_styles = function($node, props) {
+    var css = {
+        'background-color': '',
+        'background-image': '',
+        'background-position': '',
+        'background-repeat': '',
+        'background-size': ''
+    };
+    var c1 = props.bg_color,
+        c2 = props.bg_color_2,
+        img = props.bg_image;
+    
+    
+    // first color only
+    if (c1 && !c2 && !img) {
+        css['background-color'] = c1;
+    } 
+    // image only
+    else if (!c1 && !c2 && img) {
+        css['background-image'] = 'url("'+img+'")';
+    } 
+    // use gradient: two colors or color(s) and image
+    else {
+        var bg  = 'linear-gradient(to bottom, ';
+        bg += (c1 ? c1 : 'transparent') + ', ';
+        bg += c2 ? c2 : c1;
+        bg += ')';
+        if (img) {
+            bg += ', url("'+img+'")';
+        }
+        css['background-image'] = bg;
+    }
+    if (img && props.bg_position) {
+        var pos_val = props.bg_position,
+            pos = '',
+            size = '',
+            repeat = '';
+        switch (pos_val) {
+            case 'cover':
+                repeat = 'no-repeat';
+                size = 'cover';
+                break;
+            case 'repeat':
+                repeat = 'repeat';
+                break;
+            default:
+                repeat = 'no-repeat';
+                size = 'contain';
+                var pos_parts = pos_val.split('-'),
+                    h_map = {
+                        left:'0',
+                        center:'50%',
+                        right:'100%'
+                    },
+                    v_map = {
+                        top:'0',
+                        middle:'50%',
+                        bottom:'100%'
+                    };
+                pos = h_map[pos_parts[0]] +' '+v_map[pos_parts[1]];
+                break;
+        }
+        css['background-position'] = pos;
+        css['background-size'] = size;
+        css['background-repeat'] = repeat;
+    }
+    $node.css(css);
+};
+
+fx_front.prototype.get_modifier_classes = function($node, name) {
+    var rex = new RegExp('^'+name+'_'),
+        classes = $node.attr('class').split(' '),
+        res = [];
+    for (var i = 0; i < classes.length; i++) {
+        if (classes[i].match(rex)) {
+            res.push(classes[i]);
+        }
+    }
+    return res;
+};
+
+fx_front.prototype.append_container_classes = function($node, props) {
+    var c_classes = this.get_modifier_classes($node, 'fx-container');
+    $node.removeClass(c_classes.join(' '));
+    var class_props = ['align', 'valign', 'sizing', 'padding'],
+        res = [];
+    for (var i = 0; i < class_props.length; i++) {
+        var cp = class_props[i];
+        if (props[cp]) {
+            res.push('fx-container_'+cp+'_'+props[cp]);
+        }
+    }
+    $node.addClass(res.join(' '));
 };
 
 fx_front.prototype.make_node_panel = function($node) {
@@ -1337,7 +1518,7 @@ fx_front.prototype.hilight = function(container) {
     $fx.front.collect_adder_placeholders(container);
     
     var fx_selector = '.fx_template_var, .fx_area, .fx_template_var_in_att, .fx_entity, .fx_infoblock, '+
-                        '.fx_hidden_placeholded, .fx_adder_placeholder_container';
+                        '.fx_hidden_placeholded, .fx_adder_placeholder_container, .fx-container';
     var items = $(fx_selector, container).not('.fx_unselectable');
     if (container.not('.fx_unselectable').is(fx_selector)) {
         items = items.add(container);
@@ -2210,8 +2391,6 @@ fx_front.prototype.extract_infoblock_visual_fields = function($ib_node, $form) {
                 }
             );
     
-            //console.log(meta);
-    
             if (meta.parent) {
                 if (typeof meta.parent === 'string') {
                     var obj = {};
@@ -2512,19 +2691,42 @@ fx_front.prototype.enable_infoblock = function(infoblock_node) {
         .removeClass('fx_infoblock_disabled');
 };
 
+fx_front.prototype.get_layout_container_props = function($n) {
+    var classes = $n.attr('class').split(/\s+/),
+        res = {};
+    for (var i = 0; i < classes.length; i++) {
+        var c = classes[i],
+            val = c.match(/fx-content_parent-(.+)/);
+        if ( val ) {
+            var parts = val[1].split('_');
+            res[parts[0]] = parts[1];
+        }
+    }
+    return res;
+};
+
 fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_data) {
-    var $infoblock_node = $(infoblock_node);
+    var $infoblock_node = $(infoblock_node),
+        layout_container_params = $fx.front.get_layout_container_props($infoblock_node);
+    
+    infoblock_node = $infoblock_node[0];
+    
     $fx.front.disable_infoblock(infoblock_node);
     
     var ib_parent = $infoblock_node.parent();
     var meta = $infoblock_node.data('fx_infoblock');
     var page_id = $fx.front.get_page_id(); //$('body').data('fx_page_id');
     var post_data = {
-        _ajax_base_url: $infoblock_node.data('fx_ajax_base_url') || document.location.href
+        _ajax_base_url: $infoblock_node.data('fx_ajax_base_url') || document.location.href,
+        layout_container_params: JSON.stringify(layout_container_params)
     };
-    if (typeof extra_data !== 'undefined') {
-        $.extend(post_data, extra_data);
+    extra_data = extra_data || {};
+    if ($infoblock_node.is('body') && extra_data.infoblock_is_layout === undefined) {
+        extra_data.infoblock_is_layout = true;
     }
+    
+    $.extend(post_data, extra_data);
+    
     if (!meta ) {
         console.log('nometa', infoblock_node);
         return;
@@ -2749,6 +2951,10 @@ fx_front.prototype.create_button = function(button, callback) {
     
     if (button.type === 'icon' && button.label) {
         $node.append('<span class="fx_node_panel__item_label">'+button.label+'</span>');
+    }
+    
+    if (button.title) {
+        $node.attr('title', button.title);
     }
     
     if (!button.dropdown && callback) {

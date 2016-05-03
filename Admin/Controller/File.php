@@ -16,6 +16,7 @@ class File extends Admin
                'error_message' => 'Can not load this file' 
             );
             fx::http()->status(500);
+            fx::log('failed loading file', $input);
         }
         if (isset($input['format']) && !empty($input['format']) && isset($result['path'])) {
             $format = trim($input['format'], "'");

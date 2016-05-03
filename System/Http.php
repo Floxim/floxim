@@ -72,7 +72,7 @@ class Http
         $header_string = '';
         if (is_null($headers) ) {
             $headers = array(
-                'Connection' => 'keep-alive',
+                //'Connection' => 'keep-alive',
                 'Pragma' => 'no-cache',
                 'Cache-Control' => 'no-cache',
                 'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*'.'/'.'*;q=0.8',

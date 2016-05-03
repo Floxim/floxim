@@ -42,7 +42,7 @@ class Db extends \PDO
 
     public function escape($str)
     {
-        if (!is_scalar($str)) {
+        if (!is_scalar($str) && !is_null($str)) {
             fx::log(debug_backtrace());
             $str = '';
         }

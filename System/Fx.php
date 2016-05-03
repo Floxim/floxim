@@ -405,10 +405,13 @@ class Fx
             return $env->get($args[0]);
         }
         if (count($args) == 2) {
+            /*
             $method = array($env, 'set_' . $args[0]);
             if (is_callable($method)) {
                 return call_user_func($method, $args[1]);
             }
+             * 
+             */
             return call_user_func(array($env, 'set'), $args[0], $args[1]);
         }
         return null;

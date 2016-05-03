@@ -45,6 +45,11 @@ class Template
         //fx::trigger('initTemplate', array('template' => $this));
     }
     
+    public function getContext()
+    {
+        return $this->context;
+    }
+    
     public static function bemParseStr($str) 
     {
         $str = trim($str);

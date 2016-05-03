@@ -53,6 +53,7 @@ class Console extends Admin
             $code = $input['console_text'];
             
             fx::env('console', true);
+            fx::env('css_bundle', 'none');
             fx::config('dev.on', true);
             $code = self::preProcess($code);
             eval($code);

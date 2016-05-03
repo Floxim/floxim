@@ -330,8 +330,9 @@ class Entity extends System\Entity implements Template\Entity
             return $output;
         }
         if (fx::isAdmin() || (!$this->isDisabled() && !$this->isHidden())) {
-            $output = $this->getOutput();
-            $output = $this->wrapOutput($output);
+            //$output = $this->getOutput();
+            //$output = $this->wrapOutput($output);
+            $output = $this->getWrappedOutput();
         }
         $output = $this->addInfoblockMeta($output);
         if (($controller = $this->getIbController())) {
@@ -446,6 +447,9 @@ class Entity extends System\Entity implements Template\Entity
         $tpl_params['infoblock'] = $this;
         $is_admin = fx::isAdmin();
         
+        if ($this->parent_container) {
+            $tpl->getContext()->pushContainer($this->parent_container);
+        }
         try {
             $this->output_cache = $tpl->render($tpl_params);
         } catch (\Exception $e) {
@@ -465,38 +469,40 @@ class Entity extends System\Entity implements Template\Entity
     /**
      * wrap ib's output
      */
-    protected function wrapOutput($output)
+    protected function getWrappedOutput()
     {
         $wrapper = $this->getPropInherited('visual.wrapper');
         if (!$wrapper) {
-            return $output;
+            return $this->getOutput();
         }
         $tpl_wrap = fx::template($wrapper);
         if (!$tpl_wrap) {
-            return $output;
+            return $this->getOutput();
         }
         $tpl_wrap->isWrapper(true);
         $wrap_params = $this->getPropInherited('visual.wrapper_visual');
         if (!is_array($wrap_params)) {
             $wrap_params = array();
         }
-        $wrap_params['content'] = $output;
+        //$wrap_params['content'] = $output;
         $wrap_params['infoblock'] = $this;
         
         $is_admin = fx::isAdmin();
         
         try {
+            if ($this->parent_container) {
+                $tpl_wrap->getContext()->pushContainer($this->parent_container);
+                $this->parent_container = null;
+            }
             $result = $tpl_wrap->render($wrap_params);
+            if ($is_admin) {
+                $this->infoblock_meta['wrapper_params'] = $tpl_wrap->getRegisteredParams();
+            }
+            $this->output_is_subroot = $tpl_wrap->is_subroot;
         } catch (\Exception $e) {
             fx::log('error while wrapping ib #'.$this['id'], $e->getMessage());
-            $result = $output;
+            $result = $this->getOutput();
         }
-        
-        if ($is_admin) {
-            $this->infoblock_meta['wrapper_params'] = $tpl_wrap->getRegisteredParams();
-        }
-        
-        $this->output_is_subroot = $tpl_wrap->is_subroot;
         return $result;
     }
 
@@ -524,6 +530,8 @@ class Entity extends System\Entity implements Template\Entity
         if ($this['is_preset']) {
             $ib_info['is_preset'] = true;
         }
+        
+        $ib_info['scope_type'] = $this['scope_type'];
 
         $meta = array(
             'data-fx_infoblock' => $ib_info, // todo: psr0 need fix
@@ -651,5 +659,18 @@ class Entity extends System\Entity implements Template\Entity
         //$new_ib->setVisual($new_vis);
         $new_ib['visuals'] = fx::collection($new_vis);
         return $new_ib;
+    }
+    
+    protected $parent_container = null;
+    
+    public function bindLayoutContainerParams($params)
+    {
+        $res = array();
+        foreach ($params as $k => $v) {
+            $res[ preg_replace("~[^a-z0_9_-]~", '', $k) ] = preg_replace("~[^a-z0_9_-]~", '', $v);
+        }
+        $container = new \Floxim\Floxim\Template\Container();
+        $container->setValues($res);
+        $this->parent_container = $container;
     }
 }

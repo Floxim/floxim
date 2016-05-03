@@ -232,6 +232,22 @@ class Html
                 $n->wrap($each_macro_tag, '{/each}');
                 $n->removeAttribute('fx:each');
             }
+            $container_hash = false;
+            if ( ($container_id = $n->getAttribute('fx:container') )) {
+                $container_hash = md5($container_id.time().rand(0,99999999));
+                $n->wrap(
+                    "{container id='".$container_hash."' mode='start'}".$container_id."{/container}",
+                    "{container id='".$container_hash."' mode='stop' /}"
+                );
+                $n->addClass("{container id='".$container_hash."' mode='class' /}");
+                $c_style = (string) $n->getAttribute('style');
+                $n->setAttribute('style', $c_style." {container id='".$container_hash."' mode='style' /}");
+                $n->removeAttribute('fx:container');
+                $n->setAttribute(
+                    '#inj200',
+                    " {container id='".$container_hash."' mode='meta' /}"
+                );
+            }
             if (($area_id = $n->getAttribute('fx:area'))) {
                 $n->removeAttribute('fx:area');
                 $area = '{area id="' . $area_id . '" ';
@@ -242,6 +258,10 @@ class Html
                     // use when fx:area and fx:template are placed on the same node
                     $area .= 'size="' . $area_size . '" ';
                     $n->removeAttribute('fx:area-size');
+                }
+                if ( ($area_scope = $n->getAttribute('fx:area-scope')) ) {
+                    $area .= ' scope="'.$area_scope.'" ';
+                    $n->removeAttribute('fx:area-scope');
                 }
                 if (($area_suit = $n->getAttribute('fx:suit'))) {
                     $area .= 'suit="' . $area_suit . '" ';
@@ -363,7 +383,15 @@ class Html
             
             if ($n->hasAttribute('fx:b')) {
                 $b_value = $n->getAttribute('fx:b');
-                $n->addClass('{bem_block}'.$b_value.'{/bem_block}');
+                if ($n->hasAttribute('fx:styled')) {
+                    $n->removeAttribute('fx:styled');
+                    $block_parts = explode(" ", trim($b_value));
+                    $block_name = $block_parts[0];
+                    $b_value .= ' style_{$'.$block_name.'_style /}';
+                    $style_param = '{@'.$block_name.'_style type="style" mask="'.$block_name.'_style_*" /}';
+                    $n->addChildFirst(HtmlToken::create($style_param));
+                }
+                $n->addClass('{bem_block '.($container_hash ? 'container="1"' : '').'}'.$b_value.'{/bem_block}');
                 $n->removeAttribute('fx:b');
                 $n->parent->addChildAfter(HtmlToken::create('<?php $this->bemStopBlock(); ?>'), $n);
             }

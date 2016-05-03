@@ -1704,3 +1704,132 @@ span.fx_area_marker {
         z-index: 1;
     }
 }
+
+.fx_livesearch_scheme {
+    
+    display: inline-block;
+    
+    &.fx_livesearch_wrapper_sizing {
+        width: 90px;
+        height: 21px;
+        margin-top: -8px;
+        margin-bottom: -6px;
+
+        .c {
+            border-left: 1px dotted #999;
+            border-right: 1px dotted #999;
+            width: 60px;
+            display: block;
+            height: 21px;
+            margin-left: 15px;
+            padding-top:5px;
+            background:#DDD;
+        }
+
+        .w {
+            display:block;
+            height:12px;
+            width:42px;
+            border:1px solid #aac0ff;
+            background:#DDD;
+            margin-left:8px;
+            opacity:0.9;
+        }
+
+        .d {
+            background:#aac0ff;
+            display:block;
+            height:10px;
+            width:40px;
+        }
+
+        &.fullwidth {
+            .w {
+                width:90px;
+                margin-left:-16px;
+            }
+            .d {
+                width:88px;
+            }
+        }
+        &.antipad {
+            .w {
+                width: 60px;
+                margin-left:-1px;
+            }
+            .d {
+                width:58px;
+            }
+        }
+        &.fullwidth-outer {
+            .w {
+                width:90px;
+                margin-left:-16px;
+            }
+            .d {
+                width:60px;
+                margin-left:14px;
+            }
+        }
+    }
+    
+    &.fx_livesearch_align, &.fx_livesearch_valign, &.fx_livesearch_padding {
+        width: 60px;
+        height: 21px;
+        display: inline-block;
+        margin-top: -8px;
+        margin-bottom: -6px;
+        background:#DDD;
+        border: 1px dotted #999;
+        
+        .c {
+            background:#aac0ff;
+            display:block;
+        }
+    }
+    
+    &.fx_livesearch_align {
+        .c {
+            height:19px;
+            width:20px;
+        }
+        &.center .c {
+            margin-left:19px;
+        }
+        &.right .c {
+            margin-left:38px;
+        }
+    }
+    
+    &.fx_livesearch_valign {
+        .c {
+            height:7px;
+            width:58px;
+        }
+        &.middle .c {
+            margin-top:6px;
+        }
+        &.bottom .c {
+            margin-top:12px;
+        }
+    }
+    
+    &.fx_livesearch_padding {
+        .c {
+            width:100%;
+            height:100%;
+        }
+        &.all {
+            padding:5px;
+        }
+        &.none {
+            padding:0;
+        }
+        &.ns {
+            padding:5px 0;
+        }
+        &.we {
+            padding:0 5px;
+        }
+    }
+}

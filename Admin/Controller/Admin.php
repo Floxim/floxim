@@ -150,6 +150,7 @@ class Admin extends System\Controller
             $lang === 'en' ? null : $path_floxim.'/lib/editors/redactor/langs/'.$lang.'.js',
             $path_floxim . '/lib/editors/redactor/fontcolor.js',
             $path_floxim . '/lib/codemirror/codemirror.all.min.js',
+            $path_floxim . '/lib/spectrum/spectrum.js',
             $path_floxim . '/lib/js/jquery.form.js',
             $path_floxim . '/lib/js/jquery.cookie.js',
             $path_floxim . '/lib/js/jquery.ba-resize.min.js',
@@ -168,6 +169,8 @@ class Admin extends System\Controller
         
         // todo: need fix path for css - now used server path
         $page->addCssFile( $path_floxim . '/lib/editors/redactor/redactor.css' );
+        
+        $page->addCssFile( $path_floxim . '/lib/spectrum/spectrum.css' );
 
         $page->addCssBundle(
             array(
@@ -182,7 +185,7 @@ class Admin extends System\Controller
                 $path_floxim . '/Admin/style/condition-builder.less'
             ), 
             array(
-                'name' => 'admin_less'
+                'name' => 'admin'
             )
         );
     }

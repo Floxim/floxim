@@ -208,7 +208,7 @@ class Infoblock extends Admin
             $this->ui->hidden('action', 'select_settings'),
             $this->ui->hidden('entity', 'infoblock'),
             $this->ui->hidden('fx_admin', true),
-            $this->ui->hidden('area', serialize($input['area'])),
+            $this->ui->hidden('area', json_encode($input['area'])),
             $this->ui->hidden('page_id', $input['page_id']),
             $this->ui->hidden('admin_mode', isset($input['admin_mode']) ? $input['admin_mode'] : ''),
             $this->ui->hidden('container_infoblock_id', $input['container_infoblock_id']),
@@ -271,7 +271,7 @@ class Infoblock extends Admin
             ));
         }
         
-        $area_meta = is_string($input['area']) ? unserialize($input['area']) : $input['area'];
+        $area_meta = is_string($input['area']) ? json_decode($input['area'],true) : $input['area'];
         
         $site_id = fx::env('site_id');
         
@@ -344,8 +344,20 @@ class Infoblock extends Admin
             )
         ));
         
-        $c_page = fx::env('page');
-        $scope_fields = $this->getScopeFields($infoblock, $c_page);
+        $container_is_one_page = isset($area_meta['container_scope_type']) && $area_meta['container_scope_type'] === 'one_page';
+        
+        if (!$infoblock['id']) {
+            if ($container_is_one_page) {
+                $infoblock['scope_type'] = 'one_page';
+            } elseif (isset($area_meta['scope'])) {
+                $infoblock['scope_type'] = $area_meta['scope'] === 'nav' ? 'all_pages' : 'one_page';
+            }
+        }
+        $scope_fields = $this->getScopeFields($infoblock);
+        if ($container_is_one_page) {
+            $scope_fields[0]['type'] = 'hidden';
+        }
+        fx::log($scope_fields, $container_is_one_page);
         $this->response->addFields(
             $scope_fields, 
             'settings',
@@ -448,7 +460,7 @@ class Infoblock extends Admin
             $this->ui->hidden('settings_sent', 'true'),
             $this->ui->hidden('controller', isset($input['controller']) ? $input['controller'] : ''),
             $this->ui->hidden('page_id', isset($input['page_id']) ? $input['page_id'] : ''),
-            $this->ui->hidden('area', serialize($area_meta)),
+            $this->ui->hidden('area', json_encode($area_meta)),
             $this->ui->hidden('id', isset($input['id']) ? $input['id'] : ''),
             $this->ui->hidden('mode', isset($input['mode']) ? $input['mode'] : '')
         );
@@ -525,7 +537,7 @@ class Infoblock extends Admin
             $action = $ib['controller'] . ':' . $ib['action'];
             $list['values'] [] = array(
                 'id'         => $ib['id'],
-                'name'       => '<div class="fx-infoblock-list-item">'.
+                'name'       => '<div class="fx-infoblock-list-item" title="'.$ib['id'].'">'.
                                     '<div class="fx-infoblock-list-item__name">'.$ib['name'].'</div>'.
                                     '<div class="fx-infoblock-list-item__action">'.$action.'</span>'.
                                 '</div>',
@@ -550,7 +562,7 @@ class Infoblock extends Admin
         $c_page = fx::env('page');
         $infoblock = fx::router('front')->getLayoutInfoblock($c_page);
 
-        $scope_fields = $this->getScopeFields($infoblock, $c_page);
+        $scope_fields = $this->getScopeFields($infoblock);
         unset($scope_fields['visibility']);
         $this->response->addFields($scope_fields, false, 'scope');
 
@@ -1221,5 +1233,38 @@ class Infoblock extends Admin
             $vis->moveLast();
         }
         $vis->save();
+    }
+    
+    public function containerSettings($input)
+    {
+        $fields = array(
+            $this->ui->hidden('action', $input['action']),
+            $this->ui->hidden('entity', $input['entity']),
+            $this->ui->hidden('visual_id', $input['visual_id']),
+            $this->ui->hidden('container_meta', $input['container_meta']),
+            $this->ui->hidden('data_sent', 1),
+        );
+        
+        $meta = json_decode($input['container_meta'],true);
+        
+        $vis = fx::data('infoblock_visual', $input['visual_id']);
+        
+        $container = new \Floxim\Floxim\Template\Container(null, $meta['name'], $meta['set']);
+        
+        $container->bindVisual($vis);
+        
+        $container_fields = $container->getForm();
+        
+        foreach ($container_fields as $field) {
+            $fields []= $field;
+        }
+        
+        if (isset($input['data_sent'])){
+            $container->save($input);
+        }
+        
+        return array(
+            'fields' => $fields
+        );
     }
 }

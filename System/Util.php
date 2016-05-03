@@ -288,8 +288,11 @@ class Util
 
     public function camelToUnderscore($string)
     {
-        if (!is_string($string)) {
-            fx::log(fx::debug()->backtrace());
+        if (empty($string)) {
+            return '';
+        }
+        if (!is_scalar($string)) {
+            fx::log(fx::debug()->backtrace(), $string);
         }
         return strtolower(preg_replace('/([a-z])([A-Z])/', '$1_$2', $string));
     }

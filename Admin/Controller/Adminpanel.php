@@ -108,6 +108,13 @@ class Adminpanel extends Admin
                 'page_id' => fx::env('page_id')
             )
         );
+        $more_menu['theme_settings']= array(
+            'name' => fx::alang('Theme settings', 'system'),
+            'button' => array(
+                'entity' => 'layout',
+                'action' => 'theme_settings'
+            )
+        );
         $more_menu['switch_theme']= array(
             'name' => fx::alang('Change theme', 'system'),
             'button' => array(

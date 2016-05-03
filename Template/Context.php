@@ -174,4 +174,47 @@ class Context {
         }
         return end($this->forced_templates[$target_id]);
     }
+    
+    protected static $container_stack = array();
+    
+    protected static $content_classes_cache = array();
+    
+    public function pushContainer($name, $is_wrapper = false)
+    {
+        self::$content_classes_cache []= null;
+        if ($name instanceof Container) {
+            self::$container_stack []= $name;
+            return;
+        }
+        $container = new Container(
+            $this, 
+            $name, 
+            $is_wrapper ? 'wrapper_visual' : 'template_visual',
+            self::$container_stack
+        );
+        self::$container_stack []= $container;
+        return $container;
+    }
+    
+    public function getContentClasses($with_self = false)
+    {
+        $cache_index = count(self::$content_classes_cache) - ($with_self ? 1 : 2);
+        if ($cache_index < 0) {
+            return '';
+        }
+        $cached = self::$content_classes_cache[$cache_index];
+        if ($cached !== null) {
+            return $cached;
+        }
+        $container = end(self::$container_stack);
+        $res = $container->getContentClasses($with_self);
+        self::$content_classes_cache[$cache_index] = $res;
+        return $res;
+    }
+    
+    public function popContainer()
+    {
+        array_pop(self::$container_stack);
+        array_pop(self::$content_classes_cache);
+    }
 }

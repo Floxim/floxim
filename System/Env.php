@@ -25,6 +25,14 @@ class Env
         }
         return isset($this->current[$var]) ? $this->current[$var] : null;
     }
+    
+    public function getCssBundle()
+    {
+        if (!isset($this->current['css_bundle'])) {
+            $this->current['css_bundle'] = 'default';
+        }
+        return $this->current['css_bundle'];
+    }
 
     public function setSite($env)
     {

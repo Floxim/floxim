@@ -29,9 +29,9 @@ class Entity extends System\Entity
         $fxPath = fx::path();
         foreach ($modified_params as $field => $params) {
             $all_params = $this[$field];
+            $is_moved = false;
             foreach ($params as $pk => $pv) {
                 if (self::checkValueIsFile($pv['new'])) {
-                    fx::log($pv, 'is file');
                     $ib = $this['infoblock'];
                     $site_id = $ib ? $ib['site_id'] : fx::env('site_id');
 
@@ -43,9 +43,10 @@ class Entity extends System\Entity
                     if (file_exists($move_from)) {
                         fx::files()->move($move_from, $new_path);
                         $all_params[$pk] = $fxPath->removeBase($fxPath->http($new_path));
+                        $is_moved = true;
                     }
                 }
-                if ($pv['old']) {
+                if ($pv['old'] && (!$is_moved  || $pv['old'] !== $all_params[$pk])) {
                     $old_path = $fxPath->abs(FX_BASE_URL.$pv['old']);
                     if (self::checkValueIsFile($old_path)) {
                         fx::files()->rm($old_path);
@@ -125,5 +126,5 @@ class Entity extends System\Entity
             }
         }
         return $res;
-    }
+    }   
 }

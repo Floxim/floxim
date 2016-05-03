@@ -17,6 +17,7 @@ class Admin extends Base
         if ($url !== $adm_path) {
             return null;
         }
+        fx::env('css_bundle', 'admin');
         $input = fx::input()->makeInput();
 
 

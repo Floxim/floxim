@@ -390,7 +390,7 @@ class Files
 
         // Check for the existence, the ability to read and is not a directory
         if (!file_exists($local_filename) || !is_readable($local_filename) || is_dir($local_filename)) {
-            fx::debug(debug_backtrace());
+            fx::debug(debug_backtrace(), $local_filename);
             throw new Exception\Files("Unable to read file $local_filename");
         }
 
@@ -857,6 +857,7 @@ class Files
         $headers = fx::http()->getLastHeaders();
         $status = fx::http()->getLastStatus();
         if (!$file_data || $status['status_code'] >= 400) {
+            fx::log( (bool) $file_data, $headers, $status);
             return;
         }
         $file_name = $name ? $name : fx::path()->fileName($file);

@@ -25,6 +25,8 @@ class Entity extends System\Entity
     {
         $path = $this->getPath();
         fx::files()->mkdir($path);
+        $ini = "[import]\ntheme.floxim_saas.basic = *";
+        fx::files()->writefile($path.'/template.ini', $ini);
     }
 
     protected function afterDelete()
@@ -32,5 +34,17 @@ class Entity extends System\Entity
         parent::afterDelete();
         $path = fx::path()->abs($this->getPath());
         fx::files()->rm($path);
+    }
+    
+    public function getUsedFonts()
+    {
+        $params = $this['less_params'];
+        $res = array();
+        foreach ($params as $p => $v) {
+            if (preg_match('~^font~', $p)) {
+                $res []= $v;
+            }
+        }
+        return $res;
     }
 }

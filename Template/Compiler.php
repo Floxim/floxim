@@ -142,6 +142,10 @@ class Compiler
             $class .= join(' ', $block_parts['plain']);
             $class = trim($class);
             $code .= $class;
+            // token is not a container, so we should add fx-content_parent-* classes
+            if (!$token->getProp('container')) {
+                $code .= '<?php echo " ".$context->getContentClasses(true); ?>';
+            }
             return $code;
         }
         
@@ -157,6 +161,9 @@ class Compiler
         $code .= "echo \$block_parts['name'].'_'.\$mod.' ';\n";
         $code .= "}\n";
         $code .= "echo join(' ', \$block_parts['plain']);\n";
+        if (!$token->getProp('container')) {
+            $code .= "echo ' '.\$context->getContentClasses(true);\n";
+        }
         $code .= "?>";
         return $code;
     }
@@ -892,14 +899,6 @@ class Compiler
                 if ($is_formatter && isset($c_modifier['args'][0])) {
                     $token->setProp('format_modifier', trim($c_modifier['args'][0], '"\''));
                 }
-                /*
-                if (!$modifiers[0]['name'] && ) {
-                    $token->setProp('format_modifier', trim($modifiers[0]['args'][0], '"\''));
-                } elseif (in_array($modifiers[0]['name'], array('fx::date', 'fx::image'))) {
-                    $token->setProp('format_modifier', $modifiers[0]['args'][0]);
-                }
-                 * 
-                 */
             }
         }
         
@@ -1465,6 +1464,39 @@ class Compiler
         return $this->tokenHeadfileToCode($token, 'css');
     }
     
+    protected function tokenContainerToCode($token) 
+    {
+        $code = "<?php ";
+        $var = '$container_'.$token->getProp('id');
+        switch ($token->getProp('mode')) {
+            case 'start':
+                $expr = $token->getFirstChild()->getProp('value');
+                if (!preg_match("~[\$\(\)\'\\\"]~", $expr)) {
+                    $expr = '"'.$expr.'"';
+                }
+                $ep = $this->getExpressionParser();
+                $expr_code = $ep->build($expr);
+                $code .= $var . " = \$context->pushContainer(".$expr_code.", \$this->isWrapper());";
+                break;
+            case 'class':
+                $code .= "echo ".$var.'->getClasses();';
+                break;
+            case 'style':
+                $code .= "echo ".$var.'->getStyles();';
+                break;
+            case 'meta':
+                $code .= "\nif (\$_is_admin) {\n";
+                $code .= " echo ' data-fx_container=\''.".$var."->getMetaJson().'\'';\n";
+                $code .= "}\n";
+                break;
+            case 'stop':
+                $code .= "\$context->popContainer();";
+                break;
+        }
+        $code .= "?>";
+        return $code;
+    }
+    
     protected function cssBundleToCode($token)
     {
         
@@ -1489,7 +1521,7 @@ class Compiler
         $code = "<?php\n";
         $code .= 'if (!$context->isIdle()) {'."\n";
         if (!$token->getProp('bundle') && $type === 'css') {
-            $token->setProp('bundle', 'default');
+            $token->setProp('bundle', 'auto');
         }
         if ( ($token->getProp('bundle') && $token->getProp('bundle') !== 'false') || $token->getProp('extend')) {
             $code .= $this->cssBundleToCode($token);

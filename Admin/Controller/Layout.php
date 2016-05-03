@@ -271,6 +271,63 @@ class Layout extends Admin
             'view'   => 'horizontal'
         );
     }
+    
+    public function themeSettings($input)
+    {
+        
+        $layout = fx::env('layout');
+        
+        $params = $layout['less_params'];
+        
+        $bundler = fx::page()->getBundleManager();
+        $bundle = $bundler->getBundle('css', 'default');
+        $meta = $bundle->getMeta();
+        
+        $fields = array(
+            $this->ui->hidden('entity', 'layout'),
+            $this->ui->hidden('action', 'theme_settings'),
+            $this->ui->hidden('sent', 1)
+        );
+        
+        if (!isset($meta['vars']) || !is_array($meta['vars'])) {
+            $meta['vars'] = array();
+        }
+        
+        foreach ($meta['vars'] as $var) {
+            $var_name = $var['name'];
+            if (isset($params[$var_name])) {
+                $var['value'] = $params[$var_name];
+            }
+            if ($var['type'] === 'font') {
+                $var['type'] = 'livesearch';
+                $var['values'] = \Floxim\Floxim\Asset\Fonts::getAvailableFontValues();
+            }
+            $fields []= $var;
+        }
+        
+        if (isset($input['sent'])) {
+            $res_params = array();
+            foreach ($meta['vars'] as $var) {
+                $var_name = $var['name'];
+                if (isset($input[$var_name]) && !empty($input[$var_name])) {
+                    $res_params[$var_name] = $input[$var_name];
+                }
+            }
+            $layout['less_params'] = $res_params;
+            $layout->save();
+            $bundle->delete();
+            return array(
+                'status' => 'ok',
+                'reload' => true
+            );
+        }
+        
+        return array(
+            'fields' => $fields,
+            'header' => fx::alang('Theme settings', 'system'),
+            'view'   => 'horizontal'
+        );
+    }
 
     public static function makeBreadcrumb($template, $action, $breadcrumb)
     {

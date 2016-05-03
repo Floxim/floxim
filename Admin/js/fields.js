@@ -226,7 +226,22 @@ window.$fx_fields = {
     },
 
     color: function(json) {
-        return $t.jQuery('form_row', json);
+        var $res = $t.jQuery('form_row', json),
+            $inp = $('.fx-colorpicker-input', $res);
+        
+        setTimeout(
+            function() {
+                $inp.spectrum({
+                    preferredFormat:'rgb',
+                    showInput: true,
+                    allowEmpty:true,
+                    showAlpha: true,
+                    clickoutFiresChange: true
+                });
+            },
+            50
+        );
+        return $res;
     },
 
     iconselect: function(json) {
@@ -255,6 +270,7 @@ window.$fx_fields = {
                     res_val = val;
                 
                 if (val instanceof Array && val.length >= 2) {
+                    //console.log(val);
                     res_val = {
                         id:val[0],
                         name:val[1]
@@ -262,6 +278,7 @@ window.$fx_fields = {
                     if (val.length > 2) {
                         res_val =  $.extend({}, res_val, val[2]);
                     }
+                    //console.log(res_val);
                 }
                 if (json.value == res_val.id) {
                     json.value = res_val;
@@ -286,6 +303,7 @@ window.$fx_fields = {
                     preset_vals.push([k, v]);
                 });
             }
+            //console.log(preset_vals, json);
             json.params.preset_values = vals_to_obj(preset_vals);
         }
         if (json.allow_select_doubles) {

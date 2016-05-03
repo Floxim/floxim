@@ -432,6 +432,12 @@ class Token
     {
         return isset($this->children) ? $this->children : array();
     }
+    
+    public function getFirstChild()
+    {
+        return isset($this->children) && isset($this->children[0]) ? $this->children[0] : null;
+    }
+    
 
     public function getNonEmptyChildren()
     {
