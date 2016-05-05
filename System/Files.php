@@ -975,6 +975,17 @@ class Files
         }
         return $path;
     }
+    
+    public function duplicate($path)
+    {
+        $source = fx::path($path);
+        $target = $this->getPutFilePath($source);
+        $res = $this->copyFile($source, $target);
+        if ($res !== 0) {
+            throw new \Exception($res);
+        }
+        return $target;
+    }
 
     private function tarCheck()
     {

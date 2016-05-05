@@ -59,6 +59,14 @@ class Finder extends System\Finder
                 ),
                 null,
                 'AND'
+            ),
+            array(
+                array(
+                    array('scope_type', 'infoblock_pages'),
+                    array('scope_infoblock_id', $current_page['infoblock_id'])
+                ),
+                null,
+                'AND'
             )
         );
         $this->with('scope_entity');

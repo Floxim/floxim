@@ -1306,6 +1306,99 @@ fx_front.prototype.select_container = function($node) {
         ib_meta = $ib.data('fx_infoblock'),
         container_meta = $node.data('fx_container');
 
+    var last_vars = null;
+    
+    function get_color_info(c) {
+        var parts = c.match(/(\d+), (\d+), (\d+)(, ([\d\.]+))?/);
+        if (!parts) {
+            return;
+        }
+        var rgb = {
+                r:parts[1]*1,
+                g:parts[2]*1,
+                b:parts[3]*1
+            },
+            res = {
+                opacity: parts[5] ? parts[5]*1 : 1,
+                brightness: (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000
+            };
+        return res;
+        //console.log(rgb, res, parts);
+        //return (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
+    }
+    
+    function count_lightness(vars) {
+        var c1 = vars.bg_color,
+            c2 = vars.bg_color_2,
+            img = vars.bg_image;
+        if (!c1 && !c2 && !img) {
+            return '';
+        }
+        var brightness = [],
+            opacity = [];
+        if (c1) {
+            var i1 = get_color_info(c1);
+            brightness.push(i1.brightness);
+            opacity.push(i1.opacity);
+        }
+        if (c2) {
+            var i2 = get_color_info(c2)
+            brightness.push(i2.brightness);
+            opacity.push(i2.opacity);
+        }
+        var total_opacity = 0;
+        for (var i = 0; i < opacity.length; i++) {
+            total_opacity += opacity[i];
+        }
+        if (total_opacity / opacity.length < 0.5) {
+            return '';
+        }
+        var total_brightness = 0;
+        for (var i = 0; i < brightness.length; i++) {
+            total_brightness += brightness[i];
+        }
+        var avg_brightness = total_brightness / brightness.length;
+        return avg_brightness < 128 ? 'dark' : 'light';
+    }
+    
+    function data_to_vars(data) {
+        var vars = {},
+            rex = new RegExp('^container_' + container_meta.name+'_(.+)');
+        for (var i = 0; i < data.length; i++) {
+            var prop_name = data[i].name.match(rex);
+            if (!prop_name) {
+                continue;
+            }
+            prop_name = prop_name[1];
+            vars[prop_name] = data[i].value;
+        }
+        return vars;
+    }
+    
+    function handle_form_data ( data, $form ) {
+        
+        var vars = data_to_vars(data);
+        
+        if (
+            $form && last_vars && (
+                vars.bg_color !== last_vars.bg_color || 
+                vars.bg_color_2 !== last_vars.bg_color_2
+            )
+        ) {
+            var counted_lightness = count_lightness(vars);
+            if (vars.lightness !== counted_lightness) {
+                var $lightness_inp = $('select[name="container_'+container_meta.name+'_lightness"]');
+                $lightness_inp.val(counted_lightness);
+                vars.lightness = counted_lightness;
+            }
+        }
+        
+        last_vars = vars;
+        
+        $fx.front.append_container_styles($node, vars);
+        $fx.front.append_container_classes($node, vars);
+    }
+    
     node_panel.add_button(
         {
             keyword:'container',
@@ -1328,25 +1421,24 @@ fx_front.prototype.select_container = function($node) {
                 },
                 onready:function($form) {
                     $form.data('ib_node', $ib);
+                    var initial_data = $form.serializeArray();
+                    last_vars = data_to_vars(initial_data);
+                    $node.data('fx_initial_container_data', initial_data);
                     
                     $form.on('change.fx_front fx_change_file.fx_front', function(e) {
                         if (e.target.name === 'livesearch_input' || e.target.name === 'scope[type]') {
                             return;
                         }
-                        var data = $form.serializeArray(),
-                            vars = {},
-                            rex = new RegExp('^container_' + container_meta.name+'_(.+)');
-                        for (var i = 0; i < data.length; i++) {
-                            var prop_name = data[i].name.match(rex);
-                            if (!prop_name) {
-                                continue;
-                            }
-                            prop_name = prop_name[1];
-                            vars[prop_name] = data[i].value;
-                        }
-                        $fx.front.append_container_styles($node, vars);
-                        $fx.front.append_container_classes($node, vars);
+                        var data = $form.serializeArray();
+                        handle_form_data(data, $form);
                     });
+                },
+                oncancel: function() {
+                    var initial_data = $node.data('fx_initial_container_data');
+                    if (initial_data) {
+                        handle_form_data(initial_data);
+                        $node.data('fx_initial_container_data', null);
+                    }
                 }
             });
         }
@@ -1365,9 +1457,11 @@ fx_front.prototype.append_container_styles = function($node, props) {
         c2 = props.bg_color_2,
         img = props.bg_image;
     
-    
+    if (!c1 && !c2 && !img) {
+        // do nothing
+    } 
     // first color only
-    if (c1 && !c2 && !img) {
+    else if (c1 && !c2 && !img) {
         css['background-color'] = c1;
     } 
     // image only
@@ -1422,30 +1516,113 @@ fx_front.prototype.append_container_styles = function($node, props) {
     $node.css(css);
 };
 
-fx_front.prototype.get_modifier_classes = function($node, name) {
-    var rex = new RegExp('^'+name+'_'),
+fx_front.prototype.get_modifiers = function($node, name) {
+    var rex = new RegExp('^'+name+'_(.+?)(_(.+))?$'),
         classes = $node.attr('class').split(' '),
-        res = [];
+        res = {};
     for (var i = 0; i < classes.length; i++) {
-        if (classes[i].match(rex)) {
-            res.push(classes[i]);
+        var match = classes[i].match(rex);
+        if (match) {
+            //res.push(classes[i]);
+            res[match[1]] = match[3] === undefined ? true : match[3];
         }
     }
     return res;
 };
 
+fx_front.prototype.set_modifiers = function($node, name, mods) {
+    var old = $fx.front.get_modifiers($node, name),
+        cl = function(prop, value) {
+            return value === false ? '' : name+'_'+prop+(value === true ? '' : '_'+value);
+        };
+    var add_classes = [],
+        drop_classes = [],
+        event_map = {};
+    $.each(mods, function(prop, value) {
+        if (old[prop] === value) {
+            return;
+        }
+        event_map[prop] = {
+            'new':value,
+            'old':false
+        };
+        if (old[prop]) {
+            drop_classes.push(cl(prop, old[prop]));
+            event_map[prop]['old'] = old[prop];
+        }
+        add_classes.push(cl(prop, value));
+    });
+    if (drop_classes.length === 0 && add_classes.length === 0) {
+        return;
+    }
+    $node.removeClass(drop_classes.join(' ')).addClass(add_classes.join(' '));
+    var e = $.Event('fx_set_modifiers');
+    e.modifiers = event_map;
+    e.node_name = name;
+    $node.trigger(e);
+};
+
 fx_front.prototype.append_container_classes = function($node, props) {
-    var c_classes = this.get_modifier_classes($node, 'fx-container');
-    $node.removeClass(c_classes.join(' '));
-    var class_props = ['align', 'valign', 'sizing', 'padding'],
-        res = [];
+    var class_props = ['align', 'valign', 'sizing', 'padding', 'lightness'],
+        mods = {};
     for (var i = 0; i < class_props.length; i++) {
         var cp = class_props[i];
-        if (props[cp]) {
-            res.push('fx-container_'+cp+'_'+props[cp]);
+        if (props[cp] !== undefined) {
+            mods[cp] = props[cp] || false;
         }
     }
-    $node.addClass(res.join(' '));
+    var e_handler = function(e) {
+        if (e.node_name !== 'fx-container') {
+            return;
+        }
+        var mods = e.modifiers,
+            $node = $(e.target),
+            $upper_containers = $node.parents('.fx-container');
+    
+        function traverse_children ($children, prop, new_mods) {
+            $.each($children, function() {
+                var $c = $(this);
+                if ($c.hasClass('fx-container')) {
+                    var cmods = $fx.front.get_modifiers($c, 'fx-container');
+                    if (cmods[prop]) {
+                        return;
+                    }
+                }
+                if ($c.hasClass('fx-content')) {
+                    $fx.front.set_modifiers($c, 'fx-content', new_mods);
+                }
+                traverse_children($c.children(), prop, new_mods);
+            });
+        }
+    
+    
+        $.each(mods, function(prop, vals) {
+            var new_v = vals['new'],
+                is_empty = !new_v || (prop === 'lightness' && new_v === 'transparent');
+            if (is_empty) {
+                new_v = '';
+                $upper_containers.each(function() {
+                    var $cc = $(this),
+                        mods = $fx.front.get_modifiers($cc, 'fx-container');
+                    if (mods[prop]) {
+                        new_v = mods[prop];
+                        return false;
+                    }
+                });
+            }
+            if (!new_v) {
+                console.log('empty new class', new_v, prop, vals);
+                //return;
+                new_v = false;
+            }
+            var mods = {};
+            mods['parent-'+prop] = new_v;
+            traverse_children($node.children(), prop, mods);
+        });
+    };
+    $node.on('fx_set_modifiers', e_handler);
+    $fx.front.set_modifiers($node, 'fx-container', mods);
+    $node.off('fx_set_modifiers', e_handler);
 };
 
 fx_front.prototype.make_node_panel = function($node) {

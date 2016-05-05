@@ -1643,7 +1643,8 @@ class Compiler
         
         unset($props['name']);
         
-        $val_var = "\$param__".$name."_value";
+        $vname = $this->varialize($name);
+        $val_var = "\$param__".$vname."_value";
         
         $code = "<?php\n";
         $code .= $val_var." = \$context->get('".$name."');\n";
@@ -1655,7 +1656,7 @@ class Compiler
             $props['type'] = 'select';
             $mask = $props['mask'];
             unset($props['mask']);
-            $styles_var = "\$param__".$name.'_styles';
+            $styles_var = "\$param__".$vname.'_styles';
             $first_style_var = $styles_var.'_first';
             $code .= $styles_var ." = \$this->collectStyles('".$mask."');\n";
             
@@ -1666,7 +1667,7 @@ class Compiler
             $code .= "}\n";
             $default_val = $first_style_var;
             if (!isset($props['label'])) {
-                $exported_props[]= "'label' => fx::alang('Style')";
+                $exported_props[]= "'label' => fx::alang('Style').': ".preg_replace('~_style_\*~', '', $mask)."'";
             }
             $exported_props[]= "'values' => \$this->collectStyleValues('".$mask."')";
 

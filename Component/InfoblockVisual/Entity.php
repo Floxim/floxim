@@ -56,6 +56,30 @@ class Entity extends System\Entity
             $this[$field] = $all_params;
         }
     }
+    
+    /**
+     * Copy (json) params and duplicate files
+     * @param type $source
+     */
+    public function copyParams($source)
+    {
+        if (!is_array($source)) {
+            return $source;
+        }
+        $res = array();
+        foreach ($source as $k => $v) {
+            if (self::checkValueIsFile($v)) {
+                try {
+                    $v = fx::files()->duplicate($v);
+                } catch (\Exception $e) {
+                    fx::log('failed copying file', $e, $source, $k);
+                    continue;
+                }
+            }
+            $res[$k] = $v;
+        }
+        return $res;
+    }
 
     protected function beforeDelete()
     {
@@ -85,7 +109,7 @@ class Entity extends System\Entity
 
     public static function checkValueIsFile($v)
     {
-        if (empty($v)) {
+        if (empty($v) || !is_string($v)) {
             return false;
         }
         $files_path = fx::path('@files');

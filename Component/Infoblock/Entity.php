@@ -190,7 +190,7 @@ class Entity extends System\Entity implements Template\Entity
         $ids [] = $page['id'];
         $ids [] = 0; // root
         
-        if (!in_array($this['page_id'], $ids)) {
+        if ($this['scope_type'] === 'one_page' && !in_array($this['page_id'], $ids)) {
             return false;
         }
 

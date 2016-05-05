@@ -357,7 +357,6 @@ class Infoblock extends Admin
         if ($container_is_one_page) {
             $scope_fields[0]['type'] = 'hidden';
         }
-        fx::log($scope_fields, $container_is_one_page);
         $this->response->addFields(
             $scope_fields, 
             'settings',
@@ -398,6 +397,10 @@ class Infoblock extends Admin
                         break;
                     case 'one_page':
                         $infoblock['page_id'] = fx::env('page_id');
+                        break;
+                    case 'infoblock_pages':
+                        $infoblock['scope_infoblock_id'] = fx::env('page')->get('infoblock_id');
+                        $infoblock['page_id'] = null;
                         break;
                     case 'all_pages':
                         $infoblock['page_id'] = null;
@@ -676,6 +679,9 @@ class Infoblock extends Admin
     
     protected function getScopeTypeField($infoblock)
     {
+        $page = fx::env('page');
+        $page_type_name = $page->getComponent()->getItemName();
+        $page_ib_name = $page['infoblock']['name'];
         return array(
             'type'   => 'livesearch',
             'label'  => fx::alang('Scope'),
@@ -683,6 +689,10 @@ class Infoblock extends Admin
             'values' => array(
                 array('one_page', 'Только эта страница'),
                 array('all_pages', 'Все страницы'),
+                array('infoblock_pages', 'Страницы такого типа', array(
+                    'title' => 'Показывать на страницах, имеющих тип «'.$page_type_name.'»'.
+                                ' и принадлежащих инфоблоку «'.$page_ib_name.'»'
+                )),
                 array('custom', 'Настроить...')
             ),
             'value'  => $infoblock['scope_type'] ? $infoblock['scope_type'] : 'one_page'

@@ -117,7 +117,8 @@ class Container {
         $props_to_inherit = array(
             'sizing',
             'padding',
-            'lightness'
+            'lightness',
+            'align'
         );
         foreach ($parents as $parent) {
             foreach ($props_to_inherit as $prop) {
@@ -150,6 +151,14 @@ class Container {
     
     public static function getBackgroundStyle($vals)
     {
+        $c1 = $vals['bg_color'];
+        $c2 = $vals['bg_color_2'];
+        $img = $vals['bg_image'];
+        
+        if (!$c1 && !$c2 && !$img) {
+            return '';
+        }
+        
         $css = array(
             'background-color' => '',
             'background-image' => '',
@@ -157,10 +166,6 @@ class Container {
             'background-repeat' => '',
             'background-size' => ''
         );
-        
-        $c1 = $vals['bg_color'];
-        $c2 = $vals['bg_color_2'];
-        $img = $vals['bg_image'];
         
         // first color only
         if ($c1 && !$c2 && !$img) {

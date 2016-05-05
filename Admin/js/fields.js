@@ -236,7 +236,15 @@ window.$fx_fields = {
                     showInput: true,
                     allowEmpty:true,
                     showAlpha: true,
-                    clickoutFiresChange: true
+                    clickoutFiresChange: true,
+                    move:function(c) {
+                        $inp.spectrum('set', c === null ? c : c.toRgbString());
+                        $inp.trigger('change');
+                    },
+                    hide:function(c) {
+                        $inp.spectrum('set', c === null ? c : c.toRgbString());
+                        $inp.trigger('change');
+                    }
                 });
             },
             50
@@ -270,7 +278,6 @@ window.$fx_fields = {
                     res_val = val;
                 
                 if (val instanceof Array && val.length >= 2) {
-                    //console.log(val);
                     res_val = {
                         id:val[0],
                         name:val[1]
@@ -278,7 +285,6 @@ window.$fx_fields = {
                     if (val.length > 2) {
                         res_val =  $.extend({}, res_val, val[2]);
                     }
-                    //console.log(res_val);
                 }
                 if (json.value == res_val.id) {
                     json.value = res_val;
@@ -303,8 +309,10 @@ window.$fx_fields = {
                     preset_vals.push([k, v]);
                 });
             }
-            //console.log(preset_vals, json);
             json.params.preset_values = vals_to_obj(preset_vals);
+            if (json.allow_empty === false && (!json.value || typeof json.value.id === 'undefined')) {
+                json.value = json.params.preset_values[0];
+            }
         }
         if (json.allow_select_doubles) {
             json.params.allow_select_doubles = json.allow_select_doubles;

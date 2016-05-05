@@ -384,11 +384,21 @@ class Html
             if ($n->hasAttribute('fx:b')) {
                 $b_value = $n->getAttribute('fx:b');
                 if ($n->hasAttribute('fx:styled')) {
+                    $styled_value = $n->getAttribute('fx:styled');
+                    $p_meta = array();
+                    if ($styled_value && !preg_match("~\s*[a-z_-]+\:~", $styled_value) && trim($styled_value) !== '') {
+                        $p_meta['label'] = $styled_value;
+                    }
                     $n->removeAttribute('fx:styled');
                     $block_parts = explode(" ", trim($b_value));
                     $block_name = $block_parts[0];
-                    $b_value .= ' style_{$'.$block_name.'_style /}';
-                    $style_param = '{@'.$block_name.'_style type="style" mask="'.$block_name.'_style_*" /}';
+                    $param_name = str_replace("-", '_', $block_name).'_style';
+                    $b_value .= ' style_{$'.$param_name.' /}';
+                    $style_param = '{@'.$param_name.' type="style" mask="'.$block_name.'_style_*" ';
+                    foreach ($p_meta as $k => $v) {
+                        $style_param .= ' '.$k.'="'.$v.'" ';
+                    }
+                    $style_param .= '/}';
                     $n->addChildFirst(HtmlToken::create($style_param));
                 }
                 $n->addClass('{bem_block '.($container_hash ? 'container="1"' : '').'}'.$b_value.'{/bem_block}');

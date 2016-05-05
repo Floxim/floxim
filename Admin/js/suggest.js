@@ -455,6 +455,9 @@ window.fx_suggest = function(params) {
         }
         item_html += '<span class="search_item__name">'+item.name+'</span>';
         var $item = $('<div class="search_item">'+item_html+'</div>');
+        if (item.title !== undefined) {
+            $item.attr('title', item.title);
+        }
         if (level > 0) {
             $item.addClass('search_item_level_'+level);
         }
@@ -462,10 +465,9 @@ window.fx_suggest = function(params) {
             $item.data(prop, item[prop]);
         }
         $item.data('value', item);
-        if (!item.id || item.disabled) {
+        if (item.id === undefined || item.disabled) {
             $item.addClass('search_item_disabled');
         }
-        
         if (item.children && item.children.length) {
             var is_collapsed = item.collapsed;
             if (is_collapsed === undefined) {
