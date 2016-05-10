@@ -118,14 +118,29 @@ window.fx_eip = {
                 break;
             case 'att':
                 if (meta.type === 'image') {
-                    formatted_value = formatted_value || value;
-                    if (meta.att) {
-                        var att_style = meta.att.match(/style:(.+)$/);
-                        if (att_style) {
-                            $node.css(att_style[1], formatted_value);
-                        } else {
-                            $node.attr(meta.att, formatted_value);
+                    function append_image(v) {
+                        if (meta.att) {
+                            var att_style = meta.att.match(/style:(.+)$/);
+                            if (att_style) {
+                                $node.css(att_style[1], v);
+                            } else {
+                                $node.attr(meta.att, v);
+                            }
                         }
+                    }
+                    if (meta.format_modifier && !formatted_value) {
+                        var post_data = {
+                            entity:'file',
+                            action:'get_image_meta',
+                            file: value,
+                            format: meta.format_modifier
+                        };
+                        $fx.post(post_data, function(res) {
+                            append_image(res.formatted_value);
+                        });
+                    } else {
+                        formatted_value = formatted_value || value;
+                        append_image(formatted_value);
                     }
                 }
                 //fx_template_var
@@ -898,13 +913,26 @@ fx_edit_in_place.prototype.get_vars = function() {
         
         var value_changed = false;
         if (pf_meta.type === 'image' || pf_meta.type === 'file') {
+            
             value_changed = new_value !== old_value.path;
             
             var file_data = $c_input.data('fx_upload_response');
+            
             if (file_data && file_data.formatted_value) {
                 formatted_value = file_data.formatted_value;
             }
             
+            if (file_data && file_data.action === "save_image_meta") {
+                value_changed = true;
+                console.log('savr meta!', file_data, formatted_value)
+            }
+            /*
+            // dirty hack: mark value as modified if we have ?r=123 cache breaker passed from cropper
+            if (formatted_value && /\?r=\d+/.test(formatted_value)) {
+                value_changed = true;
+                console.log('mark changd');
+            }
+            */
         } else if (new_value instanceof Array && old_value instanceof Array) {
             value_changed = new_value.join(',') !== old_value.join(',');
         } else {
@@ -932,7 +960,7 @@ fx_edit_in_place.prototype.fix = function() {
     }
     
     var vars = fx_eip.fix();
-    
+    console.log('fixing eip', this);
     // nothing has changed
     if (vars.length === 0) {
         this.stop();

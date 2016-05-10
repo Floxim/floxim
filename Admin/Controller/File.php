@@ -24,4 +24,61 @@ class File extends Admin
         }
         return $result;
     }
+    
+    public function getImageMeta($input)
+    {
+        $file = $input['file'];
+        $format = $input['format'];
+        $res = array();
+        try {
+            $thumb = new \Floxim\Floxim\System\Thumb($file, $format);
+            $res['current'] = $thumb->getCustomMetaForFormat();
+        } catch (Exception $ex) {
+            // fx::log('failed saving meta', $input);
+        }
+        $res['format'] = \Floxim\Floxim\System\Thumb::readConfig($format);
+        $res['formatted_value'] = fx::image($file, $format);
+        return $res;
+    }
+    
+    public function saveImageMeta($input)
+    {
+        $file = $input['file'];
+        if ( !$file || !fx::files()->isImage(fx::path($file)) ) {
+            return;
+        }
+        $format = $input['format'];
+        $crop = json_decode($input['crop'], true);
+        try {
+            // save crop info for the certain format
+            if ($format) {
+                $thumb = new \Floxim\Floxim\System\Thumb($file, $format);
+                $thumb->setCustomMetaForFormat( array('crop' => $crop) );
+                $thumb->saveCustomMeta();
+                $result_path = $thumb->getResultPath();
+                $full_path = fx::path($file);
+
+                fx::files()->rm( fx::path($result_path) );
+
+                $res = fx::files()->getInfo($full_path);
+
+                $res['formatted_value'] = $result_path;
+            } 
+            // duplicate and crop the original image
+            else {
+                $file_copy = fx::files()->duplicate($file);
+                $resize_config = array();
+                foreach ($crop as $crop_prop => $crop_value) {
+                    $resize_config['crop-'.$crop_prop] = $crop_value;
+                }
+                $thumb = new \Floxim\Floxim\System\Thumb($file_copy, $resize_config);
+                $thumb->process($file_copy);
+                $res = fx::files()->getInfo($file_copy);
+            }
+            $res['action'] = 'save_image_meta';
+            return $res;
+        } catch (Exception $ex) {
+            fx::log('failed saving meta', $input);
+        }
+    }
 }

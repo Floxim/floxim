@@ -10,7 +10,7 @@ class Thumb extends Base
     {
         $thumbs_path = fx::path()->http('@thumbs');
         $thumbs_path_trimmed = fx::path()->removeBase($thumbs_path);
-        
+        $url = preg_replace("~\?.+$~", '', $url);
         if (substr($url, 0, strlen($thumbs_path_trimmed)) !== $thumbs_path_trimmed) {
             return null;
         }

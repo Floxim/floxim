@@ -251,6 +251,16 @@ class Files
 
         return $result;
     }
+    
+    public static function isMetaFile($path)
+    {
+        return preg_match("~\.meta$~", $path);
+    }
+    
+    protected static function getMetaFile($path)
+    {
+        return $path.'.meta';
+    }
 
     protected function copyFile($local_old_filename, $local_new_filename)
     {
@@ -258,6 +268,12 @@ class Files
 
         if ($res !== false) {
             @chmod($local_new_filename, $this->new_file_mods);
+            if (!self::isMetaFile($local_old_filename)) {
+                $meta_path = self::getMetaFile($local_old_filename);
+                if (file_exists($meta_path)) {
+                    $this->copyFile($meta_path, self::getMetaFile($local_new_filename));
+                }
+            }
             return 0;
         }
         return $res;
@@ -462,6 +478,7 @@ class Files
 
     public function rm($filename)
     {
+        $filename = preg_replace("~\?.+$~", '', $filename);
         if (is_array($filename)) {
             foreach ($filename as $file) {
                 $result = $this->rm($file);
@@ -538,6 +555,12 @@ class Files
 
             if (isset($success) && $success) {
                 fx::trigger('unlink', array('file' => $local_filename));
+                if (!self::isMetaFile($local_filename)) {
+                    $meta_file = self::getMetaFile($local_filename);
+                    if (file_exists($meta_file)) {
+                        $this->rm($meta_file);
+                    }
+                }
                 return 0;
             }
             return $this->rmFtp(dirname($filename), array(basename($filename)));

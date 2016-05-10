@@ -463,7 +463,19 @@ class Debug
     
     public function toJson($what) {
         $plain = $this->toPlain($what);
-        return json_encode($plain, JSON_UNESCAPED_UNICODE);
+        return $this->jsonEncode($plain, JSON_UNESCAPED_UNICODE);
+    }
+    
+    protected function jsonEncode($what)
+    {
+        static $is_53 = null;
+        if (is_null($is_53)) {
+            $is_53 = version_compare(phpversion(), '5.4') < 0;
+        }
+        if ($is_53) {
+            return json_encode($what);
+        }
+        return json_encode($what, JSON_UNESCAPED_UNICODE);
     }
     
     public function toPlain($what, &$index = array()) 
@@ -573,8 +585,8 @@ class Debug
             </div>
             <?php 
             foreach ($e[1] as $item) {
-                //$json = $this->toJson($item);
-                $json = json_encode($item, JSON_UNESCAPED_UNICODE);
+                
+                $json = $this->jsonEncode($item);
                 $id = md5($json);
                 ?>
                 <div class="fx-debug__data-entry" data-hash="<?=$id?>" style="display:none;"></div>

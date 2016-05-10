@@ -90,8 +90,13 @@ class Link extends \Floxim\Floxim\Component\Field\Entity
     {
         $target_com = $this->getTargetName();
         $finder = fx::data($target_com);
-        if (isset($content['site_id']) && $finder instanceof \Floxim\Main\Content\Finder) {
-            $finder->where('site_id', $content['site_id']);
+        if (isset($content['site_id'])) {
+            if (
+                $finder instanceof \Floxim\Floxim\Component\Basic\Finder && 
+                $finder->create()->hasField('site_id')
+            ) {
+                $finder->where('site_id', $content['site_id']);
+            }
         }
         $method_name = 'getRelationFinder'. fx::util()->underscoreToCamel($this['keyword']);
         if (method_exists($content, $method_name)) {

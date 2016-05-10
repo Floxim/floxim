@@ -66,10 +66,21 @@ class Thumb
 
     protected function calculateSize($params, $source = null)
     {
+        
         if (!$source) {
             $source = $this->info;
         }
+        
+        if (isset($params['crop-width']) && isset($params['crop-height'])) {
+            $source = array_merge($source, array(
+                'width' => $params['crop-width'],
+                'height' => $params['crop-height']
+            ));
+        }
+        
         $ratio = $source['width'] / $source['height'];
+        
+        
 
         $w = $params['width'];
         $h = $params['height'];
@@ -223,6 +234,68 @@ class Thumb
         );
         return $res;
     }
+    
+    protected $custom_meta = null;
+    
+    public function getCustomMeta()
+    {
+        if (is_null($this->custom_meta)) {
+            $path = $this->getCustomMetaPath();
+            $res = array();
+            if (file_exists($path)) {
+                $data = json_decode(file_get_contents($path),1);
+                if (is_array($data)) {
+                    $res = $data;
+                }
+            }
+            $this->custom_meta = $res;
+        }
+        return $this->custom_meta;
+    }
+    
+    public function getCustomMetaPath()
+    {
+        $path = $this->source_path.'.meta';
+        return $path;
+    }
+    
+    public function setCustomMetaForFormat($meta, $format = null)
+    {
+        if (is_null($format)) {
+            $format = $this->getConfigHash();
+        }
+        $c = $this->getCustomMeta();
+        if (!isset($c['formats'])) {
+            $c['formats'] = array();
+        }
+        $meta['timestamp'] = time();
+        $c['formats'][$format] = $meta;
+        $this->setCustomMeta($c);
+    }
+    
+    public function getCustomMetaForFormat($format = null)
+    {
+        if (is_null($format)) {
+            $format = $this->getConfigHash();
+        }
+        $meta = $this->getCustomMeta();
+        if (!$meta || !isset($meta['formats']) || !isset($meta['formats'][$format])) {
+            return array();
+        }
+        return (array) $meta['formats'][$format];
+    }
+    
+    public function setCustomMeta($meta)
+    {
+        $this->custom_meta = $meta;
+    }
+    
+    public function saveCustomMeta()
+    {
+        $path = $this->getCustomMetaPath();
+        $data = json_encode($this->getCustomMeta());
+        file_put_contents($path, $data);
+    }
 
     public function resize($params = null)
     {
@@ -231,6 +304,7 @@ class Thumb
         } else {
             $params = $this->config;
         }
+        
         $st = array_merge(array(
             'width'      => false,
             'height'     => false,
@@ -240,16 +314,121 @@ class Thumb
             'max-height' => false,
             'crop'       => true
         ), $params);
-
+        
+        $format_meta = $this->getCustomMetaForFormat();
+        if (isset($format_meta['crop'])) {
+            foreach ($format_meta['crop'] as $crop_prop => $crop_value) {
+                $st['crop-'.$crop_prop] = $crop_value;
+            }
+        }
+        
         // the calculated sizes based on min-max, the size of the picture and a set of w-h
         $st = array_merge($st, $this->calculateSize($st));
-
+        
         $width = $this->info['width'];
         $height = $this->info['height'];
         $type = $this->info['imagetype'];
 
-        // determine the price. zoom
-        $scale = 1;
+        $st['original-width'] = $width;
+        $st['original-height'] = $height;
+        
+        //if (isset($st['crop']) && $st['crop']) {
+        $st = $this->addCountedCrop($st, $width, $height);
+        //}
+
+        if (!$this->image) {
+            $this->loadImage();
+        }
+        $source_i = $this->image;
+        $target_i = imagecreatetruecolor($st['width'], $st['height']);
+        
+        if (isset($st['crop-color'])) {
+            $color_parts = null;
+            if (preg_match("~(\d+),\s*(\d+),\s*(\d+)~", $st['crop-color'], $color_parts)) {
+                $color = imagecolorallocate($target_i, $color_parts[1], $color_parts[2], $color_parts[3]);
+                imagefill($target_i, 0, 0, $color);
+            }
+        }
+        
+        
+
+        if (($type == IMAGETYPE_PNG || $type == IMAGETYPE_GIF)) {
+            $this->addTransparency($target_i, $source_i, $type);
+        }
+        
+        $st['crop-x2'] = ( $st['original-width'] - $st['crop-width']) - $st['crop-x'];
+        $st['crop-y2'] = ( $st['original-height'] - $st['crop-height']) - $st['crop-y'];
+        
+        $st['target-x'] = 0;
+        $st['target-y'] = 0;
+        
+        if ($st['crop-x'] < 0 || $st['crop-x2'] < 0) {
+            $ratio_x = $st['width'] / $st['crop-width'];
+            $cx = $st['crop-x'];
+            if ($cx < 0) {
+
+                $st['target-x'] = $cx * -1 * $ratio_x;
+                $st['crop-x'] = 0;
+
+                $st['width'] += $cx * $ratio_x;
+                $st['crop-width'] += $cx;
+            }
+            $cx2 = $st['crop-x2'];
+            if ($cx2 < 0) {
+                $st['width'] += $cx2 * $ratio_x;
+                $st['crop-width'] += $cx2;
+            }
+        }
+        if ($st['crop-y'] < 0 || $st['crop-y2'] < 0) {
+            $ratio_y = $st['height'] / $st['crop-height'];
+            $cy = $st['crop-y'];
+            if ($cy < 0) {
+
+                $st['target-y'] = $cy * -1 * $ratio_y;
+                $st['crop-y'] = 0;
+
+                $st['height'] += $cy * $ratio_y;
+                $st['crop-height'] += $cy;
+            }
+            $cy2 = $st['crop-y2'];
+            if ($cy2 < 0) {
+                $st['height'] += $cy2 * $ratio_y;
+                $st['crop-height'] += $cy2;
+            }
+        }
+        
+
+        $a = array(
+            'target_image'  => $target_i, //resource $dst_image ,
+            'source_image'  => $source_i, //resource $src_image ,
+            't_x'      => $st['target-x'], //int $dst_x ,
+            't_y'      => $st['target-y'], //int $dst_y ,
+            's_x'        => $st['crop-x'], //int $src_x ,
+            's_y'        => $st['crop-y'], //int $src_y ,
+            't_w'  => $st['width'], //int $dst_w ,
+            't_h' => $st['height'], //int $dst_h , 
+            's_w'  => $st['crop-width'], //int $src_w ,
+            's_h' => $st['crop-height'] //int $src_h 
+        );
+        
+        call_user_func_array('imagecopyresampled', $a);
+        imagedestroy($this->image);
+        $this->image = $target_i;
+        return $this;
+    }
+    
+    protected function addCountedCrop($st, $width, $height)
+    {
+        $has_all = true;
+        foreach ( split(',', 'x,y,width,height') as $prop) {
+            if (!isset($st['crop-'.$prop])) {
+                $has_all = false;
+                break;
+            }
+        }
+        if ($has_all) {
+            return $st;
+        }
         // and padding for circumcision
         $crop_x = 0;
         $crop_y = 0;
@@ -257,79 +436,57 @@ class Thumb
         $crop_width = $width;
         $crop_height = $height;
 
-
-        if (isset($st['crop']) && $st['crop']) {
-            $scale_x = $st['width'] / $width;
-            $scale_y = $st['height'] / $height;
-            $scale = max($scale_x, $scale_y);
-            if (isset($st['crop_offset']) && in_array($st['crop_offset'], array(
-                    'top',
-                    'middle',
-                    'bottom'
-                ))
-            ) {
-                $crop_offset = $st['crop_offset'];
-            } else {
-                $crop_offset = 'middle';
+        $scale_x = $st['width'] / $width;
+        $scale_y = $st['height'] / $height;
+        $scale = max($scale_x, $scale_y);
+        if (isset($st['crop_offset']) && in_array($st['crop_offset'], array(
+                'top',
+                'middle',
+                'bottom'
+            ))
+        ) {
+            $crop_offset = $st['crop_offset'];
+        } else {
+            $crop_offset = 'middle';
+        }
+        if ($scale == $scale_x) {
+            // the cropped height
+            $crop_height = $st['height'] / $scale;
+            switch ($crop_offset) {
+                case 'top':
+                    $crop_y = 0;
+                    break;
+                case 'middle':
+                    $crop_y = round(($height - $crop_height) / 2);
+                    break;
+                case 'bottom':
+                    $crop_y = $height - $crop_height;
+                    break;
             }
-            if ($scale == $scale_x) {
-                // the cropped height
-                $crop_height = $st['height'] / $scale;
-                switch ($crop_offset) {
-                    case 'top':
-                        $crop_y = 0;
-                        break;
-                    case 'middle':
-                        $crop_y = round(($height - $crop_height) / 2);
-                        break;
-                    case 'bottom':
-                        $crop_y = $height - $crop_height;
-                        break;
-                }
-            } else {
-                // the trimmed width
-                $crop_width = $st['width'] / $scale;
-                switch ($crop_offset) {
-                    case 'top':
-                        $crop_x = 0;
-                        break;
-                    case 'middle':
-                        $crop_x = round(($width - $crop_width) / 2);
-                        break;
-                    case 'bottom':
-                        $crop_x = $width - $crop_width;
-                        break;
-                }
+        } else {
+            // the trimmed width
+            $crop_width = $st['width'] / $scale;
+            switch ($crop_offset) {
+                case 'top':
+                    $crop_x = 0;
+                    break;
+                case 'middle':
+                    $crop_x = round(($width - $crop_width) / 2);
+                    break;
+                case 'bottom':
+                    $crop_x = $width - $crop_width;
+                    break;
             }
         }
-
-        if (!$this->image) {
-            $this->loadImage();
-        }
-        $source_i = $this->image;
-        $target_i = imagecreatetruecolor($st['width'], $st['height']);
-
-
-        if (($type == IMAGETYPE_PNG || $type == IMAGETYPE_GIF)) {
-            $this->addTransparency($target_i, $source_i, $type);
-        }
-
-        $icr_args = array(
-            'target_image'  => $target_i, //resource $dst_image ,
-            'source_image'  => $source_i, //resource $src_image ,
-            'target_x'      => 0, //int $dst_x ,
-            'target_y'      => 0, //int $dst_y ,
-            'crop_x'        => $crop_x, //int $src_x ,
-            'crop_y'        => $crop_y, //int $src_y ,
-            'target_width'  => $st['width'], //int $dst_w ,
-            'target_height' => $st['height'], //int $dst_h , 
-            'source_width'  => $crop_width, //int $src_w ,
-            'source_height' => $crop_height //int $src_h 
+        return array_merge(
+            array(
+                'crop-x' => $crop_x,
+                'crop-y' => $crop_y,
+                'crop-width' => $crop_width,
+                'crop-height' => $crop_height
+            ),
+            $st
         );
-        call_user_func_array('imagecopyresampled', $icr_args);
-        imagedestroy($this->image);
-        $this->image = $target_i;
-        return $this;
     }
 
     protected function addTransparency($dst, $src, $type)
@@ -461,23 +618,37 @@ class Thumb
         $this->image = null;
         ob_end_clean();
     }
+    
+    /**
+     * Get config as a string that can be used to create thumb folder
+     */
+    public function getConfigHash()
+    {
+        $res = array();
+        foreach ($this->config as $key => $value) {
+            if ($value && !in_array($key, array('async', 'output')) && !preg_match("~^crop-~", $key)) {
+                $res [] = $key . '-' . $value;
+            }
+        }
+        sort($res);
+        $res = join('.', $res);
+        return $res;
+    }
 
     public function getResultPath()
     {
     	$rel_path = $this->source_http_path;
 
-        $folder_name = array();
-        foreach ($this->config as $key => $value) {
-            if ($value && !in_array($key, array('async', 'output'))) {
-                $folder_name [] = $key . '-' . $value;
-            }
-        }
-        $folder_name = join('.', $folder_name);
+        $folder_name = $this->getConfigHash();
         
         $rel_path = $folder_name . '/' . $rel_path;
         $full_path = fx::path('@thumbs/' . $rel_path);
-        if (!file_exists($full_path)) {
-            if ($this->config['async']) {
+        
+        $is_forced = $this->config['async'] === 'force';
+        $is_async = $this->config['async'] === true;
+        
+        if (!file_exists($full_path) || $is_forced) {
+            if ($is_async) {
                 $target_dir = dirname($full_path);
                 if (!file_exists($target_dir)) {
                     fx::files()->mkdir($target_dir);
@@ -486,7 +657,15 @@ class Thumb
             	$this->process($full_path);
             }
         }
+        
         $path = fx::path()->http($full_path);
+        
+        // !!!SLOW!!!
+        $meta = $this->getCustomMetaForFormat();
+        if (isset($meta['timestamp'])) {
+            $path .= '?t='.$meta['timestamp'];
+        }
+        
         return $path;
     }
 
@@ -514,6 +693,12 @@ class Thumb
     public static function readConfig($config)
     {
         if (is_array($config)) {
+            if (isset($config['crop']) && is_array($config['crop'])) {
+                foreach ($config['crop'] as $cp => $cv) {
+                    $config['crop-'.$cp] = $cv;
+                }
+                $config['crop'] = true;
+            }
             return $config;
         }
         $config = preg_replace_callback(
@@ -565,7 +750,7 @@ class Thumb
             $params[$prop] = $value;
         }
         if (isset($params['async'])) {
-            $params['async'] = $params['async'] === 'false' ? false : true;
+            $params['async'] = $params['async'] === 'false' ? false : ($params['async'] === 'force'? 'force' : true);
         }
         return $params;
     }

@@ -151,6 +151,8 @@ class Admin extends System\Controller
             $path_floxim . '/lib/editors/redactor/fontcolor.js',
             $path_floxim . '/lib/codemirror/codemirror.all.min.js',
             $path_floxim . '/lib/spectrum/spectrum.js',
+            $path_floxim . '/lib/cropper/cropper.min.js',
+            //$path_floxim . '/lib/cropper/cropper.js',
             $path_floxim . '/lib/js/jquery.form.js',
             $path_floxim . '/lib/js/jquery.cookie.js',
             $path_floxim . '/lib/js/jquery.ba-resize.min.js',
@@ -171,6 +173,7 @@ class Admin extends System\Controller
         $page->addCssFile( $path_floxim . '/lib/editors/redactor/redactor.css' );
         
         $page->addCssFile( $path_floxim . '/lib/spectrum/spectrum.css' );
+        $page->addCssFile( $path_floxim . '/lib/cropper/cropper.min.css' );
 
         $page->addCssBundle(
             array(

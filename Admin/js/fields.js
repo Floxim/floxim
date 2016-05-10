@@ -235,7 +235,7 @@ window.$fx_fields = {
                     preferredFormat:'rgb',
                     showInput: true,
                     allowEmpty:true,
-                    showAlpha: true,
+                    showAlpha: json.alpha === undefined ? true : json.alpha,
                     clickoutFiresChange: true,
                     move:function(c) {
                         $inp.spectrum('set', c === null ? c : c.toRgbString());
@@ -339,6 +339,9 @@ window.$fx_fields = {
     },
 
     button: function (json) {
+        if (!json.type) {
+            json = $.extend({}, json, {type: 'button'} );
+        }
         return $t.jQuery('form_row', json);
     },
 
@@ -382,11 +385,15 @@ window.$fx_fields = {
             imageUpload : document.baseURI + 'vendor/Floxim/Floxim/Admin/Controller/redactor-upload.php',
             tidyHtml:false,
             toolbarFixed:false,
-            buttons: ['html', 'formatting',  'bold', 'italic', 'deleted',
-                    'unorderedlist', 'orderedlist',
-                    //'outdent', 'indent',
-                    'image', 'video', 'file', 'table', 'link', 'alignment', 'horizontalrule'],
-            plugins: ['fontcolor'],
+            buttons: [
+                    'html', 
+                    //'formatting',  
+                    'bold', 'italic', 'deleted', 'link',
+                    'unorderedlist', 'orderedlist', 'alignment'
+                        //'outdent', 'indent',
+                        /*'image', 'video', 'file', 'table',  'horizontalrule'*/
+                    ],
+            //plugins: ['fontcolor'],
             cleanSpaces:false,
             lang: $fx.lang('lang'),
             formatting: ['p', 'h2', 'h3'],
@@ -576,8 +583,234 @@ $html.on('change.fx', '.fx_image_field input.file', function() {
     });
 });
 
-$html.on('click.fx', '.fx_image_field .fx_file_uploader', function() {
+function load_cropper($inp) {
+    var format = $inp.data('format_modifier'),
+        src = $inp.val();
+    $fx.post({
+        entity:'file',
+        action:'get_image_meta',
+        file: src,
+        format: format
+    }, function(res) {
+        create_cropper($inp, res);
+    });
+}
+
+function create_cropper($inp, meta) {
+    var format = $inp.data('format_modifier'),
+        src = $inp.val(),
+        parsed_format = meta.format,
+        current_crop = meta.current ? meta.current.crop : {},
+        aspect_ratio = null,
+        $block = $inp.closest('.fx_image_field');
+    
+    if (!src){
+        return;
+    }
+    if (parsed_format && parsed_format.width && parsed_format.height) {
+        aspect_ratio = parsed_format.width / parsed_format.height;
+    }
+    
+    var cl = 'fx-cropper-popup',
+        $popup = $(
+            '<div class="'+cl+' fx_overlay">'+
+                '<div class="'+cl+'__wrapper">'+
+                    '<div class="'+cl+'__image-container">'+
+                        '<img src="'+src+'" class="'+cl+'__image" />'+
+                    '</div>'+
+                '</div>'+
+                '<div class="'+cl+'__controls"></div>'+
+                '<input type="hidden" value="" class="'+cl+'__value" />'+
+            '</div>'
+        ),
+        $wrapper = $('.'+cl+'__wrapper', $popup),
+        $img = $('.'+cl+'__image', $popup),
+        $controls = $('.'+cl+'__controls', $popup),
+        $cancel = $fx_fields.button({class:'cancel',label:'Отмена'}),
+        $save = $fx_fields.button({label:'Готово',is_active:true}),
+        $val = $('.'+cl+'__value', $popup);
+        
+    $popup.css('opacity', 0);
+    $('body').append($popup);
+    var c_color = current_crop && current_crop.color ? current_crop.color : '',
+        $color = $fx_fields.color({
+            name:'cropper-color', 
+            value: c_color, 
+            type:'color',
+            alpha:false
+        }),
+        $color_input = $('.fx-colorpicker-input', $color);
+    
+    if (c_color) {
+        $wrapper.css('background', c_color).addClass(cl+'__wrapper_has-color');
+    }
+    
+    $controls.append($color);
+    $controls.append($cancel).append($save);
+    
+    $cancel.click(function() {$popup.remove();});
+    
+    var  sides = {
+        n: 'Y',
+        e: 'X',
+        s: 'Y',
+        w: 'X'
+    };
+    
+    function get_crop_data() {
+        var crop = {},
+            data = $img.cropper('getData');
+    
+        $.each(['width', 'height', 'x', 'y'], function() {
+            crop[this] = Math.round( data[this] );
+        });
+        return crop;
+    }
+    
+    var bounds = {};
+    
+    $img.cropper({
+        //background: c_color ? false : true,
+        modal:false,
+        dragMode:'move',
+        data:current_crop,
+        aspectRatio:aspect_ratio,
+        autoCropArea:1,
+        movable:false,
+        built: function(e) {
+            var image = $img.cropper('getImageData'),
+                container = $img.cropper('getContainerData'),
+                ratio = image.naturalHeight / image.height;
+            if (ratio < 1) {
+                var image_data = {
+                    width:image.naturalWidth,
+                    height:image.naturalHeight,
+                    top: (container.height - image.naturalHeight) / 2,
+                    left: (container.width - image.naturalWidth) / 2
+                };
+                $img.cropper('setCanvasData', image_data);
+                if (current_crop) {
+                    $img.cropper('setData', current_crop);
+                }
+            }
+            $popup.css('opacity', 1);
+        },
+        cropstart: function(e) {
+            var canvas = $img.cropper('getCanvasData'),
+                box = $img.cropper('getCropBoxData'),
+                sx = e.originalEvent.pageX,
+                sy = e.originalEvent.pageY;
+        
+            bounds = {
+                    n: sy - (box.top - canvas.top),
+                    e: sx - ((box.left + box.width) - (canvas.left + canvas.width)),
+                    s: sy - ((box.top + box.height) - (canvas.top + canvas.height)),
+                    w: sx - (box.left  - canvas.left)
+                };
+        },
+        cropmove: function(e) {
+            
+            var oe = e.originalEvent;
+            if (oe && oe.ctrlKey) {
+                return;
+            }
+            if (!e.action || !oe) {
+                return;
+            }
+            var tolerance = 15;
+
+            var act = e.action === 'all' ? 'nesw' : e.action,
+                offsets = {
+                    X:[],
+                    Y:[],
+                    mapX:{},
+                    mapY:{}
+                };
+
+            $.each(bounds, function(k, v) {
+                var axis = sides[k],
+                    val = oe['page'+axis],
+                    diff = Math.abs(val - v);
+                if (diff > tolerance) {
+                    return;
+                }
+                offsets[axis].push(diff);
+                offsets['map'+axis][diff] = v;
+            });
+            if (!offsets.X.length && !offsets.Y.length) {
+                return;
+            }
+
+            var fe = $.extend(
+                $.Event(oe.type), 
+                oe, 
+                {
+                    preventDefault:function() {}
+                }
+            );
+
+            if (offsets.X.length) {
+                fe.pageX = offsets.mapX[ Math.min.apply(null, offsets.X) ];
+            }
+            if (offsets.Y.length) {
+                fe.pageY = offsets.mapY[ Math.min.apply(null, offsets.Y) ];
+            }
+            e.preventDefault();
+            $(oe.target).trigger(fe);
+        },
+        crop: function(e) {
+            var crop = get_crop_data();
+            $val.data( 'crop_data', crop );
+        },
+        zoom: function(e) {
+            if (e.originalEvent) {
+                e.preventDefault();
+                if (e.ratio > 4) {
+                    return;
+                }
+                var crop_data = get_crop_data();
+                $img.cropper('zoomTo', e.ratio);
+                $img.cropper('setData', crop_data);
+            }
+        }
+    });
+    window.$cropper = $img;
+    $color_input.on('change', function() {
+        var color = $color_input.val();
+        $wrapper.css('background-color', color);
+        $wrapper.toggleClass(cl+'__wrapper_has-color', color ? true : false);
+    });
+    
+    $save.click(function() {
+        var crop = $val.data('crop_data');
+        var color = $color_input.val();
+        if (color) {
+            crop.color = color;
+        }
+        var data = {
+            entity:'file',
+            action:'save_image_meta',
+            file: src,
+            format: format,
+            crop: JSON.stringify(crop)
+        };
+        $fx.post(data, function(res) {
+            $popup.remove();
+            handle_upload(res, $block);
+        });
+    });
+}
+
+$html.on('click.fx', '.fx_image_field .fx_file_uploader', function(e) {
     var $control = $(this);
+    if (e.ctrlKey) {
+        var $block = $control.closest('.fx_image_field'),
+            $real_inp = $('.real_value', $block);
+            
+        load_cropper($real_inp);
+        return false;
+    }
+    
     $control.closest('.fx_image_field').find('input.file').focus().click();
     $control.focus();
 });
