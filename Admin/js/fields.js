@@ -687,11 +687,17 @@ function create_cropper($inp, meta) {
                     height:image.naturalHeight,
                     top: (container.height - image.naturalHeight) / 2,
                     left: (container.width - image.naturalWidth) / 2
-                };
+                },
+                crop_data = get_crop_data();
+                
                 $img.cropper('setCanvasData', image_data);
+                
+                $img.cropper('setData', crop_data);
+                /*
                 if (current_crop) {
                     $img.cropper('setData', current_crop);
                 }
+                */
             }
             $popup.css('opacity', 1);
         },
