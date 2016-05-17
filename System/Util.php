@@ -341,7 +341,8 @@ class Util
             'patch',
             'patch_migration',
             'widget',
-            'select_value'
+            'select_value',
+            'style_variant'
         );
         
         foreach ($meta as &$table) {
@@ -396,7 +397,7 @@ class Util
         ));
         
         if ($options['with_users']) {
-            $cross_users = fx::data('floxim.user.user')->where('site_id',0)->all();
+            $cross_users = fx::data('floxim.user.user')->where('site_id',false, 'is null')->all();
             $user_tables = $this->getContentDumpTables($cross_users);
 
             foreach ($user_tables as $t => $item_ids) {
