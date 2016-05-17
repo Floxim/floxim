@@ -17,7 +17,8 @@ class Manager {
                 $keyword,
                 array(
                     'layout_id' => fx::env('layout_id'),
-                    'site_id' => fx::env('site_id')
+                    'site_id' => fx::env('site_id'),
+                    'style_id' => fx::env()->getLayoutStyleVariantId()
                 )
             );
         }

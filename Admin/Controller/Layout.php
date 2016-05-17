@@ -177,37 +177,40 @@ class Layout extends Admin
         
         $current_preview = fx::env()->getLayoutPreview();
         
-        $variants = array(
-            array('default', fx::alang('Default'))
-        );
+        $variants = array();
         $variants_filter = array();
         
+        $theme_styles = fx::data('style_variant')->where('style', 'theme.%', 'like')->all();
+        
         foreach ($layouts as $layout) {
+            
             $layouts_select[] = array(
                 $layout['id'], 
                 $layout['name'] . ($current_preview == $layout['id'] ? ' ('.fx::alang('Preview').')' : '')
             );
-            $tpl = fx::template('theme.'.$layout['keyword']);
-            $tpl_variants = $tpl->getStyleVariants();
-            foreach ($tpl_variants as $tpl_variant) {
-                if (!isset($variants_filter[$tpl_variant])) {
-                    $variants []= array($tpl_variant, $tpl_variant);
-                    $variants_filter[$tpl_variant] = array();
+            
+            $style_name = 'theme.'.$layout['keyword'];
+            $style_variants = $theme_styles->find('style', $style_name);
+            foreach ($style_variants as $style_variant) {
+                if (!isset($variants_filter[$style_variant['id']])) {
+                    $variants []= array($style_variant['id'], $style_variant['name']);
+                    $variants_filter[$style_variant['id']] = array();
                 }
-                $variants_filter[$tpl_variant] []= array('layout_id', $layout['id']);
+                $variants_filter[$style_variant['id']] []= array('layout_id', $layout['id']);
             }
         }
+        
+        $variants []= array('__new', fx::alang('New').'...');
 
         $fields [] = array(
             'name'   => 'layout_id',
             'type'   => 'livesearch',
             'values' => $layouts_select,
             'value'  => fx::env('layout_id'),
-            'label'  => fx::alang('Layout', 'system')
+            'label'  => fx::alang('Theme', 'system')
         );
         
-        
-        $current_variant = fx::env()->getLayoutStyleVariant();
+        $current_variant = fx::env()->getLayoutStyleVariantId();
         
         $fields []= array(
             'name' => 'style_variant',
@@ -215,7 +218,17 @@ class Layout extends Admin
             'values' => $variants,
             'values_filter' => $variants_filter,
             'type' => 'livesearch',
+            //'type' => 'hidden',
             'value' => $current_variant ? $current_variant : 'default'
+        );
+        
+        $fields []= array(
+            'name' => 'new_variant_name',
+            'type' => 'string',
+            'label' => 'Название для нового стиля',
+            'parent' => array(
+                'style_variant' => '__new'
+            )
         );
         
         $fields[]= $this->ui->hidden('settings_sent', 'true');
@@ -238,12 +251,27 @@ class Layout extends Admin
         }
         
         if (isset($input['settings_sent'])) {
+            $style_variant_id = $input['style_variant'];
+            if ($style_variant_id === '__new') {
+                $style_variant_name = $input['new_variant_name'];
+                $style_name = 'theme.'.fx::env('layout')->get('keyword');
+                $new_variant = fx::data('style_variant')->create(
+                    array(
+                        'name' => $style_variant_name,
+                        'style' => $style_name,
+                        'less_vars' => fx::env()->getLayoutStyleVariant()->getLessVars()
+                    )
+                );
+                $new_variant->save();
+                $style_variant_id = $new_variant['id'];
+            }
             if ($input['pressed_button'] == 'preview') {
-                fx::env()->setLayoutPreview($input['layout_id'], $input['style_variant']);
+                fx::env()->setLayoutPreview($input['layout_id'], $style_variant_id);
             } else {
                 $site = fx::env('site');
                 $site['layout_id'] = $input['layout_id'];
-                $site['layout_style_variant'] = $input['style_variant'];
+                
+                $site['style_variant_id'] = $style_variant_id;
                 $site->save();
                 if ($current_preview) {
                     fx::env()->setLayoutPreview(false);
@@ -275,14 +303,14 @@ class Layout extends Admin
     public function themeSettings($input)
     {
         
-        $layout = fx::env('layout');
+        //$layout = fx::env('layout');
+        $style = fx::env()->getLayoutStyleVariant();
         
-        $params = $layout['less_params'];
+        $params = $style->getLessVars();
         
         $bundler = fx::page()->getBundleManager();
         $bundle = $bundler->getBundle('css', 'default');
         $meta = $bundle->getMeta();
-        
         $fields = array(
             $this->ui->hidden('entity', 'layout'),
             $this->ui->hidden('action', 'theme_settings'),
@@ -293,10 +321,20 @@ class Layout extends Admin
             $meta['vars'] = array();
         }
         
+        $tabs = array(
+            'colors' => 'Цвета',
+            'fonts' => 'Шрифты',
+            'sizes' => 'Размеры и отступы'
+        );
+        
         foreach ($meta['vars'] as $var) {
             $var_name = $var['name'];
             if (isset($params[$var_name])) {
-                $var['value'] = $params[$var_name];
+                $c_val = $params[$var_name];
+                if ($var['type'] === 'number') {
+                    $c_val = preg_replace("~[^0-9\.]~", '', $c_val);
+                }
+                $var['value'] = $c_val;
             }
             if ($var['type'] === 'font') {
                 $var['type'] = 'livesearch';
@@ -311,10 +349,13 @@ class Layout extends Admin
                 $var_name = $var['name'];
                 if (isset($input[$var_name]) && !empty($input[$var_name])) {
                     $res_params[$var_name] = $input[$var_name];
+                    if (isset($var['units'])) {
+                        $res_params[$var_name] .= $var['units'];
+                    }
                 }
             }
-            $layout['less_params'] = $res_params;
-            $layout->save();
+            $style['less_vars'] = $res_params;
+            $style->save();
             $bundle->delete();
             return array(
                 'status' => 'ok',
@@ -325,7 +366,8 @@ class Layout extends Admin
         return array(
             'fields' => $fields,
             'header' => fx::alang('Theme settings', 'system'),
-            'view'   => 'horizontal'
+            'view'   => 'horizontal',
+            'tabs' => $tabs
         );
     }
 

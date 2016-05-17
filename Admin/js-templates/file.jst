@@ -11,6 +11,7 @@ var value_is_emtpy = !c_value || ($fx && $fx.front && c_value === $fx.front.imag
         class="real_value" 
         value="<?=c_value?>" 
         data-format_modifier="<?= _c.format_modifier || '' ?>" />
+
     <div class="fx_preview 
                 <?= c_value ? 'fx_preview_filled' : ''?> 
                 fx_preview_<?=_c.type?>">
@@ -23,6 +24,11 @@ var value_is_emtpy = !c_value || ($fx && $fx.front && c_value === $fx.front.imag
                 <span class="fx_icon fx_icon-type-paste_url"></span>
                 <input class="remote_file_location fx_input" placeholder="<?=$fx.lang('paste URL')?>" />
             </span>
+            <? if (_c.type === 'image') { ?>
+                <a class="fx_image_cropper fx_file_control" tabindex="0" title="<?= $fx.lang('Crop') ?>">
+                    <span class="fx_icon fx_icon-type-crop"></span>
+                </a>
+            <? } ?>
             <a class="fx_file_killer fx_file_control" 
                tabindex="0"
                title="<?=$fx.lang('Delete')?>">

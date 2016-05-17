@@ -101,7 +101,7 @@ class AttrtypeParser extends Fsm
         if ($this->state === self::SRC_VAL) {
             $props['att'] = 'src';
         } elseif ($this->state === self::STYLE_BACKGROUND_URL) {
-            $props['att'] = 'style:background-url';
+            $props['att'] = 'style:background-image';
         }
         $this->res .= $this->setPropVal($props, $ch);
     }

@@ -45,7 +45,7 @@ class Suitable
         });
     }
 
-    public function suit(System\Collection $infoblocks, $layout_id)
+    public function suit(System\Collection $infoblocks, $layout_id, $layout_style_id)
     {
         $layout = fx::data('layout', $layout_id);
         $layout_ib = null;
@@ -65,15 +65,22 @@ class Suitable
 
         foreach ($all_visual as $c_vis) {
             $c_layout_id = $c_vis['layout_id'];
+            $c_style_id = $c_vis['layout_style_id'];
+            
+            /*
             $infoblocks->
                 findOne('id', $c_vis['infoblock_id'])->
-                setVisual($c_vis, $c_layout_id);
-            if (!isset($layout_rate[$c_layout_id])) {
-                $layout_rate[$c_layout_id] = 0;
+                setVisual($c_vis, $c_layout_id, $c_style_id);
+            */
+            
+            $layout_hash = $c_layout_id.','.$c_style_id;
+            
+            if (!isset($layout_rate[$layout_hash])) {
+                $layout_rate[$layout_hash] = 0;
             }
             // count how many visual blocks are defined for each layout
             // later we should sort this to find correct "original" layout made by human
-            $layout_rate[$c_layout_id]++;
+            $layout_rate[$layout_hash]++;
         }
         
         //$source_layout_id = $c_layout_id;
@@ -81,17 +88,19 @@ class Suitable
         // temp: use first
         // $source_layout_id = $avail_layout_ids[0];
         $source_layout_id = end($avail_layout_ids);
-
+        
         if (!$layout_ib) {
             $layout_ib = fx::router('front')->getLayoutInfoblock(fx::env('page'));
         }
+        
 
         $area_map = array();
         
         if ($layout_ib->getVisual()->get('is_stub') || !$layout_ib->getTemplate()) {
-            $this->adjustLayoutVisual($layout_ib, $layout_id, $source_layout_id);
+            $this->adjustLayoutVisual($layout_ib, $layout_id, $layout_style_id, $source_layout_id);
             $layout_visual = $layout_ib->getVisual();
             $area_map = $layout_visual['area_map'];
+            fx::log('from layvis');
         } else {
             $layout_visual = $layout_ib->getVisual();
             $old_layout_template = $layout_ib->getPropInherited('visual.template', $source_layout_id);
@@ -103,7 +112,10 @@ class Suitable
                 $area_map = $this->mapAreas($old_areas, $new_areas);
                 $area_map = $area_map['map'];
             }
+            fx::log('from old', $source_layout_id);
         }
+        
+        fx::log($area_map);
         
         
         $layout_template_name = $layout_ib->getPropInherited('visual.template');
@@ -114,7 +126,7 @@ class Suitable
         $c_wrappers = array();
         
         foreach ($infoblocks as $ib) {
-            $ib_visual = $ib->getVisual($layout_id);
+            $ib_visual = $ib->getVisual($layout_id.','.$layout_style_id);
             if (!$ib_visual['is_stub']) {
                 continue;
             }
@@ -297,13 +309,13 @@ class Suitable
         return $wrappers;
     }
 
-    protected function adjustLayoutVisual($layout_ib, $layout_id, $source_layout_id)
+    protected function adjustLayoutVisual($layout_ib, $layout_id, $layout_style_id, $source_layout_id)
     {
         $is_root_layout = (bool)$layout_ib['parent_infoblock_id'];
         if ($is_root_layout && $source_layout_id) {
             $root_layout_ib = $layout_ib->getRootInfoblock();
             if ($root_layout_ib->getVisual($layout_id)->get('is_stub')) {
-                $this->adjustLayoutVisual($root_layout_ib, $layout_id, $source_layout_id);
+                $this->adjustLayoutVisual($root_layout_ib, $layout_id, $layout_style_id, $source_layout_id);
             }
         }
         
@@ -365,7 +377,7 @@ class Suitable
         $layout_vis = $layout_ib->getVisual();
         $layout_vis['template'] = $c_variant['full_id'];
         if ($source_template_params) {
-            $layout_vis['template_visual'] = $source_template_params;
+            $layout_vis['template_visual'] = $layout_vis->copyParams($source_template_params);
         }
         if ($c_variant['areas']) {
             $layout_vis['areas'] = $c_variant['areas'];

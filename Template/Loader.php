@@ -145,7 +145,7 @@ class Loader
                 try {
                     $this->addSourceDir($dir);
                 } catch (\Exception $e) {
-                    fx::log('Error while adding template source dir', $e->getMessage());
+                    fx::log('Error while adding template source dir', $e->getMessage(), debug_backtrace());
                 }
             }
         }

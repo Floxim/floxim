@@ -8,9 +8,22 @@ class LessMetaParser {
     
     public $isPreEvalVisitor = true;
     
+    protected $parser = null;
+    protected $current_values = null;
+    
+    protected $on_ready = null;
+    
+    public function onReady($callback)
+    {
+        $this->on_ready = $callback;
+    }
+    
     public function run($root)
     {
         $this->processRules($root);
+        if (!is_null($this->on_ready)) {
+            call_user_func($this->on_ready);
+        }
     }
     
     protected $vars = array();

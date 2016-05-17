@@ -83,6 +83,9 @@ class Entity extends System\Entity
 
     protected function beforeDelete()
     {
+        if (!fx::env('console')) {
+            fx::log(debug_backtrace());
+        }
         parent::beforeDelete();
         $files = $this->getFileParams();
         foreach ($files as $f) {
@@ -150,5 +153,5 @@ class Entity extends System\Entity
             }
         }
         return $res;
-    }   
+    }
 }

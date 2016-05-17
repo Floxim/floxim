@@ -294,7 +294,8 @@ class Infoblock extends Admin
             ));
             $i2l = fx::data('infoblock_visual')->create(array(
                 'area'      => $area_meta['id'],
-                'layout_id' => fx::env('layout_id')
+                'layout_id' => fx::env('layout_id'),
+                'layout_style_id' => fx::env()->getLayoutStyleVariantId()
             ));
             if (isset($input['next_visual_id']) && $input['next_visual_id']) {
                 $i2l->moveBefore($input['next_visual_id']);
@@ -1259,7 +1260,16 @@ class Infoblock extends Admin
         
         $vis = fx::data('infoblock_visual', $input['visual_id']);
         
-        $container = new \Floxim\Floxim\Template\Container(null, $meta['name'], $meta['set']);
+        $parent_props = isset($_POST['content_parent_props']) ? json_decode($_POST['content_parent_props'], true) : array();
+        
+        $container = new \Floxim\Floxim\Template\Container(
+            null, 
+            $meta['name'], 
+            $meta['set'],
+            array(
+                \Floxim\Floxim\Template\Container::create($parent_props)
+            )
+        );
         
         $container->bindVisual($vis);
         

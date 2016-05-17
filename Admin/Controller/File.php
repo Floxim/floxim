@@ -28,6 +28,9 @@ class File extends Admin
     public function getImageMeta($input)
     {
         $file = $input['file'];
+        if (empty($file)) {
+            $file = \Floxim\Floxim\Template\Compiler::getStubImageUrl();
+        }
         $format = $input['format'];
         $res = array();
         try {

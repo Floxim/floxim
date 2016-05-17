@@ -83,7 +83,15 @@ class Finder extends System\Finder
 
     public function getForPage($page_id = null)
     {
+        
         $page = $page_id instanceof System\Entity ? $page_id : fx::data('floxim.main.page', $page_id);
+        if(method_exists($page, 'getPath')) {
+            $path = $page->getPath();
+        } else {
+            $path = fx::collection( array($page) );
+        }
+        return $this->getForPath($path);
+        /*
         if (!$page) {
             return fx::collection();
         }
@@ -93,13 +101,17 @@ class Finder extends System\Finder
         $ids [] = $page['id'];
         $ids [] = 0; // root
         $infoblocks = $this->where('page_id', $ids)->where('site_id', $page['site_id'])->all();
+        fx::cdebug($infoblocks, $this);
         foreach ($infoblocks as $ib) {
             if (!$ib->isAvailableOnPage($page)) {
+                fx::cdebug('skip', $ib);
                 $infoblocks->remove($ib);
             }
         }
 
         return $infoblocks;
+         * 
+         */
     }
     
     /**

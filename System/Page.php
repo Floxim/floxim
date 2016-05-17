@@ -427,7 +427,7 @@ class Page
         
         $this->setAfterBody( 
             \Floxim\Floxim\Asset\Fonts::getLoaderJS(
-                fx::env('layout')->getUsedFonts()
+                fx::env()->getLayoutStyleVariant()->getUsedFonts()
             ) 
         );
         
@@ -494,7 +494,7 @@ class Page
             foreach ($ibs  as $ib) {
                 if ($ib->getVisual()->get('is_stub')) {
                     $suitable = new \Floxim\Floxim\Template\Suitable();
-                    $suitable->suit($ibs, fx::env('layout_id'));
+                    $suitable->suit($ibs, fx::env('layout_id'), fx::env()->getLayoutStyleVariantId());
                     break;
                 }
             }

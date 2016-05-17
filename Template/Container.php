@@ -17,6 +17,38 @@ class Container {
     
     protected $parents = array();
     
+    protected static $field_keys = array (
+        'bg_color',
+        'margin',
+        'padding',
+        //'min_height',
+        'vertical_align',
+        'align',
+        'valign',
+        'sizing',
+        'bg_image',
+        'bg_color_2',
+        'bg_position',
+        'lightness',
+        'overlap-top',
+        'overlap-bottom',
+        'border-radius-top',
+        'border-radius-bottom',
+        'shadow-spread',
+        'shadow-opacity'
+    );
+    
+    public static function create($props)
+    {
+        $res = array();
+        foreach ($props as $k => $v) {
+            $res[ preg_replace("~[^a-z0_9_-]~", '', $k) ] = preg_replace("~[^a-z0_9_-]~", '', $v);
+        }
+        $container = new \Floxim\Floxim\Template\Container();
+        $container->setValues($res);
+        return $container;
+    }
+    
     public function __construct(
         $context = null, 
         $name = null, 
@@ -30,8 +62,7 @@ class Container {
         $this->parents = $parents;
         
         if ($context) {
-            $field_keys = array_keys($this->getFields());
-            foreach ($field_keys as $field_key) {
+            foreach (self::$field_keys as $field_key) {
                 $value = $this->context->get($this->getStoredFieldName($field_key));
                 $this->values[$field_key] = $value;
             }
@@ -50,8 +81,7 @@ class Container {
         if (!is_array($params)) {
             $params = array();
         }
-        $field_keys = array_keys($this->getFields());
-        foreach ($field_keys as $field_key) {
+        foreach (self::$field_keys as $field_key) {
             $stored_key = $this->getStoredFieldName($field_key);
             $this->values[$field_key] = isset($params[$stored_key]) ? $params[$stored_key] : null;
         }
@@ -68,6 +98,9 @@ class Container {
         }
         if ($this->name === 'layout') {
             $res['sizing'] = 'fullwidth';
+            if (!isset($res['lightness'])) {
+                $res['lightness'] = 'light';
+            }
         }
         if (preg_match("~^column_~", $this->name)) {
             $res['sizing'] = 'column';
@@ -101,13 +134,27 @@ class Container {
         return $res;
     }
     
+    public function getParentValue($prop)
+    {
+        $parents = $this->parents;
+        if (count($parents) === 0) {
+            return null;
+        }
+        $parents = array_reverse($parents);
+        foreach ($parents as $parent) {
+            $parent_value = $parent->getValue($prop);
+            if ($parent_value) {
+                return $parent_value;
+            }
+        }
+    }
+    
     public function getContentClasses($with_self = false)
     {
         $block_class = 'fx-content';
         $parents = $this->parents;
         if ($with_self) {
             $parents []= $this;
-            //fx::log("push parent", $parents);
         }
         if (count($parents) === 0) {
             return '';
@@ -145,6 +192,35 @@ class Container {
         $res .= $this->getBackgroundStyle($vals);
         if ($vals['min_height']) {
             $res .= 'min-height:'.$vals['min_height'].';';
+        }
+        
+        foreach (array('bottom', 'top') as $prop_type) {
+            $prop = 'overlap-'.$prop_type;
+            $prop_val = $vals[$prop] * 1;
+            if (!$prop_val) {
+                continue;
+            }
+            $prop_hash = $prop_type .'-'.$this->name;
+            if ($prop_val > 0 || (!in_array($prop_hash, array('top-layout_header', 'bottom-layout_footer') ))) {
+                $res .= 'margin-' . $prop_type.':'. $prop_val . 'px; ';
+            }
+            if ($prop_val < 0) {
+                $res .= 'padding-' . $prop_type.':'. ($prop_val * -1 ). 'px; ';
+            }
+        }
+        foreach (array('bottom', 'top') as $prop_type) {
+            $prop = 'border-radius-'.$prop_type;
+            $prop_val = $vals[$prop] * 1;
+            if (!$prop_val) {
+                continue;
+            }
+            $res .= 'border-'.$prop_type.'-left-radius:'.$prop_val.'px; ';
+            $res .= 'border-'.$prop_type.'-right-radius:'.$prop_val.'px; ';
+        }
+        if (isset($vals['shadow-spread']) && !empty($vals['shadow-spread'])) {
+            $opacity = isset($vals['shadow-opacity']) && !empty($vals['shadow-opacity']) ? $vals['shadow-opacity'] : 0.3;
+            $res .= 'box-shadow: 0 0 '.$vals['shadow-spread'].'px rgba(0,0,0,'.$opacity.')';
+            
         }
         return $res;
     }
@@ -239,7 +315,10 @@ class Container {
         );
         $res['bg_color_2'] = array(
             'type' => 'color',
-            'label' => 'Цвет фона 2'
+            'label' => 'Цвет фона 2',
+            'parent' => array(
+                $this->getStoredFieldName('bg_color')
+            )
         );
         $res['bg_image'] = array(
             'type' => 'image',
@@ -269,15 +348,20 @@ class Container {
                         'we' => 'Лево и право'
                     )
                 ),
-                'value' => 'all'
+                'value' => 'none'
             );
         }
+        
         if ($type !== 'column' && $type !== 'layout') {
             $res['min_height'] = array(
                 'label' => 'Мин. высота',
-                'type' => 'number'
+                'type' => 'number',
+                'min' => 0,
+                'max' => 1000,
+                'step' => 10
             );
         }
+        
         if ($type !== 'layout' && $type !== 'columns' && $type !== 'section') {
             $res['align'] = array(
                 'label' => 'Выравнивание',
@@ -319,6 +403,58 @@ class Container {
                 );
             }
         }
+        if ($type === 'section') {
+            $res['overlap-top'] = array(
+                'label' => 'Отступ сверху',
+                'type' => 'number',
+                'value' => 0,
+                'min' => -300,
+                'max' => 300,
+                'step' => 10
+            );
+            $res['overlap-bottom'] = array(
+                'label' => 'и снизу',
+                'type' => 'number',
+                'value' => 0,
+                'min' => -300,
+                'max' => 300,
+                'step' => 10
+            );
+        }
+        if (in_array($type, array('section', 'wrapper'))) {
+            $res['border-radius-top'] = array(
+                'label' => 'Углы верх',
+                'type' => 'number',
+                'value' => 0,
+                'min' => 0,
+                'max' => 100,
+                'step' => 1
+            );
+            $res['border-radius-bottom'] = array(
+                'label' => 'и низ',
+                'type' => 'number',
+                'value' => 0,
+                'min' => 0,
+                'max' => 100,
+                'step' => 1
+            );
+            $res['shadow-spread'] = array(
+                'label' => 'Тень',
+                'type' => 'number',
+                'value' => 0,
+                'min' => 0,
+                'max' => 50,
+                'step' => 5
+            );
+            $res['shadow-opacity'] = array(
+                'label' => 'прозрачность',
+                'type' => 'number',
+                'value' => 0,
+                'min' => 0.1,
+                'max' => 1,
+                'step' => 0.1
+            );
+        }
         return $res;
     }
     
@@ -349,19 +485,29 @@ class Container {
         return array(
             'type' => 'livesearch',
             'label' => 'Позиция изображения',
-            'values' => $pos_vals
+            'values' => $pos_vals,
+            'parent' => array(
+                $this->getStoredFieldName('bg_image')
+            )
         );
     }
     
     public function getSizingVariants()
     {
         $variants = array(
-            'default',
-            'fullwidth'
+            'default'
         );
+        $parent_sizing = $this->getParentValue('sizing');
+        if ($parent_sizing !== 'column') {
+            $variants []= 'fullwidth';
+        }
         $type = $this->getType();
-        if ($type === 'wrapper') {
+        if ($type === 'wrapper' && $parent_sizing !== 'column') {
             $variants []= 'fullwidth-outer';
+        }
+        $parent_padding = $this->getParentValue('padding');
+        if ( in_array($parent_padding, array('all', 'we')) ) {
+            $variants []= 'antipad';
         }
         $res = $this->getLivesearchSchemes('wrapper_sizing', $variants);
         return $res;
@@ -461,8 +607,7 @@ class Container {
         if (!is_array($params)) {
             $params = array();
         }
-        $fields = $this->getFields();
-        foreach (array_keys($fields) as $field_key) {
+        foreach (self::$field_keys as $field_key) {
             $stored_key = $this->getStoredFieldName($field_key);
             if (isset($input[$stored_key])) {
                 $params[$stored_key] = $input[$stored_key];

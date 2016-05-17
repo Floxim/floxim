@@ -325,6 +325,9 @@ fx_form = {
         });
             
         $.each(settings.tabs, function(key,val){
+            if (typeof val === 'string') {
+                val = {label:val};
+            }
             if (key === 'header') {
                 return;
             }
@@ -587,7 +590,9 @@ fx_form = {
                         ls.destroy();
                     }
                     var new_params = $.extend({}, json, {values:new_vals});
-                    new_params.value = new_vals[0][0];
+                    if (new_vals.length) {
+                        new_params.value = new_vals[0][0];
+                    }
                     var $new_field = that.draw_field(new_params, $field, 'before');
                     $new_field.find('input[type="hidden"]').trigger('change');
                     $field.remove();

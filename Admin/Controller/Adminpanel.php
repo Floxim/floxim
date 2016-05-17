@@ -99,7 +99,7 @@ class Adminpanel extends Admin
                 'content_id'   => $c_page['id']
             )
         );
-
+        /*
         $more_menu['layout_settings'] = array(
             'name'   => fx::alang('Layout settings', 'system'),
             'button' => array(
@@ -108,6 +108,8 @@ class Adminpanel extends Admin
                 'page_id' => fx::env('page_id')
             )
         );
+         * 
+         */
         $more_menu['theme_settings']= array(
             'name' => fx::alang('Theme settings', 'system'),
             'button' => array(

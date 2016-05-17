@@ -23,21 +23,28 @@ class Entity extends System\Entity implements Template\Entity
 
     public function setVisual(Component\InfoblockVisual\Entity $visual)
     {
-        $this->_visual[$visual['layout_id']] = $visual;
+        $this->_visual[$visual['layout_id'].','.$visual['layout_style_id']] = $visual;
     }
 
     public function getVisual($layout_id = null)
     {
         if (!$layout_id) {
-            $layout_id = fx::env('layout_id');
+            $layout_id = fx::env('layout_id').','.fx::env()->getLayoutStyleVariantId();
         }
+        $layout_parts = explode(',', $layout_id);
         if (!isset($this->_visual[$layout_id])) {
-            $stored = $this['visuals']->findOne('layout_id', $layout_id);
+            $stored = $this['visuals']->findOne(
+                function($vis) use ($layout_parts) {
+                    return $vis['layout_id'] == $layout_parts[0] && $vis['layout_style_id'] == $layout_parts[1];
+                }
+            );
             if ($stored) {
                 $this->_visual[$layout_id] = $stored;
             } else {
                 $i2l_params = array(
-                    'layout_id' => $layout_id,
+                    //'layout_id' => $layout_id,
+                    'layout_id' => $layout_parts[0],
+                    'layout_style_id' => $layout_parts[1],
                     'is_stub'   => true
                 );
                 if (($ib_id = $this->get('id'))) {
@@ -665,12 +672,6 @@ class Entity extends System\Entity implements Template\Entity
     
     public function bindLayoutContainerParams($params)
     {
-        $res = array();
-        foreach ($params as $k => $v) {
-            $res[ preg_replace("~[^a-z0_9_-]~", '', $k) ] = preg_replace("~[^a-z0_9_-]~", '', $v);
-        }
-        $container = new \Floxim\Floxim\Template\Container();
-        $container->setValues($res);
-        $this->parent_container = $container;
+        $this->parent_container = \Floxim\Floxim\Template\Container::create($params);
     }
 }

@@ -318,6 +318,9 @@ window.$fx_fields = {
             json.params.allow_select_doubles = json.allow_select_doubles;
         }
         var ls = $t.jQuery(template, json);
+        if (json.values && json.values.length === 0) {
+            ls.hide();
+        }
         return ls;
     },
 
@@ -809,16 +812,20 @@ function create_cropper($inp, meta) {
 
 $html.on('click.fx', '.fx_image_field .fx_file_uploader', function(e) {
     var $control = $(this);
-    if (e.ctrlKey) {
-        var $block = $control.closest('.fx_image_field'),
-            $real_inp = $('.real_value', $block);
-            
-        load_cropper($real_inp);
-        return false;
-    }
     
     $control.closest('.fx_image_field').find('input.file').focus().click();
     $control.focus();
+});
+
+$html.on('click.fx', '.fx_image_field .fx_image_cropper', function(e) {
+    
+    var $real_inp = 
+            $(this)
+                .closest('.fx_image_field')
+                .find('.real_value');
+    
+    load_cropper($real_inp);
+    return false;
 });
 
 $html.on('click.fx', '.fx_image_field .fx_file_killer', function() {

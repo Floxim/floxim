@@ -88,6 +88,7 @@ class Debug
             call_user_func($callback);
         }
         fclose($this->file);
+        //$this->file = null;
         $this->writeIndex();
     }
 
@@ -344,6 +345,15 @@ class Debug
         $res = ob_get_clean();
         return $res;
     }
+    
+    protected function fputs($h, $data)
+    {
+        if (is_resource($h)) {
+            fputs($h, $data);
+            return false;
+        }
+        return false;
+    }
 
     /**
      * Put args into log
@@ -359,9 +369,9 @@ class Debug
         if (is_null($this->file)) {
             $this->start();
         } else {
-            fputs($this->file, $this->separator);
+            $this->fputs($this->file, $this->separator);
         }
-        fputs(
+        $this->fputs(
             $this->file,
             serialize(
                 call_user_func_array(

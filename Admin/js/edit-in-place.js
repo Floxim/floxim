@@ -122,7 +122,9 @@ window.fx_eip = {
                         if (meta.att) {
                             var att_style = meta.att.match(/style:(.+)$/);
                             if (att_style) {
-                                $node.css(att_style[1], v);
+                                if (att_style[1] === 'background-image') {
+                                    $node.css('background-image', 'url("'+v+'")');
+                                }
                             } else {
                                 $node.attr(meta.att, v);
                             }
@@ -440,9 +442,9 @@ fx_edit_in_place.prototype.start = function(meta) {
             this.add_panel_field(
                 field_meta
             ).on('fx_change_file', function(e) {
-                edit_in_place.fix();
+                edit_in_place.fix(false);
                 $(this).trigger('change');
-                if (!meta.att || !e.target.value) {
+                if (!meta.att || (!e.target.value && meta.initial_value) ) {
                     edit_in_place.save();
                 }
             });
@@ -853,8 +855,8 @@ fx_edit_in_place.prototype.get_vars = function() {
         }
     }
     for (var i = 0; i < this.panel_fields.length; i++) {
-        var pf = this.panel_fields[i],
-            pf_meta = pf.data('meta'),
+        var $pf = this.panel_fields[i],
+            pf_meta = $pf.data('meta'),
             formatted_value = null;
         
         if (!pf_meta) {
@@ -863,7 +865,7 @@ fx_edit_in_place.prototype.get_vars = function() {
         var old_value = pf_meta.value;
         var $c_input = null;
         if (pf_meta.type === 'bool' || pf_meta.type === 'checkbox') {
-            $c_input = $('input[name="'+pf_meta['name']+'"][type="checkbox"]', pf);
+            $c_input = $('input[name="'+pf_meta['name']+'"][type="checkbox"]', $pf);
             var new_value = $c_input.is(':checked') ? "1" : "0";
             if (old_value === null) {
                 old_value = '0';
@@ -871,7 +873,7 @@ fx_edit_in_place.prototype.get_vars = function() {
                 old_value = old_value+'';
             }
         } else if (pf_meta.type === 'livesearch') {
-            var livesearch = $('.livesearch', pf).data('livesearch');
+            var livesearch = $('.livesearch', $pf).data('livesearch');
             
             if (livesearch.isMultiple) {   
                 var new_value = livesearch.getValues();
@@ -906,33 +908,27 @@ fx_edit_in_place.prototype.get_vars = function() {
                 }
             }
         } else {
-            //$c_input = $(':input[name="'+pf_meta['name']+'"]', pf);
-            $c_input = pf.descendant_or_self(':input[name="'+pf_meta['name']+'"]');
+            $c_input = $pf.descendant_or_self(':input[name="'+pf_meta['name']+'"]');
             var new_value = $c_input.val();
         }
         
         var value_changed = false;
         if (pf_meta.type === 'image' || pf_meta.type === 'file') {
-            
             value_changed = new_value !== old_value.path;
             
             var file_data = $c_input.data('fx_upload_response');
             
-            if (file_data && file_data.formatted_value) {
+            if (new_value && file_data && file_data.formatted_value) {
                 formatted_value = file_data.formatted_value;
             }
             
             if (file_data && file_data.action === "save_image_meta") {
                 value_changed = true;
-                console.log('savr meta!', file_data, formatted_value)
             }
-            /*
-            // dirty hack: mark value as modified if we have ?r=123 cache breaker passed from cropper
-            if (formatted_value && /\?r=\d+/.test(formatted_value)) {
-                value_changed = true;
-                console.log('mark changd');
+            if (!old_value.path) {
+                var new_meta = $.extend({}, pf_meta, {value:{path:new_value}});
+                $pf.data('meta', new_meta);
             }
-            */
         } else if (new_value instanceof Array && old_value instanceof Array) {
             value_changed = new_value.join(',') !== old_value.join(',');
         } else {
@@ -954,15 +950,18 @@ fx_edit_in_place.prototype.get_vars = function() {
     return vars;
 };
 
-fx_edit_in_place.prototype.fix = function() {
+fx_edit_in_place.prototype.fix = function(stop_on_empty) {
+    if (typeof stop_on_empty === 'undefined') {
+        stop_on_empty = true;
+    }
     if (this.stopped) {
         return this;
     }
     
     var vars = fx_eip.fix();
-    console.log('fixing eip', this);
+    
     // nothing has changed
-    if (vars.length === 0) {
+    if (vars.length === 0 && stop_on_empty) {
         this.stop();
         //this.restore();
         return this;

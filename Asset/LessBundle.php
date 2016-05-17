@@ -30,7 +30,7 @@ class LessBundle extends Bundle {
         }
         
         try {
-            $less_vars = fx::env('layout')->get('less_params');
+            $less_vars = fx::env()->getLayoutStyleVariant()->getLessVars();
             $parser->ModifyVars($less_vars);
             $css = $parser->getCss();
             $this->meta['vars'] = $meta_parser->getVars();
@@ -44,6 +44,8 @@ class LessBundle extends Bundle {
     {
         parent::delete();
         $map_path = $this->getFilePath().'.map';
-        unlink($map_path);
+        if (file_exists($map_path)) {
+            unlink($map_path);
+        }
     }
 }

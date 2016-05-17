@@ -141,8 +141,9 @@ class Front extends Base
                 break;
             }
         }
-        
+
         if ($layout_ib->getVisual()->get('is_stub') || !$layout_ib->getTemplate()) {
+            
             $suitable = new Template\Suitable();
             //$infoblocks = $page->getPageInfoblocks();
             $infoblocks = fx::data('infoblock')->getForPage($page);
@@ -152,7 +153,8 @@ class Front extends Base
                 return $ib->isLayout() && $ib['id'] !== $layout_ib['id'];
             });
             
-            $suitable->suit($infoblocks, fx::env('layout_id'));
+            $suitable->suit($infoblocks, fx::env('layout_id'), fx::env()->getLayoutStyleVariantId());
+            fx::cdebug('suted', $infoblocks, fx::env('layout_id'), fx::env()->getLayoutStyleVariantId());
             return $infoblocks->findOne(function ($ib) {
                 return $ib->isLayout();
             });

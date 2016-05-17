@@ -322,8 +322,10 @@ class Thumb
             }
         }
         
+        $calculated_size = $this->calculateSize($st);
         // the calculated sizes based on min-max, the size of the picture and a set of w-h
-        $st = array_merge($st, $this->calculateSize($st));
+        $st = array_merge($st, $calculated_size);
+        //fx::log($st, $calculated_size);
         
         $width = $this->info['width'];
         $height = $this->info['height'];

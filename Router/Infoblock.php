@@ -64,8 +64,8 @@ class Infoblock extends Base
             $infoblock->override($infoblock_overs);
         }
         $infoblock->overrideParam('ajax_mode', true);
-        if (isset($_POST['layout_container_params'])) {
-            $infoblock->bindLayoutContainerParams( json_decode($_POST['layout_container_params'], true) );
+        if (isset($_POST['content_parent_props'])) {
+            $infoblock->bindLayoutContainerParams( json_decode($_POST['content_parent_props'], true) );
         }
         //fx::log($_POST, $_POST['layout_container_params'], $infoblock);
         

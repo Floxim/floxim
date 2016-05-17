@@ -64,6 +64,8 @@
         }
         .fx_admin_form__title {
             margin-top:13px;
+            float: left;
+            margin-right: 30px;
         }
     }
     
@@ -324,6 +326,7 @@
         //max-width: 135px;
         max-width:300px;
         margin-bottom:0;
+        display:inline-block;
     }
     .field_text .input_container {
         overflow:hidden;
@@ -534,7 +537,7 @@
         }
     }
     
-    .fx_file_killer, .fx_remote_file_block, .fx_file_uploader {
+    .fx_file_killer, .fx_remote_file_block, .fx_file_uploader, .fx_image_cropper {
         display:block;
         float:left;
         padding:2px 12px;
@@ -547,13 +550,13 @@
         border-right:1px solid #ececec;
     }
     
-    .fx_file_killer {
+    .fx_file_killer, .fx_image_cropper {
         display:none;
     }
     
     
     .fx_preview_filled {
-        .fx_file_killer {
+        .fx_file_killer, .fx_image_cropper {
             display:block;
         }
         .fx_remote_file_block {
@@ -718,6 +721,11 @@
         margin-bottom:5px;
         margin-top:5px;
     }
+}
+
+.fx_number_field_units {
+    font-size:13px;
+    color:#666;
 }
 
 .fx_admin_form.fx_form_cols .field_set .form_label label {
@@ -892,7 +900,7 @@
 }
 
 .fx_input_number {
-    width:65px !important;
+    width:85px !important;
 }
 
 .fx_list_filter {

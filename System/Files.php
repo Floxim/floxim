@@ -478,6 +478,7 @@ class Files
 
     public function rm($filename)
     {
+        fx::log(debug_backtrace());
         $filename = preg_replace("~\?.+$~", '', $filename);
         if (is_array($filename)) {
             foreach ($filename as $file) {

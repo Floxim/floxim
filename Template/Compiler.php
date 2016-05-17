@@ -727,10 +727,8 @@ class Compiler
             $code .= "}\n";
         }
 
-        //$code .= 'if (!' . $var . ' || ( !preg_match("~^https?://~", ' . $var . ') && !file_exists(fx::path()->abs(preg_replace("~\?.+$~", "", ' . $var . '))) )) {' . "\n";
         $code .= 'if (!'.$var.") {\n";
         if ($use_stub) {
-            //$stub_image = fx::path()->http('@floxim/Admin/style/images/no.gif');
             $stub_image = self::getStubImageUrl();
             $code .= $var . "= \$_is_admin ? FX_BASE_URL.'" . $stub_image . "' : '';\n";
         } else {
@@ -738,8 +736,7 @@ class Compiler
         }
         $code .= "} else {\n";
         $code .= $var . " = FX_BASE_URL .".$var.";\n";
-        $code .= "}";
-        //$code .= "}\n";
+        $code .= "}\n";
         return $code;
     }
 
@@ -802,16 +799,19 @@ class Compiler
 
             $code .= $real_val_var . ' = ' . $expr . ";\n";
 
-            if ($token_is_file) {
-                $code .= $this->makeFileCheck($real_val_var, !$has_default);
-            }
-
             if ($modifiers || $has_default) {
                 $display_val_var = '$' . $var_chunk . '_display_val';
                 $code .= $display_val_var . ' = ' . $real_val_var . ";\n";
             } else {
                 $display_val_var = $real_val_var;
             }
+            
+            if ($token_is_file) {
+                //$code .= $this->makeFileCheck($real_val_var, !$has_default);
+                $code .= $this->makeFileCheck($display_val_var, !$has_default);
+            }
+
+            
             $expr = $display_val_var;
             $real_val_defined = true;
         }
@@ -2010,7 +2010,7 @@ class Compiler
         }
         $template_id = $token->getProp('id');
         if (!$template_id) {
-            $template_id = 'used_as_'.str_replace(':', '_', $token->getProp('as'));
+            $template_id = 'used_as_'.str_replace(':', '_', $token->getProp('as')).'_'.md5(microtime(true).rand(0, 999999999));
             $template_id = str_replace('.', '_', $template_id);
             $token->setProp('id', $template_id);
             $this->registerTemplate($token);

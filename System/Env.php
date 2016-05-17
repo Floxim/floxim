@@ -174,7 +174,7 @@ class Env
             $layout_preview = self::getLayoutPreview();
             if ( $layout_preview ) {
                 $this->current['layout_id'] = $layout_preview[0];
-                $this->current['layout_style_variant'] = $layout_preview[1];
+                $this->current['style_variant_id'] = $layout_preview[1];
                 return $layout_preview[0];
             }
             $page_id = $this->getPageId();
@@ -188,7 +188,7 @@ class Env
                 $site = $this->getSite();
                 if ($site) {
                     $this->current['layout_id'] = $site['layout_id'];
-                    $this->current['layout_style_variant'] = $site['layout_style_variant'];
+                    $this->current['style_variant_id'] = $site['style_variant_id'];
                 }
             }
             if (!isset($this->current['layout_id'])) {
@@ -198,10 +198,24 @@ class Env
         return $this->current['layout_id'];
     }
     
-    public function getLayoutStyleVariant()
+    public function getLayoutStyleVariantId()
     {
         $this->getLayoutId();
-        return isset($this->current['layout_style_variant']) ? $this->current['layout_style_variant'] : null;
+        return isset($this->current['style_variant_id']) ? $this->current['style_variant_id'] : null;
+    }
+    
+    public function getLayoutStyleVariant()
+    {
+        if (isset($this->current['style_variant'])) {
+            return $this->current['style_variant'];
+        }
+        $id = $this->getLayoutStyleVariantId();
+        $variant = fx::data('style_variant', $id);
+        if (!$variant) {
+            $variant = fx::data('style_variant')->create();
+        }
+        $this->current['style_variant'] = $variant;
+        return $variant;
     }
     
     protected static function getLayoutPreviewCookieName($site_id = null)
@@ -221,10 +235,10 @@ class Env
         if ($layout_id === false) {
             $cookie_time = time() - 60*60*60;
             unset($this->current['layout_id']);
-            unset($this->current['layout_style_variant']);
+            unset($this->current['style_variant_id']);
         } else {
             $this->current['layout_id'] = $layout_id;
-            $this->current['layout_style_variant'] = $style_variant;
+            $this->current['style_variant_id'] = $style_variant;
             $cookie_time = time() + 60*60*24*365;
         }
         setcookie(self::getLayoutPreviewCookieName(), $layout_id.':'.$style_variant, $cookie_time, '/');

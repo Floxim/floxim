@@ -86,12 +86,27 @@ print('data-', (_o && _o.key != undefined ? _o.key : 'inline'),	 '="', $t.clear(
 name="<?=_c.name?>" id="<?=_c.name || _c.id?>"
 
 <!--[input]-->
+    <?
+    var type_att = ['password','number'].indexOf(_c.type) < 0 ? 'text' : _c.type;
+    ?>
 	<input 
-		type="<?=_c.type === 'password' ? 'password' : 'text'?>" 
+		type="<?= type_att ?>" 
                 <?= _c.disabled ? ' disabled="disabled"' : ''?>
         class="fx_input fx_input_<?=_c.type?>" 
 		<?=$t.field_id_name(_c)?> 
-		value="<?=$t.clear(_c.value || '')?>" />
+		value="<?=$t.clear(_c.value || '')?>" 
+                <? if (_c.type === 'number') {
+                    var num_atts = ['min','max','step'];
+                    for (var i = 0; i < num_atts.length; i++) {
+                        if (_c[num_atts[i]] !== undefined) {
+                            print(num_atts[i] + '="'+_c[num_atts[i]]+'" ');
+                        }
+                    }
+                } ?>
+                />
+    <? if (_c.type === 'number' && _c.units) { ?>
+        <span class="fx_number_field_units"> <?= _c.units ?> </span>
+    <? } ?>
 
                 
 <!--[input ? _c.type == 'html']-->

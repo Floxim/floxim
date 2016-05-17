@@ -6,6 +6,7 @@ fx_front.prototype.get_own_infoblocks = function($node) {
     var infoblocks = [],
         area_node = $node.closest('.fx_area')[0];
     
+    //console.log(area_node, $('.fx_infoblock', $node));
     $('.fx_infoblock', $node).each(function() {
         var ib = this,
             $ib = $(this);
@@ -39,6 +40,8 @@ fx_front.prototype.create_inline_infoblock_adder = function($node) {
         '<span class="fx_adder_variant">'+$fx.lang('block')+'</span>',
         'infoblock'
     );
+    
+    //console.log($node, $fx.front.get_own_infoblocks($node));
     
     
     $button.on('fx_place_adder', function() {

@@ -8,6 +8,9 @@ class Fonts {
     public static function getLoaderJS($fonts)
     {
         static $is_loaded = false;
+        if (count($fonts) === 0) {
+            return '';
+        }
         ob_start();
         if (!$is_loaded) {
             $is_loaded = true;

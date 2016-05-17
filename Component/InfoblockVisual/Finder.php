@@ -15,12 +15,15 @@ class Finder extends System\Finder
         $this->json_encode = array('wrapper_visual', 'template_visual');
     }
 
-    public function getForInfoblocks(System\Collection $infoblocks, $layout_id)
+    public function getForInfoblocks(System\Collection $infoblocks, $layout_id, $layout_style_id = null)
     {
         $ib_ids = $infoblocks->getValues('id');
         $this->where('infoblock_id', $ib_ids);
         if ($layout_id) {
             $this->where('layout_id', $layout_id);
+        }
+        if ($layout_style_id) {
+            $this->where('style_variant_id', $layout_style_id);
         }
         return $this->all();
     }
@@ -36,6 +39,11 @@ class Finder extends System\Finder
                 self::BELONGS_TO,
                 'infoblock',
                 'infoblock_id'
+            ),
+            'style_variant' => array(
+                self::BELONGS_TO,
+                'style_variant',
+                'style_variant_id'
             )
         );
     }
