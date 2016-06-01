@@ -1,0 +1,41 @@
+<!--[input ? _c.type == 'palette']-->
+<?
+    _c.value = _c.value || '';
+    var cl = $t.getBem('fx-palette'),
+        value_bg = '',
+        colors = {};
+    $.each(_c.colors, function(name, levels) {
+        $.each(levels, function(level, color) {
+            if (level === _c.value) {
+                value_bg = color;
+            }
+            colors[level] = color;
+        });
+    });
+    _c.all_colors = colors;
+?>
+<div class="<?=cl()?>">
+    <input type="hidden" name="<?= _c.name ?>" class="<?=cl('value')?>" value="<?=_c.value?>" />
+    <div 
+        class="<?=cl('value-color', !value_bg ? 'empty' : '') ?>" 
+        tabindex="0" 
+        <? if (value_bg) { ?> style="background:<?=value_bg?>" <? } ?>></div>
+    <div class="<?=cl('colors')?> fx_overlay">
+        <? $.each(_c.colors, function(name, levels) { ?>
+            <div class="<?=cl('color')?>">
+                <? $.each(levels, function(level, color) {
+                    ?>
+                    <span 
+                        class="<?=cl('color-level', level === _c.value ? 'active' : '')?>" 
+                        style="background:<?=color?>" 
+                        data-value="<?=level?>"
+                        data-color="<?=color?>"></span>
+                <? }); ?>
+            </div>
+        <?}); ?>
+        <div class="<?=cl('color')?>"><span data-value="" class="<?=cl('color-level', 'none' + (value_bg ? '' : ' active' ) )?>"></span></div>
+    </div>
+</div>
+
+<!--jquery-->
+html.find('input[type="hidden"]').data('colors', _c.all_colors);

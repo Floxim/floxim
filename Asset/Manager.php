@@ -12,14 +12,17 @@ class Manager {
     public function getBundle($type, $keyword)
     {
         if (!isset($this->bundles[$type][$keyword])) {
-            $bundle_class = '\\Floxim\\Floxim\\Asset\\'. ($type === 'css' ? 'LessBundle' : 'JsBundle');
+            $bundle_class = '\\Floxim\\Floxim\\Asset\\'. ($type === 'css' ? 'Less\\Bundle' : 'JsBundle');
+
+            $params = $keyword === 'admin' ? array() : array(
+                'layout_id' => fx::env('layout_id'),
+                'site_id' => fx::env('site_id'),
+                'style_id' => fx::env()->getLayoutStyleVariantId()
+            );
+
             $this->bundles[$type][$keyword] = new $bundle_class(
                 $keyword,
-                array(
-                    'layout_id' => fx::env('layout_id'),
-                    'site_id' => fx::env('site_id'),
-                    'style_id' => fx::env()->getLayoutStyleVariantId()
-                )
+                $params
             );
         }
         return $this->bundles[$type][$keyword];

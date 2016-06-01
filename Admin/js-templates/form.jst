@@ -88,6 +88,7 @@ name="<?=_c.name?>" id="<?=_c.name || _c.id?>"
 <!--[input]-->
     <?
     var type_att = ['password','number'].indexOf(_c.type) < 0 ? 'text' : _c.type;
+    var units = _c.type === 'number' && _c.units ? _c.units : null;
     ?>
 	<input 
 		type="<?= type_att ?>" 
@@ -97,6 +98,9 @@ name="<?=_c.name?>" id="<?=_c.name || _c.id?>"
 		value="<?=$t.clear(_c.value || '')?>" 
                 <? if (_c.type === 'number') {
                     var num_atts = ['min','max','step'];
+                    if (units) {
+                        print(' data-units="'+units+'" ');
+                    }
                     for (var i = 0; i < num_atts.length; i++) {
                         if (_c[num_atts[i]] !== undefined) {
                             print(num_atts[i] + '="'+_c[num_atts[i]]+'" ');
@@ -104,8 +108,8 @@ name="<?=_c.name?>" id="<?=_c.name || _c.id?>"
                     }
                 } ?>
                 />
-    <? if (_c.type === 'number' && _c.units) { ?>
-        <span class="fx_number_field_units"> <?= _c.units ?> </span>
+    <? if ( units ) { ?>
+        <span class="fx_number_field_units"> <?= units ?> </span>
     <? } ?>
 
                 
@@ -287,6 +291,9 @@ html.find('textarea.fx_code').each( function(){
         }
     }?>
 </select>
+<? if (_c.is_style) { ?>
+    <a class="fx-style-tweaker-link">настроить...</a>
+<? } ?>
 
 <!--[input ? _c.type == 'radio']-->
 <div class="fx_admin_group">

@@ -23,11 +23,13 @@ class Fonts {
         }
         ?>
         <script>
+        if (window.WebFont) {
           WebFont.load({
             google: {
               families: <?= json_encode($fonts) ?>
             }
           });
+          }
         </script>
         <?php
         return ob_get_clean();
@@ -74,7 +76,7 @@ class Fonts {
             'Tinos',
             'Roboto Mono',
             'Bad Script',
-            'Didact Gothic',
+            //'Didact Gothic',
             'Rubik',
             'Jura',
             'Marck Script',

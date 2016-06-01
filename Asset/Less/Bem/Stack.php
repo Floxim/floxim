@@ -1,14 +1,19 @@
 <?php
+/**
+ * Created by PhpStorm.
+ * User: Админ без пароля
+ * Date: 30.05.2016
+ * Time: 15:04
+ */
 
-namespace Floxim\Floxim\Asset;
+namespace Floxim\Floxim\Asset\Less\Bem;
 
-use \Floxim\Floxim\System\Fx as fx;
 
-class BemStack {
-    
+class Stack {
+
     public $stack = array();
     public $has_special_rules = false;
-    
+
     public function push($el)
     {
         $v = $el->value;
@@ -27,8 +32,8 @@ class BemStack {
                 array_shift($parts);
                 $block_name = array_shift($parts);
                 $this->addBlock(
-                    $block_name, 
-                    $el, 
+                    $block_name,
+                    $el,
                     isset($parts[0]) && preg_match("~^__(.+)~", $parts[0])
                 );
             } elseif ($parts[0] === '#') {
@@ -54,11 +59,11 @@ class BemStack {
             $this->stack []= $el;
         }
     }
-    
+
     protected $c_block = null;
     protected $last_bem_index = null;
-    
-    public function addBlock($name, $el, $is_transparent) 
+
+    public function addBlock($name, $el, $is_transparent)
     {
         $this->c_block = $name;
         $this->stack []= array(
@@ -70,7 +75,7 @@ class BemStack {
         );
         $this->last_bem_index = count($this->stack) - 1;
     }
-    
+
     public function addElement($name, $el)
     {
         $this->stack []= array(
@@ -81,17 +86,17 @@ class BemStack {
         );
         $this->last_bem_index = count($this->stack) - 1;
     }
-    
+
     public function setMod($name, $value, $el)
     {
         $this->stack[ $this->last_bem_index ]['mods'][]= array($name, $value, $el);
     }
-    
+
     protected static function getModSelector($mod, $base)
     {
         return $base.'_'.$mod[0].($mod[1] === true ? '' : '_'.$mod[1]);
     }
-    
+
     public function getPath()
     {
         $res = array();
@@ -126,39 +131,5 @@ class BemStack {
             }
         }
         return $res;
-    }
-}
-
-class BemLess {
-    
-    public function run($root)
-    {
-        foreach ($root->rules as $r) {
-            if (!is_array($r->paths)) {
-                if (isset($r->rules)) {
-                    $this->run($r);
-                }
-                continue;
-            }
-            foreach ($r->paths as &$p) {
-                $res = $this->processPath($p);
-                if ($res) {
-                    $p = $res;
-                }
-            }
-        }
-    }
-    
-    public function processPath($p) {
-        $stack = new BemStack();
-    	foreach ($p as $sel) {
-            foreach ($sel->elements as $el) {
-                $stack->push($el);
-            }
-        }
-        
-        if ($stack->has_special_rules) {
-            return $stack->getPath();
-        }
     }
 }

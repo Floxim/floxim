@@ -1654,6 +1654,7 @@ class Compiler
         $is_style = $props['type'] === 'style';
         if ($is_style) {
             $props['type'] = 'select';
+            $props['is_style'] = true;
             $mask = $props['mask'];
             unset($props['mask']);
             $styles_var = "\$param__".$vname.'_styles';

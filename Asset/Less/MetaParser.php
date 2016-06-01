@@ -1,29 +1,19 @@
 <?php
 
-namespace Floxim\Floxim\Asset;
+namespace Floxim\Floxim\Asset\Less;
 
 use \Floxim\Floxim\System\Fx as fx;
 
-class LessMetaParser {
+class MetaParser {
     
     public $isPreEvalVisitor = true;
     
     protected $parser = null;
     protected $current_values = null;
     
-    protected $on_ready = null;
-    
-    public function onReady($callback)
-    {
-        $this->on_ready = $callback;
-    }
-    
     public function run($root)
     {
         $this->processRules($root);
-        if (!is_null($this->on_ready)) {
-            call_user_func($this->on_ready);
-        }
     }
     
     protected $vars = array();
@@ -39,14 +29,27 @@ class LessMetaParser {
     {
         return $this->vars;
     }
+
+    public function getStyles()
+    {
+        return $this->styles;
+    }
     
     protected $styles = array();
     
     protected function registerStyle($params, $token)
     {
-        $file_name = fx::path()->fileName($token->currentFileInfo['filename']);
+        $file = $token->currentFileInfo['filename'];
+        $file_name = fx::path()->fileName($file);
         $style_name = preg_replace("~\.less$~", '', $file_name);
         $params['keyword'] = $style_name;
+        $params['file'] = $file;
+        if (!isset($params['vars'])) {
+            $params['vars'] = array();
+        }
+        foreach ($params['vars'] as $vk => &$vv) {
+            $vv['name'] = $vk;
+        }
         $this->styles []= $params;
     }
     
@@ -54,16 +57,23 @@ class LessMetaParser {
     {
         $res = array();
         $current_comment = null;
+        fx::cdebug($token->rules);
         foreach ($token->rules as $rule) {
+            // handle comment
             if ( $rule instanceof \Less_Tree_Comment ) {
                 $current_comment = $this->parseComment($rule);
                 if (isset($current_comment['for']) && $current_comment['for'] === 'style') {
                     $this->registerStyle($current_comment, $rule);
-                    $current_comment = null;
                 }
                 continue;
             }
-            if ($rule->variable && $current_comment) {
+            // handle style mixin definition - extract default values from arguments
+            if ($rule instanceof \Less_Tree_Mixin_Definition && $current_comment && $current_comment['for'] === 'style') {
+                $this->extractDefaults($rule);
+                $current_comment = null;
+            }
+            // handle variable
+            if ($rule->variable && $current_comment && $current_comment['for'] === 'var') {
                 $this->registerVar($current_comment, $rule);
                 $current_comment = null;
             }
@@ -72,7 +82,10 @@ class LessMetaParser {
         $token->rules = $res;
     }
     
-    
+    protected function extractDefaults($token)
+    {
+
+    }
     
     protected function parseComment($token)
     {

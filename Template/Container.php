@@ -18,17 +18,16 @@ class Container {
     protected $parents = array();
     
     protected static $field_keys = array (
-        'bg_color',
+        'bg-color',
         'margin',
         'padding',
         //'min_height',
-        'vertical_align',
         'align',
         'valign',
         'sizing',
-        'bg_image',
-        'bg_color_2',
-        'bg_position',
+        'bg-image',
+        'bg-color-2',
+        'bg-position',
         'lightness',
         'overlap-top',
         'overlap-bottom',
@@ -126,6 +125,9 @@ class Container {
                 $parts[$p] = $vals[$p];
             }
         }
+        if (isset($vals['bg-color']) && preg_match("~^@~", $vals['bg-color'])) {
+            $parts['bg-color'] = preg_replace("~^@~", '', $vals['bg-color']);
+        }
         $res = $cl;
         foreach ($parts as $k => $v) {
             $res .= ' '.$cl.'_'.$k.'_'.$v;
@@ -189,7 +191,7 @@ class Container {
     {
         $res = '';
         $vals = $this->values;
-        $res .= $this->getBackgroundStyle($vals);
+        //$res .= $this->getBackgroundStyle($vals);
         if ($vals['min_height']) {
             $res .= 'min-height:'.$vals['min_height'].';';
         }
@@ -309,10 +311,12 @@ class Container {
     {
         $res = array();
         $type = $this->getType();
-        $res['bg_color'] = array(
-            'type' => 'color',
+        $res['bg-color'] = array(
+            'type' => 'palette',
+            'colors' => fx::env()->getLayoutStyleVariant()->getPalette(),
             'label' => 'Цвет фона'
         );
+        /*
         $res['bg_color_2'] = array(
             'type' => 'color',
             'label' => 'Цвет фона 2',
@@ -320,11 +324,13 @@ class Container {
                 $this->getStoredFieldName('bg_color')
             )
         );
-        $res['bg_image'] = array(
+         * 
+         */
+        $res['bg-image'] = array(
             'type' => 'image',
             'label' => 'Фоновое изображение'
         );
-        $res['bg_position'] = $this->getBackgroundPositionField();
+        $res['bg-position'] = $this->getBackgroundPositionField();
         $res['lightness'] = array(
             'type' => 'select',
             'label' => 'Тон фона',
@@ -353,7 +359,7 @@ class Container {
         }
         
         if ($type !== 'column' && $type !== 'layout') {
-            $res['min_height'] = array(
+            $res['min-height'] = array(
                 'label' => 'Мин. высота',
                 'type' => 'number',
                 'min' => 0,
@@ -600,7 +606,7 @@ class Container {
         }
     }
     
-    public function save($input)
+    public function appendInput($input)
     {
         $vis = $this->visual_entity;
         $params = $vis[$this->visual_prop_name];
@@ -613,7 +619,13 @@ class Container {
                 $params[$stored_key] = $input[$stored_key];
             }
         }
-        $vis->set($this->visual_prop_name, $params)->save();
+        $vis->set($this->visual_prop_name, $params);
+    }
+    
+    public function save($input)
+    {
+        $this->appendInput($input);
+        $this->visual_entity->save();
     }
     
 }

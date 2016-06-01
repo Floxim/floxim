@@ -133,6 +133,7 @@ class Admin extends System\Controller
             $path_floxim . '/Admin/js/lib.js',
             $path_floxim . '/Admin/js/sort.js',
             $path_floxim . '/Admin/js/front.js',
+            $path_floxim . '/Admin/js/container.js',
             $path_floxim . '/Admin/js/adder.js',
             $path_floxim . '/Admin/js/buttons.js',
             $path_floxim . '/Admin/js/form.js',
@@ -160,7 +161,11 @@ class Admin extends System\Controller
             $path_floxim . '/Admin/js/map.js',
             $path_floxim . '/Admin/js/node-panel.js',
             $path_floxim . '/Admin/js/condition-builder.js',
-            $path_floxim . '/Admin/js/infoblock.js' // infoblock form overrides
+            $path_floxim . '/Admin/js/infoblock.js', // infoblock form overrides
+            $path_floxim . '/lib/lessjs/less.min.js',
+            $path_floxim . '/lib/tinycolor/tinycolor.js',
+            $path_floxim . '/Admin/js/colorset.js',
+            $path_floxim . '/Admin/js/font-preview.js'
         );
         $page = fx::page();
 

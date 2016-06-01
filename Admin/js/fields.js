@@ -44,6 +44,63 @@ window.$fx_fields = {
         return $node;
     },
     
+    colorset: function(json) {
+        var $row = $t.jQuery('form_row', json);
+        new $fx.colorset($row, json);
+        return $row;
+    },
+    
+    palette: function(json) {
+        var $row = $t.jQuery('form_row', json),
+            el = $t.getBemElementFinder('fx-palette'),
+            $colors = $row.find(el('colors')),
+            $value = $row.find(el('value')),
+            $cval = $row.find( el('value-color') );
+        
+        $('body').append($colors);
+        var first_opened = true;
+        $colors.on('click', el('color-level'), function() {
+            var $color = $(this),
+                value = $color.data('value');
+            
+            $cval.toggleClass('fx-palette__value-color_empty', !value);
+            $cval.css('background', value ? $color.data('color') : '');
+            
+            $colors.css('display', 'none');
+            $value.val(value).trigger('change');
+            
+            var active_class = 'fx-palette__color-level_active';
+            
+            $colors.find( '.' + active_class ).removeClass( active_class );
+            $color.addClass(active_class);
+        });
+        $cval.click(function() {
+            var box = $cval[0].getBoundingClientRect();
+            if ($colors.is(':visible')) {
+                $colors.hide();
+                return;
+            }
+            $colors.css({
+                top: box.top + box.height,
+                left: box.left,
+                display:'block'
+            });
+            $cval.on('keydown', function(e) {
+                if (e.which === 27) {
+                    $colors.css('display', 'none');
+                    return false;
+                }
+            });
+            if (first_opened) {
+                $value.parents().one('fx_destroy', function() {
+                    $colors.remove();
+                });
+                first_opened = false;
+            }
+        });
+        return $row;
+    },
+    
     group:function(json) {
         var $row =  $t.jQuery('form_row', json),
             b = 'fx-field-group',
@@ -301,6 +358,11 @@ window.$fx_fields = {
             return res;
         }
         
+        if (json.fontpicker) {
+            window.fx_font_preview.init_stylesheet();
+            json.values = window.fx_font_preview.get_livesearch_values( json.fontpicker );
+        }
+        
         if (json.values) {
             var preset_vals = json.values;
             if ( ! (json.values instanceof Array) ) {
@@ -317,11 +379,29 @@ window.$fx_fields = {
         if (json.allow_select_doubles) {
             json.params.allow_select_doubles = json.allow_select_doubles;
         }
-        var ls = $t.jQuery(template, json);
+        var $ls = $t.jQuery(template, json);
         if (json.values && json.values.length === 0) {
-            ls.hide();
+            $ls.hide();
         }
-        return ls;
+        if (json.fontpicker) {
+            var $input = $ls.find('.livesearch__input');
+            function add_input_style(value) {
+                if (!value) {
+                    return;
+                }
+                var $v = $(value);
+                $input.addClass($v.attr('class'));
+                $input.attr('style', $v.attr('style'));
+            }
+            if (json.value && json.value.name) {
+                add_input_style( json.value.name );
+            }
+            
+            $ls.on('livesearch_value_added', function(e) {
+                add_input_style(e.value_name);
+            });
+        }
+        return $ls;
     },
 
 
@@ -362,10 +442,6 @@ window.$fx_fields = {
     },
 
     float: function (json ) {
-        return $t.jQuery('form_row', json);
-    },
-
-    colorbasic: function (json) {
         return $t.jQuery('form_row', json);
     },
     

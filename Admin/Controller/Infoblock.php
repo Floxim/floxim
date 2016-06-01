@@ -328,11 +328,17 @@ class Infoblock extends Admin
         
         $this->response->addTabs(array(
             'settings' => array(
-                'label' => fx::alang('Settings')
+                'label' => fx::alang('Settings'),
+                'icon' => 'settings'
             ),
             'design' => array(
-                'label' => fx::alang('Design settings')
-            )
+                'label' => fx::alang('Template'),
+                'icon' => 'design'
+            ),
+            'wrapper' => array(
+                'label' => fx::alang('Container'),
+                'icon' => 'container'
+            ),
         ));
         
         $this->response->addFields(array(
@@ -376,6 +382,13 @@ class Infoblock extends Admin
             'design', // tab
             'visual'
         );
+        
+        $wrapper_fields = $this->getWrapperFields($infoblock, $area_meta);
+        $this->response->addFields(
+            $wrapper_fields, 
+            'wrapper', // tab
+            'visual'
+        );
 
         if (isset($input['settings_sent']) && $input['settings_sent'] == 'true') {
             
@@ -410,6 +423,7 @@ class Infoblock extends Admin
             } else {
                 $infoblock['is_preset'] = 1;
             }
+            
             $infoblock['name'] = $input['name'];
             $action_params = array();
             if ($settings && is_array($settings)) {
@@ -440,10 +454,17 @@ class Infoblock extends Admin
                 }
             }
             
+            if ($i2l['wrapper']) {
+                $container = $this->getWrapperContainer($i2l);
+                $container->appendInput($input['visual']);
+            }
+            
             $is_new_infoblock = !$infoblock['id'];
             $infoblock->save();
             $i2l['infoblock_id'] = $infoblock['id'];
             $i2l->save();
+            
+            
             
             if (isset($controller) && $controller instanceof System\Controller) {
                 $controller->setInput($action_params);
@@ -810,7 +831,61 @@ class Infoblock extends Admin
 
         $action_name = $infoblock->getPropInherited('action');
         
+        
+        // Collect the available templates
+        $controller = fx::controller($controller_name . ':' . $action_name);
+        $tmps = $controller->getAvailableTemplates($layout_name, $area_meta);
+        if (!empty($tmps)) {
+            foreach ($tmps as $template) {
+                $templates[] = array($template['full_id'], $template['name']);
+            }
+        }
+        
+        
+        $fields [] = array(
+            'label'  => fx::alang('Template', 'system'),
+            'name'   => 'template',
+            'type'   => 'select',
+            'values' => $templates,
+            'value'  => $i2l['template']
+        );
+        
+        return $fields;
+    }
+    
+    protected function getWrapperContainer($visual)
+    {
+        $parent_props = isset($_POST['content_parent_props']) ? json_decode($_POST['content_parent_props'], true) : array();
+        
+        $container = new \Floxim\Floxim\Template\Container(
+            null, 
+            //'wrapper_'.($visual['infoblock_id'] ? $visual['infoblock_id'] : 'new'), 
+            'wrapper',
+            'wrapper_visual',
+            array(
+                \Floxim\Floxim\Template\Container::create($parent_props)
+            )
+        );
+        
+        $container->bindVisual($visual);
+        
+        return $container;
+    }
+    
+    protected function getWrapperFields($infoblock, $area_meta)
+    {
+        
+        $visual = $infoblock->getVisual();
+        
+        $layout_name = fx::data('layout', $visual->get('layout_id'))->get('keyword');
+
+        $controller_name = $infoblock->getPropInherited('controller');
+        
+        
+        $fields = array();
+        
         $area_suit = Template\Suitable::parseAreaSuitProp(isset($area_meta['suit']) ? $area_meta['suit'] : '');
+        
         
         $force_wrapper = $area_suit['force_wrapper'];
         $default_wrapper = $area_suit['default_wrapper'];
@@ -819,18 +894,21 @@ class Infoblock extends Admin
         $c_wrapper = '';
         if (!$force_wrapper) {
             $wrappers[]= array('', '-', array('title' => fx::alang('With no wrapper', 'system')));
-            if ($i2l['id'] || !$default_wrapper) {
-                $c_wrapper = $i2l['wrapper'];
+            if ($visual['id'] || !$default_wrapper) {
+                $c_wrapper = $visual['wrapper'];
             } else {
                 $c_wrapper = $default_wrapper[0];
             }
         }
-
+        
         // Collect available wrappers
         $wrapper_sources = array(
             'floxim.layout.wrapper',
             'theme.' . $layout_name,
         );
+        
+        
+        
         $cnt = 0;
         foreach ($wrapper_sources as $wrapper_source_keyword) {
             $wrapper_tpl = fx::template($wrapper_source_keyword);
@@ -844,33 +922,7 @@ class Infoblock extends Admin
             }
         }
 
-        // Collect the available templates
-        $controller = fx::controller($controller_name . ':' . $action_name);
-        $tmps = $controller->getAvailableTemplates($layout_name, $area_meta);
-        if (!empty($tmps)) {
-            foreach ($tmps as $template) {
-                $templates[] = array($template['full_id'], $template['name']);
-            }
-        }
-
-        /*
-        if (count($templates) == 1) {
-            $fields [] = array(
-                'name'  => 'template',
-                'type'  => 'hidden',
-                'value' => $templates[0][0]
-            );
-        } else {
-         * 
-         */
-            $fields [] = array(
-                'label'  => fx::alang('Template', 'system'),
-                'name'   => 'template',
-                'type'   => 'select',
-                'values' => $templates,
-                'value'  => $i2l['template']
-            );
-        //}
+        
         if ($controller_name != 'layout' && (count($wrappers) > 1 || !isset($wrappers['']))) {
             $fields [] = array(
                 'label'     => fx::alang('Wrapper', 'system'),
@@ -882,6 +934,21 @@ class Infoblock extends Admin
                 'value'     => $c_wrapper
             );
         }
+        
+        
+        /** start getContanerSettings */
+        
+        $container = $this->getWrapperContainer($visual);
+        
+        $container_fields = $container->getForm();
+        
+        foreach ($container_fields as $field) {
+            $field['name'] = 'wrapper_visual['.$field['name'].']';
+            $fields []= $field;
+        }
+        
+        /** end gcs */
+        
         return $fields;
     }
 

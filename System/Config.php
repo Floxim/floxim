@@ -84,6 +84,7 @@ class Config
         fx::path()->register('floxim_js', '@floxim/lib/js');
         fx::path()->register('module', '@home/module/');
         fx::path()->register('files', '@home/floxim_files/');
+        fx::path()->register('theme', '@home/theme/');
         fx::path()->register('log', fx::path('@files/log'));
         fx::path()->register('thumbs', fx::path('@files/fx_thumbs'));
         fx::path()->register('content_files', fx::path('@files/content'));

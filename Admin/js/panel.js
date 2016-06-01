@@ -1,8 +1,8 @@
 (function($) {
     
     function fx_front_panel() {
-        var $topbar = $('.fx-top-panel'),
-            front_panel = this,
+        //var $topbar = $('.fx-top-panel'),
+        var front_panel = this,
             duration = 300;
         
         var body_default_padding = null;
@@ -22,6 +22,36 @@
             $('#fx_admin_control').append($sidebar);
             params.$container = $sidebar;
             return $sidebar;
+        };
+
+        this.get_previous_panel = function(type) {
+            for (var j = front_panel.panels.length - 2; j >= 0; j--) {
+                var prev_panel = front_panel.panels[j];
+                if (prev_panel.current_panel_type === type) {
+                    return prev_panel;
+                }
+            }
+        };
+
+        this.init_top_bar = function(params) {
+            var $top_bar = $('<div class="fx-top-panel"></div>');
+            $top_bar.css({height:'1px', 'visibility':'hidden'}).mod('overflow', null);
+            $top_bar.show();
+            $top_bar.mod('style', params.current_panel_style);
+            $('#fx_admin_control').append($top_bar);
+            params.$container = $top_bar;
+            var prev_panel = front_panel.get_previous_panel('top');
+            if (prev_panel) {
+                prev_panel.$container
+                    .data('saved_height', prev_panel.$container.height())
+                    .animate(
+                        {
+                            height:'0px'
+                        },
+                        300
+                    );
+            }
+            return $top_bar;
         };
 
         this.show_form = function(data, params) {
@@ -99,10 +129,8 @@
                 if (c_panel.current_panel_style === 'finish') {
                     data.button_container = 'footer';
                 }
-                $topbar.css({height:'1px', 'visibility':'hidden'}).mod('overflow', null);
-                $topbar.show();
-                $topbar.mod('style', c_panel.current_panel_style);
-                $form = $fx.form.create(data, $topbar);
+                var $top_bar = front_panel.init_top_bar(c_panel);
+                $form = $fx.form.create(data, $top_bar);
             } else {
                 data.button_container = 'footer';
                 front_panel.init_sidebar(c_panel);
@@ -149,7 +177,7 @@
                     $form.trigger('fx_panel_form_ready');
                 };
                 if (c_panel.current_panel_type === 'top') {
-                    $topbar.css('visibility', 'visible');
+                    c_panel.$container.css('visibility', 'visible');
                     $fx.front_panel.animate_panel_height(null, function () {
                         $form.resize(function() {
                             $fx.front_panel.animate_panel_height();
@@ -204,8 +232,14 @@
         
         this.show_sidebar = function(callback) {
             var c_panel = this.get_current_panel(),
-                $body = $('body'),
-                style = c_panel.current_panel_style,
+                $body = $('body');
+
+            if (!c_panel) {
+                console.log('no panel');
+                console.trace();
+            }
+
+            var style = c_panel.current_panel_style,
                 that = this,
                 $sidebar = c_panel.$container;
             
@@ -299,7 +333,9 @@
             var max_height = Math.round(
                 $(window).height() * 0.75
             );
-            var $form = $('form', $topbar);
+            var c_panel = front_panel.get_current_panel(),
+                $top_bar = c_panel.$container,
+                $form = $('form', $top_bar);
                         
             var form_height = $form.outerHeight();
             
@@ -308,13 +344,13 @@
             }
             
             if (panel_height > 0) {
-                $topbar.mod('overflow', form_height <= panel_height ? 'hidden' : null);
+                $top_bar.mod('overflow', form_height <= panel_height ? 'hidden' : null);
             }
             
             $form.css({'box-sizing':'border-box', 'width': '101%'});
             $form.css('width', '100%');
-            
-            if (panel_height === $topbar.height()) {
+
+            if (panel_height === $top_bar.height()) {
                 return;
             }
             if (body_default_padding === null) {
@@ -324,8 +360,8 @@
             
             var height_delta = body_offset - parseInt($('body').css('padding-top'));
             this.is_moving = true;
-            
-            $topbar.animate(
+
+            $top_bar.animate(
                 {height: panel_height+'px'}, 
                 {
                     duration: duration,
@@ -380,10 +416,13 @@
         };
         
         this.stop = function() {
-            $topbar.stop(true,false);
-            $('body').stop('fx_panel_queue', true,false);
-            $fx.front.get_front_overlay().stop(true,false);
-            $('.fx_top_fixed').stop(true,false);
+            var $top_bar = front_panel.get_current_panel().$container;
+            if ($top_bar) {
+                $top_bar.stop(true, false);
+                $('body').stop('fx_panel_queue', true, false);
+                $fx.front.get_front_overlay().stop(true, false);
+                $('.fx_top_fixed').stop(true, false);
+            }
             this.is_moving =  false;
         };
         this.load_form = function(form_options, params) {
@@ -406,9 +445,10 @@
                 }
                 return;
             }
+            //console.log('trig destr', c_panel.$form);
+            c_panel.$form.trigger('fx_destroy');
             var is_last = this.panels.length === 1;
             
-            // $fx.front.enable_select(); 
             if (is_last) {
                 $fx.front.enable_select();
                 $('body').off('.fx_front_panel');
@@ -433,10 +473,16 @@
                 that.panels.pop();
             };
             if (c_panel.current_panel_type === 'top') {
+                var prev_top_panel = this.get_previous_panel('top');
+                if (prev_top_panel) {
+                    prev_top_panel.$container.animate({
+                        height:prev_top_panel.$container.data('saved_height')
+                    });
+                }
                 this.animate_panel_height(
                     0, 
                     function () {
-                        $topbar.hide().html('');
+                        c_panel.$container.hide().html('');
                         callback();
                         c_panel.is_visible = false;
                     }

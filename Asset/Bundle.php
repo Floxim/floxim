@@ -22,6 +22,7 @@ abstract class Bundle {
         $this->params = $params;
         $meta_path = $this->getMetaPath();
         if (!file_exists($meta_path)) {
+            fx::log('no meta, new', $meta_path);
             $this->is_new = true;
             $this->version = time();
         } else {
@@ -30,6 +31,11 @@ abstract class Bundle {
             $this->version = $meta['version'];
             $this->meta = $meta;
         }
+    }
+    
+    public function getFiles()
+    {
+        return $this->files;
     }
     
     public function getMeta()
@@ -43,7 +49,10 @@ abstract class Bundle {
         foreach ($this->params as $k => $v) {
             $parts[] = $k.'-'.$v;
         }
-        return join(".", $parts);
+        if (count($parts) === 0) {
+            return '';
+        }
+        return join(".", $parts).'.';
     }
     
     protected function getDirPath()
@@ -53,7 +62,7 @@ abstract class Bundle {
     
     public function getMetaPath()
     {
-        return fx::path($this->getDirPath().'/'.$this->keyword.'.'.$this->getHash().'.'.$this->type.'.meta.php');
+        return fx::path($this->getDirPath().'/'.$this->keyword.'.'.$this->getHash().$this->type.'.meta.php');
     }
     
     public function isFresh()
@@ -73,7 +82,7 @@ abstract class Bundle {
     
     public function getFilePath()
     {
-        return fx::path($this->getDirPath().'/'.$this->keyword.'.'.$this->getHash().'.'.$this->version.'.'.$this->type);
+        return fx::path($this->getDirPath().'/'.$this->keyword.'.'.$this->getHash().$this->version.'.'.$this->type);
     }
 
 
@@ -107,6 +116,7 @@ abstract class Bundle {
         if ($this->isFresh()) {
             return;
         }
+        fx::log('saving', debug_backtrace(), $this);
         if (!$this->is_new) {
             $this->delete();
             $this->version = time();

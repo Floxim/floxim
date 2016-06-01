@@ -1,0 +1,19 @@
+<!--[input ? _c.type == 'colorset']-->
+<?
+    _c.value = _c.value || '';
+    var cl = $t.getBem('fx-colorset');
+?>
+<div class="<?=cl()?>">
+    <input type="hidden" name="<?= _c.name ?>" class="<?=cl('value')?>" value="" />
+    <div class="<?=cl('common')?>">
+        <div class="<?=cl('hue')?> <?=cl('slider')?>"></div>
+        <div class="<?=cl('saturation')?> <?=cl('slider')?>"></div>
+    </div>
+    <div class="<?=cl('colors')?>">
+        <? for (var i = 0; i <= 5; i++) { ?>
+            <div class="<?=cl('color', 'level_'+i)?>">
+                <span class="<?=cl('color-rgb')?>"></span>
+            </div>
+        <?} ?>
+    </div>
+</div>

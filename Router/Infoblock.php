@@ -61,6 +61,7 @@ class Infoblock extends Base
                 parse_str($infoblock_overs, $infoblock_overs);
                 $infoblock_overs = fx::input()->prepareSuperglobal($infoblock_overs);
             }
+            fx::log('overing', $infoblock_overs);
             $infoblock->override($infoblock_overs);
         }
         $infoblock->overrideParam('ajax_mode', true);

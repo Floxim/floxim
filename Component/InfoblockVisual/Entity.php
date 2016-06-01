@@ -47,7 +47,8 @@ class Entity extends System\Entity
                     }
                 }
                 if ($pv['old'] && (!$is_moved  || $pv['old'] !== $all_params[$pk])) {
-                    $old_path = $fxPath->abs(FX_BASE_URL.$pv['old']);
+                    //$old_path = $fxPath->abs(FX_BASE_URL.$pv['old']);
+                    $old_path = $pv['old'];
                     if (self::checkValueIsFile($old_path)) {
                         fx::files()->rm($old_path);
                     }
@@ -112,7 +113,7 @@ class Entity extends System\Entity
 
     public static function checkValueIsFile($v)
     {
-        if (empty($v) || !is_string($v)) {
+        if (empty($v) || !is_string($v) || substr($v, 0, 1) !== '/') {
             return false;
         }
         $files_path = fx::path('@files');

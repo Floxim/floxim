@@ -242,4 +242,185 @@ $('html').on('fx_panel_form_ready', function(e) {
     
 });
 
+var style_tweaker = {
+    handle_form: function($form) {
+        $form.on('click', '.fx-style-tweaker-link', function() {
+            var $inp = $(this).closest('.field').find('select'),
+                style_name = $inp.attr('name').match(/([^\]\[]+)\]?$/),
+                block_name = style_name[1].replace(/_style/, ''),
+                style_value = $inp.val(),
+                $stylesheet = null,
+                tweak_less = '',
+                tweak_class = block_name+'_style_'+style_value+'-tweaked',
+                $target_block = $('.fx_selected').descendant_or_self('.'+block_name);
+
+            console.log(tweak_class, $target_block);
+            $target_block.addClass(tweak_class);
+
+            function render_styles(data) {
+                console.log($stylesheet, data);
+                var vars = {};
+
+                $.each(data, function(i) {
+                    var prop = data[i];
+                    if (!prop.value) {
+                        return;
+                    }
+                    if (/^@color-/.test(prop.value)) {
+                        vars[prop.name + '-tweaked'] = prop.value.replace(/^@color-/, '').replace(/\-(\d+)/, ' $1');
+                    } else {
+                        if (/^entity|action|sent|style_tweaker_file|_base_url/.test(prop.name)) {
+                            return;
+                        }
+                        var $inp = $('input[name="'+prop.name+'"]');
+                        var units = $inp.data('units');
+                        if (units) {
+                            prop.value += units;
+                        }
+                        vars[prop.name + '-tweaked'] = prop.value;
+                    }
+                });
+                render_less(vars, tweak_less, $stylesheet);
+                console.log(vars);
+            }
+
+            $fx.front_panel.load_form(
+                {
+                    entity:'layout',
+                    action:'style_settings',
+                    block: block_name,
+                    style:style_value
+                },
+                {
+                    view:'horizontal',
+                    onready: function($form) {
+                        $stylesheet = get_tweaker_stylesheet(block_name, style_value);
+                        var tweaker_file = $form.find('input[name="style_tweaker_file"]').val(),
+                            timer = null;
+                        $.ajax({
+                            url: tweaker_file,
+                            success: function(res) {
+                                tweak_less = res;
+                                $form.on('change input', function() {
+                                    clearTimeout(timer);
+                                    timer = setTimeout(function() {
+                                        render_styles($form.serializeArray());
+                                    }, 500);
+                                });
+                            }
+                        });
+                    },
+                    oncancel: function() {
+                        if ($stylesheet) {
+                            $stylesheet.remove();
+                        }
+                        $target_block.removeClass(tweak_class);
+                    }
+                }
+            )
+        });
+    }
+};
+
+function get_tweaker_stylesheet(block, style) {
+    var ss_class = 'fx-layout-tweak-stylesheet';
+    if (block && style) {
+        ss_class += '_'+block+'_'+style;
+    }
+    var $stylesheet = $('.'+ss_class);
+
+    if ($stylesheet.length === 0) {
+        $stylesheet = $('<style type="text/css" class="'+ss_class+'"></style>');
+        $('body').append($stylesheet);
+    }
+    return $stylesheet;
+}
+
+function render_less(vars, tweak_less, $stylesheet) {
+
+    var vars_less = '';
+    $.each(vars, function (k, v) {
+        vars_less += '@'+k+':'+v+";\n";
+    });
+
+    var final_less = tweak_less + vars_less;
+
+    less.render(final_less).then(
+        function(css) {
+            $stylesheet.text( css.css );
+        },
+        function (error) {
+            console.log(error, final_less);
+        }
+    );
+}
+
+$('html').on('fx_adm_form_created', function(e, data) {
+
+    var $form = $(e.target);
+
+    style_tweaker.handle_form($form);
+
+    if (!data ||  !data.request || data.request.action !== "theme_settings") {
+        return;
+    }
+    var tweak_url = $('input[name="less_tweak_file"]').val();
+    if (!tweak_url) {
+        return;
+    }
+    var $form = $(e.target),
+        tweak_less,
+        timer = null;
+    $.ajax({
+        url: tweak_url,
+        success: function(res) {
+            tweak_less = res;
+            $form.on('change input', function() {
+                clearTimeout(timer);
+                timer = setTimeout(function() {
+                    render_styles();
+                }, 500);
+            });
+        }
+    });
+    
+    $form.on('fx_form_cancel', function() {
+        get_tweaker_stylesheet().remove();
+    });
+    
+    function render_styles() {
+        var vars = {},
+            data = $form.serializeArray();
+        
+        $.each(data, function(i) {
+            var prop = data[i];
+            if (!prop.value) {
+                return;
+            }
+            if (/^color-/.test(prop.name)) {
+                var colorset = $.parseJSON(prop.value);
+                $.each(colorset, function(color_prop, color_val) {
+                    vars[color_prop] = color_val;
+                });
+            } else {
+                if (/^entity|action|sent|less_tweak_file|_base_url/.test(prop.name)) {
+                    return;
+                }
+                var $inp = $('input[name="'+prop.name+'"]');
+
+                var units = $inp.data('units');
+                if (units) {
+                    prop.value += units;
+                }
+                vars[prop.name] = prop.value;
+                if ( prop.name.match(/^font/) ) {
+                    window.fx_font_preview.load_font( prop.value );
+                }
+            }
+        });
+
+        render_less( vars, tweak_less, get_tweaker_stylesheet());
+    }
+});
+
 })($fxj);

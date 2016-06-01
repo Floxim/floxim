@@ -1,5 +1,9 @@
 /* global Function */
 
+window.less = {
+    async: true
+};
+
 (function($) {
 
 window.fx_front = function () {
@@ -836,6 +840,7 @@ fx_front.prototype.add_infoblock_select_settings = function(data) {
         $('.fx_infoblock_fake').remove();
         $fx.front.hilight();
     };
+
     $fx.front_panel.show_form(data, {
         view:'horizontal',
         onfinish:function(res) {
@@ -860,16 +865,20 @@ fx_front.prototype.add_infoblock_select_settings = function(data) {
             );
         },
         onready:function($form) {
+
+            /*
             var back = $('.fx_admin_form__header a.back', $form);
+
             back.on('click.fx_front', function() {
                 infoblock_back();
                 cancel_adding();
             });
+            */
+
+            var container_handler = new $fx.container.form_handler($form);
             
             // creating infoblock preview
             $fx.front.deselect_item();
-            
-            
             
             var add_fake_ib = function (callback) {
                 var $c_ib_node = $('<div class="fx_infoblock fx_infoblock_fake" />');
@@ -905,7 +914,7 @@ fx_front.prototype.add_infoblock_select_settings = function(data) {
             var ib_loader = null, 
                 is_waiting = false,
                 c_data = null;
-            
+
             $form.on('change.fx_front', function(e) {
                 var new_data = $form.serialize();
                 if (c_data === new_data) {
@@ -920,13 +929,13 @@ fx_front.prototype.add_infoblock_select_settings = function(data) {
                 is_waiting = true;
                 
                 var $c_ib_node = $form.data('ib_node');
-                
                 ib_loader = $fx.front.reload_infoblock(
                     $c_ib_node, 
                     function($new_ib_node) {
                         var add_ib_to_form = function($new_ib_node) {
                             $form.data('ib_node', $new_ib_node);
                             is_waiting = false;
+                            container_handler.set_node($new_ib_node);
                             $fx.front.extract_infoblock_visual_fields($new_ib_node, $form);
                             $fx.front.select_item($new_ib_node.get(0));
                         };
@@ -1327,96 +1336,7 @@ fx_front.prototype.select_container = function($node) {
         ib_meta = $ib.data('fx_infoblock'),
         container_meta = $node.data('fx_container');
 
-    var last_vars = null;
-    
-    function get_color_info(c) {
-        var parts = c.match(/(\d+), (\d+), (\d+)(, ([\d\.]+))?/);
-        if (!parts) {
-            return;
-        }
-        var rgb = {
-                r:parts[1]*1,
-                g:parts[2]*1,
-                b:parts[3]*1
-            },
-            res = {
-                opacity: parts[5] ? parts[5]*1 : 1,
-                brightness: (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000
-            };
-        return res;
-    }
-    
-    function count_lightness(vars) {
-        var c1 = vars.bg_color,
-            c2 = vars.bg_color_2,
-            img = vars.bg_image;
-        if (!c1 && !c2 && !img) {
-            return '';
-        }
-        var brightness = [],
-            opacity = [];
-        if (c1) {
-            var i1 = get_color_info(c1);
-            brightness.push(i1.brightness);
-            opacity.push(i1.opacity);
-        }
-        if (c2) {
-            var i2 = get_color_info(c2)
-            brightness.push(i2.brightness);
-            opacity.push(i2.opacity);
-        }
-        var total_opacity = 0;
-        for (var i = 0; i < opacity.length; i++) {
-            total_opacity += opacity[i];
-        }
-        if (total_opacity / opacity.length < 0.5) {
-            return '';
-        }
-        var total_brightness = 0;
-        for (var i = 0; i < brightness.length; i++) {
-            total_brightness += brightness[i];
-        }
-        var avg_brightness = total_brightness / brightness.length;
-        return avg_brightness < 128 ? 'dark' : 'light';
-    }
-    
-    function data_to_vars(data) {
-        var vars = {},
-            rex = new RegExp('^container_' + container_meta.name+'_(.+)');
-        for (var i = 0; i < data.length; i++) {
-            var prop_name = data[i].name.match(rex);
-            if (!prop_name) {
-                continue;
-            }
-            prop_name = prop_name[1];
-            vars[prop_name] = data[i].value;
-        }
-        return vars;
-    }
-    
-    function handle_form_data ( data, $form ) {
-        
-        var vars = data_to_vars(data);
-        
-        if (
-            $form && last_vars && (
-                vars.bg_color !== last_vars.bg_color || 
-                vars.bg_color_2 !== last_vars.bg_color_2
-            )
-        ) {
-            var counted_lightness = count_lightness(vars);
-            if (vars.lightness !== counted_lightness) {
-                var $lightness_inp = $('select[name="container_'+container_meta.name+'_lightness"]');
-                $lightness_inp.val(counted_lightness);
-                vars.lightness = counted_lightness;
-            }
-        }
-        
-        last_vars = vars;
-        
-        $fx.front.append_container_styles($node, vars);
-        $fx.front.append_container_classes($node, vars);
-    }
+    var form_handler = null;
     
     node_panel.add_button(
         {
@@ -1440,136 +1360,14 @@ fx_front.prototype.select_container = function($node) {
                     $fx.front.reload_infoblock($('.fx_infoblock_'+ib_meta.id));
                 },
                 onready:function($form) {
-                    $form.data('ib_node', $ib);
-                    var initial_data = $form.serializeArray();
-                    last_vars = data_to_vars(initial_data);
-                    $node.data('fx_initial_container_data', initial_data);
-                    
-                    $form.on('change.fx_front fx_change_file.fx_front input.fx_front', function(e) {
-                        if (e.target.name === 'livesearch_input' || e.target.name === 'scope[type]') {
-                            return;
-                        }
-                        var data = $form.serializeArray();
-                        handle_form_data(data, $form);
-                    });
+                    form_handler = new $fx.container.form_handler($form, $node, '');
                 },
                 oncancel: function() {
-                    var initial_data = $node.data('fx_initial_container_data');
-                    if (initial_data) {
-                        handle_form_data(initial_data);
-                        $node.data('fx_initial_container_data', null);
-                    }
+                    form_handler.reset_block();
                 }
             });
         }
     );
-};
-
-fx_front.prototype.append_container_styles = function($node, props) {
-    var css = {
-        'background-color': '',
-        'background-image': '',
-        'background-position': '',
-        'background-repeat': '',
-        'background-size': '',
-        'margin-top': '',
-        'margin-bottom': ''
-    };
-    var c1 = props.bg_color,
-        c2 = props.bg_color_2,
-        img = props.bg_image;
-    
-    if (!c1 && !c2 && !img) {
-        // do nothing
-    } 
-    // first color only
-    else if (c1 && !c2 && !img) {
-        css['background-color'] = c1;
-    } 
-    // image only
-    else if (!c1 && !c2 && img) {
-        css['background-image'] = 'url("'+img+'")';
-    } 
-    // use gradient: two colors or color(s) and image
-    else {
-        var bg  = 'linear-gradient(to bottom, ';
-        bg += (c1 ? c1 : 'transparent') + ', ';
-        bg += c2 ? c2 : c1;
-        bg += ')';
-        if (img) {
-            bg += ', url("'+img+'")';
-        }
-        css['background-image'] = bg;
-    }
-    if (img && props.bg_position) {
-        var pos_val = props.bg_position,
-            pos = '',
-            size = '',
-            repeat = '';
-        switch (pos_val) {
-            case 'cover':
-                repeat = 'no-repeat';
-                size = 'cover';
-                break;
-            case 'repeat':
-                repeat = 'repeat';
-                break;
-            default:
-                repeat = 'no-repeat';
-                size = 'contain';
-                var pos_parts = pos_val.split('-'),
-                    h_map = {
-                        left:'0',
-                        center:'50%',
-                        right:'100%'
-                    },
-                    v_map = {
-                        top:'0',
-                        middle:'50%',
-                        bottom:'100%'
-                    };
-                pos = h_map[pos_parts[0]] +' '+v_map[pos_parts[1]];
-                break;
-        }
-        css['background-position'] = pos;
-        css['background-size'] = size;
-        css['background-repeat'] = repeat;
-    }
-    
-    var container_name = $node.data('fx_container').name;
-    
-    $.each(['overlap-bottom', 'overlap-top'], function(n, prop) {
-        var prop_val = props[prop] * 1,
-            prop_type = prop.replace(/overlap\-/, '');
-            
-        css['padding-'+prop_type] = '';
-            
-        if (!prop_val) {
-            return;
-        }
-        var prop_hash = prop_type +'-'+container_name;
-        if (prop_val > 0 || (['top-layout_header', 'bottom-layout_footer'].indexOf(prop_hash) === -1)) {
-            css['margin-' + prop_type] = prop_val + 'px';
-        }
-        if (prop_val < 0) {
-            css['padding-' + prop_type ] = (prop_val * -1) + 'px';
-        }
-    });
-    
-    $.each(['bottom', 'top'], function(n, prop_type) {
-        var prop = 'border-radius-' + prop_type,
-            prop_val = props[prop] * 1,
-            prop_val = prop_val > 0 ? prop_val +'px' : ''; 
-        
-        css['border-' + prop_type + '-left-radius'] = prop_val;
-        css['border-' + prop_type + '-right-radius'] = prop_val;
-    });
-    css['box-shadow'] = '';
-    if (props['shadow-spread']) {
-        var shadow_opacity = props['shadow-opacity'] || 0.3;
-        css['box-shadow'] =  '0 0 '+props['shadow-spread']+'px rgba(0,0,0,'+shadow_opacity+')';
-    }
-    $node.css(css);
 };
 
 fx_front.prototype.get_modifiers = function($node, name) {
@@ -1579,7 +1377,6 @@ fx_front.prototype.get_modifiers = function($node, name) {
     for (var i = 0; i < classes.length; i++) {
         var match = classes[i].match(rex);
         if (match) {
-            //res.push(classes[i]);
             res[match[1]] = match[3] === undefined ? true : match[3];
         }
     }
@@ -1616,67 +1413,6 @@ fx_front.prototype.set_modifiers = function($node, name, mods) {
     e.modifiers = event_map;
     e.node_name = name;
     $node.trigger(e);
-};
-
-fx_front.prototype.append_container_classes = function($node, props) {
-    var class_props = ['align', 'valign', 'sizing', 'padding', 'lightness'],
-        mods = {};
-    for (var i = 0; i < class_props.length; i++) {
-        var cp = class_props[i];
-        if (props[cp] !== undefined) {
-            mods[cp] = props[cp] || false;
-        }
-    }
-    var e_handler = function(e) {
-        if (e.node_name !== 'fx-container') {
-            return;
-        }
-        var mods = e.modifiers,
-            $node = $(e.target),
-            $upper_containers = $node.parents('.fx-container');
-        
-        function traverse_children ($children, prop, new_mods) {
-            $.each($children, function() {
-                var $c = $(this);
-                if ($c.hasClass('fx-content')) {
-                    $fx.front.set_modifiers($c, 'fx-content', new_mods);
-                }
-                if ($c.hasClass('fx-container')) {
-                    var cmods = $fx.front.get_modifiers($c, 'fx-container');
-                    if (cmods[prop]) {
-                        return;
-                    }
-                }
-                traverse_children($c.children(), prop, new_mods);
-            });
-        }
-    
-    
-        $.each(mods, function(prop, vals) {
-            var new_v = vals['new'],
-                is_empty = !new_v || (prop === 'lightness' && new_v === 'transparent');
-            if (is_empty) {
-                new_v = '';
-                $upper_containers.each(function() {
-                    var $cc = $(this),
-                        mods = $fx.front.get_modifiers($cc, 'fx-container');
-                    if (mods[prop]) {
-                        new_v = mods[prop];
-                        return false;
-                    }
-                });
-            }
-            if (!new_v) {
-                new_v = false;
-            }
-            var mods = {};
-            mods['parent-'+prop] = new_v;
-            traverse_children($node.children(), prop, mods);
-        });
-    };
-    $node.on('fx_set_modifiers', e_handler);
-    $fx.front.set_modifiers($node, 'fx-container', mods);
-    $node.off('fx_set_modifiers', e_handler);
 };
 
 fx_front.prototype.make_node_panel = function($node) {
@@ -2658,11 +2394,7 @@ fx_front.prototype.select_infoblock = function($node, panel) {
     if (!panel) {
         panel = $fx.front.node_panel.get();
     }
-    /*
-    var $label = panel.add_label( $fx.lang('Infoblock') );
-    
-    $label.addClass('fx_node_panel__item-button-label');
-    */
+
     panel.add_button('settings', function() {
         var ib_node = $node[0],
             $ib_node = $node,
@@ -2676,8 +2408,9 @@ fx_front.prototype.select_infoblock = function($node, panel) {
         
         var is_waiting = false, 
             ib_loader = null,
-            has_changes = false;
-            
+            has_changes = false,
+            container_handler = null;
+
         $fx.front_panel.load_form({
             entity:'infoblock',
             action:'select_settings',
@@ -2695,6 +2428,8 @@ fx_front.prototype.select_infoblock = function($node, panel) {
                 $form.data('ib_node', ib_node);
                 $fx.front.extract_infoblock_visual_fields($ib_node, $form);
                 var c_data = $form.serialize();
+
+                container_handler = new $fx.container.form_handler($form, $ib_node);
                 
                 $form.on('change.fx_front', function(e) {
                     if (e.target.name === 'livesearch_input' || e.target.name === 'scope[type]') {
@@ -2715,6 +2450,7 @@ fx_front.prototype.select_infoblock = function($node, panel) {
                             has_changes = true;
                             $form.data('ib_node', $new_ib_node);
                             $fx.front.extract_infoblock_visual_fields($new_ib_node, $form);
+                            container_handler.set_node($new_ib_node);
                             is_waiting = false;
                         }, 
                         {override_infoblock:c_data}
@@ -2724,6 +2460,8 @@ fx_front.prototype.select_infoblock = function($node, panel) {
             oncancel:function($form) {
                 if (has_changes) {
                     $fx.front.reload_infoblock($form.data('ib_node'));
+                } else {
+                    container_handler.reset_block();
                 }
             }
         });
@@ -2923,6 +2661,13 @@ fx_front.prototype.enable_infoblock = function(infoblock_node) {
 };
 
 fx_front.prototype.get_content_parent_props = function($n) {
+    if (!$n.hasClass('fx-content')) {
+        $n = $n.closest('.fx-content');
+    }
+    var c_class = $n.attr('class');
+    if (!c_class) {
+        return {};
+    }
     var classes = $n.attr('class').split(/\s+/),
         res = {};
     for (var i = 0; i < classes.length; i++) {
@@ -2939,7 +2684,7 @@ fx_front.prototype.get_content_parent_props = function($n) {
 fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_data) {
     var $infoblock_node = $(infoblock_node),
         content_parent_props = $fx.front.get_content_parent_props($infoblock_node);
-    
+
     infoblock_node = $infoblock_node[0];
     
     $fx.front.disable_infoblock(infoblock_node);
@@ -3112,7 +2857,7 @@ fx_front.prototype.reload_layout = function(callback) {
 
 fx_front.prototype.get_panel_height = function() {
     return $('.fx-admin-panel').outerHeight();
-}
+};
 
 fx_front.prototype.move_down_body = function () {
     var panel_height = this.get_panel_height();
@@ -3242,14 +2987,14 @@ fx_front.prototype.get_overlay_z_index = function($n) {
  */
 fx_front.prototype.hide_hover_outlines = function(pos) {
     var $panes = $('body>.fx_front_overlay .fx_outline_style_hover');
-    var treshold = 1;
+    var threshold = 1;
     $panes.each(function(i, p) {
         var $p = $(p),
             offset = $p.offset(),
-            top = offset.top - treshold,
-            left = offset.left - treshold,
-            bottom = top + $p.height() + treshold*2,
-            right = left + $p.width() + treshold*2;
+            top = offset.top - threshold,
+            left = offset.left - threshold,
+            bottom = top + $p.height() + threshold*2,
+            right = left + $p.width() + threshold*2;
         if (pos.top > top && pos.top < bottom && pos.left > left && pos.left < right) {
             //$p.css('outline', '3px solid #FF0');
             $p.css('visibility', 'hidden');

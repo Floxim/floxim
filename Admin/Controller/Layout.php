@@ -311,10 +311,15 @@ class Layout extends Admin
         $bundler = fx::page()->getBundleManager();
         $bundle = $bundler->getBundle('css', 'default');
         $meta = $bundle->getMeta();
+        
+        
+        $tweak_file = $bundle->getTweakerLessFile();
+        
         $fields = array(
             $this->ui->hidden('entity', 'layout'),
             $this->ui->hidden('action', 'theme_settings'),
-            $this->ui->hidden('sent', 1)
+            $this->ui->hidden('sent', 1),
+            $this->ui->hidden('less_tweak_file', $tweak_file)
         );
         
         if (!isset($meta['vars']) || !is_array($meta['vars'])) {
@@ -327,18 +332,38 @@ class Layout extends Admin
             'sizes' => 'Размеры и отступы'
         );
         
+        //$var_list = array();
+        
         foreach ($meta['vars'] as $var) {
             $var_name = $var['name'];
-            if (isset($params[$var_name])) {
-                $c_val = $params[$var_name];
-                if ($var['type'] === 'number') {
-                    $c_val = preg_replace("~[^0-9\.]~", '', $c_val);
+            if ($var['type'] === 'colorset') {
+                $color_code = $var['name'];
+                $color_val = array();
+                foreach ($params as $k => $v) {
+                    $color_prop = null;
+                    preg_match("~^".$color_code."-(.+)~", $k, $color_prop);
+                    if ($color_prop) {
+                        $color_val[ $color_prop[1]] = $v;
+                    }
                 }
-                $var['value'] = $c_val;
+                $var['value'] = $color_val;
+            } else {
+                if (isset($params[$var_name])) {
+                    $c_val = $params[$var_name];
+                    if ($var['type'] === 'number') {
+                        $c_val = preg_replace("~[^0-9\.]~", '', $c_val);
+                    }
+                    $var['value'] = $c_val;
+                }
             }
             if ($var['type'] === 'font') {
                 $var['type'] = 'livesearch';
-                $var['values'] = \Floxim\Floxim\Asset\Fonts::getAvailableFontValues();
+                $font_type = preg_replace("~^font_?~", '', $var_name);
+                if (empty($font_type)) {
+                    $font_type = 'text';
+                }
+                $var['fontpicker'] = $font_type;
+                //$var['values'] = \Floxim\Floxim\Asset\Fonts::getAvailableFontValues();
             }
             $fields []= $var;
         }
@@ -347,10 +372,14 @@ class Layout extends Admin
             $res_params = array();
             foreach ($meta['vars'] as $var) {
                 $var_name = $var['name'];
-                if (isset($input[$var_name]) && !empty($input[$var_name])) {
-                    $res_params[$var_name] = $input[$var_name];
-                    if (isset($var['units'])) {
-                        $res_params[$var_name] .= $var['units'];
+                if (isset($input[$var_name]) && !empty($input[$var_name])) {    
+                    if ($var['type'] === 'colorset') {
+                        $res_params = array_merge($res_params, json_decode($input[$var_name], true));
+                    } else {
+                        $res_params[$var_name] = $input[$var_name];
+                        if (isset($var['units'])) {
+                            $res_params[$var_name] .= $var['units'];
+                        }
                     }
                 }
             }
@@ -369,6 +398,86 @@ class Layout extends Admin
             'view'   => 'horizontal',
             'tabs' => $tabs
         );
+    }
+
+    public function styleSettings($input)
+    {
+
+        $fields = array();
+
+        $bundle = fx::page()->getBundleManager()->getBundle('css','default');
+
+        $meta = $bundle->getMeta();
+
+        $style = null;
+        foreach ($meta['styles'] as $c_style) {
+            if ($c_style['keyword'] === $input['block'].'_style_'.$input['style']) {
+                $style = $c_style;
+                break;
+            }
+        }
+
+        foreach ($style['vars'] as $var => $props) {
+            $props['name'] = $var;
+            if ($props['type'] === 'palette') {
+                $props['colors'] = fx::env()->getLayoutStyleVariant()->getPalette();
+            }
+            $fields []= $props;
+        }
+
+        $fields []= $this->ui->hidden(
+            'style_tweaker_file',
+            $bundle->getStyleTweakerLessFile(
+                array(
+                    $input['block'],
+                    $input['style']
+                )
+            )
+        );
+
+        return array(
+            'fields' => $fields,
+            'header' => 'Настраиваем стиль'
+        );
+    }
+    
+    protected function testColors() {
+        $fields = array(
+            'main' => array(
+                'type' => 'colorset',
+                'label' => 'Основной',
+                'saturation' => array(0, 0.15),
+                'luminance_map' => array(
+                    0.01,
+                    0.04,
+                    0.15,
+                    0.45,
+                    0.7,
+                    0.9
+                ),
+                'value' => array(
+                    'hue' => 0,
+                    'saturation' => 0
+                )
+            ),
+            'alt' => array(
+                'type' => 'colorset',
+                'label' => 'Акценты',
+                'value' => array(
+                    'hue' => 0,
+                    'saturation' => 0.6
+                )
+            ),
+            'third' => array(
+                'type' => 'colorset',
+                'label' => 'Дополнительный',
+                'value' => array(
+                    'hue' => 100,
+                    'saturation' => 0.4
+                )
+            )
+        );
+        return $fields;
     }
 
     public static function makeBreadcrumb($template, $action, $breadcrumb)
@@ -515,5 +624,17 @@ class Layout extends Admin
         $this->response->submenu->setMenu('layout');
         $this->response->addFormButton('save');
         return array('fields' => $fields, 'form_button' => array('save'));
+    }
+    
+    public function colorSet()
+    {
+        //$fields = $this->testColors();
+        $fields = array(
+            'palette' => array(
+                'type' => 'palette',
+                'colors' => fx::env()->getLayoutStyleVariant()->getPalette()
+            )
+        );
+        $this->response->addFields($fields);
     }
 }

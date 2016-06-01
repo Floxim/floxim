@@ -11,10 +11,10 @@ class Manager
     public function __construct()
     {
         $namespace = 'Floxim\Floxim\Router';
-        foreach (array('Admin', 'Infoblock', 'Ajax', 'Thumb', 'Front', 'Error') as $r_name) {
-            $classname = $namespace . '\\' . $r_name;
-            if (class_exists($classname)) {
-                $router = new $classname;
+        foreach (array('Admin', 'Infoblock', 'Ajax', 'Thumb', 'Front', 'File', 'Error') as $r_name) {
+            $class_name = $namespace . '\\' . $r_name;
+            if (class_exists($class_name)) {
+                $router = new $class_name;
                 $this->register($router);
             }
         }

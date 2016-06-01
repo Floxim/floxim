@@ -1,5 +1,48 @@
 (function($) {
 window.$t = {
+    
+    getBem: function(block) {
+        return function(e, mods) {
+            var res = block;
+            if (e) {
+                res += '__'+e;
+            }
+            
+            if (mods === undefined || mods === '') {
+                return res;
+            }
+            if ( ! (mods instanceof Array ) ) {
+                mods = mods.split(/[,\s]+/);
+            }
+            var base = res;
+            for (var i = 0; i < mods.length; i++) {
+                res += ' '+base+'_'+mods[i];
+            }
+            return res;
+        };
+    },
+    
+    
+    // 'common hue.visible.type_text' -> 'block__common block__hue_visible.block__hue_type_text'
+    getBemElementFinder: function(block) {
+        return function(sel) {
+            var parts = sel.split(/\s+/),
+                res = [];
+            
+            for (var i = 0 ; i < parts.length; i++) {
+                var part = parts[i].split('.'),
+                    el = part.shift(),
+                    base = '.'+block+'__'+el,
+                    c_part = base;
+                for (var j = 0; j < part.length; j++) {
+                    c_part += '.'+base+'_'+part[j];
+                }
+                res.push(c_part);
+            }
+            return res.join(' ');
+        };
+    },
+    
     add: function(name, tpl, test, priority) {
         
         if (typeof tpl._test === 'undefined' && typeof test === 'function') {
