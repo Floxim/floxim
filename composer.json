@@ -13,6 +13,7 @@
         "floxim/cache" : "*",
         "oyejorge/less.php": "~1.5",
         "phpmailer/phpmailer": "5.2.8",
-        "linkorb/jsmin-php": "dev-master"
+        "linkorb/jsmin-php": "dev-master",
+        "symfony/yaml": "*"
     }
 }
