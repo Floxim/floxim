@@ -1,0 +1,20 @@
+<!--[input ? _c.type == 'measures']-->
+<?
+var cl = $t.getBem('fx-measures');
+?>
+<div class="<?= cl(null, 'prop_'+_c.prop)?>">
+    <input type="hidden" name="<?= _c.name ?>" class="<?=cl('value')?>" value="<?=_c.value?>" />
+    <div class="<?= cl('preview') ?>">
+        <? for (var i = 0; i < 4; i++ ) { ?>
+            <div class="<?= cl('preview-item', 'num_'+i) ?>"></div>
+        <? } ?>
+    </div>
+    <div class="<?= cl('controls') ?>">
+        <? for (var i = 0; i < 4; i++ ) { ?>
+            <div class="<?= cl('control', 'num_'+i) ?>">
+
+            </div>
+        <? } ?>
+        <div class=" <?= cl('lock') ?> "></div>
+    </div>
+</div>

@@ -35,7 +35,7 @@ window.$t = {
                     base = '.'+block+'__'+el,
                     c_part = base;
                 for (var j = 0; j < part.length; j++) {
-                    c_part += '.'+base+'_'+part[j];
+                    c_part += base+'_'+part[j];
                 }
                 res.push(c_part);
             }

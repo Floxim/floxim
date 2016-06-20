@@ -86,7 +86,7 @@ $fx.colorset = function($field, params) {
 
 $fx.colorset.prototype = {
     
-    normalzie_hue: function (val) {
+    normalize_hue: function (val) {
         if (val < 0) {
             return 360 + val;
         }
@@ -130,7 +130,7 @@ $fx.colorset.prototype = {
         for (var i = 0; i <= count; i++) {
             var c_hue = min + (i * step);
             parts.push(
-                tinycolor( 'hsl(' + this.normalzie_hue(c_hue) + ', '+s+', '+l+')' ).toRgbString()
+                tinycolor( 'hsl(' + this.normalize_hue(c_hue) + ', '+s+', '+l+')' ).toRgbString()
             );
         }
 
@@ -189,9 +189,8 @@ $fx.colorset.prototype = {
         var hue = this.hue,
             saturation = this.saturation;
     
-        //var method = this.name === 'color_third' ? 'lightness' : 'luminance',
-        var method = 'lightness',
-            method = 'luminance',
+        //var method = 'lightness',
+        var method = 'luminance',
             colors = this['colors_by_'+method](hue, saturation),
             $colors = this.get_color_nodes();
         
@@ -348,7 +347,8 @@ var number_slider = function($node, params) {
         step = params.step || 1,
         max = params.max || step * 100,
         change = params.change || function() {},
-        cl = 'fx-number-slider';
+        cl = 'fx-number-slider',
+        that = this;
 
     this.$node = $node;
     
@@ -359,13 +359,21 @@ var number_slider = function($node, params) {
     var $point = $('<div class="'+cl+'__point"></div>');
     $node.append($point);
     $node.data('fx-number-slider', this);
+
+    function round ( v ) {
+        if (params.round === undefined) {
+            return v;
+        }
+        var m = Math.pow(10, params.round);
+        return Math.round( v * m) / m;
+    };
     
     var box,
         value = params.value === undefined ? min : params.value;
     
     function x_to_val(x) {
         var ratio = box.width / (max - min);
-        return x / ratio + min;
+        return round( x / ratio + min );
     }
     
     function val_to_x(val) {
@@ -393,22 +401,35 @@ var number_slider = function($node, params) {
         box = $node[0].getBoundingClientRect();
     }
     
-    $node.on('click', function(e) {
+    //$node.on('click', function(e) {
+    $node.on('mousedown', function(e) {
+        if (that.disabled) {
+            return;
+        }
         recount_box();
-        $point.css('transition', 'left 0.15s ease');
+        $point.css('transition', 'left 0.09s ease');
         move(e);
         setTimeout(function() {
             $point.css('transition', '');
-        }, 150);
+        }, 100);
+        $body
+            .on('mousemove', move)
+            .one('mouseup', function() {
+                $body.off('mousemove', move);
+            });
     });
     
     $point.on('mousedown', function(e) {
+        if (that.disabled) {
+            return;
+        }
         recount_box();
         $body
             .on('mousemove', move)
             .one('mouseup', function() {
                 $body.off('mousemove', move);
             });
+        return false;
     });
     
     this.set = function(val) {
@@ -428,6 +449,16 @@ var number_slider = function($node, params) {
     this.get = function() {
         return value;
     };
-    
+
+    this.disabled = false;
+
+    this.disable = function() {
+        this.disabled = true;
+        $node.addClass(cl+'_disabled');
+    };
+    this.enable = function() {
+        this.disabled = false;
+        $node.removeClass(cl+'_disabled');
+    };
     this.set( value );
 };

@@ -33,6 +33,23 @@ class Admin extends System\Controller
         $this->process_do_return = isset($input['do_return']) ? $input['do_return'] : $do_return;
     }
 
+    public function getHiddenFields($fields = array())
+    {
+        $input = $this->input;
+        $fields = array_merge($fields, array('entity', 'action'));
+        $res = array();
+        foreach ($fields as $f) {
+            $res []= $this->ui->hidden($f, isset($input[$f]) ? $input[$f] : '');
+        }
+        $res []= $this->ui->hidden('sent', 1);
+        return $res;
+    }
+
+    public function isSent()
+    {
+        return isset($this->input['sent']) && $this->input['sent'];
+    }
+
     public function process()
     {
 
@@ -141,6 +158,7 @@ class Admin extends System\Controller
             $path_floxim . '/Admin/js/livesearch.js',
             $path_floxim . '/Admin/js/suggest.js',
             $path_floxim . '/Admin/js/fields.js',
+            $path_floxim . '/Admin/js/measures.js',
             $path_floxim . '/Admin/js/edit-in-place.js',
             $path_floxim . '/Admin/js/panel.js',
             $path_floxim . '/Admin/js/popup.js',
@@ -189,6 +207,7 @@ class Admin extends System\Controller
                 $path_floxim . '/Admin/style/front.less',
                 $path_floxim . '/Admin/style/livesearch.less',
                 $path_floxim . '/Admin/style/debug.less',
+                $path_floxim . '/Admin/style/measures.less',
                 $path_floxim . '/lib/codemirror/codemirror.css',
                 $path_floxim . '/Admin/style/condition-builder.less'
             ), 

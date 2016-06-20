@@ -134,6 +134,11 @@ window.$fx = {
                         }
                     }
                 }
+                var css_inline = jqXHR.getResponseHeader('fx_inline_css');
+                if (css_inline) {
+                    css_inline = $.parseJSON(css_inline);
+                    $fx.merge_inline_styles(css_inline);
+                }
             });
         });
 
@@ -142,6 +147,15 @@ window.$fx = {
         $('html').click(function(){
             $fx.panel.trigger('fx.click', 'main');
         });
+    },
+
+    merge_inline_styles: function(css) {
+        var $inline_stylesheet = $('.fx_inline_styles');
+        if ($inline_stylesheet.length === 0) {
+            $inline_stylesheet = $('<style type="text/css" class="fx_inline_styles"></style>');
+            $('head').append($inline_stylesheet);
+        }
+        $inline_stylesheet.text( $inline_stylesheet.text() + css);
     },
 
     set_mode: function() {

@@ -61,15 +61,12 @@ class Infoblock extends Base
                 parse_str($infoblock_overs, $infoblock_overs);
                 $infoblock_overs = fx::input()->prepareSuperglobal($infoblock_overs);
             }
-            fx::log('overing', $infoblock_overs);
             $infoblock->override($infoblock_overs);
         }
         $infoblock->overrideParam('ajax_mode', true);
         if (isset($_POST['content_parent_props'])) {
             $infoblock->bindLayoutContainerParams( json_decode($_POST['content_parent_props'], true) );
         }
-        //fx::log($_POST, $_POST['layout_container_params'], $infoblock);
-        
         $res = $infoblock->render();
         return $res;
     }

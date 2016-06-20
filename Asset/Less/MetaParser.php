@@ -4,13 +4,22 @@ namespace Floxim\Floxim\Asset\Less;
 
 use \Floxim\Floxim\System\Fx as fx;
 
+use \Symfony\Component\Yaml;
+
 class MetaParser {
     
     public $isPreEvalVisitor = true;
     
     protected $parser = null;
     protected $current_values = null;
-    
+
+    protected $output = null;
+
+    public function __construct()
+    {
+        $this->output = new Tweaker\Output();
+    }
+
     public function run($root)
     {
         $this->processRules($root);
@@ -48,6 +57,9 @@ class MetaParser {
             $params['vars'] = array();
         }
         foreach ($params['vars'] as $vk => &$vv) {
+            if (!is_array($vv)) {
+                $vv = array();
+            }
             $vv['name'] = $vk;
         }
         $this->styles []= $params;
@@ -57,11 +69,13 @@ class MetaParser {
     {
         $res = array();
         $current_comment = null;
-        fx::cdebug($token->rules);
         foreach ($token->rules as $rule) {
             // handle comment
             if ( $rule instanceof \Less_Tree_Comment ) {
                 $current_comment = $this->parseComment($rule);
+                if (!$current_comment) {
+                    continue;
+                }
                 if (isset($current_comment['for']) && $current_comment['for'] === 'style') {
                     $this->registerStyle($current_comment, $rule);
                 }
@@ -71,9 +85,11 @@ class MetaParser {
             if ($rule instanceof \Less_Tree_Mixin_Definition && $current_comment && $current_comment['for'] === 'style') {
                 $this->extractDefaults($rule);
                 $current_comment = null;
+                $res []= $rule;
+                continue;
             }
             // handle variable
-            if ($rule->variable && $current_comment && $current_comment['for'] === 'var') {
+            if (isset($rule->variable) && $rule->variable && $current_comment && $current_comment['for'] === 'var') {
                 $this->registerVar($current_comment, $rule);
                 $current_comment = null;
             }
@@ -84,22 +100,27 @@ class MetaParser {
     
     protected function extractDefaults($token)
     {
-
+        $c_style =& $this->styles[count($this->styles) - 1];
+        foreach ($token->params as $arg) {
+            $var_name = substr($arg['name'], 1);
+            if (isset($c_style['vars'][$var_name])) {
+                $c_style['vars'][$var_name]['value'] = $this->output->get($arg['value'], false);
+            }
+        }
     }
     
     protected function parseComment($token)
     {
         $text = $token->value;
-        $text = str_replace("\n", ' ', $text);
-        $text = preg_replace("~^\s*/\*+\s*|\s*\*+\/\s*$~s", '', $text);
-        if (!preg_match("~^\{.+\}$~", $text)) {
-            return;
+        $text = preg_replace("~^/\*|\*/$~", '', $text);
+        try {
+            $res = Yaml\Yaml::parse($text);
+            if (is_array($res)) {
+                return $this->prepareComment($res);
+            }
+        } catch (\Exception $e) {
+            fx::cdebug('cat', $e, $text);
         }
-        $parsed = json_decode($text,1);
-        if (!$parsed) {
-            return;
-        }
-        return $this->prepareComment($parsed);
     }
     
     protected function prepareComment($parsed)
@@ -112,5 +133,42 @@ class MetaParser {
             }
         }
         return $parsed;
+    }
+
+    public static function getQuickStyleMeta($f) {
+        $fh = fopen($f, 'r');
+        $c = 0;
+        $name = null;
+        $has_vars = null;
+        $is_in_comment = false;
+        while ($c < 30 && !feof($fh)) {
+            $s = fgets($fh);
+            $c++;
+            if (!$is_in_comment && preg_match("~\s*/\*~", $s)) {
+                $is_in_comment = true;
+                continue;
+            }
+            if ($is_in_comment && preg_match("~\s*\*/~", $s)) {
+                $is_in_comment = false;
+                continue;
+            }
+            if (!$is_in_comment) {
+                continue;
+            }
+            $parts = null;
+            if (!preg_match("~(name|vars)\s*\:(.*)~", $s, $parts)){
+                continue;
+            }
+            if ($parts[1] === 'name') {
+                $name = trim($parts[2]);
+                continue;
+            }
+            $has_vars = true;
+        }
+        fclose($fh);
+        return array(
+            'name' => $name,
+            'is_tweakable' => $has_vars
+        );
     }
 }

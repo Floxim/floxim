@@ -400,14 +400,58 @@ class Layout extends Admin
         );
     }
 
+    protected function prepareStyleVar($props)
+    {
+        if ($props['type'] === 'palette') {
+            $props['colors'] = fx::env()->getLayoutStyleVariant()->getPalette();
+            $props['empty'] = false;
+        }
+        if ($props['type'] === 'css-text-transform') {
+            $props['type'] = 'livesearch';
+            $props['values'] = array(
+                array('none', 'Abc'),
+                array('uppercase', 'ABC'),
+                array('lowercase', 'abc')
+            );
+            if (!$props['label']) {
+                $props['label'] = 'Регистр';
+            }
+            $props['allow_empty'] = false;
+        }
+        if ($props['type'] === 'css-font-style') {
+            $props['type'] = 'livesearch';
+            $props['values'] = array(
+                array('normal', 'Нормальный'),
+                array('bold', 'Жирный'),
+                array('normal italic', 'Курсив'),
+                array('bold italic', 'Жирный курсив')
+            );
+            if (!$props['label']) {
+                $props['label'] = 'Начертание';
+            }
+            $props['allow_empty'] = false;
+        }
+        if ($props['units'] && $props['value']) {
+            $props['value'] = preg_replace("~[^\d]+~", '', $props['value']);
+        }
+        return $props;
+    }
+
     public function styleSettings($input)
     {
 
-        $fields = array();
+        $fields = $this->getHiddenFields(array('style', 'block', 'style_variant_id'));
 
         $bundle = fx::page()->getBundleManager()->getBundle('css','default');
 
         $meta = $bundle->getMeta();
+        
+        $style_variant = 
+            isset($input['style_variant_id'])  && $input['style_variant_id']
+                ? fx::data('style_variant', $input['style_variant_id'])
+                : fx::data('style_variant')->create();
+
+        $input['style'] = preg_replace("~\-\-\d+$~", '', $input['style']);
 
         $style = null;
         foreach ($meta['styles'] as $c_style) {
@@ -416,13 +460,34 @@ class Layout extends Admin
                 break;
             }
         }
+        
+        $is_sent = $this->isSent();
+        $less_vars = $style_variant['less_vars'];
 
         foreach ($style['vars'] as $var => $props) {
             $props['name'] = $var;
-            if ($props['type'] === 'palette') {
-                $props['colors'] = fx::env()->getLayoutStyleVariant()->getPalette();
+            if (isset($less_vars[$var])) {
+                $props['value'] = $less_vars[$var];
             }
+            $props = $this->prepareStyleVar($props);
             $fields []= $props;
+            if ($is_sent && isset($input[$var])) {
+                $less_vars[$var] = $input[$var];
+                if (isset($props['units'])) {
+                    $less_vars[$var]  .= $props['units'];
+                }
+            }
+        }
+
+        if ($is_sent) {
+            $style_variant['less_vars'] = $less_vars;
+            $style_variant['name'] = $input['style_name'];
+            $style_variant['style'] = $input['block'].'_'.$input['style'];
+            $style_variant->save();
+            fx::page()->getBundleManager()->getBundle('css', 'default')->delete();
+            return array(
+                'id' => $style_variant['id']
+            );
         }
 
         $fields []= $this->ui->hidden(
@@ -433,6 +498,15 @@ class Layout extends Admin
                     $input['style']
                 )
             )
+        );
+
+        $fields[]= array(
+            'name' => 'style_name',
+            'tab' => 'header',
+            'type' => 'string',
+            'label' => false,
+            'placeholder' => 'название стиля',
+            'value' => $style_variant['name']
         );
 
         return array(
@@ -632,7 +706,47 @@ class Layout extends Admin
         $fields = array(
             'palette' => array(
                 'type' => 'palette',
-                'colors' => fx::env()->getLayoutStyleVariant()->getPalette()
+                'transparent' => true,
+                'colors' => fx::env()->getLayoutStyleVariant()->getPalette(),
+                'value' => 'alt 2'
+            )
+        );
+        $this->response->addFields($fields);
+    }
+
+    public function measures()
+    {
+        $fields = array(
+            'padding' => array(
+                'label' => 'Padding',
+                'type' => 'measures',
+                'prop' => 'corners',
+                'value' => '2 4 2 4'
+            ),
+            'sizing' => array(
+                'type' => 'livesearch',
+                'values' => array(
+                    array(
+                        'auto',
+                        'По размеру контента'
+                    ),
+                    array(
+                        'full',
+                        'На весь экран'
+                    ),
+                    array(
+                        '',
+                        '',
+                        array(
+                            'custom' => array(
+                                'type' => 'number',
+                                'min' => 10,
+                                'max' => 100,
+                                'units' => '%'
+                            )
+                        )
+                    )
+                )
             )
         );
         $this->response->addFields($fields);

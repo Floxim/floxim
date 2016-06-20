@@ -16,24 +16,34 @@
 ?>
 <div class="<?=cl()?>">
     <input type="hidden" name="<?= _c.name ?>" class="<?=cl('value')?>" value="<?=_c.value?>" />
-    <div 
-        class="<?=cl('value-color', !value_bg ? 'empty' : '') ?>" 
-        tabindex="0" 
-        <? if (value_bg) { ?> style="background:<?=value_bg?>" <? } ?>></div>
+    <div class="<?= cl('value-color-wrapper') ?>">
+        <div
+            class="<?=cl('value-color', !value_bg ? 'empty' : '') ?>"
+            tabindex="0"
+            <? if (value_bg) { ?> style="background:<?=value_bg?>" <? } ?>></div>
+    </div>
     <div class="<?=cl('colors')?> fx_overlay">
         <? $.each(_c.colors, function(name, levels) { ?>
-            <div class="<?=cl('color')?>">
+            <div class="<?=cl('color', ['type_' + name])?>">
                 <? $.each(levels, function(level, color) {
+                    var darkness = level.match(/\d$/)[0] * 1 < 3 ? 'dark' : 'light';
                     ?>
                     <span 
-                        class="<?=cl('color-level', level === _c.value ? 'active' : '')?>" 
+                        class="<?=cl('color-level', [level === _c.value ? 'active' : '', 'darkness_'+darkness])?>"
                         style="background:<?=color?>" 
                         data-value="<?=level?>"
                         data-color="<?=color?>"></span>
                 <? }); ?>
             </div>
         <?}); ?>
+        <? if (_c.opacity !== false) { ?>
+            <div class="<?=cl('opacity-wrapper')?>">
+                <div class="<?=cl('opacity')?>"></div>
+            </div>
+        <? } ?>
+        <? if (_c.empty !== false) { ?>
         <div class="<?=cl('color')?>"><span data-value="" class="<?=cl('color-level', 'none' + (value_bg ? '' : ' active' ) )?>"></span></div>
+        <? } ?>
     </div>
 </div>
 

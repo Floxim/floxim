@@ -7,7 +7,8 @@ use \Floxim\Floxim\System\Fx as fx;
 class Container {
     protected $context = null;
     protected $name = null;
-    
+    protected $type = null;
+
     protected $values = array();
     protected $forced_values = array();
     
@@ -24,15 +25,15 @@ class Container {
         //'min_height',
         'align',
         'valign',
-        'sizing',
+        //'sizing',
+        'width',
+        'width-custom',
+        'height',
         'bg-image',
         'bg-color-2',
         'bg-position',
         'lightness',
-        'overlap-top',
-        'overlap-bottom',
-        'border-radius-top',
-        'border-radius-bottom',
+        'corners',
         'shadow-spread',
         'shadow-opacity'
     );
@@ -55,16 +56,36 @@ class Container {
         $parents = array()
     )
     {
-        $this->name = $name;
+        $this->handleName($name);
         $this->context = $context;
         $this->visual_prop_name = $visual_prop_name;
         $this->parents = $parents;
-        
+
         if ($context) {
             foreach (self::$field_keys as $field_key) {
                 $value = $this->context->get($this->getStoredFieldName($field_key));
                 $this->values[$field_key] = $value;
             }
+        }
+    }
+
+    protected function handleName($name)
+    {
+        preg_match("~^([^_+]+_?)~", $name, $base);
+        $this->name = $name;
+        switch ($base[1]) {
+            case 'layout':
+                $this->type = 'layout';
+                break;
+            case 'layout_':
+                $this->type = 'section';
+                break;
+            case 'column_':
+                $this->type = 'column';
+                break;
+            case 'wrapper_':
+                $this->type = 'wrapper';
+                break;
         }
     }
     
@@ -89,20 +110,17 @@ class Container {
     public function getValues()
     {
         $defaults = array(
-            'sizing' => 'default'
+            //'sizing' => 'default'
         );
         $res = array();
         foreach ($this->values as $k => $v) {
             $res[$k] = !empty($v) ? $v : (isset($defaults[$k]) ? $defaults[$k] : $v);
         }
         if ($this->name === 'layout') {
-            $res['sizing'] = 'fullwidth';
+            $res['width'] = 'full';
             if (!isset($res['lightness'])) {
                 $res['lightness'] = 'light';
             }
-        }
-        if (preg_match("~^column_~", $this->name)) {
-            $res['sizing'] = 'column';
         }
         return $res;
     }
@@ -119,16 +137,35 @@ class Container {
         $parts = array();
         $vals = $this->getValues();
         
-        $props = array('align', 'valign', 'sizing', 'padding', 'lightness');
+        $props = array(
+            'align',
+            'valign',
+            //'sizing',
+            'lightness'
+        );
         foreach ($props as $p) {
             if (isset($vals[$p]) && $vals[$p]) {
                 $parts[$p] = $vals[$p];
             }
         }
-        if (isset($vals['bg-color']) && preg_match("~^@~", $vals['bg-color'])) {
-            $parts['bg-color'] = preg_replace("~^@~", '', $vals['bg-color']);
+        if (isset($vals['height']) && $vals['height'] !== 'auto') {
+            $parts['height'] = $vals['height'];
+        }
+        if (!isset($vals['width'])) {
+            $vals['width'] = $this->getType() === 'column' ? 'column' : 'container';
+        }
+
+        $parts['width'] = $vals['width'];
+
+        if (isset($vals['bg-color'])) {
+            $bg_parts = explode(" ", $vals['bg-color']);
+            if (count($bg_parts) === 2 && !isset($vals['bg-color-2'])) {
+                $bg_class = join('-', $bg_parts);
+                $parts['bg-color'] = $bg_class;
+            }
         }
         $res = $cl;
+        $parts['name'] = $this->name;
         foreach ($parts as $k => $v) {
             $res .= ' '.$cl.'_'.$k.'_'.$v;
         }
@@ -164,8 +201,7 @@ class Container {
         $parents = array_reverse($parents);
         $parts = array();
         $props_to_inherit = array(
-            'sizing',
-            'padding',
+            'width',
             'lightness',
             'align'
         );
@@ -186,57 +222,166 @@ class Container {
         }
         return $res;
     }
+
+    protected static function getLessColorVar($color_code)
+    {
+        if (!$color_code) {
+            return;
+        }
+        $parts = explode(" ", $color_code);
+        $var = '@color-'.$parts[0].'-'.$parts[1];
+        if (isset($parts[2])) {
+            $var = 'fade('.$var.', '. ($parts[2] * 100).'%)';
+        }
+        return $var;
+    }
+
+    public function getLess()
+    {
+        $res = '';
+        $bg_c1_var = $this->getLessColorVar($this->getValue('bg-color'));
+        $bg_c2_var = $this->getLessColorVar($this->getValue('bg-color-2'));
+        $bg_img = $this->getValue('bg-image');
+        if ($bg_c1_var || $bg_c2_var || $bg_img) {
+            if ($bg_c1_var && !$bg_c2_var && !$bg_img) {
+                $res .= 'background-color:' . $bg_c1_var . '; ';
+            } else {
+                $res .= 'background-image: linear-gradient(to bottom, ' . $bg_c1_var . ', ' . ($bg_c2_var ? $bg_c2_var : $bg_c1_var) . ')';
+                if ($bg_img) {
+                    $res .= ', url(' . $bg_img . ') ';
+                }
+                $res .= ';';
+            }
+        }
+        return $res;
+    }
+
+    protected static $layout_sizes = null;
+    public static function getLayoutSizes()
+    {
+        if (is_null(self::$layout_sizes)) {
+            $style_variant = fx::env()->getLayoutStyleVariant();
+            $sizes = array(
+                'width' => (int) $style_variant->getLessVar('layout_width'),
+                'max-width' => (int) $style_variant->getLessVar('max_width')
+            );
+            $sizes['breakpoint'] = 'min-width: '. $sizes['max-width'] / ($sizes['width']/100) . 'px';
+            self::$layout_sizes = $sizes;
+        }
+        return self::$layout_sizes;
+    }
+
+    protected static function getMeasureParts($prop)
+    {
+        $parts = explode(" ", $prop);
+        foreach (range(0,3) as $n) {
+            if (!isset($parts[$n]) || $parts[$n] === '0') {
+                $parts[$n] = 0;
+            }
+        }
+        return $parts;
+    }
     
     public function getStyles()
     {
-        $res = '';
+        $styles = array();
         $vals = $this->values;
-        //$res .= $this->getBackgroundStyle($vals);
-        if ($vals['min_height']) {
-            $res .= 'min-height:'.$vals['min_height'].';';
+
+        $default = $this->getBackgroundStyle($vals);
+
+        if (in_array($vals['padding'], array('0 0 0 0', 'none', 'all', 'ns', 'we'))) {
+            $vals['padding'] = null;
+        }
+        if ($vals['padding']) {
+            $default ['padding'] = $vals['padding'];
         }
         
-        foreach (array('bottom', 'top') as $prop_type) {
-            $prop = 'overlap-'.$prop_type;
-            $prop_val = $vals[$prop] * 1;
-            if (!$prop_val) {
-                continue;
-            }
-            $prop_hash = $prop_type .'-'.$this->name;
-            if ($prop_val > 0 || (!in_array($prop_hash, array('top-layout_header', 'bottom-layout_footer') ))) {
-                $res .= 'margin-' . $prop_type.':'. $prop_val . 'px; ';
-            }
-            if ($prop_val < 0) {
-                $res .= 'padding-' . $prop_type.':'. ($prop_val * -1 ). 'px; ';
-            }
+        $width = isset($vals['width']) ? $vals['width'] : 'container';
+
+        $parent_width = $this->getParentValue('width');
+
+        if ($width === 'layout' && $parent_width !== 'full') {
+            $width = 'container';
         }
-        foreach (array('bottom', 'top') as $prop_type) {
-            $prop = 'border-radius-'.$prop_type;
-            $prop_val = $vals[$prop] * 1;
-            if (!$prop_val) {
-                continue;
+
+        if ($width === 'full' && $parent_width === 'full') {
+            $width = 'container';
+        }
+
+
+        if ($width === 'custom' && isset($vals['width-custom']) && is_numeric($vals['width-custom'])) {
+            $default['width'] = $vals['width-custom'].'%';
+        }
+
+        if ($vals['margin'] && $vals['margin'] !== '0 0 0 0') {
+            $default ['margin'] = $vals['margin'];
+        }
+
+        $layout_sizes = self::getLayoutSizes();
+
+        $margin_parts = $this->getMeasureParts($vals['margin']);
+        $padding_parts = $this->getMeasureParts($vals['padding']);
+
+        if ($width === 'full' || $width === 'full-outer') {
+
+            $f_margin = 50 - (5000 / $layout_sizes['width']);
+            $f_bp_margin = 'calc( ( 100vw - '.$layout_sizes['max-width'].'px) / -2  ';
+            $res_bp = array();
+
+            foreach (array(1 => 'right', 3 => 'left') as $side_index => $side) {
+                $c_margin = $margin_parts[$side_index];
+                $c_padding = $padding_parts[$side_index];
+
+                if ($parent_width === 'layout' || $parent_width === 'full-outer') {
+                    $default['margin-' . $side] = !$c_margin ? $f_margin . '%' : 'calc(' . $f_margin . '% + ' . $c_margin . ')';
+                    $res_bp ['margin-' . $side] = $f_bp_margin . (!$c_margin ? '' : ' + ' . $c_margin) . ')';
+                }
+                if ($width === 'full-outer') {
+                    $default['padding-' . $side] = !$c_padding ? ($f_margin * -1) . '%' : 'calc(' . ($f_margin * -1) . '% + ' . $c_padding . ')';
+                    $res_bp ['padding-' . $side] = $f_bp_margin . ' * -1 ' . (!$c_padding ? '' : ' + ' . $c_padding) . ')';
+                }
             }
-            $res .= 'border-'.$prop_type.'-left-radius:'.$prop_val.'px; ';
-            $res .= 'border-'.$prop_type.'-right-radius:'.$prop_val.'px; ';
+            $styles[$layout_sizes['breakpoint']] = $res_bp;
+        } elseif ($width === 'layout') {
+            $f_margin = 'calc( (100vw - ' . $layout_sizes['max-width'] ."px) / 2";
+            $res_bp = array();
+            foreach (array(1 => 'right', 3 => 'left') as $side_index => $side) {
+                $c_margin = $margin_parts[$side_index];
+                $res_bp ['margin-'.$side] = $f_margin .( !$c_margin ? '' : ' + '.$c_margin).')';
+            }
+            $styles[$layout_sizes['breakpoint']] = $res_bp;
+        }
+        
+        if (isset($vals['corners']) && $vals['corners'] !== '0 0 0 0') {
+            $default ['border-radius'] = $vals['corners'];
         }
         if (isset($vals['shadow-spread']) && !empty($vals['shadow-spread'])) {
             $opacity = isset($vals['shadow-opacity']) && !empty($vals['shadow-opacity']) ? $vals['shadow-opacity'] : 0.3;
-            $res .= 'box-shadow: 0 0 '.$vals['shadow-spread'].'px rgba(0,0,0,'.$opacity.')';
-            
+            $default ['box-shadow'] = '0 0 '.$vals['shadow-spread'].'px rgba(0,0,0,'.$opacity.')';
         }
-        return $res;
+        $styles ['default'] = $default;
+        return $styles;
+    }
+
+    public function getCssSelector()
+    {
+        return '.fx-container_name_'.$this->name;
     }
     
     public static function getBackgroundStyle($vals)
     {
-        $c1 = $vals['bg_color'];
-        $c2 = $vals['bg_color_2'];
-        $img = $vals['bg_image'];
-        
+        $style_variant = fx::env()->getLayoutStyleVariant();
+        $c1 = $vals['bg-color'];
+        $c2 = $vals['bg-color-2'];
+        $img = $vals['bg-image'];
+
         if (!$c1 && !$c2 && !$img) {
             return '';
         }
-        
+
+        $c1 = $c1 ? $style_variant->getColor($c1) : false;
+        $c2 = $c2 ? $style_variant->getColor($c2) : false;
+
         $css = array(
             'background-color' => '',
             'background-image' => '',
@@ -264,68 +409,66 @@ class Container {
             }
             $css['background-image'] = $bg;
         }
-        if ($img && isset($vals['bg_position']) && $vals['bg_position']) {
-            $pos_val = $vals['bg_position'];
-            $pos = '';
-            $size = '';
-            $repeat = '';
-            switch ($pos_val) {
-                case 'cover':
-                    $repeat = 'no-repeat';
-                    $size = 'cover';
-                    break;
-                case 'repeat':
-                    $repeat = 'repeat';
-                    break;
-                default:
-                    $repeat = 'no-repeat';
-                    $size = 'contain';
-                    $pos_parts = explode('-', $pos_val);
-                    $h_map = array(
-                        'left' => 0,
-                        'center' => '50%',
-                        'right' => '100%'
-                    );
-                    $v_map = array(
-                        'top' => '0',
-                        'middle' => '50%',
-                        'bottom' => '100%'
-                    );
-                    $pos = $h_map[$pos_parts[0]] .' '.$v_map[$pos_parts[1]];
-                    break;
-            }
-            $css['background-position'] = $pos;
-            $css['background-size'] = $size;
-            $css['background-repeat'] = $repeat;
+        $css = array_merge($css, self::getBackgroundPositionProps($vals));
+        return $css;
+    }
+
+    protected function getBackgroundPositionProps($vals)
+    {
+        $css = array();
+        if (!isset($vals['bg-image']) || !isset($vals['bg-position']) || !$vals['bg-position'] || !$vals['bg-image']) {
+            return $css;
         }
-        $res = '';
-        foreach ($css as $p => $v) {
-            if ($v) {
-                $res .= $p.':'.$v.';';
-            }
+        $pos_val = $vals['bg-position'];
+        $pos = '';
+        $size = '';
+        $repeat = 'no-repeat';
+        switch ($pos_val) {
+            case 'cover':
+                $size = 'cover';
+                break;
+            case 'repeat':
+                $repeat = 'repeat';
+                break;
+            default:
+                $size = 'contain';
+                $pos_parts = explode('-', $pos_val);
+                $h_map = array(
+                    'left' => 0,
+                    'center' => '50%',
+                    'right' => '100%'
+                );
+                $v_map = array(
+                    'top' => '0',
+                    'middle' => '50%',
+                    'bottom' => '100%'
+                );
+                $pos = $h_map[$pos_parts[0]] .' '.$v_map[$pos_parts[1]];
+                break;
         }
-        return $res;
+        $css['background-position'] = $pos;
+        $css['background-size'] = $size;
+        $css['background-repeat'] = $repeat;
+        return $css;
     }
     
     public function getFields()
     {
         $res = array();
         $type = $this->getType();
+
         $res['bg-color'] = array(
             'type' => 'palette',
             'colors' => fx::env()->getLayoutStyleVariant()->getPalette(),
-            'label' => 'Цвет фона'
+            'label' => 'Цвет фона',
+            'opacity' => true
         );
-        /*
-        $res['bg_color_2'] = array(
-            'type' => 'color',
-            'label' => 'Цвет фона 2',
-            'parent' => array(
-                $this->getStoredFieldName('bg_color')
-            )
+        $res['bg-color-2'] = array(
+            'type' => 'palette',
+            'colors' => fx::env()->getLayoutStyleVariant()->getPalette(),
+            'label' => 'Цвет 2',
+            'opacity' => true
         );
-         * 
-         */
         $res['bg-image'] = array(
             'type' => 'image',
             'label' => 'Фоновое изображение'
@@ -340,24 +483,22 @@ class Container {
                 'dark' => 'Темный'
             )
         );
-        if ($type !== 'layout' && $type !== 'columns') {
+        if ($type !== 'layout') {
             $res['padding'] = array(
                 'label' => 'Внутренний отступ',
-                'type' => 'livesearch',
-                'allow_empty' => false,
-                'values' => $this->getLivesearchSchemes(
-                    'padding',
-                    array(
-                        'none' => 'Нет',
-                        'all' => 'Да',
-                        'ns' => 'Верх и низ',
-                        'we' => 'Лево и право'
-                    )
-                ),
-                'value' => 'none'
+                'type' => 'measures',
+                'prop' => 'padding',
+                'value' => '0 0 0 0'
+            );
+            $res['margin'] = array(
+                'label' => 'Внешний отступ',
+                'type' => 'measures',
+                'prop' => 'margin',
+                'value' => '0 0 0 0'
             );
         }
-        
+
+        /*
         if ($type !== 'column' && $type !== 'layout') {
             $res['min-height'] = array(
                 'label' => 'Мин. высота',
@@ -367,7 +508,8 @@ class Container {
                 'step' => 10
             );
         }
-        
+        */
+
         if ($type !== 'layout' && $type !== 'columns' && $type !== 'section') {
             $res['align'] = array(
                 'label' => 'Выравнивание',
@@ -398,6 +540,7 @@ class Container {
             );
         }
         if ($type !== 'column' && $type !== 'layout') {
+            /*
             $sizing_variants = $this->getSizingVariants();
             if (count($sizing_variants) > 0) {
                 $res['sizing'] = array(
@@ -408,41 +551,48 @@ class Container {
                     'value' => "default" 
                 );
             }
-        }
-        if ($type === 'section') {
-            $res['overlap-top'] = array(
-                'label' => 'Отступ сверху',
-                'type' => 'number',
-                'value' => 0,
-                'min' => -300,
-                'max' => 300,
-                'step' => 10
+            */
+            $res['width'] = array(
+                'type' => 'livesearch',
+                'label' => 'Ширина',
+                'value' => 'container',
+                'values' => array(
+                    'container' => '100%',
+                    'auto' => 'Авто',
+                    'layout' => 'Ширина лейаута',
+                    'full' => 'На весь экран',
+                    'full-outer' => 'На весь экран + отступ',
+                    'custom' => 'Задать...'
+                )
             );
-            $res['overlap-bottom'] = array(
-                'label' => 'и снизу',
+            $res['width-custom'] = array(
                 'type' => 'number',
-                'value' => 0,
-                'min' => -300,
-                'max' => 300,
-                'step' => 10
+                'units' => '%',
+                'min' => 10,
+                'max' => 100,
+                'step' => 5,
+                'parent' => array(
+                    $this->getStoredFieldName('width') => 'custom'
+                )
+            );
+
+            $res['height'] = array(
+                'type' => 'livesearch',
+                'label' => 'Высота',
+                'value' => 'auto',
+                'values' => array(
+                    'auto' => 'Авто',
+                    'grow' => 'Растягивать'
+                )
             );
         }
+        
         if (in_array($type, array('section', 'wrapper'))) {
-            $res['border-radius-top'] = array(
-                'label' => 'Углы верх',
-                'type' => 'number',
-                'value' => 0,
-                'min' => 0,
-                'max' => 100,
-                'step' => 1
-            );
-            $res['border-radius-bottom'] = array(
-                'label' => 'и низ',
-                'type' => 'number',
-                'value' => 0,
-                'min' => 0,
-                'max' => 100,
-                'step' => 1
+            $res['corners'] = array(
+                'label' => 'Углы',
+                'type' => 'measures',
+                'prop' => 'corners',
+                'value' => '0 0 0 0'
             );
             $res['shadow-spread'] = array(
                 'label' => 'Тень',
@@ -493,13 +643,35 @@ class Container {
             'label' => 'Позиция изображения',
             'values' => $pos_vals,
             'parent' => array(
-                $this->getStoredFieldName('bg_image')
+                $this->getStoredFieldName('bg-image')
             )
         );
     }
     
     public function getSizingVariants()
     {
+        return array(
+            array(
+                'auto',
+                'По размеру контента'
+            ),
+            array(
+                'full',
+                'На весь экран'
+            ),
+            array(
+                '',
+                '',
+                array(
+                    'custom' => array(
+                        'type' => 'number',
+                        'min' => 10,
+                        'max' => 100,
+                        'units' => '%'
+                    )
+                )
+            )
+        );
         $variants = array(
             'default'
         );
@@ -588,22 +760,7 @@ class Container {
     
     public function getType()
     {
-        $name = $this->name;
-        if ($name === 'layout') {
-            return 'layout';
-        }
-        if ($name === 'columns') {
-            return 'columns';
-        }
-        if (preg_match("~^layout_~", $name)) {
-            return 'section';
-        }
-        if (preg_match("~^column_~", $name)) {
-            return 'column';
-        }
-        if (preg_match("~^wrapper_~", $name)) {
-            return 'wrapper';
-        }
+        return $this->type;
     }
     
     public function appendInput($input)

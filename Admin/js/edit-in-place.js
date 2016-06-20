@@ -322,6 +322,7 @@ function fx_edit_in_place( node ) {
         });
     }
     var $selected_entity = this.node.closest('.fx_entity');
+
     $(this.node)
     .closest('.fx_selected')
     .off('fx_deselect.edit_in_place')

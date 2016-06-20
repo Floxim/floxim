@@ -240,8 +240,6 @@ class Html
                     "{container id='".$container_hash."' mode='stop' /}"
                 );
                 $n->addClass("{container id='".$container_hash."' mode='class' /}");
-                $c_style = (string) $n->getAttribute('style');
-                $n->setAttribute('style', $c_style." {container id='".$container_hash."' mode='style' /}");
                 $n->removeAttribute('fx:container');
                 $n->setAttribute(
                     '#inj200',

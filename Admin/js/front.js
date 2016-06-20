@@ -476,8 +476,15 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
             $fx.front.outline_block_off($(this));
         });
         $fx.front.disable_hilight();
-        
-        $placeholder.trigger('fx_before_show_adder_placeholder');
+
+        var before_show_event = jQuery.Event( "fx_before_show_adder_placeholder" );
+        before_show_event.hide_placeholder = hide_placeholder;
+        $placeholder.trigger(before_show_event);
+        if ( before_show_event.isDefaultPrevented() ) {
+            console.log('canceled');
+            return;
+        }
+        console.log(before_show_event);
         
         var is_linker_placeholder = placeholder_meta.placeholder_linker;
                 
@@ -545,6 +552,7 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
                             }
                         })();
                     } else {
+                        console.log('select itm', $placeholder_focus);
                         $fx.front.select_item($placeholder_focus);
                     }
                 } else {
@@ -598,6 +606,7 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
     };
     
     function hide_placeholder() {
+        console.trace();
         $fx.front.disable_hilight();
         $fx.front.outline_block_off($placeholder);
         fx_eip.stop();
@@ -830,6 +839,7 @@ fx_front.prototype.append_ib_node = function ($area_node, $ib_node) {
 };
 
 fx_front.prototype.add_infoblock_select_settings = function(data) {
+    
     var $area_node = $($fx.front.get_selected_item()).closest('.fx_area');
     
     var infoblock_back = function () {
@@ -866,20 +876,11 @@ fx_front.prototype.add_infoblock_select_settings = function(data) {
         },
         onready:function($form) {
 
-            /*
-            var back = $('.fx_admin_form__header a.back', $form);
-
-            back.on('click.fx_front', function() {
-                infoblock_back();
-                cancel_adding();
-            });
-            */
-
             var container_handler = new $fx.container.form_handler($form);
             
             // creating infoblock preview
             $fx.front.deselect_item();
-            
+
             var add_fake_ib = function (callback) {
                 var $c_ib_node = $('<div class="fx_infoblock fx_infoblock_fake" />');
                 // if the closest infoblock is not layout,
@@ -983,6 +984,9 @@ fx_front.prototype.is_selectable = function(node) {
             }
             return false;
         case 'edit':
+            if (n.hasClass('fx-container')) {
+                return true;
+            }
             if (n.hasClass('fx_infoblock')) {
                 return true;
             }
@@ -1285,9 +1289,11 @@ fx_front.prototype.select_item = function(node) {
     }, 150);
     
     $fx.front.disable_hilight();
-    
     $('html').on('keydown.fx_selected', function(e) {
-        if ($fx.front_panel.is_visible || $fx.front.hilight_disabled) {
+        if (
+            $fx.front_panel.is_visible
+            // || $fx.front.hilight_disabled
+        ) {
             return;
         }
         // Escape
@@ -1331,6 +1337,9 @@ fx_front.prototype.select_item = function(node) {
 
 
 fx_front.prototype.select_container = function($node) {
+    if ($node.hasClass('fx_entity_adder_placeholder')) {
+        return;
+    }
     var node_panel = this.node_panel.get($node);
     var $ib = $node.closest('.fx_infoblock'),
         ib_meta = $ib.data('fx_infoblock'),
@@ -2065,7 +2074,12 @@ fx_front.prototype.get_edit_closure = function($entity, params) {
                     $var_nodes.each(function() {
                         var $var_node = $(this),
                             var_meta = $var_node.data('fx_var');
+                        // skip template var
                         if (var_meta.var_type === 'visual') {
+                            return;
+                        }
+                        // skip property of nested entity
+                        if ($var_node.closest('.fx_entity')[0] !== $entity[0]) {
                             return;
                         }
                         var_meta.target_type = 'var';
@@ -2370,7 +2384,6 @@ fx_front.prototype.extract_infoblock_visual_fields = function($ib_node, $form) {
                 });
                 meta.parent = real_parent;
             }
-            
             var $field = $fx.form.draw_field(meta, $rel_field, 'after');
             $field.addClass(field_class);
             
@@ -2384,6 +2397,7 @@ fx_front.prototype.extract_infoblock_visual_fields = function($ib_node, $form) {
             $rel_field = $field;
         });
     });
+    $form.trigger('fx_infoblock_visual_fields_updated');
 };
 
 fx_front.prototype.select_infoblock = function($node, panel) {
@@ -3151,10 +3165,17 @@ fx_front.prototype.outline_block = function(n, style, speed) {
             box.left = c_left;
         } else if (c_left >= doc_width) {
             c_left = doc_width - size - 1;
-            box.left= c_left;
+            box.left = c_left;
         }
         if (c_width + c_left >= doc_width) {
             box.width = (doc_width - c_left - size);
+        }
+
+        if (box.top >= doc_height) {
+            box.top = doc_height - 3;
+        }
+        if ( (box.top + box.height) >= doc_height) {
+            box.height = doc_height - box.top - 3;
         }
         if (pane_position === 'fixed') {
             box.top += overlay_offset;
@@ -3224,6 +3245,7 @@ fx_front.prototype.outline_block = function(n, style, speed) {
             
             $lens.css(lens_css);
         }
+
         return $pane_node;
     }
     var offset_x = params.offset_x,

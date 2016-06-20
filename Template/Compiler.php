@@ -1481,13 +1481,21 @@ class Compiler
             case 'class':
                 $code .= "echo ".$var.'->getClasses();';
                 break;
+            /*
             case 'style':
                 $code .= "echo ".$var.'->getStyles();';
                 break;
+            */
             case 'meta':
                 $code .= "\nif (\$_is_admin) {\n";
                 $code .= " echo ' data-fx_container=\''.".$var."->getMetaJson().'\'';\n";
+                $less_var = $var.'_less';
+                $code .= $less_var . ' = '.$var."->getLess();\n";
+                $code .= "if (".$less_var.") {\n";
+                $code .= "echo ' data-fx_container_less=\"'.".$less_var.".'\"';\n";
                 $code .= "}\n";
+                $code .= "}\n";
+                $code .= 'fx::page()->addInlineStyles('.$var.'->getStyles(), '.$var.'->getCssSelector());'."\n";
                 break;
             case 'stop':
                 $code .= "\$context->popContainer();";
@@ -1653,7 +1661,7 @@ class Compiler
         
         $is_style = $props['type'] === 'style';
         if ($is_style) {
-            $props['type'] = 'select';
+            $props['type'] = 'livesearch';
             $props['is_style'] = true;
             $mask = $props['mask'];
             unset($props['mask']);

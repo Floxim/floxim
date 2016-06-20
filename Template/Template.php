@@ -548,9 +548,20 @@ class Template
         }
         return $res;
     }
-    
+
+    protected static $styles_cache = array(
+        'styles' => array(),
+        'values' => array()
+    );
+
     public function collectStyles($mask)
     {
+        if (isset(self::$styles_cache['styles'][$mask])) {
+            return self::$styles_cache['styles'][$mask];
+        }
+
+        $block = preg_replace("~_style_.*$~", '', $mask);
+
         $dirs = array_values($this->getTemplateSourceDirs());
         $layout_template = fx::env()->getLayoutTemplate();
         $theme_dirs = $layout_template->getTemplateSourceDirs();
@@ -559,6 +570,11 @@ class Template
         }
         $res = array();
         $rex = "~".str_replace("*", "([a-z0-9\-]+)", $mask)."~";
+
+
+
+        $user_styles = fx::data('style_variant')->where('style', $block.'_%', 'like')->all()->group('style');
+
         foreach ($dirs as $dir) {
             $dir_mask = fx::path($dir.'/'.$mask);
             $files = glob($dir_mask);
@@ -577,18 +593,82 @@ class Template
                     );
                 }
                 $res[$style_keyword]['files'][]= $f;
+                if (isset($user_styles[$block.'_'.$style_keyword])) {
+                    foreach ($user_styles[$block.'_'.$style_keyword] as $c_user_style) {
+                        $c_user_style_keyword = $c_user_style->getStyleKeyword();
+                        $c_user_style_name = $c_user_style['name'];
+                        if (!$c_user_style_name) {
+                            $c_user_style_name = '#'.$c_user_style['id'];
+                        }
+                        $res[$c_user_style_keyword] = array(
+                            'name' => ' -- '.$c_user_style_name,
+                            'keyword' => $c_user_style_keyword,
+                            'files' => array(
+                                $f,
+                                $c_user_style->getStyleLessFile()
+                            ),
+                            'id' => $c_user_style['id']
+                        );
+                    }
+                }
             }
         }
+        self::$styles_cache['styles'][$mask] = $res;
         return $res;
+    }
+
+    protected function isStyleTweakable($params)
+    {
+        if (isset($params['id'])) {
+            return true;
+        }
+        foreach ($params['files'] as $file) {
+            $c = 0;
+            $fh = fopen($file, 'r');
+            $file_data = '';
+            while ($c < 5 && !feof($fh)) {
+                $file_data .= fgets($fh);
+                $c++;
+            }
+            if (preg_match("~/\*[^\*]+name\s*:~s", $file_data)) {
+                return true;
+            }
+        }
+        return false;
     }
     
     public function collectStyleValues($mask)
     {
+        if (isset(self::$styles_cache['values'][$mask])) {
+            return self::$styles_cache['values'][$mask];
+        }
         $res = $this->collectStyles($mask);
         $vals = array();
         foreach ($res as $style_info) {
-            $vals []= array($style_info['keyword'], $style_info['name']);
+            $keyword = $style_info['keyword'];
+            if (!isset($style_info['id'])) {
+                foreach ($style_info['files'] as $f) {
+                    $file_meta = \Floxim\Floxim\Asset\Less\MetaParser::getQuickStyleMeta($f);
+                    if ($file_meta['name']) {
+                        $style_info['name'] = $file_meta['name'];
+                    }
+                    if ($file_meta['is_tweakable']) {
+                        $style_info['is_tweakable'] = true;
+                    }
+                }
+            } else {
+                $style_info['is_tweakable'] = true;
+            }
+            $vals []= array(
+                $keyword,
+                $style_info['name'],
+                array(
+                    'is_tweakable' => $style_info['is_tweakable'],
+                    'style_variant_id' => isset($style_info['id']) ? $style_info['id'] : null
+                )
+            );
         }
+        self::$styles_cache['values'][$mask] = $vals;
         return $vals;
     }
 }

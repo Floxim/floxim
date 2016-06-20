@@ -244,21 +244,38 @@ $('html').on('fx_panel_form_ready', function(e) {
 
 var style_tweaker = {
     handle_form: function($form) {
+        $form.on('fx_infoblock_visual_fields_updated', function() {
+            $('.monosearch', $form).each(function() {
+                var $monosearch = $(this),
+                    ls = $monosearch.data('livesearch');
+                if (!ls || !ls.preset_values) {
+                    return;
+                }
+                var c_value = ls.getFullValue();
+                if (!c_value || !c_value.is_tweakable) {
+                    return;
+                }
+                $monosearch.after ( $('<a class="fx-style-tweaker-link fx_icon fx_icon-type-settings"></a>') );
+            });
+        });
         $form.on('click', '.fx-style-tweaker-link', function() {
-            var $inp = $(this).closest('.field').find('select'),
-                style_name = $inp.attr('name').match(/([^\]\[]+)\]?$/),
+            var $ls = $(this).closest('.field').find('.livesearch'),
+                ls = $ls.data('livesearch'),
+                input_name = ls.inputName,
+                current_style = ls.getFullValue(),
+                style_name = input_name.match(/([^\]\[]+)\]?$/),
                 block_name = style_name[1].replace(/_style/, ''),
-                style_value = $inp.val(),
+                style_value = current_style.id.replace(/\-\-\d+$/, ''),
+                style_variant_id = current_style.style_variant_id,
                 $stylesheet = null,
                 tweak_less = '',
                 tweak_class = block_name+'_style_'+style_value+'-tweaked',
                 $target_block = $('.fx_selected').descendant_or_self('.'+block_name);
 
-            console.log(tweak_class, $target_block);
+
             $target_block.addClass(tweak_class);
 
             function render_styles(data) {
-                console.log($stylesheet, data);
                 var vars = {};
 
                 $.each(data, function(i) {
@@ -280,14 +297,15 @@ var style_tweaker = {
                         vars[prop.name + '-tweaked'] = prop.value;
                     }
                 });
-                render_less(vars, tweak_less, $stylesheet);
                 console.log(vars);
+                render_less(vars, tweak_less, $stylesheet);
             }
 
             $fx.front_panel.load_form(
                 {
                     entity:'layout',
                     action:'style_settings',
+                    style_variant_id: style_variant_id,
                     block: block_name,
                     style:style_value
                 },
@@ -302,6 +320,7 @@ var style_tweaker = {
                             success: function(res) {
                                 tweak_less = res;
                                 $form.on('change input', function() {
+                                    console.log('fch');
                                     clearTimeout(timer);
                                     timer = setTimeout(function() {
                                         render_styles($form.serializeArray());
@@ -344,7 +363,6 @@ function render_less(vars, tweak_less, $stylesheet) {
     });
 
     var final_less = tweak_less + vars_less;
-
     less.render(final_less).then(
         function(css) {
             $stylesheet.text( css.css );
@@ -360,8 +378,20 @@ $('html').on('fx_adm_form_created', function(e, data) {
     var $form = $(e.target);
 
     style_tweaker.handle_form($form);
+    console.log(data);
+    if (data.request.action === 'select_settings') {
+        var $wrapper_input = $('input[name="visual[wrapper]"]', $form),
+            $wrapper_tab = $wrapper_input.closest('.fx_tab_data');
+        console.log($wrapper_input, $wrapper_tab);
+        function handle_wrapper_input() {
+            console.log($wrapper_input.val());
+            $wrapper_tab.toggleClass('fx_tab_data-wrapper_inactive', !$wrapper_input.val());
+        }
+        handle_wrapper_input();
+        $wrapper_input.on('change', handle_wrapper_input );
+    }
 
-    if (!data ||  !data.request || data.request.action !== "theme_settings") {
+    if (data.request.action !== "theme_settings") {
         return;
     }
     var tweak_url = $('input[name="less_tweak_file"]').val();
@@ -370,7 +400,22 @@ $('html').on('fx_adm_form_created', function(e, data) {
     }
     var $form = $(e.target),
         tweak_less,
-        timer = null;
+        timer = null,
+        $containers = $('.fx-container[data-fx_container_less]');
+
+    var containers_less = ' .fx-inline-containers() {';
+    $containers.each(function() {
+        var $c = $(this),
+            c_name = $c.data('fx_container').name,
+            c_less = $c.data('fx_container_less');
+        containers_less += '.fx-container_name_'+c_name+' { ';
+        containers_less += c_less;
+        containers_less += '}';
+    });
+    containers_less += '}; .fx-inline-containers() !important;';
+
+    //console.log(containers_less);
+
     $.ajax({
         url: tweak_url,
         success: function(res) {
@@ -419,7 +464,7 @@ $('html').on('fx_adm_form_created', function(e, data) {
             }
         });
 
-        render_less( vars, tweak_less, get_tweaker_stylesheet());
+        render_less( vars, tweak_less + containers_less, get_tweaker_stylesheet());
     }
 });
 

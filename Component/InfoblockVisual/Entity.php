@@ -84,9 +84,6 @@ class Entity extends System\Entity
 
     protected function beforeDelete()
     {
-        if (!fx::env('console')) {
-            fx::log(debug_backtrace());
-        }
         parent::beforeDelete();
         $files = $this->getFileParams();
         foreach ($files as $f) {
@@ -154,5 +151,18 @@ class Entity extends System\Entity
             }
         }
         return $res;
+    }
+
+    public function addInfoblockIdToParams()
+    {
+        $ib_id = $this['infoblock_id'];
+        if (!$ib_id || !is_array($this['wrapper_visual'])) {
+            return;
+        }
+        $new_wrapper_params = array();
+        foreach ($this['wrapper_visual'] as $k => $v) {
+            $new_wrapper_params[ str_replace("wrapper_new", 'wrapper_'.$ib_id, $k) ] = $v;
+        }
+        $this['wrapper_visual'] = $new_wrapper_params;
     }
 }

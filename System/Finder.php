@@ -1475,11 +1475,31 @@ abstract class Finder
                 if ($value instanceof \Floxim\Floxim\System\Entity) {
                     $value = $value['id'];
                 }
+                /*
                 $res = array(
                     $field,
                     $value,
                     'IN'
                 );
+                */
+                
+                $res = array(
+                    array(
+                        array(
+                            $field,
+                            $value,
+                            'IN'
+                        ),
+                        array(
+                            $field,
+                            null,
+                            'IS NOT NULL'
+                        )
+                    ),
+                    null,
+                    'AND'
+                );
+
                 break;
             case 'is_true':
                 $res = array(

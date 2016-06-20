@@ -186,28 +186,40 @@ class Response
         }
         $this->fields = array_merge($this->fields, $fields);
     }
-    
-    
-    public static function addFieldPrefix($field, $prefix)
+
+    public static function addParentPrefix($field, $prefix)
+    {
+        $np = array();
+        foreach ($field['parent'] as $pkey => $pval) {
+            if (is_numeric($pkey)) {
+                $np[$pkey] = self::getPrefixedFieldName($pval, $prefix);
+            } else {
+                $np[ self::getPrefixedFieldName($pkey, $prefix)] = $pval;
+            }
+        }
+        $field['parent'] = $np;
+        return $field;
+    }
+
+    public static function getPrefixedFieldName($name, $prefix)
     {
         $alt_name = preg_replace_callback(
-            "~^([^\[]+)~", 
+            "~^([^\[]+)~",
             function($m) {
                 return '[' . $m[1] . ']';
             },
-            $field['name']
+            $name
         );
-        $field['name'] = $prefix . $alt_name;
+        return $prefix . $alt_name;
+    }
+    
+    public static function addFieldPrefix($field, $prefix)
+    {
+
+        $field['name'] = self::getPrefixedFieldName($field['name'], $prefix);
+
         if (isset($field['parent']) && is_array($field['parent'])) {
-            $np = array();
-            foreach ($field['parent'] as $pkey => $pval) {
-                if (preg_match("~\[~", $pkey)) {
-                    $np[$pkey] = $pval;
-                } else {
-                    $np[$prefix . '[' . $pkey . ']'] = $pval;
-                }
-            }
-            $field['parent'] = $np;
+            $field = self::addParentPrefix($field, $prefix);
         }
         if (isset($field['join_with']) && !preg_match("~\[~", $field['join_with'])) {
             $field['join_with'] = $prefix . '[' . $field['join_with'] . ']';

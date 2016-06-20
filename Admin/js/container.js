@@ -5,27 +5,82 @@ $fx.container = {
 
 field_rex: /container_.+?_([^_\]]+)\]?$/,
 
+parse_color_code: function(color_code) {
+    if (!color_code) {
+        return;
+    }
+    var color_parts = color_code.split(/\s+/);
+    return {
+        type: color_parts[0],
+        level: color_parts[1],
+        opacity: color_parts.length > 2 ? color_parts[2] : 1
+    }
+},
+    
+color_from_code: function(color_code) {
+    if (!color_code) {
+        return;
+    }
+    var color = this.parse_color_code(color_code);
+    if (!color) {
+        return;
+    }
+
+    var color_group = this.colors[color.type];
+
+    if (!color_group) {
+        return;
+    }
+
+    var color_hex = color_group[color.type+' '+color.level];
+
+    if (!color_hex) {
+        return;
+    }
+
+    var rgba = tinycolor(color_hex).setAlpha(color.opacity).toRgbString();
+    return rgba;
+},
+
+get_measure_parts : function(val) {
+    if (val === undefined) {
+        val = '';
+    }
+    var parts = val.split(' ');
+    for (var i = 0; i < 4; i++) {
+        if (!parts[i] || parts[i] === '0') {
+            parts[i] = 0;
+        }
+    }
+    return parts;
+},
+
 append_container_styles: function($node, props) {
     var css = {
-        'background-color': '',
-        'background-image': '',
+        'background-color': 'transparent',
+        'background-image': 'none',
         'background-position': '',
         'background-repeat': '',
         'background-size': '',
-        'margin-top': '',
-        'margin-bottom': ''
+        'margin': '',
+        'padding': ''
     };
 
-    var c1 = props.bg_color,
-        c2 = props.bg_color_2,
-        img = props.bg_image;
+    var medias = {default:''};
+
+    this.color_from_code(props['bg-color']);
+
+    var c1 = props['bg-color'],
+        c2 = props['bg-color-2'],
+        img = props['bg-image'];
 
     if (!c1 && !c2 && !img) {
         // do nothing
     } 
     // first color only
     else if (c1 && !c2 && !img) {
-        //css['background-color'] = c1;
+        var cv1 = this.color_from_code(c1);
+        css['background-color'] = cv1;
     } 
     // image only
     else if (!c1 && !c2 && img) {
@@ -33,17 +88,21 @@ append_container_styles: function($node, props) {
     } 
     // use gradient: two colors or color(s) and image
     else {
+        var cv1 = this.color_from_code(c1),
+            cv2 = this.color_from_code(c2);
+
         var bg  = 'linear-gradient(to bottom, ';
-        bg += (c1 ? c1 : 'transparent') + ', ';
-        bg += c2 ? c2 : c1;
+
+        bg += (cv1 ? cv1 : 'transparent') + ', ';
+        bg += cv2 ? cv2 : cv1;
         bg += ')';
         if (img) {
             bg += ', url("'+img+'")';
         }
         css['background-image'] = bg;
     }
-    if (img && props.bg_position) {
-        var pos_val = props.bg_position,
+    if (img && props['bg-position']) {
+        var pos_val = props['bg-position'],
             pos = '',
             size = '',
             repeat = '';
@@ -77,55 +136,128 @@ append_container_styles: function($node, props) {
         css['background-repeat'] = repeat;
     }
 
-    var container_meta = $node.data('fx_container'),
-        container_name = container_meta ? container_meta.name : '';
-
-
-    $.each(['overlap-bottom', 'overlap-top'], function(n, prop) {
-        var prop_val = props[prop] * 1,
-            prop_type = prop.replace(/overlap\-/, '');
-
-        css['padding-'+prop_type] = '';
-
-        if (!prop_val) {
-            return;
-        }
-        var prop_hash = prop_type +'-'+container_name;
-        if (prop_val > 0 || (['top-layout_header', 'bottom-layout_footer'].indexOf(prop_hash) === -1)) {
-            css['margin-' + prop_type] = prop_val + 'px';
-        }
-        if (prop_val < 0) {
-            css['padding-' + prop_type ] = (prop_val * -1) + 'px';
-        }
-    });
-
-    $.each(['bottom', 'top'], function(n, prop_type) {
-        var prop = 'border-radius-' + prop_type,
-            prop_val = props[prop] * 1,
-            prop_val = prop_val > 0 ? prop_val +'px' : ''; 
-
-        css['border-' + prop_type + '-left-radius'] = prop_val;
-        css['border-' + prop_type + '-right-radius'] = prop_val;
-    });
-    css['box-shadow'] = '';
+    css['box-shadow'] = 'none';
     if (props['shadow-spread']) {
         var shadow_opacity = props['shadow-opacity'] || 0.3;
         css['box-shadow'] =  '0 0 '+props['shadow-spread']+'px rgba(0,0,0,'+shadow_opacity+')';
     }
-    $node.css(css);
+
+    css.padding = props['padding'];
+    css.margin = props['margin'];
+
+    var width = props.width,
+        parent_width = $node.attr('class').match(/fx-content_parent-width_([^\s]+)/);
+
+    parent_width = parent_width ? parent_width[1] : 'full';
+
+    if (width === 'layout' && parent_width !== 'full') {
+        width = 'container';
+    }
+
+    if (width === 'full' && parent_width === 'full') {
+        width = 'container';
+    }
+
+
+    if (width === 'custom' && props['width-custom']) {
+        css.width = props['width-custom']+'%';
+    }
+
+    if (props.margin && props.margin !== '0 0 0 0') {
+        css.margin = props.margin;
+    }
+
+    var layout_sizes = this.layout_sizes,
+        margin_parts = this.get_measure_parts(props.margin),
+        padding_parts = this.get_measure_parts(props.padding),
+        sides = {1 : 'right', 3  : 'left'};
+
+    if (width === 'full' || width === 'full-outer') {
+
+        var f_margin = 50 - (5000 / layout_sizes.width),
+            f_bp_margin = 'calc( ( 100vw - ' + layout_sizes['max-width'] + 'px) / -2  ',
+            res_bp = {};
+
+        $.each (sides, function(side_index, side) {
+            var c_margin = margin_parts[side_index],
+                c_padding = padding_parts[side_index];
+
+            if (parent_width === 'layout' || parent_width === 'full-outer') {
+                css['margin-' + side] = !c_margin ? f_margin + '%' : 'calc(' + f_margin + '% + ' + c_margin + ')';
+                res_bp ['margin-' + side] = f_bp_margin + (!c_margin ? '' : ' + ' + c_margin) + ')';
+            }
+            if (width === 'full-outer') {
+                css['padding-' + side] = !c_padding ? (f_margin * -1) + '%' : 'calc(' + (f_margin * -1) + '% + ' + c_padding + ')';
+                res_bp['padding-' + side] = f_bp_margin + ' * -1 ' + (!c_padding ? '' : ' + ' + c_padding) + ')';
+            }
+        });
+        medias[layout_sizes.breakpoint] = res_bp;
+    } else if (width === 'layout') {
+        var f_margin = 'calc( (100vw - ' + layout_sizes['max-width'] + "px) / 2",
+            res_bp = {};
+        $.each (sides, function(side_index , side) {
+            var c_margin = margin_parts[side_index];
+            res_bp ['margin-' + side] = f_margin  +( !c_margin ? '' : ' + ' + c_margin) + ')';
+        });
+        medias[layout_sizes.breakpoint] = res_bp;
+    }
+
+
+
+    css['border-radius'] = props['corners'];
+
+    medias['default'] = css;
+
+    var $ss = this.get_node_stylesheet($node);
+
+    var css_text = '',
+        container_class = 'fx-container_name_'+$node.data('fx_container').name;
+
+    $.each(medias, function(media, rules) {
+        var group_css =  '.'+container_class+" { \n";
+        $.each(rules, function(prop, value) {
+            if (value) {
+                group_css += prop + ':' + value + ";\n";
+            }
+        });
+        group_css += "}\n\n";
+        if (media !== 'default') {
+            group_css = '@media ('+media+') {'+group_css+'}';
+        }
+        css_text += group_css;
+    });
+    $ss.text(css_text);
+},
+
+get_node_stylesheet: function($node) {
+    var $ss = $node.data('fx_container_stylesheet');
+    if (!$ss) {
+        $ss = $('<style type="text/css"></style>');
+        $('head').append($ss);
+        $node.data('fx_container_stylesheet', $ss);
+    }
+    return $ss;
 },
 
 append_container_classes: function($node, props) {
-    var class_props = ['align', 'valign', 'sizing', 'padding', 'lightness', 'bg-color'],
+    var class_props = ['align', 'valign', 'height', 'lightness'],
         mods = {};
     for (var i = 0; i < class_props.length; i++) {
         var cp = class_props[i];
         
         if (props[cp] !== undefined) {
-            mods[cp] = props[cp].replace(/^@/, '') || false;
+            mods[cp] = props[cp].replace(/^@/, '').replace(/\s+/, '-') || false;
         }
     }
-    
+
+    var c1 = this.parse_color_code(props['bg-color']),
+        c2 = props['bg-color-2'],
+        img = props['bg-image'];
+
+    if (c1 && c1.opacity === 1 && !c2 && !img) {
+        mods['bg-color'] = c1.type +'-'+c1.level;
+    }
+
     var e_handler = function(e) {
         if (e.node_name !== 'fx-container') {
             return;
@@ -191,37 +323,19 @@ data_to_vars: function(data) {
     return vars;
 },
 
-get_real_color:  function(code) {
-    var colors = $('.fx-palette__value').data('colors');
-
-    if (!colors[code]) {
-        return '';
-    }
-    var color = tinycolor(colors[code]);
-    return color.toRgbString();
-},
-
 get_color_info: function(c) {
 
-    var parts = c.match(/(\d+), (\d+), (\d+)(, ([\d\.]+))?/);
-    if (!parts) {
-        return;
-    }
-    var rgb = {
-            r:parts[1]*1,
-            g:parts[2]*1,
-            b:parts[3]*1
-        },
+    var rgb = tinycolor(c).toRgb(),
         res = {
-            opacity: parts[5] ? parts[5]*1 : 1,
+            opacity: rgb.a,
             brightness: (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000
         };
     return res;
 },
 
 count_lightness: function(vars) {
-    var c1 = this.get_real_color(vars['bg-color']);
-    var c2 = this.get_real_color(vars['bg-color-2']);
+    var c1 = this.color_from_code(vars['bg-color']);
+    var c2 = this.color_from_code(vars['bg-color-2']);
     var img = vars['bg-image'];
     if (!c1 && !c2 && !img) {
         return '';

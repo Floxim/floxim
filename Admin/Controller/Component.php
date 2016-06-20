@@ -435,6 +435,7 @@ class Component extends Admin
                 'action' => preg_replace("~^.+\:~", '', $tpl['of']), // todo: psr0 verify with multiple fx:of
                 'used'   => count($visuals->find('template', $tpl['full_id']))
             );
+            /*
             $owner_ctr_match = null;
             preg_match("~^(component_|widget_)?(.+?)\..+$~", $tpl['of'], $owner_ctr_match);
             $owner_ctr = $owner_ctr_match ? $owner_ctr_match[2] : null;
@@ -454,6 +455,7 @@ class Component extends Admin
                 $c_parts = fx::getComponentParts($tpl['full_id']);
                 $r['source'] = fx::data($ctr_type, $c_parts['vendor'].'.'.$c_parts['module'].'.'.$c_parts['component'])->get('name');
             }
+            */
             $r['file'] = fx::path()->http($tpl['file']);
             $field['values'][] = $r;
         }

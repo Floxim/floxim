@@ -73,7 +73,7 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
         }
         
         $parser = $this->startParser($options);
-        
+
         try {
             if (!$is_admin) {
                 $less_vars = $this->getLayoutVars();
@@ -92,7 +92,13 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
     
     protected function getLayoutVars()
     {
-        return fx::env()->getLayoutStyleVariant()->getLessVars();
+        $vars = fx::env()->getLayoutStyleVariant()->getLessVars();
+        foreach ($vars as $k => $v) {
+            if (preg_match("~^font_~", $k)) {
+                $vars[$k] = '"'.trim($v, '"').'"';
+            }
+        }
+        return $vars;
     }
 
     public function getStyle($block, $style) {

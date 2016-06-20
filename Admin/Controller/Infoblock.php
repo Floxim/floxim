@@ -336,7 +336,7 @@ class Infoblock extends Admin
                 'icon' => 'design'
             ),
             'wrapper' => array(
-                'label' => fx::alang('Container'),
+                'label' => fx::alang('Block'),
                 'icon' => 'container'
             ),
         ));
@@ -462,6 +462,9 @@ class Infoblock extends Admin
             $is_new_infoblock = !$infoblock['id'];
             $infoblock->save();
             $i2l['infoblock_id'] = $infoblock['id'];
+            if ($is_new_infoblock) {
+                $i2l->addInfoblockIdToParams();
+            }
             $i2l->save();
             
             
@@ -492,6 +495,7 @@ class Infoblock extends Admin
 
         $this->response->addFields($fields);
         $this->response->addFormButton('cancel');
+        /*
         if (!$infoblock['id']) {
             $this->response->addFormButton(
                 array(
@@ -503,6 +507,7 @@ class Infoblock extends Admin
                 )
             );
         }
+        */
         $this->response->addFormButton('save');
     }
     
@@ -859,8 +864,8 @@ class Infoblock extends Admin
         
         $container = new \Floxim\Floxim\Template\Container(
             null, 
-            //'wrapper_'.($visual['infoblock_id'] ? $visual['infoblock_id'] : 'new'), 
-            'wrapper',
+            'wrapper_'.($visual['infoblock_id'] ? $visual['infoblock_id'] : 'new'),
+            //'wrapper',
             'wrapper_visual',
             array(
                 \Floxim\Floxim\Template\Container::create($parent_props)
@@ -928,7 +933,6 @@ class Infoblock extends Admin
                 'label'     => fx::alang('Wrapper', 'system'),
                 'name'      => 'wrapper',
                 'type'      => 'radio_facet',
-                //'join_with' => 'template',
                 'hidden_on_one_value' => true,
                 'values'    => $wrappers,
                 'value'     => $c_wrapper
@@ -936,17 +940,17 @@ class Infoblock extends Admin
         }
         
         
-        /** start getContanerSettings */
+        /** start getContainerSettings */
         
         $container = $this->getWrapperContainer($visual);
         
         $container_fields = $container->getForm();
         
         foreach ($container_fields as $field) {
-            $field['name'] = 'wrapper_visual['.$field['name'].']';
+            $field = \Floxim\Floxim\Admin\Response::addFieldPrefix($field, 'wrapper_visual');
             $fields []= $field;
         }
-        
+
         /** end gcs */
         
         return $fields;
@@ -1345,7 +1349,7 @@ class Infoblock extends Admin
         foreach ($container_fields as $field) {
             $fields []= $field;
         }
-        
+
         if (isset($input['data_sent'])){
             $container->save($input);
         }

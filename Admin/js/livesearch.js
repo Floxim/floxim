@@ -42,6 +42,7 @@ window.fx_livesearch = function (node) {
     if (this.preset_values.length) {
         this.count_show = this.preset_values.length;
     }
+
     this.inputNameTpl = $node.data('prototype_name');
     
     this.$input = $node.find('.'+bl+'__input');
@@ -116,6 +117,19 @@ window.fx_livesearch = function (node) {
             return vals[0];
         }
         return null;
+    };
+
+    this.getFullValue = function() {
+        if (this.isMultiple || !this.preset_values) {
+            return;
+        }
+        var val = this.getValue();
+        for (var i = 0; i < this.preset_values.length; i++) {
+            var c_full_val = this.preset_values[i];
+            if (c_full_val['id'] == val ) {
+                return c_full_val;
+            }
+        }
     };
     
     this.Select = function($n) {
@@ -304,7 +318,6 @@ window.fx_livesearch = function (node) {
             e.value_node = node;
             e.is_preset = !!this.inpNames[id];
             this.$node.trigger(e);
-
             $('input', node).trigger('change');
         }
         this.Suggest.hideBox();

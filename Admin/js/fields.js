@@ -49,35 +49,166 @@ window.$fx_fields = {
         new $fx.colorset($row, json);
         return $row;
     },
+
+    measures: function(json) {
+        var $row = $t.jQuery('form_row', json);
+        $fx.measures.create($row, json);
+        return $row;
+    },
     
     palette: function(json) {
         var $row = $t.jQuery('form_row', json),
             el = $t.getBemElementFinder('fx-palette'),
             $colors = $row.find(el('colors')),
             $value = $row.find(el('value')),
-            $cval = $row.find( el('value-color') );
-        
+            $cval = $row.find( el('value-color') ),
+            opacity_slider = null,
+            $opacity = null;
+
+        $fx.container.colors = json.colors;
+
         $('body').append($colors);
+
+        if (json.opacity) {
+            $opacity = $colors.find( el('opacity') );
+            var v = parse_value(json.value),
+                initial_opacity = v ? v.opacity : 1;
+
+            opacity_slider = new number_slider(
+                $opacity, {
+                    min:0,
+                    max:1,
+                    step:0.05,
+                    value: initial_opacity,
+                    round:2,
+                    change:function(val) {
+                        var $c_color = $colors.find( el('color-level.active')),
+                            color_value = $c_color.data('value');
+                        set_value(color_value ? color_value + ' ' + val : color_value, false);
+                        $value.trigger('change');
+                    }
+                }
+            );
+        }
+
         var first_opened = true;
-        $colors.on('click', el('color-level'), function() {
-            var $color = $(this),
-                value = $color.data('value');
-            
-            $cval.toggleClass('fx-palette__value-color_empty', !value);
-            $cval.css('background', value ? $color.data('color') : '');
-            
+
+        function hide_colors() {
             $colors.css('display', 'none');
-            $value.val(value).trigger('change');
-            
+            $cval.off('blur');
+            $('html').off('mousedown.fx_palette_clickout');
+        }
+
+        function parse_value(value) {
+            var color_parts = value.match(/([a-z]+)\s+(\d+)(\s+[\d\.]+)?$/);
+            if (!color_parts) {
+                return;
+            }
+            var res = {
+                level: color_parts[2] * 1,
+                opacity: 1,
+                type: color_parts[1]
+            };
+            if (json.opacity && color_parts[3]) {
+                res.opacity = color_parts[3].replace(/\s+/, '') * 1;
+            }
+            return res;
+        }
+
+        function set_value(value, hide) {
+            var light_value = null,
+                $color = null;
+
+            hide = hide === undefined ? true : hide;
+
+            if (value) {
+                var v  = parse_value(value);
+
+                if (!v) {
+                    return;
+                }
+
+                var $row_colors = $colors.find(el('color.type_' + v.type)).find(el('color-level')),
+                    $light_color = null;
+
+                $color = $row_colors.eq(v.level);
+
+            } else {
+                $color = $colors.find( el('color-level') ).last();
+            }
+
+            if (json.transparent === true && v) {
+
+                if (v.level >= 3 ) {
+                    v.level = 5 - v.level;
+                    value = v.type + ' ' + v.level;
+                    $color = $row_colors.eq(v.level);
+                }
+                var light_level  = 5 - v.level;
+                light_value = v.type + ' ' + light_level;
+                $light_color = $row_colors.eq(light_level);
+            }
+
+            if (json.opacity) {
+                value ? opacity_slider.enable() : opacity_slider.disable();
+            }
+
+            $cval.toggleClass('fx-palette__value-color_empty', !value);
+
+            if (hide) {
+                hide_colors();
+            }
+
+            $value.val(value);
+
             var active_class = 'fx-palette__color-level_active';
-            
+
             $colors.find( '.' + active_class ).removeClass( active_class );
             $color.addClass(active_class);
+
+            if (light_value !== null) {
+                $light_color.addClass(active_class);
+                var c1 = $color.data('color'),
+                    c2 = $light_color.data('color');
+                $cval.css(
+                    'background',
+                    'linear-gradient(135deg, '+c1+', '+c1+' 55%, '+ c2 +' 55.5%, '+c2 +')'
+                );
+            } else {
+                var val_bg = '';
+                if (value) {
+                    val_bg = $color.data('color');
+                    if (json.opacity) {
+                        val_bg = tinycolor(val_bg).setAlpha(v.opacity).toRgbString();
+                    }
+                }
+                $cval.css('background', val_bg);
+            }
+            if (json.opacity) {
+                var color_value = value ? $color.data('color') : '#fff';
+                $opacity.css(
+                    'background-image',
+                    'linear-gradient(to right, transparent, '+color_value+')'
+                );
+            }
+            $cval.focus();
+        }
+
+        set_value( $value.val() );
+
+        $colors.on('click', el('color-level'), function() {
+            var c_value = $(this).data('value');
+            if (json.opacity && c_value) {
+                c_value += ' '+opacity_slider.get();
+            }
+            set_value(c_value, !json.opacity);
+            $value.trigger('change');
         });
+
         $cval.click(function() {
             var box = $cval[0].getBoundingClientRect();
             if ($colors.is(':visible')) {
-                $colors.hide();
+                hide_colors();
                 return;
             }
             $colors.css({
@@ -86,11 +217,23 @@ window.$fx_fields = {
                 display:'block'
             });
             $cval.on('keydown', function(e) {
-                if (e.which === 27) {
-                    $colors.css('display', 'none');
+                if (e.which === 27 || e.which === 13 || e.which === 32) {
+                    hide_colors();
                     return false;
                 }
+            }).on('blur', function() {
+                $cval.focus();
             });
+            setTimeout(
+                function() {
+                    $('html').on('mousedown.fx_palette_clickout', function (e) {
+                        if ($(e.target).closest($colors).length === 0) {
+                            hide_colors();
+                        }
+                    })
+                },
+                10
+            );
             if (first_opened) {
                 $value.parents().one('fx_destroy', function() {
                     $colors.remove();
@@ -98,6 +241,7 @@ window.$fx_fields = {
                 first_opened = false;
             }
         });
+
         return $row;
     },
     
@@ -379,6 +523,7 @@ window.$fx_fields = {
         if (json.allow_select_doubles) {
             json.params.allow_select_doubles = json.allow_select_doubles;
         }
+        
         var $ls = $t.jQuery(template, json);
         if (json.values && json.values.length === 0) {
             $ls.hide();

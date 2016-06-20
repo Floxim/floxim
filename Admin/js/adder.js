@@ -40,9 +40,7 @@ fx_front.prototype.create_inline_infoblock_adder = function($node) {
         '<span class="fx_adder_variant">'+$fx.lang('block')+'</span>',
         'infoblock'
     );
-    
-    //console.log($node, $fx.front.get_own_infoblocks($node));
-    
+
     
     $button.on('fx_place_adder', function() {
         var $ib = $button.data('rel_node');
@@ -141,12 +139,14 @@ fx_front.prototype.create_inline_entity_adder = function($node) {
         }
         var $text_variants = $('.fx_adder_variants', $placeholder_mark);
     } else {
-        var $entities = $('>.fx_entity', $node).not('.fx_entity_adder_placeholder');
+        var $entities = $('>.fx_entity', $node).not('.fx_entity_adder_placeholder'),
+            button_scope = $node.is('.columns') ? 'infoblock' : 'entity';
+
         var $button = $fx.front.create_inline_adder(
             $node, 
             $entities,
             '',
-            'entity'
+            button_scope
         );
         var $title = $button.data('title_node');
     }
@@ -478,12 +478,6 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
     // if closest infoblock was hidden while rendering, use it as mouse event target
     var $visible_node = $node;
     
-    // use this to count overlapping
-    var $closest_area = null;
-    if (scope === 'entity') {
-        $closest_area = $node.closest('.fx_area');
-    }
-    
     function handle_mouseover (e, $node) {
         // the nested adder case
         if ($fx.front.is_adder_disabled(scope)) {
@@ -550,7 +544,6 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
                 });
             } else {
                 if (!$button.data('not_sortable_rendered')) {
-                    //$button.addClass(bl+'-not_sortable');
                     $button.data('not_sortable_rendered', true);
                     var $variants = $('.fx_adder_variant', $title),
                         plus_label_text = $fx.lang('Add');
@@ -574,8 +567,11 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
             over_timeout = null;
         }, 100);
         
-        var right_edge = $(window).width() - 20,
-            bottom_edge = $(document).height() - 20;
+        var plus_size = 16,
+            left_edge = plus_size,
+            right_edge = $(window).width() - plus_size,
+            top_edge = $fx.front.get_panel_height() + plus_size,
+            bottom_edge = $(document).height() - plus_size;
         
         function place_button(e, $entity) {
             
@@ -667,18 +663,34 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
         
             $button.toggleClass(bl+'_placed', is_placed);
                 
-            var css = {};
+            var css = {},
+                is_outstanding = false;
             
             if (is_vertical) {
                 css.height = height;
                 css.top = top;
                 css.left = is_after ? left + width : left;
+                if (css.left < left_edge) {
+                    css.left = plus_size;
+                    is_outstanding = true;
+                } else if (css.left > right_edge) {
+                    css.left = right_edge;
+                    is_outstanding = true;
+                }
             } else {
                 css.width = width;
                 css.top = is_after ? top + height : top;
                 css.left = left;
+                if (css.top < top_edge) {
+                    css.top = top_edge;
+                    is_outstanding = true;
+                } else if (css.top > bottom_edge) {
+                    css.top = bottom_edge;
+                    is_outstanding = true;
+                }
             }
-            
+            $button.toggleClass(bl + '-outstanding', is_outstanding);
+
             var c_width = is_vertical ? 0 : width,
                 c_height = is_vertical ? height : 0;
             

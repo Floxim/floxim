@@ -778,10 +778,10 @@ span.fx_area_marker {
     }
     
     &__plus {
-        
+        //background-color:rgba(255,255,0,0.3);
         opacity:0;
-        width:34px;
-        height:34px;
+        width:32px;
+        height:18px;
         position:absolute;
         z-index:1;
         
@@ -811,46 +811,62 @@ span.fx_area_marker {
     }
     
     &-horizontal &__plus {
-        bottom:-2px;
+        bottom:-1px;
         left:50%;
-        margin-left:-18px;
+        margin-left:-10px;
     }
     
     &-horizontal &__line {
         width:100%;
         height:2px;
-        bottom:0;
+        bottom:-1px;
         left:0;
     }
-    
+
     &-horizontal&-dir_after &__plus {
         bottom:auto;
-        top:-2px;
+        top:-1px;
         transform:rotate(180deg);
     }
     
     &-horizontal&-dir_after &__line {
         bottom:auto;
-        top:0;
+        top:-1px;
     }
     
     &-vertical &__plus {
         transform:rotate(270deg);
-        right:-2px;
+        right:-9px;
         top:50%;
-        margin-top:-18px;
+        margin-top:-10px;
     }
     
     &-vertical&-dir_after &__plus {
         right:auto;
-        left:-2px;
+        left:-9px;
         transform:rotate(90deg);
     }
     
     &-vertical &__line {
         top:0;
+        left:-1px;
         display:inline-block;
         height:100%;
+    }
+
+    &-outstanding&-horizontal &__line {
+        bottom:13px;
+    }
+
+    &-outstanding&-horizontal&-dir_after &__line {
+        top:14px;
+    }
+
+    &-outstanding&-vertical &__line {
+        left:-15px;
+    }
+    &-outstanding&-vertical&-dir_after &__line {
+        left:13px;
     }
     
     &-horizontal&_overlapper &__plus {
@@ -870,12 +886,12 @@ span.fx_area_marker {
     }
     
     &-infoblock &__plus {
-        background-position:-2105px 3px;
-        transform:rotate(0deg);
+        background-position:-2106px -12px;
+        //transform:rotate(0deg);
     }
     
     &-entity &__plus {
-        background-position:-2171px 3px;
+        background-position:-2172px -12px;
     }
     
     &-infoblock&-horizontal &__plus {
@@ -1202,9 +1218,6 @@ span.fx_area_marker {
     .fx_admin_form__close_icon {
         .fx_panel_closer_left();
     }
-    &, label, .fx_admin_form__title {
-        //color:#FFF;
-    }
     .fx_admin_form {
         min-height:60px;
         text-align:right;
@@ -1280,11 +1293,17 @@ span.fx_area_marker {
             padding:0;
         }
         &__header {
+            /*
             display: block;
             position: absolute;
             top: 50%;
             margin-top: -25px;
             left: 20px;
+            */
+            display:inline-block;
+            margin-left:20px;
+            float:left;
+            margin-top:5px;
         }
         &__footer {
             border-left:1px solid #eaeaea;
@@ -1883,5 +1902,17 @@ span.fx_area_marker {
             //vertical-align:middle;
             margin-right:20px;
         }
+    }
+}
+
+.fx-style-tweaker-link {
+    display:inline-block;
+    vertical-align:middle;
+    transform:scale(0.75);
+}
+
+.fx_tab_data-wrapper_inactive {
+    & > .field:not(.field_name__visual--wrapper) {
+        display:none !important;
     }
 }

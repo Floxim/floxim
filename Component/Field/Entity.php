@@ -363,6 +363,9 @@ class Entity extends System\Entity
 
     static public function getSqlTypeByType($type)
     {
+        if (!$type) {
+            fx::log( debug_backtrace() );
+        }
         $classname = 'Floxim\\Floxim\\Field\\' . ucfirst($type);
         $field = new $classname();
         return $field->getSqlType();

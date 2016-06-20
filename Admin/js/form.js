@@ -63,7 +63,8 @@ fx_form = {
         if (settings.lockable) {
             $fx_form.handle_lockable($form);
         }
-        $form.trigger('fx_adm_form_created', settings);
+        var passed_settings = $.extend({request:{}}, settings);
+        $form.trigger('fx_adm_form_created', passed_settings);
         return $form;
     },
     // find fields that are placed before containing group and put it right after it

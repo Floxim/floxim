@@ -399,6 +399,9 @@ window.fx_suggest = function(params) {
     
     
     this.checkItem = function(item, term) {
+        if (item.custom) {
+            return true;
+        }
         return item.name && item.name.toLowerCase().indexOf(
                 term.toLowerCase()
         )!== -1;
@@ -453,8 +456,24 @@ window.fx_suggest = function(params) {
             });
             item_html += '</span>';
         }
+
+        if (item.custom) {
+            item.name = "<input class='search_item__custom-value' type='number' /> "+item.custom.units;
+        }
+
         item_html += '<span class="search_item__name">'+item.name+'</span>';
+
         var $item = $('<div class="search_item">'+item_html+'</div>');
+
+        if (item.custom) {
+            var $custom_input = $('.search_item__custom-value', $item);
+            $custom_input.on('click', function() {
+                return false;
+            }).on('blur', function() {
+                $item.trigger('click');
+            });
+        }
+
         if (item.title !== undefined) {
             $item.attr('title', item.title);
         }
@@ -465,6 +484,7 @@ window.fx_suggest = function(params) {
             $item.data(prop, item[prop]);
         }
         $item.data('value', item);
+
         if (item.id === undefined || item.disabled) {
             $item.addClass('search_item_disabled');
         }

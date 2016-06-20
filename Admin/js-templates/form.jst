@@ -4,7 +4,7 @@ var c_class = 'field field_'+_c.type;
 if (_c.class_name) {
     c_class += ' '+_c.class_name;
 }
-c_class += ' field_name__'+(_c.id || _c.name);
+c_class += ' field_name__'+(_c.id || _c.name).replace(/[\[\]]+/g, '--').replace(/--$/, '');
 if (_c.lock_edit) {
     c_class += ' fx_field_is_locked';
 }
@@ -93,7 +93,12 @@ name="<?=_c.name?>" id="<?=_c.name || _c.id?>"
 	<input 
 		type="<?= type_att ?>" 
                 <?= _c.disabled ? ' disabled="disabled"' : ''?>
-        class="fx_input fx_input_<?=_c.type?>" 
+        class="fx_input fx_input_<?=_c.type?>"
+         <?
+            if (_c.placeholder) {
+            print(' placeholder="'+_c.placeholder+'" ');
+            }
+         ?>
 		<?=$t.field_id_name(_c)?> 
 		value="<?=$t.clear(_c.value || '')?>" 
                 <? if (_c.type === 'number') {
@@ -291,9 +296,6 @@ html.find('textarea.fx_code').each( function(){
         }
     }?>
 </select>
-<? if (_c.is_style) { ?>
-    <a class="fx-style-tweaker-link">настроить...</a>
-<? } ?>
 
 <!--[input ? _c.type == 'radio']-->
 <div class="fx_admin_group">

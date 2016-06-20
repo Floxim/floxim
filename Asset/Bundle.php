@@ -22,7 +22,6 @@ abstract class Bundle {
         $this->params = $params;
         $meta_path = $this->getMetaPath();
         if (!file_exists($meta_path)) {
-            fx::log('no meta, new', $meta_path);
             $this->is_new = true;
             $this->version = time();
         } else {
@@ -105,8 +104,15 @@ abstract class Bundle {
     
     public function delete()
     {
-        unlink($this->getFilePath());
-        unlink($this->getMetaPath());
+        $files = array(
+            $this->getFilePath(),
+            $this->getMetaPath()
+        );
+        foreach ($files as $f) {
+            if (file_exists($f)) {
+                unlink($f);
+            }
+        }
     }
     
     public abstract function getBundleContent();
@@ -116,7 +122,6 @@ abstract class Bundle {
         if ($this->isFresh()) {
             return;
         }
-        fx::log('saving', debug_backtrace(), $this);
         if (!$this->is_new) {
             $this->delete();
             $this->version = time();

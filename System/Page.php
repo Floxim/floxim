@@ -69,6 +69,50 @@ class Page
         }
     }
 
+    protected $inline_styles = array();
+
+    public function addInlineStyles($styles, $selector = null)
+    {
+        $this->inline_styles []= array($styles, $selector);
+    }
+
+    public function getInlineStyles()
+    {
+        $by_media = array();
+        foreach ($this->inline_styles as $group) {
+            $rules = $group[0];
+            $selector = $group[1];
+            foreach ($rules as $media_type => $props) {
+                if (is_array($props)) {
+                    $res_props = '';
+                    foreach ($props as $p => $v) {
+                        if ($v) {
+                            $res_props .= $p . ':' . $v . ';';
+                        }
+                    }
+                    $props = $res_props;
+                }
+                if (!$props) {
+                    continue;
+                }
+                if (!isset($by_media[$media_type])) {
+                    $by_media[$media_type] = '';
+                }
+                $by_media[$media_type] .= $selector ." {".$props."}";
+            }
+        }
+        $res = '';
+        if (isset($by_media['default'])) {
+            $res .= $by_media['default'];
+        }
+        foreach ($by_media as $media => $css) {
+            if ($media !== 'default') {
+                $res .= "@media (".$media.") {".$css."}";
+            }
+        }
+        return $res;
+    }
+
     public function addCssFile($file, $params = array())
     {
         if (preg_match("~\.less$~", $file)) {
@@ -326,13 +370,17 @@ class Page
     }
 
     /**
-     * Add assets (js & css) to ajax responce via http headers
+     * Add assets (js & css) to ajax response via http headers
      */
     public function addAssetsAjax()
     {
         fx::http()->header('fx_assets_js', $this->files_js);
         $files_css = array_keys($this->getCssFilesFinal());
         fx::http()->header('fx_assets_css', $files_css);
+        $inline_styles = $this->getInlineStyles();
+        if ($inline_styles) {
+            fx::http()->header('fx_inline_css', json_encode($inline_styles));
+        }
     }
     
     public function getCssFilesFinal() 
@@ -412,6 +460,12 @@ class Page
         $r .= '<base href="'.(is_null($this->base_url) ? FX_BASE_URL : $this->base_url).'/" />';
 
         $r .= $this->getAssetsCode();
+
+        $inline_styles = $this->getInlineStyles();
+        if ($inline_styles) {
+            $r .= '<style type="text/css" class="fx_inline_styles">'.$inline_styles.'</style>';
+        }
+
         
         if (!preg_match("~<head(\s[^>]*?|)>~i", $buffer)) {
             if (preg_match("~<html[^>]*?>~i", $buffer)) {
