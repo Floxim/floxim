@@ -20,9 +20,14 @@ class Entity extends \Floxim\Floxim\System\Entity
     public function getLessVars()
     {
         $res = $this['less_vars'];
+        $defaults = array(
+            'max_width' => '1200px',
+            'layout_width' => '80%'
+        );
         if (!is_array($res)) {
-            return array();
+            $res = array();
         }
+        $res = array_merge($defaults, $res);
         return $res;
     }
 

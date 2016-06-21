@@ -80,8 +80,13 @@ $('html').on('fx_panel_form_ready', function(e) {
         return;
     }
     var $scope_ls = $scope_inp.closest('.livesearch'),
-        scope_ls = $scope_ls.data('livesearch'),
-        infoblock_id = $form.find('input[name="id"]').val(),
+        scope_ls = $scope_ls.data('livesearch');
+
+    if (!scope_ls) {
+        return;
+    }
+    
+    var infoblock_id = $form.find('input[name="id"]').val(),
         $scope_link = $('<a class="fx_form_extra_link">Настроить...</a>'),
         last_scope_type = scope_ls.getValue();
         
@@ -378,19 +383,15 @@ $('html').on('fx_adm_form_created', function(e, data) {
     var $form = $(e.target);
 
     style_tweaker.handle_form($form);
-    console.log(data);
     if (data.request.action === 'select_settings') {
         var $wrapper_input = $('input[name="visual[wrapper]"]', $form),
             $wrapper_tab = $wrapper_input.closest('.fx_tab_data');
-        console.log($wrapper_input, $wrapper_tab);
         function handle_wrapper_input() {
-            console.log($wrapper_input.val());
             $wrapper_tab.toggleClass('fx_tab_data-wrapper_inactive', !$wrapper_input.val());
         }
         handle_wrapper_input();
         $wrapper_input.on('change', handle_wrapper_input );
     }
-
     if (data.request.action !== "theme_settings") {
         return;
     }
@@ -413,8 +414,6 @@ $('html').on('fx_adm_form_created', function(e, data) {
         containers_less += '}';
     });
     containers_less += '}; .fx-inline-containers() !important;';
-
-    //console.log(containers_less);
 
     $.ajax({
         url: tweak_url,

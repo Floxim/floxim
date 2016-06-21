@@ -481,11 +481,9 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
         before_show_event.hide_placeholder = hide_placeholder;
         $placeholder.trigger(before_show_event);
         if ( before_show_event.isDefaultPrevented() ) {
-            console.log('canceled');
             return;
         }
-        console.log(before_show_event);
-        
+
         var is_linker_placeholder = placeholder_meta.placeholder_linker;
                 
         if (is_linker_placeholder) {
@@ -552,7 +550,6 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
                             }
                         })();
                     } else {
-                        console.log('select itm', $placeholder_focus);
                         $fx.front.select_item($placeholder_focus);
                     }
                 } else {

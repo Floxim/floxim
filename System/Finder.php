@@ -106,9 +106,6 @@ abstract class Finder
         }
         
         foreach ($items as $i) {
-            if (!$i['name']) {
-                continue;
-            }
             $c_res = array();
             foreach ($props as $prop) {
                 $c_res[$prop] = $prop === 'id' ? $i[$id_field] : $i[$prop];
@@ -118,13 +115,10 @@ abstract class Finder
                 $c_res[$id_field] = $i[$id_field];
                 $c_res['_real_id'] = $i['id'];
             }
-            if ($i instanceof \Floxim\Main\Content\Entity && ($parent_entity = $i['parent'])) {
-                $site = fx::data('site', $i['site_id']);
-                if (!$site || $parent_entity['id'] !== $site['index_page_id']) {
-                    $c_res['path'] = array( $parent_entity->getName() );
-                }
+            $c_res = $i->prepareForLivesearch($c_res, $term);
+            if (!isset($c_res['name'])) {
+                continue;
             }
-            
             $res['results'][] = $c_res;
         }
         return $res;

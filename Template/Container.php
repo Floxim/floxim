@@ -110,7 +110,7 @@ class Container {
     public function getValues()
     {
         $defaults = array(
-            //'sizing' => 'default'
+
         );
         $res = array();
         foreach ($this->values as $k => $v) {
@@ -229,6 +229,9 @@ class Container {
             return;
         }
         $parts = explode(" ", $color_code);
+        if (count($parts) < 2) {
+            return;
+        }
         $var = '@color-'.$parts[0].'-'.$parts[1];
         if (isset($parts[2])) {
             $var = 'fade('.$var.', '. ($parts[2] * 100).'%)';

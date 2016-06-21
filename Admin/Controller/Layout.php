@@ -169,26 +169,36 @@ class Layout extends Admin
         $this->response->submenu->setMenu('layout-' . $layout['id'])->setSubactive($action);
         return $result;
     }
-    
-    public function changeTheme($input) {
+
+    public static function getThemeFields($site = null)
+    {
+        if ($site && $site['id'] === fx::env('site_id')) {
+            $current_preview = fx::env()->getLayoutPreview();
+            $current_variant = fx::env()->getLayoutStyleVariantId();
+            $current_layout_id = fx::env('layout_id');
+        } else {
+            $current_preview = null;
+            $current_variant = $site['style_variant_id'];
+            $current_layout_id = $site['layout_id'];
+        }
+
         $fields = array();
+
         $layouts = fx::data('layout')->all();
         $layouts_select = array();
-        
-        $current_preview = fx::env()->getLayoutPreview();
-        
+
         $variants = array();
         $variants_filter = array();
-        
+
         $theme_styles = fx::data('style_variant')->where('style', 'theme.%', 'like')->all();
-        
+
         foreach ($layouts as $layout) {
-            
+
             $layouts_select[] = array(
-                $layout['id'], 
+                $layout['id'],
                 $layout['name'] . ($current_preview == $layout['id'] ? ' ('.fx::alang('Preview').')' : '')
             );
-            
+
             $style_name = 'theme.'.$layout['keyword'];
             $style_variants = $theme_styles->find('style', $style_name);
             foreach ($style_variants as $style_variant) {
@@ -199,29 +209,30 @@ class Layout extends Admin
                 $variants_filter[$style_variant['id']] []= array('layout_id', $layout['id']);
             }
         }
-        
+
         $variants []= array('__new', fx::alang('New').'...');
 
         $fields [] = array(
             'name'   => 'layout_id',
             'type'   => 'livesearch',
+            'allow_empty' => false,
             'values' => $layouts_select,
-            'value'  => fx::env('layout_id'),
+            'value'  => $current_layout_id,
             'label'  => fx::alang('Theme', 'system')
         );
-        
-        $current_variant = fx::env()->getLayoutStyleVariantId();
-        
+
+
+
         $fields []= array(
             'name' => 'style_variant',
             'label' => 'Вариант стилей',
             'values' => $variants,
+            'allow_empty' => false,
             'values_filter' => $variants_filter,
             'type' => 'livesearch',
-            //'type' => 'hidden',
             'value' => $current_variant ? $current_variant : 'default'
         );
-        
+
         $fields []= array(
             'name' => 'new_variant_name',
             'type' => 'string',
@@ -230,6 +241,15 @@ class Layout extends Admin
                 'style_variant' => '__new'
             )
         );
+        return $fields;
+    }
+    
+    public function changeTheme($input) {
+        $fields = array();
+
+        $current_preview = fx::env()->getLayoutPreview();
+
+        $fields = array_merge($fields, self::getThemeFields(fx::env('site')));
         
         $fields[]= $this->ui->hidden('settings_sent', 'true');
         $fields[]= $this->ui->hidden('entity', 'layout');

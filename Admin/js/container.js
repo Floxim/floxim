@@ -210,8 +210,16 @@ append_container_styles: function($node, props) {
 
     var $ss = this.get_node_stylesheet($node);
 
+    var container_data = $node.data('fx_container') || {},
+        container_name = container_data.name;
+
+    if (!container_name) {
+        console.log('no container info', $node);
+        return;
+    }
+
     var css_text = '',
-        container_class = 'fx-container_name_'+$node.data('fx_container').name;
+        container_class = 'fx-container_name_'+container_name;
 
     $.each(medias, function(media, rules) {
         var group_css =  '.'+container_class+" { \n";
@@ -240,7 +248,7 @@ get_node_stylesheet: function($node) {
 },
 
 append_container_classes: function($node, props) {
-    var class_props = ['align', 'valign', 'height', 'lightness'],
+    var class_props = ['align', 'valign', 'height', 'lightness', 'width'],
         mods = {};
     for (var i = 0; i < class_props.length; i++) {
         var cp = class_props[i];

@@ -4,7 +4,8 @@ var c_class = 'field field_'+_c.type;
 if (_c.class_name) {
     c_class += ' '+_c.class_name;
 }
-c_class += ' field_name__'+(_c.id || _c.name).replace(/[\[\]]+/g, '--').replace(/--$/, '');
+
+c_class += ' field_name__'+ ('' + (_c.id || _c.name || '')).replace(/[\[\]]+/g, '--').replace(/--$/, '');
 if (_c.lock_edit) {
     c_class += ' fx_field_is_locked';
 }

@@ -529,7 +529,6 @@ fx_form = {
             });
             */
         }
-        //console.log(json);
         if (json.values_filter) {
             if (!json.all_values) {
                 json.all_values = json.values;

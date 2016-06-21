@@ -891,5 +891,10 @@ abstract class Entity implements \ArrayAccess, Template\Entity
         }
         $this->moveAfter($last_entity);
     }
+
+    public function prepareForLivesearch($res, $term = '')
+    {
+        return $res;
+    }
 }
 

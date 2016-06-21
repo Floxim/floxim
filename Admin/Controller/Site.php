@@ -68,6 +68,25 @@ class Site extends Admin
         $this->response->submenu->setMenu('site');
     }
 
+    protected function getStyleVariantId($input)
+    {
+        $style_variant_id = $input['style_variant'];
+        if ($style_variant_id === '__new') {
+            $style_variant_name = $input['new_variant_name'];
+            $style_name = 'theme.'.fx::env('layout')->get('keyword');
+            $new_variant = fx::data('style_variant')->create(
+                array(
+                    'name' => $style_variant_name,
+                    'style' => $style_name,
+                    'less_vars' => fx::env()->getLayoutStyleVariant()->getLessVars()
+                )
+            );
+            $new_variant->save();
+            $style_variant_id = $new_variant['id'];
+        }
+        return $style_variant_id;
+    }
+
     public function addSave($input)
     {
 
@@ -76,10 +95,14 @@ class Site extends Admin
             'name'      => $input['name'],
             'domain'    => $input['domain'],
             'layout_id' => $input['layout_id'],
+            'style_variant_id' => $this->getStyleVariantId($input),
             'mirrors'   => $input['mirrors'],
             'language'  => $input['language'],
             'checked'   => 1
         ));
+
+
+
 
         if (!$site->validate()) {
             $result['status'] = 'error';
@@ -161,20 +184,7 @@ class Site extends Admin
             'value'  => $site['language'],
             'label'  => fx::alang('Language', 'system')
         );
-
-        $layouts = fx::data('layout')->all();
-        $layouts_select = array();
-        foreach ($layouts as $layout) {
-            $layouts_select[] = array($layout['id'], $layout['name']);
-        }
-
-        $main_fields [] = array(
-            'name'   => 'layout_id',
-            'type'   => 'select',
-            'values' => $layouts_select,
-            'value'  => $site['layout_id'],
-            'label'  => fx::alang('Layout', 'system')
-        );
+        $main_fields = array_merge($main_fields, Layout::getThemeFields($site));
         return $main_fields;
     }
 
@@ -212,10 +222,13 @@ class Site extends Admin
             'language',
             'robots',
             'layout_id',
+            'style_variant_id',
             'index_page_id',
             'error_page_id',
             'offline_text'
         );
+
+        $input['style_variant_id'] = $this->getStyleVariantId($input);
 
         foreach ($params as $v) {
             if (isset($input[$v])) {
