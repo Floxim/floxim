@@ -202,6 +202,7 @@ class Container {
         $parts = array();
         $props_to_inherit = array(
             'width',
+            'height',
             'lightness',
             'align'
         );
@@ -302,8 +303,8 @@ class Container {
         $width = isset($vals['width']) ? $vals['width'] : 'container';
 
         $parent_width = $this->getParentValue('width');
-
-        if ($width === 'layout' && $parent_width !== 'full') {
+        
+        if ($width === 'layout' && ($parent_width === 'layout' || $parent_width === 'column')) {
             $width = 'container';
         }
 
@@ -330,6 +331,7 @@ class Container {
             $f_margin = 50 - (5000 / $layout_sizes['width']);
             $f_bp_margin = 'calc( ( 100vw - '.$layout_sizes['max-width'].'px) / -2  ';
             $res_bp = array();
+            $outer_padding = (100 - $layout_sizes['width']) / 2;
 
             foreach (array(1 => 'right', 3 => 'left') as $side_index => $side) {
                 $c_margin = $margin_parts[$side_index];
@@ -340,7 +342,7 @@ class Container {
                     $res_bp ['margin-' . $side] = $f_bp_margin . (!$c_margin ? '' : ' + ' . $c_margin) . ')';
                 }
                 if ($width === 'full-outer') {
-                    $default['padding-' . $side] = !$c_padding ? ($f_margin * -1) . '%' : 'calc(' . ($f_margin * -1) . '% + ' . $c_padding . ')';
+                    $default['padding-' . $side] = !$c_padding ? $outer_padding . '%' : 'calc(' . $outer_padding . '% + ' . $c_padding . ')';
                     $res_bp ['padding-' . $side] = $f_bp_margin . ' * -1 ' . (!$c_padding ? '' : ' + ' . $c_padding) . ')';
                 }
             }

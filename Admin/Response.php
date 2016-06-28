@@ -203,6 +203,9 @@ class Response
 
     public static function getPrefixedFieldName($name, $prefix)
     {
+        if (preg_match("~^/~", $name)) {
+            return preg_replace("~^/~", '', $name);
+        }
         $alt_name = preg_replace_callback(
             "~^([^\[]+)~",
             function($m) {

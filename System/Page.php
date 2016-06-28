@@ -54,6 +54,11 @@ class Page
         return $bundleManager;
     }
     
+    public function getDefaultCssBundle()
+    {
+        return $this->getBundleManager()->getBundle('css', 'default');
+    }
+    
     public function addToBundle($files, $bundle_keyword)
     {
         $this->getBundleManager()->addToBundle($files, $bundle_keyword);

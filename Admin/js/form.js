@@ -64,6 +64,7 @@ fx_form = {
             $fx_form.handle_lockable($form);
         }
         var passed_settings = $.extend({request:{}}, settings);
+        $form.data('fx_response', passed_settings);
         $form.trigger('fx_adm_form_created', passed_settings);
         return $form;
     },

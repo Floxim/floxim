@@ -8,6 +8,8 @@
 
 namespace Floxim\Floxim\Asset\Less\Tweaker;
 
+use \Floxim\Floxim\System\Fx as fx;
+
 
 class Output extends \Less_Output
 {
@@ -29,5 +31,13 @@ class Output extends \Less_Output
             $this->chunks = array();
         }
         return $res;
+    }
+
+    public static function grab($token)
+    {
+        $instance = new self;
+        $token->genCSS($instance);
+        unset($token);
+        return join('', $instance->chunks);
     }
 }

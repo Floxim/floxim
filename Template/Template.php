@@ -262,9 +262,10 @@ class Template
         return $html;
     }
 
-    protected function getTemplateSign()
+    public function getTemplateSign()
     {
         $template_name = get_class($this);
+        fx::cdebug($this);
         return $template_name . ':' . $this->action;
     }
 

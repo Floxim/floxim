@@ -1679,7 +1679,7 @@ class Compiler
                 $exported_props[]= "'label' => fx::alang('Style').': ".preg_replace('~_style_\*~', '', $mask)."'";
             }
             $exported_props[]= "'values' => \$this->collectStyleValues('".$mask."')";
-
+            $exported_props[]= "'source_template' => '".$this->template_set_name."'";
         }
 
         if (isset($props['default'])) {

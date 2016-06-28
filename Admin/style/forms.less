@@ -70,6 +70,18 @@
         }
         .fx_admin_form__header {
             min-height:60px;
+            display:flex;
+            .fx_admin_form__title {
+                order:1;
+            }
+            .fx_admin_form__header_fields {
+                order:2;
+                margin-top:5px;
+                margin-right:20px;
+            }
+            .fx_admin_form__tab_labels {
+                order:3;
+            }
         }
         .fx_admin_form__title {
             margin-top:13px;
@@ -765,6 +777,23 @@
     display:none !important;
 }
 
+.fx-toggle-button {
+    border: 1px solid #dddddd;
+    border-radius:2px;
+    padding: 8px 12px;
+    display:inline-block;
+    cursor:pointer;
+    color:#333;
+    position:relative;
+    max-width:220px;
+    overflow:hidden;
+    white-space:nowrap;
+    &_on {
+        background:#e2e9fe;
+        color:#2d63ff;
+    }
+}
+
 .fx-radio-facet {
     &__variant {
         border: 1px solid #dddddd;
@@ -920,6 +949,14 @@
 
 .fx_input_number {
     width:85px !important;
+    padding-right:5px !important;
+}
+.fx_input_number_ddd {
+    width:70px !important;
+}
+
+.fx_input_number_dd {
+    width:60px !important;
 }
 
 .fx_list_filter {
@@ -1526,4 +1563,16 @@ select.fx_input {
 .fx-font-preview-item {
     white-space:nowrap;
     font-size:18px !important;
+}
+
+.fx-css-font-field {
+    &__controls {
+        .livesearch, .fx-toggle-button, .fx_number_field_units {
+            margin-right:5px;
+        }
+
+        .fx-toggle-button {
+            vertical-align:middle;
+        }
+    }
 }

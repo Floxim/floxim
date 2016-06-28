@@ -150,7 +150,7 @@ append_container_styles: function($node, props) {
 
     parent_width = parent_width ? parent_width[1] : 'full';
 
-    if (width === 'layout' && parent_width !== 'full') {
+    if (width === 'layout' && (parent_width === 'layout' || parent_width === 'column')) {
         width = 'container';
     }
 
@@ -176,7 +176,8 @@ append_container_styles: function($node, props) {
 
         var f_margin = 50 - (5000 / layout_sizes.width),
             f_bp_margin = 'calc( ( 100vw - ' + layout_sizes['max-width'] + 'px) / -2  ',
-            res_bp = {};
+            res_bp = {},
+            outer_padding = (100 - layout_sizes.width) / 2;
 
         $.each (sides, function(side_index, side) {
             var c_margin = margin_parts[side_index],
@@ -187,7 +188,8 @@ append_container_styles: function($node, props) {
                 res_bp ['margin-' + side] = f_bp_margin + (!c_margin ? '' : ' + ' + c_margin) + ')';
             }
             if (width === 'full-outer') {
-                css['padding-' + side] = !c_padding ? (f_margin * -1) + '%' : 'calc(' + (f_margin * -1) + '% + ' + c_padding + ')';
+                //css['padding-' + side] = !c_padding ? (f_margin * -1) + '%' : 'calc(' + (f_margin * -1) + '% + ' + c_padding + ')';
+                css['padding-' + side] = !c_padding ? outer_padding + '%' : 'calc(' + outer_padding + '% + ' +  c_padding + ')';
                 res_bp['padding-' + side] = f_bp_margin + ' * -1 ' + (!c_padding ? '' : ' + ' + c_padding) + ')';
             }
         });

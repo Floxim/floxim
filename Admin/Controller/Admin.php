@@ -183,7 +183,8 @@ class Admin extends System\Controller
             $path_floxim . '/lib/lessjs/less.min.js',
             $path_floxim . '/lib/tinycolor/tinycolor.js',
             $path_floxim . '/Admin/js/colorset.js',
-            $path_floxim . '/Admin/js/font-preview.js'
+            $path_floxim . '/Admin/js/font-preview.js',
+            $path_floxim . '/Admin/js/bem-less.js'
         );
         $page = fx::page();
 

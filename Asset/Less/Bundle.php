@@ -51,9 +51,13 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
         }
         
         foreach ($files as $f) {
-            $dir = fx::path()->http(dirname($f));
-            if (file_exists($f)) {
-                $parser->parseFile($f, $dir);
+            if (is_array($f) && isset($f['source'])) {
+                $parser->parse($f['source']);
+            } else {
+                $dir = fx::path()->http(dirname($f));
+                if (file_exists($f)) {
+                    $parser->parseFile($f, $dir);
+                }
             }
         }
         return $parser;
@@ -111,15 +115,34 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
             }
         }
     }
+    
+    protected static function minifyLess($less)
+    {
+        $res = preg_replace("~/\*.+?\*/~is", '', $less);
+        return $res;
+    }
 
     public function getStyleTweakerLess($style)
     {
         $block = $style[0];
         $style_name = $style[1];
         $style_meta = $this->getStyle($block, $style_name);
-
-        $vars = $style_meta['vars'];
-
+        
+        $res = '';
+        foreach ($this->getCommonLessFiles() as $f) {
+            $res .= self::minifyLess(file_get_contents($f))."\n";
+        }
+        $file_data = self::minifyLess(file_get_contents($style_meta['file']));
+        
+        // quick & dirty replace mixin call
+        $file_data = preg_replace("~\.".$block.'_style_'.$style_name."\s*\{.+?\}~is", '', $file_data);
+        
+        foreach ($this->getLayoutVars()  as $var => $val) {
+            $res .= '@'.$var.':'.$val.";\n";
+        }
+        $res .= $file_data;
+        return $res;
+        /*
         $options = array(
             'strictMath' => true,
             'files' => array(
@@ -136,6 +159,7 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
         try {
 
             $res = $parser->getCss();
+            fx::cdebug($res);
             foreach ($this->getLayoutVars()  as $var => $val) {
                 $res .= '@'.$var.':'.$val.";\n";
             }
@@ -143,13 +167,13 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
             foreach ($this->getCommonLessFiles() as $f) {
                 $commons .= file_get_contents($f)."\n";
             }
-            $commons = preg_replace("~/\*.*?\*/~s", '', $commons);
+            $commons = preg_replace("~/\*.*?\*"."/~s", '', $commons);
             $res = $commons . $res;
             return $res;
         } catch (\Exception $ex) {
             fx::cdebug($ex);
         }
-
+        */
     }
     
     public function getTweakerLess()

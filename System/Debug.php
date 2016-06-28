@@ -484,7 +484,11 @@ class Debug
         if ($is_53) {
             return json_encode($what);
         }
-        return json_encode($what, JSON_UNESCAPED_UNICODE);
+        $res = json_encode($what, JSON_UNESCAPED_UNICODE);
+        if ($res === '') {
+            $res = null;
+        }
+        return $res;
     }
     
     public function toPlain($what, &$index = array()) 

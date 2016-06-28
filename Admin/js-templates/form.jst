@@ -90,11 +90,22 @@ name="<?=_c.name?>" id="<?=_c.name || _c.id?>"
     <?
     var type_att = ['password','number'].indexOf(_c.type) < 0 ? 'text' : _c.type;
     var units = _c.type === 'number' && _c.units ? _c.units : null;
+    var extra_class = '';
+    if (_c.type === 'number' && _c.max) {
+        extra_class +=' fx_input_number_';
+        var max_len = (_c.max+'').length;
+        if (_c.step && Math.abs(_c.step % 1) > 0) {
+            max_len +=  ( (_c.step % 1)+'' ).length - 2;
+        }
+        for (var i = 0 ; i < max_len; i++) {
+            extra_class += 'd';
+        }
+    }
     ?>
 	<input 
 		type="<?= type_att ?>" 
                 <?= _c.disabled ? ' disabled="disabled"' : ''?>
-        class="fx_input fx_input_<?=_c.type?>"
+        class="fx_input fx_input_<?=_c.type?> <?= extra_class ?>"
          <?
             if (_c.placeholder) {
             print(' placeholder="'+_c.placeholder+'" ');
@@ -564,3 +575,11 @@ html.on('change', '.fx_limit_all', function() {
 
 <!--jquery-->
 new condition_builder( $.extend({}, _c, {$node: html}) );
+
+<!--[input ? _c.type == 'css-font']-->
+<div class="fx-css-font-field">
+    <input type="hidden" name="<?= _c.name ?>" class="fx-css-font-field__value" value="<?= _c.value ?>" />
+     <div class="fx-css-font-field__controls">
+
+     </div>
+</div>

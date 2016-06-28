@@ -11,7 +11,7 @@ class Processor {
     public function run($root)
     {
         foreach ($root->rules as $r) {
-            if (!is_array($r->paths)) {
+            if (!isset($r->paths) || !is_array($r->paths)) {
                 if (isset($r->rules)) {
                     $this->run($r);
                 }

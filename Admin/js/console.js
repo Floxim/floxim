@@ -12,7 +12,7 @@
         var $form = $b.closest('form');
         $form.off('.fx_submit').trigger('fx_form_submit');
         $form.ajaxSubmit(function(data) {
-            //console.log('ress!', data);
+            console.log('ress!', data);
             var $container = $('.fx_admin_console_container');
             if (!$container.length) {
                 $container = $('<div class="fx_admin_console_container"></div>');
@@ -24,6 +24,7 @@
             } catch (e) {
                 var res = data;
             }
+            console.log(res);
             $container.html(res);
             $container.trigger('fx_render');
             $b.data('is_pending', false);

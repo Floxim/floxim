@@ -16,6 +16,30 @@ window.$fx_fields = {
         return json.value;
     },
     
+    handle_number_wheel: function ($inp, params) {
+        params = $.extend(
+            {
+                min: $inp.attr('min')*1,
+                max: $inp.attr('max')*1,
+                step: $inp.attr('step')*1
+            },
+            params
+        );
+        $inp.on('mousewheel keyup', function(e) {
+            var delta = e.originalEvent.deltaY > 0 ? -1 : 1,
+                $inp = $(this),
+                c_value = $inp.val() * 1,
+                new_value = c_value + params.step * delta;
+            if (new_value < params.min) {
+                new_value = params.min;
+            } else if (new_value > params.max ) {
+                new_value = params.max;
+            }
+            $inp.focus().val(new_value).trigger('change');
+            return false;
+        });
+    },
+    
     row: function(json) {
         if (json.type === undefined) {
             json.type = 'input';
@@ -55,7 +79,146 @@ window.$fx_fields = {
         $fx.measures.create($row, json);
         return $row;
     },
-    
+
+    'css-font': function(json) {
+        // nav 16px bold italic uppercase underline
+        var $row =  $t.jQuery('form_row', json),
+            el = $t.getBemElementFinder('fx-css-font-field'),
+            $controls = $row.find( el('controls')),
+            $value = $row.find( el('value')),
+            controls = {};
+
+        function init_controls() {
+            var c_value = parse_value(json.value);
+            var $family = $fx_fields['css-font-family'](c_value.family, json.family);
+            $controls.append($family);
+
+            controls.family = $family;
+
+            var size_params = {
+                min:11,
+                max:32,
+                step:1,
+                units:'px',
+                value:c_value.size
+            };
+            if (json.size) {
+                var size = json.size.split(/[\s\-]+/);
+                size_params.min = size[0];
+                size_params.max = size[1];
+            }
+            var $size = $fx_fields.number(size_params, 'input');
+            $controls.append($size);
+
+            controls.size = $size;
+
+            var $weight = $fx_fields.toggle_button('<b>Ж</b>', c_value.weight === 'bold', 'Жирный');
+            $controls.append($weight);
+            controls.weight = $weight;
+
+            var $style = $fx_fields.toggle_button('<i>К</i>', c_value.style === 'italic', 'Курсив');
+            $controls.append($style);
+            controls.style = $style;
+
+            var $transform = $fx_fields['css-text-transform']({
+                value: c_value.transform
+            }, 'input');
+            $controls.append($transform);
+            controls.transform = $transform;
+
+            $controls.on('change input', function(e) {
+                update_value();
+                return false;
+            })
+        }
+
+        function update_value() {
+            var res = [];
+            res.push(controls.family.data('livesearch').getValue());
+            res.push(controls.size.val() + 'px');
+            res.push(controls.weight.val() ? 'bold' : 'normal');
+            res.push(controls.style.val() ? 'italic' : 'normal');
+            res.push(controls.transform.data('livesearch').getValue());
+            $value.val( res.join(' ') ).trigger('change');
+        }
+
+        function parse_value(value) {
+            if (!value) {
+                value = 'text 16px normal normal none none';
+            }
+            var parts = value.split(/\s+/);
+
+            var  res = {
+                family: parts[0],
+                size: parts[1].replace(/[^\d]+/, ''),
+                weight: parts[2],
+                style: parts[3],
+                transform:parts[4],
+                decoration:parts[5]
+            };
+            return res;
+        }
+
+        init_controls();
+
+        return $row;
+    },
+
+    'toggle_button': function(label, value, title) {
+        var cl = 'fx-toggle-button';
+        var $node = $('<div class="'+cl+' ' + (value ? ' '+cl+'_on' : '')+'">'+label+'</div>');
+        if (title) {
+            $node.attr('title', title);
+        }
+        $node.on('click', function() {
+            $node.toggleClass('fx-toggle-button_on');
+            $node.trigger('change');
+        });
+        $node.val = function(value) {
+            if (value === undefined) {
+                return $node.hasClass(cl+'_on');
+            }
+            $node.toggleClass(cl+'_on', value);
+        };
+        return $node;
+    },
+
+    'css-font-family': function(value, avail_families){
+        var all_families = {
+            text: 'Обычный',
+            headers: 'Для заголовков',
+            nav: 'Для навигации'
+        },
+        values = {};
+        if (!avail_families) {
+            values = all_families;
+        } else {
+            if (typeof avail_families === 'string') {
+                avail_families = avail_families.split(/[\s\,]+/);
+            }
+            for (var i = 0; i < avail_families.length; i++) {
+                var c_family = avail_families[i];
+                values[c_family] = all_families[c_family];
+            }
+        }
+        return this.livesearch({
+            values:values,
+            value:value,
+            'allow_empty': false
+        }, 'input');
+    },
+
+    'css-text-transform': function(json, template) {
+        json.type = 'livesearch';
+        json.values = {
+            none:'Abc',
+            uppercase:'ABC',
+            lowercase:'abc'
+        };
+        json.allow_empty = false;
+        return this.livesearch(json, template);
+    },
+
     palette: function(json) {
         var $row = $t.jQuery('form_row', json),
             el = $t.getBemElementFinder('fx-palette'),
@@ -244,7 +407,7 @@ window.$fx_fields = {
 
         return $row;
     },
-    
+
     group:function(json) {
         var $row =  $t.jQuery('form_row', json),
             b = 'fx-field-group',
@@ -342,9 +505,15 @@ window.$fx_fields = {
         return $res;
     },
     
-    number: function(json) {
+    number: function(json, template) {
+        if (!json.type ) {
+            json.type = 'number';
+        }
         json.class_name = 'number' + (json.class_name || '');
-        return $t.jQuery('form_row', json);
+        var $res = $t.jQuery(template ? template : 'form_row', json);
+        var $inp = template === 'input' ? $res : $res.find('input');
+        this.handle_number_wheel($inp);
+        return $res;
     },
 
     file: function (json) {

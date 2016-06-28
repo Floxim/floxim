@@ -57,7 +57,7 @@ class Entity extends \Floxim\Floxim\System\Entity {
             $conds = array($conds);
         }
         foreach ($conds as $c) {
-            if ($c['field'] === 'entity' && !$c['inverted']) {
+            if ($c['field'] === 'entity' && (!isset($c['inverted']) || !$c['inverted']) ) {
                 foreach ($ids as $id) {
                     if (in_array($id, $c['value'])) {
                         return $id;

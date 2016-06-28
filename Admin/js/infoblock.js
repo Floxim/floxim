@@ -85,7 +85,7 @@ $('html').on('fx_panel_form_ready', function(e) {
     if (!scope_ls) {
         return;
     }
-    
+
     var infoblock_id = $form.find('input[name="id"]').val(),
         $scope_link = $('<a class="fx_form_extra_link">Настроить...</a>'),
         last_scope_type = scope_ls.getValue();
@@ -265,6 +265,7 @@ var style_tweaker = {
         });
         $form.on('click', '.fx-style-tweaker-link', function() {
             var $ls = $(this).closest('.field').find('.livesearch'),
+                ls_json = $ls.data('json'),
                 ls = $ls.data('livesearch'),
                 input_name = ls.inputName,
                 current_style = ls.getFullValue(),
@@ -274,37 +275,34 @@ var style_tweaker = {
                 style_variant_id = current_style.style_variant_id,
                 $stylesheet = null,
                 tweak_less = '',
-                tweak_class = block_name+'_style_'+style_value+'-tweaked',
-                $target_block = $('.fx_selected').descendant_or_self('.'+block_name);
-
-
-            $target_block.addClass(tweak_class);
+                tweaked_class = null,
+                mixin_name = null,
+                is_new = null,
+                $target_block = $('.fx_selected').descendant_or_self('.'+block_name),
+                $affected_blocks = $target_block,
+                style_meta = {};
 
             function render_styles(data) {
-                var vars = {};
-
+                var mixin_call = '.' + tweaked_class +" {\n";
+                mixin_call += '.'+mixin_name+"(\n";
                 $.each(data, function(i) {
                     var prop = data[i];
-                    if (!prop.value) {
+                    if ( style_meta.tweaked_vars.indexOf(prop.name) === -1) {
                         return;
                     }
-                    if (/^@color-/.test(prop.value)) {
-                        vars[prop.name + '-tweaked'] = prop.value.replace(/^@color-/, '').replace(/\-(\d+)/, ' $1');
-                    } else {
-                        if (/^entity|action|sent|style_tweaker_file|_base_url/.test(prop.name)) {
-                            return;
-                        }
-                        var $inp = $('input[name="'+prop.name+'"]');
-                        var units = $inp.data('units');
-                        if (units) {
-                            prop.value += units;
-                        }
-                        vars[prop.name + '-tweaked'] = prop.value;
+                    var $inp = $('input[name="'+prop.name+'"]');
+                    var units = $inp.data('units');
+                    if (units) {
+                        prop.value += units;
                     }
+                    mixin_call += "@"+prop.name+": "+prop.value+";\n";
                 });
-                console.log(vars);
-                render_less(vars, tweak_less, $stylesheet);
+                
+                mixin_call += ");\n";
+                mixin_call += "\n}";
+                render_less({}, tweak_less + mixin_call, $stylesheet);
             }
+            
 
             $fx.front_panel.load_form(
                 {
@@ -312,25 +310,48 @@ var style_tweaker = {
                     action:'style_settings',
                     style_variant_id: style_variant_id,
                     block: block_name,
-                    style:style_value
+                    style:style_value,
+                    source_template: ls_json.source_template
                 },
                 {
                     view:'horizontal',
                     onready: function($form) {
                         $stylesheet = get_tweaker_stylesheet(block_name, style_value);
-                        var tweaker_file = $form.find('input[name="style_tweaker_file"]').val(),
+                        
+                        style_meta = $form.data('fx_response') || {};
+                        
+                        var tweaker_file = style_meta.tweaker_file,
                             timer = null;
+                        
+                        
+                        mixin_name = style_meta.mixin_name;
+                        is_new = !style_meta.existing_class;
+                        if (!is_new) {
+                            $affected_blocks =  $('.'+style_meta.existing_class);
+                        }
+                        
+                        tweaked_class = style_meta.mixin_name+'-tweaked';
+                        
                         $.ajax({
                             url: tweaker_file,
                             success: function(res) {
+                                
+                                $affected_blocks.removeClass(style_meta.mixin_name);
+                                
+                                if (!is_new) {
+                                    $affected_blocks.removeClass(style_meta.existing_class);
+                                }
+                                
+                                $affected_blocks.addClass(tweaked_class);
                                 tweak_less = res;
                                 $form.on('change input', function() {
-                                    console.log('fch');
                                     clearTimeout(timer);
                                     timer = setTimeout(function() {
                                         render_styles($form.serializeArray());
                                     }, 500);
                                 });
+                                
+                                render_styles($form.serializeArray());
                             }
                         });
                     },
@@ -338,7 +359,8 @@ var style_tweaker = {
                         if ($stylesheet) {
                             $stylesheet.remove();
                         }
-                        $target_block.removeClass(tweak_class);
+                        $affected_blocks.removeClass(tweaked_class);
+                        $affected_blocks.addClass( is_new ? style_meta.mixin_name : style_meta.existing_class );
                     }
                 }
             )
@@ -367,8 +389,17 @@ function render_less(vars, tweak_less, $stylesheet) {
         vars_less += '@'+k+':'+v+";\n";
     });
 
-    var final_less = tweak_less + vars_less;
-    less.render(final_less).then(
+    var final_less = tweak_less + vars_less,
+        options = {
+            plugins: [
+                new BemLessPlugin({})
+            ]
+        };
+    
+    less.render(
+        final_less,
+        options
+    ).then(
         function(css) {
             $stylesheet.text( css.css );
         },

@@ -83,10 +83,29 @@ class Generator extends Less\Tweaker\Generator
         return $obj;
     }
 
+    public function visitRuleset($obj)
+    {
+        $selectors = array();
+        foreach ($obj->selectors as $selector) {
+            if ($selector->condition) {
+                $selectors []= new \Less_Tree_Selector(
+                    array(
+                        new Less\Tweaker\HardSelectorElement(
+                            $this->visitObj($selector->condition)
+                        )
+                    )
+                );
+            } else {
+                $selectors []= $selector;
+            }
+        }
+        $obj->selectors = $selectors;
+        return $obj;
+    }
+
     public function run($root) {
 
         $rules = array();
-
         foreach ($root->rules as $rule) {
             if ($rule->type !== 'Ruleset') {
                 $rules []= $rule;
@@ -100,6 +119,7 @@ class Generator extends Less\Tweaker\Generator
         foreach ($this->inner_vars as $var) {
             $root->rules []= $var;
         }
+
         return $res;
     }
 }

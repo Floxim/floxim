@@ -768,7 +768,11 @@ abstract class Finder
             if ($type == '=') {
                 $type = 'IN';
             }
-            $value = " ('" . join("', '", array_unique($value)) . "') ";
+            $vals = array_unique($value);
+            foreach ($vals as &$c_val) {
+                $c_val = fx::db()->escape($c_val);
+            }
+            $value = " ('" . join("', '",  $vals) . "') ";
         } elseif (in_array(strtolower($type), array('is null', 'is not null'))) {
             $value = '';
         } else {

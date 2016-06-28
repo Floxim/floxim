@@ -8,6 +8,8 @@
 
 namespace Floxim\Floxim\Asset\Less\Bem;
 
+use \Floxim\Floxim\System\Fx as fx;
+
 
 class Stack {
 
@@ -124,7 +126,7 @@ class Stack {
                     $res []= $mod_el;
                 }
             } else {
-                if (!$level['is_transparent']) {
+                if (!isset($level['is_transparent']) || !$level['is_transparent']) {
                     $level_el->value = $base;
                     $res []= $level_el;
                 }
