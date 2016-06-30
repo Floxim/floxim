@@ -98,7 +98,7 @@ class Entity extends \Floxim\Floxim\System\Entity {
                 return false;
         }
         if ($subtype && !$entity_base->isInstanceOf($subtype)) {
-            return $cond['inverted'] ? true : false;
+            return isset($cond['inverted']) && $cond['inverted'] ? true : false;
         }
         $tested_value = $entity_base;
         $tested_entity = $entity_base;
@@ -182,7 +182,7 @@ class Entity extends \Floxim\Floxim\System\Entity {
                 }
                 break;
         }
-        if ($cond['inverted']) {
+        if (isset($cond['inverted']) && $cond['inverted']) {
             $res = !$res;
         }
         $cond['res'] = $res;
@@ -203,7 +203,7 @@ class Entity extends \Floxim\Floxim\System\Entity {
                 break;
             }
         }
-        if ($cond['inverted']) {
+        if ( isset($cond['inverted']) && $cond['inverted']) {
             $res = !$res;
         }
         return $res;

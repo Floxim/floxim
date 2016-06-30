@@ -360,27 +360,6 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
         if (!is_sortable) {
             css.left = 0;
             css.top = $plus.outerHeight();
-        /*} else if ( false && $button.hasClass(bl+'-outstanding')) {
-
-            if ($button.hasClass(bl+'-vertical')) {
-                css.left = '-' + ( $title.outerWidth() / 2 - plus_size / 2 ) + 'px';
-                if ($button.hasClass(bl+'-inverted')) {
-                    css.top = $line.outerHeight() + plus_size*0.7;
-                } else {
-                    css.top = '-' + ($title.outerHeight() + plus_size*0.7) + 'px';
-                }
-            } else {
-                css.top = '-' + ( $title.outerHeight() / 2 - plus_size / 2 ) + 'px';
-                if ($button.hasClass(bl+'-inverted')) {
-                    css.left = ($line.outerWidth() + plus_size*0.7) + 'px';
-                } else {
-                    css.left = '-'+( $title.outerWidth() + plus_size*0.7 )+'px';
-                }
-            }
-            if ( parseInt($button.css('left')) + parseInt(css.left) < 0) {
-                css.left = 0;
-            }
-        */
         } else {
             if ($button.hasClass(bl+'-vertical')) {
                 css.left = plus_size * 0.7;
@@ -403,7 +382,6 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
             css.bottom = css.top;
             css.top = '';
         }
-        console.log(abs_top, $(document).height(), css);
         $title.attr('style', '').css(css);
     }
     
@@ -669,7 +647,9 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
             $button.toggleClass(bl+'_placed', is_placed);
                 
             var css = {},
-                is_outstanding = false;
+                is_outstanding = false,
+                line_width = width,
+                line_left = left;
             
             if (is_vertical) {
                 css.height = height;
@@ -683,9 +663,14 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
                     is_outstanding = true;
                 }
             } else {
-                css.width = width;
+                if (scope !== 'entity') {
+                    var $parent = $entity.parent();
+                    line_width = Math.max(line_width, $parent.outerWidth());
+                    line_left = $parent[0].getBoundingClientRect().left;
+                }
+                css.width = line_width;
                 css.top = is_after ? top + height : top;
-                css.left = left;
+                css.left = line_left;
                 if (css.top < top_edge) {
                     css.top = top_edge;
                     is_outstanding = true;
@@ -696,7 +681,7 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
             }
             $button.toggleClass(bl + '-outstanding', is_outstanding);
 
-            var c_width = is_vertical ? 0 : width,
+            var c_width = is_vertical ? 0 : line_width,
                 c_height = is_vertical ? height : 0;
             
             $button

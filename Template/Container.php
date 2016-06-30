@@ -35,7 +35,8 @@ class Container {
         'lightness',
         'corners',
         'shadow-spread',
-        'shadow-opacity'
+        'shadow-opacity',
+        'z-index'
     );
     
     public static function create($props)
@@ -298,6 +299,10 @@ class Container {
         }
         if ($vals['padding']) {
             $default ['padding'] = $vals['padding'];
+        }
+        
+        if (isset($vals['z-index']) && $vals['z-index']) {
+            $default['z-index'] = (int) $vals['z-index'];
         }
         
         $width = isset($vals['width']) ? $vals['width'] : 'container';
@@ -614,6 +619,14 @@ class Container {
                 'min' => 0.1,
                 'max' => 1,
                 'step' => 0.1
+            );
+            $res['z-index'] = array(
+                'label' => 'z-index',
+                'type' => 'number',
+                'min' => 0,
+                'max' => 1000,
+                'step' => 1,
+                'value' => 0
             );
         }
         return $res;

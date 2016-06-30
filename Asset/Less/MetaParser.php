@@ -104,7 +104,12 @@ class MetaParser {
         foreach ($token->params as $arg) {
             $var_name = substr($arg['name'], 1);
             if (isset($c_style['vars'][$var_name])) {
-                $c_style['vars'][$var_name]['value'] = $this->output->get($arg['value'], false);
+                $value = $this->output->get($arg['value'], false);
+                $parts = null;
+                if (!isset($c_style['vars'][$var_name]['units']) && preg_match("~^\d+(em|rem|px|pt|%|vh|vw)~", $value, $parts)) {
+                    $c_style['vars'][$var_name]['units'] = $parts[1];
+                }
+                $c_style['vars'][$var_name]['value'] = $value;
             }
         }
     }

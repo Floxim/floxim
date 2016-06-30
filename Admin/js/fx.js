@@ -5,6 +5,67 @@ window.$fx = {
     KEYCODE_ESC: 27,
         
     init: function(options) {
+        
+        $.ajaxSetup({
+            dataFilter: function(data, type)  {
+                var json = null;
+                try {
+                    json = $.parseJSON(data);
+                } catch (e) {
+                    return data;
+                }
+                
+                if (!json || !json.format || json.format !== 'fx-response') {
+                    return data;
+                }
+                
+                var js_assets = json.js;
+                if (js_assets) {
+                    if (!window.fx_assets_js) {
+                        window.fx_assets_js = [];
+                    }
+                    for (var i = 0; i < js_assets.length; i++) {
+                        var asset = js_assets[i];
+                        var is_loaded = $.inArray(asset, window.fx_assets_js);
+                        if (is_loaded !== -1) {
+                            continue;
+                        }
+                        (function(asset) {
+                            $.ajax({
+                                url:asset,
+                                async:false,
+                                dataType: 'script',
+                                success: function() {
+                                    window.fx_assets_js.push(asset);
+                                }
+                            });
+                        })(asset);
+                    }
+                }
+                
+                var css_assets = json.css;
+                if (css_assets) {
+                    for (var i = 0; i < css_assets.length; i++) {
+                        var asset = css_assets[i];
+                        if ($('link[href="'+asset+'"]').length === 0) {
+                            $('head').append('<link type="text/css" rel="stylesheet" href="'+asset+'" />');
+                        }
+                    }
+                }
+                
+                var css_inline = json.inline_css;
+                if (css_inline) {
+                    $fx.merge_inline_styles(css_inline);
+                }
+                
+                var response = json.response;
+                if ( typeof response !== 'string') {
+                    response = JSON.stringify(response);
+                }
+                return response;
+            }
+        });
+        
         $fx.settings = options;    
         $fx.buttons_map = options.buttons.map;
         $fx.history = options.history;

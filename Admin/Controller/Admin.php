@@ -86,10 +86,14 @@ class Admin extends System\Controller
         if (isset($result['fields']) && is_array($result['fields'])) {
             $result['fields'] = array_values($result['fields']);
         }
+        return $result;
+        /*
         if ($this->process_do_return) {
             return $result;
         }
         return json_encode($result);
+         * 
+         */
     }
 
     protected function getStatusText()

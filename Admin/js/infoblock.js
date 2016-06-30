@@ -269,8 +269,9 @@ var style_tweaker = {
                 ls = $ls.data('livesearch'),
                 input_name = ls.inputName,
                 current_style = ls.getFullValue(),
-                style_name = input_name.match(/([^\]\[]+)\]?$/),
-                block_name = style_name[1].replace(/_style/, ''),
+                //style_name = input_name.match(/([^\]\[]+)\]?$/),
+                //block_name = style_name[1].replace(/_style/, ''),
+                block_name = ls_json.block,
                 style_value = current_style.id.replace(/\-\-\d+$/, ''),
                 style_variant_id = current_style.style_variant_id,
                 $stylesheet = null,
@@ -278,10 +279,10 @@ var style_tweaker = {
                 tweaked_class = null,
                 mixin_name = null,
                 is_new = null,
-                $target_block = $('.fx_selected').descendant_or_self('.'+block_name),
+                $target_block = $('.fx_selected').descendant_or_self('.'+block_name+'_style-id_'+ls_json.style_id),
                 $affected_blocks = $target_block,
                 style_meta = {};
-
+            
             function render_styles(data) {
                 var mixin_call = '.' + tweaked_class +" {\n";
                 mixin_call += '.'+mixin_name+"(\n";
@@ -343,17 +344,27 @@ var style_tweaker = {
                                 }
                                 
                                 $affected_blocks.addClass(tweaked_class);
+                                
                                 tweak_less = res;
                                 $form.on('change input', function() {
                                     clearTimeout(timer);
                                     timer = setTimeout(function() {
                                         render_styles($form.serializeArray());
-                                    }, 500);
+                                    }, 200);
                                 });
                                 
                                 render_styles($form.serializeArray());
                             }
                         });
+                    },
+                    onfinish: function(res) {
+                        var $inp = $form.find('input[name="'+input_name+'"]'),
+                            new_val = style_value+ (res.id ? '--'+res.id : '');
+                        
+                        var change_event = $.Event('change');
+                        change_event.fx_forced = true;
+                        
+                        $inp.val(new_val).trigger(change_event);
                     },
                     oncancel: function() {
                         if ($stylesheet) {

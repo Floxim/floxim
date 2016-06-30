@@ -21,7 +21,6 @@ class Fonts {
             <?php
         }
         $avail = self::getAvailableFonts();
-        fx::log($fonts, $avail);
         foreach ($fonts as &$font) {
             if (isset($avail[$font])) {
                 $font = $font.':'.join(',', $avail[$font]);

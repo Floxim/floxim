@@ -63,7 +63,8 @@ append_container_styles: function($node, props) {
         'background-repeat': '',
         'background-size': '',
         'margin': '',
-        'padding': ''
+        'padding': '',
+        'z-index': ''
     };
 
     var medias = {default:''};
@@ -204,6 +205,9 @@ append_container_styles: function($node, props) {
         medias[layout_sizes.breakpoint] = res_bp;
     }
 
+    if (props['z-index']) {
+        css['z-index'] = props['z-index'];
+    }
 
 
     css['border-radius'] = props['corners'];
@@ -216,7 +220,7 @@ append_container_styles: function($node, props) {
         container_name = container_data.name;
 
     if (!container_name) {
-        console.log('no container info', $node);
+        //console.log('no container info', $node);
         return;
     }
 
@@ -395,6 +399,9 @@ form_handler: function ($form, $node, prefix) {
         rnd = Math.random();
 
     function handle_form_data (data) {
+        if (!that.$node.is('.fx-container')) {
+            return;
+        }
         var vars = container.data_to_vars(data);
         if (
             $form && last_vars && (

@@ -2349,52 +2349,110 @@ fx_front.prototype.get_entity_bound_vars = function($entity) {
     return $bound_to_edit;
 };
 
-fx_front.prototype.extract_infoblock_visual_fields = function($ib_node, $form) {
-    var types = ['template', 'wrapper'];
-    
-    $.each(types, function(index, type) {
-        var props = $ib_node.data('fx_'+type+'_params'),
-            field_class = 'fx_infoblock_'+type+'_param_field';
-        $('.'+field_class, $form).remove();
+
+fx_front.prototype.prepare_infoblock_visual_fields = function(all_props, callback) {
+    var style_props = [];
+    $.each(all_props, function(prop_type, props){
         if (!props) {
             return;
         }
-        var $rel_field = $(':input[name="visual['+type+']"]', $form).closest('.field');
-        $.each(props, function(prop_name, prop_data) {
-            var meta = $.extend(
-                {}, 
-                prop_data, {
-                    name:'visual['+type+'_visual]['+prop_name+']',
-                    view_context:'panel'
-                }
-            );
-    
-            if (meta.parent) {
-                if (typeof meta.parent === 'string') {
-                    var obj = {};
-                    obj[meta.parent] = '!=0';
-                    meta.parent = obj;
-                }
-                var real_parent = {};
-                $.each(meta.parent, function(index, rule) {
-                    real_parent['visual['+type+'_visual]['+index+']'] = rule;
-                });
-                meta.parent = real_parent;
+        $.each( props, function( prop_name, prop) {
+            if (prop.type === 'style') {
+                style_props.push(prop);
             }
-            var $field = $fx.form.draw_field(meta, $rel_field, 'after');
-            $field.addClass(field_class);
-            
-            // show tab label if the tab contained no visible fields
-            var $c_tab = $rel_field.closest('.fx_tab_data');
-            if ($c_tab.length) {
-                var tab_key = $c_tab.attr('class').match(/fx_tab_data-key-(.+)$/)[1];
-                var $tab_label = $form.find('.fx_tab_label[data-key="'+tab_key+'"]');
-                $tab_label.show();
-            }
-            $rel_field = $field;
         });
     });
-    $form.trigger('fx_infoblock_visual_fields_updated');
+    if (style_props.length > 0) {
+        $fx.post({
+            entity:'layout',
+            action:'get_style_variants',
+            blocks: style_props
+        }, function(res) {
+            for (var i = 0; i < res.variants.length; i++) {
+                var variants = res.variants[i],
+                    prop = style_props[i],
+                    is_hidden = false;
+                if (prop.style_id) {
+                    var $styled_el = $('.fx_selected').find('.'+prop.block+'_style-id_'+prop.style_id);
+                    if ($styled_el.length === 0) {
+                        is_hidden = true;
+                    }
+                }
+                if (is_hidden) {
+                    prop.type = 'hidden';
+                } else {
+                    prop.type = 'livesearch';
+                    prop.values = variants;
+                    prop.allow_empty = false;
+                }
+            }
+            callback(all_props);
+        });
+    } else {
+        callback(all_props);
+    }
+};
+
+fx_front.prototype.extract_infoblock_visual_fields = function($ib_node, $form) {
+    var types = ['template', 'wrapper'];
+    
+    var all_props = {};
+    $.each(types, function(index, type) {
+        var source_props = $ib_node.data('fx_'+type+'_params'),
+            props = {};
+        if (source_props) {
+            $.each(source_props, function(k,v) {
+                props[k] = $.extend({}, v);
+            });
+        }
+        all_props[type] = props || null;
+    });
+    
+    this.prepare_infoblock_visual_fields(all_props, function() {
+        $.each(all_props, function(type, props) {
+            //var props = $ib_node.data('fx_'+type+'_params'),
+            var field_class = 'fx_infoblock_'+type+'_param_field';
+            $('.'+field_class, $form).remove();
+            if (!props) {
+                return;
+            }
+            var $rel_field = $(':input[name="visual['+type+']"]', $form).closest('.field');
+            $.each(props, function(prop_name, prop_data) {
+                var meta = $.extend(
+                    {}, 
+                    prop_data, {
+                        name:'visual['+type+'_visual]['+prop_name+']',
+                        view_context:'panel'
+                    }
+                );
+
+                if (meta.parent) {
+                    if (typeof meta.parent === 'string') {
+                        var obj = {};
+                        obj[meta.parent] = '!=0';
+                        meta.parent = obj;
+                    }
+                    var real_parent = {};
+                    $.each(meta.parent, function(index, rule) {
+                        real_parent['visual['+type+'_visual]['+index+']'] = rule;
+                    });
+                    meta.parent = real_parent;
+                }
+                var $field = $fx.form.draw_field(meta, $rel_field, 'after');
+                $field.addClass(field_class);
+
+                // show tab label if the tab contained no visible fields
+                var $c_tab = $rel_field.closest('.fx_tab_data');
+                if ($c_tab.length) {
+                    var tab_key = $c_tab.attr('class').match(/fx_tab_data-key-(.+)$/)[1];
+                    var $tab_label = $form.find('.fx_tab_label[data-key="'+tab_key+'"]');
+                    $tab_label.show();
+                }
+                $rel_field = $field;
+            });
+        });
+        $form.trigger('fx_infoblock_visual_fields_updated');
+    });
 };
 
 fx_front.prototype.select_infoblock = function($node, panel) {
@@ -2447,7 +2505,8 @@ fx_front.prototype.select_infoblock = function($node, panel) {
                         return;
                     }
                     var new_data = $form.serialize();
-                    if (new_data === c_data) {
+                    
+                    if (new_data === c_data && !e.fx_forced) {
                         return;
                     }
                     c_data = new_data;

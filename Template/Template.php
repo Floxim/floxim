@@ -653,9 +653,7 @@ class Template
                     if ($file_meta['name']) {
                         $style_info['name'] = $file_meta['name'];
                     }
-                    if ($file_meta['is_tweakable']) {
-                        $style_info['is_tweakable'] = true;
-                    }
+                    $style_info['is_tweakable'] = isset($file_meta['is_tweakable']) && $file_meta['is_tweakable'];
                 }
             } else {
                 $style_info['is_tweakable'] = true;
@@ -671,5 +669,30 @@ class Template
         }
         self::$styles_cache['values'][$mask] = $vals;
         return $vals;
+    }
+    
+    public function addStyleLess($block, $value, $current_dir)
+    {
+        $files = array();
+        $base = $value;
+        $is_custom = false;
+        $parts = null;
+        if (preg_match("~(.+?)--(\d+)~", $value, $parts)) {
+            $base = $parts[1];
+            $id = $parts[2];
+            $is_custom = true;
+        }
+        $files []= $current_dir.'/'.$block.'_style_'.$base.'.less';
+        if ($is_custom) {
+            $custom_file = fx::path( '@files/asset_cache/'.$block.'_'.$base.'-'.$id.'.less' );
+            if (! file_exists($custom_file) ) {
+                $style_variant = fx::data('style_variant', $id);
+                if ($style_variant) {
+                    $custom_file = $style_variant->getStyleLessFile(true);
+                }
+            }
+            $files []= $custom_file;
+        }
+        fx::page()->addToBundle( $files, 'default' );
     }
 }

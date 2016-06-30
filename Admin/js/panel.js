@@ -474,17 +474,15 @@
             };
             if (c_panel.current_panel_type === 'top') {
                 var prev_top_panel = this.get_previous_panel('top');
-                if (prev_top_panel) {
-                    prev_top_panel.$container.animate({
-                        height:prev_top_panel.$container.data('saved_height')
-                    });
-                }
                 this.animate_panel_height(
                     0, 
                     function () {
                         c_panel.$container.hide().html('');
                         callback();
                         c_panel.is_visible = false;
+                        if (prev_top_panel) {
+                            that.animate_panel_height(prev_top_panel.$container.data('saved_height'));
+                        }
                     }
                 );
             } else {

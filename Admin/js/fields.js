@@ -25,6 +25,16 @@ window.$fx_fields = {
             },
             params
         );
+        var defaults = {
+            min:-100000,
+            max:100000,
+            step:1
+        };
+        $.each(defaults, function(prop, val) {
+            if (params[prop] === undefined || isNaN(params[prop]) ) {
+                params[prop] = val;
+            }
+        });
         $inp.on('mousewheel keyup', function(e) {
             var delta = e.originalEvent.deltaY > 0 ? -1 : 1,
                 $inp = $(this),
@@ -129,7 +139,7 @@ window.$fx_fields = {
             $controls.on('change input', function(e) {
                 update_value();
                 return false;
-            })
+            });
         }
 
         function update_value() {
@@ -143,7 +153,7 @@ window.$fx_fields = {
         }
 
         function parse_value(value) {
-            if (!value) {
+            if (!value || value === 'none') {
                 value = 'text 16px normal normal none none';
             }
             var parts = value.split(/\s+/);

@@ -128,6 +128,51 @@ class Entity extends \Floxim\Floxim\System\Entity
         parent::afterSave();
         $this->getStyleLessFile(true);
     }
+    
+    public function afterDelete()
+    {
+        $file = $this->getStyleLessFilePath();
+        if (file_exists($file)) {
+            fx::files()->rm($file);
+        }
+        
+        $this->unbindFromVisuals();
+        
+    }
+    
+    public function unbindFromVisuals()
+    {
+        $visuals = $this->findUsingVisuals();
+        
+        $kw = $this->getStyleKeyword();
+        
+        foreach ($visuals as $vis) {
+            foreach (array('template_visual', 'wrapper_visual') as $props_type) {
+                $props = $vis[$props_type];
+                foreach ($props as $pk => $pv) {
+                    if ($pv === $kw && preg_match("~_style$~", $pk)) {
+                        $props[$pk] = preg_replace("~\-\-\d+$~", '', $kw);
+                    }
+                }
+                $vis[$props_type] = $props;
+            }
+            $vis->save();
+        }
+    }
+    
+    public function findUsingVisuals()
+    {
+        $kw = $this->getStyleKeyword();
+        $vis = fx::data('infoblock_visual')->where(
+                array(
+                    array('template_visual', '%'.$kw.'%', 'like'),
+                    array('wrapper_visual', '%'.$kw.'%', 'like')
+                ),
+                null,
+                'or'
+            )->all();
+        return $vis;
+    }
 
     public function getStyleLessFilePath()
     {
@@ -137,7 +182,7 @@ class Entity extends \Floxim\Floxim\System\Entity
     public function getStyleLessFile($force_update = false)
     {
         $path = $this->getStyleLessFilePath();
-        if (!file_exists($path) || $force_update) {
+        if ($force_update || !file_exists($path)) {
             $less = $this->getStyleLess();
             fx::files()->writefile($path, $less);
         }

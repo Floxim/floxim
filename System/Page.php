@@ -388,6 +388,18 @@ class Page
         }
     }
     
+    public function ajaxResponse($result)
+    {
+        $response = array(
+            'format' => 'fx-response',
+            'response' => $result,
+            'js' => $this->files_js,
+            'css' => array_keys($this->getCssFilesFinal()),
+            'inline_css' => $this->getInlineStyles()
+        );
+        return json_encode($response);
+    }
+    
     public function getCssFilesFinal() 
     {
         $res = array();

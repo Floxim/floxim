@@ -1193,6 +1193,58 @@ class Compiler
         $code .= "}\n";
         return $code;
     }
+    
+    protected function tokenStyledToCode(Token $token)
+    {
+        $code = '<?php ob_start();'."\n";
+        $code .= $this->childrenToCode($token);
+        $var = '$style_info';
+        $code .= $var .' = \Floxim\Floxim\Template\Compiler::parseCssLikeProps(ob_get_clean());'."\n";
+        
+        $label = $token->getProp('label');
+        $id = $token->getProp('id');
+        $block = $token->getProp('block');
+        $id_val = '$style_id';
+        $code .= $id_val.' = ';
+        if ($id) {
+            $code .= "'".$id."'";
+        } else {
+            $code .=  '( isset('.$var."['id']) ? ".$var."['id'] : '".str_replace("-", '_', $block)."' )";
+        }
+        $code .= ".'_style';\n";
+        
+        $val_var = '$style_value';
+        $code .= $val_var . "  = \$context->get(".$id_val.");\n";
+        $code .= "if (!".$val_var.") {\n";
+        $code .= $val_var . "  = 'default';\n";
+        $code .= "}\n";
+        
+        $mod_id_var = '$style_mod_id';
+        $code .= $mod_id_var . " = preg_replace('~[^a-z0-9]~i', '-', ".$id_val.");\n";
+        
+        $param_props = array(
+            'label' => $label ? '"'.$label.'"' : $var."['label']",
+            'type' => '"style"',
+            'block' => '"'.$token->getProp('block').'"',
+            'source_template' => "'".$this->template_set_name."'",
+            'value' => $val_var,
+            'style_id' => $mod_id_var
+        );
+        
+        $exported_props = array();
+        foreach ($param_props as $p => $v) {
+            $exported_props []= '"'.$p.'" => '.$v;
+        }
+        $code .= "\$this->registerParam(".$id_val.", array(".join(", ", $exported_props).") );\n";
+        
+        $code .= '$this->addStyleLess("'.$block.'", '.$val_var.', \''.dirname($this->current_source_file).'\')'.";\n";
+        $code .= '// '.$this->current_source_file."\n";
+        $code .= "if (\$_is_admin) {\n";
+        $code .= " echo ' style-id_'.".$mod_id_var.";\n";
+        $code .= "}\n";
+        $code .= " echo ' style_'.".$val_var.";\n ?>";
+        return $code;
+    }
 
     protected function tokenEachToCode(Token $token)
     {
@@ -1233,10 +1285,12 @@ class Compiler
 
         $separator = $this->findSeparator($token);
         $check_traversable = $token->getProp('check_traversable') !== 'false';
-        if ($check_traversable) {
+        if ($check_traversable ) {
             $code .= "if (is_array(" . $arr_id . ") || " . $arr_id . " instanceof Traversable) {\n";
             // add-in-place settings
-            $code .= $this->getAdderPlaceholderCode($arr_id);
+            if ($token->getProp('add') !== 'false') {
+                $code .= $this->getAdderPlaceholderCode($arr_id);
+            }
         }
 
         $loop_id = '$' . $item_alias . '_loop';
@@ -1625,7 +1679,7 @@ class Compiler
             preg_replace_callback(
                     "~^([0-9a-z_-]+?):(.+)$~",
                 function($matches) use (&$res) {
-                    $res[$matches[1]] = trim($matches[2], "'\"");
+                    $res[$matches[1]] = trim($matches[2], "'\" ");
                 },
                 $p
             );

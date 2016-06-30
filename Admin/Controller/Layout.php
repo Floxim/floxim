@@ -322,8 +322,10 @@ class Layout extends Admin
     
     public function themeSettings($input)
     {
-        
-        fx::router('front')->route(fx::env('url'));
+        // run current page rendering and extract css files
+        $ib = fx::router('front')->getLayoutInfoblock(fx::env('page'));
+        fx::router('infoblock')->route('/~ib/'.$ib['id'].'@'.fx::env('page')->get('id'));
+        fx::page()->getCssFilesFinal();
         
         $style = fx::env()->getLayoutStyleVariant();
         
@@ -509,20 +511,12 @@ class Layout extends Admin
 
         $input['style'] = preg_replace("~\-\-\d+$~", '', $input['style']);
 
-        /*
-        $style = null;
-        foreach ($meta['styles'] as $c_style) {
-            if ($c_style['keyword'] === $input['block'].'_style_'.$input['style']) {
-                $style = $c_style;
-                break;
-            }
-        }
-        */
-        
         $style = $this->getStyleMeta($input['style'], $input['block'], $input['source_template']);
         
         $is_sent = $this->isSent();
         $less_vars = $style_variant['less_vars'];
+        
+        
         
         foreach ($style['vars'] as $var => $props) {
             $props['name'] = $var;
@@ -540,13 +534,20 @@ class Layout extends Admin
         }
 
         if ($is_sent) {
-            $style_variant['less_vars'] = $less_vars;
-            $style_variant['name'] = $input['style_name'];
-            $style_variant['style'] = $input['block'].'_'.$input['style'];
-            $style_variant->save();
+            if ($style_variant['id'] && isset($input['pressed_button']) && $input['pressed_button'] === 'delete') {
+                $style_variant->delete();
+                $id = '';
+            } else {
+                $style_variant['less_vars'] = $less_vars;
+                $style_variant['name'] = $input['style_name'];
+                $style_variant['style'] = $input['block'].'_'.$input['style'];
+                $style_variant->save();
+                $id = $style_variant['id'];
+            }
             fx::page()->getBundleManager()->getBundle('css', 'default')->delete();
+            
             return array(
-                'id' => $style_variant['id'],
+                'id' => $id,
                 'name' => $style_variant['name']
             );
         }
@@ -579,6 +580,11 @@ class Layout extends Admin
         );
         if ($style['tabs']) {
             $res['tabs'] = $style['tabs'];
+        }
+        
+        if ($style_variant['id']) {
+            $this->response->addFormButton(array('class' => 'delete', 'key' => 'delete', 'label' => fx::alang('Delete')));
+            $this->response->addFormButton(array('key' => 'save'));
         }
         return $res;
     }
@@ -734,6 +740,23 @@ class Layout extends Admin
         }
 
         return $result;
+    }
+    
+    public function getStyleVariants($input)
+    {
+        $templates = array();
+        $res = array();
+        foreach ($input['blocks'] as $block) {
+            $tpl = $block['source_template'];
+            if (!isset($templates[$tpl])) {
+                $templates[$tpl] = fx::template($tpl);
+            }
+            $res []= $templates[$tpl]->collectStyleValues($block['block'].'_style_*');
+        }
+        return array(
+            'variants' => $res
+        );
+        
     }
 
 

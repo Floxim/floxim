@@ -238,6 +238,13 @@ class Token
                 'use'
             )
         ),
+        'styled' => array(
+            'type' => 'double',
+            'contains' => array(
+                'code',
+                'var'
+            )
+        ),
         'param' => array(
             'type' => 'single'
         ),
@@ -314,7 +321,7 @@ class Token
         ),
         'bem_block' => array(
             'type'     => 'double',
-            'contains' => array('code', 'var', 'lang', 'call', 'if', 'elseif', 'else')
+            'contains' => array('code', 'var', 'lang', 'call', 'if', 'elseif', 'else', 'styled')
         ),
         'bem_element' => array(
             'type'     => 'double',

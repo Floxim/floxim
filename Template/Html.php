@@ -207,6 +207,11 @@ class Html
                 $each_macro_tag = '{each ';
                 $each_macro_tag .= $subroot;
                 $each_macro_tag .= ' select="' . $each_id . '"';
+                
+                if ( ($each_add = $n->getAttribute('fx:add'))) {
+                    $n->removeAttribute('fx:add');
+                    $each_macro_tag .= ' add="'.$each_add.'"';
+                }
 
                 if (($each_as = $n->getAttribute('fx:as'))) {
                     $each_macro_tag .= ' as="' . $each_as . '"';
@@ -382,9 +387,27 @@ class Html
             if ($n->hasAttribute('fx:b')) {
                 $b_value = $n->getAttribute('fx:b');
                 if ($n->hasAttribute('fx:styled')) {
-                    $styled_value = $n->getAttribute('fx:styled');
+                    
+                    $styled_value = trim($n->getAttribute('fx:styled'));
+                    $n->removeAttribute('fx:styled');
+                    
+                    $block_parts = explode(" ", trim($b_value));
+                    $block_name = $block_parts[0];
+                    
+                    $styled_call = '{styled block="'.$block_name.'" ';
+                    if ($styled_value !== '' && !preg_match("~(?:[a-z_-]+\:|\{)~", $styled_value)) {
+                        $styled_call .= 'label="'.$styled_value.'"}';
+                    } else {
+                        $styled_call .= '}'.$styled_value;
+                    }
+                    $styled_call .= '{/styled}';
+                    $b_value .= $styled_call;
+                    //$n->addChildFirst(HtmlToken::create($styled_call));
+                    /*
                     $p_meta = array();
+                    fx::cdebug('sv', $styled_value);
                     if ($styled_value && !preg_match("~\s*[a-z_-]+\:~", $styled_value) && trim($styled_value) !== '') {
+                        fx::cdebug('labling');
                         $p_meta['label'] = $styled_value;
                     }
                     $n->removeAttribute('fx:styled');
@@ -398,6 +421,8 @@ class Html
                     }
                     $style_param .= '/}';
                     $n->addChildFirst(HtmlToken::create($style_param));
+                     * 
+                     */
                 }
                 $n->addClass('{bem_block '.($container_hash ? 'container="1"' : '').'}'.$b_value.'{/bem_block}');
                 $n->removeAttribute('fx:b');
