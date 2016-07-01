@@ -172,7 +172,7 @@ class MetaParser {
             if (!preg_match("~(name|vars)\s*\:(.*)~", $s, $parts)){
                 continue;
             }
-            if ($parts[1] === 'name') {
+            if ($parts[1] === 'name' && is_null($name)) {
                 $name = trim($parts[2]);
                 continue;
             }

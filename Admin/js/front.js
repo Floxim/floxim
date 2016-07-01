@@ -2362,6 +2362,7 @@ fx_front.prototype.prepare_infoblock_visual_fields = function(all_props, callbac
             }
         });
     });
+    console.log(style_props);
     if (style_props.length > 0) {
         $fx.post({
             entity:'layout',
@@ -2373,7 +2374,7 @@ fx_front.prototype.prepare_infoblock_visual_fields = function(all_props, callbac
                     prop = style_props[i],
                     is_hidden = false;
                 if (prop.style_id) {
-                    var $styled_el = $('.fx_selected').find('.'+prop.block+'_style-id_'+prop.style_id);
+                    var $styled_el = $('.fx_selected').descendant_or_self('.'+prop.block+'_style-id_'+prop.style_id);
                     if ($styled_el.length === 0) {
                         is_hidden = true;
                     }
@@ -2386,6 +2387,7 @@ fx_front.prototype.prepare_infoblock_visual_fields = function(all_props, callbac
                     prop.allow_empty = false;
                 }
             }
+            console.log(all_props);
             callback(all_props);
         });
     } else {
@@ -2407,7 +2409,7 @@ fx_front.prototype.extract_infoblock_visual_fields = function($ib_node, $form) {
         }
         all_props[type] = props || null;
     });
-    
+    console.log(all_props);
     this.prepare_infoblock_visual_fields(all_props, function() {
         $.each(all_props, function(type, props) {
             //var props = $ib_node.data('fx_'+type+'_params'),
