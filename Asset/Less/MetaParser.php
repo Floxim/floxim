@@ -103,14 +103,22 @@ class MetaParser {
         $c_style =& $this->styles[count($this->styles) - 1];
         foreach ($token->params as $arg) {
             $var_name = substr($arg['name'], 1);
-            if (isset($c_style['vars'][$var_name])) {
-                $value = $this->output->get($arg['value'], false);
-                $parts = null;
-                if (!isset($c_style['vars'][$var_name]['units']) && preg_match("~^\d+(em|rem|px|pt|%|vh|vw)~", $value, $parts)) {
-                    $c_style['vars'][$var_name]['units'] = $parts[1];
-                }
-                $c_style['vars'][$var_name]['value'] = $value;
+            if (!isset($c_style['vars'][$var_name])) {
+                continue;
             }
+            $c_var =& $c_style['vars'][$var_name];
+            $value = $this->output->get($arg['value'], false);
+            $parts = null;
+            $match_units = preg_match("~^\d+(em|rem|px|pt|%|vh|vw)~", $value, $parts);
+            if ($match_units) {
+                if (!isset($c_var['type'])) {
+                    $c_var['type'] = 'number';
+                }
+                if ($c_var['type'] === 'number' && !isset($c_var['units'])) {
+                    $c_var['units'] = $parts[1];
+                }
+            }
+            $c_var['value'] = $value;
         }
     }
     

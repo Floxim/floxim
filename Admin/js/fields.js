@@ -35,9 +35,10 @@ window.$fx_fields = {
                 params[prop] = val;
             }
         });
-        $inp.on('mousewheel keyup', function(e) {
+        var $target=  params.$target || $inp;
+        $target.on('mousewheel keyup', function(e) {
             var delta = e.originalEvent.deltaY > 0 ? -1 : 1,
-                $inp = $(this),
+                //$inp = $(this),
                 c_value = $inp.val() * 1,
                 new_value = c_value + params.step * delta;
             if (new_value < params.min) {

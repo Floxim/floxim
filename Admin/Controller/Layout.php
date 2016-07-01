@@ -470,12 +470,10 @@ class Layout extends Admin
         
         $find_style = function($meta) use ($style, $block) {
             if (!isset($meta['styles']) || !is_array($meta['styles'])) {
-                fx::log('no styles', $meta);
                 return;
             }
             foreach ($meta['styles'] as $c_style) {
                 if ($c_style['keyword'] === $block.'_style_'.$style) {
-                    fx::log('ret', $c_style);
                     return $c_style;
                 }
             }
@@ -491,7 +489,6 @@ class Layout extends Admin
         }
         $bundle->push($styles[$style]['files']);
         $bundle->getBundleContent();
-        fx::log($bundle->getMeta());
         $found_style = $find_style($bundle->getMeta());
         if ($found_style) {
             return $found_style;

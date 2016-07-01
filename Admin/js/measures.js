@@ -20,10 +20,12 @@ $fx.measures.prototype = {
         this.$value = $( el ('value') , $row);
         this.init_controls();
 
-        var init_value = this.$value.val();
+        var init_value = this.prepare_init_value(this.$value.val());
+        /*
         if (!this.check_value(init_value)) {
             init_value = this.get_default_value();
         }
+        */
         this.set_value( init_value );
         
         this.$lock = $( el('lock'), $row);
@@ -56,6 +58,27 @@ $fx.measures.prototype = {
         '1-3--2-4',
         'all'
     ],
+    
+    prepare_init_value: function(value) {
+        if (!value) {
+            return this.get_default_value();
+        }
+        var parts = value.split(this.value_separator),
+            that  = this;
+        parts = parts.map(function(v) {
+            return v.replace(/[^\d\.\-]+/, '') + that.units;
+        });
+        if (parts.length === 1) {
+            parts = [
+                parts[0], parts[0], parts[0], parts[0]
+            ];
+        } else if (parts.length === 2) {
+            parts = [
+                parts[0], parts[1], parts[0], parts[1]
+            ];
+        }
+        return parts.join(this.value_separator);
+    },
 
     check_value: function(value) {
         var vals = this.get_values(value);
@@ -82,16 +105,15 @@ $fx.measures.prototype = {
                 });
     },
     
-    sync_locked: function(index) {
+    get_locked_indexes: function(index) {
         if (this.lock === 'none') {
-            return;
+            return [];
         }
         var lock = this.lock === 'all' ? '1-2-3-4' : this.lock,
             lock_parts = lock.split('--');
         
-        var vals = this.get_current_values(),
-            changed = vals[index],
-            named_index = index + 1;
+        var named_index = index + 1,
+            res = [];
         for (var i = 0; i < lock_parts.length; i++) {
             var c_part = lock_parts[i].split('-').map(function(v) {
                 return v * 1;
@@ -100,10 +122,20 @@ $fx.measures.prototype = {
                 for (var j = 0; j < c_part.length; j++) {
                     var c_part_index = c_part[j];
                     if (c_part_index !== named_index ) {
-                        this.append_control_value(changed, c_part_index - 1);
+                        res.push( c_part_index - 1 );
                     }
                 }
             }
+        }
+        return res;
+    },
+    
+    sync_locked: function(index) {
+        var indexes = this.get_locked_indexes(index),
+            vals = this.get_current_values(),
+            changed = vals[index];
+        for (var i = 0 ; i < indexes.length; i++) {
+            this.append_control_value(changed, indexes[i]);
         }
     },
 
@@ -131,8 +163,25 @@ $fx.measures.prototype = {
     init_number_controls: function(params) {
         var that = this;
         this.inputs = [];
-        $.each( this.$controls.find( this.el('control') ), function(index) {
+        var $all_controls = this.$controls.find( this.el('control') );
+        $.each( $all_controls, function(index) {
             that.init_number_control($(this), params, index);
+        });
+        
+        var active_class = 'fx-measures__control_active';
+        
+        $all_controls.on('mouseenter', function(e) {
+            var $control = $(this),
+                index = $all_controls.index( $control ),
+                locked = that.get_locked_indexes(index);
+                
+            $control.addClass(active_class);
+            for (var i = 0; i < locked.length; i++) {
+                $all_controls.eq( locked[i] ).addClass(active_class);
+            }
+            
+        }).on('mouseleave', function(e) {
+            $all_controls.removeClass(active_class);
         });
     },
 
@@ -148,13 +197,16 @@ $fx.measures.prototype = {
             ),
             that = this;
             
-        $fx_fields.handle_number_wheel($inp);
+        $fx_fields.handle_number_wheel($inp, {$target:$c});
         
         $inp.on('change input', function() {
             that.recount_value(index);
             return false;
         });
         $c.append($inp);
+        $c.on('click', function() {
+            $inp.focus().select();
+        });
         this.inputs.push($inp);
     },
     append_controls_values: function() {
@@ -167,7 +219,6 @@ $fx.measures.prototype = {
         return this.inputs[i].val();
     },
     append_control_value: function(value, index) {
-        console.log(index, value);
         this.inputs[index].val(value);
     },
     get_default_value: function() {

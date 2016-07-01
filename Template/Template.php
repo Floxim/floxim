@@ -683,6 +683,7 @@ class Template
             $is_custom = true;
         }
         $files []= $current_dir.'/'.$block.'_style_'.$base.'.less';
+        
         if ($is_custom) {
             $custom_file = fx::path( '@files/asset_cache/'.$block.'_'.$base.'-'.$id.'.less' );
             if (! file_exists($custom_file) ) {
@@ -693,6 +694,6 @@ class Template
             }
             $files []= $custom_file;
         }
-        fx::page()->addToBundle( $files, 'default' );
+        fx::page()->addCssBundle($files, array('name' => 'auto'));
     }
 }
