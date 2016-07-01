@@ -322,10 +322,13 @@ class Layout extends Admin
     
     public function themeSettings($input)
     {
+        fx::env('css_bundle', 'default');
         // run current page rendering and extract css files
         $ib = fx::router('front')->getLayoutInfoblock(fx::env('page'));
         fx::router('infoblock')->route('/~ib/'.$ib['id'].'@'.fx::env('page')->get('id'));
         fx::page()->getCssFilesFinal();
+        
+        fx::env('css_bundle', 'admin');
         
         $style = fx::env()->getLayoutStyleVariant();
         
