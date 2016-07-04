@@ -48,7 +48,7 @@ class MetaParser {
     
     protected function registerStyle($params, $token)
     {
-        $file = $token->currentFileInfo['filename'];
+        $file = fx::path($token->currentFileInfo['filename']);
         $file_name = fx::path()->fileName($file);
         $style_name = preg_replace("~\.less$~", '', $file_name);
         $params['keyword'] = $style_name;

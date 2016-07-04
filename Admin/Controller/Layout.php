@@ -572,6 +572,7 @@ class Layout extends Admin
                         $input['style']
                     )
                 ),
+            'rootpath' => fx::path()->http( dirname($style['file']) ) . '/',
             'tweaked_vars' => array_keys($style['vars']),
             'mixin_name' => $mixin_name,
             'existing_class' => $style_variant['id'] ? $mixin_name.'--'.$style_variant['id'] : null,
