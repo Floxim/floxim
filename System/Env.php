@@ -184,7 +184,7 @@ class Env
                     $this->current['layout_id'] = $page['layout_id'];
                 }
             }
-            if (!isset($this->current['layout_id'])) {
+            if (!isset($this->current['layout_id']) || !isset($this->current['style_variant_id']) ) {
                 $site = $this->getSite();
                 if ($site) {
                     $this->current['layout_id'] = $site['layout_id'];

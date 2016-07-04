@@ -905,8 +905,8 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
     }
     
     public function get($offset) {
-        if (!is_scalar($offset)) {
-            fx::log('nuups', $offset, fx::debug()->backtrace());
+        if (!is_scalar($offset) && !is_null($offset)) {
+            fx::log('non-scalar offset', $offset, fx::debug()->backtrace());
         }
         return isset($this->data[$offset]) ? $this->data[$offset] : null;
     }

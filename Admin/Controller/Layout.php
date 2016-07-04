@@ -205,6 +205,9 @@ class Layout extends Admin
                 if (!isset($variants_filter[$style_variant['id']])) {
                     $variants []= array($style_variant['id'], $style_variant['name']);
                     $variants_filter[$style_variant['id']] = array();
+                    if (!$current_variant) {
+                        $current_variant = $style_variant['id'];
+                    }
                 }
                 $variants_filter[$style_variant['id']] []= array('layout_id', $layout['id']);
             }
@@ -353,6 +356,7 @@ class Layout extends Admin
         if (!isset($meta['vars']) || !is_array($meta['vars'])) {
             $meta['vars'] = array();
         }
+        
         
         $tabs = array(
             'colors' => 'Цвета',
