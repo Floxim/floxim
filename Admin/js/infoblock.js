@@ -301,7 +301,7 @@ var style_tweaker = {
                 
                 mixin_call += ");\n";
                 mixin_call += "\n}";
-                render_less({}, tweak_less + mixin_call, $stylesheet);
+                render_less({}, tweak_less + mixin_call, $stylesheet, style_meta.rootpath);
             }
             
 
@@ -393,7 +393,7 @@ function get_tweaker_stylesheet(block, style) {
     return $stylesheet;
 }
 
-function render_less(vars, tweak_less, $stylesheet) {
+function render_less(vars, tweak_less, $stylesheet, rootpath) {
 
     var vars_less = '';
     $.each(vars, function (k, v) {
@@ -406,6 +406,10 @@ function render_less(vars, tweak_less, $stylesheet) {
                 new BemLessPlugin({})
             ]
         };
+        
+    if (rootpath) {
+        options.rootpath = rootpath;
+    }
     
     less.render(
         final_less,

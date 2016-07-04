@@ -2362,7 +2362,7 @@ fx_front.prototype.prepare_infoblock_visual_fields = function(all_props, callbac
             }
         });
     });
-    console.log(style_props);
+    
     if (style_props.length > 0) {
         $fx.post({
             entity:'layout',
@@ -2387,7 +2387,6 @@ fx_front.prototype.prepare_infoblock_visual_fields = function(all_props, callbac
                     prop.allow_empty = false;
                 }
             }
-            console.log(all_props);
             callback(all_props);
         });
     } else {
@@ -2409,7 +2408,6 @@ fx_front.prototype.extract_infoblock_visual_fields = function($ib_node, $form) {
         }
         all_props[type] = props || null;
     });
-    console.log(all_props);
     this.prepare_infoblock_visual_fields(all_props, function() {
         $.each(all_props, function(type, props) {
             //var props = $ib_node.data('fx_'+type+'_params'),
