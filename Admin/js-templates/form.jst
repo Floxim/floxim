@@ -250,6 +250,9 @@ html.find('textarea.fx_code').each( function(){
         smartIndent: false
     };
     var cCodeMirror = CodeMirror.fromTextArea(this, config);
+    
+    window.cCodeMirror = cCodeMirror;
+    
     $textarea.data('codemirror', cCodeMirror);
     
     setTimeout(function() {
@@ -275,6 +278,11 @@ html.find('textarea.fx_code').each( function(){
     };
 
     $(document.body).off('fx_form_submit.save_cm_fields').on('fx_form_submit.save_cm_fields', 'form', save_cm_fields);
+    
+    cCodeMirror.on('change', function() {
+        cCodeMirror.save();
+        $textarea.trigger('change');
+    });
 });
 
 <!--[input ? _c.type == 'select']-->

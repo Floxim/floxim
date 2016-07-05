@@ -840,4 +840,16 @@ class Layout extends Admin
         );
         $this->response->addFields($fields);
     }
+    
+    public function codemirror()
+    {
+        $fields = array(
+            'test' => array(
+                'label' => 'CodeMirror',
+                'type' => 'text',
+                'code' => 'true'
+            )
+        );
+        $this->response->addFields($fields);
+    }
 }

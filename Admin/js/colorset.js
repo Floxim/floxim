@@ -36,30 +36,20 @@ $fx.colorset = function($field, params) {
     );
     
     this.luminance_map = params.luminance_map || params.neutral ? [
-        0.01,
-        0.04,
-        0.15,
-        0.45,
-        0.7,
-        0.9
+        0.00,
+        0.03,
+        0.11,
+        0.60,
+        0.85,
+        1.00
     ] : [
-        0.1,
-        0.15,
+        0.06,
+        0.10,
         0.2,
-        0.4,
-        0.55,
-        0.7
-    ];
-            
-            
-    /*[
-        0.04,
-        0.1,
-        0.2,
-        0.4,
-        0.6,
+        0.5,
+        0.65,
         0.8
-    ]*/;
+    ];
     
     var saturation_range = params.saturation || params.neutral ? [0, 0.15] : [0.15, 1];
     
