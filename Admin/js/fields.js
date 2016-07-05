@@ -934,6 +934,9 @@ $html.on('blur.fx', '.fx_image_field .fx_remote_file_block input', function() {
 });
 
 function handle_upload(data, $block) {
+    if (data.format === 'fx-response') {
+        data = data.response;
+    }
     var $res_inp = $('.real_value', $block);
     var field_type = $block.data('field_type');
     $res_inp.val(data.path);
