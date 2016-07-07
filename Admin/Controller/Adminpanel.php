@@ -73,15 +73,37 @@ class Adminpanel extends Admin
                 )
                  * 
                  */
-            ),
-            'profile' => array(
-                'logout' => array(
-                    'name' => fx::alang('Sign out','system'),
-                    'href' => fx::user()->getLogoutUrl()
-                )
-            ),
-            'is_front' => $_SERVER['REQUEST_URI'] !== fx::config('path.admin')
+            )
         );
+        
+        $profile_items = array();
+        
+        if (fx::config('has_users')) {
+            $roles = array(
+                'admin' => 'Админ',
+                'user' => 'Пользователь',
+                'guest' => 'Гость'
+            );
+            $profile_items []= array(
+                'name' => 'Смотреть как',
+                'code' => 'role-control',
+                'data' => array(
+                    'values' => $roles,
+                    'value' => 'admin'
+                )
+            );
+        }
+        
+        $profile_items['logout'] = array(
+            'name' => fx::alang('Sign out','system'),
+            'href' => fx::user()->getLogoutUrl()
+        );
+            
+        $data['profile'] = array(
+                'name' => fx::user()->get('name'),
+                'children' => $profile_items
+        );
+        $data['is_front'] =  $_SERVER['REQUEST_URI'] !== fx::config('path.admin');
         $res = fx::template('@admin:panel')->render($data);
         return $res;
     }

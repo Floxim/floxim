@@ -107,7 +107,7 @@ window.$fx_fields = {
 
             var size_params = {
                 min:11,
-                max:32,
+                max:82,
                 step:1,
                 units:'px',
                 value:c_value.size
@@ -666,7 +666,7 @@ window.$fx_fields = {
                         res_val =  $.extend({}, res_val, val[2]);
                     }
                 }
-                if (json.value == res_val.id) {
+                if ( !(json.value instanceof Array) && json.value == res_val.id) {
                     json.value = res_val;
                     json.value.path = path.slice(0);
                 }

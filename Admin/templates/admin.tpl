@@ -11,10 +11,11 @@
         
 <a 
     fx:template="menu_item" 
-    class="fx_menu_item {$class} {if $.icon}fx_menu_item-has_icon{/if}" 
+    class="fx_menu_item {$class} {if $.icon}fx_menu_item-has_icon{/if} {if $.code}fx-menu-item_code_{$.code /}{/if}" 
     {if $href}href="{$href}"{/if} 
     {if $key}data-key="{$key}"{/if}
-    {if $.button}data-button='{$.button | json_encode}{/if}'>
+    {if $.button}data-button='{$.button | json_encode}{/if}'
+    {if $.data}data-data='{$.data | json_encode}'{/if}>
     <span fx:if="$.icon" class="fx_icon fx_icon-type-{$icon}"></span>
     <span class="fx_menu_item__name">{$name}</span>
 </a>
@@ -36,7 +37,7 @@
         <div class="fx_main_menu_expander"></div>
         <div class="fx_main_menu_items">
             {$main_menu || :menu_item /}
-            {apply menu_item with $profile.logout /}
+            {apply menu_item with $profile /}
         </div>
     </div>
     <div fx:if="$is_front" id="fx_admin_front_menu">

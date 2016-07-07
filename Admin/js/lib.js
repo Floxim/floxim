@@ -20,6 +20,31 @@
     $.fn.descendant_or_self = function(selector) {
         return this.find(selector).add( this.filter(selector));
     };
+    
+    $.traceFn = function(functions, selector, callback) {
+        function replaceFunction(func, selector, callback) {
+            var original = jQuery.fn[func],
+                replacer = function() {
+                    var res = original.apply(this, arguments);
+                    if (this.is(selector)) {
+                        console.trace();
+                        if (callback) {
+                            callback.apply(this, [func, arguments]);
+                        }
+                    }
+                    return res;
+                };
+            jQuery.fn[func] = replacer;
+        }
+        if ( typeof functions === 'string' ) {
+            functions = [functions];
+        }
+        for (var i = 0; i < functions.length; i++) {
+            var func = functions[i];
+            replaceFunction(func, selector, callback);
+        }
+    };
+    
     $.fn.putCursorAtEnd = function() {
         return this.each(function() {
             $(this).focus()

@@ -29,7 +29,7 @@ class Finder extends System\Finder
         );
     }
 
-    public $json_encode = array('params', 'scope');
+    public $json_encode = array('params', 'scope', 'user_scope');
 
     public function isLayout()
     {

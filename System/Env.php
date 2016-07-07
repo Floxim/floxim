@@ -307,29 +307,10 @@ class Env
             $page_field = $page->getComponent()->getFieldForFilter('context.page');
             $page_field['name'] = 'Текущая страница';
             $context []= $page_field;
-            /*
-            $context []= array(
-                'id' => 'context.page',
-                'name' => 'Текущая страница',
-                'type' => 'entity',
-                'entity_type' => $page['type'],
-                'children' => $page->getComponent()->getFieldsForFilter('context.page')
-            );
-             * 
-             */
         }
         $user_field = fx::component('floxim.user.user')->getFieldForFilter('context.user');
         $user_field['name'] = 'Текущий пользователь';
         $context []= $user_field;
-        /*
-        $context []= array(
-            'id' => 'context.user',
-            'name' => 'Текущий пользователь',
-            'type' => 'entity',
-            'children' => fx::component('floxim.user.user')->getFieldsForFilter('context.user')
-        );
-         * 
-         */
         return $context;
     }
     

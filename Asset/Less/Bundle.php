@@ -90,7 +90,7 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
             }
             return $css;
         } catch (\Less_Exception_Compiler $e) {
-            fx::log($e, $parser);
+            fx::log($e, fx::debug()->backtrace(), $parser);
         }
     }
     

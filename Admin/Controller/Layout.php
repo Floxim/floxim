@@ -521,7 +521,9 @@ class Layout extends Admin
         $less_vars = $style_variant['less_vars'];
         
         
-        
+        if (!isset($style['vars'])) {
+            $style['vars'] = array();
+        }
         foreach ($style['vars'] as $var => $props) {
             $props['name'] = $var;
             if (isset($less_vars[$var])) {

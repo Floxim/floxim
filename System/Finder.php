@@ -1320,91 +1320,6 @@ abstract class Finder
         }
         return $this;
     }
-    /*
-    public function moveFirst($entity)
-    {
-        // put $entity to the beginning
-        $first_entity = $this
-            ->getInstance()
-            ->where('priority', null, 'is not null')
-            ->order('priority')
-            ->one();
-        // $entity is already the first one
-        if ($first_entity['id'] === $entity['id']) {
-            return $entity;
-        }
-        $first_priority = $first_entity ? $first_entity['priority'] : 1;
-        $entity->set('priority', $first_priority - 1);
-    }
-    
-    public function moveLast($entity)
-    {
-        // put $entity to the end
-        $last_entity = $this
-            ->getInstance()
-            ->where('priority', null, 'is not null')
-            ->order('priority', 'desc')
-            ->one();
-        // $entity is already the last one
-        if ($last_entity['id'] === $entity['id']) {
-            return;
-        }
-        $last_priority = $last_entity ? $last_entity['priority'] : -1;
-        $entity->set('priority', $last_priority + 1);
-    }
-    
-    public function moveAfter($entity, $prev_entity)
-    {
-        if (! $entity instanceof Entity) {
-            $entity = $this->getInstance()->getById($entity);
-        }
-        if (! $prev_entity instanceof Entity) {
-            $prev_entity = $this->getInstance()->getById($prev_entity);
-        }
-        if ($entity['id'] === $prev_entity['id']) {
-            return;
-        }
-        
-        $prev_priority = $prev_entity['priority'];
-        
-        $next_entity = $this
-            ->getInstance()
-            ->order('priority')
-            ->where('priority', $prev_priority, '>')
-            ->one();
-        
-        $next_priority = $next_entity ? $next_entity['priority'] : $prev_priority + 2;
-        
-        $entity['priority'] = ($prev_priority + $next_priority) / 2;
-    }
-    
-    public function moveBefore($entity, $next_entity)
-    {
-        if (! $entity instanceof Entity) {
-            $entity = $this->getInstance()->getById($entity);
-        }
-        if (! $next_entity instanceof Entity) {
-            $next_entity = $this->getInstance()->getById($next_entity);
-        }
-        if ($entity['id'] === $next_entity['id']) {
-            return;
-        }
-        
-        $next_priority = $next_entity['priority'];
-        
-        $prev_entity = $this
-            ->getInstance()
-            ->order('priority', 'desc')
-            ->where('priority', $next_priority, '<')
-            ->one();
-        
-        $prev_priority = $prev_entity ? $prev_entity['priority'] : $next_priority - 2;
-        
-        $entity['priority'] = ($prev_priority + $next_priority) / 2;
-    }
-     * 
-     * 
-     */
     
     public function normalizePriority() {
         $this->order(null)->order('priority')->select('id')->select('priority');
@@ -1438,8 +1353,14 @@ abstract class Finder
                 $scope = $scope_parts[0];
                 $field = $scope_parts[1].'.'.$field;
             }
-            if ($scope !== 'entity') {
-                return;
+            if ($scope === 'context') {
+                $is_true = \Floxim\Floxim\Component\Scope\Entity::checkCondition($cond);
+                $res = array(
+                    $is_true ? 'TRUE' : 'FALSE',
+                    null,
+                    'RAW'
+                );
+                return $res;
             }
         }
         $value = $cond['value'];

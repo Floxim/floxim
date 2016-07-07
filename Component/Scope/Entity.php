@@ -6,41 +6,10 @@ use Floxim\Floxim\System\Fx as fx;
 
 class Entity extends \Floxim\Floxim\System\Entity {
     
-    
-    /*
-    public function beforeSave() {
-        parent::beforeSave();
-        if ($this->isModified('conditions')) {
-            $ibs = $this['infoblocks'];
-            if (count($ibs) > 0) {
-                $root_page_id = $this->getRootPage()->get('id');
-                foreach ($ibs as $ib) {
-                    $ib['page_id'] = $root_page_id;
-                }
-            }
-        }
-    }
-    
-    public function getRootPage()
-    {
-        $finder = fx::data('floxim.main.page');
-        $finder->applyConditions( $this->getConditions() );
-        $finder->order('level', 'desc');
-        $finder->group('level');
-        $finder->select('level');
-        $finder->select('count(*) as cnt');
-        $finder->select('id');
-        $finder->limit(1);
-        $data = $finder->getData();
-        fx::cdebug($finder->showQuery(), $data, $this['infoblocks']);
-    }
-    */
-    
     public function checkPath($path)
     {
         $conds = $this->getConditions();
-        $res = $this->checkCondition($conds, $path);
-        //fx::cdebug($res, $conds);
+        $res = self::checkCondition($conds, $path);
         return $res;
     }
     
@@ -68,10 +37,10 @@ class Entity extends \Floxim\Floxim\System\Entity {
         return null;
     }
     
-    public function checkCondition(&$cond, $path) 
+    public static function checkCondition(&$cond, $path = null) 
     {
         if ($cond['type'] === 'group') {
-            $res = $this->checkGroup($cond, $path);
+            $res = self::checkGroup($cond, $path);
             $cond['res'] = $res;
             return $res;
         }
@@ -93,9 +62,11 @@ class Entity extends \Floxim\Floxim\System\Entity {
             case 'entity':
                 $entity_base = $path->last();
                 break;
-            default:
-                fx::cdebug('field base', $field_base);
-                return false;
+            case 'context':
+                $context_prop = array_shift($field_path);
+                $entity_base = fx::env()->get($context_prop);
+                
+                break;
         }
         if ($subtype && !$entity_base->isInstanceOf($subtype)) {
             return isset($cond['inverted']) && $cond['inverted'] ? true : false;
@@ -115,6 +86,10 @@ class Entity extends \Floxim\Floxim\System\Entity {
         switch ($cond['type']) {
             default:
                 
+                break;
+            case 'is_true':
+                // cast to number
+                $res = $tested_value * 1 === $value * 1;
                 break;
             case 'defined':
                 $res = !empty($tested_value);
@@ -189,12 +164,12 @@ class Entity extends \Floxim\Floxim\System\Entity {
         return $res;
     }
     
-    protected function checkGroup(&$cond, $path) 
+    protected static function checkGroup(&$cond, $path) 
     {
         $logic = $cond['logic'];
         $res = $logic === 'OR' ? false : true;
         foreach ($cond['values'] as &$subcond) {
-            $sub_res = $this->checkCondition($subcond, $path);
+            $sub_res = self::checkCondition($subcond, $path);
             if ($logic === 'OR' && $sub_res) {
                 $res = true;
                 break;

@@ -37,9 +37,9 @@ $fx.colorset = function($field, params) {
     
     this.luminance_map = params.luminance_map || params.neutral ? [
         0.00,
-        0.03,
-        0.11,
-        0.60,
+        0.12,
+        0.25,
+        0.55,
         0.85,
         1.00
     ] : [

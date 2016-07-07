@@ -5,6 +5,7 @@ var bl = 'fx_admin_form';
 fx_form = {
     
     create:function(options, $target) {
+        
         var settings = {
             form: {
                 id:'fx_dialog_form', 
@@ -12,10 +13,13 @@ fx_form = {
                 target:'fx_form_target'
             }
         };
+        
         if (options) {
             $.extend(true, settings, options);
         }
+        
         $('html').trigger('fx_before_adm_form_created', settings);
+        
         var $form = $(
                 '<form '+
                     'class="'+bl+'" '+
@@ -144,6 +148,7 @@ fx_form = {
             if (settings.lockable) {
                 json.form_is_lockable = true;
             }
+            
             var $field_node = $fx_form.draw_field(json, $target);
             if (json.type === 'group') {
                 var $group_fields_container = $field_node.find('.fx-field-group__fields');
@@ -450,7 +455,6 @@ fx_form = {
             $rel_node = $target;
             $target = $rel_node.parent();
         }
-        
         var node = $fx_fields.row(json);
         switch (position) {
             case 'into':

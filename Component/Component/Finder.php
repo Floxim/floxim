@@ -62,6 +62,26 @@ class Finder extends System\Finder
         }
         return $keyword;
     }
+    
+    public static function getTypesHierarchy()
+    {
+        $tree = fx::data('component')->getTree();
+        $res = array();
+
+        $handle_level = function($tree, &$res) use (&$handle_level) {
+            foreach ($tree as $com) {
+                $kw = $com['keyword'];
+                $res [$kw] = array();
+                $children = $com['children'];
+                if ($children) {
+                    $handle_level($children, $res[$kw]);
+                }
+            }
+        };
+
+        $handle_level($tree, $res);
+        return $res;
+    }
 
     public function getSelectValues($com_id = null)
     {

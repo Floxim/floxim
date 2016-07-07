@@ -123,7 +123,7 @@ fx_front.prototype.create_inline_entity_adder = function($node) {
     }
     var $placeholder_mark = $node.is('.fx_hidden_placeholder_mark') ? $node : $('.fx_hidden_placeholder_mark', $node);
     
-    if ($placeholder_mark.closest('.fx_adder_placeholder_container')[0] !== $node[0]) {
+    if ($placeholder_mark.closest('.fx_adder_placeholder_container, .fx_hidden_placeholded')[0] !== $node[0]) {
         $placeholder_mark = $([]);
     }
     
@@ -664,9 +664,11 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
                 }
             } else {
                 if (scope !== 'entity') {
-                    var $parent = $entity.parent();
-                    line_width = Math.max(line_width, $parent.outerWidth());
-                    line_left = $parent[0].getBoundingClientRect().left;
+                    var $parent = $entity.parent(),
+                        parent_width = $parent.outerWidth();
+                    if (line_width <= parent_width) {
+                        line_left = $parent[0].getBoundingClientRect().left;
+                    }
                 }
                 css.width = line_width;
                 css.top = is_after ? top + height : top;

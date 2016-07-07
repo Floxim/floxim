@@ -14,6 +14,28 @@ window.condition_builder = function(params) {
     
     this.$node.data('condition_builder', this);
     
+    if (params.types) {
+        var raw_types = {};
+        function handle_level(level, target, path) {
+            $.each(level, function(type, children) {
+                path.push(type);
+                if (path.length > 1) {
+                    raw_types[type] = path.slice(0);
+                }
+                handle_level(children, null, path);
+                path.pop();
+            });
+        }
+        handle_level(params.types, null, []);
+        this.isInstanceOf = function(type, type2) {
+            return type === type2 || (raw_types[type] && raw_types[type].indexOf(type2) !== -1);
+        };
+    } else {
+        this.isInstanceOf = function(type, type2) {
+            return type === type2;
+        };
+    }
+    
     function get_date_value($control) {
         var res = $control.find('.date_input').val();
         return res;
@@ -382,8 +404,13 @@ window.condition_builder = function(params) {
         switch (op_type) {
             case 'is_in':
                 var content_type = field.content_type;
+                //console.log(that.context, content_type);
                 res = find_fields( that.context, function(field) {
-                    var res = field.type === 'entity' && field.content_type === content_type;
+                    //var res = field.type === 'entity' && field.content_type === content_type;
+                    if (field.type !== 'entity') {
+                        return false;
+                    }
+                    var res = that.isInstanceOf(field.content_type, content_type);
                     return res;
                 });
                 break;

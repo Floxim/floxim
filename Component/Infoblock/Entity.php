@@ -155,6 +155,10 @@ class Entity extends System\Entity implements Template\Entity
         $this['params'] = array_merge($c_params, $params);
         return $this;
     }
+    
+    public function getParam($param) {
+        return isset($this['params'][$param]) ? $this['params'][$param] : null;
+    }
 
     /**
      * Check if infoblock's scope.visibility allows the current user to see this block
@@ -163,23 +167,36 @@ class Entity extends System\Entity implements Template\Entity
     public function isAvailableForUser()
     {
         $c_user = fx::user();
-        $ib_visibility = isset($this['scope']['visibility']) ? $this['scope']['visibility'] : null;
-        if (!$ib_visibility || $ib_visibility === 'all') {
+        
+        $c_scope = $this['user_scope'];
+        if (!$c_scope || !is_array($c_scope) || count($c_scope) === 0) {
             return true;
         }
-        if ($ib_visibility === 'nobody') {
-            return false;
+        
+        if ($c_user->isAdmin()) {
+            return true;
         }
-        if ($ib_visibility === 'admin' && !$c_user->isAdmin()) {
-            return false;
+        
+        foreach ($c_scope as $role) {
+            switch ($role) {
+                case 'admin':
+                    if ($c_user->isAdmin()) {
+                        return true;
+                    }
+                    break;
+                case 'guest':
+                    if ($c_user->isGuest()) {
+                        return true;
+                    }
+                    break;
+                case 'user':
+                    if (!$c_user->isGuest()) {
+                        return true;
+                    }
+                    break;
+            }
         }
-        if ($ib_visibility === 'user' && $c_user->isGuest()) {
-            return false;
-        }
-        if ($ib_visibility === 'guest' && !$c_user->isGuest()) {
-            return false;
-        }
-        return true;
+        return false;
     }
 
     public function isAvailableOnPage($page)
@@ -544,6 +561,13 @@ class Entity extends System\Entity implements Template\Entity
             'data-fx_infoblock' => $ib_info, // todo: psr0 need fix
             'class'             => 'fx_infoblock fx_infoblock_' . $this['id']
         );
+        
+        if ($this['user_scope'] && is_array($this['user_scope'])) {
+            $meta['class'] .= ' fx-infoblock_has-user-scope';
+            foreach ($this['user_scope'] as $scope_item) {
+                $meta['class'] .= ' fx-infoblock_user-scope_'.$scope_item;
+            }
+        }
         
         foreach ($this->infoblock_meta as $meta_key => $meta_val) {
             // register only non-empty props

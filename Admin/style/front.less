@@ -781,7 +781,7 @@ span.fx_area_marker {
         //background-color:rgba(255,255,0,0.3);
         opacity:0;
         width:32px;
-        height:18px;
+        height:19px;
         position:absolute;
         z-index:1;
         
@@ -825,7 +825,7 @@ span.fx_area_marker {
 
     &-horizontal&-dir_after &__plus {
         bottom:auto;
-        top:-1px;
+        top:-2px;
         transform:rotate(180deg);
     }
     
@@ -886,7 +886,7 @@ span.fx_area_marker {
     }
     
     &-infoblock &__plus {
-        background-position:-2106px -12px;
+        background-position:-2106px -11px;
         //transform:rotate(0deg);
     }
     
@@ -1910,4 +1910,29 @@ span.fx_area_marker {
     & > .field:not(.field_name__visual--wrapper) {
         display:none !important;
     }
+}
+
+.fx-menu-item_code_role-control .livesearch {
+    display:inline-block;
+    vertical-align:middle;
+    margin-left:10px;
+}
+
+
+@roles: user admin guest;
+
+.fx-hidden {
+    display:none;
+}
+
+.role_loop (@index:1) when not(@index > length(@roles)) {
+    @role: extract(@roles, @index);
+    &.fx-root_user-role_@{role} .fx-infoblock_has-user-scope:not( .fx-infoblock_user-scope_@{role} ) {
+        &:extend( .fx-hidden );
+    }
+    .role_loop(@index + 1);
+}
+
+html {
+    .role_loop();
 }

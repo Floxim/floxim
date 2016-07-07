@@ -392,10 +392,18 @@ class Infoblock extends Admin
 
         if (isset($input['settings_sent']) && $input['settings_sent'] == 'true') {
             
+            fx::log($input);
             $is_preset = isset($input['pressed_button']) && $input['pressed_button'] === 'favorite';
             
             if (!$is_preset) {
                 $scope_data = $input['scope'];
+                
+                if (isset($scope_data['user_scope'])) {
+                    $infoblock['user_scope'] = $scope_data['user_scope'];
+                } else {
+                    $infoblock['user_scope'] = null;
+                }
+                
                 $infoblock['scope_type'] = $scope_data['type'];
                 switch ($scope_data['type']) {
                     case 'custom':
@@ -737,6 +745,29 @@ class Infoblock extends Admin
                 'value' => $scope ? json_encode(array('id' => $scope['id'], 'conditions' => $scope['conditions'])) : null
             )
         );
+        if (fx::config('has_users')) {
+            $fields []= array(
+                'type' => 'livesearch',
+                'is_multiple' => true,
+                'label' => 'Кому показывать',
+                'name' => 'user_scope',
+                'values' => array(
+                    array(
+                        'guest',
+                        'Гостям'
+                    ),
+                    array(
+                        'admin',
+                        'Админам'
+                    ),
+                    array(
+                        'user',
+                        'Пользователям'
+                    )
+                ),
+                'value' => $infoblock['user_scope']
+            );
+        }
         return $fields;
         
     }
@@ -800,6 +831,7 @@ class Infoblock extends Admin
             'fields' => array(
                 fx::component('floxim.main.page')->getFieldForFilter('entity')
             ),
+            'types' => fx::data('component')->getTypesHierarchy(),
             'value' => $scope['conditions'],
             'label' => false
         );

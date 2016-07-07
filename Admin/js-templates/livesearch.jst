@@ -13,6 +13,13 @@ var bl = _c.is_multiple ? 'multisearch' : 'monosearch';
     if (_c.is_multiple) {
         if (_c.value && !_c.ajax_preload) {
             $.each(_c.value, function(vi, vv) {
+                if (typeof vv !== 'object') {
+                    vv = {
+                        id: vv,
+                        name: '',
+                        value_id: vi
+                    };
+                }
                 var value_name = vv.name ? vv.name.replace(/\"/g, '&quot') : '';
                 ?><input class="preset_value" type="hidden" 
                     name="<?=_c.name?>[<?=vv.value_id?>]<?=f_postfix?>"

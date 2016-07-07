@@ -454,12 +454,21 @@ window.fx_livesearch = function (node) {
                 });
             }, 100);
         }
+        
         inputs.each(function() {
             var $inp = $(this),
                 id = $inp.val(),
                 name = $inp.data('name'),
                 path = $inp.data('path');
                 
+            if (!name && livesearch.preset_values) {
+                $.each(livesearch.preset_values, function(index, val) {
+                    if (val.id === id) {
+                        name = val.name;
+                        return false;
+                    }
+                });
+            }
             livesearch.inpNames[id] = this.name;
             livesearch.addValue({id:id, name:name, input_name:this.name}, path);
             $(this).remove();
