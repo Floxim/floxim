@@ -132,11 +132,25 @@ class Token
             }
         } elseif (($name == 'each' || $name == 'with_each') && $type != 'close' && !preg_match('~select=~', $source)) {
             $props['select'] = trim($source);
-        } elseif ($name == 'set') {
+        } elseif ($name == 'set' && $source) {
             $parts = explode("=", $source, 2);
-            $props['var'] = trim($parts[0]);
-            if (isset($parts[1])) {
-                $props['value'] = trim($parts[1]);
+            $var_part = trim($parts[0]);
+            
+            // {set $var = 'value' /}
+            if (preg_match('~^\$[a-z0-9_]+$~i', $var_part)) {
+                $props['var'] = $var_part;
+                if (isset($parts[1])) {
+                    $props['value'] = trim($parts[1]);
+                }
+            }
+            // {set $var att="value" att2="value2"}...{/set}
+            else {
+                $real_var_part = null;
+                if (preg_match('~^\$[a-z0-9_]+~i', $var_part, $real_var_part)) {
+                    $props['var'] = $real_var_part[0];
+                    $source = preg_replace('~^\$[a-z0-9_]+~i', '', $source);
+                    $props = array_merge($props, TokenAttParser::getAtts($source));
+                }
             }
         } elseif ($name == 'with' && !preg_match("~select=~", $source)) {
             $props['select'] = trim($source);
@@ -189,6 +203,27 @@ class Token
         }
         $res .= $this->type == 'single' ? '/' : '';
         $res .= '}';
+        return $res;
+    }
+    
+    public function toPlain()
+    {
+        if ($this->name === 'code') {
+            return $this->getProp('value');
+        }
+        $res = array($this->name);
+        $props = $this->props;
+        unset($props['offset']);
+        unset($props['source']);
+        $res []= $props;
+        $children = $this->getChildren();
+        if ($children && count($children) > 0) {
+            $plain_children = array();
+            foreach ($this->children as $child) {
+                $plain_children[]= $child->toPlain();
+            }
+            $res[]= $plain_children;
+        }
         return $res;
     }
 

@@ -36,10 +36,13 @@ window.$fx_fields = {
             }
         });
         var $target=  params.$target || $inp;
+        var decimal_part = (params.step % 1).toString().match(/\.(.+)/),
+            multiplier = decimal_part ? decimal_part[1].length * 10 : 1;
+        
         $target.on('mousewheel', function(e) {
             var delta = e.originalEvent.deltaY > 0 ? -1 : 1,
                 c_value = $inp.val() * 1,
-                new_value = c_value + params.step * delta;
+                new_value = ( c_value * multiplier + params.step * delta * multiplier ) / multiplier;
             if (new_value < params.min) {
                 new_value = params.min;
             } else if (new_value > params.max ) {
@@ -87,6 +90,151 @@ window.$fx_fields = {
     measures: function(json) {
         var $row = $t.jQuery('form_row', json);
         $fx.measures.create($row, json);
+        return $row;
+    },
+    
+    ratio: function(json, template) {
+        if (!json.label) {
+            json.label = 'Пропорции';
+        }
+        function to_ratio(val) {
+            if (typeof val !== 'string') {
+                return val;
+            }
+            var parts = val.match(/(\d+)\s*\:\s*(\d+)/);
+            if (!parts) {
+                return val * 1;
+            }
+            return parts[1] / parts[2];
+        };
+        
+        function append_ratio_size($node, ratio, square) {
+            square = square ||  1900;
+            var height = Math.sqrt( square / ratio ),
+                width = height * ratio;
+
+            $node.css({
+                width: width + 'px',
+                height: height + 'px'
+            });
+        }
+       
+        var $row = $t.jQuery('form_row', json),
+            $control = $('.fx-ratio-input__control', $row),
+            $trigger = $('.fx-ratio-input__trigger', $row),
+            all_ratios = [
+                [5,"5:1"],
+                [4,"4:1"],
+                [3,"3:1"],
+                [2.5,"5:2"],
+                [2,"2:1"],
+                [1.5,"3:2"],
+                [1.33,"4:3"],
+                [1,"1:1"],
+                [0.75,"3:4"],
+                [0.67,"2:3"],
+                [0.5,"1:2"],
+                [0.33,"1:3"],
+                [0.25,"1:4"]
+            ],
+            avail_ratios = all_ratios;
+        
+        if (json.min) {
+            json.min = to_ratio(json.min);
+        }
+        if (json.max) {
+            json.max = to_ratio(json.max);
+        }
+        if (json.min || json.max) {
+            avail_ratios = [];
+            for (var i = 0; i < all_ratios.length; i++) {
+                var c_ratio = all_ratios[i][0];
+                if ( 
+                    (!json.min || c_ratio >= json.min) &&
+                    (!json.max || c_ratio <= json.max )
+                ) {
+                    avail_ratios.push( all_ratios[i] );
+                }
+            }
+        }
+        if (!json.value) {
+            json.value = '1:1';
+        }
+        
+        json.value = to_ratio(json.value);
+        
+        
+        for (var i = 0; i < avail_ratios.length; i++) {
+            var c_ratio = avail_ratios[i],
+                $container = $('<div class="fx-ratio-input__item-container"></div>'),
+                $item = $('<div class="fx-ratio-input__item" data-value="'+c_ratio[0]+'"><span>'+c_ratio[1]+'</span></div>');
+            append_ratio_size($item, c_ratio[0]);
+            
+            $container.append($item);
+            $control.append($container);
+        }
+        
+        $('body').append($control);
+        
+        var active_class = 'fx-ratio-input__control_active';
+        
+        
+        function show_control () {
+            $control.addClass(active_class);
+            $control.attr('tabindex',0).focus().on('keydown.fx-ratio-input', function(e) {
+                if (e.which === 27) {
+                    hide_control();
+                    e.stopImmediatePropagation();
+                    return false;
+                }
+            });
+            $('html').on('click.fx-ratio-input', function(e) {
+                if ($(e.target).closest('.fx-ratio-input__control').length === 0) {
+                    hide_control();
+                    return false;
+                }
+            });
+        }
+        
+        function hide_control() {
+            $('html').off('.fx-ratio-input');
+            $control.attr('tabindex','').removeClass(active_class).off('.fx-ratio-input');
+        }
+        
+        $trigger.on('click', function() {
+            if (!$control.is('.'+active_class)) {
+                show_control();
+                var offset = $trigger.offset();
+                
+                $control.offset({
+                    top: offset.top + $trigger.height() + 10,
+                    left: offset.left
+                });
+            } else {
+                hide_control();
+            }
+            return false;
+        });
+        
+        function set_value(ratio) {
+            var active_item_class = 'fx-ratio-input__item_active';
+            $control.find('.'+active_item_class).removeClass(active_item_class);
+            var $item = $control.find('.fx-ratio-input__item[data-value="'+ratio+'"]');
+            $item.addClass(active_item_class);
+            var $vis = $trigger.find('.fx-ratio-input__visible');
+            $vis.find('span').text($item.text());
+            append_ratio_size($vis, ratio, ratio > 1 ? 1900 : 1400);
+            $trigger.find('.fx-ratio-input__value').val( $item.data('value') ).trigger('change');
+        }
+        
+        $control.on('click', '.fx-ratio-input__item', function() {
+            var $item = $(this);
+            set_value($item.data('value'));
+            hide_control();
+        });
+        
+        set_value(json.value);
+        
         return $row;
     },
 

@@ -132,7 +132,7 @@ class MetaParser {
                 return $this->prepareComment($res);
             }
         } catch (\Exception $e) {
-            fx::cdebug('cat', $e, $text);
+            //fx::cdebug('cat', $e, $text);
         }
     }
     
@@ -147,7 +147,7 @@ class MetaParser {
         }
         return $parsed;
     }
-
+    
     public static function getQuickStyleMeta($f) {
         $fh = fopen($f, 'r');
         $c = 0;

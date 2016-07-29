@@ -311,8 +311,7 @@ var style_tweaker = {
                     action:'style_settings',
                     style_variant_id: style_variant_id,
                     block: block_name,
-                    style:style_value,
-                    source_template: ls_json.source_template
+                    style:style_value
                 },
                 {
                     view:'horizontal',
@@ -330,8 +329,7 @@ var style_tweaker = {
                         if (!is_new) {
                             $affected_blocks =  $('.'+style_meta.existing_class);
                         }
-                        
-                        tweaked_class = style_meta.mixin_name+'-tweaked';
+                        tweaked_class = block_name+'_style_'+style_value+'-tweaked';
                         
                         $.ajax({
                             url: tweaker_file,
@@ -372,6 +370,7 @@ var style_tweaker = {
                         }
                         $affected_blocks.removeClass(tweaked_class);
                         $affected_blocks.addClass( is_new ? style_meta.mixin_name : style_meta.existing_class );
+                        //console.log($affected_blocks, is_new ? style_meta.mixin_name : style_meta.existing_class);
                     }
                 }
             )
@@ -416,6 +415,7 @@ function render_less(vars, tweak_less, $stylesheet, rootpath) {
         options
     ).then(
         function(css) {
+            //console.log(final_less, css.css);
             $stylesheet.text( css.css );
         },
         function (error) {

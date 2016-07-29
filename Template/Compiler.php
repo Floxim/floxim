@@ -55,6 +55,13 @@ class Compiler
      */
     public function compile($tree, $class_name)
     {
+        fx::cdebug(
+            $tree, 
+            $tree->toPlain(), 
+            mb_strlen(json_encode($tree)), 
+            mb_strlen(json_encode($tree->toPlain())),
+            json_decode(json_encode($tree),1)
+        );
         $code = $this->makeCode($tree, $class_name);
         $code = self::addTabs($code);
         if (fx::config('templates.check_php_syntax')) {
@@ -65,7 +72,7 @@ class Compiler
                 $lines[$error_line - 1] = '[[bad ' . $lines[$error_line - 1] . ']]';
                 $lined = join("\n", $lines);
                 $error = $is_correct[0] . ': ' . $is_correct[1][0] . ' (line ' . $error_line . ')';
-                fx::debug($error, $lined);
+                fx::debug($error, fx::debug()->backtrace(), $lined);
                 fx::log($error, $is_correct, $lined);
                 throw new \Exception('Syntax error');
             }
@@ -127,14 +134,28 @@ class Compiler
         return $res;
     }
     
+    protected function getBemNamespace()
+    {
+        $ns = $this->template_set_name;
+        if ($ns === 'admin') {
+            return '';
+        }
+        $ns = str_replace(".", '--', $ns);
+        $ns = str_replace("_", '-', $ns);
+        $ns .= '--';
+        return $ns;
+    }
+    
     protected function tokenBemBlockToCode($token)
     {
+        $ns = $this->getBemNamespace();
         $code =  "<?php";
         $str = $this->childrenGetPlain($token);
         if ($str !== false) {
             $block_parts = Template::bemParseStr($str);
-            $code .= " \$this->bemStartBlock('".$block_parts['name']."'); ";
+            $code .= " \$this->bemStartBlock('".$ns.$block_parts['name']."'); ";
             $code .= "?>";
+            $block_parts['name'] = $ns.$block_parts['name'];
             $class = $block_parts['name'].' ';
             foreach ($block_parts['modifiers'] as $mod) {
                 $class .= $block_parts['name'].'_'.$mod.' ';
@@ -155,6 +176,7 @@ class Compiler
         $this->popState('edit');
         $code .= '$block_string = ob_get_clean();'."\n";
         $code .= '$block_parts = \\Floxim\\Floxim\\Template\\Template::bemParseStr($block_string);'."\n";
+        $code .= '$block_parts[\'name\'] = "'.$ns.'".$block_parts[\'name\'];'."\n";
         $code .= "\$this->bemStartBlock(\$block_parts['name']);\n";
         $code .= "echo \$block_parts['name'].' ';\n";
         $code .= "foreach (\$block_parts['modifiers'] as \$mod) {\n";
@@ -190,7 +212,6 @@ class Compiler
                 $code .= ' '.join(' ', $el_parts['plain']);
             }
             return $code;
-            //$code .= "echo join(' ', \$el_parts['plain']);\n";
         }
         $code .= "\nob_start();\n";
         $this->pushState('edit', false);
@@ -611,6 +632,39 @@ class Compiler
             $meta = null;
         }
         return array($expr, $meta);
+    }
+    
+    /*
+     * Genrate code to export vars from less style to template context
+     */
+    public static function generateStyleExportCode($export, $vals)
+    {
+        $code = '<?php'."\n";
+        foreach ($export as $var => $expression) {
+            $expression = preg_replace_callback(
+                '~@([a-z0-9_-]+)~',
+                function( $matches ) use ($vals) {
+                    $var = $matches[1];
+                    if (isset($vals[$var])) {
+                        $c_val = trim($vals[$var]);
+                        if (!is_numeric($c_val)) {
+                            $numeric = null;
+                            if (preg_match("~^(\d+)(em|rem|px|%|vh|vw)$~i", $c_val, $numeric)) {
+                                $c_val = $numeric[1];
+                            } else {
+                                if (!preg_match("~^[\'\\\"].*[\'\\\"]$~", $c_val)) {
+                                    $c_val = '"'.addslashes($c_val).'"';
+                                }
+                            }
+                        }
+                        return $c_val;
+                    }
+                },
+                $expression
+            );
+            $code .= '$context->set("'.$var.'", '.$expression.");\n";
+        }
+        return $code;
     }
 
     public function parseExpression($str)
@@ -1181,7 +1235,7 @@ class Compiler
         return $code;
     }
     
-    protected function getAdderPlaceholderCode($arr_id)
+    protected function getAdderPlaceholderCode($arr_id, $mode = 'add')
     {
         $code = '';
         $code .= 'if ($_is_admin ';
@@ -1189,7 +1243,11 @@ class Compiler
         $code .= ' && isset(' . $arr_id . '->finder)';
         $code .= ' && $this->getMode("add") != "false" ';
         $code .= ' && ' . $arr_id . '->finder instanceof \\Floxim\\Main\\Content\\Finder) {' . "\n";
-        $code .= $arr_id . '->finder->createAdderPlaceholder(' . $arr_id . ');' . "\n";
+        if ($mode === 'add') {
+            $code .= $arr_id . '->finder->createAdderPlaceholder(' . $arr_id . ');' . "\n";
+        } else {
+            $code .= $arr_id . '->finder->removeAdderPlaceholder(' . $arr_id . ');' . "\n";
+        }
         $code .= "}\n";
         return $code;
     }
@@ -1203,7 +1261,9 @@ class Compiler
         
         $label = $token->getProp('label');
         $id = $token->getProp('id');
-        $block = $token->getProp('block');
+        $ns = $this->getBemNamespace();
+        $block = $ns.$token->getProp('block');
+        
         $id_val = '$style_id';
         $code .= $id_val.' = ';
         if ($id) {
@@ -1225,8 +1285,7 @@ class Compiler
         $param_props = array(
             'label' => $label ? '"'.$label.'"' : $var."['label']",
             'type' => '"style"',
-            'block' => '"'.$token->getProp('block').'"',
-            'source_template' => "'".$this->template_set_name."'",
+            'block' => '"'.$block.'"',
             'value' => $val_var,
             'style_id' => $mod_id_var
         );
@@ -1236,9 +1295,10 @@ class Compiler
             $exported_props []= '"'.$p.'" => '.$v;
         }
         $code .= "\$this->registerParam(".$id_val.", array(".join(", ", $exported_props).") );\n";
+        $code .= 'if ( ($export_style_file = $this->addStyleLess("'.$block.'", '.$val_var.') ) ) {'."\n";
+        $code .= 'require( $export_style_file );'."\n";
+        $code .= "}\n";
         
-        $code .= '$this->addStyleLess("'.$block.'", '.$val_var.', \''.dirname($this->current_source_file).'\')'.";\n";
-        $code .= '// '.$this->current_source_file."\n";
         $code .= "if (\$_is_admin) {\n";
         $code .= " echo ' style-id_'.".$mod_id_var.";\n";
         $code .= "}\n";
@@ -1290,6 +1350,8 @@ class Compiler
             // add-in-place settings
             if ($token->getProp('add') !== 'false') {
                 $code .= $this->getAdderPlaceholderCode($arr_id);
+            } else {
+                $code .= $this->getAdderPlaceholderCode($arr_id, 'remove');
             }
         }
 
@@ -1354,16 +1416,30 @@ class Compiler
         
         $var = $token->getProp('var');
         
+        fx::cdebug($token);
+        
         $meta = null;
         
+        $format = $token->getProp('format');
         if ($token->getProp('value')) {
             //$value = self::parseExpression($token->getProp('value'));
             $value_with_meta = $this->parseExpressionWithMeta($token->getProp('value'));
             list($value, $meta) = $value_with_meta;
         } else {
-            $code .= "ob_start();\n";
-            $code .= $this->childrenToCode($token);
-            $value = "ob_get_clean()";
+            if (count($token->children) === 1 && $token->children[0]->name === 'code') {
+                $value = $token->children[0]->getProp('value');
+                if ($format === 'yaml') {
+                    $value = Template::processYaml($value);
+                }
+                $value = var_export($value,1);
+            } else {
+                $code .= "ob_start();\n";
+                $code .= $this->childrenToCode($token);
+                $value = "ob_get_clean()";
+                if ($format === 'yaml') {
+                    $value = 'self::processYaml('.$value.')';
+                }
+            }
         }
         
         $is_default = $token->getProp('default');
@@ -1573,7 +1649,7 @@ class Compiler
         }
         $code .= $this->childrenToCode($token)."\n";
         $dirs = $token->getProp('extend') ? "\$this->getAllDirs()" : "\$template_dir";
-        $bundle_params = var_export(array('name' => $token->getProp('bundle')), true);
+        $bundle_params = var_export(array('name' => $token->getProp('bundle'), 'namespace' => $this->getBemNamespace()), true);
         $code .= 'fx::page()->addCssBundleFromString(ob_get_clean(), '.$dirs.', '.$bundle_params.');'."\n";
         return $code;
     }
@@ -1713,29 +1789,6 @@ class Compiler
         $val_is_null = $val_var."_is_null";
         $code .= $val_is_null . " = is_null(".$val_var.");\n";
         
-        $is_style = $props['type'] === 'style';
-        if ($is_style) {
-            $props['type'] = 'livesearch';
-            $props['is_style'] = true;
-            $mask = $props['mask'];
-            unset($props['mask']);
-            $styles_var = "\$param__".$vname.'_styles';
-            $first_style_var = $styles_var.'_first';
-            $code .= $styles_var ." = \$this->collectStyles('".$mask."');\n";
-            
-            $code .= $first_style_var." = null;\n";
-            $code .= 'if ('.$val_is_null.' && count('.$styles_var.') > 0) {'."\n";
-            $code .= $first_style_var." = current(".$styles_var.");\n";
-            $code .= $first_style_var." = ".$first_style_var."['keyword'];\n";
-            $code .= "}\n";
-            $default_val = $first_style_var;
-            if (!isset($props['label'])) {
-                $exported_props[]= "'label' => fx::alang('Style').': ".preg_replace('~_style_\*~', '', $mask)."'";
-            }
-            $exported_props[]= "'values' => \$this->collectStyleValues('".$mask."')";
-            $exported_props[]= "'source_template' => '".$this->template_set_name."'";
-        }
-
         if (isset($props['default'])) {
             // handle computable defaults
             $default_val = "'".$props['default']."'";
@@ -1746,9 +1799,6 @@ class Compiler
             $code .= $val_var." = ".$default_val.";\n";
             $code .= "\$context->set('".$name."', ".$val_var.");\n";
             $code .= "}\n";
-        }
-        if ($is_style) {
-            $code .= 'fx::page()->addToBundle('.$styles_var.'['.$val_var.']["files"], "default");'."\n";
         }
         $exported_props [] = "'is_forced' => !".$val_is_null." && \$context->getLastVarLevel() !== 1";
         

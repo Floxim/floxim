@@ -22,7 +22,7 @@ class Output extends \Less_Output
     public function get(\Less_Tree $node, $add_separator = true)
     {
         $res = '';
-        if ($node instanceof \Less_Tree_Expression || $node instanceof HardExpression) {
+        if ($node instanceof \Less_Tree_Expression || $node instanceof HardExpression || $node instanceof \Less_Tree_Selector) {
             $node->genCSS($this);
             $res = join($this->chunks, '');
             if ($res !== '' && $add_separator) {

@@ -438,6 +438,7 @@ class Layout extends Admin
             $props['colors'] = fx::env()->getLayoutStyleVariant()->getPalette();
             $props['empty'] = false;
         }
+        /*
         if ($props['type'] === 'css-text-transform') {
             $props['type'] = 'livesearch';
             $props['values'] = array(
@@ -463,12 +464,15 @@ class Layout extends Admin
             }
             $props['allow_empty'] = false;
         }
+         * 
+         */
         if ($props['units'] && $props['value']) {
-            $props['value'] = preg_replace("~[^\d]+~", '', $props['value']);
+            $props['value'] = preg_replace("~[^\d\.]+~", '', $props['value']);
         }
         return $props;
     }
     
+    /*
     protected function getStyleMeta($style, $block, $source_template)
     {
         $bundle = fx::page()->getDefaultCssBundle();
@@ -501,12 +505,13 @@ class Layout extends Admin
             return $found_style;
         }
     }
-
+    */
+    
     public function styleSettings($input)
     {
-        $bundle = fx::page()->getDefaultCssBundle();
         
-        $fields = $this->getHiddenFields(array('style', 'block', 'style_variant_id', 'source_template'));
+
+        $fields = $this->getHiddenFields(array('style', 'block', 'style_variant_id'));
 
         $style_variant = 
             isset($input['style_variant_id'])  && $input['style_variant_id']
@@ -514,16 +519,24 @@ class Layout extends Admin
                 : fx::data('style_variant')->create();
 
         $input['style'] = preg_replace("~\-\-\d+$~", '', $input['style']);
-
-        $style = $this->getStyleMeta($input['style'], $input['block'], $input['source_template']);
+        
+        $bundle = fx::assets('style', $input['block'].'_'.$input['style']);
+        
+        if (!$bundle->isFresh()) {
+            
+            // run processor to extract defaults
+            $bundle->save();
+        }
+        
+        $style = $bundle->getStyleMeta();
         
         $is_sent = $this->isSent();
         $less_vars = $style_variant['less_vars'];
-        
-        
+                
         if (!isset($style['vars'])) {
             $style['vars'] = array();
         }
+        
         foreach ($style['vars'] as $var => $props) {
             $props['name'] = $var;
             if (isset($less_vars[$var])) {
@@ -538,7 +551,7 @@ class Layout extends Admin
                 }
             }
         }
-
+        
         if ($is_sent) {
             if ($style_variant['id'] && isset($input['pressed_button']) && $input['pressed_button'] === 'delete') {
                 $style_variant->delete();
@@ -546,10 +559,12 @@ class Layout extends Admin
             } else {
                 $style_variant['less_vars'] = $less_vars;
                 $style_variant['name'] = $input['style_name'];
-                $style_variant['style'] = $input['block'].'_'.$input['style'];
+                $style_variant['block'] = $input['block'];
+                $style_variant['style'] = $input['style'];
                 $style_variant->save();
                 $id = $style_variant['id'];
             }
+            
             fx::page()->getBundleManager()->getBundle('css', 'default')->delete();
             
             return array(
@@ -564,24 +579,17 @@ class Layout extends Admin
             'type' => 'string',
             'label' => false,
             'placeholder' => 'название стиля',
-            'value' => $style_variant['name']
+            'value' => $style_variant->getReal('name')
         );
         
-        $mixin_name = $input['block'].'_style_'.$input['style'];
+        $mixin_name = substr($bundle->getMixinName(), 1);
         
-
         $res = array(
-            'tweaker_file' => 
-                $bundle->getStyleTweakerLessFile(
-                    array(
-                        $input['block'],
-                        $input['style']
-                    )
-                ),
+            'tweaker_file' => $bundle->getTweakerLessFile(),
             'rootpath' => fx::path()->http( dirname($style['file']) ) . '/',
             'tweaked_vars' => array_keys($style['vars']),
             'mixin_name' => $mixin_name,
-            'existing_class' => $style_variant['id'] ? $mixin_name.'--'.$style_variant['id'] : null,
+            'existing_class' => $style_variant['id'] ? $style_variant['block'].'_style_'.$style_variant['style'].'--'.$style_variant['id'] : null,
             'fields' => $fields,
             'header' => 'Настраиваем стиль'
         );
@@ -751,19 +759,13 @@ class Layout extends Admin
     
     public function getStyleVariants($input)
     {
-        $templates = array();
         $res = array();
         foreach ($input['blocks'] as $block) {
-            $tpl = $block['source_template'];
-            if (!isset($templates[$tpl])) {
-                $templates[$tpl] = fx::template($tpl);
-            }
-            $res []= $templates[$tpl]->collectStyleValues($block['block'].'_style_*');
+            $res []= \Floxim\Floxim\Asset\Less\StyleBundle::collectStyleVariants($block['block']);
         }
         return array(
             'variants' => $res
         );
-        
     }
 
 
@@ -807,6 +809,18 @@ class Layout extends Admin
                 'transparent' => true,
                 'colors' => fx::env()->getLayoutStyleVariant()->getPalette(),
                 'value' => 'alt 2'
+            )
+        );
+        $this->response->addFields($fields);
+    }
+    
+    public function ratio() {
+        $fields = array(
+            'ratio' => array(
+                'label' => 'Пропорции',
+                'type' => 'ratio',
+                'value' => 5,
+                'min' => 1
             )
         );
         $this->response->addFields($fields);

@@ -3,6 +3,7 @@
 namespace Floxim\Floxim\Template;
 
 use Floxim\Floxim\System\Fx as fx;
+use \Symfony\Component\Yaml;
 
 class Template
 {
@@ -63,7 +64,9 @@ class Template
             if ($c[0] === '.') {
                 $res['plain'][] = trim($c, '.');
             } else {
-                $res['modifiers'][]= $c;
+                if (substr($c, -1, 1) !== '_') {
+                    $res['modifiers'][]= $c;
+                }
             }
         }
         return $res;
@@ -549,6 +552,8 @@ class Template
         }
         return $res;
     }
+    
+    /*
 
     protected static $styles_cache = array(
         'styles' => array(),
@@ -662,6 +667,7 @@ class Template
                 $keyword,
                 $style_info['name'],
                 array(
+                    'title' => str_replace("*", '', $mask).$keyword,
                     'is_tweakable' => $style_info['is_tweakable'],
                     'style_variant_id' => isset($style_info['id']) ? $style_info['id'] : null
                 )
@@ -670,30 +676,93 @@ class Template
         self::$styles_cache['values'][$mask] = $vals;
         return $vals;
     }
+     * 
+     */
     
-    public function addStyleLess($block, $value, $current_dir)
+    public function addStyleLess($block, $value)
     {
-        $files = array();
+        $bundle_keyword = $block.'_'. str_replace("--", "_", $value);
+        $bundle = fx::assets('style', $bundle_keyword);
+        $default_bundle = fx::assets('css');
+        $default_bundle->push(array($bundle));
+        if (!$bundle->isFresh()) {
+            $bundle->save();
+        }
+        $export_file = $bundle->getExportFile();
+        return $export_file;
+        /*
+        $files = \Floxim\Floxim\Asset\Less\Bundle::getCommonLessFiles();
         $base = $value;
         $is_custom = false;
         $parts = null;
+        $id = null;
         if (preg_match("~(.+?)--(\d+)~", $value, $parts)) {
             $base = $parts[1];
             $id = $parts[2];
             $is_custom = true;
         }
-        $files []= $current_dir.'/'.$block.'_style_'.$base.'.less';
+        
+        $default_keyword = $block.'_style_'.$base;
+        
+        $files []= $current_dir.'/'.$default_keyword.'.less';
+        
+        $bundle_keyword = $block.'_'.$base;
         
         if ($is_custom) {
-            $custom_file = fx::path( '@files/asset_cache/'.$block.'_'.$base.'-'.$id.'.less' );
-            if (! file_exists($custom_file) ) {
-                $style_variant = fx::data('style_variant', $id);
-                if ($style_variant) {
-                    $custom_file = $style_variant->getStyleLessFile(true);
-                }
-            }
-            $files []= $custom_file;
+            $bundle_keyword .= '-'.$id;
         }
-        fx::page()->addCssBundle($files, array('name' => 'auto'));
+        
+        $bundle = fx::page()->getBundleManager()->getBundle('css', $bundle_keyword);
+        
+        $asset_cache_path = $bundle->getDirPath();
+        $call_file = $asset_cache_path.'/'.$bundle_keyword.'.less';
+        if (! file_exists($call_file) ) {
+            $style_variant = $id ? fx::data('style_variant', $id) : fx::data('style_variant')->create(
+                array(
+                    'style' => $block.'_'.$base
+                )
+            );
+            $less = $style_variant->getStyleLess();
+            fx::files()->writefile($call_file, $less);
+        }
+        $files []= $call_file;
+        
+        $export_file = \Floxim\Floxim\Asset\Less\MetaParser::getExportFilePath($bundle_keyword);
+        
+        
+        $bundle->push( $files );
+        
+        fx::page()->getDefaultCssBundle()->push ( array($bundle) );
+        
+        if (file_exists($export_file)) {
+            return $export_file;
+        }
+         * 
+         */
+    }
+    
+    public static function processYaml($s)
+    {
+        $space = '';
+        $s = preg_replace("~^[\r\n]+~", '', $s);
+        
+        $s = preg_replace("~^[ ]+[\r\n]+~s", '', $s);
+        
+        $s = str_replace("\t", '    ', $s);
+
+        if (preg_match("~^[ ]+~", $s, $space) ) {
+            $space = $space[0];
+        }
+
+        $s = trim($s);
+        
+        $s = preg_replace("~([\r\n]+)".$space."~", "\$1", $s);
+        fx::cdebug('yamling', $space, $s);
+        try {
+            $res = Yaml\Yaml::parse($s);
+            return $res;
+        } catch (\Exception $e) {
+            fx::log('incorrect yaml', $e);
+        }
     }
 }

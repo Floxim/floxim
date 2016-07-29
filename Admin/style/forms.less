@@ -951,6 +951,11 @@
     width:85px !important;
     padding-right:5px !important;
 }
+
+.fx_input_number_d {
+    width:50px !important;
+}
+
 .fx_input_number_ddd {
     width:70px !important;
 }
@@ -1574,5 +1579,60 @@ select.fx_input {
         .fx-toggle-button {
             vertical-align:middle;
         }
+    }
+}
+
+.fx-ratio-input {
+    &__control {
+        width:320px;
+        border-radius:2px;
+        position:absolute;
+        top:0;
+        left:0;
+        display:none;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        padding:0 5px;
+        border:1px solid #CCC;
+        background:#FFF;
+        z-index:10000;
+        &_active {
+            display:flex;
+        }
+    }
+    &__item-container {
+        padding:5px;
+        margin:5px 0;
+        display:flex;
+        border:1px solid transparent;
+        cursor:pointer;
+    }
+    
+    &__item, &__visible {
+        box-sizing: border-box;
+        font-size: 11px;
+        border: 1px solid #CCC;
+        display: flex;
+        border-radius: 2px;
+        color:#666;
+        cursor:pointer;
+        justify-content:center;
+        align-items:center;
+        background: #E5ECFF;
+    }
+    
+    &__visible {
+        color:#000;
+    }
+    
+    &__item-container:hover &__item {
+        border-color:#999;
+        color:#000;
+    }
+    
+    &__item_active {
+        background:#3D71FF;
+        color:#FFF !important;
+        border-color:transparent;
     }
 }

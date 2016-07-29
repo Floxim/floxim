@@ -392,7 +392,6 @@ class Infoblock extends Admin
 
         if (isset($input['settings_sent']) && $input['settings_sent'] == 'true') {
             
-            fx::log($input);
             $is_preset = isset($input['pressed_button']) && $input['pressed_button'] === 'favorite';
             
             if (!$is_preset) {

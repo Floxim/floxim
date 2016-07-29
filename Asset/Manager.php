@@ -9,16 +9,22 @@ class Manager {
         'css' => array()
     );
     
-    public function getBundle($type, $keyword)
+    public function getBundle($type, $keyword, $params = array())
     {
         if (!isset($this->bundles[$type][$keyword])) {
-            $bundle_class = '\\Floxim\\Floxim\\Asset\\'. ($type === 'css' ? 'Less\\Bundle' : 'JsBundle');
-
-            $params = $keyword === 'admin' ? array() : array(
-                'layout_id' => fx::env('layout_id'),
-                'site_id' => fx::env('site_id'),
-                'style_id' => fx::env()->getLayoutStyleVariantId()
+            $types = array(
+                'js' => 'JsBundle',
+                'css' => 'Less\\Bundle',
+                'style' => 'Less\\StyleBundle'
             );
+            $bundle_class = '\\Floxim\\Floxim\\Asset\\'.$types[$type];
+
+            $hash_params = $keyword === 'admin' ? array() : array(
+                'layout' => fx::env('layout_id'),
+                'site' => fx::env('site_id'),
+                'style' => fx::env()->getLayoutStyleVariantId()
+            );
+            $params = array_merge($hash_params, $params);
 
             $this->bundles[$type][$keyword] = new $bundle_class(
                 $keyword,
@@ -28,11 +34,11 @@ class Manager {
         return $this->bundles[$type][$keyword];
     }
     
-    public function addToBundle($files, $bundle_keyword) 
+    public function addToBundle($files, $bundle_keyword, $params = array()) 
     {
         $files = (array) $files;
         $type = self::getTypeByFiles($files);
-        $bundle = $this->getBundle($type, $bundle_keyword);
+        $bundle = $this->getBundle($type, $bundle_keyword, $params);
         $bundle->push($files);
     }
     

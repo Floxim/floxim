@@ -286,7 +286,7 @@ class Util
         return $str;
     }
 
-    public function camelToUnderscore($string)
+    public static function camelToUnderscore($string)
     {
         if (empty($string)) {
             return '';
@@ -297,7 +297,7 @@ class Util
         return strtolower(preg_replace('/([a-z])([A-Z])/', '$1_$2', $string));
     }
 
-    public function underscoreToCamel($string, $first_upper = true)
+    public static function underscoreToCamel($string, $first_upper = true)
     {
         $t_string = trim($string, '_');
         $parts = explode('_', $t_string);

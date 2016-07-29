@@ -8,13 +8,18 @@ abstract class Bundle {
     protected $keyword =  null;
     protected $files = array();
     protected $params = array();
-    protected $type;
+    protected $type = null;
     protected $version = null;
     protected $dir;
     protected $is_new = false;
     protected $has_new_files = false;
     
     protected $meta = array();
+    
+    public function getType()
+    {
+        return $this->type;
+    }
 
     public function __construct($keyword, $params = array()) 
     {
@@ -51,27 +56,59 @@ abstract class Bundle {
         if (count($parts) === 0) {
             return '';
         }
-        return join(".", $parts).'.';
+        return join(".", $parts);
     }
     
-    protected function getDirPath()
+    public function getDirPath()
     {
-        return fx::path('@files/asset_cache');
+        $hash = $this->getHash();
+        
+        return fx::path('@files/asset_cache/'. ( $hash ? $hash.'/' : '').$this->keyword);
     }
     
     public function getMetaPath()
     {
-        return fx::path($this->getDirPath().'/'.$this->keyword.'.'.$this->getHash().$this->type.'.meta.php');
+        return fx::path($this->getDirPath().'/'.$this->type.'.meta.php');
     }
     
-    public function isFresh()
+    protected function getSubBundle($file)
     {
+        if (substr($file, 0, 7) !== 'bundle:') {
+            return;
+        }
+        $parts = explode(":", substr($file, 7));
+        //$bundle = fx::page()->getBundleManager()->getBundle($this->type, $keyword);
+        $bundle = fx::assets($parts[0], $parts[1]);
+        return $bundle;
+    }
+    
+    public function isNew()
+    {
+        return $this->is_new;
+    }
+    
+    public function isFresh($file = null)
+    {
+        $saved_time = (int) $this->version;
+        if ($file !== null) {
+            return file_exists($file) && filemtime($file) < $saved_time;
+        }
         if ($this->is_new || $this->has_new_files) {
             return false;
         }
-        $saved_time = (int) $this->version;
+        
         foreach ($this->files as $f) {
+            
+            $sub_bundle = $this->getSubBundle($f);
+            if ($sub_bundle) {
+                $sub_is_fresh = $sub_bundle->isFresh();
+                if (!$sub_is_fresh) {
+                    return false;
+                }
+                continue;
+            }
             $file_time = file_exists($f) ? filemtime($f) : 0;
+            
             if ($file_time > $saved_time) {
                 return false;
             }
@@ -81,14 +118,15 @@ abstract class Bundle {
     
     public function getFilePath()
     {
-        return fx::path($this->getDirPath().'/'.$this->keyword.'.'.$this->getHash().$this->version.'.'.$this->type);
+        return fx::path($this->getDirPath().'/'.$this->version.'.'.$this->extension);
     }
-
-
+    
     public function push($files)
     {
         foreach ($files as $file) {
-            $this->processFile($file);
+            if ($file instanceof Bundle) {
+                $file = 'bundle:'.$file->getType().':'.$file->keyword;
+            }
             if (!$this->has_new_files && !in_array($file, $this->files)) {
                 $this->has_new_files = true;
             }
@@ -96,14 +134,11 @@ abstract class Bundle {
         }
     }
     
-    public function processFile($file)
-    {
-        
-    }
-    
-    
     public function delete()
     {
+        if ($this->is_new) {
+            return;
+        }
         $files = array(
             $this->getFilePath(),
             $this->getMetaPath()
@@ -117,6 +152,16 @@ abstract class Bundle {
     
     public abstract function getBundleContent();
     
+    protected function getUniqueFiles()
+    {
+        $res = array();
+        foreach ($this->files as $f) {
+            $res []= fx::path($f);
+        }
+        $res = array_unique($res);
+        return $res;
+    }
+    
     public function save()
     {
         if ($this->isFresh()) {
@@ -128,10 +173,21 @@ abstract class Bundle {
         }
         fx::files()->mkdir($this->getDirPath());
         $content = $this->getBundleContent();
+        
+        //$files = array_unique($this->files);
+        $files = $this->getUniqueFiles();
+        
         $meta = array(
             'version' => $this->version,
-            'files' => array_unique($this->files)
+            'files' => $files
         );
+        
+        foreach ($files as $f) {
+            $sub = $this->getSubBundle($f);
+            if ($sub) {
+                $sub->save();
+            }
+        }
         
         $meta = array_merge($this->meta, $meta);
         

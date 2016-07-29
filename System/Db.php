@@ -30,9 +30,17 @@ class Db extends \PDO
             $this->prefix = $prefix ? $prefix . '_'  : '';
             $this->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
             $this->db_name = fx::config('db.name');
+            if ($this->getAttribute(\PDO::ATTR_DRIVER_NAME) !== 'sqlite') {
+                $this->query("SET NAMES '" . fx::config('db.charset') . "'");
+            }
         } catch (\Exception $e) {
             echo $e->getMessage();
         }
+    }
+    
+    public function getDriver()
+    {
+        return $this->getAttribute(\PDO::ATTR_DRIVER_NAME);
     }
     
     public function getPrefix()
@@ -46,7 +54,12 @@ class Db extends \PDO
             fx::log(debug_backtrace());
             $str = '';
         }
-        return addslashes($str);
+        switch ($this->getDriver()) {
+            case 'sqlite':
+                return str_replace("'", "''", $str);
+            default:
+                return addslashes($str);
+        }
     }
 
     public function prepare($str)
@@ -103,14 +116,6 @@ class Db extends \PDO
         $start_time = microtime(true);
 
         $statement = $this->prepareQuery($statement);
-
-        // determine the type of request
-        // but what for???
-        /*
-        preg_match("/^([a-z]+)\s+/i", $statement, $match);
-        $this->query_type = strtolower($match[1]);
-         * 
-         */
         $this->last_result = parent::query($statement);
         $this->num_queries++;
         $this->last_query = $statement;

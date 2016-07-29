@@ -44,6 +44,16 @@ class Admin extends System\Controller
         $res []= $this->ui->hidden('sent', 1);
         return $res;
     }
+    
+    public function error($message)
+    {
+        return array(
+            'status' => 'error',
+            'errors' => array(
+                $message
+            )
+        );
+    }
 
     public function isSent()
     {

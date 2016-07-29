@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Админ без пароля
- * Date: 30.05.2016
- * Time: 15:04
- */
 
 namespace Floxim\Floxim\Asset\Less\Bem;
 
@@ -15,123 +9,139 @@ class Stack {
 
     public $stack = array();
     public $has_special_rules = false;
-
-    public function push($el)
+    
+    public function __construct($path) {
+        $this->output = new \Floxim\Floxim\Asset\Less\Tweaker\Output();
+        $this->pushPath($path);
+    }
+    
+    public function pushPath($path)
     {
-        $v = $el->value;
-        if (is_object($v)) {
-            $this->stack []= $el;
+        $s = ' ';
+        foreach ($path as $p) {
+            $chunk = $this->output->get($p, false);
+            $s .= $chunk;
+        }
+        if (!strstr($s, "#_")) {
             return;
         }
-        $is_special = preg_match("~^#_~", $v);
-        if ($is_special) {
-            $this->has_special_rules = true;
+        $parts = null;
+        if (!preg_match_all("~[\.\s\#]+[^\.\s\#]+~s", $s, $parts)) {
+            return;
         }
-        if ($is_special || preg_match("~^\.~", $v)) {
-            $el = clone $el;
-            $parts = preg_split("~(\.|_+[^_]+)~", $v, null, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
-            if ($parts[0] === '.') {
-                array_shift($parts);
-                $block_name = array_shift($parts);
-                $this->addBlock(
-                    $block_name,
-                    $el,
-                    isset($parts[0]) && preg_match("~^__(.+)~", $parts[0])
-                );
-            } elseif ($parts[0] === '#') {
-                array_shift($parts);
-            }
-            if (count($parts) > 0) {
+        
+        foreach ($parts[0] as $part) {
+            $this->pushPart($part);
+        }
+        $this->has_special_rules = true;
+    }
+    
+    public function pushPart($v) 
+    {
+        $combinator = preg_match("~^\s+~", $v) ? ' ' : '';
+        $v = trim($v);
+        
+        $is_special = preg_match("~^#_~", $v);
+
+        if (!$is_special && !preg_match("~^\.~", $v)) {
+            $this->stack []= array(
+                'combinator' => $combinator,
+                'value' => $v
+            );
+            return;
+        }
+           
+        $parts = preg_split("~(\.|_+[^_]+)~", $v, null, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
+        if ($parts[0] === '.') {
+            array_shift($parts);
+            $block_name = array_shift($parts);
+            $this->addBlock(
+                $block_name,
+                $combinator
+            );
+            $combinator = '';
+        } elseif ($parts[0] === '#') {
+            array_shift($parts);
+        }
+        if (count($parts) > 0) {
+            $part = array_shift($parts);
+            $el_name = null;
+            $mod_name = null;
+            if (preg_match("~^__(.+)~", $part, $el_name)) {
+                $this->addElement($el_name[1], $combinator);
                 $part = array_shift($parts);
-                if (preg_match("~^__(.+)~", $part, $el_name)) {
-                    $this->addElement($el_name[1], $el);
-                    $part = array_shift($parts);
-                }
-                if (preg_match("~^_(.+)~", $part, $mod_name)) {
-                    $mod_name = $mod_name[1];
-                    if (count($parts) > 0) {
-                        $mod_val = preg_replace("~^_~", '', $parts[0]);
-                    } else {
-                        $mod_val = true;
-                    }
-                    $this->setMod($mod_name, $mod_val, $el);
-                }
             }
-        } else {
-            $this->stack []= $el;
+            if (preg_match("~^_(.+)~", $part, $mod_name)) {
+                $mod_name = $mod_name[1];
+                if (count($parts) > 0) {
+                    $mod_val = preg_replace("~^_~", '', $parts[0]);
+                } else {
+                    $mod_val = true;
+                }
+                $this->setMod($mod_name, $mod_val);
+            }
         }
     }
 
     protected $c_block = null;
     protected $last_bem_index = null;
 
-    public function addBlock($name, $el, $is_transparent)
+    public function addBlock($name, $combinator)
     {
         $this->c_block = $name;
         $this->stack []= array(
+            'combinator' => $combinator,
             'name' => $name,
-            'is_transparent' => $is_transparent, // true if block added together with element
-            'el' => $el,
             'type' => 'block',
             'mods' => array()
         );
         $this->last_bem_index = count($this->stack) - 1;
     }
 
-    public function addElement($name, $el)
+    public function addElement($name, $combinator = '')
     {
         $this->stack []= array(
             'name' => $this->c_block.'__'.$name,
-            'el' => $el,
+            'combinator' => $combinator,
             'type' => 'element',
             'mods' => array()
         );
         $this->last_bem_index = count($this->stack) - 1;
     }
 
-    public function setMod($name, $value, $el)
+    public function setMod($name, $value)
     {
-        $this->stack[ $this->last_bem_index ]['mods'][]= array($name, $value, $el);
+        $this->stack[ $this->last_bem_index ]['mods'][]= array($name, $value);
     }
 
     protected static function getModSelector($mod, $base)
     {
         return $base.'_'.$mod[0].($mod[1] === true ? '' : '_'.$mod[1]);
     }
-
+    
     public function getPath()
     {
-        $res = array();
-        foreach ($this->stack as $level) {
-            // real less token
-            if (!is_array($level)) {
-                $res []= $level;
+        $res = '';
+        foreach ($this->stack as $num => $level) {
+            $res .= $level['combinator'];
+            if (isset($level['value'])) {
+                $res .= $level['value'];
                 continue;
             }
-            $base = '.'.$level['name'];
-            $first_mod = array_shift($level['mods']);
-            $level_el = $level['el'];
-            if ($first_mod) {
-                $level_combinator = $level_el->combinator;
-                if ($first_mod) {
-                    $first_mod_el = $first_mod[2];
-                    $first_mod_el->value = self::getModSelector($first_mod, $base);
-                    $first_mod_el->combinator = $level_combinator;
-                    $res []= $first_mod_el;
-                }
-                foreach ($level['mods'] as $mod) {
-                    $mod_el = $mod[2];
-                    $mod_el->value = self::getModSelector($mod, $base);
-                    $mod_el->combinator = '';
-                    $res []= $mod_el;
-                }
-            } else {
-                if (!isset($level['is_transparent']) || !$level['is_transparent']) {
-                    $level_el->value = $base;
-                    $res []= $level_el;
+            if ($level['type'] === 'block' && count($level['mods']) === 0 && isset($this->stack[$num + 1]) ) {
+                $next = $this->stack[$num + 1];
+                if (isset($next['type']) && $next['type'] === 'element') {
+                    continue;
                 }
             }
+            $base = '.'.$level['name'];
+            $res .= $base;
+            foreach ($level['mods'] as $mod_num => $mod) {
+                $res .= self::getModSelector($mod, $mod_num > 0 ? $base : '');
+            }
         }
-        return $res;
+        $el = new \Less_Tree_Element('', trim($res));
+        $sel = new \Less_Tree_Selector(array($el));
+        return array($sel);
     }
 }

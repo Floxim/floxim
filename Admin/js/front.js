@@ -117,15 +117,18 @@ fx_front.prototype.handle_mouseover = function(e) {
     if (!$fx.front.is_selectable(this)) {
         return;
     }
-    var node = $(this);
-    if (node.hasClass('fx_selected')) {
+    var $node = $(this);
+    if ($node.closest('.fx_is_moving').length > 0) {
+        return;
+    }
+    if ($node.hasClass('fx_selected')) {
         e.fx_hilight_done = true;
         return;
     } 
     if (
         // @todo: fix make_content_editable for bound-to-entity vars
         //!$fx.front.is_selectable(this) || 
-        node.closest('.fx_entity_adder_placeholder').length 
+        $node.closest('.fx_entity_adder_placeholder').length 
     ) {
         return;
     }
@@ -144,21 +147,21 @@ fx_front.prototype.handle_mouseover = function(e) {
     
     setTimeout(
         function() {
-            if ($fx.front.c_hover !== node.get(0)) {
+            if ($fx.front.c_hover !== $node.get(0)) {
                 return;
             }
-            if (node.hasClass('fx_selected')) {
+            if ($node.hasClass('fx_selected')) {
                 return;
             }
             if ($fx.front.hilight_disabled) {
                 return false;
             }
-            $fx.front.last_hover_node = node[0];
-            if (!node.hasClass('fx_hilight_hover') && node.closest('.fx_infoblock_disabled').length === 0) {
+            $fx.front.last_hover_node = $node[0];
+            if (!$node.hasClass('fx_hilight_hover') && $node.closest('.fx_infoblock_disabled').length === 0) {
                 $('.fx_hilight_hover').removeClass('fx_hilight_hover');
-                node.addClass('fx_hilight_hover');
-                if (node.closest('.fx_is_moving').length === 0) {
-                    $fx.front.outline_block(node, 'hover', 300);
+                $node.addClass('fx_hilight_hover');
+                if ($node.closest('.fx_is_moving').length === 0) {
+                    $fx.front.outline_block($node, 'hover', 300);
                 }
                 if (make_content_editable) {
                     $editable.addClass('fx_var_editable').attr('contenteditable', 'true');
@@ -167,19 +170,19 @@ fx_front.prototype.handle_mouseover = function(e) {
         },
         is_hover_parent ? 300 : 30
     );
-    node.one('mouseout.fx_front_mouseout', function() {
+    $node.one('mouseout.fx_front_mouseout', function() {
         $fx.front.c_hover = null;
-        if (node.closest('.fx_selected').length > 0) {
+        if ($node.closest('.fx_selected').length > 0) {
             return false;
         }
         setTimeout(
             function() {
-                if (node.closest('.fx_selected').length > 0) {
+                if ($node.closest('.fx_selected').length > 0) {
                     return false;
                 }
-                if ($fx.front.c_hover !== node[0]) {
-                    node.removeClass('fx_hilight_hover');
-                    $fx.front.outline_block_off(node, 100);
+                if ($fx.front.c_hover !== $node[0]) {
+                    $node.removeClass('fx_hilight_hover');
+                    $fx.front.outline_block_off($node, 100);
                     $editable.removeClass('fx_var_editable').attr('contenteditable', null);
                 }
             },
@@ -368,8 +371,8 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
     var $placeholder_pre = $placeholder.prev().first(),
         placeholder_meta = $placeholder.data('fx_entity_meta');
     
-    var speed = 300;
-    var null_size = {width:'',height:''};
+    var speed = 500;
+    var null_size = {width:'',height:'','min-width':''};
     
     if (placeholder_meta.add_to_top) {
         $rel_node = $placeholder_parent.find('.fx_entity').first();
@@ -409,6 +412,7 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
             height: $placeholder.height() - 1,
             width: $placeholder.width() - 1
         };
+        size['min-width'] = size.width;
         return size;
     }
     
@@ -526,9 +530,12 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
         
         var initial_style_att = $placeholder.attr('style');
         
-        $placeholder
-          .css({width:0,height:0})
-          .animate(
+        $placeholder.css({width:0,height:0, 'min-width':0});
+        if (placeholder_meta.replace_last) {
+            var $last_entity = $placeholder.parent().find('>.fx_entity:not(.fx_entity_adder_placeholder)').last();
+            $last_entity.addClass('fx_entity_last_hidden');
+        }
+        $placeholder.animate(
             target_size,
             speed,
             null,
@@ -669,8 +676,16 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
                 if (block_was_hidden) {
                     $hidden_block.addClass('fx_hidden_placeholded');
                 }
+                
+                if (placeholder_meta.replace_last) {
+                    var $last_entity = $placeholder.parent().find('>.fx_entity_last_hidden');
+                    $last_entity.removeClass('fx_entity_last_hidden');
+                }
+                
                 $placeholder.trigger('fx_after_hide_adder_placeholder');
+                
                 $placeholder.remove();
+                
                 $fx.front.enable_hilight();
             }
         );
@@ -1804,8 +1819,18 @@ fx_front.prototype.get_list_orientation = function($entities) {
                     '</'+tag+'>');
         $c_entity.after($clone);
         $entities_visible = $entities_visible.add($clone);
+    } else {
+        var $entities_sorted = $([]),
+            $children = $entities_visible.first().parent().children();
+        
+        $children.each ( function() {
+            if ( $(this).is($entities_visible) ) {
+                $entities_sorted = $entities_sorted.add( $(this) );
+            }
+        });
+        $entities_visible = $entities_sorted;
+        
     }
-    
     $entities_visible.each(function()  {
         var c_rect = this.getBoundingClientRect();
         if (prev_rect === null) {

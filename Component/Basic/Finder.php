@@ -351,38 +351,54 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
         
         $com = $this->getComponent();
         
-        $priority_field = $com->getFieldByKeyword('priority');
+        $priority_field = $com->getFieldByKeyword('priority', true);
         
         $base_table = array_shift($tables);
         $root_set = $set[$base_table];
+        
         $q = "INSERT INTO `{{" . $base_table . "}}` ";
-        if ($priority_field && !isset($data['priority'])) {
-            $q .= ' ( `priority`, ' . join(", ", array_keys($root_set)) . ') ';
-            $q .= ' SELECT MAX(`priority`)+1, ';
-            $q .= join(", ", $root_set);
-            $q .= ' FROM {{' . $base_table . '}}';
-        } else {
-            $q .= "SET " . $this->compileSetStatement($root_set);
+        
+        $auto_priority = $priority_field && !isset($data['priority']);
+        
+        if ($auto_priority) {
+            $root_set = array_reverse($root_set, true);
+            $root_set['`priority`'] = 'SELECT MAX(`priority`) + 1';
+            $root_set = array_reverse($root_set, true);
         }
-
+        
+        $q .= '( '.join(', ', array_keys($root_set)).' ) ';
+        
+        if (!$auto_priority) {
+            $q .= 'VALUES (';
+        }
+        $q .= join(', ', $root_set);
+        
+        if ($auto_priority) {
+            $q .= ' FROM {{'.$base_table.'}}';
+        } else {
+            $q .= ')';
+        }
+        
         $tables_inserted = array();
 
         $q_done = fx::db()->query($q);
         $id = fx::db()->insertId();
-        if ($q_done) {
-            // remember, whatever table has inserted
-            $tables_inserted [] = $base_table;
-        } else {
+        
+        if (!$q_done) {
             return false;
         }
+        
+        $tables_inserted [] = $base_table;
 
         foreach ($tables as $table) {
 
             $table_set = isset($set[$table]) ? $set[$table] : array();
 
             $table_set['`id`'] = "'" . $id . "'";
-            $q = "INSERT INTO `{{" . $table . "}}` SET " . $this->compileSetStatement($table_set);
-
+            
+            $q = "INSERT INTO `{{".$table."}}` (".join(', ', array_keys($table_set)).') ';
+            $q .= 'VALUES ('.join(', ', $table_set).')';
+            
             $q_done = fx::db()->query($q);
             if ($q_done) {
                 // remember, whatever table has inserted
@@ -398,7 +414,7 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
         }
         return $id;
     }
-
+    
     protected function setStatement($data)
     {
         $res = array();

@@ -5,6 +5,7 @@ namespace Floxim\Floxim\System;
 class Config
 {
     private $config = array(
+        'db.driver'                  => 'mysql',
         'db.prefix'                  => 'fx',
         'db.charset'                 => 'utf8',
         'dev.on'                     => false,
@@ -132,7 +133,14 @@ class Config
                 define("FX_ALLOW_DEBUG", false);
             }
             if (!isset($this->config['db.dsn'])) {
-                $this->config['db.dsn'] = 'mysql:dbname=' . $this->config['db.name'] . ';host=' . $this->config['db.host'];
+                switch ($this->config['db.driver']) {
+                    case 'mysql':
+                        $this->config['db.dsn'] = 'mysql:dbname=' . $this->config['db.name'] . ';host=' . $this->config['db.host'];
+                        break;
+                    case 'sqlite':
+                        $this->config['db.dsn'] = 'sqlite:' . $this->config['db.file'];
+                        break;
+                }
             }
             define('FX_JQUERY_PATH', $this->config['path.jquery']);
             define('FX_JQUERY_PATH_HTTP', $this->config['path.jquery.http']);

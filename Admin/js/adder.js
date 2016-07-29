@@ -6,7 +6,6 @@ fx_front.prototype.get_own_infoblocks = function($node) {
     var infoblocks = [],
         area_node = $node.closest('.fx_area')[0];
     
-    //console.log(area_node, $('.fx_infoblock', $node));
     $('.fx_infoblock', $node).each(function() {
         var ib = this,
             $ib = $(this);
@@ -370,7 +369,6 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
                 css.left = 5;
             } else {
                 css.left = ($line.outerWidth() - $title.outerWidth()) / 2;
-                console.log('set left', css.left);
                 css.top = 5;
             }
         }
@@ -479,6 +477,7 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
         }
         
         var axis = $fx.front.get_list_orientation($entities);
+        
         if (axis === null) {
             if ($entities.length > 0 && $entities.first().outerWidth() > $node.outerWidth() / 2) {
                 axis = 'y';

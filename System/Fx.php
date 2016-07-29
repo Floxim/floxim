@@ -70,9 +70,7 @@ class Fx
         static $db = null;
         if ($db === null) {
             $db = new Db();
-            if ($db) {
-                $db->query("SET NAMES '" . fx::config('db.charset') . "'");
-            } else {
+            if (!$db) {
                 $db = false;
             }
         }
@@ -1209,5 +1207,23 @@ class Fx
     public static function decl($word, $number)
     {
         return fx::util()->getDeclensionByNumber($word, $number);
+    }
+    
+    public static function assets($type = null, $keyword = null, $params = array())
+    {
+        static $bundleManager = null;
+        if (is_null($bundleManager)) {
+            $bundleManager = new \Floxim\Floxim\Asset\Manager();
+        }
+        switch (func_num_args()) {
+            case 0:
+                return $bundleManager;
+            case 1:
+                return $bundleManager->getBundle($type, 'default');
+            case 2:
+                return $bundleManager->getBundle($type, $keyword);
+            case 3:
+                return $bundleManager->getBundle($type, $keyword, $params);
+        }
     }
 }

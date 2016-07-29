@@ -177,7 +177,7 @@ window.$fx = {
                     for (var i = 0; i < js_assets.length; i++) {
                         var asset = js_assets[i];
                         var is_loaded = $.inArray(asset, window.fx_assets_js);
-                        //console.log('sys', asset, is_loaded, window.fx_assets_js);
+                        
                         if (is_loaded !== -1) {
                             continue;
                         }
@@ -352,21 +352,15 @@ window.$fx = {
         };
         $alert.elem('close').click(destroy);
         if (expire) {
-            setTimeout(destroy, expire*1000);
+            var expire_timer = setTimeout(destroy, expire*1000);
+            $alert.one('mouseover', function() {
+                clearTimeout(expire_timer);
+            });
         }
     },
 
     show_status_text: function ( text, status ) { 
-        var $block = $("#fx_admin_status_block");
-        if (!$block.length) {
-            $block = $('<div id="fx_admin_status_block"></div>');
-            $('body').append($block);
-        }
-        $block
-            .attr('class', '')
-            .html("<span>"+text+"</span>")
-            .addClass(status)
-            .fadeIn('slow');
+        this.alert(text, status, 3);
     },
     
     show_error: function(json) {
@@ -375,7 +369,7 @@ window.$fx = {
             errors.push("unknown error");
         } else {
             $.each(json.errors, function(i, e) {
-                errors.push(e.text);
+                errors.push(typeof e === 'string' ? e : e.text);
             });
         }
         $fx.show_status_text(errors.join("<br />"), 'error');
@@ -414,7 +408,20 @@ window.$fx = {
             type: "POST",
             data: data,
             dataType: "JSON",
-            //async: false,
+            success: function(json) {
+                if (json.reload) {
+                    $fx.reload(json.reload);
+                    return;
+                }
+                if (json.status === 'error') {
+                    $fx.show_error(json);
+                    return;
+                }
+                if (callback) {
+                    callback.apply(this, arguments);
+                }
+            },
+            /*
             success: [
                 function(json) {
                     if (json.reload) {
@@ -428,6 +435,7 @@ window.$fx = {
                 },
                 callback
             ],
+            */
             error: function(jqXHR, textStatus, errorThrown) {
                 if ( textStatus === 'parsererror') {
                     $fx.show_status_text( $fx.lang('Server error:') + jqXHR.responseText, 'error');

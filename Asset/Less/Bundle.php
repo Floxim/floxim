@@ -5,22 +5,28 @@ namespace Floxim\Floxim\Asset\Less;
 use Floxim\Floxim\System\Fx as fx;
 
 class Bundle extends \Floxim\Floxim\Asset\Bundle {
+    
     protected $type = 'css';
+    protected $extension = 'css';
 
     public function __construct($keyword, $params = array())
     {
+        
+        if (isset($params['namespace'])) {
+            $this->meta['namespace'] = $params['namespace'];
+            unset($params['namespace']);
+        }
+        
         parent::__construct($keyword, $params);
         /*
          * @todo: replace hardcoded path to vars.less with counted value
          */
-        if ($keyword === 'default') {
-            $this->push($this->getCommonLessFiles());
-        }
+        $this->push($this->getCommonLessFiles());
     }
 
-    protected function getCommonLessFiles()
+    public function getCommonLessFiles()
     {
-        return array(
+        return $this->keyword === 'admin' ? array() : array(
             fx::path('/theme/Floxim/Basic/vars.less')
         );
     }
@@ -43,11 +49,19 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
                 $options
             );
         }
+        
         $parser = new \Less_Parser($options);
         if (isset($options['files'])) {
             $files = $options['files'];
         } else {
-            $files = array_unique($this->files);
+            $files = array();
+            foreach ($this->files as $file) {
+                if (!is_string($file)) {
+                    continue;
+                }
+                $files[] = fx::path($file);
+            }
+            $files = array_unique($files);
         }
         
         foreach ($files as $f) {
@@ -65,6 +79,7 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
     
     public function getBundleContent() {
         $is_admin = $this->keyword === 'admin';
+        $is_default = $this->keyword === 'default';
         
         $options = array( );
         
@@ -77,6 +92,8 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
         }
         
         $parser = $this->startParser($options);
+        
+        $res = '';
 
         try {
             if (!$is_admin) {
@@ -84,14 +101,29 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
                 $parser->ModifyVars($less_vars);
             }
             $css = $parser->getCss();
-            if (!$is_admin) {
+            // collect common vars (colors, fonts etc.) for "theme settings" dialog
+            if ($is_default) {
                 $this->meta['vars'] = $meta_parser->getVars();
+            } 
+            // collect meta for "style settings" dialog
+            elseif (!$is_admin) {
                 $this->meta['styles'] = $meta_parser->getStyles();
+                //$meta_parser->generateExportFiles();
             }
-            return $css;
+            $res = $css;
         } catch (\Less_Exception_Compiler $e) {
             fx::log($e, fx::debug()->backtrace(), $parser);
         }
+        foreach ($this->files as $f) {
+            $sub_bundle = $this->getSubBundle($f);
+            if ($sub_bundle instanceof Bundle) {
+                if (!$sub_bundle->isFresh()) {
+                    $sub_bundle->save();
+                }
+                $res .= file_get_contents($sub_bundle->getFilePath());
+            }
+        }
+        return $res;
     }
     
     protected function getLayoutVars()
@@ -102,79 +134,20 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
                 $vars[$k] = '"'.trim($v, '"').'"';
             }
         }
+        if (isset($this->meta['namespace'])) {
+            $vars['namespace'] = $this->meta['namespace'];
+        }
         return $vars;
     }
 
-    public function getStyle($block, $style) {
-        if (!isset($this->meta['styles']) || !is_array($this->meta['styles'])) {
-            return;
-        }
-        foreach ($this->meta['styles'] as $c_style) {
-            if ($c_style['keyword'] === $block.'_style_'.$style) {
-                return $c_style;
-            }
-        }
-    }
-    
     protected static function minifyLess($less)
     {
         $res = preg_replace("~/\*.+?\*/~is", '', $less);
+        $res = preg_replace("~^//[^\r\n]+~m", '', $res);
+        //$res = preg_replace("~\s+~", ' ', $res);
         return $res;
     }
 
-    public function getStyleTweakerLess($style)
-    {
-        $block = $style[0];
-        $style_name = $style[1];
-        $style_meta = $this->getStyle($block, $style_name);
-        
-        $res = '';
-        foreach ($this->getCommonLessFiles() as $f) {
-            $res .= self::minifyLess(file_get_contents($f))."\n";
-        }
-        $file_data = self::minifyLess(file_get_contents($style_meta['file']));
-        
-        // quick & dirty replace mixin call
-        $file_data = preg_replace("~\.".$block.'_style_'.$style_name."\s*\{.+?\}~is", '', $file_data);
-        
-        foreach ($this->getLayoutVars()  as $var => $val) {
-            $res .= '@'.$var.':'.$val.";\n";
-        }
-        $res .= $file_data;
-        return $res;
-        /*
-        $options = array(
-            'strictMath' => true,
-            'files' => array(
-                $style_meta['file']
-            ),
-            'plugins' => array(
-                new Tweaker\Style\Generator($vars, $style),
-                new Tweaker\PostProcessor(),
-                new Bem\Processor()
-            )
-        );
-
-        $parser = $this->startParser($options);
-        try {
-
-            $res = $parser->getCss();
-            fx::cdebug($res);
-            foreach ($this->getLayoutVars()  as $var => $val) {
-                $res .= '@'.$var.':'.$val.";\n";
-            }
-            $commons = '';
-            foreach ($this->getCommonLessFiles() as $f) {
-                $commons .= file_get_contents($f)."\n";
-            }
-            $commons = preg_replace("~/\*.*?\*"."/~s", '', $commons);
-            $res = $commons . $res;
-            return $res;
-        } catch (\Exception $ex) {
-            fx::cdebug($ex);
-        }
-        */
-    }
     
     public function getTweakerLess()
     {
@@ -206,24 +179,6 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
     protected function getTweakLessPath()
     {
         return $this->getFilePath().'.tweak';
-    }
-
-    protected function getStyleTweakerLessPath($style)
-    {
-        if (is_array($style)) {
-            $style = $style[0].'_style_'.$style[1];
-        }
-        return $this->getFilePath().'-'.$style.'.tweak';
-    }
-
-    public function getStyleTweakerLessFile($style)
-    {
-        $file_path = $this->getStyleTweakerLessPath($style);
-        if (!file_exists($file_path)) {
-            $tweak = $this->getStyleTweakerLess($style);
-            file_put_contents($file_path, $tweak);
-        }
-        return fx::path()->http($file_path);
     }
 
     

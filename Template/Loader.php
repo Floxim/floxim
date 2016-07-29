@@ -228,6 +228,30 @@ class Loader
     
     protected static $imported_classes = array();
     
+    protected static $registered_names = array();
+    
+    /*
+     * Make template availble for search
+     */
+    public static function register($tpl_name)
+    {
+        if (is_array($tpl_name)) {
+            foreach ($tpl_name as $real_name) {
+                self::register($real_name);
+            }
+            return;
+        }
+        self::$registered_names []= $tpl_name;
+    }
+    
+    protected static function importRegistered()
+    {
+        foreach (self::$registered_names as $name) {
+            self::import($name);
+        }
+        self::$registered_names = array();
+    }
+    
     public static function import($tpl_name)
     {
         $is_aliased = preg_match("~^\@(.+)~", $tpl_name, $real_name);
@@ -261,6 +285,7 @@ class Loader
     
     public function getImportedClasses()
     {
+        self::importRegistered();
         return self::$imported_classes;
     }
     
@@ -384,7 +409,7 @@ class Loader
 
     public function isFresh($target_path)
     {
-
+        
         $cache = fx::config('templates.cache');
         
         // template caching is disabled

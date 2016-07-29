@@ -187,9 +187,10 @@ abstract class Finder
     {
         $args = func_get_args();
         if (count($args) === 1) {
-            $this->limit = array(
+            $limit = $args[0];
+            $this->limit = is_null($limit) ? null : array(
                 'offset' => 0,
-                'count' => (int) $args[0]
+                'count' => (int) $limit
             );
         } else {
             $this->limit = array(
@@ -277,10 +278,10 @@ abstract class Finder
             } else {
                 $type = 'RAW';
                 if ( strtolower($field) === 'false' || $field === false) {
-                    $value = 'FALSE';
+                    $value = '0';
                     $field = null;
                 } elseif ( strtolower($field) === 'true' || $field === true ) {
-                    $value = 'TRUE';
+                    $value = '1';
                     $field = null;
                 }
             }
@@ -525,7 +526,7 @@ abstract class Finder
         }
         $base_table = array_shift($tables);
         $q = 'SELECT ';
-        if ($this->calc_found_rows) {
+        if ($this->calc_found_rows && fx::db()->getDriver() !== 'sqlite') {
             $q .= 'SQL_CALC_FOUND_ROWS ';
         }
 
@@ -728,7 +729,7 @@ abstract class Finder
                 $parts [] = $this->makeCond($sub_cond, $base_table);
             }
             if (count($parts) == 0) {
-                return ' FALSE';
+                return ' 0';
             }
             return " (" . join(" ".$op." ", $parts) . ") ";
         }
@@ -763,7 +764,7 @@ abstract class Finder
         
         if (is_array($value)) {
             if (count($value) == 0) {
-                return 'FALSE';
+                return '0';
             }
             if ($type == '=') {
                 $type = 'IN';
@@ -795,7 +796,14 @@ abstract class Finder
         $res = fx::db()->getResults($query);
         
         if ($this->calc_found_rows) {
-            $this->found_rows = fx::db()->getVar('SELECT FOUND_ROWS()');
+            if (fx::db()->getDriver() === 'sqlite') {
+                $counter = clone $this;
+                $counter->select(null)->select('count(*)')->limit(null);
+                $this->found_rows = fx::db()->getVar( $counter->buildQuery() );
+                fx::log($counter->buildQuery(), $this->found_rows );
+            } else {
+                $this->found_rows = fx::db()->getVar('SELECT FOUND_ROWS()');
+            }
         }
 
         $objs = array();
@@ -1069,12 +1077,14 @@ abstract class Finder
 
     public function insert($data)
     {
-        $set = $this->setStatement($data);
-        if ($set) {
-            fx::db()->query("INSERT INTO `{{" . static::getTable() . "}}` SET " . join(",", $set));
+        $insert = $this->insertStatement($data);
+        $id = null;
+        if ($insert) {
+            $query = "INSERT INTO `{{" . static::getTable() . "}}` (".join(', ', $insert['into']).") VALUES (".join(', ', $insert['values']).')';
+            //fx::db()->query("INSERT INTO `{{" . static::getTable() . "}}` SET " . join(",", $set));
+            fx::db()->query($query);
             $id = fx::db()->insertId();
         }
-
         return $id;
     }
 
@@ -1178,6 +1188,38 @@ abstract class Finder
         }
 
         return $set;
+    }
+    
+    protected function insertStatement($data)
+    {
+
+        $cols = $this->getColumns();
+
+        $insert = array(
+            'into' => array(),
+            'values' => array()
+        );
+        
+        $encoded_fields = $this->getNonScalarFields();
+
+        foreach ($data as $k => $v) {
+            if (!in_array($k, $cols)) {
+                continue;
+            }
+            if (in_array($k, $encoded_fields)) {
+                $v = json_encode($v);
+            }
+            if ($v === null) {
+                $str = 'NULL';
+            } else {
+                $str = "'" . fx::db()->escape($v) . "' ";
+            }
+            
+            $insert['into'] []= "`" . fx::db()->escape($k) . "`";
+            $insert['values'] []= $str;
+        }
+
+        return $insert;
     }
 
     public static $isStaticCacheUsed = false;
@@ -1356,7 +1398,7 @@ abstract class Finder
             if ($scope === 'context') {
                 $is_true = \Floxim\Floxim\Component\Scope\Entity::checkCondition($cond);
                 $res = array(
-                    $is_true ? 'TRUE' : 'FALSE',
+                    $is_true ? '1' : '0',
                     null,
                     'RAW'
                 );
