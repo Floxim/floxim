@@ -60,7 +60,8 @@ class Config
         ini_set("session.gc_probability", "1");
         ini_set("session.gc_maxlifetime", "1800");
         ini_set("session.hash_bits_per_character", "5");
-        ini_set("mbstring.internal_encoding", "UTF-8");
+        //ini_set("mbstring.internal_encoding", "UTF-8");
+        ini_set('default_charset', 'UTF-8');
         ini_set("session.name", ini_get("session.hash_bits_per_character") >= 5 ? "sid" : "ced");
         
         if (!defined('CMS_ROOT')) {

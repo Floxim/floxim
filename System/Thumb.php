@@ -769,7 +769,7 @@ class Thumb
         return $this;
     }
     
-    public function readConfigFromPathString($config)
+    public static function readConfigFromPathString($config)
     {
         $config = str_replace(".", ",", $config);
         $config  = str_replace("-", ':', $config);
