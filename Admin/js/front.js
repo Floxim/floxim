@@ -2513,7 +2513,7 @@ fx_front.prototype.extract_infoblock_visual_fields = function($ib_node, $form) {
                 $rel_field = $field;
             });
         });
-        $form.trigger('fx_infoblock_visual_fields_updated');
+        $form.trigger('fx_infoblock_visual_fields_updated').resize();
     });
 };
 

@@ -95,10 +95,26 @@ class Template
         return '';
     }
     
+    protected $template_param_handlers = array();
+    
+    public function pushTemplateParamHandler($handler) 
+    {
+        $this->template_param_handlers[]= $handler;
+    }
+    
+    public function popTemplateParamHandler() 
+    {
+        array_pop($this->template_param_handlers);
+    }
+    
     protected $template_params = array();
     
     public function registerParam($name, $data)
     {
+        if (count($this->template_param_handlers) > 0) {
+            end($this->template_param_handlers)->registerParam($name, $data, $this->context);
+            return;
+        }
         if ($this->parent) {
             $this->parent->registerParam($name, $data);
             return;
@@ -553,132 +569,6 @@ class Template
         return $res;
     }
     
-    /*
-
-    protected static $styles_cache = array(
-        'styles' => array(),
-        'values' => array()
-    );
-
-    public function collectStyles($mask)
-    {
-        if (isset(self::$styles_cache['styles'][$mask])) {
-            return self::$styles_cache['styles'][$mask];
-        }
-
-        $block = preg_replace("~_style_.*$~", '', $mask);
-
-        $dirs = array_values($this->getTemplateSourceDirs());
-        $layout_template = fx::env()->getLayoutTemplate();
-        $theme_dirs = $layout_template->getTemplateSourceDirs();
-        foreach ($theme_dirs as $td) {
-            $dirs []= $td;
-        }
-        $res = array();
-        $rex = "~".str_replace("*", "([a-z0-9\-]+)", $mask)."~";
-
-
-
-        $user_styles = fx::data('style_variant')->where('style', $block.'_%', 'like')->all()->group('style');
-
-        foreach ($dirs as $dir) {
-            $dir_mask = fx::path($dir.'/'.$mask);
-            $files = glob($dir_mask);
-            if (!$files) {
-                continue;
-            }
-            foreach ($files as $f) {
-                $style_keyword = null;
-                preg_match($rex, $f, $style_keyword);
-                $style_keyword = $style_keyword[1];
-                if (!isset($res[$style_keyword])) {
-                    $res[$style_keyword] = array(
-                        'name' => $style_keyword,
-                        'keyword' => $style_keyword,
-                        'files' => array()
-                    );
-                }
-                $res[$style_keyword]['files'][]= $f;
-                if (isset($user_styles[$block.'_'.$style_keyword])) {
-                    foreach ($user_styles[$block.'_'.$style_keyword] as $c_user_style) {
-                        $c_user_style_keyword = $c_user_style->getStyleKeyword();
-                        $c_user_style_name = $c_user_style['name'];
-                        if (!$c_user_style_name) {
-                            $c_user_style_name = '#'.$c_user_style['id'];
-                        }
-                        $res[$c_user_style_keyword] = array(
-                            'name' => ' -- '.$c_user_style_name,
-                            'keyword' => $c_user_style_keyword,
-                            'files' => array(
-                                $f,
-                                $c_user_style->getStyleLessFile()
-                            ),
-                            'id' => $c_user_style['id']
-                        );
-                    }
-                }
-            }
-        }
-        self::$styles_cache['styles'][$mask] = $res;
-        return $res;
-    }
-
-    protected function isStyleTweakable($params)
-    {
-        if (isset($params['id'])) {
-            return true;
-        }
-        foreach ($params['files'] as $file) {
-            $c = 0;
-            $fh = fopen($file, 'r');
-            $file_data = '';
-            while ($c < 5 && !feof($fh)) {
-                $file_data .= fgets($fh);
-                $c++;
-            }
-            if (preg_match("~/\*[^\*]+name\s*:~s", $file_data)) {
-                return true;
-            }
-        }
-        return false;
-    }
-    
-    public function collectStyleValues($mask)
-    {
-        if (isset(self::$styles_cache['values'][$mask])) {
-            return self::$styles_cache['values'][$mask];
-        }
-        $res = $this->collectStyles($mask);
-        $vals = array();
-        foreach ($res as $style_info) {
-            $keyword = $style_info['keyword'];
-            if (!isset($style_info['id'])) {
-                foreach ($style_info['files'] as $f) {
-                    $file_meta = \Floxim\Floxim\Asset\Less\MetaParser::getQuickStyleMeta($f);
-                    if ($file_meta['name']) {
-                        $style_info['name'] = $file_meta['name'];
-                    }
-                    $style_info['is_tweakable'] = isset($file_meta['is_tweakable']) && $file_meta['is_tweakable'];
-                }
-            } else {
-                $style_info['is_tweakable'] = true;
-            }
-            $vals []= array(
-                $keyword,
-                $style_info['name'],
-                array(
-                    'title' => str_replace("*", '', $mask).$keyword,
-                    'is_tweakable' => $style_info['is_tweakable'],
-                    'style_variant_id' => isset($style_info['id']) ? $style_info['id'] : null
-                )
-            );
-        }
-        self::$styles_cache['values'][$mask] = $vals;
-        return $vals;
-    }
-     * 
-     */
-    
     public function addStyleLess($block, $value)
     {
         $bundle_keyword = $block.'_'. str_replace("--", "_", $value);
@@ -690,55 +580,6 @@ class Template
         }
         $export_file = $bundle->getExportFile();
         return $export_file;
-        /*
-        $files = \Floxim\Floxim\Asset\Less\Bundle::getCommonLessFiles();
-        $base = $value;
-        $is_custom = false;
-        $parts = null;
-        $id = null;
-        if (preg_match("~(.+?)--(\d+)~", $value, $parts)) {
-            $base = $parts[1];
-            $id = $parts[2];
-            $is_custom = true;
-        }
-        
-        $default_keyword = $block.'_style_'.$base;
-        
-        $files []= $current_dir.'/'.$default_keyword.'.less';
-        
-        $bundle_keyword = $block.'_'.$base;
-        
-        if ($is_custom) {
-            $bundle_keyword .= '-'.$id;
-        }
-        
-        $bundle = fx::page()->getBundleManager()->getBundle('css', $bundle_keyword);
-        
-        $asset_cache_path = $bundle->getDirPath();
-        $call_file = $asset_cache_path.'/'.$bundle_keyword.'.less';
-        if (! file_exists($call_file) ) {
-            $style_variant = $id ? fx::data('style_variant', $id) : fx::data('style_variant')->create(
-                array(
-                    'style' => $block.'_'.$base
-                )
-            );
-            $less = $style_variant->getStyleLess();
-            fx::files()->writefile($call_file, $less);
-        }
-        $files []= $call_file;
-        
-        $export_file = \Floxim\Floxim\Asset\Less\MetaParser::getExportFilePath($bundle_keyword);
-        
-        
-        $bundle->push( $files );
-        
-        fx::page()->getDefaultCssBundle()->push ( array($bundle) );
-        
-        if (file_exists($export_file)) {
-            return $export_file;
-        }
-         * 
-         */
     }
     
     public static function processYaml($s)
@@ -757,7 +598,6 @@ class Template
         $s = trim($s);
         
         $s = preg_replace("~([\r\n]+)".$space."~", "\$1", $s);
-        fx::cdebug('yamling', $space, $s);
         try {
             $res = Yaml\Yaml::parse($s);
             return $res;

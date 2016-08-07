@@ -44,7 +44,8 @@ class ExpressionParser extends Fsm
     {
         $this->addRule(self::CODE, '`', null, 'startEsc');
         $this->addRule(self::ESC, '`', null, 'endEsc');
-        $this->addRule(array(self::CODE, self::ARR_INDEX, self::VAR_NAME), '~^\$~', null, 'startVar');
+        $this->addRule(array(self::CODE), '~^[\%]~', null, 'startVar');
+        $this->addRule(array(self::CODE, self::ARR_INDEX, self::VAR_NAME), '~^[\$]~', null, 'startVar');
         $this->addRule(array(self::VAR_NAME, self::ARR_INDEX), array('[', '.'), null, 'startArr');
         $this->addRule(
             self::VAR_NAME,
@@ -152,6 +153,9 @@ class ExpressionParser extends Fsm
             $this->curr_node->addChild($var);
         }
         $this->pushStack($var);
+        if ($ch === '%') {
+            $var->is_visual = true;
+        }
         $this->pushState(self::VAR_NAME);
     }
 
@@ -382,7 +386,7 @@ class ExpressionParser extends Fsm
                         if (!is_numeric($var_name)) {
                             $var_name = '"' . $var_name . '"';
                         }
-                        $var = '$context->get(' . $var_name . $context_level . ')';
+                        $var = '$context->get'.($node->is_visual ? 'Visual' : '').'(' . $var_name . $context_level . ')';
                     }
                 } // complex var such as $image_$id
                 else {

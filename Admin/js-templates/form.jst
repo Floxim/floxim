@@ -140,6 +140,9 @@ name="<?=_c.name?>" id="<?=_c.name || _c.id?>"
 <!--[input ? _c.field_type == 'textarea']-->
 <?
 var c_val = _c.value || '';
+if (typeof c_val !== 'string') {
+    c_val = JSON.stringify(c_val, undefined, 2);
+}
 c_val = $t.clear(c_val);
 ?>
 <div class="fx_textarea_container">
@@ -153,6 +156,10 @@ c_val = $t.clear(c_val);
 </div>
 
 <!--jquery-->
+
+if (!_c.wysiwyg && !_c.code) {
+    autosize( $('textarea', html) );
+}
 
 function set_snippet(val) {
     var $temp_container = $('<div />');
@@ -251,8 +258,6 @@ html.find('textarea.fx_code').each( function(){
     };
     var cCodeMirror = CodeMirror.fromTextArea(this, config);
     
-    window.cCodeMirror = cCodeMirror;
-    
     $textarea.data('codemirror', cCodeMirror);
     
     setTimeout(function() {
@@ -267,6 +272,10 @@ html.find('textarea.fx_code').each( function(){
             }
             $container.resize(fix_cm_size);
         }
+        var $tab = $textarea.closest('.fx_tab_data');
+        $tab.on('fx_tab_focus', function()  {
+            cCodeMirror.refresh();
+        });
         cCodeMirror.refresh();
     },50);
 
@@ -281,7 +290,12 @@ html.find('textarea.fx_code').each( function(){
     
     cCodeMirror.on('change', function() {
         cCodeMirror.save();
-        $textarea.trigger('change');
+    })
+    cCodeMirror.on('keydown', function(cm, e) {
+        if (e.which === 13 && (e.metaKey || e.ctrlKey)) {
+            e.preventDefault();
+            $textarea.trigger('change');
+        }
     });
 });
 

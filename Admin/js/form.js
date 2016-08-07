@@ -367,7 +367,7 @@ fx_form = {
 
             $.each(map, function(c_class, $node) {
                 $('.'+c_class+'-active', $node.closest('.'+bl+'__tab_data, .'+bl+'__tab_labels')).removeClass(c_class+'-active');
-                $node.addClass(c_class+'-active');
+                $node.addClass(c_class+'-active').trigger('fx_tab_focus');
             });
             $('.'+c_label+' .fx_icon').addClass('fx_icon-clickable');
             $('.'+c_label+'-active .fx_icon').removeClass('fx_icon-clickable');

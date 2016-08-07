@@ -43,7 +43,7 @@ window.$t = {
         };
     },
     
-    add: function(name, tpl, test, priority) {
+    add: function(name, tpl, test, priority, handler) {
         
         if (typeof tpl._test === 'undefined' && typeof test === 'function') {
             tpl._test = test;
@@ -51,6 +51,10 @@ window.$t = {
         
         if (typeof tpl._priority !== 'number' && typeof priority === 'number') {
             tpl._priority = priority;
+        }
+        
+        if (typeof handler === 'function') {
+            tpl.jquery = handler;
         }
         
         // for example, form.fields.text

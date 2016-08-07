@@ -19,7 +19,6 @@ class Loop implements \ArrayAccess
             $alias = 'item';
         }
         $this->_is_collection = $items instanceof System\Collection;
-
         $this->loop = $this;
         $this->looped = $items;
         $this->total = count($items);
@@ -95,7 +94,7 @@ class Loop implements \ArrayAccess
 
     public function offsetSet($offset, $value)
     {
-        ;
+        $this->$offset = $value;
     }
 
     public function offsetExists($offset)
@@ -107,5 +106,25 @@ class Loop implements \ArrayAccess
     public function offsetUnset($offset)
     {
         ;
+    }
+    
+    protected $loop_stop_callbacks = array();
+    
+    public function onStop($callback) 
+    {
+        if (!is_callable($callback)) {
+            throw new Exception('Invalid loop callback: '.$callback);
+        }
+        $this->loop_stop_callbacks []= $callback;
+    }
+    
+    /**
+     * Called after the loop is finished, triggers callbacks
+     */
+    public function stop()
+    {
+        foreach ($this->loop_stop_callbacks as $cb) {
+            $cb();
+        }
     }
 }

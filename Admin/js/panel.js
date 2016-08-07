@@ -85,7 +85,12 @@
                 data.fields = [];
             }
             
-            data.fields.push({type:'hidden', name:'_base_url', value:document.location.href});
+            for (var i = 0; i < data.fields.length; i++) {
+                if (data.fields[i].name === 'action') {
+                    data.fields.push({type:'hidden', name:'_base_url', value:document.location.href});
+                    break;
+                }
+            }
             
             c_panel.current_panel_type = 'side';
             c_panel.current_panel_style = params.style;
@@ -121,10 +126,13 @@
             }
             
             if (params.onsubmit) {
-                data.onsubmit = [
-                    params.onsubmit,
-                    $fx_form.submit_handler
-                ];
+               data.onsubmit = function(e) {
+                   var res = params.onsubmit(e);
+                   if (res === false || e.isDefaultPrevented()) {
+                       return;
+                   }
+                   return $fx_form.submit_handler(e);
+               };
             }
             
             c_panel.current_params = params;
@@ -333,10 +341,10 @@
             }
         };
         
+        this.panel_height_queue = [];
+        
         this.animate_panel_height = function(panel_height, callback) {
-            if (this.is_moving) {
-                return;
-            }
+            
             
             var max_height = Math.round(
                 $(window).height() * 0.75
@@ -344,10 +352,16 @@
             var c_panel = front_panel.get_current_panel(),
                 $top_bar = c_panel.$container,
                 $form = $('form', $top_bar);
-            
+        
             if (c_panel.current_panel_type !== 'top') {
                 return;
             }
+            
+            if (this.is_moving) {
+                front_panel.panel_height_queue.push(1);
+                return;
+            }
+            
             var form_height = $form.outerHeight();
             
             if (typeof panel_height === 'undefined' || panel_height === null) {
@@ -378,9 +392,9 @@
                     duration: duration,
                     complete: function() {
                         $fx.front_panel.is_moving = false;
-                        setTimeout(function() {
-                            //$fx.front.scrollTo( $($fx.front.get_selected_item()) );
-                        }, 100);
+                        if ($fx.front_panel.panel_height_queue.pop()) {
+                            //$fx.front_panel.animate_panel_height();
+                        }
                     }
                 }
             );

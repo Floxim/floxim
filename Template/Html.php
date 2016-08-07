@@ -83,6 +83,8 @@ class Html
                 }
                 $n->removeAttribute('fx:raw');
             }
+            
+            /*
             if ($n->name == 'meta' && ($layout_id = $n->getAttribute('fx:layout'))) {
                 $layout_name = $n->getAttribute('fx:name');
                 $tpl_tag = '{template id="' . $layout_id . '" name="' . $layout_name . '" of="layout:show"}';
@@ -103,6 +105,7 @@ class Html
                 $n->remove();
                 return;
             }
+            
             if (($fx_replace = $n->getAttribute('fx:replace'))) {
                 $replace_atts = explode(",", $fx_replace);
                 foreach ($replace_atts as $replace_att) {
@@ -128,6 +131,7 @@ class Html
                     $n->removeAttribute('fx:replace');
                 }
             }
+            
             if (($var_name = $n->getAttribute('fx:var'))) {
                 if (!preg_match("~^[\$\%]~", $var_name)) {
                     $var_name = '%' . $var_name;
@@ -136,7 +140,15 @@ class Html
                 $n->addChild(HtmlToken::create('{/' . $var_name . '}'));
                 $n->removeAttribute('fx:var');
             }
-
+             * 
+             */
+            
+            if ($n->hasAttribute('fx:scope')) {
+                $scope = $n->getAttribute('fx:scope');
+                $scope_start_tag = '{scope mode="start"}'.$scope.'{/scope}';
+                $n->wrap($scope_start_tag, '{scope mode="end" /}');
+                $n->removeAttribute('fx:scope');
+            }
 
             $tpl_id = $n->getAttribute('fx:template');
             $macro_id = $n->getAttribute('fx:macro');

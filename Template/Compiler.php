@@ -55,13 +55,6 @@ class Compiler
      */
     public function compile($tree, $class_name)
     {
-        fx::cdebug(
-            $tree, 
-            $tree->toPlain(), 
-            mb_strlen(json_encode($tree)), 
-            mb_strlen(json_encode($tree->toPlain())),
-            json_decode(json_encode($tree),1)
-        );
         $code = $this->makeCode($tree, $class_name);
         $code = self::addTabs($code);
         if (fx::config('templates.check_php_syntax')) {
@@ -801,7 +794,10 @@ class Compiler
         // to create correct expression for get_var_meta()
         //$ep = new ExpressionParser();
         $ep = self::getExpressionParser();
-        $expr_token = $ep->parse('$' . $token->getProp('id'));
+        
+        $token_is_visual = $token->getProp('var_type') == 'visual';
+        
+        $expr_token = $ep->parse( ($token_is_visual ? '%' : '$') . $token->getProp('id') );
         $expr = $ep->compile($expr_token);
         $var_token = $expr_token->last_child;
         
@@ -809,7 +805,7 @@ class Compiler
 
         $modifiers = $token->getProp('modifiers');
         $token->setProp('modifiers', null);
-        $token_is_visual = $token->getProp('var_type') == 'visual';
+        
 
         $token_type = $token->getProp('type');
         // analyze default value to get token type and wysiwyg linebreaks mode
@@ -838,7 +834,8 @@ class Compiler
         }
 
         // e.g. "name" or "image_".$context->get('id')
-        $var_id = preg_replace('~^\$context->get\(~', '', preg_replace("~\)$~", '', $expr));
+        // @todo: replace with something simple, because varialize() doesn't generate readable names anymore
+        $var_id = preg_replace('~^\$context->get(Visual)?\(~', '', preg_replace("~\)$~", '', $expr));
 
         $has_default = $token->getProp('default') || count($token->getChildren()) > 0;
 
@@ -861,7 +858,6 @@ class Compiler
             }
             
             if ($token_is_file) {
-                //$code .= $this->makeFileCheck($real_val_var, !$has_default);
                 $code .= $this->makeFileCheck($display_val_var, !$has_default);
             }
 
@@ -928,10 +924,10 @@ class Compiler
                     $code .= $this->makeFileCheck($display_val_var, true, true);
                 }
                 if ($token_is_visual) {
-                    $code .= "\n" . '$context->set(' . $var_id . ',  ' . $display_val_var . ");\n";
+                    //$code .= "\n" . '$context->set(' . $var_id . ',  ' . $display_val_var . ");\n";
                 }
             } elseif ($token_is_visual) {
-                $code .= "\n" . '$context->set(' . $var_id . ',  ' . $default . ");\n";
+                //$code .= "\n" . '$context->set(' . $var_id . ',  ' . $default . ");\n";
             }
             $code .= "}\n";
         }
@@ -1374,6 +1370,7 @@ class Compiler
         }
         $code .= $counter_id."++;\n";
         $code .= "}\n"; // close foreach
+        $code .= $loop_id."->stop();\n";
         $code .= "\$context->pop();\n";
         if ($check_traversable) {
             $code .= "}\n";  // close if

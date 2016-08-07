@@ -34,7 +34,6 @@ class ContextFlex extends Context {
                 ), 
             $meta
         );
-        //$this->vars[$l] = array();
         $this->var_props[$l] = $var_props;
         $this->misses[$l] = array();
     }
@@ -115,6 +114,42 @@ class ContextFlex extends Context {
         }
         $this->last_var_level = null;
         return null;
+    }
+    
+    public function getVisual($name = null)
+    {
+        for ($i = $this->level; $i >= 0; $i--) {
+            
+            if (isset($this->misses[$i][$name])) {
+                continue;
+            }
+            if (!is_array($this->stack[$i])) {
+                continue;
+            }
+            if (isset($this->stack[$i][$name])) {
+                $this->last_var_level = $i;
+                return $this->stack[$i][$name];
+            } 
+            $this->misses[$i][$name] = true;
+        }
+        $this->last_var_level = null;
+        return null;
+    }
+    
+    public function getAll($name)
+    {
+        $res = array();
+        for ($i = $this->level; $i >= 0; $i--) {
+            if (isset($this->misses[$i][$name])) {
+                continue;
+            }
+            if (isset($this->stack[$i][$name])) {
+                $res[$i] = $this->stack[$i][$name];
+            } else {
+                $this->misses[$i][$name] = true;
+            }
+        }
+        return $res;
     }
     
     public function getVarMeta($var_name = null, $source = null)

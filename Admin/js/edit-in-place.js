@@ -487,6 +487,9 @@ fx_edit_in_place.prototype.handle_keydown = function(e) {
     if (e.which === 13) {
         var $target = $(e.target),
             $node = $target.closest('.fx_edit_in_place');
+        if ($target.closest('.fx_admin_form').length > 0) {
+            return;
+        }
         if ($node.length) {
             var c_eip = $node.data('edit_in_place');
         } else {
