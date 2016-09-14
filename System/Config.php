@@ -9,6 +9,8 @@ class Config
         'db.prefix'                  => 'fx',
         'db.charset'                 => 'utf8',
         'dev.on'                     => false,
+        'dev.css.minify'             => true,
+        'dev.css.source_map'         => false,
         'CHARSET'                    => 'utf-8',
         'lang.admin'                 => 'en',
         'auth.login_field'           => 'email',

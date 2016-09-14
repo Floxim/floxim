@@ -2,6 +2,8 @@
 
 namespace Floxim\Floxim\Template;
 
+use \Floxim\Floxim\System\Fx as fx;
+
 class HtmlToken
 {
     public $type;
@@ -107,6 +109,51 @@ class HtmlToken
             return null;
         }
         return $index;
+    }
+    
+    public function prettyPrint($level = -1)
+    {
+        $pad = str_repeat("    ", max($level,0));
+        if ($this->name === 'text') {
+            $val = trim($this->source);
+            if (!empty($val)) {
+                $val = $pad.$val."\n";
+            }
+            return $val;
+        }
+        $res = '';
+        $is_tag = $this->name !== 'root' && $this->name !== 'text';
+        $is_double = $is_tag && $this->type !== 'single';
+        
+        if ($is_tag) {
+            $res .= $pad."<".$this->name;
+            $base_len = mb_strlen($res);
+            $att_pad = str_repeat(" ", $base_len+3);
+            $atts = $this->getAttributes();
+            $att_sep = count($atts) > 1 ? "\n".str_repeat(" ", $base_len) : ' ';
+            foreach ($atts as $k => $v) {
+                $v =  trim($v);
+                if ($k === 'class') {
+                    $classes = explode(" ", $v);
+                    if (count($classes) > 1) {
+                        $v = "\n".$att_pad.join("\n".$att_pad, $classes);
+                    }
+                }
+                $res .= $att_sep.$k.'="'.$v.'"';
+            }
+            $res .= ">\n";
+        }
+        
+        if (isset($this->children)) {
+            foreach ($this->children as $child) {
+                $res .= $child->prettyPrint($level+1);
+            }
+        }
+        
+        if ($is_double) {
+            $res .= $pad."</".$this->name.">\n";
+        }
+        return $res;
     }
 
     public function serialize()
@@ -224,6 +271,14 @@ class HtmlToken
             self::$attr_parser = new AttrParser();
         }
         self::$attr_parser->parseAtts($this);
+    }
+    
+    public function getAttributes()
+    {
+        if (!isset($this->attributes)) {
+            $this->parseAttributes();
+        }
+        return $this->attributes;
     }
 
     public function hasAttribute($att_name)

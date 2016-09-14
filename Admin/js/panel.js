@@ -129,7 +129,7 @@
                data.onsubmit = function(e) {
                    var res = params.onsubmit(e);
                    if (res === false || e.isDefaultPrevented()) {
-                       return;
+                       return false;
                    }
                    return $fx_form.submit_handler(e);
                };

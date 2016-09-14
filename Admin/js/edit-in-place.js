@@ -555,6 +555,7 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
                 ) || (
                     content_var.var_type === 'visual' &&
                     content_var.id === meta.id &&
+                    content_var.scope_path === meta.scope_path && 
                     $node.closest('.fx_infoblock').data('fx_infoblock').id === that.ib_meta.id
                 )
             )

@@ -61,6 +61,18 @@ class Page
         return $bundle;
     }
     
+    public function getTempCssBundle()
+    {
+        static $bundle_added = false;
+        $bundle = fx::assets('css', 'temp');
+        if (!$bundle_added) {
+            $bundle->delete();
+            $this->files_css[]= $bundle;
+            $bundle_added = true;
+        }
+        return $bundle;
+    }
+    
     public function addToBundle($files, $bundle_keyword)
     {
         $this->getBundleManager()->addToBundle($files, $bundle_keyword);
@@ -193,7 +205,7 @@ class Page
                 foreach ($template_dir as $c_dir) {
                     $files[]= fx::path()->abs($c_dir.$l);
                 }
-            }else {
+            } else {
                 $files []= $l;
             }
         }
@@ -382,28 +394,14 @@ class Page
         $this->after_body[] = $txt;
     }
 
-    /**
-     * Add assets (js & css) to ajax response via http headers
-     */
-    public function addAssetsAjax()
-    {
-        fx::http()->header('fx_assets_js', $this->files_js);
-        $files_css = array_keys($this->getCssFilesFinal());
-        fx::http()->header('fx_assets_css', $files_css);
-        $inline_styles = $this->getInlineStyles();
-        if ($inline_styles) {
-            fx::http()->header('fx_inline_css', json_encode($inline_styles));
-        }
-    }
-    
     public function ajaxResponse($result)
     {
         $response = array(
             'format' => 'fx-response',
             'response' => $result,
             'js' => $this->files_js,
-            'css' => array_keys($this->getCssFilesFinal()),
-            'inline_css' => $this->getInlineStyles()
+            'css' => array_keys($this->getCssFilesFinal())//,
+            //'inline_css' => $this->getInlineStyles()
         );
         return json_encode($response);
     }
@@ -486,11 +484,12 @@ class Page
 
         $r .= $this->getAssetsCode();
 
+        /*
         $inline_styles = $this->getInlineStyles();
         if ($inline_styles) {
             $r .= '<style type="text/css" class="fx_inline_styles">'.$inline_styles.'</style>';
         }
-
+        */
         
         if (!preg_match("~<head(\s[^>]*?|)>~i", $buffer)) {
             if (preg_match("~<html[^>]*?>~i", $buffer)) {

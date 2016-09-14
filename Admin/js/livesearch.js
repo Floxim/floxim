@@ -134,10 +134,6 @@ window.fx_livesearch = function (node) {
     
     this.Select = function($n) {
         var value = $n.data('value');
-        if ($n.hasClass('add_item')){
-            return;
-        }
-        
         var path = $n.data('path');
         if (!path) {
             var $groups = $n.parent().parents('.search_group'),
@@ -153,7 +149,11 @@ window.fx_livesearch = function (node) {
             livesearch.recountInputWidth();
         } else {
             livesearch.$container.removeClass('livesearch__container_focused');
-            livesearch.$container.focus();
+            if (value.custom) {
+                livesearch.$container.find('.search_item__custom-value input:visible').first().focus();
+            } else {
+                livesearch.$container.focus();
+            }
         }
     };
     
@@ -259,6 +259,7 @@ window.fx_livesearch = function (node) {
     
     // now adding all together
     this.addValue = function(value, path) {
+        
         var     id = value.id,
                 name = value.name,
                 input_name = value.input_name;
@@ -294,15 +295,35 @@ window.fx_livesearch = function (node) {
             res_value = name;
         }
         
+        if (value.custom ) {
+            res_value = value.value;
+        }
+        
         var path_separator = ' <span class="'+bl+'__item-path-separator">&#9657;</span> ';
 
-        var node = $('<div class="'+bl+'__item'+ (!id ? ' '+bl+'__item_empty' : '')+'">'+
-            '<input type="hidden" name="'+input_name+'" value="'+res_value+'" />'+
+        var $node = $('<div class="'+bl+'__item'+ (!id ? ' '+bl+'__item_empty' : '')+'">'+
+            '<input class="'+bl+'__item-value" type="hidden" name="'+input_name+'" value="'+res_value+'" />'+
             ( path.length ? '<span class="'+bl+'__item-path">'+ path.join(path_separator)+ path_separator +'</span>' : '')+
-            '<span class="'+bl+'__item-title">'+name+'</span>'+
+            '<span class="'+bl+'__item-title">'+(name || '')+'</span>'+
             (this.isMultiple ? '<span class="'+bl+'__item-killer">&times;</span>' : '')+
             '</div>');
-        this.$input.before( node );
+    
+        if (value.custom) {
+            var $custom_control = this.Suggest.drawCustomControl(value, $node.find('.'+bl+'__item-title')),
+                $item_input = $node.find('.'+bl+'__item-value');
+            
+            $custom_control.on(
+                'input change',
+                function(e) {
+                    var $t = $(e.target),
+                        v = $t.val();
+                    $item_input.val(v).trigger('change');
+                }
+            );
+        }
+        
+        this.$input.before( $node );
+        
         this.updateSortableAxis();
         if (!this.isMultiple) {
             this.disableAdd();
@@ -315,10 +336,10 @@ window.fx_livesearch = function (node) {
             e.id = id;
             e.value = value;
             e.value_name = name;
-            e.value_node = node;
+            e.value_node = $node;
             e.is_preset = !!this.inpNames[id];
             this.$node.trigger(e);
-            $('input', node).trigger('change');
+            $('input', $node).trigger('change');
         }
         this.Suggest.hideBox();
     };
@@ -459,7 +480,8 @@ window.fx_livesearch = function (node) {
             var $inp = $(this),
                 id = $inp.val(),
                 name = $inp.data('name'),
-                path = $inp.data('path');
+                path = $inp.data('path'),
+                value_obj = null;
                 
             if (!name && livesearch.preset_values) {
                 $.each(livesearch.preset_values, function(index, val) {
@@ -467,10 +489,18 @@ window.fx_livesearch = function (node) {
                         name = val.name;
                         return false;
                     }
+                    if (val.custom) {
+                        value_obj = val;
+                    }
                 });
             }
             livesearch.inpNames[id] = this.name;
-            livesearch.addValue({id:id, name:name, input_name:this.name}, path);
+            if (value_obj === null) {
+                value_obj = {id:id, name:name, input_name:this.name};
+            } else {
+                value_obj.value = id;
+            }
+            livesearch.addValue(value_obj, path);
             $(this).remove();
         });
 
@@ -557,7 +587,7 @@ window.fx_livesearch = function (node) {
             livesearch.recountInputWidth();
         });
         
-        this.$node.on('focus', '.'+bl+'__input', function() {
+        this.$node.on('focus', '.'+bl+'__input', function(e) {
             livesearch.$container.addClass('livesearch__container_focused');
             if (livesearch.isMultiple) {
                 return;
@@ -576,6 +606,9 @@ window.fx_livesearch = function (node) {
         });
 
         this.$container.click(function(e) {
+            if ($(e.target).closest('.search_item__custom-value').length) {
+                return;
+            }
             if (!livesearch.$input.is(':focus')) {
                 livesearch.$input.focus();
             }

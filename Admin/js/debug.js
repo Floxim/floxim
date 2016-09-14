@@ -126,7 +126,12 @@ window.fx_debug_draw = function(data, $target) {
         var $n = $('<div class="fx-debug__item"></div>');
         if (typeof item === 'string') {
             $n.addClass('fx-debug__item_type_string');
-            $n.text(item);
+            if (item.slice(0,5) === '%raw%') {
+                $n.html(item.slice(5));
+            } else {
+                $n.text(item);
+            }
+            
         } else {
             var type = get_type(item);
             
@@ -262,6 +267,24 @@ function fx_debug_init($container) {
         fx_debug_draw(data, $(this));
         $entry.addClass(ready_class).attr('style', '');
     });
+    if (window.Clipboard) {
+        var $cb = $('<div class="fx-debug-clipboard-button">copy</div>');
+        $('body').append($cb);
+        $cb.css({
+            position:'absolute',
+            top:90,
+            right:0,
+            'z-index':100000,
+            display:'none'
+        });
+        $cb.attr('data-clipboard-target', '.fx-debug__item_active');
+        var clipboard = new Clipboard($cb[0]),
+            active_class = 'fx-debug__item_active';
+        clipboard.on('success', function() {
+            $cb.hide();
+            $('.'+active_class).removeClass(active_class);
+        });
+    }
     $container
         .off('.fx_debug')
         .on(
@@ -274,6 +297,30 @@ function fx_debug_init($container) {
                 return false;
             }
         );
+    if (window.Clipboard) {
+        $container.on('click.fx_debug', '.fx-debug__item_type_string', function(e) {
+            var $node = $(e.target);
+            if ($node.hasClass(active_class)) {
+                $node.removeClass(active_class);
+                $cb.css('display', 'none');
+            } else {
+                $('.'+active_class).removeClass(active_class);
+                $node.addClass(active_class);
+                var node_box = e.target.getBoundingClientRect(),
+                    $entry = $node.closest('.fx_debug_entry'),
+                    c_box = $entry[0].getBoundingClientRect();
+                    
+                $entry.append($cb);
+                
+                $cb.css( {
+                    top:node_box.top - c_box.top,
+                    left: Math.min(node_box.right - c_box.left, (c_box.right - c_box.left - 60)),
+                    display:'inline-block'
+                });
+            }
+            return false;
+        });
+    }
 }
 
 $(function() {

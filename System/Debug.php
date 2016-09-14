@@ -478,13 +478,19 @@ class Debug
     protected function jsonEncode($what)
     {
         static $is_53 = null;
+        static $is_55 = null;
         if (is_null($is_53)) {
             $is_53 = version_compare(phpversion(), '5.4') < 0;
+            $is_55 = function_exists('json_last_error_msg');
         }
         if ($is_53) {
-            return json_encode($what);
+            $res = json_encode($what);
+        } else {
+            $res = json_encode($what, JSON_UNESCAPED_UNICODE);
         }
-        $res = json_encode($what, JSON_UNESCAPED_UNICODE);
+        if ($res === false) {
+            $res = $this->toJson('[json error]: '. ($is_55 ? json_last_error_msg() : '') );
+        }
         if ($res === '') {
             $res = null;
         }
@@ -613,8 +619,12 @@ class Debug
                         }
                         <?php
                     }
+                    if ($json !== '') {
+                        ?>
+                        window.fx_debug_data['<?=$id?>'] = <?= $json ?>;
+                        <?php
+                    }
                     ?>
-                    window.fx_debug_data['<?=$id?>'] = <?= $json ?>;
                 </script>
                 <?php
             }

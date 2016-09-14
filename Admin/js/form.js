@@ -126,6 +126,7 @@ fx_form = {
         }
         var rendered_groups = {},
             sorted_fields = this.sort_fields(settings.fields);
+        
         $.each(sorted_fields, function(i, json) {
             var $target = $form_body;
             if (json.group) {            
@@ -153,11 +154,13 @@ fx_form = {
             if (json.type === 'group') {
                 var $group_fields_container = $field_node.find('.fx-field-group__fields');
                 rendered_groups[json.keyword] = $group_fields_container;
+                /*
                 if (json.fields) {
                     $.each(json.fields, function(index, field) {
                         $fx_form.draw_field(field, $group_fields_container);
                     });
                 }
+                */
             }
         });
         
@@ -258,51 +261,55 @@ fx_form = {
         
         $form.trigger('fx_form_submit');
         
-        $form.ajaxSubmit(function ( data ) {
-            $fx.form.unlock_form($form);
-            if (typeof data === 'string') {
-                try {
-                    data = $.parseJSON( data );
-                } catch(e) {
-                    $fx.alert('Responce parse error');
-                    console.log(data, e);
-                    return false;
+        //$form.ajaxSubmit(function ( data ) {
+        $fx.post(
+            $form.formToHash(),
+            function(data) {
+                $fx.form.unlock_form($form);
+                if (typeof data === 'string') {
+                    try {
+                        data = $.parseJSON( data );
+                    } catch(e) {
+                        $fx.alert('Responce parse error');
+                        console.log(data, e);
+                        return false;
+                    }
                 }
-            }
-            $form.trigger('fx_form_sent', data);
-            
-            if ( data.status === 'ok') {
-                status_block.show();
-                status_block.writeOk( data.text ? data.text : 'Ok');
-                $form.trigger('fx_form_ok');
-            }
-            else if (data.status === 'error') {
-                //status_block.writeError( data );
-                if (data.errors.length) {
-                    $.each(data.errors, function() {
-                        $fx.alert(this.error || this.text, 'error', 3);
-                    });
+                $form.trigger('fx_form_sent', data);
+
+                if ( data.status === 'ok') {
+                    status_block.show();
+                    status_block.writeOk( data.text ? data.text : 'Ok');
+                    $form.trigger('fx_form_ok');
+                }
+                else if (data.status === 'error') {
+                    //status_block.writeError( data );
+                    if (data.errors.length) {
+                        $.each(data.errors, function() {
+                            $fx.alert(this.error || this.text, 'error', 3);
+                        });
+                    } else {
+                        $fx.alert('Error!', 'error', 3);
+                    }
+                    return;
+                }
+                else if (data.text) {
+                    status_block.show();
+                    status_block.writeError(data['text']);
+                    for ( i in data.fields ) {
+                        $('[name="'+data.fields[i]+'"]').addClass("ui-state-error");
+                    }
+                }
+                if (data.reload) {
+                    $fx.form.lock_form($form);
+                    $fx.reload(data.reload);
+                } else if (data.show_result) {
+                    $fx.admin.load_page(data);
                 } else {
-                    $fx.alert('Error!', 'error', 3);
-                }
-                return;
-            }
-            else if (data.text) {
-                status_block.show();
-                status_block.writeError(data['text']);
-                for ( i in data.fields ) {
-                    $('[name="'+data.fields[i]+'"]').addClass("ui-state-error");
+                    $(window).hashchange();
                 }
             }
-            if (data.reload) {
-                $fx.form.lock_form($form);
-                $fx.reload(data.reload);
-            } else if (data.show_result) {
-                $fx.admin.load_page(data);
-            } else {
-                $(window).hashchange();
-            }
-        });
+        );
         return false;
     },
 
@@ -827,26 +834,36 @@ $fx.form = window.fx_form = window.$fx_form = fx_form;
         return this;
     };
     
-    $.fn.formToHash = function() {
+    $.fn.formToHash = function(filter) {
         var $form = this,
-            data = $form.formToArray(),
+            data = $form.formToArray(true),
             res = {};
+        
+        filter = filter || function(f) {return true;}
+        
         for (var i = 0; i < data.length; i++) {
-            var f = data[i],
-                name = f.name,
+            var f = data[i];
+            if (!filter(f)) {
+                continue;
+            }
+            var name = f.name,
                 value = f.value,
                 name_path_parts = name.match(/\[.+?\]/g);
             if (name_path_parts) {
                 var name_base = name.replace(/\[.+/, ''),
                     name_path = [name_base];
                 for (var j = 0; j < name_path_parts.length; j++) {
-                    name_path.push(name_path_parts[j].replace(/[\[\]]/g, ''))
+                    name_path.push(name_path_parts[j].replace(/[\[\]]/g, ''));
                 }
                 var c_res = res;
                 for (var j = 0; j < name_path.length; j++) {
-                    var part = name_path[j];
-                    if (!c_res[part]) {
-                        c_res[part] = j === name_path.length - 1 ? value : {};
+                    var part = name_path[j],
+                        is_last = j === name_path.length - 1;
+                   
+                    if (typeof c_res[part] === 'undefined' && !is_last) {
+                        c_res[part] = {};
+                    } else if (is_last) {
+                        c_res[part] = value;
                     }
                     c_res = c_res[part];
                 }

@@ -800,7 +800,6 @@ abstract class Finder
                 $counter = clone $this;
                 $counter->select(null)->select('count(*)')->limit(null);
                 $this->found_rows = fx::db()->getVar( $counter->buildQuery() );
-                fx::log($counter->buildQuery(), $this->found_rows );
             } else {
                 $this->found_rows = fx::db()->getVar('SELECT FOUND_ROWS()');
             }

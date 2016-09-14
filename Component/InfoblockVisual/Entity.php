@@ -18,6 +18,23 @@ class Entity extends System\Entity
         }
     }
     
+    protected function afterSave() {
+        parent::afterSave();
+        if ($this->isModified('template_visual') || $this->isModified('wrapper_visual')) {
+            $this->deleteInlineStyles();
+        }
+    }
+    
+    protected function deleteInlineStyles()
+    {
+        if ($this['id']) {
+            $dropped = \Floxim\Floxim\Asset\Less\StyleBundle::deleteForVisual($this['id']);
+            if ($dropped && $this->isDeleted()) {
+                fx::assets('css')->delete();
+            }
+        }
+    }
+    
     public function setNeedRecountFiles($need)
     {
         $this->needRecountFiles = $need;
@@ -89,6 +106,11 @@ class Entity extends System\Entity
         foreach ($files as $f) {
             fx::files()->rm($f);
         }
+    }
+    
+    protected function afterDelete() {
+        parent::afterDelete();
+        $this->deleteInlineStyles();
     }
 
     /**

@@ -748,9 +748,60 @@ class Util
             echo "<hr>";
             echo "<b>".fx::path()->http($rd)."</b>";
             echo "<pre style='font-size:11px;'>".$res."</pre>";
-            
-            //fx::cdebug($rd, $res);
         }
-        //fx::cdebug($repo_dirs);
+    }
+    
+    public static function fullMerge($a, $b) 
+    {
+	$res = $a;
+        foreach ($b as $k => $v) {
+            if (!isset($res[$k])) {
+                $res[$k] = $v;
+                continue;
+            }
+            if (is_array($res[$k])) {
+                $res[$k] = self::fullMerge($res[$k], $v);
+                continue;
+            }
+            $res[$k] = $v;
+        }
+        return $res;
+    }
+    
+    /**
+     * Very slow! For debugging only!
+     * @param string $s html string
+     * @return string formatted string
+     */
+    public static function formatHTML($s) {
+        $parser = new \Floxim\Floxim\Template\Html('');
+        $tokenizer = new \Floxim\Floxim\Template\HtmlTokenizer();
+        $tokens = $tokenizer->parse($s);
+        $tree = $parser->makeTree($tokens);
+        return $tree->prettyPrint();
+    }
+    
+    public static function dropCache($what = null)
+    {
+        $map = array(
+            'assets' => fx::path('@files/asset_cache'),
+            'templates' => fx::path('@files/compiled_templates')
+        );
+        
+        if ($what === null) {
+            $what = array_keys($map);
+        } elseif (is_string($what)) {
+            $what = array($what);
+        }
+        if (!is_array($what)) {
+            return;
+        }
+        foreach ($what as $c_what) {
+            if (!isset($map[$c_what])) {
+                continue;
+            }
+            $dir = $map[$c_what];
+            fx::files()->rm($dir);
+        }
     }
 }

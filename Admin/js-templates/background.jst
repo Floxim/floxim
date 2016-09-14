@@ -1,0 +1,32 @@
+<!--[input ? _c.type == 'css-background']-->
+<?
+    _c.value = _c.value || '';
+    var cl = $t.getBem('fx-background-control'),
+        level_types = [
+            ['color', 'цвет'],
+            ['image', 'изображение'],
+            ['linear', 'градиент']
+        ];
+?>
+<div class="<?=cl()?>">
+    <textarea name="<?= _c.name ?>" class="<?=cl('value')?>"><?=_c.value?></textarea>
+    <div class="<?=cl('handler')?>">...</div>
+    <div class="<?=cl('popup')?>">
+        <div class="<?=cl('lightness')?>">
+        </div>
+        <div class="<?=cl('close')?>">&times;</div>
+        <div class="<?=cl('levels')?>">
+
+        </div>
+        <div class="<?=cl('add-level')?>">
+            <span class="<?=cl('add-label')?>">Добавить:</span>
+            <? for (var i = 0; i < level_types.length; i++) {
+                var level_type = level_types[i];
+                ?>
+                <span class="<?=cl('add', 'type_'+level_type[0])?>">
+                    <a data-type="<?=level_type[0]?>"><?=level_type[1]?></a>
+                </span>
+            <? } ?>
+        </div>
+    </div>
+</div>

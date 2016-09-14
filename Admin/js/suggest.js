@@ -217,6 +217,7 @@ window.fx_suggest = function(params) {
     };
     
     this.Search = function(term, params) {
+        
         params = params || {};
         
         if (this.disabled) {
@@ -456,22 +457,13 @@ window.fx_suggest = function(params) {
             });
             item_html += '</span>';
         }
-
-        if (item.custom) {
-            item.name = "<input class='search_item__custom-value' type='number' /> "+item.custom.units;
-        }
-
-        item_html += '<span class="search_item__name">'+item.name+'</span>';
+        
+        item_html += '<span class="search_item__name">'+(item.name || '')+'</span>';
 
         var $item = $('<div class="search_item">'+item_html+'</div>');
-
+        
         if (item.custom) {
-            var $custom_input = $('.search_item__custom-value', $item);
-            $custom_input.on('click', function() {
-                return false;
-            }).on('blur', function() {
-                $item.trigger('click');
-            });
+            this.drawCustomControl(item, $item.find('.search_item__name'));
         }
 
         if (item.title !== undefined) {
@@ -515,6 +507,26 @@ window.fx_suggest = function(params) {
         }
         return $item;
     };
+    
+    this.custom_value = null;
+    
+    this.drawCustomControl = function(item, $target) {
+        if (this.custom_value !== null) {
+            item = $.extend(item, {value: this.custom_value});
+        }
+        var $custom_control = $fx_fields.control(item);
+        $target.addClass('search_item__custom-value');
+        $target.append($custom_control);
+        $custom_control.on(
+            'input change',
+            function(e) {
+                var $t = $(e.target),
+                    v = $t.val();
+                Suggest.custom_value = v;
+            }
+        );
+        return $custom_control;
+    },
     
     this.placeBox = function() {
         var $node = this.offsetNode,
@@ -632,7 +644,6 @@ window.fx_suggest = function(params) {
         });
         
         this.input.blur(function(e) {
-            //return;
             // Suggest is not active
             if (Suggest.disabled) {
                 return;

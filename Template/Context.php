@@ -175,6 +175,54 @@ class Context {
         return end($this->forced_templates[$target_id]);
     }
     
+    
+    protected static $container_props = array();
+    
+    public function pushContainerProps($props) 
+    {
+        $current_props = count(self::$container_props) > 0 ? end(self::$container_props) : array();
+        $props = array_merge($current_props, $props);
+        self::$container_props []= $props;
+    }
+    
+    public function popContainerProps() 
+    {
+        array_pop(self::$container_props);
+    }
+    
+    public function getContainerClasses($current_props = false) {
+        $cnt = count(self::$container_props);
+        if ($cnt === 0) {
+            return '';
+        }
+        
+        $last = self::$container_props[$cnt - 1];
+        
+        $prev = $cnt > 1 && $current_props ? self::$container_props[$cnt - 2] : array();
+        
+        $res = '';
+        
+        if (isset($last['darkness'])) {
+            $res .= ' fx-block_darkness_'.$last['darkness'];
+        }
+        
+        foreach ($last as $p => $v) {
+            if ($p === 'lightness') {
+                $res .= ' fx-block_lightness_'.$v;
+                continue;
+            }
+            if (!$current_props || !isset($current_props[$p])) {
+                $res .= ' fx-block_parent-'.$p.'_'.$v;
+                continue;
+            }
+            if (isset($prev[$p])) {
+                $res .= ' fx-block_parent-'.$p.'_'.$prev[$p];
+            }
+        }
+        return $res.' ';
+    }
+    
+    
     protected static $container_stack = array();
     
     protected static $content_classes_cache = array();

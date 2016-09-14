@@ -417,7 +417,9 @@ class Layout extends Admin
             }
             $style['less_vars'] = $res_params;
             $style->save();
-            $bundle->delete();
+            
+            fx::util()->dropCache('assets');
+            
             return array(
                 'status' => 'ok',
                 'reload' => true
@@ -438,95 +440,37 @@ class Layout extends Admin
             $props['colors'] = fx::env()->getLayoutStyleVariant()->getPalette();
             $props['empty'] = false;
         }
-        /*
-        if ($props['type'] === 'css-text-transform') {
-            $props['type'] = 'livesearch';
-            $props['values'] = array(
-                array('none', 'Abc'),
-                array('uppercase', 'ABC'),
-                array('lowercase', 'abc')
-            );
-            if (!$props['label']) {
-                $props['label'] = 'Регистр';
-            }
-            $props['allow_empty'] = false;
-        }
-        if ($props['type'] === 'css-font-style') {
-            $props['type'] = 'livesearch';
-            $props['values'] = array(
-                array('normal', 'Нормальный'),
-                array('bold', 'Жирный'),
-                array('normal italic', 'Курсив'),
-                array('bold italic', 'Жирный курсив')
-            );
-            if (!$props['label']) {
-                $props['label'] = 'Начертание';
-            }
-            $props['allow_empty'] = false;
-        }
-         * 
-         */
         if ($props['units'] && $props['value']) {
             $props['value'] = preg_replace("~[^\d\.]+~", '', $props['value']);
         }
         return $props;
     }
     
-    /*
-    protected function getStyleMeta($style, $block, $source_template)
-    {
-        $bundle = fx::page()->getDefaultCssBundle();
-
-        $meta = $bundle->getMeta();
-        
-        $find_style = function($meta) use ($style, $block) {
-            if (!isset($meta['styles']) || !is_array($meta['styles'])) {
-                return;
-            }
-            foreach ($meta['styles'] as $c_style) {
-                if ($c_style['keyword'] === $block.'_style_'.$style) {
-                    return $c_style;
-                }
-            }
-        };
-        $found_style = $find_style($meta);
-        if ($found_style) {
-            return $found_style;
-        }
-        $tpl = fx::template($source_template);
-        $styles = $tpl->collectStyles($block.'_style_*');
-        if (!isset($styles[$style])) {
-            return;
-        }
-        $bundle->push($styles[$style]['files']);
-        $bundle->getBundleContent();
-        $found_style = $find_style($bundle->getMeta());
-        if ($found_style) {
-            return $found_style;
-        }
-    }
-    */
-    
     public function styleSettings($input)
     {
-        
-
         $fields = $this->getHiddenFields(array('style', 'block', 'style_variant_id'));
 
         $style_variant = 
             isset($input['style_variant_id'])  && $input['style_variant_id']
                 ? fx::data('style_variant', $input['style_variant_id'])
-                : fx::data('style_variant')->create();
+                : fx::data('style_variant')->create(
+                    array(
+                        'block' => $input['block'],
+                        'style' => $input['style']
+                    )
+                );
 
-        $input['style'] = preg_replace("~\-\-\d+$~", '', $input['style']);
+        //$input['style'] = preg_replace("~\-\-\d+$~", '', $input['style']);
+        $input['style'] = preg_replace("~_variant_[^_]+$~", '', $input['style']);
         
         $bundle = fx::assets('style', $input['block'].'_'.$input['style']);
         
+        /*
         if (!$bundle->isFresh()) {
-            
             // run processor to extract defaults
             $bundle->save();
         }
+        */
         
         $style = $bundle->getStyleMeta();
         
@@ -559,8 +503,6 @@ class Layout extends Admin
             } else {
                 $style_variant['less_vars'] = $less_vars;
                 $style_variant['name'] = $input['style_name'];
-                $style_variant['block'] = $input['block'];
-                $style_variant['style'] = $input['style'];
                 $style_variant->save();
                 $id = $style_variant['id'];
             }
@@ -584,12 +526,17 @@ class Layout extends Admin
         
         $mixin_name = substr($bundle->getMixinName(), 1);
         
+        $is_saved = $style_variant->isSaved();
+        
         $res = array(
-            'tweaker_file' => $bundle->getTweakerLessFile(),
-            'rootpath' => fx::path()->http( dirname($style['file']) ) . '/',
-            'tweaked_vars' => array_keys($style['vars']),
-            'mixin_name' => $mixin_name,
-            'existing_class' => $style_variant['id'] ? $style_variant['block'].'_style_'.$style_variant['style'].'--'.$style_variant['id'] : null,
+            'tweaker' => array(
+                'tweaker_file' => $bundle->getTweakerLessFile(),
+                'rootpath' => fx::path()->http( dirname($style['file']) ) . '/',
+                'tweaked_vars' => array_keys($style['vars']),
+                'mixin_name' => $mixin_name,
+                'style_class' => $style_variant['block'].'_style_'.$style_variant['style']. ($is_saved ? '--'.$style_variant['id'] : ''),
+                'is_new' => !$is_saved
+            ),
             'fields' => $fields,
             'header' => 'Настраиваем стиль'
         );
@@ -761,11 +708,42 @@ class Layout extends Admin
     {
         $res = array();
         foreach ($input['blocks'] as $block) {
-            $res []= \Floxim\Floxim\Asset\Less\StyleBundle::collectStyleVariants($block['block']);
+            if ($block['is_inline'] === 'true') {
+                
+                $bundle_id = $block['block'].'_default';
+                
+                $bundle = fx::assets('style', $bundle_id);
+                $style = $bundle->getStyleMeta();
+                $fields = $bundle->getFormFields($block['value']);
+                
+                $res []= array(
+                    'type' => 'group',
+                    'style' => 'transparent',
+                    'fields' =>  $fields,
+                    'tweaker' => array(
+                        'tweaker_file' => $bundle->getTweakerLessFile(),
+                        'rootpath' => $bundle->getRootPath(),
+                        'is_new' => true, //$block['value'] === 'default',
+                        'vars' => array_keys($style['vars']),
+                        'mixin_name' => substr($bundle->getMixinName(), 1),
+                        'style_class' => $block['block'].'_style_'.$block['mod_value'],
+                        'style_id' => $block['style_id']
+                    )
+                );
+            } else {
+                $res []= \Floxim\Floxim\Asset\Less\StyleBundle::collectStyleVariants($block['block']);
+            }
         }
         return array(
             'variants' => $res
         );
+    }
+    
+    public function saveInlineStyle($input)
+    {
+        $vis = fx::data('infoblock_visual', $input['visual_id']);
+        $vis->digSet('template_visual.'.$input['prop'], $input['value']);
+        $vis->save();
     }
 
 
@@ -798,74 +776,5 @@ class Layout extends Admin
         $this->response->submenu->setMenu('layout');
         $this->response->addFormButton('save');
         return array('fields' => $fields, 'form_button' => array('save'));
-    }
-    
-    public function colorSet()
-    {
-        //$fields = $this->testColors();
-        $fields = array(
-            'palette' => array(
-                'type' => 'palette',
-                'transparent' => true,
-                'colors' => fx::env()->getLayoutStyleVariant()->getPalette(),
-                'value' => 'alt 2'
-            )
-        );
-        $this->response->addFields($fields);
-    }
-    
-    public function ratio() {
-        $fields = array(
-            'ratio' => array(
-                'label' => 'Пропорции',
-                'type' => 'ratio',
-                'value' => 5,
-                'min' => 1
-            )
-        );
-        $this->response->addFields($fields);
-    }
-
-    public function font()
-    {
-        $fields = array(
-            'font' => array(
-                'label' => 'Тестовый шрифт',
-                'type' => 'css-font',
-                'value' => 'nav 16px bold italic uppercase underline'
-            )
-        );
-        $this->response->addFields($fields);
-    }
-    
-    public function measures()
-    {
-        $fields = array(
-            'test' => array(
-                'label' => 'padding',
-                'type' => 'measures',
-                'prop' => 'padding',
-                'lock' => '1-3--2-4'
-            ),
-            'cr' => array(
-                'label' => 'corners',
-                'type' => 'measures',
-                'prop' => 'corners',
-                'lock' => '1-2--3-4'
-            )
-        );
-        $this->response->addFields($fields);
-    }
-    
-    public function codemirror()
-    {
-        $fields = array(
-            'test' => array(
-                'label' => 'CodeMirror',
-                'type' => 'text',
-                'code' => 'true'
-            )
-        );
-        $this->response->addFields($fields);
     }
 }

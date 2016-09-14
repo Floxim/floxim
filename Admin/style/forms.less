@@ -1266,6 +1266,11 @@ select.fx_input {
     &_expanded &__expander {
         background-position:-1813px -26px;
     }
+    
+    &_style_transparent &__fields {
+        padding-top:0;
+        display:block;
+    }
 }
 
 .fx-side-panel {
@@ -1541,7 +1546,8 @@ select.fx_input {
             box-shadow: 0px 0px 6px 2px #3357BD;
         }
     }
-    &__value-color_empty, &__color-level_none {
+    //&__value-color_empty, 
+    &__color-level_none {
         &:after {
             content: "\00d7";
             font-size: 18px;
@@ -1634,5 +1640,191 @@ select.fx_input {
         background:#3D71FF;
         color:#FFF !important;
         border-color:transparent;
+    }
+}
+
+.fx-background-control {
+    &__levels {
+        display:table;
+        margin:20px -15px 20px -15px;
+        .fx_input_number {
+            display:inline-block;
+        }
+    }
+    
+    &__lightness {
+        display:inline-block;
+    }
+    &__th, &__level {
+        display:table-row;
+        & > div {
+            display:table-cell;
+            white-space:nowrap;
+            padding-right: 15px;
+            padding-top:10px;
+            padding-bottom: 10px;
+            border-bottom:1px solid #CCC;
+            & > div {
+                vertical-align:middle;
+                &.field {
+                    margin-bottom:0;
+                }
+            }
+        }
+        &:first-child > div {
+            border-top:1px solid #CCC;
+        }
+    }
+    
+    &__th {
+        font-size:12px;
+        &_inactive {
+            display:none;
+        }
+    }
+    
+    &__level {
+        background:#FFF;
+    }
+    
+    .fx_image_field {
+        height: 36px;
+        display: inline-block;
+        
+        .fx_preview_block {
+            display:inline-block;
+        }
+        .fx_preview_filled img {
+            max-height:50px;
+            display:inline-block;
+            margin:0;
+        }
+        
+        .fx_file_controls {
+            vertical-align: top;
+        }
+        
+        .fx_file_info {
+            display:none;
+        }
+        .fx_file_killer {
+            display:none !important;
+        }
+    }
+    
+    
+    &__level-drag, &__level-drop {
+        cursor:pointer;
+        display:inline-block;
+        font-size: 20px;
+        text-shadow: 2px 2px 1px #ccc;
+        width:10px;
+        height:10px;
+        line-height:0;
+    }
+    
+    &__level-drop {
+        color:#F00;
+        margin-right:15px;
+    }
+    
+    &__level-drag {
+        cursor:move;
+    }
+    
+    &__level-controls {
+        padding-right:30px !important;
+    }
+    
+    &__level-controls, &__level-value {
+        vertical-align:middle;
+        padding-left:20px;
+    }
+    
+    &__level-value {
+        min-width:200px;
+        .fx-palette__value-color-wrapper {
+            border:1px solid #CCC;
+            border-radius:2px;
+            overflow:hidden;
+        }
+        .fx-palette__value-color {
+            width:200px;
+            height:36px;
+            outline:none;
+        }
+    }
+    
+    &__close {
+        position: absolute;
+        top: 8px;
+        right: 5px;
+        width: 40px;
+        height: 40px;
+        vertical-align: middle;
+        text-align: center;
+        font-size: 30px;
+        color: #999;
+        cursor: pointer;
+        &:hover {
+            color:#666;
+        }
+    }
+    
+    &__label {
+        font-size: 12px;
+        margin-bottom: 5px;
+    }
+    
+    // gradient chess bg
+    &__linear-wrapper {
+        display: inline-block;
+        border: 1px solid #CCC;
+        border-radius:2px;
+        width: 200px;
+        height: 38px;
+        margin-right:15px;
+        .fx_chess_background(@size: 5px);
+    }
+    
+    // gradient slider
+    &__linear {
+        display: inline-block;
+        height: 100%;
+        width: 100%;
+        .fx-number-slider__point {
+            overflow:hidden;
+            top:100%;
+        }
+    }
+    
+    &__add:not(:last-child):after {
+        content: '|';
+        display: inline-block;
+        margin: 0 5px;
+        color:#999;
+    }
+    
+    &__add_inactive {
+        display:none;
+    }
+    
+    &__popup {
+        display:none;
+        position:fixed;
+        top:100px;
+        left:100px;
+        background:#FFF;
+        padding:25px 15px;
+        border:1px solid #CCC;
+        border-radius:3px;
+        z-index:9999;
+    }
+    
+    textarea&__value {
+        display:none;
+        width: 100%;
+        height: 50px;
+        font-size:12px;
     }
 }

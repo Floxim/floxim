@@ -533,7 +533,6 @@ abstract class Entity implements \ArrayAccess, Template\Entity
     /* Array access */
     public function offsetGet($offset)
     {
-
         if ($offset === 'id') {
             return isset($this->data['id']) ? $this->data['id'] : null;
         }
@@ -587,8 +586,9 @@ abstract class Entity implements \ArrayAccess, Template\Entity
         if ($offset_type === self::OFFSET_RELATION) {
             $finder = $this->getFinder();
             $finder->addRelated($offset, new Collection(array($this)));
-            if (!isset($this->data[$offset])) {
-                return null;
+            
+            if (!array_key_exists($offset, $this->data)) {
+                $this->data[$offset] = null;
             }
             return $this->data[$offset];
         }

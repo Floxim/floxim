@@ -543,5 +543,17 @@ class Token
         $r .= ']';
         return $r;
     }
+    
+    public function getRawValue()
+    {
+        $res = '';
+        foreach ($this->getChildren() as $child) {
+            if ($child->name !== 'code') {
+                return null;
+            }
+            $res .= $child->getProp('value');
+        }
+        return $res;
+    }
 }
 

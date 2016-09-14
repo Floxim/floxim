@@ -457,15 +457,23 @@ class Infoblock extends Admin
                     if (!is_array($i2l[$vis_prop])) {
                         $i2l[$vis_prop] = array();
                     }
-                    $i2l[$vis_prop] = array_merge($i2l[$vis_prop], $input['visual'][$vis_prop]);
+                    $c_prop_data = $input['visual'][$vis_prop];
+                    foreach ($c_prop_data as $c_prop_data_key => &$c_prop_item) {
+                        if (preg_match("~^box_~", $c_prop_data_key) && is_string($c_prop_item)) {
+                            $c_prop_item = json_decode($c_prop_item, true);
+                        }
+                    }
+                    $i2l[$vis_prop] = array_merge($i2l[$vis_prop], $c_prop_data);
                 }
             }
             
+            /*
             if ($i2l['wrapper']) {
                 $container = $this->getWrapperContainer($i2l);
                 $container->appendInput($input['visual']);
             }
-            
+             * 
+             */
             $is_new_infoblock = !$infoblock['id'];
             $infoblock->save();
             $i2l['infoblock_id'] = $infoblock['id'];
@@ -973,6 +981,7 @@ class Infoblock extends Admin
         
         /** start getContainerSettings */
         
+        /*
         $container = $this->getWrapperContainer($visual);
         
         $container_fields = $container->getForm();
@@ -981,6 +990,8 @@ class Infoblock extends Admin
             $field = \Floxim\Floxim\Admin\Response::addFieldPrefix($field, 'wrapper_visual');
             $fields []= $field;
         }
+         * 
+         */
 
         /** end gcs */
         
@@ -1133,10 +1144,14 @@ class Infoblock extends Admin
                 if (!is_array($c_visual)) {
                     $c_visual = array();
                 }
-                if ($value == 'null') {
-                    unset($c_visual[$var['id']]);
+                if (isset($var['scope_path']) && $var['scope_path'] !== '') {
+                    fx::digSet($c_visual, $var['scope_path'].'.'.$var['id'], $value);
                 } else {
-                    $c_visual[$var['id']] = $value;
+                    if ($value == 'null') {
+                        unset($c_visual[$var['id']]);
+                    } else {
+                        $c_visual[$var['id']] = $value;
+                    }
                 }
                 $ib_visual[$visual_set] = $c_visual;
             }

@@ -412,6 +412,17 @@ class Files
 
         return file_get_contents($local_filename);
     }
+    
+    public function gzReadFile($file)
+    {
+        $h = gzopen($file, 'rb');
+        $res = '';
+        while (!gzeof($h)) {
+            $res .= gzgets($h);
+        }
+        gzclose($h);
+        return $res;
+    }
 
     public function ls($path, $recursive = false, $sort = false)
     {

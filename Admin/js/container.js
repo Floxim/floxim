@@ -1,5 +1,7 @@
 (function($) {
     
+$fx.container = {};
+return;
     
 $fx.container = {
 

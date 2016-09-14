@@ -548,9 +548,10 @@ class Fx
             $is_arr = is_array($arr);
             $is_aa = $arr instanceof \ArrayAccess;
             if (!$is_arr && !$is_aa) {
-                return null;
+                //return null;
+                $arr = array();
             }
-            if (empty($pp)) {
+            if ($pp === '') {
                 $arr[] = $var_value;
                 return;
             }
@@ -1015,22 +1016,23 @@ class Fx
     }
     
     public static function date($value = null, $format = 'Y-m-d H:i:s') {
-      if ($value === null) {
-        $value = time();
-      }
-      if (empty($value)) {
-        return $value;
-      }
-      if (!is_numeric($value)) {
-        $value = strtotime($value);
-      }
-      if (empty($value)) {
-        return $value;
-      }
-      if (!strstr($format, '%')) {
-        return date($format, $value);
-      }
-      return self::smartDateFormat($value, $format);
+        if ($value === null) {
+          return null;
+          $value = time();
+        }
+        if (empty($value)) {
+            return $value;
+        }
+        if (!is_numeric($value)) {
+            $value = strtotime($value);
+        }
+        if (empty($value)) {
+            return $value;
+        }
+        if (!strstr($format, '%')) {
+            return date($format, $value);
+        }
+        return self::smartDateFormat($value, $format);
     }
     
     public static function timestamp($value = null)
@@ -1129,7 +1131,15 @@ class Fx
         if (fx::env('console') !== true) {
             return;
         }
-        call_user_func_array('fx::debug', func_get_args());
+        
+        if (ob_get_level() <= 1) {
+            call_user_func_array('fx::debug', func_get_args());
+        } else {
+            ob_start();
+            call_user_func_array('fx::debug', func_get_args());
+            $res = ob_get_clean();
+            fx::env('console_buffer', fx::env('console_buffer').$res);
+        }
     }
 
     public static function log($what)
@@ -1156,7 +1166,11 @@ class Fx
             self::debug()->start();
             self::debug()->onStop(function() use ($profiler) {
                 if ($profiler->hasData()) {
-                    fx::log('%raw%'.$profiler->show(), $profiler->getSortedTags(), $profiler);
+                    fx::log(
+                        '%raw%'.$profiler->show(), 
+                        $profiler->getSortedTags(), 
+                        $profiler
+                    );
                 }
             });
         }

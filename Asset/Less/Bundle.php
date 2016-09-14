@@ -35,7 +35,9 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
     {
         $options = array_merge(
             array(
-                'cache_dir' => fx::path('@files/less_cache')
+                'cache_dir' => fx::path('@files/less_cache'),
+                'compress' => fx::config('dev.css.minify'),
+                'sourceMap' => fx::config('dev.css.source_map')
             ),
             $options
         );
@@ -108,21 +110,28 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
             // collect meta for "style settings" dialog
             elseif (!$is_admin) {
                 $this->meta['styles'] = $meta_parser->getStyles();
-                //$meta_parser->generateExportFiles();
             }
             $res = $css;
         } catch (\Less_Exception_Compiler $e) {
             fx::log($e, fx::debug()->backtrace(), $parser);
         }
-        foreach ($this->files as $f) {
-            $sub_bundle = $this->getSubBundle($f);
+        $files = $this->getUniqueFiles();
+        foreach ($files as $f) {
+            $sub_bundle = self::getSubBundle($f);
             if ($sub_bundle instanceof Bundle) {
                 if (!$sub_bundle->isFresh()) {
                     $sub_bundle->save();
                 }
-                $res .= file_get_contents($sub_bundle->getFilePath());
+                $sub_file = $sub_bundle->getFilePath();
+                if (file_exists($sub_file)) {
+                    $res .= file_get_contents($sub_file);
+                } else {
+                    fx::log('no file', $sub_file, $sub_bundle);
+                }
             }
         }
+        $res = self::minifyLess($res);
+        //fx::log($this, $res);
         return $res;
     }
     
@@ -144,6 +153,8 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
     {
         $res = preg_replace("~/\*.+?\*/~is", '', $less);
         $res = preg_replace("~^//[^\r\n]+~m", '', $res);
+        $res = preg_replace("~[\r\n]+~", "\n", $res);
+        $res = trim($res);
         //$res = preg_replace("~\s+~", ' ', $res);
         return $res;
     }

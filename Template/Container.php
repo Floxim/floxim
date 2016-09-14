@@ -5,6 +5,45 @@ namespace Floxim\Floxim\Template;
 use \Floxim\Floxim\System\Fx as fx;
 
 class Container {
+    
+    protected $parent = null;
+    
+    protected $props = array();
+    
+    public static function create($props) {
+        return new self($props);
+    }
+    
+    public function __construct($props, $parent = null)
+    {
+        $this->props = $props;
+        $this->parent = $parent;
+    }
+    
+    public function getClasses()
+    {
+        
+    }
+    
+    protected static $layout_sizes = null;
+    public static function getLayoutSizes()
+    {
+        if (is_null(self::$layout_sizes)) {
+            $style_variant = fx::env()->getLayoutStyleVariant();
+            $sizes = array(
+                'width' => (int) $style_variant->getLessVar('layout_width'),
+                'max-width' => (int) $style_variant->getLessVar('max_width')
+            );
+            $sizes['breakpoint'] = 'min-width: '. $sizes['max-width'] / ($sizes['width']/100) . 'px';
+            self::$layout_sizes = $sizes;
+        }
+        return self::$layout_sizes;
+    }
+}
+
+/*
+
+class Container {
     protected $context = null;
     protected $name = null;
     protected $type = null;
@@ -508,18 +547,7 @@ class Container {
             );
         }
 
-        /*
-        if ($type !== 'column' && $type !== 'layout') {
-            $res['min-height'] = array(
-                'label' => 'Мин. высота',
-                'type' => 'number',
-                'min' => 0,
-                'max' => 1000,
-                'step' => 10
-            );
-        }
-        */
-
+        
         if ($type !== 'layout' && $type !== 'columns' && $type !== 'section') {
             $res['align'] = array(
                 'label' => 'Выравнивание',
@@ -550,18 +578,6 @@ class Container {
             );
         }
         if ($type !== 'column' && $type !== 'layout') {
-            /*
-            $sizing_variants = $this->getSizingVariants();
-            if (count($sizing_variants) > 0) {
-                $res['sizing'] = array(
-                    'label' => 'Ширина',
-                    'values' => $sizing_variants,
-                    'type' => "livesearch",
-                    'allow_empty' => false,
-                    'value' => "default" 
-                );
-            }
-            */
             $res['width'] = array(
                 'type' => 'livesearch',
                 'label' => 'Ширина',
@@ -804,3 +820,5 @@ class Container {
     }
     
 }
+ * 
+ */

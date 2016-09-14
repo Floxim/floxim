@@ -84,7 +84,7 @@ class Component extends Admin
         return $result;
     }
 
-    public function getComponentSubmenu($component)
+    public static function getComponentSubmenu($component)
     {
         $entity_code = $component instanceof \Floxim\Floxim\Component\Component\Entity ? 'component' : 'widget';
 

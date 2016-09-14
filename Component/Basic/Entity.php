@@ -326,7 +326,6 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
         $infoblock_id = $this['infoblock_id'];
         static $cache = array();
         $cc = $com_id.'/'.$infoblock_id;
-        //if (!isset(self::$content_fields_by_component[$com_id])) {
         if (!isset($cache[$cc])) {
             $fields = array();
             foreach ($this->getComponent()->getAllFields() as $field) {
@@ -336,7 +335,6 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
             $cache[$cc] = fx::collection($fields);
         }
         return $cache[$cc];
-        //return self::$content_fields_by_component[$com_id];
     }
 
     public function hasField($field_keyword)

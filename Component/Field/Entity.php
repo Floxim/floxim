@@ -9,7 +9,7 @@ class Entity extends System\Entity
 {
     
     protected $value, $error, $is_error = false;
-    //protected $_js_field = array();
+    
     
     public function getJsField($content)
     {

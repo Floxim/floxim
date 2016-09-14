@@ -10,6 +10,10 @@ class ContextFlex extends Context {
     
     protected $var_props = array();
     
+    protected $scope_path = array();
+    
+    protected $visual_id = null;
+    
     public function getFromTop($var)
     {
         return isset($this->stack[1][$var]) ? $this->stack[1][$var] : null;
@@ -180,4 +184,49 @@ class ContextFlex extends Context {
         return array();
     }
     
+    public function startScope($name)
+    {
+        $this->scope_path []= $name;
+    }
+    
+    public function stopScope() 
+    {
+        array_pop($this->scope_path);
+    }
+    
+    public function getScopePath()
+    {
+        return join(".", $this->scope_path);
+    }
+    
+    public function getScopePrefix($separator = '-') 
+    {
+        return count($this->scope_path) === 0 ? '' : join($separator, $this->scope_path).$separator;
+    }
+    
+    public function getVisualId()
+    {
+        if (is_null($this->visual_id)) {    
+            $ib = $this->getFromTop('infoblock');
+            if (!$ib) {
+                $this->visual_id = 'new';
+            } else {
+                $vis = $ib->getVisual();
+                if ($vis->isSaved()) {
+                    $vis_id = $vis['id'];
+                } else {
+                    $vis_id = 'new';
+                    /*
+                     * @todo: case when there are several not-saved blocks&visuals
+                     */
+                    fx::env('new_infoblock_visual', $vis);
+                }
+                if ($vis->isModified('template_visual') || $vis->isModified('wrapper_visual')) {
+                    $vis_id .= '-temp';
+                }
+                $this->visual_id = $vis_id;
+            }
+        }
+        return $this->visual_id;
+    }
 }

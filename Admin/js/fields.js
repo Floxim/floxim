@@ -39,16 +39,26 @@ window.$fx_fields = {
         var decimal_part = (params.step % 1).toString().match(/\.(.+)/),
             multiplier = decimal_part ? decimal_part[1].length * 10 : 1;
         
+        var frozen = false;
+        
         $target.on('mousewheel', function(e) {
-            var delta = e.originalEvent.deltaY > 0 ? -1 : 1,
-                c_value = $inp.val() * 1,
-                new_value = ( c_value * multiplier + params.step * delta * multiplier ) / multiplier;
-            if (new_value < params.min) {
-                new_value = params.min;
-            } else if (new_value > params.max ) {
-                new_value = params.max;
+            
+            if (!frozen) {
+                
+                var delta = e.originalEvent.deltaY > 0 ? -1 : 1,
+                    c_value = $inp.val() * 1,
+                    new_value = ( c_value * multiplier + params.step * delta * multiplier ) / multiplier;
+                if (new_value < params.min) {
+                    new_value = params.min;
+                } else if (new_value > params.max ) {
+                    new_value = params.max;
+                }
+                $inp.focus().val(new_value).trigger('change');
+                frozen = true;
+                setTimeout(function() {
+                    frozen = false;
+                }, 80);
             }
-            $inp.focus().val(new_value).trigger('change');
             return false;
         });
     },
@@ -74,9 +84,18 @@ window.$fx_fields = {
             type = 'default';
         }
         
+        var source_json = JSON.parse(JSON.stringify(json));
+        
         var $node = this[type](json);
-        if (json.field_meta) {
-            $node.data('field_meta', json.field_meta);
+        if ($node && $node.length && typeof $node !== 'string') {
+            if (json.field_meta) {
+                $node.data('field_meta', json.field_meta);
+            }
+            try {
+                $node.data('source_json', source_json);
+            } catch (e) {
+                console.log(e);
+            }
         }
         return $node;
     },
@@ -237,6 +256,14 @@ window.$fx_fields = {
         
         return $row;
     },
+    
+    'css-background': function(json) {
+        var $row = $t.jQuery('form_row', json),
+            $node = $row.find('.fx-background-control');
+        var bg_control = new fx_background_control($node, json);
+        $node.data('bg_control', bg_control);
+        return $row;
+    },
 
     'css-font': function(json) {
         // nav 16px bold italic uppercase underline
@@ -305,6 +332,10 @@ window.$fx_fields = {
                 value = 'text 16px normal normal none none';
             }
             var parts = value.split(/\s+/);
+            
+            if (!parts[1]) {
+                parts[1] = '16px';
+            }
 
             var  res = {
                 family: parts[0],
@@ -343,7 +374,7 @@ window.$fx_fields = {
 
     'css-font-family': function(value, avail_families){
         var all_families = {
-            text: 'Обычный',
+            text: 'Основной',
             headers: 'Для заголовков',
             nav: 'Для навигации'
         },
@@ -359,8 +390,18 @@ window.$fx_fields = {
                 values[c_family] = all_families[c_family];
             }
         }
+        var handy_values = [];
+        $.each(values, function(code, label) {
+            var family_name = $fx.layout_vars['font_'+code];
+            handy_values.push(
+                {
+                    id:code,
+                    name:"<span style='font-family:"+family_name+";' title='"+family_name+"'>"+label+'</span>'
+                }
+            );
+        });
         return this.livesearch({
-            values:values,
+            values:handy_values,
             value:value,
             'allow_empty': false
         }, 'input');
@@ -377,7 +418,7 @@ window.$fx_fields = {
         return this.livesearch(json, template);
     },
 
-    palette: function(json) {
+    palette: function(json, template) {
         var $row = $t.jQuery('form_row', json),
             el = $t.getBemElementFinder('fx-palette'),
             $colors = $row.find(el('colors')),
@@ -525,8 +566,8 @@ window.$fx_fields = {
             set_value(c_value, !json.opacity);
             $value.trigger('change');
         });
-
-        $cval.click(function() {
+        
+        function handle_click() {
             var box = $cval[0].getBoundingClientRect();
             if ($colors.is(':visible')) {
                 hide_colors();
@@ -548,10 +589,14 @@ window.$fx_fields = {
             setTimeout(
                 function() {
                     $('html').on('mousedown.fx_palette_clickout', function (e) {
-                        if ($(e.target).closest($colors).length === 0) {
+                        var $t = $(e.target);
+                        if (
+                            $t.closest($colors).length === 0 &&
+                            $t.closest($cval).length === 0
+                        ) {
                             hide_colors();
                         }
-                    })
+                    });
                 },
                 10
             );
@@ -561,9 +606,20 @@ window.$fx_fields = {
                 });
                 first_opened = false;
             }
-        });
+        }
 
-        return $row;
+        //$cval.click();
+        var mdt = null;
+        $cval.on('mousedown', function() {
+            mdt = new Date();
+        });
+        $cval.on('mouseup', function() {
+            var mut = new Date();
+            if (mut - mdt < 250) {
+                handle_click();
+            }
+        });
+        return template  === 'input' ? $row.find('.fx-palette') : $row;
     },
 
     group:function(json) {
@@ -572,6 +628,10 @@ window.$fx_fields = {
             exp_class = b+'_expanded',
             $group = $('.'+b, $row),
             $fields = $('.'+b+'__fields', $group);
+            
+        if (json.fields && json.fields.length > 0) {
+            $fx_form.draw_fields(json, $fields);
+        }
         
         function is_expanded() {
             return $group.hasClass(exp_class);
@@ -678,8 +738,9 @@ window.$fx_fields = {
         return $t.jQuery('form_row', json);
     },
 
-    image: function ( json ) {
-        return $t.jQuery('form_row', json);
+    image: function ( json , template) {
+        var $row =  $t.jQuery('form_row', json);
+        return template === 'input' ? $row.find('.fx_image_field') : $row;
     },
 
     textarea: function(json) {
@@ -807,9 +868,13 @@ window.$fx_fields = {
                 
                 if (val instanceof Array && val.length >= 2) {
                     res_val = {
-                        id:val[0],
-                        name:val[1]
+                        id:val[0]
                     };
+                    if (typeof val[1] === 'string') {
+                        res_val.name = val[1];
+                    } else if (typeof val[1] === 'object') {
+                        res_val = $.extend({}, res_val, val[1]);
+                    }
                     if (val.length > 2) {
                         res_val =  $.extend({}, res_val, val[2]);
                     }
@@ -835,16 +900,28 @@ window.$fx_fields = {
         }
         
         if (json.values) {
-            var preset_vals = json.values;
+            var preset_vals = json.values,
+                has_custom = false;
             if ( ! (json.values instanceof Array) ) {
                 preset_vals = [];
                 $.each(json.values, function(k, v) {
                     preset_vals.push([k, v]);
                 });
             }
+            
             json.params.preset_values = vals_to_obj(preset_vals);
+            
+            for (var i = 0; i < json.params.preset_values.length; i++) {
+                if (json.params.preset_values[i].custom) {
+                    has_custom = true;
+                    break;
+                }
+            }
+            
             if (json.allow_empty === false && (!json.value || typeof json.value.id === 'undefined')) {
-                json.value = json.params.preset_values[0];
+                if (!has_custom) {
+                    json.value = json.params.preset_values[0];
+                }
             }
         }
         if (json.allow_select_doubles) {

@@ -21,6 +21,9 @@ class Layout extends System\Controller
             fx::page()->addJsText(
                 '$fx.container.layout_sizes = ' .json_encode( \Floxim\Floxim\Template\Container::getLayoutSizes()).';'
             );
+            fx::page()->addJsText(
+                '$fx.layout_vars = '.json_encode( fx::env()->getLayoutStyleVariant()->get('less_vars') ).';'
+            );
         }
         $page_infoblocks = fx::router('front')->getPageInfoblocks($page_id, $layout_id);
         fx::page()->setInfoblocks($page_infoblocks);
@@ -52,8 +55,8 @@ class Layout extends System\Controller
     public function postprocess($html)
     {
         if ($this->getParam('ajax_mode')) {
-            $html = preg_replace("~^.+?<body[^>]*?>~is", '', $html);
-            $html = preg_replace("~</body>.+?$~is", '', $html);
+            $html = preg_replace("~^.+?<body([^>]*?>)~is", '<layout $1', $html);
+            $html = preg_replace("~</body>.+?$~is", '</layout>', $html);
         } else {
             $page = fx::env('page');
             $meta_title = empty($page['title']) ? $page['name'] : $page['title'];

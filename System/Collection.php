@@ -71,7 +71,6 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
     
     public function __construct($data = array())
     {
-        fx::count('create collection');
         if (is_array($data)) {
             $this->data = $data;
         } else {

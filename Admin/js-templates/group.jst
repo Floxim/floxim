@@ -1,15 +1,20 @@
 <!--[input ? _c.type === 'group']-->
 <?
-var b = 'fx-field-group';
+var b = 'fx-field-group',
+    kw = _c.keyword || _c.name,
+    style = _c.style || 'default',
+    exp = _c.is_expanded ? 'fx-field-group_expanded' : '';
 ?>
-<div class="<?=b?> <?=b?>_keyword_<?=_c.keyword?> <?= _c.is_expanded ? 'fx-field-group_expanded' : '' ?> ">
-    <div class="<?=b?>__title" tabindex="0">
-        <div class="<?=b?>__name"><?= _c.label ?></div>
-        <?if (_c.description) {?>
-            <div class="<?=b?>__description"><?= _c.description ?> </div>
-        <?}?>
-        <div class="<?=b?>__expander"></div>
-    </div>
+<div class="<?=b?> <?=b?>_keyword_<?=kw?> <?=b?>_style_<?=style?> <?= exp ?>">
+    <? if (_c.label && style !== 'transparent' ) { ?>
+        <div class="<?=b?>__title" tabindex="0">
+            <div class="<?=b?>__name"><?= _c.label ?></div>
+            <?if (_c.description) {?>
+                <div class="<?=b?>__description"><?= _c.description ?> </div>
+            <?}?>
+            <div class="<?=b?>__expander"></div>
+        </div>
+    <? } ?>
     <div class="<?=b?>__fields"></div>
 </div>
 

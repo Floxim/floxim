@@ -84,72 +84,6 @@ class Html
                 $n->removeAttribute('fx:raw');
             }
             
-            /*
-            if ($n->name == 'meta' && ($layout_id = $n->getAttribute('fx:layout'))) {
-                $layout_name = $n->getAttribute('fx:name');
-                $tpl_tag = '{template id="' . $layout_id . '" name="' . $layout_name . '" of="layout:show"}';
-                $tpl_tag .= '{apply id="_layout_body"}';
-                $content = $n->getAttribute('content');
-                $vars = explode(",", $content);
-                foreach ($vars as $var) {
-                    $var = trim($var);
-                    $negative = false;
-                    if (preg_match("~^!~", $var)) {
-                        $negative = true;
-                        $var = preg_replace("~^!~", '', $var);
-                    }
-                    $tpl_tag .= '{$' . $var . ' select="' . ($negative ? 'false' : 'true') . '" /}';
-                }
-                $tpl_tag .= '{/call}{/template}';
-                $n->parent->addChildBefore(HtmlToken::create($tpl_tag), $n);
-                $n->remove();
-                return;
-            }
-            
-            if (($fx_replace = $n->getAttribute('fx:replace'))) {
-                $replace_atts = explode(",", $fx_replace);
-                foreach ($replace_atts as $replace_att) {
-                    if (!isset($unnamed_replaces[$replace_att])) {
-                        $unnamed_replaces[$replace_att] = 0;
-                    }
-                    $var_name = 'replace_' . $replace_att . '_' . $unnamed_replaces[$replace_att];
-                    $unnamed_replaces[$replace_att]++;
-                    $default_val = $n->getAttribute($replace_att);
-                    switch ($replace_att) {
-                        case 'src':
-                            $var_title = fx::alang('Picture', 'system');
-                            break;
-                        case 'href':
-                            $var_title = fx::alang('Link', 'system');
-                            break;
-                        default:
-                            $var_title = $replace_att;
-                            break;
-                    }
-                    $n->setAttribute($replace_att,
-                        '{%' . $var_name . ' title="' . $var_title . '"}' . $default_val . '{/%' . $var_name . '}');
-                    $n->removeAttribute('fx:replace');
-                }
-            }
-            
-            if (($var_name = $n->getAttribute('fx:var'))) {
-                if (!preg_match("~^[\$\%]~", $var_name)) {
-                    $var_name = '%' . $var_name;
-                }
-                $n->addChildFirst(HtmlToken::create('{' . $var_name . '}'));
-                $n->addChild(HtmlToken::create('{/' . $var_name . '}'));
-                $n->removeAttribute('fx:var');
-            }
-             * 
-             */
-            
-            if ($n->hasAttribute('fx:scope')) {
-                $scope = $n->getAttribute('fx:scope');
-                $scope_start_tag = '{scope mode="start"}'.$scope.'{/scope}';
-                $n->wrap($scope_start_tag, '{scope mode="end" /}');
-                $n->removeAttribute('fx:scope');
-            }
-
             $tpl_id = $n->getAttribute('fx:template');
             $macro_id = $n->getAttribute('fx:macro');
             if ($tpl_id || $macro_id) {
@@ -220,6 +154,11 @@ class Html
                 $each_macro_tag .= $subroot;
                 $each_macro_tag .= ' select="' . $each_id . '"';
                 
+                if ( $n->hasAttribute('fx:scope') ) {
+                    $n->removeAttribute('fx:scope');
+                    $each_macro_tag .= ' scope="true" ';
+                }
+                
                 if ( ($each_add = $n->getAttribute('fx:add'))) {
                     $n->removeAttribute('fx:add');
                     $each_macro_tag .= ' add="'.$each_add.'"';
@@ -249,6 +188,14 @@ class Html
                 $n->wrap($each_macro_tag, '{/each}');
                 $n->removeAttribute('fx:each');
             }
+            
+            if ($n->hasAttribute('fx:scope')) {
+                $scope = $n->getAttribute('fx:scope');
+                $scope_start_tag = '{scope mode="start"}'.$scope.'{/scope}';
+                $n->wrap($scope_start_tag, '{scope mode="end" /}');
+                $n->removeAttribute('fx:scope');
+            }
+            
             $container_hash = false;
             if ( ($container_id = $n->getAttribute('fx:container') )) {
                 $container_hash = md5($container_id.time().rand(0,99999999));
@@ -390,51 +337,50 @@ class Html
                 $n->removeAttribute('fx:omit');
             }
             
+            $style_is_inline = false;
+            
+            if ($n->hasAttribute('fx:styled-inline')) {
+                $n->setAttribute('fx:styled', $n->getAttribute('fx:styled-inline'));
+                $n->removeAttribute('fx:styled-inline');
+                $style_is_inline = true;
+            }
+            
+            $styled_call = null;
+            if ($n->hasAttribute('fx:styled')) {
+                $styled_value = trim($n->getAttribute('fx:styled'));
+                $n->removeAttribute('fx:styled');
+                
+                $styled_call = '{styled %s ';
+                if ($style_is_inline) {
+                    $styled_call .= ' inline="true" ';
+                }
+                if ($styled_value !== '' && !preg_match("~(?:[a-z_-]+\:|\{)~", $styled_value)) {
+                    $styled_call .= 'label="'.$styled_value.'"}';
+                } else {
+                    $styled_call .= '}'.$styled_value;
+                }
+                $styled_call .= '{/styled}';
+            }
+            
             if ($n->hasAttribute('fx:e')) {
-                $e_value = $n->getAttribute('fx:e');
-                $n->addClass('{bem_element}'.$e_value.'{/bem_element}');
+                $el_value = $n->getAttribute('fx:e');
+                if ($styled_call && !$n->hasAttribute('fx:b')) {
+                    $el_parts = explode(" ", trim($el_value));
+                    $el_name = $el_parts[0];
+                    $styled_call = sprintf($styled_call, 'element="'.$el_name.'"');
+                    $el_value .= $styled_call;
+                }
+                $n->addClass('{bem_element}'.$el_value.'{/bem_element}');
                 $n->removeAttribute('fx:e');
             }
             
             if ($n->hasAttribute('fx:b')) {
                 $b_value = $n->getAttribute('fx:b');
-                if ($n->hasAttribute('fx:styled')) {
-                    
-                    $styled_value = trim($n->getAttribute('fx:styled'));
-                    $n->removeAttribute('fx:styled');
-                    
+                if ($styled_call) {
                     $block_parts = explode(" ", trim($b_value));
                     $block_name = $block_parts[0];
-                    
-                    $styled_call = '{styled block="'.$block_name.'" ';
-                    if ($styled_value !== '' && !preg_match("~(?:[a-z_-]+\:|\{)~", $styled_value)) {
-                        $styled_call .= 'label="'.$styled_value.'"}';
-                    } else {
-                        $styled_call .= '}'.$styled_value;
-                    }
-                    $styled_call .= '{/styled}';
+                    $styled_call = sprintf($styled_call, 'block="'.$block_name.'"');
                     $b_value .= $styled_call;
-                    //$n->addChildFirst(HtmlToken::create($styled_call));
-                    /*
-                    $p_meta = array();
-                    fx::cdebug('sv', $styled_value);
-                    if ($styled_value && !preg_match("~\s*[a-z_-]+\:~", $styled_value) && trim($styled_value) !== '') {
-                        fx::cdebug('labling');
-                        $p_meta['label'] = $styled_value;
-                    }
-                    $n->removeAttribute('fx:styled');
-                    $block_parts = explode(" ", trim($b_value));
-                    $block_name = $block_parts[0];
-                    $param_name = str_replace("-", '_', $block_name).'_style';
-                    $b_value .= ' style_{$'.$param_name.' /}';
-                    $style_param = '{@'.$param_name.' type="style" mask="'.$block_name.'_style_*" ';
-                    foreach ($p_meta as $k => $v) {
-                        $style_param .= ' '.$k.'="'.$v.'" ';
-                    }
-                    $style_param .= '/}';
-                    $n->addChildFirst(HtmlToken::create($style_param));
-                     * 
-                     */
                 }
                 $n->addClass('{bem_block '.($container_hash ? 'container="1"' : '').'}'.$b_value.'{/bem_block}');
                 $n->removeAttribute('fx:b');

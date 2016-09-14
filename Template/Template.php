@@ -74,14 +74,28 @@ class Template
     
     protected $bem_stack = array();
     
-    protected function bemStartBlock($name)
+    protected $bem_blocks_with_container_props = array();
+    
+    protected function bemStartBlock($name, $container_props = false)
     {
         $this->bem_stack[]= $name;
+        if ($container_props !== false) {
+            $this->context->pushContainerProps($container_props);
+            $this->bem_blocks_with_container_props [count($this->bem_stack) - 1]= true;
+        }
+        $classes = $this->context->getContainerClasses($container_props);
+        echo $classes;
     }
     
     protected function bemStopBlock()
     {
         array_pop($this->bem_stack);
+        
+        $index = count($this->bem_stack);
+        if (isset($this->bem_blocks_with_container_props [ $index ])) {
+            $this->context->popContainerProps();
+            unset($this->bem_blocks_with_container_props [ $index ]);
+        }
     }
     
     public function bemGetBlock()
@@ -284,7 +298,6 @@ class Template
     public function getTemplateSign()
     {
         $template_name = get_class($this);
-        fx::cdebug($this);
         return $template_name . ':' . $this->action;
     }
 
@@ -569,15 +582,26 @@ class Template
         return $res;
     }
     
-    public function addStyleLess($block, $value)
+    public function addStyleLess($block, $value, $params = array(), $is_temp = false)
     {
-        $bundle_keyword = $block.'_'. str_replace("--", "_", $value);
-        $bundle = fx::assets('style', $bundle_keyword);
-        $default_bundle = fx::assets('css');
+        $bundle_keyword = $block.'_'.$value;
+        $bundle = fx::assets('style', $bundle_keyword, $params);
+        $main_bundle = $is_temp ? 
+                                fx::page()->getTempCssBundle() 
+                                : 
+                                fx::page()->getDefaultCssBundle();
+        
+        $main_bundle->push(array($bundle));
+        $export_file = $bundle->getExportFile();
+        return $export_file;
+    }
+    
+    public function addTempStyleLess($block, $value, $params = array())
+    {
+        $bundle_keyword = $block.'_'.$value;
+        $bundle = fx::assets('style', $bundle_keyword, $params);
+        $default_bundle = fx::page()->getTempCssBundle();
         $default_bundle->push(array($bundle));
-        if (!$bundle->isFresh()) {
-            $bundle->save();
-        }
         $export_file = $bundle->getExportFile();
         return $export_file;
     }

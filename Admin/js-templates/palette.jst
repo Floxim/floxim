@@ -1,6 +1,9 @@
 <!--[input ? _c.type == 'palette']-->
 <?
     _c.value = _c.value || '';
+    if (typeof _c.colors === 'undefined') {
+        _c.colors = $fx.get_colors();
+    }
     var cl = $t.getBem('fx-palette'),
         value_bg = '',
         colors = {};
@@ -36,7 +39,7 @@
                 <? }); ?>
             </div>
         <?}); ?>
-        <? if (_c.opacity !== false) { ?>
+        <? if (_c.opacity) { ?>
             <div class="<?=cl('opacity-wrapper')?>">
                 <div class="<?=cl('opacity')?>"></div>
             </div>

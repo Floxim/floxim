@@ -73,6 +73,8 @@ window.$fx = {
         
         $fx.main_menu = new fx_main_menu($fx.settings.mainmenu);
         
+        
+        
         $(function () {
             var ajax_counter = 0;
             $(document).ajaxSend(function() {
@@ -89,6 +91,7 @@ window.$fx = {
             
             $fx.additional_menu = new fx_additional_menu();
             $fx.additional_menu.load();
+            
             $(window).hashchange($fx.set_mode);
             
             $(window).hashchange();
@@ -421,21 +424,6 @@ window.$fx = {
                     callback.apply(this, arguments);
                 }
             },
-            /*
-            success: [
-                function(json) {
-                    if (json.reload) {
-                        $fx.reload(json.reload);
-                        return;
-                    }
-                    if (json.status === 'error') {
-                        $fx.show_error(json);
-                        return;
-                    }
-                },
-                callback
-            ],
-            */
             error: function(jqXHR, textStatus, errorThrown) {
                 if ( textStatus === 'parsererror') {
                     $fx.show_status_text( $fx.lang('Server error:') + jqXHR.responseText, 'error');
@@ -485,6 +473,23 @@ window.$fx = {
         if (this.do_log) {
             console.log.apply(console, arguments);
         }
+    },
+    
+    get_colors: function() {
+        var res = {};
+        $.each($fx.layout_vars, function(k, v) {
+            var m = k.match(/^color-([a-z]+)-(\d+)/);
+            if (!m) {
+                return;
+            }
+            var c = m[1],
+                l = m[2];
+            if (typeof res[c] === 'undefined') {
+                res[c] = {};
+            }
+            res[c][c+' '+l] = v;
+        });
+        return res;
     }
 };
 })($fxj);

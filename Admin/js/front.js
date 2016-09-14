@@ -343,6 +343,8 @@ fx_front.prototype.get_area_meta = function($area_node) {
         }
     }
     if (typeof meta.size === 'undefined') {
+        meta.size = '';
+        /*
         // It would be nice to calculate
         var full_size = 1000;
         if ($area_node.outerWidth() < full_size*0.5) {
@@ -350,6 +352,7 @@ fx_front.prototype.get_area_meta = function($area_node) {
         } else {
             meta.size = '';
         }
+        */
         $area_node.data('fx_area', meta);
     }
     return meta;
@@ -911,7 +914,7 @@ fx_front.prototype.add_infoblock_select_settings = function(data) {
         },
         onready:function($form) {
 
-            var container_handler = new $fx.container.form_handler($form);
+            //var container_handler = new $fx.container.form_handler($form);
             
             // creating infoblock preview
             $fx.front.deselect_item();
@@ -952,7 +955,8 @@ fx_front.prototype.add_infoblock_select_settings = function(data) {
                 c_data = null;
 
             $form.on('change.fx_front', function(e) {
-                var new_data = $form.serialize();
+                //var new_data = $form.serialize();
+                var new_data = $form.formToHash();
                 if (c_data === new_data) {
                     return;
                 }
@@ -971,7 +975,7 @@ fx_front.prototype.add_infoblock_select_settings = function(data) {
                         var add_ib_to_form = function($new_ib_node) {
                             $form.data('ib_node', $new_ib_node);
                             is_waiting = false;
-                            container_handler.set_node($new_ib_node);
+                            //container_handler.set_node($new_ib_node);
                             $fx.front.extract_infoblock_visual_fields($new_ib_node, $form);
                             $fx.front.select_item($new_ib_node.get(0));
                         };
@@ -994,6 +998,15 @@ fx_front.prototype.add_infoblock_select_settings = function(data) {
             $('.fx_infoblock_stub').remove();
         }
     });
+};
+
+fx_front.prototype.is_styled_inline = function($n) {
+    return $n.hasClass('fx-styled-inline') 
+            && 
+            (
+                $n.hasClass('theme--floxim--basic--section') || 
+                $n.hasClass('theme--floxim--basic--layout')
+            );
 };
 
 fx_front.prototype.is_selectable = function(node) {
@@ -1019,7 +1032,7 @@ fx_front.prototype.is_selectable = function(node) {
             }
             return false;
         case 'edit':
-            if (n.hasClass('fx-container')) {
+            if ($fx.front.is_styled_inline(n)) {
                 return true;
             }
             if (n.hasClass('fx_infoblock')) {
@@ -1223,16 +1236,19 @@ fx_front.prototype.draw_select_path = function($node) {
                 is_active:is_active
             });
         }
-        if ($cp.is('.fx-container') && !$cp.is('.fx_infoblock') && !$cp.is('.fx_entity')) {
+        if ( $fx.front.is_styled_inline($cp) && !$cp.is('.fx_infoblock') && !$cp.is('.fx_entity')) {
+            /*
             var container_data = $cp.data('fx_container'),
                 container_name = container_data.name;
+            */
+            var container_name = '';
             
             if ($cp.is('.fx_area')) {
                 var area_meta = $cp.data('fx_area');
                 if (area_meta.name) {
                     container_name = area_meta.name;
                 }
-            } else if (container_name === 'layout') {
+            } else if ($cp.is('.theme--floxim--basic--layout')) {
                 container_name = 'Страница';
             }
             path_items.push({
@@ -1372,9 +1388,84 @@ fx_front.prototype.select_item = function(node) {
     
     $node.closest('.fx_entity_hidden').addClass('fx_entity_hidden-selected');
     
-    if ($node.is('.fx-container')) {
-        $fx.front.select_container($node);
+    if ($node.is('.fx-styled-inline')) {
+        $fx.front.select_styled($node);
     }
+};
+
+fx_front.prototype.select_styled = function($node) {
+    var node_panel = this.node_panel.get($node);
+    var $ib = $node.closest('.fx_infoblock'),
+        ib_meta = $ib.data('fx_infoblock');
+    
+    var style_id = $node.attr('class').match(/_style-id_([^\s]+)/);
+    
+    if (!style_id) {
+        return;
+    }
+    style_id = style_id[1];
+    
+    var template_params = $ib.data('fx_template_params'),
+        param_key = null,
+        param_meta = null;
+        
+    if (!template_params) {
+        return;
+    }
+    
+    $.each(template_params, function(k, tp) {
+        if (tp.style_id && tp.style_id !== style_id) {
+            return;
+        }
+        param_key = k;
+        param_meta = tp;
+        return false;
+    });
+    
+    if (!param_key || !param_meta) {
+        return;
+    }
+    
+    var pm = JSON.parse(JSON.stringify(param_meta));
+    
+    node_panel.add_button(
+        {
+            keyword:'container',
+            type:'icon',
+            title:'Стиль'
+        }, 
+        function() {
+            var fields = [param_meta];
+            $fx.front.prepare_infoblock_visual_fields([fields], function(res) {
+                fields = res[0];
+                $fx.front_panel.show_form({
+                    header: 'Правим стиль',
+                    fields: fields,
+                    form_buttons: ['cancel']
+                }, {
+                    view:'horizontal',
+                    onsubmit: function(e) {
+                        //update_data($(e.target));
+                        var $f = $(e.target),
+                            vals = $f.find('.fx-field-group').formToHash();
+                        
+                        $fx.post({
+                            entity:'layout',
+                            action:'save_inline_style',
+                            prop:param_key,
+                            value: vals,
+                            visual_id: ib_meta.visual_id
+                        }, function(res) {
+                            //console.log(res, ib_meta, param_meta, pm);
+                            $fx.front_panel.hide();
+                            $fx.front.reload_infoblock($ib);
+                        });
+                        return false;
+                    }
+                });
+            });
+        }
+    );
 };
 
 
@@ -1879,9 +1970,7 @@ fx_front.prototype.load = function ( mode ) {
         left:0,
         width:$(window).width(),
         height:$(window).height() - panel_height
-    });/*.animate({
-        opacity:0.8
-    }, 100);*/
+    });
     
     $('body').removeClass('fx_mode_'+this.mode).addClass('fx_mode_'+mode);
     
@@ -1920,6 +2009,7 @@ fx_front.prototype.load = function ( mode ) {
         } else {
             this.set_mode_design();
         }
+        this.get_front_overlay().css('top', 0);
     }
       
     if ( $fx.settings.additional_text ) {
@@ -2444,9 +2534,13 @@ fx_front.prototype.prepare_infoblock_visual_fields = function(all_props, callbac
                 if (is_hidden) {
                     prop.type = 'hidden';
                 } else {
-                    prop.type = 'livesearch';
-                    prop.values = variants;
-                    prop.allow_empty = false;
+                    if (prop.is_inline) {
+                        prop = $.extend(prop, variants);
+                    } else {
+                        prop.type = 'livesearch';
+                        prop.values = variants;
+                        prop.allow_empty = false;
+                    }
                 }
             }
             callback(all_props);
@@ -2470,6 +2564,7 @@ fx_front.prototype.extract_infoblock_visual_fields = function($ib_node, $form) {
         }
         all_props[type] = props || null;
     });
+    
     this.prepare_infoblock_visual_fields(all_props, function() {
         $.each(all_props, function(type, props) {
             //var props = $ib_node.data('fx_'+type+'_params'),
@@ -2480,13 +2575,21 @@ fx_front.prototype.extract_infoblock_visual_fields = function($ib_node, $form) {
             }
             var $rel_field = $(':input[name="visual['+type+']"]', $form).closest('.field');
             $.each(props, function(prop_name, prop_data) {
+                var field_name = 'visual['+type+'_visual]['+prop_name.replace(/\./, '][')+']';
                 var meta = $.extend(
                     {}, 
                     prop_data, {
-                        name:'visual['+type+'_visual]['+prop_name+']',
+                        name:field_name,
                         view_context:'panel'
                     }
                 );
+        
+                if (meta.type === 'group' && meta.fields) {
+                    for (var i = 0; i < meta.fields.length; i++) {
+                        var cf = meta.fields[i];
+                        cf.name = field_name+'['+cf.name+']';
+                    }
+                }
 
                 if (meta.parent) {
                     if (typeof meta.parent === 'string') {
@@ -2558,15 +2661,17 @@ fx_front.prototype.select_infoblock = function($node, panel) {
             onready:function($form) {
                 $form.data('ib_node', ib_node);
                 $fx.front.extract_infoblock_visual_fields($ib_node, $form);
-                var c_data = $form.serialize();
-
-                container_handler = new $fx.container.form_handler($form, $ib_node);
+                //var c_data = $form.serialize();
+                var c_data = $form.formToHash();
+                
+                //container_handler = new $fx.container.form_handler($form, $ib_node);
                 
                 $form.on('change.fx_front', function(e) {
                     if (e.target.name === 'livesearch_input' || e.target.name === 'scope[type]') {
                         return;
                     }
-                    var new_data = $form.serialize();
+                    //var new_data = $form.serialize();
+                    var new_data = $form.formToHash();
                     
                     if (new_data === c_data && !e.fx_forced) {
                         return;
@@ -2582,7 +2687,7 @@ fx_front.prototype.select_infoblock = function($node, panel) {
                             has_changes = true;
                             $form.data('ib_node', $new_ib_node);
                             $fx.front.extract_infoblock_visual_fields($new_ib_node, $form);
-                            container_handler.set_node($new_ib_node);
+                            //container_handler.set_node($new_ib_node);
                             is_waiting = false;
                         }, 
                         {override_infoblock:c_data}
@@ -2593,7 +2698,7 @@ fx_front.prototype.select_infoblock = function($node, panel) {
                 if (has_changes) {
                     $fx.front.reload_infoblock($form.data('ib_node'));
                 } else {
-                    container_handler.reset_block();
+                    //container_handler.reset_block();
                 }
             }
         });
@@ -2845,6 +2950,7 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
          selected_selector = selected.first().generate_selector(ib_parent);
     }
     var real_infoblock_id = (extra_data || {}).real_infoblock_id || meta.id;
+    
     var xhr = $.ajax({
         type:'post',
         data:post_data,
@@ -2863,18 +2969,41 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
 
            if (is_layout) {
                $fx.front.front_overlay = null;
-               var inserted = false;
-               $infoblock_node.children().each(function() {
-                   if(!$(this).hasClass('fx_overlay')) {
-                       if (!inserted) {
-                            $(this).before(res);
+               var inserted = false,
+                   $res = $(res),
+                   res_root = $res[0];
+           
+                
+                $infoblock_node.trigger('fx_infoblock_unloaded');
+                $infoblock_node.children().each(function() {
+                    var $child = $(this);
+                    if(!$child.hasClass('fx_overlay')) {
+                        if (!inserted) {
+                            $child.before( $res.html() );
                             inserted = true;
-                       }
-                       $(this).remove();
-                   }
-               });
-               var $new_infoblock_node = $('body');
-               $new_infoblock_node.removeClass('fx_infoblock_disabled');
+                        }
+                        $child.remove();
+                    }
+                });
+                var $new_infoblock_node = $('body');
+                for (var i = 0; i < res_root.attributes.length; i++) {
+                    var att = res_root.attributes[i],
+                        data_prop = att.name.match(/data-(.+)/),
+                        data_val;
+                
+                    $new_infoblock_node.attr(att.name, att.value);
+                    if (!data_prop) {
+                        continue;
+                    }
+                    data_prop = data_prop[1];
+                    try {
+                        data_val = JSON.parse(att.value);
+                    } catch (e) {
+                        data_val = att.value;
+                    }
+                    $new_infoblock_node.data(data_prop, data_val );
+                }
+                $new_infoblock_node.removeClass('fx_infoblock_disabled');
            } else {
                var $new_infoblock_node = $( $.trim(res) );
                if ($new_infoblock_node.length > 0) {
@@ -3188,7 +3317,7 @@ fx_front.prototype.outline_block = function(n, style, speed) {
     
     
     //if (style === 'selected' || style === 'hidden' || style === 'selected_light') {
-    if (params.recount) {
+    if (params.recount ) {
         var recount_outlines = function(e) {
             $fx.front.outline_block(n, style);
             $fx.front.recount_node_panel();

@@ -151,6 +151,7 @@ class Admin extends System\Controller
         $js_files = array(
             FX_JQUERY_PATH,
             $path_floxim . '/lib/js/jquery.bem.js', // https://github.com/zenwalker/jquery-bem
+            $path_floxim . '/lib/js/promise.min.js',
             $path_floxim . '/Admin/js/fxj.js',
             $path_floxim . '/Admin/js/fx.js',
             $path_floxim . '/Admin/js/js-dictionary-' . $lang . '.js',
@@ -169,6 +170,7 @@ class Admin extends System\Controller
             $path_floxim . '/Admin/js/buttons.js',
             $path_floxim . '/Admin/js/form.js',
             $path_floxim . '/Admin/js/debug.js',
+            $path_floxim . '/lib/js/clipboard.min.js',
             $path_floxim . '/Admin/js/livesearch.js',
             $path_floxim . '/Admin/js/suggest.js',
             $path_floxim . '/Admin/js/fields.js',
@@ -193,9 +195,12 @@ class Admin extends System\Controller
             $path_floxim . '/Admin/js/node-panel.js',
             $path_floxim . '/Admin/js/condition-builder.js',
             $path_floxim . '/Admin/js/infoblock.js',
+            $path_floxim . '/Admin/js/styles.js',
             $path_floxim . '/lib/lessjs/less.min.js',
             $path_floxim . '/lib/tinycolor/tinycolor.js',
             $path_floxim . '/Admin/js/colorset.js',
+            $path_floxim . '/Admin/js/number-slider.js',
+            $path_floxim . '/Admin/js/css-background.js',
             $path_floxim . '/Admin/js/font-preview.js',
             $path_floxim . '/Admin/js/bem-less.js'
         );
@@ -243,6 +248,11 @@ class Admin extends System\Controller
             $res = fx::template('@admin:back_office')->render(array('panel' => $panel));
             $js_config = new FxAdmin\Configjs();
             fx::page()->addJsText("\$fx.init(" . $js_config->getConfig() . ");");
+            
+            fx::page()->addJsText(
+                '$fx.layout_vars = '.json_encode( fx::env()->getLayoutStyleVariant()->get('less_vars') ).';'
+            );
+            
         } else {
             $auth_form = fx::controller('floxim.user.user:auth_form')->render('floxim.user.user:auth_form');
 

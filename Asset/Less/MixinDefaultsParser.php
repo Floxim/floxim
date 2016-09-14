@@ -42,7 +42,7 @@ class MixinDefaultsParser {
             $c_var =& $this->vars[$var_name];
             $value = $this->output->get($arg['value'], false);
             $parts = null;
-            $match_units = preg_match("~^\d+(em|rem|px|pt|%|vh|vw)~", $value, $parts);
+            $match_units = preg_match("~^[\d\.]+(em|rem|px|pt|%|vh|vw)~", $value, $parts);
             if ($match_units) {
                 if (!isset($c_var['type'])) {
                     $c_var['type'] = 'number';

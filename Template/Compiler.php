@@ -157,12 +157,16 @@ class Compiler
             $class = trim($class);
             $code .= $class;
             // token is not a container, so we should add fx-content_parent-* classes
+            /*
             if (!$token->getProp('container')) {
                 $code .= '<?php echo " ".$context->getContentClasses(true); ?>';
             }
+             * 
+             */
+            /* $code .= '<?php echo " ".$context->getContainerClasses(); ?>'; */
             return $code;
         }
-        
+        $code .= "\n\$block_container_props = false;\n";
         $code .= "\nob_start();\n";
         $this->pushState('edit', false);
         $code .= $this->childrenToCode($token);
@@ -170,15 +174,19 @@ class Compiler
         $code .= '$block_string = ob_get_clean();'."\n";
         $code .= '$block_parts = \\Floxim\\Floxim\\Template\\Template::bemParseStr($block_string);'."\n";
         $code .= '$block_parts[\'name\'] = "'.$ns.'".$block_parts[\'name\'];'."\n";
-        $code .= "\$this->bemStartBlock(\$block_parts['name']);\n";
+        $code .= "\$this->bemStartBlock(\$block_parts['name'], \$block_container_props);\n";
         $code .= "echo \$block_parts['name'].' ';\n";
         $code .= "foreach (\$block_parts['modifiers'] as \$mod) {\n";
         $code .= "echo \$block_parts['name'].'_'.\$mod.' ';\n";
         $code .= "}\n";
         $code .= "echo join(' ', \$block_parts['plain']);\n";
+        /*
         if (!$token->getProp('container')) {
             $code .= "echo ' '.\$context->getContentClasses(true);\n";
         }
+         * 
+         */
+        //$code .= ' echo " ".$context->getContainerClasses();'."\n";
         $code .= "?>";
         return $code;
     }
@@ -457,11 +465,33 @@ class Compiler
             $value_to_set = '';
             $meta_to_set = null;
             if ($param_var_token->hasChildren()) {
-                // pass the inner html code
-                $value_to_set .= "ob_start();\n";
-                $value_to_set .= $this->childrenToCode($param_var_token);
-                $value_to_set .= "\n";
-                $passed_value_type = 'buffer';
+                $raw_value = $param_var_token->getRawValue();
+                $is_yaml = $param_var_token->getProp('format') === 'yaml';
+                if (!$raw_value) {
+                    // pass the inner html code
+                    $value_to_set .= "ob_start();\n";
+                    $value_to_set .= $this->childrenToCode($param_var_token);
+                    $value_to_set .= "\n";
+                    $passed_value_type = 'buffer';
+                    if ($is_yaml) {
+                        // @todo: handle newlines after php closing tag (? >)
+                        $value_to_set = array(
+                            $value_to_set,
+                            'self::processYaml(ob_get_clean())'
+                        );
+                    }
+                } else {
+                    if ($is_yaml) {
+                        $value_to_set = array(
+                            '',
+                            var_export(Template::processYaml($raw_value), 1)
+                        );
+                        $passed_value_type = 'buffer';
+                    } else {
+                        $value_to_set = $raw_value;
+                        $passed_value_type = 'string';
+                    }
+                }
             } elseif (($select_att = $param_var_token->getProp('select'))) {
                 // pass the result of executing the php code
                 //$value_to_set = self::parseExpression($select_att);
@@ -505,8 +535,13 @@ class Compiler
                         }
                         break;
                     case 'buffer':
-                        $code .= $passed_var[1];
-                        $code .= $tpl_passed."['".$passed_var_key."'] = ob_get_clean();\n";
+                        if (is_array($passed_var[1])) {
+                            $code .= $passed_var[1][0];
+                            $code .= $tpl_passed."['".$passed_var_key."'] = ".$passed_var[1][1].";\n";
+                        } else {
+                            $code .= $passed_var[1];
+                            $code .= $tpl_passed."['".$passed_var_key."'] = ob_get_clean();\n";
+                        }
                 }
             }
             if (count($with_passed_props) > 0) {
@@ -630,10 +665,13 @@ class Compiler
     /*
      * Genrate code to export vars from less style to template context
      */
-    public static function generateStyleExportCode($export, $vals)
+    public static function generateStyleExportCode($props, $vals)
     {
-        $code = '<?php'."\n";
-        foreach ($export as $var => $expression) {
+        //$code = '<?php'."\n";
+        
+        $code = '';
+        
+        foreach ($props['export'] as $var => $expression) {
             $expression = preg_replace_callback(
                 '~@([a-z0-9_-]+)~',
                 function( $matches ) use ($vals) {
@@ -657,6 +695,32 @@ class Compiler
             );
             $code .= '$context->set("'.$var.'", '.$expression.");\n";
         }
+        $container_props = array();
+        foreach ($props['container'] as $var => $val) {
+            $val = trim($val);
+            switch ($var) {
+                case 'lightness':
+                    $lightness = null;
+                    if (preg_match("~^[^,]+~", $vals[$val], $lightness)) {
+                        $lightness = $lightness[0];
+                        if ($lightness === 'light' || $lightness === 'dark') {
+                            $container_props['lightness'] = $lightness;
+                        }
+                    }
+                    break;
+                case 'width':
+                    $container_props['width'] = $vals[$val];
+                    break;
+            }
+        }
+        if (count($container_props) > 0) {
+            $code .= '$block_container_props = '.var_export($container_props,1).";\n";
+        }
+        
+        if (empty($code)) {
+            return;
+        }
+        $code = '<?php'."\n".$code;
         return $code;
     }
 
@@ -784,6 +848,29 @@ class Compiler
         $code .= "} else {\n";
         $code .= $var . " = FX_BASE_URL .".$var.";\n";
         $code .= "}\n";
+        return $code;
+    }
+    
+    protected function tokenScopeToCode(Token $token)
+    {
+        $code =  "<?php\n";
+        if ($token->getProp('mode') === 'start') {
+            $code .= "ob_start();\n";
+            $code .= $this->childrenToCode($token)."\n";
+            $scope_name_var  = '$scope_name';
+            $code .= $scope_name_var ." = ob_get_clean();\n";
+            $scope_arr_var = '$scope_arr';
+            $code .= $scope_arr_var .' = $context->get('.$scope_name_var.");\n";
+            $code .= 'if (!'.$scope_arr_var.") {\n";
+            $code .= $scope_arr_var .' = array();'."\n";
+            $code .= "}\n";
+            $code .= '$context->push('.$scope_arr_var.");\n";
+            $code .= '$context->startScope('.$scope_name_var.');'."\n";
+        } else {
+            $code .= '$context->pop();'."\n";
+            $code .= '$context->stopScope()'."\n";
+        }
+        $code .= "\n?>";
         return $code;
     }
 
@@ -1001,6 +1088,9 @@ class Compiler
             
             if ($real_val_defined) {
                 $meta_parts [] = 'array("real_value" => ' . $real_val_var . ')';
+            }
+            if ($token_is_visual) {
+                $meta_parts []= 'array("scope_path" => $context->getScopePath())';
             }
             if (count($meta_parts) > 1) {
                 $code .= 'array_merge(' . join(", ", $meta_parts) . ')';
@@ -1248,57 +1338,177 @@ class Compiler
         return $code;
     }
     
+    protected function childrenToVar($token, $var_name)
+    {
+        $children = $token->getChildren();
+        $res = "\n";
+        if (count($children === 0)) {
+            $res .= $var_name . ' = ""'.";\n";
+        } elseif (count($children) === 1 && $children[0]->name === 'code') {
+            $res .= $var_name . " = '".addslashes($children[0]->getProp('value'))."';\n";
+        } else {
+            $res .= "ob_start();\n";
+            $res .= $this->childrenToCode($token);
+            $res .= $var_name . " = ob_get_clean();\n";
+        }
+        return $res;
+    }
+    
     protected function tokenStyledToCode(Token $token)
     {
-        $code = '<?php ob_start();'."\n";
-        $code .= $this->childrenToCode($token);
-        $var = '$style_info';
-        $code .= $var .' = \Floxim\Floxim\Template\Compiler::parseCssLikeProps(ob_get_clean());'."\n";
+        // value passed to registered param, 
+        // as is in JSON or 'default'
+        $_style_value = '$style_value';
+        
+        // path to value in JSON, 
+        // added as $block_name.'_style-id_'.$style_var_path modifier 
+        // in admin mode only, used by tweaker
+        $_style_value_path = '$style_value_path';
+        
+        // value passed to fx::asset('style', $block_name.'_style_'.$bundle_id)
+        //  - $param_value if style is NOT inline
+        //  - $style_value_path if style IS inline
+        $_bundle_id = '$bundle_id';
+        
+        $_mod_value = '$mod_value';
+        
+        $_block_name = '$block_name';
+        $_style_info = '$style_info';
+        
+        $_bundle_params = '$bundle_params';
+        
+        $_bundle_is_temp = '$bundle_is_temp';
+        
+        $_style_id = '$style_id';
+        
+        $_style_id_mod = '$style_id_mod';
+        
+        $code = '<?php'."\n";
+        
+        $ns = $this->getBemNamespace();
+        
+        $id = $token->getProp('id');
+        
+        $children = $token->getChildren();
+        $has_info = count($children) > 0;
+        
+        $has_block = $token->getProp('block');
         
         $label = $token->getProp('label');
-        $id = $token->getProp('id');
-        $ns = $this->getBemNamespace();
-        $block = $ns.$token->getProp('block');
         
-        $id_val = '$style_id';
-        $code .= $id_val.' = ';
+        if ($has_block) {
+            $code .= $_block_name . ' = "'.$ns.$token->getProp('block').'";'."\n";
+            $default_id = '"'.str_replace('-', '', $ns.$token->getProp('block')).'"';
+        } else {
+            $code .= $_block_name . ' = $this->bemGetBlock()."__'.$token->getProp('element').'";'."\n";
+            $default_id = "str_replace('-', '', ".$_block_name.")";
+        }
+        
+        $raw_value = null;
+        
+        if ($has_info) {
+            $raw_value = $token->getRawValue();
+            if ($raw_value !== null) {
+                $style_info = self::parseCssLikeProps($raw_value);
+                $code .= $_style_info .' = '.var_export($style_info, 1).";\n";
+            } else {
+                $code .= $this->childrenToVar($token, $_style_info);
+                $code .= $_style_info .' = \Floxim\Floxim\Template\Compiler::parseCssLikeProps('.$_style_info.');'."\n";
+            }
+        } else {
+            $code .= $_style_info ." = array();\n";
+        }
+        
+        $is_inline = $token->getProp('inline') === 'true';
+        
+        $code .= $_style_id.' = ';
         if ($id) {
             $code .= "'".$id."'";
+        } elseif ($has_info) {
+            if ($raw_value !== null) {
+                $code .= isset($style_info['id']) ? $style_info['id'] : $default_id;
+            } else {
+                $code .=  '( isset('.$_style_info."['id']) ? ".$_style_info."['id'] : ".$default_id.")";
+            }
         } else {
-            $code .=  '( isset('.$var."['id']) ? ".$var."['id'] : '".str_replace("-", '_', $block)."' )";
+            $code .= $default_id;
         }
-        $code .= ".'_style';\n";
+        $code .= ";\n";
         
-        $val_var = '$style_value';
-        $code .= $val_var . "  = \$context->get(".$id_val.");\n";
-        $code .= "if (!".$val_var.") {\n";
-        $code .= $val_var . "  = 'default';\n";
-        $code .= "}\n";
+        $code .= $_style_value . "  = \$context->get(".$_style_id.".'_style');\n";
         
-        $mod_id_var = '$style_mod_id';
-        $code .= $mod_id_var . " = preg_replace('~[^a-z0-9]~i', '-', ".$id_val.");\n";
+        $code .= $_style_value_path .' = $context->getScopePrefix().'.$_style_id.";\n";
+ 
+        if ($label) {
+            $label_prop = '"'.$label.'"';
+        } elseif ($raw_value !== null) {
+            $label_prop = isset($style_info['label']) ? '"'.$style_info['label'].'"' : '""';
+        } elseif ($has_info) {
+            $label_prop = 'isset('.$_style_info."['label']) ? ".$_style_info."['label'] : ''";
+        } else {
+            $label_prop = '""';
+        }
         
         $param_props = array(
-            'label' => $label ? '"'.$label.'"' : $var."['label']",
+            'label' => $label_prop,
             'type' => '"style"',
-            'block' => '"'.$block.'"',
-            'value' => $val_var,
-            'style_id' => $mod_id_var
+            'block' => $_block_name,
+            'value' => $_style_value,
+            'is_inline' => $is_inline ? 'true' : 'false',
+            'style_id' => $_style_id_mod,
+            'asset_id' => $_bundle_id,
+            'mod_value' => $_mod_value
         );
+        
+        
+        $code .= "if (!".$_style_value.") {\n";
+            $code .= $_style_value . " = 'default';\n";
+            $code .= $_bundle_id . " = 'default';\n";
+            $code .= $_mod_value . " = 'default';\n";
+            $code .= $_bundle_params . " = array();\n";
+            $code .= $_bundle_is_temp ." = false;\n";
+        $code .= "} else {\n";
+            if ($is_inline) {
+                $_visual_path = '$visual_path';
+                $_visual_id = '$visual_id';
+                $code .= $_visual_id . " = \$context->getVisualId();\n";
+                $code .= $_bundle_is_temp ." = substr(".$_visual_id.", -5, 5) === '-temp';\n";
+                $code .= $_visual_path . ' = ($this->isWrapper() ? "w" : "t")."-".'.$_style_value_path.";\n";
+                $code .= $_mod_value . ' = md5('.$_visual_id.'."-".'.$_visual_path.");\n";
+                $code .= $_bundle_id . ' = "default_inline_".'.$_visual_id.'."_".'.$_mod_value.";\n";
+                $code .= $_bundle_params . " = array('visual_path' => ".$_visual_path.");\n";
+            } else {
+                $code .= $_bundle_id .' = '.$_style_value.";\n";
+                $code .= $_bundle_params . " = array();\n";
+                $code .= $_mod_value . " = str_replace('_variant_', '--', ".$_bundle_id.");\n";
+                $code .= $_bundle_is_temp ." = false;\n";
+            }
+        $code .= "}\n";
         
         $exported_props = array();
         foreach ($param_props as $p => $v) {
             $exported_props []= '"'.$p.'" => '.$v;
         }
-        $code .= "\$this->registerParam(".$id_val.", array(".join(", ", $exported_props).") );\n";
-        $code .= 'if ( ($export_style_file = $this->addStyleLess("'.$block.'", '.$val_var.') ) ) {'."\n";
+        
+        $code .= 'if ( ($export_style_file = $this->addStyleLess('.
+                    $_block_name.', '.$_bundle_id.', '.$_bundle_params.', '.$_bundle_is_temp.
+                ') ) ) {'."\n";
         $code .= 'require( $export_style_file );'."\n";
         $code .= "}\n";
         
+        $code .= " echo ' style_'.".$_mod_value.";\n";
+        
         $code .= "if (\$_is_admin) {\n";
-        $code .= " echo ' style-id_'.".$mod_id_var.";\n";
+            $code .= $_style_id_mod .' = md5('.$_style_value_path.'.'.$_mod_value.");\n";
+            $code .= " echo ' ".($is_inline ? '.fx-styled-inline' : '')." style-id_'.".$_style_id_mod.";\n";
+            $code .= "\$this->registerParam(".
+                        "\n\t".$_style_id.".'_style',".
+                        "\n \tarray(".
+                            "\n\t\t".join(",\n\t\t ", $exported_props).
+                        "\n\t)".
+                     "\n);\n";
         $code .= "}\n";
-        $code .= " echo ' style_'.".$val_var.";\n ?>";
+        $code .= "?>";
         return $code;
     }
 
@@ -1310,6 +1520,11 @@ class Compiler
             $select = '$.items';
         }
         $arr_id = self::parseExpression($select);
+        
+        $has_scope = $token->getProp('scope') === 'true';
+        if ($has_scope) {
+            $scope_base_name = preg_replace('~^\$~', '', $select);
+        }
 
 
         $loop_alias = 'null';
@@ -1339,7 +1554,7 @@ class Compiler
             $loop_key = '"' . $item_key . '"';
         }
 
-        $separator = $this->findSeparator($token);
+        
         $check_traversable = $token->getProp('check_traversable') !== 'false';
         if ($check_traversable ) {
             $code .= "if (is_array(" . $arr_id . ") || " . $arr_id . " instanceof Traversable) {\n";
@@ -1358,18 +1573,28 @@ class Compiler
         $code .= $counter_id." = 1;\n";
         
         $code .= "\$context->push(" . $loop_id . ", array('transparent' => true));\n";
+        if ($has_scope) {
+            $code .= "\$context->startScope('".$scope_base_name."');\n";
+        }
         $code .= "\nforeach (" . $arr_id . " as \$" . $item_key . " => \$" . $item_alias . ") {\n";
         $code .= $loop_id . "->move();\n";
+        
+        if ($has_scope) {
+            $code .= '$context->startScope($'.$item_key.");\n";
+        }
+        
         // get code for step with scope & meta
         $code .= $this->getItemCode($token, $item_alias, $counter_id, $arr_id);
 
-        if ($separator) {
-            $code .= 'if (!' . $loop_id . '->isLast()) {' . "\n";
-            $code .= $this->childrenToCode($separator);
-            $code .= "\n}\n";
-        }
         $code .= $counter_id."++;\n";
+        
+        if ($has_scope) {
+            $code .= '$context->stopScope();'."\n";
+        }
         $code .= "}\n"; // close foreach
+        if ($has_scope) {
+            $code .= '$context->stopScope();'."\n";
+        }
         $code .= $loop_id."->stop();\n";
         $code .= "\$context->pop();\n";
         if ($check_traversable) {
@@ -1412,8 +1637,6 @@ class Compiler
         $code = "<?php\n";
         
         $var = $token->getProp('var');
-        
-        fx::cdebug($token);
         
         $meta = null;
         
@@ -1593,6 +1816,7 @@ class Compiler
     
     protected function tokenContainerToCode($token) 
     {
+        return '';
         $code = "<?php ";
         $var = '$container_'.$token->getProp('id');
         switch ($token->getProp('mode')) {
@@ -1608,11 +1832,6 @@ class Compiler
             case 'class':
                 $code .= "echo ".$var.'->getClasses();';
                 break;
-            /*
-            case 'style':
-                $code .= "echo ".$var.'->getStyles();';
-                break;
-            */
             case 'meta':
                 $code .= "\nif (\$_is_admin) {\n";
                 $code .= " echo ' data-fx_container=\''.".$var."->getMetaJson().'\'';\n";

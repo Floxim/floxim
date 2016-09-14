@@ -116,7 +116,7 @@ class Entity extends \Floxim\Floxim\System\Entity
 
     public function getStyleKeyword()
     {
-        return $this['style'].($this['id'] ? '--'.$this['id'] : '');
+        return $this['style'].($this['id'] ? '_variant_'.$this['id'] : '');
     }
     
     public function getStyleLess()
@@ -149,13 +149,8 @@ class Entity extends \Floxim\Floxim\System\Entity
     
     public function afterDelete()
     {
-        $file = $this->getStyleLessFilePath();
-        if (file_exists($file)) {
-            fx::files()->rm($file);
-        }
-        
+        $this->getBundle()->delete();
         $this->unbindFromVisuals();
-        
     }
     
     public function unbindFromVisuals()
@@ -194,7 +189,7 @@ class Entity extends \Floxim\Floxim\System\Entity
     
     public function getBundleKeyword()
     {
-        return $this['block'] .'_'.$this['style'].($this->is_saved ? '_'.$this['id'] : '');
+        return $this['block'] .'_'.$this['style'].($this->is_saved ? '_variant_'.$this['id'] : '');
     }
 
     public function getStyleLessFilePath()

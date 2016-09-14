@@ -6,6 +6,12 @@ use \Floxim\Floxim\System\Fx as fx;
 
 use \Symfony\Component\Yaml;
 
+/*
+ * [block--name]_[style_name] - default (with no external vars)
+ * [block--name]_[style_name]_inline_[infoblock_visual.id]_[md5(visual_id.'-'.bundle_id)]
+ * [block--name]_[style_name]_variant_[style_variant.id]
+ */
+
 
 /**
  * Style bundle - for bem blocks with @fx:styled
@@ -16,35 +22,61 @@ class StyleBundle extends Bundle {
     protected $extension = 'css';
     
     public function __construct($keyword, $params = array()) {
-        $kw_parts = explode("_", $keyword);
         
-        $this->meta['variant_id'] = isset($kw_parts[2]) ? $kw_parts[2] : null;
+        
+        $this->meta = array_merge($this->meta, self::parseKeyword($keyword));
+        
+        if (isset($params['visual_path'])) {
+            $this->meta['visual_path'] = $params['visual_path'];
+            unset($params['visual_path']);
+        }
         
         parent::__construct($keyword, $params);
         
         if ($this->is_new) {
-            $parts = self::parseKeyword($keyword);
-            $this->meta = array_merge($this->meta, $parts);
-            
-            $files = array();
-            $files []= $this->meta['declaration_file'];
-            $this->push($files);
+            $this->init();
         }
     }
     
-    public function getHash() 
-    {
-        if ($this->meta['variant_id']) {
-            return '';
+    
+    public function getDirPath() {
+        $res = self::getCacheDir();
+        switch ($this->meta['type']) {
+            case 'default': default:
+                $res .=  '/'.$this->getHash()
+                        .'/'.$this->meta['block_name']
+                        .'/'.$this->meta['style_name'];
+                break;
+            case 'inline':
+                $res .= '/inline/'.$this->meta['visual_id']
+                       .(isset($this->meta['is_temp']) && $this->meta['is_temp'] ? '-temp' : '')
+                       .'/'.$this->meta['visual_path_hash'];
+                break;
+            case 'variant':
+                $res .= '/variant/'.$this->meta['variant_id'];
+                break;
         }
-        return parent::getHash();
+        return $res;
+    }
+    
+    protected $meta_updated = false;
+    
+    public function isFresh($file = null) {
+        if ($file !== null) {
+            return parent::isFresh($file);
+        }
+        if (isset($this->meta['is_temp']) && $this->meta['is_temp']) {
+            return false;
+        }
+        return parent::isFresh();
     }
     
     public function getStyleMeta()
     {
         $declaration_file = $this->meta['declaration_file'];
-        if (!$this->isFresh($declaration_file) || !isset($this->meta['style'])) {
-            fx::cdebug('real read meta');
+        
+        if (!$this->meta_updated && (!$this->isFresh($declaration_file) || !isset($this->meta['style']) )) {
+            
             if (!file_exists($declaration_file)) {
                 fx::log('no file', $declaration_file, $this);
                 return null;
@@ -83,48 +115,118 @@ class StyleBundle extends Bundle {
                         }
                     }
                 } catch (\Exception $e) {
-                    fx::cdebug('cat', $e, $comment);
+                    fx::log('cat', $e, $comment);
                 }
             }
+            
+            $res['vars'] = $this->extractDefaults($res['vars']);
+            
             $this->meta['style'] = $res;
+            $this->meta_updated = true;
+            
         }
         return $this->meta['style'];
     }
     
-    public static function parseKeyword($keyword)
+    public function init()
     {
-        $parts = explode("_", $keyword);
-        $path = $parts[0];
-        $path = explode("--", $path);
-        $block = array_pop($path);
-        $style = $parts[1];
-        $namespace = join("--", $path);
+        $block = $this->meta['block_name'];
+        $block_info = self::parseBlockName($block);
         
-        if ($path[0] === 'theme') {
-            array_shift($path);
+        $declaration_file = $block_info['path'].'/'
+                           .$block_info['block_base']
+                           .'_style_'.$this->meta['style_name'].'.less';
+        
+        $this->meta['declaration_file'] = $declaration_file;
+        $this->meta = array_merge($this->meta, $block_info);
+        $this->push(array($this->meta['declaration_file']));
+    }
+    
+    public static function parseBlockName($block)
+    {
+        $block_parts = explode("--", $block);
+        
+        if ($block_parts[0] === 'theme') {
+            array_shift($block_parts);
             $base = '@theme';
         } else {
             $base = '@module';
         }
         
-        foreach ($path as &$part) {
+        $block_base = array_pop($block_parts);
+        $namespace = join("--", $block_parts);
+        
+        foreach ($block_parts as $i => &$part) {
             $part = str_replace("-", '_', $part);
             $part = \Floxim\Floxim\System\Util::underscoreToCamel($part);
         }
         
-        $path = fx::path($base.'/'.join('/', $path));
+        $path = fx::path($base.'/'.join('/', $block_parts));
         
-        $res = array(
-            'path' => $path,
-            'block_name' => $block,
-            'style_name' => $style,
-            'variant_id' => isset($parts[2]) ? $parts[2] : null,
-            'namespace' => $namespace
-        );
-        $res ['declaration_file'] = $res['path'].'/'.$block.'_style_'.$style.'.less';
+        $res = array();
+        
+        $res['namespace'] = $namespace;
+        $res['block_base'] = $block_base;
+        $res['path'] = $path;
         return $res;
     }
     
+    public static function parseKeyword($keyword)
+    {
+        $kw_parts = explode("_", $keyword);
+        
+        $res = array();
+        
+        $res['block_name'] = $kw_parts[0];
+        $res['style_name'] = $kw_parts[1];
+        
+        if (isset($kw_parts[2])) {
+            $type = $kw_parts[2];
+            if ($type === 'inline') {
+                $visual_id = $kw_parts[3];
+                if (preg_match('~-temp$~', $visual_id)) {
+                    $visual_id = substr($visual_id, 0, -5);
+                    $res['is_temp'] = true;
+                }
+                $res['visual_id'] = $visual_id;
+                $res['visual_path_hash'] = $kw_parts[4];
+            } elseif ($type === 'variant') {
+                $res['variant_id'] = $kw_parts[3];
+            }
+        } else {
+            $type = 'default';
+        }
+        $res['type'] = $type;
+        return $res;
+    }
+    
+    public static function deleteForVisual($visual_id)
+    {
+        $dir = self::getCacheDir().'/inline/'.$visual_id;
+        if (!file_exists($dir)) {
+            return false;
+        }
+        fx::files()->rm($dir);
+        return true;
+    }
+    
+    public function extractDefaults($vars)
+    {
+        $meta_parser = new MixinDefaultsParser($this->getMixinName(), $vars);
+        $parser = $this->startParser(
+            array(
+                'plugins' => array(
+                    $meta_parser
+                )
+            )
+        );
+        try {
+            $parser->getCss();
+        } catch (Exception $ex) {
+            
+        }
+        return $vars;
+    }
     
     public function getBundleContent() 
     {
@@ -137,58 +239,117 @@ class StyleBundle extends Bundle {
             return $res;
         }
         
-        $vars = $meta['vars'];
-        
-        $meta_parser = new MixinDefaultsParser($this->getMixinName(), $vars);
         $parser = $this->startParser(
             array(
                 'plugins' => array(
-                    $meta_parser,
                     new Bem\Processor()
-                ),
-                'compress' => false
+                )
             )
         );
 
         try {
             $less_vars = $this->getLayoutVars();
-            $parser->parse( $this->generateCallLess() );
+            $less_call = $this->generateCallLess();
+            
+            $parser->parse( $less_call );
             
             $parser->ModifyVars($less_vars);
+            
             $res = $parser->getCss();
             
-            $this->meta['style']['vars'] = $vars;
-            fx::cdebug('set vars', $vars);
             $this->generateExportFile();
             
         } catch (\Less_Exception_Compiler $e) {
             fx::log($e, fx::debug()->backtrace(), $parser);
         }
+        $res = self::minifyLess($res);
         return $res;
     }
     
     public function getMixinName()
     {
-        return '.'.$this->meta['block_name'].'_style_'.$this->meta['style_name'];
+        return '.'.$this->meta['block_base'].'_style_'.$this->meta['style_name'];
+    }
+    
+    public function getVariantVars()
+    {
+        $vars = null;
+        if (isset($this->meta['visual_path'])) {
+            $id_parts = explode("-", $this->meta['visual_path']);
+            
+            $visual_id = $this->meta['visual_id'];
+
+            if ($visual_id === 'new') {
+                $visual = fx::env('new_infoblock_visual');
+            } else {
+                $visual = fx::data('infoblock_visual', (int) $visual_id);
+            }
+            
+            if (!$visual) {
+                return;
+            }
+            $prop_set = array_shift($id_parts) === 'w' ? 'wrapper_visual' : 'template_visual';
+
+            $props = $visual[$prop_set];
+            $path = join(".", $id_parts).'_style';
+            $vars = fx::dig($props, $path);
+        } else {
+            $style_variant = $this->getStyleVariant();
+            if ($style_variant && is_array($style_variant['less_vars'])) {
+                $vars = $style_variant['less_vars'];
+            }
+        }
+        if (!$vars) {
+            return;
+        }
+        $style_meta = $this->getStyleMeta();
+        $res = array();
+        foreach ($style_meta['vars'] as $var_key => $var_props) {
+            if (!isset($vars[$var_key])) {
+                continue;
+            }
+            $val = $vars[$var_key];
+            if (isset($var_props['units'])) {
+                $u = $var_props['units'];
+                if (substr($val, strlen($u)*-1) !== $u) {
+                    $val = preg_replace("~[^\d\.\,]~", '', $val).$u;
+                }
+            }
+            if (empty($val)) {
+                $val = 'none';
+            }
+            $res[$var_key] = $val;
+        }
+        return $res;
+    }
+    
+    protected function getStyleMod()
+    {
+        switch ($this->meta['type']) {
+            case 'default': default:
+                return $this->meta['style_name'];
+            case 'variant':
+                return $this->meta['style_name'].'--'.$this->meta['variant_id'];
+            case 'inline':
+                return $this->meta['visual_path_hash'];
+        }
     }
     
     public function generateCallLess()
     {
-        $block = $this->meta['block_name'];
-        $style = $this->meta['style_name'];
-        $variant_id = $this->meta['variant_id'];
-        $res = '.'.$this->meta['namespace'].'--'.$block.'_style_'.$style;
-        if ($variant_id) {
-            $res .= '--'.$variant_id;
-        }
+        $res = '.'.$this->meta['block_name'].'_style_'.$this->getStyleMod();
+        
         $res .= "{\n";
         $res .= $this->getMixinName()."(";
-        if ($variant_id) {
-            $style_variant = fx::data('style_variant', $variant_id);
-            if ($style_variant && is_array($style_variant['less_vars'])) {
+        if ( ($variant_vars = $this->getVariantVars()) ) {
+            $style_meta = $this->getStyleMeta();
+            if ($style_meta && isset($style_meta['vars']) && is_array($style_meta['vars'])) {
                 $res .= "\n";
-                foreach ($style_variant['less_vars'] as $var_name => $var_value) {
-                    $res .= "    @".$var_name.':'.$var_value.";\n";
+                foreach (array_keys($style_meta['vars']) as $var_name) {
+                    if (isset($variant_vars[$var_name])) {
+                        $var_value = $variant_vars[$var_name];
+                        $res .= "    @".$var_name.':'.$var_value.";\n";
+                    }
                 }
             }
         }
@@ -214,9 +375,12 @@ class StyleBundle extends Bundle {
     public function getTweakerLessFile()
     {
         $file_path = $this->getTweakerLessPath();
+        if (!$this->isFresh()) {
+            $this->save();
+        }
         if (!file_exists($file_path)) {
             $tweak = $this->getTweakerLess();
-            file_put_contents($file_path, $tweak);
+            fx::files()->writefile($file_path, $tweak);
         }
         return fx::path()->http($file_path);
     }
@@ -239,8 +403,8 @@ class StyleBundle extends Bundle {
     public static function collectStyleVariants($block) 
     {
         $res = array();
-        $parts = self::parseKeyword($block.'_default');
-        $variant_files = glob($parts['path'].'/'.$parts['block_name'].'_style_*');
+        $parts = self::parseBlockName($block);
+        $variant_files = glob($parts['path'].'/'.$parts['block_base'].'_style_*');
         if (!$variant_files) {
             return $res;
         }
@@ -291,7 +455,7 @@ class StyleBundle extends Bundle {
     
     public function getStyleVariant()
     {
-        if (!isset($this->meta['variant_id'])) {
+        if (!isset($this->meta['variant_id']) || isset($this->meta['visual_path'])) {
             return null;
         }
         $id = $this->meta['variant_id'];
@@ -305,19 +469,16 @@ class StyleBundle extends Bundle {
     {
         $meta = $this->getStyleMeta();
         
-        if (!isset($meta['export'])) {
+        $export = isset($meta['export']) ? $meta['export'] : array();
+        $container = isset($meta['container']) ? $meta['container'] : array();
+        
+        if (count($export) === 0 && count($container) === 0) {
             return;
         }
         
-        $export = $meta['export'];
-        
-        if (!is_array($export) || count($export) === 0) {
-            return;
-        }
-        
-        $variant = $this->getStyleVariant();
-        if ($variant) {
-            $values = $variant['less_vars'];
+        $variant_vars = $this->getVariantVars();
+        if ($variant_vars) {
+            $values = $variant_vars;
         } else {
             $values = array();
             foreach ($meta['vars'] as $var_name => $var) {
@@ -328,14 +489,58 @@ class StyleBundle extends Bundle {
         }
         
         $path = $this->getExportFilePath();
-        $code = \Floxim\Floxim\Template\Compiler::generateStyleExportCode($export, $values);
+        $code = \Floxim\Floxim\Template\Compiler::generateStyleExportCode(
+            array(
+                'export' => $export, 
+                'container' => $container
+            ),
+            $values
+        );
         fx::files()->writefile($path, $code);
-        fx::cdebug($code, $export, $values);
         $this->meta['export_file'] = $path;
     }
     
     public function getExportFile()
     {
+        $this->save();
         return isset($this->meta['export_file']) ? $this->meta['export_file'] : null;
+    }
+    
+    protected function prepareStyleField($props)
+    {
+        if ($props['type'] === 'palette') {
+            $props['colors'] = fx::env()->getLayoutStyleVariant()->getPalette();
+            //$props['empty'] = false;
+        }
+        if ($props['units'] && $props['value']) {
+            $props['value'] = preg_replace("~[^\d\.]+~", '', $props['value']);
+        }
+        return $props;
+    }
+    
+    public function getFormFields($vals = array())
+    {
+        $style = $this->getStyleMeta();
+        
+        if (!isset($style['vars'])) {
+            $style['vars'] = array();
+        }
+        
+        $fields = array();
+        
+        foreach ($style['vars'] as $var => $props) {
+            $props['name'] = $var;
+            if (isset($vals[$var])) {
+                $props['value'] = $vals[$var];
+            }
+            $props = $this->prepareStyleField($props);
+            $fields []= $props;
+        }
+        return $fields;
+    }
+    
+    public function getRootPath()
+    {
+        return fx::path()->http($this->meta['path']);
     }
 }

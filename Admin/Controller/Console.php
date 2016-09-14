@@ -54,10 +54,15 @@ class Console extends Admin
             
             fx::env('console', true);
             fx::env('css_bundle', 'none');
+            fx::env('console_buffer', '');
             fx::config('dev.on', true);
             $code = self::preProcess($code);
             eval($code);
             $res = ob_get_clean();
+            $buffer = fx::env('console_buffer');
+            if ($buffer) {
+                $res .= '<hr /><b>Buffered:</b>'.$buffer;
+            }
             return array(
                 'result' => $res
             );
