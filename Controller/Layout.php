@@ -18,12 +18,7 @@ class Layout extends System\Controller
         // add admin files bundle BEFORE site scripts/styles
         if (!$this->getParam('ajax_mode') && fx::isAdmin()) {
             Admin\Controller\Admin::addAdminFiles();
-            fx::page()->addJsText(
-                '$fx.container.layout_sizes = ' .json_encode( \Floxim\Floxim\Template\Container::getLayoutSizes()).';'
-            );
-            fx::page()->addJsText(
-                '$fx.layout_vars = '.json_encode( fx::env()->getLayoutStyleVariant()->get('less_vars') ).';'
-            );
+            fx::page()->addLayoutVars();
         }
         $page_infoblocks = fx::router('front')->getPageInfoblocks($page_id, $layout_id);
         fx::page()->setInfoblocks($page_infoblocks);

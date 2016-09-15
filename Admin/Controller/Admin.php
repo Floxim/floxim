@@ -248,11 +248,7 @@ class Admin extends System\Controller
             $res = fx::template('@admin:back_office')->render(array('panel' => $panel));
             $js_config = new FxAdmin\Configjs();
             fx::page()->addJsText("\$fx.init(" . $js_config->getConfig() . ");");
-            
-            fx::page()->addJsText(
-                '$fx.layout_vars = '.json_encode( fx::env()->getLayoutStyleVariant()->get('less_vars') ).';'
-            );
-            
+            fx::page()->addLayoutVars();
         } else {
             $auth_form = fx::controller('floxim.user.user:auth_form')->render('floxim.user.user:auth_form');
 

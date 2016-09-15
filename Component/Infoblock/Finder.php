@@ -91,27 +91,6 @@ class Finder extends System\Finder
             $path = fx::collection( array($page) );
         }
         return $this->getForPath($path);
-        /*
-        if (!$page) {
-            return fx::collection();
-        }
-        
-        //$ids = $page->getParentIds();
-        $ids = $page->getPath()->getValues('id');
-        $ids [] = $page['id'];
-        $ids [] = 0; // root
-        $infoblocks = $this->where('page_id', $ids)->where('site_id', $page['site_id'])->all();
-        fx::cdebug($infoblocks, $this);
-        foreach ($infoblocks as $ib) {
-            if (!$ib->isAvailableOnPage($page)) {
-                fx::cdebug('skip', $ib);
-                $infoblocks->remove($ib);
-            }
-        }
-
-        return $infoblocks;
-         * 
-         */
     }
     
     /**

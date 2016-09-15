@@ -465,6 +465,44 @@ class Page
     {
         $this->base_url = $url;
     }
+    
+    public function addLayoutVars()
+    {
+        $style_variant = fx::env()->getLayoutStyleVariant();
+        $vars = $style_variant->get('less_vars');
+        
+        $fonts = array();
+        
+        $all_fonts = \Floxim\Floxim\Asset\Fonts::getAvailableFonts();
+        $font_types = array(
+            'text' => 'Основной',
+            'nav' => 'Для навигации',
+            'headers' => 'Для заголовков'
+        );
+        
+        foreach ($vars as $k => $v) {
+            if (preg_match("~^font_~", $k)) {
+                //$fonts [ preg_replace("~^font_~", '', $k) ]= $v;
+                if (isset($all_fonts[$v])) {
+                    $font_styles = $all_fonts[$v];
+                    $kw = preg_replace("~^font_~", '', $k);
+                    $font_type = $font_types[$kw];
+                    $fonts []= array(
+                        'keyword' => $kw,
+                        'type' => $font_type,
+                        'family' => $v,
+                        'styles' => $font_styles
+                    );
+                }
+            }
+        }
+        
+        $js = '$fx.container.layout_sizes = ' .json_encode( \Floxim\Floxim\Template\Container::getLayoutSizes()).";\n";
+        $js .= '$fx.layout_vars = '.json_encode( $vars ).";\n";
+        $js .= '$fx.layout_fonts = '.json_encode( $fonts ).";\n";
+        
+        $this->addJsText($js);
+    }
 
     public function postProcess($buffer)
     {
