@@ -1,6 +1,7 @@
 (function() {
     
 function less_tweaker(params) {
+    
     $.extend(this, params);
     
     var that = this;
@@ -26,7 +27,7 @@ less_tweaker.prototype.init = function() {
     } else {
         this.$affected = $($fx.front.get_selected_item()).descendant_or_self('.'+style_id_class);
     }
-    //console.log(this, style_id_class, cl);
+    
     this.update( 
         this.get_data() 
     ).then(function() {
@@ -124,8 +125,111 @@ less_tweaker.prototype.get_mixin_call = function(data) {
 };
 
 less_tweaker.prototype.update = function(vars) {
-    var less = this.less + "\n" + this.get_mixin_call(vars);
-    return this.render_less(less);
+    var less = this.less + "\n" + this.get_mixin_call(vars),
+        less_promise = this.render_less(less),
+        that = this;
+    return less_promise.then(
+        function() {
+            that.recount_container(vars);
+        },
+        function(err) {
+            
+        }
+    );
+};
+
+less_tweaker.prototype.recount_container = function(vars) {
+    var c_vars = this.current_container_vars || null,
+        new_vars = less_tweaker.get_container_props(this.container, vars);
+    
+    if (JSON.stringify(c_vars) === JSON.stringify(new_vars)) {
+        return;
+    }
+    
+    function get_mods(props) {
+        var res = {};
+        $.each(props, function(prop,v) {
+            res[ prop === 'lightness' ? prop : 'parent-'+prop ] = v;
+        });
+        return res;
+    }
+    
+    this.current_container_vars = new_vars;
+    
+    function traverse($items, vars) {
+        $.each($items, function () {
+            var $item = $(this);
+            if ($item.is('.fx-block')) {
+                var sub_vars = {},
+                    c_mods = $fx.front.get_modifiers($item, 'fx-block'),
+                    has_mods = false;
+                
+                $.each(vars, function(k, v) {
+                    if (!c_mods['has-'+k]) {
+                        has_mods = true;
+                        sub_vars[k] = v;
+                    }
+                });
+                if (has_mods) {
+                    $fx.front.set_modifiers($item, 'fx-block', get_mods(sub_vars));
+                    traverse($item.children(), sub_vars);
+                }
+            } else {
+                traverse($item.children(), vars);
+            }
+        });
+    }
+    
+    $.each(this.$affected, function() {
+        var $item = $(this),
+            c_mods = $fx.front.get_modifiers($item, 'fx-block');
+            
+        console.log(new_vars);
+        if (new_vars.lightness) {
+            if (new_vars.lightness === 'none') {
+                var $lp = $item.closest('.fx-block_has-lightness');
+                if ($lp.length === 0) {
+                    c_mods.lightness = 'light';
+                } else {
+                    var lp_mods = $fx.front.get_modifiers($lp, 'fx-block');
+                    c_mods.lightness = lp_mods.lightness;
+                }
+                new_vars.lightness = c_mods.lightness;
+            } else {
+                c_mods.lightness = new_vars.lightness;
+                c_mods['has-lightness'] = true;
+            }
+        }
+        console.log(new_vars, c_mods);
+        $fx.front.set_modifiers($item, 'fx-block', c_mods);
+        traverse($item.children(), new_vars);
+    });
+};
+
+less_tweaker.get_container_props = function(container, vars) {
+    if (!container) {
+        return null;
+    }
+    var res = {};
+    $.each(container, function(prop, exp) {
+        exp = exp.replace(/^\s+|\s+$/g, '');
+        switch (prop) {
+            case 'lightness':
+                var c_val = vars[exp];
+                if (c_val) {
+                    c_val  = c_val.match(/^[^\,]+/)[0];
+                    res[prop] = c_val;
+                }
+                break;
+            default:
+                var c_val = vars[exp];
+                if (c_val) {
+                    res[prop] = c_val;
+                }
+                break;
+        }
+    });
+    return res;
 };
 
 less_tweaker.prototype.render_less = function(less_text) {
@@ -172,7 +276,7 @@ less_tweaker.init_style_select = function($monosearch) {
         that = this,
         source_json = $monosearch.closest('.field').data('source_json'),
         style_id = source_json.style_id;
-    //console.log(source_json);
+    
     $monosearch.after ( $settings_button );
     $settings_button.on('click', function() {
         var $ls = $(this).closest('.field').find('.livesearch'),
@@ -183,7 +287,7 @@ less_tweaker.init_style_select = function($monosearch) {
             style_value = current_style.id.replace(/_variant_[^_]+$/, ''),
             style_variant_id = current_style.style_variant_id,
             tweaker = null;
-        //console.log(style_value);
+            
         $fx.front_panel.load_form(
             {
                 entity:'layout',
@@ -202,7 +306,8 @@ less_tweaker.init_style_select = function($monosearch) {
                         style_class: style_meta.style_class,
                         style_id: style_id,
                         vars: style_meta.tweaked_vars,
-                        mixin_name: style_meta.mixin_name
+                        mixin_name: style_meta.mixin_name,
+                        is_new: style_variant_id === null
                     });
                 },
                 onfinish: function(res) {
@@ -214,6 +319,13 @@ less_tweaker.init_style_select = function($monosearch) {
 
                     $inp.val(new_val).trigger(change_event);
                     
+                    // destroy when the selected block is reloaded
+                    var $ib = $($fx.front.get_selected_item()).closest('.fx_infoblock');
+                    if ($ib.length > 0) {
+                        $ib.on('fx_infoblock_unloaded', function() {
+                            tweaker.destroy();
+                        });
+                    }
                 },
                 oncancel: function() {
                     if (tweaker) {

@@ -201,6 +201,7 @@ class Admin extends System\Controller
             $path_floxim . '/Admin/js/colorset.js',
             $path_floxim . '/Admin/js/number-slider.js',
             $path_floxim . '/Admin/js/css-background.js',
+            $path_floxim . '/Admin/js/css-font.js',
             $path_floxim . '/Admin/js/font-preview.js',
             $path_floxim . '/Admin/js/bem-less.js'
         );

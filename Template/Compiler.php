@@ -1342,7 +1342,7 @@ class Compiler
     {
         $children = $token->getChildren();
         $res = "\n";
-        if (count($children === 0)) {
+        if (count($children) === 0) {
             $res .= $var_name . ' = ""'.";\n";
         } elseif (count($children) === 1 && $children[0]->name === 'code') {
             $res .= $var_name . " = '".addslashes($children[0]->getProp('value'))."';\n";
@@ -1412,6 +1412,7 @@ class Compiler
                 $style_info = self::parseCssLikeProps($raw_value);
                 $code .= $_style_info .' = '.var_export($style_info, 1).";\n";
             } else {
+                fx::cdebug($token);
                 $code .= $this->childrenToVar($token, $_style_info);
                 $code .= $_style_info .' = \Floxim\Floxim\Template\Compiler::parseCssLikeProps('.$_style_info.');'."\n";
             }

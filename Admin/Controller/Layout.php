@@ -460,17 +460,9 @@ class Layout extends Admin
                     )
                 );
 
-        //$input['style'] = preg_replace("~\-\-\d+$~", '', $input['style']);
         $input['style'] = preg_replace("~_variant_[^_]+$~", '', $input['style']);
         
         $bundle = fx::assets('style', $input['block'].'_'.$input['style']);
-        
-        /*
-        if (!$bundle->isFresh()) {
-            // run processor to extract defaults
-            $bundle->save();
-        }
-        */
         
         $style = $bundle->getStyleMeta();
         
@@ -535,7 +527,8 @@ class Layout extends Admin
                 'tweaked_vars' => array_keys($style['vars']),
                 'mixin_name' => $mixin_name,
                 'style_class' => $style_variant['block'].'_style_'.$style_variant['style']. ($is_saved ? '--'.$style_variant['id'] : ''),
-                'is_new' => !$is_saved
+                'is_new' => !$is_saved,
+                'container' => isset($style['container']) ? $style['container'] : array()
             ),
             'fields' => $fields,
             'header' => 'Настраиваем стиль'
@@ -715,7 +708,6 @@ class Layout extends Admin
                 $bundle = fx::assets('style', $bundle_id);
                 $style = $bundle->getStyleMeta();
                 $fields = $bundle->getFormFields($block['value']);
-                
                 $res []= array(
                     'type' => 'group',
                     'style' => 'transparent',
@@ -723,11 +715,12 @@ class Layout extends Admin
                     'tweaker' => array(
                         'tweaker_file' => $bundle->getTweakerLessFile(),
                         'rootpath' => $bundle->getRootPath(),
-                        'is_new' => true, //$block['value'] === 'default',
+                        'is_new' => true,
                         'vars' => array_keys($style['vars']),
                         'mixin_name' => substr($bundle->getMixinName(), 1),
                         'style_class' => $block['block'].'_style_'.$block['mod_value'],
-                        'style_id' => $block['style_id']
+                        'style_id' => $block['style_id'],
+                        'container' => isset($style['container']) ? $style['container'] : array()
                     )
                 );
             } else {

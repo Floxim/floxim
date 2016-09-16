@@ -200,7 +200,7 @@ class Context {
         
         $prev = $cnt > 1 && $current_props ? self::$container_props[$cnt - 2] : array();
         
-        $res = '';
+        $res = 'fx-block ';
         
         if (isset($last['darkness'])) {
             $res .= ' fx-block_darkness_'.$last['darkness'];
@@ -217,6 +217,11 @@ class Context {
             }
             if (isset($prev[$p])) {
                 $res .= ' fx-block_parent-'.$p.'_'.$prev[$p];
+            }
+        }
+        if ($current_props) {
+            foreach ($current_props as $k => $v) {
+                $res .= ' fx-block_has-'.$k;
             }
         }
         return $res.' ';

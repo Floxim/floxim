@@ -1555,6 +1555,7 @@ fx_front.prototype.set_modifiers = function($node, name, mods) {
     e.modifiers = event_map;
     e.node_name = name;
     $node.trigger(e);
+    return event_map;
 };
 
 fx_front.prototype.make_node_panel = function($node) {

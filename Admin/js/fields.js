@@ -266,174 +266,7 @@ window.$fx_fields = {
     },
 
     'css-font': function(json) {
-        
-        // nav 16px bold italic uppercase underline
-        var $row =  $t.jQuery('form_row', json),
-            el = $t.getBemElementFinder('fx-css-font-field'),
-            $controls = $row.find( el('controls')),
-            $value = $row.find( el('value')),
-            controls = {},
-            fonts = $fx.layout_fonts || [];
-        
-        function get_font(type) {
-            for (var i = 0; i < fonts.length; i++ ) {
-                if (fonts[i].keyword === type) {
-                    return fonts[i];
-                }
-            }
-        }
-        
-        function get_style_values(font_type) {
-            var font = get_font(font_type),
-                res = [];
-            if (!font || !font.styles) {
-                return [];
-            }
-            var weight_names = {
-                '300':'Тонкий',
-                '400':'Нормальный',
-                regular:'Нормальный',
-                normal:'Нормальный',
-                bold:'Жирный',
-                '700':'Полужирный',
-                '900':'Жирный'
-            };
-            for (var i = 0 ; i < font.styles.length; i++) {
-                var val = font.styles[i],
-                    weight = val.match(/\d00/),
-                    italic = val.match(/italic/);
-                
-                weight = weight ? weight[0] : 'normal';
-                
-                var style = 'font-family: '+font.family+';';
-                style += 'font-weight:'+weight+';';
-                
-                if (italic) {
-                    style += 'font-style: italic;';
-                }
-                
-                var value = weight +' ' +(italic ? 'italic' : 'normal');
-                
-                var name = weight_names[weight] || weight;
-                if (italic) {
-                    name += ' курсив'
-                }
-                
-                
-                res.push({
-                    id: value,
-                    name: "<span style='"+style+"'>"+name+'</span>'
-                });
-            }
-            return res;
-        }
-        
-        function get_style_control() {
-            var family_ls = controls.family.data('livesearch'),
-                current_family = family_ls.getValue();
-            var style_values = get_style_values(current_family);
-            
-            var $style = $fx_fields.control({
-                type: 'livesearch',
-                allow_empty:false,
-                values: style_values
-            });
-            controls.style = $style;
-            return $style;
-        }
-
-        function init_controls() {
-            var c_value = parse_value(json.value);
-            var $family = $fx_fields['css-font-family'](c_value.family, json.family);
-            $controls.append($family);
-            
-            controls.family = $family;
-            
-            var $style = get_style_control();
-            $controls.append($style);
-            
-            $family.on('change', function() {
-                var $old_style = controls.style,
-                    $new_style = get_style_control();
-                $old_style.before($new_style);
-                $old_style.remove();
-            });
-
-            var size_params = {
-                min:11,
-                max:82,
-                step:1,
-                units:'px',
-                value:c_value.size
-            };
-            
-            if (json.size) {
-                var size = json.size.split(/[\s\-]+/);
-                size_params.min = size[0];
-                size_params.max = size[1];
-            }
-            var $size = $fx_fields.number(size_params, 'input');
-            $controls.append($size);
-
-            controls.size = $size;
-            
-            /*
-            var $weight = $fx_fields.toggle_button('<b>Ж</b>', c_value.weight === 'bold', 'Жирный');
-            $controls.append($weight);
-            controls.weight = $weight;
-
-            var $style = $fx_fields.toggle_button('<i>К</i>', c_value.style === 'italic', 'Курсив');
-            $controls.append($style);
-            controls.style = $style;
-            */
-           
-            var $transform = $fx_fields['css-text-transform']({
-                value: c_value.transform
-            }, 'input');
-            $controls.append($transform);
-            controls.transform = $transform;
-
-            $controls.on('change input', function(e) {
-                update_value();
-                return false;
-            });
-        }
-
-        function update_value() {
-            var res = [];
-            res.push(controls.family.data('livesearch').getValue());
-            res.push(controls.size.val() + 'px');
-            //res.push(controls.weight.val() ? 'bold' : 'normal');
-            //res.push(controls.style.val() ? 'italic' : 'normal');
-            res.push(controls.style.data('livesearch').getValue());
-            res.push(controls.transform.data('livesearch').getValue());
-            $value.val( res.join(' ') ).trigger('change');
-        }
-
-        function parse_value(value) {
-            if (!value || value === 'none') {
-                value = 'text 16px normal normal none none';
-            }
-            var parts = value.split(/\s+/);
-            
-            if (!parts[1]) {
-                parts[1] = '16px';
-            }
-
-            var  res = {
-                family: parts[0],
-                size: parts[1].replace(/[^\d]+/, ''),
-                weight: parts[2],
-                style: parts[3],
-                transform:parts[4],
-                decoration:parts[5]
-            };
-            return res;
-        }
-
-        init_controls();
-
-        return $row;
+        return fx_font_control(json);
     },
 
     'toggle_button': function(label, value, title) {
@@ -999,6 +832,10 @@ window.$fx_fields = {
                     has_custom = true;
                     break;
                 }
+            }
+            
+            if (typeof json.allow_empty === 'undefined') {
+                json.allow_empty = false;
             }
             
             if (json.allow_empty === false && (!json.value || typeof json.value.id === 'undefined')) {
