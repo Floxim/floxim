@@ -186,7 +186,7 @@ less_tweaker.prototype.recount_container = function(vars) {
             
         if (new_vars.lightness) {
             if (new_vars.lightness === 'none') {
-                var $lp = $item.closest('.fx-block_has-lightness');
+                var $lp = $item.parent().closest('.fx-block_has-lightness');
                 if ($lp.length === 0) {
                     c_mods.lightness = 'light';
                 } else {
