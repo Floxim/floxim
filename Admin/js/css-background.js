@@ -39,6 +39,50 @@ bg.parse_value = function(v) {
     return res;
 };
 
+bg.get_color_info = function(rgb) {
+    return {
+        opacity: rgb.a,
+        brightness: (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000
+    };
+};
+
+bg.prototype.count_lightness = function() {
+    var $levels = this.$popup.find( bg.el('level') );
+    
+    var cb = 0,
+        co = null,
+        n = 0,
+        treshold = 140;
+    
+    $levels.each(function() {
+        n++;
+        var $l = $(this),
+            level = $l.data('bg-level'),
+            lr = level.count_lightness();
+            
+        if (co === null) {
+            co = lr.opacity;
+            cb = lr.brightness;
+        } else {
+            var old_opacity = co,
+                old_brightness = cb,
+                opacity_delta = ( 1 - old_opacity ) * lr.opacity;
+            
+            co = old_opacity + opacity_delta;
+            
+            if (old_opacity > 0) {
+                var level_coeff = (1 - co) / old_opacity;
+                cb = (old_brightness + (lr.brightness * level_coeff )) / (1 + level_coeff);
+            } else {
+                cb = lr.brightness;
+            }
+        }
+    });
+    
+    var res = co < 0.5 ? 'none' : (cb > treshold ? 'light' : 'dark');
+    return res;
+};
+
 bg.prototype.get_value = function() { 
     
     
@@ -64,7 +108,13 @@ bg.prototype.get_value = function() {
     return res;
 };
 
-bg.prototype.update = function() {
+bg.prototype.update = function(skip_lightness) {
+    
+    if (typeof skip_lightness === 'undefined' || skip_lightness === false) {
+        var lightness = this.count_lightness();
+        this.$lightness.data('livesearch').setValue(lightness);
+    }
+    
     this.$input.val( this.get_value() ).trigger('change');
     
     var has_color = this.$popup.find(bg.el('level.type_color')).length > 0;
@@ -115,7 +165,7 @@ bg.prototype.init = function() {
     this.$popup.find( bg.el('lightness') ).append(this.$lightness);
     
     this.$lightness.on('change', function() {
-        that.update();
+        that.update(true);
     });
     
     for (var i =0 ; i < value.levels.length; i++) {
@@ -376,6 +426,27 @@ background_level.linear.prototype.get_value = function() {
     return res;
 };
 
+background_level.linear.prototype.count_lightness = function() {
+    var points = this.get_sorted_points(),
+        res = {
+            opacity:0,
+            brightness:0
+        };
+    
+    for (var i = 0; i < points.length; i++) {
+        var $p = points[i],
+            color = $p.find('.fx-palette__value').data('rgb-value'),
+            info = bg.get_color_info(color);
+        
+        res.brightness += info.brightness;
+        res.opacity += info.opacity;
+    }
+    res.brightness = res.brightness / points.length;
+    res.opacity = res.opacity / points.length;
+    return res;
+};
+
+
 background_level.linear.prototype.get_sorted_points = function() {
     return this.slider.points.sort(
         function($a, $b) {
@@ -453,6 +524,13 @@ background_level.image.prototype.get_value = function() {
     return res;
 };
 
+background_level.image.prototype.count_lightness = function() {
+    return {
+        brightness:0,
+        opacity:0
+    };
+};
+
 // Color BG
 background_level.color = function() {
     background_level.apply(this, arguments);
@@ -476,6 +554,16 @@ background_level.color.prototype.draw_value = function() {
     });
     this.$color_inp = $c.find('.fx-palette__value');
     this.el('level-value').append($c);
+};
+
+background_level.color.prototype.count_lightness = function() {
+    var color_rgb = this.$color_inp.data('rgb-value'),
+        res = {opacity:0,brightness:0};
+    
+    if (color_rgb) {
+        res = bg.get_color_info(color_rgb);
+    }
+    return res;
 };
 
 

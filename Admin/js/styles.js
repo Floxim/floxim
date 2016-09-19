@@ -184,7 +184,6 @@ less_tweaker.prototype.recount_container = function(vars) {
         var $item = $(this),
             c_mods = $fx.front.get_modifiers($item, 'fx-block');
             
-        console.log(new_vars);
         if (new_vars.lightness) {
             if (new_vars.lightness === 'none') {
                 var $lp = $item.closest('.fx-block_has-lightness');
@@ -200,7 +199,6 @@ less_tweaker.prototype.recount_container = function(vars) {
                 c_mods['has-lightness'] = true;
             }
         }
-        console.log(new_vars, c_mods);
         $fx.front.set_modifiers($item, 'fx-block', c_mods);
         traverse($item.children(), new_vars);
     });

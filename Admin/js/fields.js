@@ -456,9 +456,13 @@ window.$fx_fields = {
                 var val_bg = '';
                 if (value) {
                     val_bg = $color.data('color');
+                    var tc = tinycolor(val_bg);
                     if (json.opacity) {
-                        val_bg = tinycolor(val_bg).setAlpha(v.opacity).toRgbString();
+                        tc.setAlpha(v.opacity);
+                        //val_bg = tinycolor(val_bg).setAlpha(v.opacity).toRgbString();
                     }
+                    val_bg = tc.toRgbString();
+                    $value.data('rgb-value', tc.toRgb());
                 }
                 $cval.css('background', val_bg);
             }

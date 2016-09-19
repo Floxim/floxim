@@ -16,7 +16,7 @@ parse_color_code: function(color_code) {
         type: color_parts[0],
         level: color_parts[1],
         opacity: color_parts.length > 2 ? color_parts[2] : 1
-    }
+    };
 },
     
 color_from_code: function(color_code) {

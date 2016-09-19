@@ -76,11 +76,8 @@ class Test extends Admin {
     
     public function background() 
     {
-        $fields = array(
-            'test' => array(
-                'label' => "Background",
-                'type' => 'css-background',
-                'value' => 'light,
+        
+        $val = 'light,
         
                     linear 80deg,
                     main 2 0.5 0 main 1 0.1 50% alt 2 1 80%,
@@ -96,7 +93,23 @@ class Test extends Admin {
                     
                     color,
                     alt 2 0.5,
-                    none'
+                    none';
+        
+        $val = 'light,
+        
+                    linear 80deg,
+                    main 0 0.1 0 main 0 0.1 100%,
+                    ~"0% 50% / 100% 100%" no-repeat scroll,
+                    
+                    color,
+                    main 5 0.8,
+                    none';
+        
+        $fields = array(
+            'test' => array(
+                'label' => "Background",
+                'type' => 'css-background',
+                'value' => $val
             )
         );
         $this->response->addFields($fields);
