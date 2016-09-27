@@ -152,6 +152,7 @@ class Admin extends System\Controller
             FX_JQUERY_PATH,
             $path_floxim . '/lib/js/jquery.bem.js', // https://github.com/zenwalker/jquery-bem
             $path_floxim . '/lib/js/promise.min.js',
+            //$path_floxim . '/lib/js/md5.min.js',
             $path_floxim . '/Admin/js/fxj.js',
             $path_floxim . '/Admin/js/fx.js',
             $path_floxim . '/Admin/js/js-dictionary-' . $lang . '.js',

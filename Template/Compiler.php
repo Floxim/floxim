@@ -156,14 +156,6 @@ class Compiler
             $class .= join(' ', $block_parts['plain']);
             $class = trim($class);
             $code .= $class;
-            // token is not a container, so we should add fx-content_parent-* classes
-            /*
-            if (!$token->getProp('container')) {
-                $code .= '<?php echo " ".$context->getContentClasses(true); ?>';
-            }
-             * 
-             */
-            /* $code .= '<?php echo " ".$context->getContainerClasses(); ?>'; */
             return $code;
         }
         $code .= "\n\$block_container_props = false;\n";
@@ -180,13 +172,6 @@ class Compiler
         $code .= "echo \$block_parts['name'].'_'.\$mod.' ';\n";
         $code .= "}\n";
         $code .= "echo join(' ', \$block_parts['plain']);\n";
-        /*
-        if (!$token->getProp('container')) {
-            $code .= "echo ' '.\$context->getContentClasses(true);\n";
-        }
-         * 
-         */
-        //$code .= ' echo " ".$context->getContainerClasses();'."\n";
         $code .= "?>";
         return $code;
     }
@@ -709,10 +694,12 @@ class Compiler
                     }
                     break;
                 case 'width':
-                    $container_props['width'] = $vals[$val];
+                case 'align':
+                    $container_props[$var] = isset($vals[$val]) ? $vals[$val] : 'none';
                     break;
             }
         }
+        //fx::cdebug($vals, $props, $container_props);
         if (count($container_props) > 0) {
             $code .= '$block_container_props = '.var_export($container_props,1).";\n";
         }
@@ -1412,7 +1399,6 @@ class Compiler
                 $style_info = self::parseCssLikeProps($raw_value);
                 $code .= $_style_info .' = '.var_export($style_info, 1).";\n";
             } else {
-                fx::cdebug($token);
                 $code .= $this->childrenToVar($token, $_style_info);
                 $code .= $_style_info .' = \Floxim\Floxim\Template\Compiler::parseCssLikeProps('.$_style_info.');'."\n";
             }

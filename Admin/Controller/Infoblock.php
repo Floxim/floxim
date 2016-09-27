@@ -14,8 +14,29 @@ class Infoblock extends Admin
 
     public function getAvailableBlocks($page, $area_meta = null)
     {
-        $controllers = fx::data('component')->all();
-        $controllers->concat(fx::data('widget')->all());
+        $controllers = fx::collection();
+        $coms = fx::data('component')->all();
+        foreach ($coms as $c) {
+            $controllers[$c['keyword']] = array(
+                'type' => 'component',
+                'keyword' => $c['keyword'],
+                'name' => $c['name']
+            );
+        }
+        
+        fx::modules()->apply(function($m) use ($controllers) {
+            $m_controllers = $m->getControllerKeywords();
+            foreach ($m_controllers as $m_ctr) {
+                if (isset($controllers[$m_ctr])) {
+                    continue;
+                }
+                $controllers[$m_ctr] = array(
+                    'type' => 'widget',
+                    'keyword' => $m_ctr,
+                    'name' => $m_ctr
+                );
+            }
+        });
         
         $result = array(
             'controllers' => array(),
@@ -47,7 +68,7 @@ class Infoblock extends Admin
                 continue;
             }
             
-            $type = $c instanceof Component\Entity ? 'component' : 'widget';
+            $type = $c['type'];
             $keyword = $c['keyword'];
             
             $result['controllers'] [$keyword]= array(
@@ -73,9 +94,10 @@ class Infoblock extends Admin
                         continue;
                     }
                 }
-                
-                $act_ctr = fx::controller($keyword . ':' . $action_code);
+                $action_kw = $keyword . ':' . $action_code;
+                $act_ctr = fx::controller($action_kw);
                 $act_templates = $act_ctr->getAvailableTemplates(fx::env('layout_id'), $area_meta);
+                
                 if (count($act_templates) == 0) {
                     continue;
                 }
@@ -104,7 +126,6 @@ class Infoblock extends Admin
                 if (empty($action['name'])) {
                     $action['name'] = $action_code;
                 }
-                
                 $result['actions'] []= $action;
             }
         }

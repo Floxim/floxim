@@ -23,4 +23,19 @@ if (jQuery) {
             return this;
         }
     });
+    
+    $fxj.valHooks.input = {
+        get: function( elem ) {
+            if (elem.getAttribute('data-json-val') !== 'true') {
+                return undefined;
+            }
+            try {
+                var res = JSON.parse(elem.value);
+            } catch (e) {
+                console.log(e, elem, elem.value);
+            }
+            return res;
+        }
+    };
+
 }

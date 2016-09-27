@@ -490,6 +490,22 @@ window.$fx = {
             res[c][c+' '+l] = v;
         });
         return res;
+    },
+    
+    uid: function() {
+        var res = (new Date() * 1).toString(16);
+        for (var i = 0; i < 21; i++) {
+            res += Math.round(Math.random()*15).toString(16);
+        }
+        return res;
+    },
+    
+    disableSelection: function($n) {
+        return $n
+                 .attr('unselectable', 'on')
+                 .css('user-select', 'none')
+                 .on('selectstart', false);
     }
+    
 };
 })($fxj);

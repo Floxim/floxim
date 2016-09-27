@@ -264,6 +264,20 @@ window.$fx_fields = {
         $node.data('bg_control', bg_control);
         return $row;
     },
+    
+    'css-align': function(json, tpl) {
+        json.type = 'livesearch';
+        json.values = {
+            none:'Авто',
+            left:'Слева',
+            center:'По центру',
+            right:'Справа'
+        };
+        if (!json.label) {
+            json.label = 'Выравнивание';
+        }
+        return this.livesearch(json, tpl);
+    },
 
     'css-font': function(json) {
         return fx_font_control(json);
@@ -821,7 +835,7 @@ window.$fx_fields = {
         
         if (json.values) {
             var preset_vals = json.values,
-                has_custom = false;
+                custom = false;
             if ( ! (json.values instanceof Array) ) {
                 preset_vals = [];
                 $.each(json.values, function(k, v) {
@@ -833,7 +847,7 @@ window.$fx_fields = {
             
             for (var i = 0; i < json.params.preset_values.length; i++) {
                 if (json.params.preset_values[i].custom) {
-                    has_custom = true;
+                    custom = json.params.preset_values[i];
                     break;
                 }
             }
@@ -843,7 +857,9 @@ window.$fx_fields = {
             }
             
             if (json.allow_empty === false && (!json.value || typeof json.value.id === 'undefined')) {
-                if (!has_custom) {
+                if (!custom ) {
+                    json.value = json.params.preset_values[0];
+                } else if (custom.type === 'number' && !json.value.match(/^[0-9\.\,\-]*$/)) {
                     json.value = json.params.preset_values[0];
                 }
             }

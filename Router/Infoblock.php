@@ -62,7 +62,8 @@ class Infoblock extends Base
         }
         $infoblock->overrideParam('ajax_mode', true);
         if (isset($_POST['content_parent_props'])) {
-            $infoblock->bindLayoutContainerParams( json_decode($_POST['content_parent_props'], true) );
+            $container_params = json_decode($_POST['content_parent_props'], true);
+            $infoblock->bindLayoutContainerProps( $container_params );
         }
         $res = $infoblock->render();
         return $res;

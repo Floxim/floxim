@@ -471,8 +471,9 @@ class Entity extends System\Entity implements Template\Entity
         $tpl_params['infoblock'] = $this;
         $is_admin = fx::isAdmin();
         
-        if ($this->parent_container) {
-            $tpl->getContext()->pushContainer($this->parent_container);
+        if ($this->parent_container_props) {
+            //$tpl->getContext()->pushContainer($this->parent_container);
+            $tpl->getContext()->pushContainerProps($this->parent_container_props);
         }
         try {
             $this->output_cache = $tpl->render($tpl_params);
@@ -514,9 +515,11 @@ class Entity extends System\Entity implements Template\Entity
         $is_admin = fx::isAdmin();
         
         try {
-            if ($this->parent_container) {
-                $tpl_wrap->getContext()->pushContainer($this->parent_container);
-                $this->parent_container = null;
+            if ($this->parent_container_props) {
+                //$tpl_wrap->getContext()->pushContainer($this->parent_container);
+                $tpl_wrap->getContext()->pushContainerProps($this->parent_container_props);
+                //$this->parent_container = null;
+                $this->parent_container_props = null;
             }
             $result = $tpl_wrap->render($wrap_params);
             if ($is_admin) {
@@ -692,10 +695,10 @@ class Entity extends System\Entity implements Template\Entity
         return $new_ib;
     }
     
-    protected $parent_container = null;
+    protected $parent_container_props = null;
     
-    public function bindLayoutContainerParams($params)
+    public function bindLayoutContainerProps($props)
     {
-        $this->parent_container = \Floxim\Floxim\Template\Container::create($params);
+        $this->parent_container_props = $props;
     }
 }

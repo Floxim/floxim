@@ -181,8 +181,13 @@ class Context {
     public function pushContainerProps($props) 
     {
         $current_props = count(self::$container_props) > 0 ? end(self::$container_props) : array();
-        $props = array_merge($current_props, $props);
-        self::$container_props []= $props;
+        $new_props = $current_props;
+        foreach ($props as $p => $v) {
+            if ($v !== 'none') {
+                $new_props[$p] = $v;
+            }
+        }
+        self::$container_props []= $new_props;
     }
     
     public function popContainerProps() 
@@ -202,13 +207,11 @@ class Context {
         
         $res = 'fx-block ';
         
-        if (isset($last['darkness'])) {
-            $res .= ' fx-block_darkness_'.$last['darkness'];
-        }
+        $apply_to_self = array('lightness');
         
         foreach ($last as $p => $v) {
-            if ($p === 'lightness') {
-                $res .= ' fx-block_lightness_'.$v;
+            if (in_array($p, $apply_to_self)) {
+                $res .= ' fx-block_'.$p.'_'.$v;
                 continue;
             }
             if (!$current_props || !isset($current_props[$p])) {
@@ -221,7 +224,10 @@ class Context {
         }
         if ($current_props) {
             foreach ($current_props as $k => $v) {
-                $res .= ' fx-block_has-'.$k;
+                if ($v !== 'none') {
+                    $res .= ' fx-block_has-'.$k;
+                    $res .= ' fx-block_own-'.$k.'_'.$v;
+                }
             }
         }
         return $res.' ';

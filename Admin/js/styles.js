@@ -27,7 +27,6 @@ less_tweaker.prototype.init = function() {
     } else {
         this.$affected = $($fx.front.get_selected_item()).descendant_or_self('.'+style_id_class);
     }
-    
     this.update( 
         this.get_data() 
     ).then(function() {
@@ -36,7 +35,10 @@ less_tweaker.prototype.init = function() {
 };
 
 less_tweaker.prototype.get_tweaked_class = function() {
-    return this.style_class + '-tweaked';
+    if (typeof this.tweaked_class === 'undefined') {
+        this.tweaked_class = this.style_class + '-tweaked-'+Math.round(Math.random()*1000000);
+    }
+    return this.tweaked_class;
 };
 
 less_tweaker.loaded_files = {};
@@ -154,6 +156,13 @@ less_tweaker.prototype.recount_container = function(vars) {
         return res;
     }
     
+    var defaults = {
+            lightness:'light',
+            width:'full',
+            align:'left'
+        },
+        apply_to_self = ['lightness'];
+    
     this.current_container_vars = new_vars;
     
     function traverse($items, vars) {
@@ -161,17 +170,26 @@ less_tweaker.prototype.recount_container = function(vars) {
             var $item = $(this);
             if ($item.is('.fx-block')) {
                 var sub_vars = {},
+                    own_vars = {},
                     c_mods = $fx.front.get_modifiers($item, 'fx-block'),
-                    has_mods = false;
+                    has_sub_mods = false;
                 
                 $.each(vars, function(k, v) {
                     if (!c_mods['has-'+k]) {
-                        has_mods = true;
+                        has_sub_mods = true;
                         sub_vars[k] = v;
                     }
+                    if (apply_to_self.indexOf(k) === -1 || !c_mods['has-'+k]) {
+                        own_vars[k] = v;
+                    }
                 });
-                if (has_mods) {
-                    $fx.front.set_modifiers($item, 'fx-block', get_mods(sub_vars));
+                
+                
+                var own_mods = $.extend({}, c_mods, get_mods(own_vars));
+                
+                $fx.front.set_modifiers($item, 'fx-block', own_mods);
+                
+                if (has_sub_mods) {
                     traverse($item.children(), sub_vars);
                 }
             } else {
@@ -182,24 +200,30 @@ less_tweaker.prototype.recount_container = function(vars) {
     
     $.each(this.$affected, function() {
         var $item = $(this),
+            own_vars = {},
             c_mods = $fx.front.get_modifiers($item, 'fx-block');
             
-        if (new_vars.lightness) {
-            if (new_vars.lightness === 'none') {
-                var $lp = $item.parent().closest('.fx-block_has-lightness');
-                if ($lp.length === 0) {
-                    c_mods.lightness = 'light';
+        
+        $.each(new_vars, function(k, v) {
+            if (v === 'none') {
+                var $par = $item.parent().closest('.fx-block_has-'+k);
+                if ($par.length === 0) {
+                    v = defaults[k];
                 } else {
-                    var lp_mods = $fx.front.get_modifiers($lp, 'fx-block');
-                    c_mods.lightness = lp_mods.lightness;
+                    var par_mods = $fx.front.get_modifiers($par, 'fx-block');
+                    v = par_mods['own-'+k];
                 }
-                new_vars.lightness = c_mods.lightness;
+                c_mods['has-'+k] = false;
+                new_vars[k] = v;
             } else {
-                c_mods.lightness = new_vars.lightness;
-                c_mods['has-lightness'] = true;
+                c_mods['has-'+k] = true;
             }
-        }
-        $fx.front.set_modifiers($item, 'fx-block', c_mods);
+            if (apply_to_self.indexOf(k) !== -1) {
+                own_vars[k] = v;
+            }
+        });
+        var new_mods = $.extend({}, c_mods, get_mods(own_vars));
+        $fx.front.set_modifiers($item, 'fx-block', new_mods);
         traverse($item.children(), new_vars);
     });
 };

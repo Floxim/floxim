@@ -71,12 +71,35 @@ class StyleBundle extends Bundle {
         return parent::isFresh();
     }
     
-    public function getStyleMeta()
+    public static function getDefaultValue($var)
+    {
+        switch ($var['type']) {
+            case 'css-background':
+                $v = $var['default'];
+                $res = array_shift($v);
+                foreach ($v as $l) {
+                    $parts = explode(", ", $l);
+                    if (count($parts) === 2) {
+                        $l = $l.', ~"0% 0% / 100% 100%" no-repeat scroll';
+                    }
+                    $res .= ', '.$l;
+                }
+                return $res;
+            default:
+                return $var['default'];
+        }
+    }
+    
+    public function getStyleMeta($force = false)
     {
         $declaration_file = $this->meta['declaration_file'];
-        
-        if (!$this->meta_updated && (!$this->isFresh($declaration_file) || !isset($this->meta['style']) )) {
-            
+        if (
+            $force === true || 
+            (
+                !$this->meta_updated && 
+                (!$this->isFresh($declaration_file) || !isset($this->meta['style'])) 
+            )
+        ) {
             if (!file_exists($declaration_file)) {
                 fx::log('no file', $declaration_file, $this);
                 return null;
@@ -341,19 +364,20 @@ class StyleBundle extends Bundle {
         
         $res .= "{\n";
         $res .= $this->getMixinName()."(";
-        if ( ($variant_vars = $this->getVariantVars()) ) {
-            $style_meta = $this->getStyleMeta();
-            if ($style_meta && isset($style_meta['vars']) && is_array($style_meta['vars'])) {
-                $res .= "\n";
-                foreach (array_keys($style_meta['vars']) as $var_name) {
-                    if (isset($variant_vars[$var_name])) {
-                        $var_value = $variant_vars[$var_name];
-                        $res .= "    @".$var_name.':'.$var_value.";\n";
-                    }
+        
+        $variant_vars = $this->getVariantVars();
+        $style_meta = $this->getStyleMeta();
+        
+        if ($style_meta && isset($style_meta['vars']) && is_array($style_meta['vars'])) {
+            foreach ($style_meta['vars'] as $var_key => $var_meta) {
+                $var_value = isset($variant_vars[$var_key]) ? $variant_vars[$var_key] : $var_meta['value'];
+                if (empty($var_value)) {
+                    $var_value = 'none';
                 }
+                $res .= "\n    @".$var_key.":".$var_value.";";
             }
         }
-        $res .= ");\n";
+        $res .= "\n);\n";
         $res .= "}\n";
         return $res;
     }

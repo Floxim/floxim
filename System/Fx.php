@@ -643,6 +643,18 @@ class Fx
         }
     }
     
+    public static function modules()
+    {
+        $res =
+            self::$module_manager
+                ->getAll()
+                ->find('object')
+                ->column(
+                    'object'
+                );
+        return $res;
+    }
+    
     public static function module($keyword)
     {
         $modules = self::$module_manager->getAll();

@@ -375,6 +375,7 @@ class Controller
         $blocks = array();
         $meta = array();
         $my_name = $this->getControllerName();
+        
         foreach ($sources as $src) {
             $src_hash = md5($src);
             $is_own = $my_name && fx::getComponentFullNameByPath(fx::path()->http($src)) === $my_name;

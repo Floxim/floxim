@@ -40,7 +40,22 @@ class MixinDefaultsParser {
                 continue;
             }
             $c_var =& $this->vars[$var_name];
-            $value = $this->output->get($arg['value'], false);
+            
+            if (!isset($arg['value'])) {
+                continue;
+            }
+            $c_val = $arg['value'];
+            // extract default from vars yaml, e.g.
+            // @background:@background
+            if (
+                isset($c_val->value) && 
+                count($c_val->value) === 1 && 
+                $c_val->value[0] instanceof \Less_Tree_Variable
+            ) {
+                $value = StyleBundle::getDefaultValue($c_var);
+            } else {
+                $value = $this->output->get($arg['value'], false);
+            }
             $parts = null;
             $match_units = preg_match("~^[\d\.]+(em|rem|px|pt|%|vh|vw)~", $value, $parts);
             if ($match_units) {

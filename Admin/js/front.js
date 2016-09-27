@@ -913,35 +913,11 @@ fx_front.prototype.add_infoblock_select_settings = function(data) {
             );
         },
         onready:function($form) {
-
-            //var container_handler = new $fx.container.form_handler($form);
-            
             // creating infoblock preview
             $fx.front.deselect_item();
 
             var add_fake_ib = function (callback) {
                 var $c_ib_node = $('<div class="fx_infoblock fx_infoblock_fake" />');
-                // if the closest infoblock is not layout,
-                // we will reload it with 'add_new' param
-                var $closest_ib = $area_node.closest('.fx_infoblock');
-                var $cib_data = $closest_ib.data('fx_infoblock');
-                if (
-                    $closest_ib.length 
-                    && $closest_ib[0].nodeName !== 'BODY'
-                    && $cib_data.controller.match(/^widget_blockset/)
-                ) {
-                    $fx.front.reload_infoblock(
-                        $closest_ib, 
-                        function($new_ib_node) {
-                            cancel_adding = function(){
-                                $fx.front.reload_infoblock($new_ib_node);
-                            };
-                            callback($new_ib_node.find('.fx_infoblock_fake'));
-                        }, 
-                        {override_infoblock:{params:{add_new_infoblock:true}}}
-                    );
-                    return;
-                }
                 $fx.front.append_ib_node($area_node, $c_ib_node);
                 $c_ib_node.data('fx_infoblock', {id:'fake'});
                 $form.data('ib_node', $c_ib_node);
@@ -955,7 +931,6 @@ fx_front.prototype.add_infoblock_select_settings = function(data) {
                 c_data = null;
 
             $form.on('change.fx_front', function(e) {
-                //var new_data = $form.serialize();
                 var new_data = $form.formToHash();
                 if (c_data === new_data) {
                     return;
@@ -978,6 +953,8 @@ fx_front.prototype.add_infoblock_select_settings = function(data) {
                             //container_handler.set_node($new_ib_node);
                             $fx.front.extract_infoblock_visual_fields($new_ib_node, $form);
                             $fx.front.select_item($new_ib_node.get(0));
+                            
+                            $fx.front.hilight_empty_infoblock_areas($new_ib_node, 'show');
                         };
                         if (!$new_ib_node || $new_ib_node.length === 0) {
                             add_fake_ib(add_ib_to_form);
@@ -1337,8 +1314,7 @@ fx_front.prototype.select_item = function(node) {
     
     var scrolling = false;
     setTimeout(function() {
-        //if (!scrolling && !$node.hasClass('fx_edit_in_place')) {
-        if (!scrolling && !$node.hasClass('fx_var_editable')) {
+        if (!scrolling && !$node.hasClass('fx_var_editable') && !$node.hasClass('theme--floxim--basic--layout')) {
             $fx.front.scrollTo($node, true, function() {
                 scrolling = false;
             });
@@ -1456,7 +1432,6 @@ fx_front.prototype.select_styled = function($node) {
                             value: vals,
                             visual_id: ib_meta.visual_id
                         }, function(res) {
-                            //console.log(res, ib_meta, param_meta, pm);
                             $fx.front_panel.hide();
                             $fx.front.reload_infoblock($ib);
                         });
@@ -1849,7 +1824,57 @@ fx_front.prototype.collect_adder_placeholders = function($container) {
 };
 
 fx_front.prototype.hilight_area_empty = function($area, scenario) {
-    var a_meta = $area.data('fx_area');
+    var a_meta = $area.data('fx_area'),
+        placeholder_text = null;
+    
+    $area_placeholder = $('<span class="fx_area_placeholder"></span>');
+    
+    switch (scenario) {
+        case 'add':
+            placeholder_text = 'Area %s is empty, you can add some blocks here.';
+                $area_placeholder.on(
+                'click', 
+                'a', 
+                function() {
+                    $fx.front.add_infoblock_select_controller($area);
+                    return false;
+                }
+            );
+            break;
+        case 'place':
+            placeholder_text = '%s: <a>put the block here</a>.';
+            $area_placeholder.on(
+                'click', 
+                'a',
+                function() {
+                    $area_placeholder.remove();
+                    $area.removeClass('fx_hidden_placeholded');
+                    var $cutted_ib = $('.fx_infoblock_cutted');
+                    $fx.front.place_block($cutted_ib, $area, 'into');
+                }
+            );
+            break;
+        case 'show':
+            placeholder_text = 'Область &laquo;%s&raquo;:<br /> тут скоро будут блоки!'
+            break;
+    }
+    placeholder_text = $fx.lang(placeholder_text)
+        .replace(
+            /\%s/, 
+            a_meta.name ? a_meta.name : a_meta.id
+        );
+    
+    $area_placeholder.html(placeholder_text);
+    
+    $area.find('>.fx_area_placeholder').remove();
+    $area.append($area_placeholder);
+    
+    $area.addClass('fx_area_placeholded');
+    $area.toggleClass('fx_hidden_placeholded', scenario !== 'show');
+    
+    
+    /*
+    
     var area_placeholder = $fx.lang(
                                 scenario === 'place' ? 
                                     '%s: <a>put the block here</a>.' : 
@@ -1871,7 +1896,7 @@ fx_front.prototype.hilight_area_empty = function($area, scenario) {
                 $fx.front.place_block($cutted_ib, $area, 'into');
             }
         );
-    } else {
+    } else  {
         $area_placeholder.on(
             'click', 
             'a', 
@@ -1881,9 +1906,7 @@ fx_front.prototype.hilight_area_empty = function($area, scenario) {
             }
         );
     }
-    $area.find('>.fx_area_placeholder').remove();
-    $area.append($area_placeholder);
-    $area.addClass('fx_hidden_placeholded');
+    */
 };
 
 fx_front.prototype.get_list_orientation = function($entities) {
@@ -2621,6 +2644,21 @@ fx_front.prototype.extract_infoblock_visual_fields = function($ib_node, $form) {
     });
 };
 
+fx_front.prototype.hilight_empty_infoblock_areas = function($ib, mode) {
+    var $areas = $('.fx_area_placeholded', $ib),
+        ib = $ib[0];
+    
+    $areas.each(function() {
+        var $a = $(this),
+            $a_ib = $a.closest('.fx_infoblock');
+            
+        if (!$a_ib.length || $a_ib[0] !== ib) {
+            return;
+        }
+        $fx.front.hilight_area_empty($a, mode);
+    });
+};
+
 fx_front.prototype.select_infoblock = function($node, panel) {
     if ($fx.front.mode === 'edit') {
         $node.edit_in_place();
@@ -2660,6 +2698,9 @@ fx_front.prototype.select_infoblock = function($node, panel) {
                 $fx.front.reload_infoblock($('.fx_infoblock_'+ib.id));
             },
             onready:function($form) {
+                
+                $fx.front.hilight_empty_infoblock_areas($ib_node, 'show');
+                
                 $form.data('ib_node', ib_node);
                 $fx.front.extract_infoblock_visual_fields($ib_node, $form);
                 //var c_data = $form.serialize();
@@ -2688,8 +2729,8 @@ fx_front.prototype.select_infoblock = function($node, panel) {
                             has_changes = true;
                             $form.data('ib_node', $new_ib_node);
                             $fx.front.extract_infoblock_visual_fields($new_ib_node, $form);
-                            //container_handler.set_node($new_ib_node);
                             is_waiting = false;
+                            $fx.front.hilight_empty_infoblock_areas($new_ib_node, 'show');
                         }, 
                         {override_infoblock:c_data}
                     );
@@ -2699,7 +2740,10 @@ fx_front.prototype.select_infoblock = function($node, panel) {
                 if (has_changes) {
                     $fx.front.reload_infoblock($form.data('ib_node'));
                 } else {
-                    //container_handler.reset_block();
+                    var $c_ib_node = $($form.data('ib_node'));
+                    if ($c_ib_node && $c_ib_node.length) {
+                        $fx.front.hilight_empty_infoblock_areas($ib_node, 'add');
+                    }
                 }
             }
         });
@@ -2899,23 +2943,22 @@ fx_front.prototype.enable_infoblock = function(infoblock_node) {
 };
 
 fx_front.prototype.get_content_parent_props = function($n) {
-    if (!$n.hasClass('fx-content')) {
-        $n = $n.closest('.fx-content');
-    }
-    var c_class = $n.attr('class');
-    if (!c_class) {
-        return {};
-    }
-    var classes = $n.attr('class').split(/\s+/),
-        res = {};
-    for (var i = 0; i < classes.length; i++) {
-        var c = classes[i],
-            val = c.match(/fx-content_parent-(.+)/);
-        if ( val ) {
-            var parts = val[1].split('_');
-            res[parts[0]] = parts[1];
-        }
-    }
+    var res = {},
+        $pars = $n.parents('.fx-block');
+    
+    $.each($pars, function() {
+        var mods = $fx.front.get_modifiers($(this), 'fx-block');
+        $.each(mods, function( k, v) {
+            var p = k.match(/own-(.+)/);
+            if (!p) {
+                return;
+            }
+            p = p[1];
+            if (typeof res[p] === 'undefined') {
+                res[p] = v;
+            }
+        });
+    } );
     return res;
 };
 
@@ -2929,7 +2972,7 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
     
     var ib_parent = $infoblock_node.parent();
     var meta = $infoblock_node.data('fx_infoblock');
-    var page_id = $fx.front.get_page_id(); //$('body').data('fx_page_id');
+    var page_id = $fx.front.get_page_id();
     var post_data = {
         _ajax_base_url: $infoblock_node.data('fx_ajax_base_url') || document.location.href,
         content_parent_props: JSON.stringify(content_parent_props)

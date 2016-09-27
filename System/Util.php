@@ -804,4 +804,14 @@ class Util
             fx::files()->rm($dir);
         }
     }
+    
+    public static function uid()
+    {
+        $time = round(microtime(true)*1000);
+        $res = dechex($time);
+        $uid = md5(uniqid(null, true));    
+        $uid = substr($uid, 0, 21); // 21 = 32 - 11
+        $res .= $uid;
+        return $res;
+    }
 }

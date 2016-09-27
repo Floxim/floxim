@@ -433,7 +433,8 @@ class Template
                     'Less compiler exception', 
                     get_class($this).':'.$method,
                     $e->getMessage(), 
-                    $e->currentFile
+                    $e->currentFile,
+                    $e->getTrace()
                 );
             } else {
                 fx::log(
@@ -593,6 +594,9 @@ class Template
         
         $main_bundle->push(array($bundle));
         $export_file = $bundle->getExportFile();
+        if ($export_file) {
+            //fx::log($block, $value, $params, file_get_contents($export_file));
+        }
         return $export_file;
     }
     
