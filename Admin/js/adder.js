@@ -664,9 +664,12 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
             } else {
                 if (scope !== 'entity') {
                     var $parent = $entity.parent(),
-                        parent_width = $parent.outerWidth();
+                        parent_rect = $parent[0].getBoundingClientRect(),
+                        parent_width = parent_rect.right - parent_rect.left;
+                
                     if (line_width <= parent_width) {
-                        line_left = $parent[0].getBoundingClientRect().left;
+                        line_left = parent_rect.left;
+                        line_width = parent_width;
                     }
                 }
                 css.width = line_width;

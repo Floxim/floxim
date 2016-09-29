@@ -5,6 +5,8 @@ window.less = {
 };
 
 (function($) {
+    
+var drop_fx_data_atts = false;
 
 window.fx_front = function () {
     
@@ -360,7 +362,7 @@ fx_front.prototype.get_area_meta = function($area_node) {
 
 fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, rel_position) {
     var $placeholder_parent = $placeholder[0].$fx_placeholder_parent;
-    //var $hidden_block = $placeholder.parent().closest('.fx_hidden_placeholded');
+    
     var $hidden_block = $placeholder_parent.closest('.fx_hidden_placeholded');
     var block_was_hidden = $hidden_block.length > 0;
     var $block_mark = $([]);
@@ -372,10 +374,9 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
     
     // store node right before placeholder to place placeholder back on cancel
     var $placeholder_pre = $placeholder.prev().first(),
-        placeholder_meta = $placeholder.data('fx_entity_meta');
-    
-    var speed = 500;
-    var null_size = {width:'',height:'','min-width':''};
+        placeholder_meta = $placeholder.data('fx_entity_meta'),
+        speed = 500,
+        null_size = {width:'',height:'','min-width':''};
     
     if (placeholder_meta.add_to_top) {
         $rel_node = $placeholder_parent.find('.fx_entity').first();
@@ -656,6 +657,8 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
                 
                 $placeholder.removeClass('fx_entity_adder_placeholder_active').css(null_size);
                 
+                window.$last_placeholder = $placeholder;
+                
                 // reset real_value's
                 for( var i in $placeholder.data()) {
                     if (!/^fx_template_var/.test(i)) {
@@ -687,8 +690,8 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
                 
                 $placeholder.trigger('fx_after_hide_adder_placeholder');
                 
-                $placeholder.remove();
-                
+                //$placeholder.remove();
+                $placeholder.detach();
                 $fx.front.enable_hilight();
             }
         );
@@ -1128,10 +1131,10 @@ fx_front.prototype.get_select_path_panel = function() {
     $path_panel = $(
         '<div class="fx_select_path_panel">'+
             '<div class="fx_select_path_panel__path"></div>'+
-            '<div class="fx_button fx_button-class-cancel">'+$fx.lang('cancel')+'</div>'+
+            '<div class="fx_select_path_panel__cancel"></div>'+
         '</div>'
     );
-    $path_panel.find('.fx_button').click(function() {
+    $path_panel.find('.fx_select_path_panel__cancel').click(function() {
         fx_eip.cancel();
     });
     $panel.append($path_panel);
@@ -1601,7 +1604,28 @@ fx_front.prototype.node_is_empty = function($n){
     return res;
 };
 
+
+var fx_data_att_rex = /^data-(fx.+)$/;
+
+function drop_node_fx_data_atts(node) {
+    var drop = [];
+    for (var i = 0; i < node.attributes.length; i++) {
+        var att = node.attributes[i].name,
+            m = att.match(fx_data_att_rex);
+        if (!m) {
+            continue;
+        }
+        $(node).data(m[1]);
+        drop.push(att);
+    }
+    for (var i = 0; i < drop.length; i++) {
+        node.removeAttribute(drop[i]);
+    }
+}
+
 fx_front.prototype.hilight = function(container) {
+    
+    
     container = container || $('html');
     
     $('*[data-has_var_in_att="1"]', container).addClass('fx_template_var_in_att');
@@ -1614,6 +1638,7 @@ fx_front.prototype.hilight = function(container) {
     if (container.not('.fx_unselectable').is(fx_selector)) {
         items = items.add(container);
     }
+    
     
     var $hide_empty = container.descendant_or_self('.fx-hide-empty');
     $hide_empty.each(function() {
@@ -1690,6 +1715,13 @@ fx_front.prototype.hilight = function(container) {
     items = $(items.get().reverse());
     
     items.each(function(index, item) {
+        
+        // defined in the beginning of this file
+        if (drop_fx_data_atts) {
+            drop_node_fx_data_atts(item);
+        }
+
+        
         var i = $(item);
         var meta = i.data('fx_controller_meta') || {};
         
@@ -1715,6 +1747,7 @@ fx_front.prototype.hilight = function(container) {
                 i.is('.fx_infoblock, .fx_adder_placeholder_container')
                 && !hidden_placeholder 
                 && $('.fx_entity', i).length === 0
+                && !i.is('.fx_entity')
             ) {
                 hidden_placeholder = $fx.lang('This block is empty');
             }
@@ -2532,7 +2565,8 @@ fx_front.prototype.prepare_infoblock_visual_fields = function(all_props, callbac
         if (!props) {
             return;
         }
-        $.each( props, function( prop_name, prop) {
+        $.each( props, function() {
+            var prop = this instanceof Array ? this[1] : this;
             if (prop.type === 'style') {
                 style_props.push(prop);
             }
@@ -2579,14 +2613,19 @@ fx_front.prototype.extract_infoblock_visual_fields = function($ib_node, $form) {
     
     var all_props = {};
     $.each(types, function(index, type) {
+        /*
         var source_props = $ib_node.data('fx_'+type+'_params'),
-            props = {};
+            //props = {};
+            props = [];
         if (source_props) {
             $.each(source_props, function(k,v) {
-                props[k] = $.extend({}, v);
+                //props[k] = $.extend({}, v);
+                props[k] = v;
             });
         }
         all_props[type] = props || null;
+        */
+        all_props[type] = $ib_node.data('fx_'+type+'_params') || null;
     });
     
     this.prepare_infoblock_visual_fields(all_props, function() {
@@ -2598,15 +2637,17 @@ fx_front.prototype.extract_infoblock_visual_fields = function($ib_node, $form) {
                 return;
             }
             var $rel_field = $(':input[name="visual['+type+']"]', $form).closest('.field');
-            $.each(props, function(prop_name, prop_data) {
-                var field_name = 'visual['+type+'_visual]['+prop_name.replace(/\./, '][')+']';
-                var meta = $.extend(
-                    {}, 
-                    prop_data, {
-                        name:field_name,
-                        view_context:'panel'
-                    }
-                );
+            $.each(props, function() {
+                var prop_name = this[0],
+                    prop_data = this[1],
+                    field_name = 'visual['+type+'_visual]['+prop_name.replace(/\./, '][')+']',
+                    meta = $.extend(
+                        {}, 
+                        prop_data, {
+                            name:field_name,
+                            view_context:'panel'
+                        }
+                    );
         
                 if (meta.type === 'group' && meta.fields) {
                     for (var i = 0; i < meta.fields.length; i++) {
@@ -2712,7 +2753,7 @@ fx_front.prototype.select_infoblock = function($node, panel) {
                     if (e.target.name === 'livesearch_input' || e.target.name === 'scope[type]') {
                         return;
                     }
-                    //var new_data = $form.serialize();
+                    
                     var new_data = $form.formToHash();
                     
                     if (new_data === c_data && !e.fx_forced) {
@@ -3047,7 +3088,9 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
                     }
                     $new_infoblock_node.data(data_prop, data_val );
                 }
-                $new_infoblock_node.removeClass('fx_infoblock_disabled');
+                $new_infoblock_node
+                    .removeClass('fx_infoblock_disabled')
+                    .addClass('fx_mode_'+$fx.front.mode);
            } else {
                var $new_infoblock_node = $( $.trim(res) );
                if ($new_infoblock_node.length > 0) {

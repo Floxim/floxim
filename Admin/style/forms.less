@@ -1604,6 +1604,10 @@ select.fx_input {
         z-index:10000;
         &_active {
             display:flex;
+            &:after {
+                content: '';
+                flex-grow: 1;
+            }
         }
     }
     &__item-container {
@@ -1612,6 +1616,20 @@ select.fx_input {
         display:flex;
         border:1px solid transparent;
         cursor:pointer;
+        &_auto {
+            width:100%;
+        }
+    }
+    
+    &__item-container_auto &__item {
+        color:#F00 !important;
+        padding:5px 15px;
+        background:#EEE;
+    }
+    
+    &__item-container_auto &__item_active {
+        background:#F00;
+        color:#FFF !important;
     }
     
     &__item, &__visible {

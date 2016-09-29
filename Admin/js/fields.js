@@ -117,6 +117,9 @@ window.$fx_fields = {
             json.label = 'Пропорции';
         }
         function to_ratio(val) {
+            if (val === 'none') {
+                return val;
+            }
             if (typeof val !== 'string') {
                 return val;
             }
@@ -129,6 +132,11 @@ window.$fx_fields = {
         
         function append_ratio_size($node, ratio, square) {
             square = square ||  1900;
+            
+            if (ratio === 'none') {
+                ratio = 5;
+            }
+            
             var height = Math.sqrt( square / ratio ),
                 width = height * ratio;
 
@@ -179,19 +187,33 @@ window.$fx_fields = {
         if (!json.value) {
             json.value = '1:1';
         }
+        if (json.auto) {
+            avail_ratios.unshift(['none', 'Авто']);
+        }
         
         json.value = to_ratio(json.value);
         
-        
         for (var i = 0; i < avail_ratios.length; i++) {
             var c_ratio = avail_ratios[i],
+                c_val = c_ratio[0],
                 $container = $('<div class="fx-ratio-input__item-container"></div>'),
-                $item = $('<div class="fx-ratio-input__item" data-value="'+c_ratio[0]+'"><span>'+c_ratio[1]+'</span></div>');
-            append_ratio_size($item, c_ratio[0]);
+                $item = $('<div class="fx-ratio-input__item" data-value="'+c_val+'"><span>'+c_ratio[1]+'</span></div>');
+            if (c_val === 'none') {
+                $container.addClass('fx-ratio-input__item-container_auto');
+            }
+            append_ratio_size($item, c_val);
             
             $container.append($item);
             $control.append($container);
         }
+        
+        var handle_escape = function(e) {
+            if (e.which === 27) {
+                hide_control();
+                e.stopImmediatePropagation();
+                return false;
+            };
+        };
         
         $('body').append($control);
         
@@ -200,19 +222,17 @@ window.$fx_fields = {
         
         function show_control () {
             $control.addClass(active_class);
+            /*
             $control.attr('tabindex',0).focus().on('keydown.fx-ratio-input', function(e) {
-                if (e.which === 27) {
-                    hide_control();
-                    e.stopImmediatePropagation();
-                    return false;
-                }
+                
             });
+            */
             $('html').on('click.fx-ratio-input', function(e) {
                 if ($(e.target).closest('.fx-ratio-input__control').length === 0) {
                     hide_control();
                     return false;
                 }
-            });
+            }).on('keydown.fx-ratio-input', handle_escape);
         }
         
         function hide_control() {
@@ -236,6 +256,7 @@ window.$fx_fields = {
         });
         
         function set_value(ratio) {
+            console.log('sv', ratio);
             var active_item_class = 'fx-ratio-input__item_active';
             $control.find('.'+active_item_class).removeClass(active_item_class);
             var $item = $control.find('.fx-ratio-input__item[data-value="'+ratio+'"]');
@@ -258,6 +279,9 @@ window.$fx_fields = {
     },
     
     'css-background': function(json) {
+        if (!json.label) {
+            json.label = 'Фон';
+        }
         var $row = $t.jQuery('form_row', json),
             $node = $row.find('.fx-background-control');
         var bg_control = new fx_background_control($node, json);

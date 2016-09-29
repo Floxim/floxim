@@ -738,8 +738,10 @@ fx_form = {
     
     bind_conditions: function( conds, $container, callback) {
         var that = this;
-    
+        
         conds = this.make_conditions(conds);
+        
+        console.log(conds);
         
         var handled_input_names = {};
         for (var i = 0; i < conds.length; i++ ) {
@@ -773,6 +775,15 @@ fx_form = {
 
     //add_parent_condition: function(parent, _el, container) {
     add_parent_condition: function(conds, $field, $container) {
+        
+        if (typeof conds === 'string') {
+            var cond_parts = conds.split(/\s*?(==|!=|>|<|>=|<=)\s*/);
+            if (cond_parts.length === 3) {
+                conds = [cond_parts[0], cond_parts[2], cond_parts[1]];
+            }
+            console.log(cond_parts, $field);
+        }
+        
         var that = this;
         $container = $container.closest('form');
         var handler = this.bind_conditions(
@@ -834,9 +845,44 @@ $fx.form = window.fx_form = window.$fx_form = fx_form;
         return this;
     };
     
+    function formToArray($f) {
+        var $els = $f.find('[name]'),
+            res = [];
+        $.each($els, function() {
+            var $el = $(this),
+                n = $el.attr('name'),
+                v = $el.val();
+            
+            if (!n || this.disabled) {
+                return;
+            }
+            if (this.tagName === 'BUTTON') {
+                return;
+            }
+            if (this.tagName === 'INPUT') {
+                if (
+                    this.type === 'checkbox' && 
+                    !this.hasAttribute('data-fx-unchecked-value') &&
+                    !this.checked
+                ) {
+                    return;
+                }
+                if (this.type === 'radio' && !this.checked) {
+                    return;
+                }
+            }
+            res.push({
+                name:n,
+                value: $el.val()
+            });
+        });
+        return res;
+    }
+    
     $.fn.formToHash = function(filter) {
         var $form = this,
-            data = $form.formToArray(true),
+            //data = $form.formToArray(true),
+            data = formToArray($form),
             res = {};
         
         filter = filter || function(f) {return true;}

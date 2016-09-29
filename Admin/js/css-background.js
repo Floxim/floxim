@@ -138,7 +138,9 @@ bg.prototype.init = function() {
     this.$popup.addClass('fx_overlay fx_admin_form '+bg.cl());
     
     this.$handler.on('click', function() {
+        that.$popup.css('left', 0).show();
         var rect = that.$handler[0].getBoundingClientRect();
+        
         that.$popup.css({
             top: rect.top,
             left: rect.left

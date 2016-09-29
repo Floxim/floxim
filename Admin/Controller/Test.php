@@ -24,7 +24,7 @@ class Test extends Admin {
             'ratio' => array(
                 'label' => 'Пропорции',
                 'type' => 'ratio',
-                'value' => 5,
+                'value' => 'none',
                 'min' => 1
             )
         );

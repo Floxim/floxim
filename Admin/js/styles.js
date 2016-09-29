@@ -70,8 +70,9 @@ less_tweaker.prototype.get_data = function() {
     for (var i = 0; i < this.vars.length; i++) {
         var name = this.vars[i],
             inp_name = that.base_name ? that.base_name + '['+name+']' : name,
-            $inp = that.$form.find(':input[name="'+inp_name+'"]'),
-            value = $inp.val(),
+            $inp = that.$form.find(':input[name="'+inp_name+'"]');
+        
+        var value = $inp.val(),
             units = $inp.data('units');
         if (units) {
             value += units;
@@ -81,6 +82,7 @@ less_tweaker.prototype.get_data = function() {
         }
         res[name] = value;
     }
+    
     return res;
 };
 

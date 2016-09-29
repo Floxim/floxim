@@ -37,5 +37,11 @@ if (jQuery) {
             return res;
         }
     };
-
+    
+    $fxj.valHooks.checkbox.get = function(elem) {
+        if (elem.hasAttribute('data-fx-unchecked-value')) {
+            return elem.checked ? elem.value : elem.getAttribute('data-fx-unchecked-value');
+        }
+        return undefined;
+    };
 }

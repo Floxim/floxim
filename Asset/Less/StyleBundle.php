@@ -489,7 +489,8 @@ class StyleBundle extends Bundle {
         return fx::data('style_variant', $id);
     }
     
-    public function generateExportFile()
+    
+    public function getExportFileCode() 
     {
         $meta = $this->getStyleMeta();
         
@@ -512,7 +513,7 @@ class StyleBundle extends Bundle {
             }
         }
         
-        $path = $this->getExportFilePath();
+        
         $code = \Floxim\Floxim\Template\Compiler::generateStyleExportCode(
             array(
                 'export' => $export, 
@@ -520,6 +521,16 @@ class StyleBundle extends Bundle {
             ),
             $values
         );
+        return $code;
+    }
+    
+    public function generateExportFile()
+    {
+        $code = $this->getExportFileCode();
+        if (!$code) {
+            return;
+        }
+        $path = $this->getExportFilePath();
         fx::files()->writefile($path, $code);
         $this->meta['export_file'] = $path;
     }

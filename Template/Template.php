@@ -151,7 +151,8 @@ class Template
         $res = array();
         foreach ($this->template_params as $pk => $pp) {
             if (!$pp['is_forced']) {
-                $res[$pk] = $pp;
+                //$res[$pk] = $pp;
+                $res []= array($pk, $pp);
             }
         }
         return $res;

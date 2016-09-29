@@ -363,10 +363,11 @@ html.find('textarea.fx_code').each( function(){
 </div>
 
 <!--[input ? (_c.type == 'checkbox' && typeof _c.values == 'undefined') || _c.type == 'bool']-->
-<input type="hidden" name="<?=_c.name?>" value="0">
+
 <input 
     type="checkbox"
     style="display:inline;" 
+    data-fx-unchecked-value="0"
     <?=$t.field_id_name(_c)?> 
     value="1" <?=_c.value && _c.value !== '0' ? ' checked="checked"' : ''?> 
     <?= _c.disabled ? ' disabled="disabled" ' : '' ?> />
