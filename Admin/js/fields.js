@@ -256,7 +256,6 @@ window.$fx_fields = {
         });
         
         function set_value(ratio) {
-            console.log('sv', ratio);
             var active_item_class = 'fx-ratio-input__item_active';
             $control.find('.'+active_item_class).removeClass(active_item_class);
             var $item = $control.find('.fx-ratio-input__item[data-value="'+ratio+'"]');
@@ -828,8 +827,8 @@ window.$fx_fields = {
                     res_val = {
                         id:val[0]
                     };
-                    if (typeof val[1] === 'string') {
-                        res_val.name = val[1];
+                    if (typeof val[1] === 'string' || typeof val[1] === 'number') {
+                        res_val.name = val[1] + '';
                     } else if (typeof val[1] === 'object') {
                         res_val = $.extend({}, res_val, val[1]);
                     }

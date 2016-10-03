@@ -505,7 +505,7 @@ fx_edit_in_place.prototype.handle_keydown = function(e) {
     }
 };
 
-fx_edit_in_place.prototype.force_focus = function($n) {
+var force_focus = function($n) {
     var selection = window.getSelection(),
         range = document.createRange();
     
@@ -514,6 +514,10 @@ fx_edit_in_place.prototype.force_focus = function($n) {
     selection.removeAllRanges();
     selection.addRange(range);
 };
+
+fx_edit_in_place.prototype.force_focus = force_focus;
+
+window.force_focus = force_focus;
 
 fx_edit_in_place.prototype.is_text_empty = function(text) {
     return text.length === 0 || (text.length === 1 && text.charCodeAt(0) === 8203);
@@ -575,7 +579,12 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
     $("<style type='text/css' class='fx_placeholder_stylesheet'>\n"+
         ".fx_var_editable:empty:after, .fx_editable_empty:after {"+
             "color:rgb("+avg_color+","+avg_color+","+avg_color+") !important;"+
-            "content:attr(fx_placeholder);"+
+            "content:attr(fx_placeholder) !important;"+
+            "position:static !important;"+
+        "}"+
+        ".fx_editable_empty p {"+
+            "position:absolute;"+
+            "min-width:10px;"+
         "}"+
     "</style>").appendTo( $('head') );
    
@@ -634,7 +643,7 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
     if (this.$closest_button.length > 0) {
         this.$closest_button.on('click.edit_in_place', function() {return false;});
     }
-    if (!this.is_wysiwyg) {
+    if (!this.is_wysiwyg || true) {
         handle_node_size();
         $n.on(
             //'keyup.edit_in_place keydown.edit_in_place click.edit_in_place change.edit_in_place', 
@@ -1089,6 +1098,15 @@ fx_edit_in_place.prototype.make_wysiwyg = function () {
         top:'0px',
         left:'0px'
     });
+    
+    if ($node.is('.fx_var_bound_to_entity')) {
+        this.$owner_entity = $node.closest('.fx_entity');
+        this.$owner_entity.on('mousedown.eip', function(e) {
+            if ( $(e.target).closest('.fx_var_editable').length === 0) {
+                return false;
+            }
+        });
+    }
 };
 
 fx_edit_in_place.prototype.destroy_wysiwyg = function() {
@@ -1096,6 +1114,11 @@ fx_edit_in_place.prototype.destroy_wysiwyg = function() {
     this.node.redactor('core.destroy');
     $('#fx_admin_control .editor_panel').remove();
     this.node.get(0).normalize();
+    if (this.$owner_entity) {
+        this.$owner_entity.off('.eip');
+        delete this.$owner_entity;
+        console.log('leave oe');
+    }
 };
 
 $(function() {

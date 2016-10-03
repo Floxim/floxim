@@ -647,59 +647,59 @@ class Compiler
         return array($expr, $meta);
     }
     
+    protected static function parseExportExpression($expression, $vals)
+    {
+        $expression = preg_replace_callback(
+            '~@([a-z0-9_-]+)~',
+            function( $matches ) use ($vals) {
+                $var = $matches[1];
+                if (isset($vals[$var])) {
+                    $c_val = trim($vals[$var]);
+                    if (!is_numeric($c_val)) {
+                        $numeric = null;
+                        if (preg_match("~^(\d+)(em|rem|px|%|vh|vw)$~i", $c_val, $numeric)) {
+                            $c_val = $numeric[1];
+                        } else {
+                            if (!preg_match("~^[\'\\\"].*[\'\\\"]$~", $c_val)) {
+                                $c_val = '"'.addslashes($c_val).'"';
+                            }
+                        }
+                    }
+                    return $c_val;
+                }
+            },
+            $expression
+        );
+        return $expression;
+    }
+    
     /*
      * Genrate code to export vars from less style to template context
      */
     public static function generateStyleExportCode($props, $vals)
     {
-        //$code = '<?php'."\n";
-        
         $code = '';
         
         foreach ($props['export'] as $var => $expression) {
-            $expression = preg_replace_callback(
-                '~@([a-z0-9_-]+)~',
-                function( $matches ) use ($vals) {
-                    $var = $matches[1];
-                    if (isset($vals[$var])) {
-                        $c_val = trim($vals[$var]);
-                        if (!is_numeric($c_val)) {
-                            $numeric = null;
-                            if (preg_match("~^(\d+)(em|rem|px|%|vh|vw)$~i", $c_val, $numeric)) {
-                                $c_val = $numeric[1];
-                            } else {
-                                if (!preg_match("~^[\'\\\"].*[\'\\\"]$~", $c_val)) {
-                                    $c_val = '"'.addslashes($c_val).'"';
-                                }
-                            }
-                        }
-                        return $c_val;
-                    }
-                },
-                $expression
-            );
+            self::parseExportExpression($expression, $vals);
             $code .= '$context->set("'.$var.'", '.$expression.");\n";
         }
         $container_props = array();
         foreach ($props['container'] as $var => $val) {
             $val = trim($val);
-            switch ($var) {
-                case 'lightness':
-                    $lightness = null;
-                    if (preg_match("~^[^,]+~", $vals[$val], $lightness)) {
-                        $lightness = $lightness[0];
-                        if ($lightness === 'light' || $lightness === 'dark') {
-                            $container_props['lightness'] = $lightness;
-                        }
-                    }
-                    break;
-                case 'width':
-                case 'align':
-                    $container_props[$var] = isset($vals[$val]) ? $vals[$val] : 'none';
-                    break;
+            if (preg_match("~@~", $val)) {
+                $expr = self::parseExportExpression($val, $vals);
+                $res_val = eval("return ".$expr.";");
+            } else {
+                $res_val = isset($vals[$val]) ? $vals[$val] : 'none';
             }
+            if ($var === 'lightness') {
+                if (preg_match("~^[^,]+~", $res_val, $lightness)) {
+                    $res_val = $lightness[0];
+                }
+            }
+            $container_props[$var] = $res_val;
         }
-        //fx::cdebug($vals, $props, $container_props);
         if (count($container_props) > 0) {
             $code .= '$block_container_props = '.var_export($container_props,1).";\n";
         }

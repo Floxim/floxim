@@ -741,8 +741,6 @@ fx_form = {
         
         conds = this.make_conditions(conds);
         
-        console.log(conds);
-        
         var handled_input_names = {};
         for (var i = 0; i < conds.length; i++ ) {
             handled_input_names[ conds[i][0] ] = true;
@@ -781,7 +779,6 @@ fx_form = {
             if (cond_parts.length === 3) {
                 conds = [cond_parts[0], cond_parts[2], cond_parts[1]];
             }
-            console.log(cond_parts, $field);
         }
         
         var that = this;

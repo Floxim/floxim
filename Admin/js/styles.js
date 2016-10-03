@@ -1,9 +1,7 @@
 (function() {
     
 function less_tweaker(params) {
-    
     $.extend(this, params);
-    
     var that = this;
     this.load_less().then(
         function(less) {
@@ -230,27 +228,47 @@ less_tweaker.prototype.recount_container = function(vars) {
     });
 };
 
+function eval_expression(expr, vars) {
+    var expr = expr.replace(
+        /\@([a-z0-9_-]+)/g,
+        function(all, var_name) {
+            if (typeof vars[var_name] === 'undefined') {
+                return 'null';
+            }
+            var c_val = vars[var_name];
+            if (typeof c_val === 'string') {
+                c_val = '"'+c_val+'"';
+            }
+            return c_val;
+        }
+    );
+    var res = eval(expr);
+    return res;
+}
+
+
 less_tweaker.get_container_props = function(container, vars) {
     if (!container) {
         return null;
     }
+    //console.log(container, vars);
     var res = {};
     $.each(container, function(prop, exp) {
+        var c_val = null;
+        
         exp = exp.replace(/^\s+|\s+$/g, '');
-        switch (prop) {
-            case 'lightness':
-                var c_val = vars[exp];
-                if (c_val) {
-                    c_val  = c_val.match(/^[^\,]+/)[0];
-                    res[prop] = c_val;
-                }
-                break;
-            default:
-                var c_val = vars[exp];
-                if (c_val) {
-                    res[prop] = c_val;
-                }
-                break;
+        
+        if (/\@/.test(exp)) {
+            c_val = eval_expression(exp, vars);
+        } else {
+            c_val = vars[exp];
+        }
+        if (prop === 'lightness') {
+            var lightness = c_val.match(/^[^,]+/);
+            c_val = lightness ? lightness[0] : null;
+        }
+        if (c_val) {
+            res[prop] = c_val;
         }
     });
     return res;
@@ -323,16 +341,19 @@ less_tweaker.init_style_select = function($monosearch) {
             {
                 view:'horizontal',
                 onready: function($form) {
-                    var style_meta = $form.data('fx_response').tweaker;
-                    tweaker = new less_tweaker({
-                        $form:$form,
-                        tweaker_file:style_meta.tweaker_file,
-                        style_class: style_meta.style_class,
-                        style_id: style_id,
-                        vars: style_meta.tweaked_vars,
-                        mixin_name: style_meta.mixin_name,
-                        is_new: style_variant_id === null
-                    });
+                    var style_meta = $form.data('fx_response').tweaker,
+                        params = $.extend(
+                            {},
+                            style_meta,
+                            {
+                                $form: $form,
+                                style_id: style_id,
+                                vars: style_meta.tweaked_vars,
+                                is_new: style_variant_id === null
+                            }
+                        );
+                    
+                    tweaker = new less_tweaker(params);
                 },
                 onfinish: function(res) {
                     var $inp = $monosearch.find('input[type="hidden"]'),

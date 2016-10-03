@@ -201,13 +201,11 @@ fx_front.prototype.handle_click = function(e) {
         return;
     }
     
-    
     var $target = $(e.target);
     
     if ($fx.front.select_disabled && $target.closest('.fx_overlay').length === 0) {
         return false;
     }
-    
     
     // don't remove selection when mousedown target doesn't match current click (mouseup) target
     // e.g. user tries to select some text and stops selection when pointer is outside the edited node
@@ -248,7 +246,6 @@ fx_front.prototype.handle_click = function(e) {
         document.location.href = clicked_link.attr('href');
         return false;
     }
-
 
     e.stopImmediatePropagation();
     
@@ -1392,7 +1389,10 @@ fx_front.prototype.select_styled = function($node) {
         return;
     }
     
-    $.each(template_params, function(k, tp) {
+    $.each(template_params, function(n, tps) {
+        var k = tps[0],
+            tp = tps[1];
+        
         if (tp.style_id && tp.style_id !== style_id) {
             return;
         }
@@ -2613,24 +2613,12 @@ fx_front.prototype.extract_infoblock_visual_fields = function($ib_node, $form) {
     
     var all_props = {};
     $.each(types, function(index, type) {
-        /*
-        var source_props = $ib_node.data('fx_'+type+'_params'),
-            //props = {};
-            props = [];
-        if (source_props) {
-            $.each(source_props, function(k,v) {
-                //props[k] = $.extend({}, v);
-                props[k] = v;
-            });
-        }
-        all_props[type] = props || null;
-        */
-        all_props[type] = $ib_node.data('fx_'+type+'_params') || null;
+        var source_props = $ib_node.data('fx_'+type+'_params') || null;
+        all_props[type] = $.extend(true, {}, source_props);
     });
     
     this.prepare_infoblock_visual_fields(all_props, function() {
         $.each(all_props, function(type, props) {
-            //var props = $ib_node.data('fx_'+type+'_params'),
             var field_class = 'fx_infoblock_'+type+'_param_field';
             $('.'+field_class, $form).remove();
             if (!props) {
