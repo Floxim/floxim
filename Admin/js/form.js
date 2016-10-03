@@ -635,7 +635,7 @@ fx_form = {
         }
         for (var i = 0; i < res.length; i++) {
             var cond = res[i];
-            if (cond.length === 1){
+            if (cond.length === 1) {
                 cond[1] = null;
                 cond[2] = 'not_empty';
             } else if (cond.length === 2) {
@@ -653,6 +653,15 @@ fx_form = {
                     cond[2] = 'in';
                 } else {
                     cond[2] = '==';
+                }
+            } else if (cond.length === 3) {
+                if (cond[2] === '~') {
+                    cond[2] = 'regexp';
+                } else if (cond[2] === '!~') {
+                    cond[2] = 'not_regexp';
+                }
+                if (/regexp$/.test(cond[2])) {
+                    cond[1] = new RegExp(cond[1]);
                 }
             }
         }
@@ -775,7 +784,7 @@ fx_form = {
     add_parent_condition: function(conds, $field, $container) {
         
         if (typeof conds === 'string') {
-            var cond_parts = conds.split(/\s*?(==|!=|>|<|>=|<=)\s*/);
+            var cond_parts = conds.split(/\s*?(==|!=|>|<|>=|<=|!~|~)\s*/);
             if (cond_parts.length === 3) {
                 conds = [cond_parts[0], cond_parts[2], cond_parts[1]];
             }

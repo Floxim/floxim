@@ -237,7 +237,7 @@ function eval_expression(expr, vars) {
             }
             var c_val = vars[var_name];
             if (typeof c_val === 'string') {
-                c_val = '"'+c_val+'"';
+                c_val = '"'+c_val.replace(/"/g, '\\"')+'"';
             }
             return c_val;
         }
