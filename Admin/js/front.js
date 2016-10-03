@@ -1623,6 +1623,24 @@ function drop_node_fx_data_atts(node) {
     }
 }
 
+fx_front.prototype.collapse_hidden = function($container) {
+    var $hide_empty = $container.descendant_or_self('.fx-hide-empty');
+    $hide_empty = $($hide_empty.get().reverse());
+    $hide_empty.each(function() {
+        var $el = $(this),
+            has_visible_children = false;
+        $el.children().each(function() {
+            if (!$(this).hasClass('fx_view_hidden')) {
+                has_visible_children = true;
+                return false;
+            }
+        });
+        if (!has_visible_children) {
+            $el.addClass('fx_view_hidden');
+        }
+    });
+};
+
 fx_front.prototype.hilight = function(container) {
     
     
@@ -1639,21 +1657,7 @@ fx_front.prototype.hilight = function(container) {
         items = items.add(container);
     }
     
-    
-    var $hide_empty = container.descendant_or_self('.fx-hide-empty');
-    $hide_empty.each(function() {
-        var $el = $(this),
-            has_visible_children = false;
-        $el.children().each(function() {
-            if (!$(this).hasClass('fx_view_hidden')) {
-                has_visible_children = true;
-                return false;
-            }
-        });
-        if (!has_visible_children) {
-            $el.addClass('fx_view_hidden');
-        }
-    });
+    $fx.front.collapse_hidden(container);
     
     $('.fx_has_inline_adder', container)
         .off('.fx_recount_adders_entity')
