@@ -99,7 +99,7 @@ class Config
         $this->config['path.jquery.http'] = fx::path()->http($this->config['path.jquery']);
         
         //$this->config['path.jquery-ui'] = fx::path('@floxim/lib/js/jquery-ui.min.js');
-        $this->config['path.jquery-ui'] = fx::path('@floxim/lib/js/jquery-ui.js');
+        $this->config['path.jquery-ui'] = fx::path('@floxim/lib/js/jquery-ui.min.js');
         
         $this->config['templates.cache_dir'] = fx::path('@files/compiled_templates');
 

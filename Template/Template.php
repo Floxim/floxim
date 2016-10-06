@@ -588,16 +588,19 @@ class Template
     {
         $bundle_keyword = $block.'_'.$value;
         $bundle = fx::assets('style', $bundle_keyword, $params);
+        if (!$is_temp || $value === 'default') {
+            fx::page()->getDefaultCssBundle()->push( array($bundle) );
+        }
+        /*
         $main_bundle = $is_temp ? 
                                 fx::page()->getTempCssBundle() 
                                 : 
                                 fx::page()->getDefaultCssBundle();
         
         $main_bundle->push(array($bundle));
+         * 
+         */
         $export_file = $bundle->getExportFile();
-        if ($export_file) {
-            //fx::log($block, $value, $params, file_get_contents($export_file));
-        }
         return $export_file;
     }
     

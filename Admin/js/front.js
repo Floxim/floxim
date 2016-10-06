@@ -1312,6 +1312,7 @@ fx_front.prototype.select_item = function(node) {
         $fx.front.select_infoblock($node);
     }
     
+    /*
     var scrolling = false;
     setTimeout(function() {
         if (!scrolling && !$node.hasClass('fx_var_editable') && !$node.hasClass('theme--floxim--basic--layout')) {
@@ -1321,7 +1322,8 @@ fx_front.prototype.select_item = function(node) {
             scrolling = true;
         }
     }, 150);
-    
+    */
+   
     $fx.front.disable_hilight();
     $('html').on('keydown.fx_selected', function(e) {
         if (
@@ -1404,8 +1406,6 @@ fx_front.prototype.select_styled = function($node) {
     if (!param_key || !param_meta) {
         return;
     }
-    
-    var pm = JSON.parse(JSON.stringify(param_meta));
     
     node_panel.add_button(
         {
@@ -2956,15 +2956,14 @@ fx_front.prototype.set_mode_design = function() {
     });
 };
 
-fx_front.prototype.disabled_infoblock_opacity = 0.4;
+fx_front.prototype.disabled_infoblock_opacity = 0.8;
 
 fx_front.prototype.disable_infoblock = function(infoblock_node) {
-    // .css({opacity:'0.3'}).
     $(infoblock_node)
         .on('click.fx_fake_click', function() {
             return false;
         })
-        .animate({opacity:$fx.front.disabled_infoblock_opacity}, 250)
+        .animate({opacity:$fx.front.disabled_infoblock_opacity}, 150)
         .addClass('fx_infoblock_disabled');
 };
 
@@ -3090,7 +3089,7 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
                }
                $infoblock_node.hide();
                $infoblock_node.before($new_infoblock_node);
-               $infoblock_node.trigger('fx_infoblock_unloaded');
+               $infoblock_node.trigger('fx_infoblock_unloaded', [$new_infoblock_node]);
                $infoblock_node.remove();
            }
            
@@ -3099,7 +3098,7 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
            }
            $fx.front.hilight($new_infoblock_node);
            $new_infoblock_node.trigger('fx_infoblock_loaded');
-           $new_infoblock_node.css('opacity', $fx.front.disabled_infoblock_opacity).animate({opacity: 1},250);
+           $new_infoblock_node.css('opacity', $fx.front.disabled_infoblock_opacity).animate({opacity: 1},150);
            $('body').removeClass('fx_stop_outline');
            if (selected_selector) {
                var sel_target = ib_parent.find(selected_selector);

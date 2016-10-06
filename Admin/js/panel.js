@@ -208,7 +208,6 @@
             
             $('body').off('.fx_front_panel').on('keydown.fx_front_panel', function(e) {
                 if (e.which === 27) {
-                    //$form.trigger('fx_form_cancel');
                     $fx.front_panel.get_current_panel().$form.trigger('fx_form_cancel');
                     return false;
                 }

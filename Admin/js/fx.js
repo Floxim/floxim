@@ -47,8 +47,38 @@ window.$fx = {
                 if (css_assets) {
                     for (var i = 0; i < css_assets.length; i++) {
                         var asset = css_assets[i];
-                        if ($('link[href="'+asset+'"]').length === 0) {
-                            $('head').append('<link type="text/css" rel="stylesheet" href="'+asset+'" />');
+                        if (typeof asset === 'string') {
+                            if ($('link[href="'+asset+'"]').length === 0) {
+                                $('head').append('<link type="text/css" rel="stylesheet" href="'+asset+'" />');
+                            }
+                        } else if (typeof asset === 'object') {
+                            if (asset.declarations) {
+                                $.each(asset.declarations, function(k,v) {
+                                    $fx.less_block_declarations[k] = v;
+                                });
+                            }
+                            if (asset.styles) {
+                                for (var j = 0; j < asset.styles.length; j++) {
+                                    var style = asset.styles[j];
+                                    if ($('link[href="'+style+'"]').length === 0) {
+                                        $('head').append('<link type="text/css" rel="stylesheet" href="'+style+'" />');
+                                    }
+                                }
+                            }
+                            if (asset.blocks) {
+                                for (var j = 0 ; j < asset.blocks.length; j++) {
+                                    var block = asset.blocks[j];
+                                    var $ss = $('style#'+block.style_class);
+                                    if (!$ss.length) {
+                                        $ss = $('<style type="text/css" id="'+block.style_class+'"></style>');
+                                        $ss.attr('data-declaration', block.declaration_keyword);
+                                        $('head').append($ss);
+                                    }
+                                    if (!$ss.data('is_tweaked')) {
+                                        $ss.text(block.css);
+                                    }
+                                }
+                            }
                         }
                     }
                 }

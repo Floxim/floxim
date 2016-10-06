@@ -16,8 +16,9 @@ class Fonts {
         ob_start();
         if (!$is_loaded) {
             $is_loaded = true;
+            /* <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.16/webfont.js"></script> */
             ?>
-            <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.16/webfont.js"></script>
+            <script src="<?= fx::path()->http('@floxim_js') ?>/webfont.js"></script>
             <?php
         }
         $avail = self::getAvailableFonts();

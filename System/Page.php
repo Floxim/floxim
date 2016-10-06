@@ -55,6 +55,7 @@ class Page
         static $bundle_added = false;
         $bundle = fx::assets('css');
         if (!$bundle_added) {
+            $bundle->collect_pushed_files = true;
             $this->files_css[]= $bundle;
             $bundle_added = true;
         }
@@ -396,12 +397,20 @@ class Page
 
     public function ajaxResponse($result)
     {
+        $css = $this->getCssFilesFinal();
+        $css_res = array();
+        foreach ($css as $set) {
+            if (isset($set['file'])) {
+                $css_res []= $set['file'];
+            } else {
+                $css_res []= $set;
+            }
+        }
         $response = array(
             'format' => 'fx-response',
             'response' => $result,
             'js' => $this->files_js,
-            'css' => array_keys($this->getCssFilesFinal())//,
-            //'inline_css' => $this->getInlineStyles()
+            'css' => $css_res
         );
         return json_encode($response);
     }
@@ -410,16 +419,24 @@ class Page
     {
         $res = array();
         foreach ($this->files_css as $f) {
-            if ($f instanceof \Floxim\Floxim\Asset\Bundle) {
+            if ($f instanceof \Floxim\Floxim\Asset\Less\Bundle) {
                 $f->save();
-                $f = array(
-                    'file' => fx::path()->http($f->getFilePath())
-                );
+                if (fx::isAdmin() && $f->isDefaultBundle()) {
+                    $f = $f->getAdminOutput();
+                } else {
+                    $f = array(
+                        'file' => fx::path()->http($f->getFilePath())
+                    );
+                }
             }
             if (!is_array($f)) {
                 $f = array('file' => $f);
             }
-            $res[$f['file']] = $f;
+            if (isset($f['file'])) {
+                $res[$f['file']] = $f;
+            } else {
+                $res []= $f;
+            }
         }
         return $res;
     }
@@ -429,11 +446,33 @@ class Page
         $r = '';
         $files_css = $this->getCssFilesFinal();
         foreach ($files_css as $file => $file_info) {
-            $r .= '<link rel="stylesheet" type="text/css" href="' . $file . '" ';
-            if (isset($file_info['media'])) {
-                $r .= ' media="('.$file_info['media'].')" ';
+            if (isset($file_info['file'])) {
+                $r .= '<link rel="stylesheet" type="text/css" href="' . $file . '" ';
+                if (isset($file_info['media'])) {
+                    $r .= ' media="('.$file_info['media'].')" ';
+                }
+                $r .= '/>' . PHP_EOL;
+            } else {
+                if (isset($file_info['declarations'])) {
+                    $this->addJsText(
+                        '$fx.less_block_declarations = '.  json_encode($file_info['declarations']).';'
+                    );
+                }
+                if (isset($file_info['blocks'])) {
+                    foreach ($file_info['blocks'] as $block) {
+                        $r .= '<style type="text/css"';
+                        $r .= ' id="'.$block['style_class'].'"';
+                        $r .= ' data-declaration="'.$block['declaration_keyword'].'">'."\n";
+                        $r .= $block['css'];
+                        $r .= '</style>';
+                    }
+                }
+                if (isset($file_info['styles'])) {
+                    foreach ($file_info['styles'] as $style_href) {
+                        $r .= '<link type="text/css" rel="stylesheet" href="'.$style_href.'" />'."\n";
+                    }
+                }
             }
-            $r .= '/>' . PHP_EOL;
         }
         
         if ($this->files_js) {
@@ -521,13 +560,6 @@ class Page
         $r .= '<base href="'.(is_null($this->base_url) ? FX_BASE_URL : $this->base_url).'/" />';
 
         $r .= $this->getAssetsCode();
-
-        /*
-        $inline_styles = $this->getInlineStyles();
-        if ($inline_styles) {
-            $r .= '<style type="text/css" class="fx_inline_styles">'.$inline_styles.'</style>';
-        }
-        */
         
         if (!preg_match("~<head(\s[^>]*?|)>~i", $buffer)) {
             if (preg_match("~<html[^>]*?>~i", $buffer)) {
@@ -537,7 +569,6 @@ class Page
             }
         }
 
-        //$buffer = preg_replace("~<head(\s[^>]*?|)>~", '$0'.$r, $buffer);
         $buffer = preg_replace("~<title>.+</title>~i", '', $buffer);
         $buffer = preg_replace("~</head\s*?>~i", $r . '$0', $buffer);
         

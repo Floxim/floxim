@@ -681,7 +681,7 @@ class Compiler
         $code = '';
         
         foreach ($props['export'] as $var => $expression) {
-            self::parseExportExpression($expression, $vals);
+            $expression = self::parseExportExpression($expression, $vals);
             $code .= '$context->set("'.$var.'", '.$expression.");\n";
         }
         $container_props = array();
@@ -1459,7 +1459,8 @@ class Compiler
                 $_visual_path = '$visual_path';
                 $_visual_id = '$visual_id';
                 $code .= $_visual_id . " = \$context->getVisualId();\n";
-                $code .= $_bundle_is_temp ." = substr(".$_visual_id.", -5, 5) === '-temp';\n";
+                //$code .= $_bundle_is_temp ." = substr(".$_visual_id.", -5, 5) === '-temp';\n";
+                $code .= $_bundle_is_temp ." = ".$_visual_id." === 'new';\n";
                 $code .= $_visual_path . ' = ($this->isWrapper() ? "w" : "t")."-".'.$_style_value_path.";\n";
                 $code .= $_mod_value . ' = md5('.$_visual_id.'."-".'.$_visual_path.");\n";
                 $code .= $_bundle_id . ' = "default_inline_".'.$_visual_id.'."_".'.$_mod_value.";\n";
@@ -1486,7 +1487,8 @@ class Compiler
         $code .= " echo ' style_'.".$_mod_value.";\n";
         
         $code .= "if (\$_is_admin) {\n";
-            $code .= $_style_id_mod .' = md5('.$_style_value_path.'.'.$_mod_value.");\n";
+            //$code .= $_style_id_mod .' = md5('.$_style_value_path.'.'.$_mod_value.");\n";
+            $code .= $_style_id_mod .' = md5('.$_style_value_path.");\n";
             $code .= " echo ' ".($is_inline ? '.fx-styled-inline' : '')." style-id_'.".$_style_id_mod.";\n";
             $code .= "\$this->registerParam(".
                         "\n\t".$_style_id.".'_style',".

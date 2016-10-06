@@ -83,6 +83,18 @@ bg.prototype.count_lightness = function() {
     return res;
 };
 
+bg.prototype.update_handle = function() {
+    this.$handler.html('');
+    var $levels = this.$popup.find( bg.el('level') ),
+        that = this;
+
+    $levels.each(function() {
+        var $l = $(this),
+            level = $l.data('bg-level');
+        that.$handler.append( level.get_handler() );
+    });
+};
+
 bg.prototype.get_value = function() { 
     
     
@@ -120,11 +132,34 @@ bg.prototype.update = function(skip_lightness) {
     var has_color = this.$popup.find(bg.el('level.type_color')).length > 0;
     
     this.$popup.find( bg.el('add.type_color') ).toggleClass(bg.cl('add')+'_inactive', has_color);
+    
+    if (this.$popup.is(':visible')) {
+        this.place_popup();
+    }
+    this.update_handle();
 };
 
 bg.prototype.get_lightness_value = function() {
     
     return this.$lightness.data('livesearch').getValue();
+};
+
+bg.prototype.place_popup = function() {
+    this.$popup.css('left', 0).show();
+    var rect = this.$handler[0].getBoundingClientRect(),
+        popup_rect = this.$popup[0].getBoundingClientRect(),
+        body_rect = document.body.getBoundingClientRect(),
+        offset = body_rect.right - (rect.left + popup_rect.width);
+
+    this.$popup.css({
+        top: rect.top,
+        left: rect.left + Math.min(offset, 0)
+    });
+};
+
+bg.prototype.hide_popup = function() {
+    this.$popup.hide();
+    $('html').off('.fx_bg_clickout');
 };
 
 bg.prototype.init = function() {
@@ -137,18 +172,44 @@ bg.prototype.init = function() {
     
     this.$popup.addClass('fx_overlay fx_admin_form '+bg.cl());
     
-    this.$handler.on('click', function() {
-        that.$popup.css('left', 0).show();
-        var rect = that.$handler[0].getBoundingClientRect();
+    var first_open = true;
+    
+    function show_popup(){ 
         
-        that.$popup.css({
-            top: rect.top,
-            left: rect.left
-        }).show();
+        that.place_popup();
+        
+        setTimeout(
+            function() {
+                $('html').on('mousedown.fx_bg_clickout', function (e) {
+                    var $t = $(e.target);
+                    if (
+                        $t.closest(that.$popup).length === 0 && 
+                        $t.closest('.fx_suggest_box').length === 0 && 
+                        $t.closest('.fx-palette__colors').length === 0
+                    ) {
+                        that.hide_popup();
+                        return false;
+                    }
+                });
+            },
+            10
+        );
+        
+        if (first_open) {
+            that.$container.parents().one('fx_destroy', function() {
+                that.$popup.remove();
+            });
+            first_open = false;
+        }
+    }
+    
+    this.$handler.on('click', function() {
+        show_popup();
     });
     
     this.$popup.find( bg.el('close') ).on('click', function() {
-        that.$popup.hide();
+        that.hide_popup();
+        return false;
     });
 
     this.$lightness = $fx_fields.control({
@@ -213,6 +274,10 @@ background_level.create = function(type, params, value, sizing) {
     var level = new this[type](params, value, sizing);
     level.type = type;
     return level;
+};
+
+background_level.prototype.get_handler = function() {
+    return '<span title="'+this.type+'"></span>';
 };
 
 background_level.prototype.default_params = [];
@@ -348,6 +413,12 @@ background_level.linear.prototype.draw_sizing = function() {
     
 };
 
+background_level.linear.prototype.get_handler = function() {
+    var $h = $('<span title="Градиент"></span>');
+    $h.css('background', this.get_css());
+    return $h;
+};
+
 background_level.linear.prototype.get_sizing_value = function() {
     return '~"0% 0% / 100%" no-repeat scroll';
 };
@@ -457,7 +528,7 @@ background_level.linear.prototype.get_sorted_points = function() {
     );
 };
 
-background_level.linear.prototype.draw_gradient = function() {
+background_level.linear.prototype.get_css = function() {
     var points = this.get_sorted_points(),
         css = 'linear-gradient(90deg, ',
         pts = [];
@@ -470,6 +541,11 @@ background_level.linear.prototype.draw_gradient = function() {
         pts.push( color + ' ' + distance  );
     }
     css += pts.join(',')+')';
+    return css;
+};
+
+background_level.linear.prototype.draw_gradient = function() {
+    var css = this.get_css();
     this.$slider.css('background', css);
 };
 
@@ -556,6 +632,13 @@ background_level.color.prototype.draw_value = function() {
     });
     this.$color_inp = $c.find('.fx-palette__value');
     this.el('level-value').append($c);
+};
+
+background_level.color.prototype.get_handler = function() {
+    var $h = $('<span title="Цвет"></span>');
+    var $wrap = this.$color_inp.parent().find('.fx-palette__value-color');
+    $h.attr('style', $wrap.attr('style'));
+    return $h;
 };
 
 background_level.color.prototype.count_lightness = function() {

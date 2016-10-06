@@ -715,7 +715,7 @@ class Layout extends Admin
                     'tweaker' => array(
                         'tweaker_file' => $bundle->getTweakerLessFile(),
                         'rootpath' => $bundle->getRootPath(),
-                        'is_new' => true,
+                        //'is_new' => true,
                         'vars' => array_keys($style['vars']),
                         'mixin_name' => substr($bundle->getMixinName(), 1),
                         'style_class' => $block['block'].'_style_'.$block['mod_value'],

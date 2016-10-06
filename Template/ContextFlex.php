@@ -212,17 +212,24 @@ class ContextFlex extends Context {
                 $this->visual_id = 'new';
             } else {
                 $vis = $ib->getVisual();
+                /*
                 if ($vis->isSaved()) {
                     $vis_id = $vis['id'];
                 } else {
                     $vis_id = 'new';
-                    /*
-                     * @todo: case when there are several not-saved blocks&visuals
-                     */
+                    // @todo: case when there are several not-saved blocks&visuals
                     fx::env('new_infoblock_visual', $vis);
                 }
                 if ($vis->isModified('template_visual') || $vis->isModified('wrapper_visual')) {
                     $vis_id .= '-temp';
+                }
+                 * 
+                 */
+                if ($vis->isSaved()) {
+                    $vis_id = $vis['id'];
+                } else {
+                    $vis_id = 'new';
+                    fx::env('new_infoblock_visual', $vis);
                 }
                 $this->visual_id = $vis_id;
             }

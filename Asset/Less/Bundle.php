@@ -79,9 +79,57 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
         return $parser;
     }
     
+    public function getAdminOutput()
+    {
+        //$files = $this->getUniqueFiles();
+        $files = $this->pushed_files;
+        $blocks = array();
+        $styles = array();
+        $declarations = array();
+        foreach ($files as $f) {
+            $sub_bundle = self::getSubBundle($f);
+            if (!$sub_bundle) {
+                continue;
+            }
+            if ($sub_bundle instanceof StyleBundle) {
+                $keyword = $sub_bundle->getDeclarationKeyword();
+                $blocks []= $sub_bundle->getAdminOutput();
+                //$res .= $sub_bundle->getAdminOutput();
+                if (!isset($declarations[$keyword])) {
+                    $declarations[$keyword] = $sub_bundle->getDeclarationOutput();
+                }
+            } elseif ($sub_bundle instanceof Bundle) {
+                if (!$sub_bundle->isFresh()) {
+                    $sub_bundle->save();
+                }
+                $f = $sub_bundle->getFilePath();
+                $href = fx::path()->http($f);
+                $styles []= $href;
+                //$res .= '<link type="text/css" href="'.$href.'" rel="stylesheet" />';
+            }
+        }
+        $res = array(
+            'declarations' => $declarations,
+            'styles' => $styles,
+            'blocks' => $blocks
+        );
+        return $res;
+        /*
+        $res = join("\n", $declarations)."\n".$res;
+        return $res;
+         * 
+         */
+    }
+    
+    public function isDefaultBundle()
+    {
+        return $this->keyword === 'default';
+    }
+    
     public function getBundleContent() {
         $is_admin = $this->keyword === 'admin';
-        $is_default = $this->keyword === 'default';
+        //$is_default = $this->keyword === 'default';
+        $is_default = $this->isDefaultBundle();
         
         $options = array( );
         

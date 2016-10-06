@@ -23,7 +23,6 @@ class StyleBundle extends Bundle {
     
     public function __construct($keyword, $params = array()) {
         
-        
         $this->meta = array_merge($this->meta, self::parseKeyword($keyword));
         
         if (isset($params['visual_path'])) {
@@ -251,6 +250,44 @@ class StyleBundle extends Bundle {
         return $vars;
     }
     
+    public function getDeclarationKeyword()
+    {
+        return $this->meta['block_name'].'_'.$this->meta['style_name'];
+    }
+    
+    public function getDeclarationOutput()
+    {
+        $declaration_file = $this->meta['declaration_file'];
+        if (!file_exists($declaration_file)) {
+            return;
+        }
+        $declaration = file_get_contents($declaration_file);
+        $declaration = self::minifyLess($declaration);
+        
+        return array(
+            'keyword' => $this->getDeclarationKeyword(),
+            'meta' => $this->getStyleMeta(),
+            'less' => $declaration
+        );
+    }
+    
+    public function getAdminOutput()
+    {
+        if (!$this->isFresh()) {
+            $this->save();
+        }
+        $css_file = $this->getFilePath();
+        $css = file_get_contents($css_file);
+        $declaration_keyword = $this->getDeclarationKeyword();
+        return array(
+            'keyword' => $this->keyword,
+            'style_class' => $this->getStyleClass(),
+            'declaration_keyword' => $declaration_keyword,
+            'version' => $this->version,
+            'css' => $css
+        );
+    }
+    
     public function getBundleContent() 
     {
         
@@ -358,9 +395,14 @@ class StyleBundle extends Bundle {
         }
     }
     
+    public function getStyleClass()
+    {
+        return $this->meta['block_name'].'_style_'.$this->getStyleMod();
+    }
+    
     public function generateCallLess()
     {
-        $res = '.'.$this->meta['block_name'].'_style_'.$this->getStyleMod();
+        $res = '.'.$this->getStyleClass();
         
         $res .= "{\n";
         $res .= $this->getMixinName()."(";
@@ -512,7 +554,6 @@ class StyleBundle extends Bundle {
                 }
             }
         }
-        
         
         $code = \Floxim\Floxim\Template\Compiler::generateStyleExportCode(
             array(

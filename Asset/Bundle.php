@@ -153,18 +153,38 @@ abstract class Bundle {
         return fx::path($this->getDirPath().'/'.$this->version.'.'.$this->extension);
     }
     
+    public $collect_pushed_files = false;
+    protected $pushed_files = array();
+
     public function push($files)
     {
         foreach ($files as $file) {
             if ($file instanceof Bundle) {
-                $file = 'bundle:'.$file->getType().':'.$file->keyword.":".$file->exportParams();
+                $file = $file->getSignature();
             }
-            if (!$this->has_new_files && !in_array($file, $this->files)) {
+            $is_new_file = !in_array($file, $this->files);
+            if ($this->collect_pushed_files && !in_array($file, $this->pushed_files)) {
+                $this->pushed_files [] = $file;
+            }
+            if (!$is_new_file) {
+                continue;
+            }
+            if (!$this->has_new_files) {
                 $this->has_new_files = true;
                 $this->is_fresh = false;
             }
             $this->files[] = $file;
         }
+    }
+    
+    protected $signature = null;
+    
+    protected function getSignature()
+    {
+        if (is_null($this->signature)) {
+            $this->signature = 'bundle:'.$this->getType().':'.$this->keyword.":".$this->exportParams();
+        }
+        return $this->signature;
     }
     
     public function exportParams()
