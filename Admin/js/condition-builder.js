@@ -602,7 +602,7 @@ window.condition_builder = function(params) {
             that.drawOperators($cond, field, value);
             $cond.data('current_field', field);
         });
-        if (value) {
+        if (value || true) {
             $field_control.trigger('change');
         }
         var invertor_class = ccl+'__invertor';
