@@ -890,7 +890,7 @@ $fx.form = window.fx_form = window.$fx_form = fx_form;
             //data = $form.formToArray(true),
             data = formToArray($form),
             res = {};
-        
+    
         filter = filter || function(f) {return true;}
         
         for (var i = 0; i < data.length; i++) {
@@ -900,7 +900,7 @@ $fx.form = window.fx_form = window.$fx_form = fx_form;
             }
             var name = f.name,
                 value = f.value,
-                name_path_parts = name.match(/\[.+?\]/g);
+                name_path_parts = name.match(/\[.*?\]/g);
             if (name_path_parts) {
                 var name_base = name.replace(/\[.+/, ''),
                     name_path = [name_base];
@@ -913,9 +913,13 @@ $fx.form = window.fx_form = window.$fx_form = fx_form;
                         is_last = j === name_path.length - 1;
                    
                     if (typeof c_res[part] === 'undefined' && !is_last) {
-                        c_res[part] = {};
+                        c_res[part] = name_path[j + 1] === '' ? [] : {};
                     } else if (is_last) {
-                        c_res[part] = value;
+                        if (part === '') {
+                            c_res.push(value);
+                        } else {
+                            c_res[part] = value;
+                        }
                     }
                     c_res = c_res[part];
                 }
