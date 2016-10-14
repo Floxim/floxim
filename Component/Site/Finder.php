@@ -19,8 +19,8 @@ class Finder extends System\Finder
         return array(
             'theme' => array(
                 self::BELONGS_TO,
-                'layout',
-                'layout_id'
+                'theme',
+                'theme_id'
             )
         );
     }

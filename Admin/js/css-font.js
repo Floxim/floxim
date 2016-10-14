@@ -8,7 +8,7 @@ window.fx_font_control = function(json) {
         $value = $row.find( el('value')),
         controls = {},
         fonts = $fx.layout_fonts || [];
-
+    
     function get_font(type) {
         for (var i = 0; i < fonts.length; i++ ) {
             if (fonts[i].keyword === type) {
@@ -38,7 +38,6 @@ window.fx_font_control = function(json) {
                 italic = val.match(/italic/);
 
             weight = weight ? weight[0] : 'normal';
-
             var style = 'font-family: '+font.family+';';
             style += 'font-weight:'+weight+';';
 

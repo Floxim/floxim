@@ -52,7 +52,10 @@ class StyleBundle extends Bundle {
                        .'/'.$this->meta['visual_path_hash'];
                 break;
             case 'variant':
-                $res .= '/variant/'.$this->meta['variant_id'];
+                $res .= '/variant/'.$this->meta['style_variant_id'].'/'.$this->getHash();
+                break;
+            case 'tv':
+                $res .= '/tv/'.$this->meta['template_variant_id'].'/'.$this->meta['visual_path_hash'];
                 break;
         }
         return $res;
@@ -204,16 +207,23 @@ class StyleBundle extends Bundle {
         
         if (isset($kw_parts[2])) {
             $type = $kw_parts[2];
-            if ($type === 'inline') {
-                $visual_id = $kw_parts[3];
-                if (preg_match('~-temp$~', $visual_id)) {
-                    $visual_id = substr($visual_id, 0, -5);
-                    $res['is_temp'] = true;
-                }
-                $res['visual_id'] = $visual_id;
-                $res['visual_path_hash'] = $kw_parts[4];
-            } elseif ($type === 'variant') {
-                $res['variant_id'] = $kw_parts[3];
+            switch ($type) {
+                case 'inline':
+                    $visual_id = $kw_parts[3];
+                    if (preg_match('~-temp$~', $visual_id)) {
+                        $visual_id = substr($visual_id, 0, -5);
+                        $res['is_temp'] = true;
+                    }
+                    $res['visual_id'] = $visual_id;
+                    $res['visual_path_hash'] = $kw_parts[4];
+                    break;
+                case 'variant':
+                    $res['style_variant_id'] = $kw_parts[3];
+                    break;
+                case 'tv':
+                    $res['template_variant_id'] = $kw_parts[3];
+                    $res['visual_path_hash'] = $kw_parts[4];
+                    break;
             }
         } else {
             $type = 'default';
@@ -225,6 +235,16 @@ class StyleBundle extends Bundle {
     public static function deleteForVisual($visual_id)
     {
         $dir = self::getCacheDir().'/inline/'.$visual_id;
+        if (!file_exists($dir)) {
+            return false;
+        }
+        fx::files()->rm($dir);
+        return true;
+    }
+    
+    public static function deleteForTemplateVariant($variant_id)
+    {
+        $dir = self::getCacheDir().'/tv/'.$variant_id;
         if (!file_exists($dir)) {
             return false;
         }
@@ -277,6 +297,10 @@ class StyleBundle extends Bundle {
             $this->save();
         }
         $css_file = $this->getFilePath();
+        if (!file_exists($css_file)) {
+            fx::log('no file!!!', $this, $css_file);
+            throw new \Exception('style bundle error');
+        }
         $css = file_get_contents($css_file);
         $declaration_keyword = $this->getDeclarationKeyword();
         return array(
@@ -337,28 +361,36 @@ class StyleBundle extends Bundle {
         if (isset($this->meta['visual_path'])) {
             $id_parts = explode("-", $this->meta['visual_path']);
             
-            $visual_id = $this->meta['visual_id'];
-
-            if ($visual_id === 'new') {
-                $visual = fx::env('new_infoblock_visual');
-            } else {
-                $visual = fx::data('infoblock_visual', (int) $visual_id);
-            }
+            $props = null;
             
-            if (!$visual) {
-                return;
-            }
-            $prop_set = array_shift($id_parts) === 'w' ? 'wrapper_visual' : 'template_visual';
+            if (isset($this->meta['visual_id'])) {
+                $visual_id = $this->meta['visual_id'];
 
-            $props = $visual[$prop_set];
-            $path = join(".", $id_parts).'_style';
-            $vars = fx::dig($props, $path);
+                if ($visual_id === 'new') {
+                    $visual = fx::env('new_infoblock_visual');
+                } else {
+                    $visual = fx::data('infoblock_visual', (int) $visual_id);
+                }
+
+                if ($visual) {   
+                    $prop_set = array_shift($id_parts) === 'w' ? 'wrapper_visual' : 'template_visual';
+                    $props = $visual[$prop_set];
+                }
+            } elseif (isset($this->meta['template_variant_id'])) {
+                $template_variant = fx::data('template_variant', $this->meta['template_variant_id']);
+                $props = $template_variant['params'];
+            }
+            if ($props) {
+                $path = join(".", $id_parts).'_style';
+                $vars = fx::dig($props, $path);
+            }
         } else {
             $style_variant = $this->getStyleVariant();
             if ($style_variant && is_array($style_variant['less_vars'])) {
                 $vars = $style_variant['less_vars'];
             }
         }
+        
         if (!$vars) {
             return;
         }
@@ -389,8 +421,9 @@ class StyleBundle extends Bundle {
             case 'default': default:
                 return $this->meta['style_name'];
             case 'variant':
-                return $this->meta['style_name'].'--'.$this->meta['variant_id'];
+                return $this->meta['style_name'].'--'.$this->meta['style_variant_id'];
             case 'inline':
+            case 'tv':
                 return $this->meta['visual_path_hash'];
         }
     }
@@ -477,6 +510,10 @@ class StyleBundle extends Bundle {
         
         $variants = fx::data('style_variant')
             ->where('block', $block)
+            ->whereOr(
+                array('theme_id', fx::env('theme_id')),
+                array('theme_id', null, 'is null')
+            )
             ->all()
             ->group('style');
         
@@ -521,10 +558,10 @@ class StyleBundle extends Bundle {
     
     public function getStyleVariant()
     {
-        if (!isset($this->meta['variant_id']) || isset($this->meta['visual_path'])) {
+        if (!isset($this->meta['style_variant_id']) || isset($this->meta['visual_path'])) {
             return null;
         }
-        $id = $this->meta['variant_id'];
+        $id = $this->meta['style_variant_id'];
         if (!$id) {
             return null;
         }
@@ -580,6 +617,22 @@ class StyleBundle extends Bundle {
     {
         $this->save();
         return isset($this->meta['export_file']) ? $this->meta['export_file'] : null;
+    }
+    
+    public function getTempExportFile()
+    {
+        if (isset($this->temp_export_file)) {
+            return $this->temp_export_file;
+        }
+        $code = $this->getExportFileCode();
+        if ($code) {
+            $path = $this->getDirPath().'/export.temp.php';
+            fx::files()->writefile($path, $code);
+            $this->temp_export_file = $path;
+        } else {
+            $this->temp_export_file = false;
+        }
+        return $this->temp_export_file;
     }
     
     protected function prepareStyleField($props)

@@ -96,7 +96,7 @@ class Infoblock extends Admin
                 }
                 $action_kw = $keyword . ':' . $action_code;
                 $act_ctr = fx::controller($action_kw);
-                $act_templates = $act_ctr->getAvailableTemplates(fx::env('layout_id'), $area_meta);
+                $act_templates = $act_ctr->getAvailableTemplates(fx::env('theme_id'), $area_meta);
                 
                 if (count($act_templates) == 0) {
                     continue;
@@ -151,8 +151,8 @@ class Infoblock extends Admin
             }
             if (isset($a['subgroup'])) {
                 $controller = $data['controllers'][$a['controller']];
-                $a['full_name'] = $a['name'];
-                $a['name'] = $controller['name'];
+                $a['action_name'] = $a['name'];
+                $a['controller_name'] = $controller['name'];
             }
             $c_group['children'][]= $a;
         }
@@ -202,7 +202,7 @@ class Infoblock extends Admin
     {
         $presets = 
             fx::data('infoblock')
-                ->where('visuals.layout_id', fx::env('layout_id'))
+                ->where('visuals.theme_id', fx::env('theme_id'))
                 ->where('is_preset',1)
                 ->all();
         $actions = fx::collection($actions);
@@ -245,9 +245,9 @@ class Infoblock extends Admin
         $area_meta = $input['area'];
         
         $blocks = $this->getAvailableBlocks($page, $area_meta);
-        $presets = $this->getAvailablePresets($blocks['actions']);
+        //$presets = $this->getAvailablePresets($blocks['actions']);
         $blocks = $this->groupAvailableBlocksWithListTypesOnTop($blocks);
-        
+        /*
         if (count($presets) > 0) {
             $fields[] = array(
                 'type' => 'tree',
@@ -257,6 +257,8 @@ class Infoblock extends Admin
                 })
             );
         }
+         * 
+         */
 
         /* The list of controllers */
         $fields['controller'] = array(
@@ -301,10 +303,12 @@ class Infoblock extends Admin
             $infoblock = fx::data('infoblock', $input['id']);
             $controller = $infoblock->getPropInherited('controller');
             $action = $infoblock->getPropInherited('action');
+            $controller_val = $controller.':'.$action;
             $i2l = $infoblock->getVisual();
         } else {
             // Create a new type and ID of the controller received from the previous step
-            list($controller, $action) = explode(":", $input['controller']);
+            $controller_val = $input['controller'];
+            list($controller, $action) = explode(":", $controller_val);
             
             $infoblock = fx::data("infoblock")->create(array(
                 'controller'             => $controller,
@@ -315,8 +319,7 @@ class Infoblock extends Admin
             ));
             $i2l = fx::data('infoblock_visual')->create(array(
                 'area'      => $area_meta['id'],
-                'layout_id' => fx::env('layout_id'),
-                'layout_style_id' => fx::env()->getLayoutStyleVariantId()
+                'theme_id' => fx::env('theme_id')
             ));
             if (isset($input['next_visual_id']) && $input['next_visual_id']) {
                 $i2l->moveBefore($input['next_visual_id']);
@@ -325,7 +328,7 @@ class Infoblock extends Admin
             }
             $infoblock->setVisual($i2l);
         }
-
+        
         if (!isset($infoblock['params']) || !is_array($infoblock['params'])) {
             $infoblock->addParams(array());
         }
@@ -469,7 +472,25 @@ class Infoblock extends Admin
 
             $infoblock['params'] = $action_params;
             
-
+            foreach (array('template','wrapper') as $template_type) {
+                $template_val = $input['visual'][$template_type];
+                $vis_props = (array) $input['visual'][$template_type.'_visual'];
+                if (is_numeric($template_val)) {
+                    $c_variant = fx::data('template_variant', $template_val);
+                    if ($c_variant) {
+                        $i2l[$template_type] = null;
+                        $i2l[$template_type.'_variant_id'] = $template_val;
+                        $c_variant->set('params', $vis_props)->save();
+                    }
+                } else {
+                    $i2l[$template_type] = $template_val;
+                    $i2l[$template_type.'_variant_id'] = null;
+                    
+                    $i2l[$template_type.'_visual'] = $vis_props;
+                }
+            }
+            
+            /*
             $i2l['wrapper'] = fx::dig($input, 'visual.wrapper');
             $i2l['template'] = fx::dig($input, 'visual.template');
             
@@ -479,31 +500,15 @@ class Infoblock extends Admin
                         $i2l[$vis_prop] = array();
                     }
                     $c_prop_data = $input['visual'][$vis_prop];
-                    foreach ($c_prop_data as $c_prop_data_key => &$c_prop_item) {
-                        if (preg_match("~^box_~", $c_prop_data_key) && is_string($c_prop_item)) {
-                            $c_prop_item = json_decode($c_prop_item, true);
-                        }
-                    }
                     $i2l[$vis_prop] = array_merge($i2l[$vis_prop], $c_prop_data);
                 }
             }
+            */
             
-            /*
-            if ($i2l['wrapper']) {
-                $container = $this->getWrapperContainer($i2l);
-                $container->appendInput($input['visual']);
-            }
-             * 
-             */
             $is_new_infoblock = !$infoblock['id'];
             $infoblock->save();
             $i2l['infoblock_id'] = $infoblock['id'];
-            if ($is_new_infoblock) {
-                $i2l->addInfoblockIdToParams();
-            }
             $i2l->save();
-            
-            
             
             if (isset($controller) && $controller instanceof System\Controller) {
                 $controller->setInput($action_params);
@@ -522,7 +527,7 @@ class Infoblock extends Admin
             $this->ui->hidden('action', 'select_settings'),
             $this->ui->hidden('fx_admin', true),
             $this->ui->hidden('settings_sent', 'true'),
-            $this->ui->hidden('controller', isset($input['controller']) ? $input['controller'] : ''),
+            $this->ui->hidden('controller', $controller_val),
             $this->ui->hidden('page_id', isset($input['page_id']) ? $input['page_id'] : ''),
             $this->ui->hidden('area', json_encode($area_meta)),
             $this->ui->hidden('id', isset($input['id']) ? $input['id'] : ''),
@@ -670,75 +675,6 @@ class Infoblock extends Admin
         );
         return $res;
     }
-
-    protected function saveLayoutSettings($infoblock, $input)
-    {
-        $visual = $infoblock->getVisual();
-        $old_scope = $infoblock->getScopeString();
-        $new_scope = $input['scope']['complex_scope'];
-
-        $old_layout = $visual['template'];
-        $new_layout = $input['visual']['template'];
-
-        $c_page = fx::data('floxim.main.page', $input['page_id']);
-
-        if ($old_layout == $new_layout && $old_scope == $new_scope) {
-            return;
-        }
-        $create = false;
-        $update = false;
-        $delete = false;
-        // this is the root infoblock - default rule for all pages
-        if (!$infoblock['parent_infoblock_id']) {
-            // they changed the scope, we must create new iblock
-            // but only if template also changed
-            // because if it didn't, default rule will mean the same
-            if ($old_scope != $new_scope && $old_layout != $new_layout) {
-                $create = true;
-            } else {
-                // they changed default layout
-                $update = true;
-            }
-        } else {
-            // if everything changed, let's create new ib
-            if ($old_scope != $new_scope && $old_layout != $new_layout) {
-                $create = true;
-            } // if there's only one modified param, update existing rule
-            else {
-                $update = true;
-            }
-            $existing = fx::data('infoblock')->isLayout()->getForPage($c_page['id'], false);
-            if (count($existing) > 1) {
-                $existing = fx::data('infoblock')->sortInfoblocks($existing);
-                $next = $existing->eq(1);
-                if ($next->getScopeString() == $new_scope && $next->getPropInherited('visual.template') == $new_layout) {
-                    $delete = true;
-                }
-            }
-        }
-        if ($delete) {
-            $infoblock->delete();
-        } elseif ($create) {
-            $params = $infoblock->get();
-            unset($params['id']);
-            $new_ib = fx::data('infoblock')->create($params);
-            $c_parent = $infoblock['parent_infoblock_id'];
-            $new_ib['parent_infoblock_id'] = $c_parent ? $c_parent : $infoblock['id'];
-            $new_ib->setScopeString($new_scope);
-            $new_vis = fx::data('infoblock_visual')->create(array(
-                'layout_id' => $visual['layout_id']
-            ));
-            $new_vis['template'] = $new_layout;
-            $new_ib->save();
-            $new_vis['infoblock_id'] = $new_ib['id'];
-            $new_vis->save();
-        } elseif ($update) {
-            $infoblock->setScopeString($new_scope);
-            $visual->set('template', $new_layout);
-            $infoblock->save();
-            $visual->save();
-        }
-    }
     
     protected function getScopeTypeField($infoblock)
     {
@@ -879,43 +815,61 @@ class Infoblock extends Admin
 
     protected function getFormatFields(CompInfoblock\Entity $infoblock, $area_meta = null)
     {
-        $i2l = $infoblock->getVisual();
+        $ib_visual = $infoblock->getVisual();
         $fields = array(
             array(
                 'label' => "Area",
                 'name'  => 'area',
-                'value' => $i2l['area'],
+                'value' => $ib_visual['area'],
                 'type'  => 'hidden'
             )
         );
         
+        $tpl_field = $this->getTemplatesField(
+            $infoblock->initController(),
+            $area_meta
+        );
+        $tpl_field['value'] = $ib_visual['template_variant_id'] ? $ib_visual['template_variant_id'] : $ib_visual['template'];
+        $fields []= $tpl_field;
         
-        $layout_name = fx::data('layout', $i2l['layout_id'])->get('keyword');
-
-        $controller_name = $infoblock->getPropInherited('controller');
-
-        $action_name = $infoblock->getPropInherited('action');
-        
-        
+        return $fields;
+    }
+    
+    public function getTemplatesField($controller, $area_meta)
+    {
         // Collect the available templates
-        $controller = fx::controller($controller_name . ':' . $action_name);
-        $tmps = $controller->getAvailableTemplates($layout_name, $area_meta);
+        $tmps = $controller->getAvailableTemplates(fx::env('theme_id'), $area_meta);
+        $theme_variants = fx::env('theme')->get('template_variants');
         if (!empty($tmps)) {
             foreach ($tmps as $template) {
-                $templates[] = array($template['full_id'], $template['name']);
+                $template_item = array('id' => $template['full_id'], 'name' => $template['name']);
+                $template_variants =  $theme_variants->find('template', $template['full_id']);
+                if ( count($template_variants) > 0) {
+                    $template_item['children'] = array();
+                    $template_item['expanded'] = 'always';
+                    foreach ($template_variants as $variant) {
+                        $template_item['children'] []= array(
+                            (string) $variant['id'],
+                            $variant['name'],
+                            array(
+                                'basic_template' => $template['full_id'],
+                                'real_name' => $variant->getReal('name'),
+                                'is_locked' => $variant['is_locked']
+                            )
+                        );
+                    }
+                }
+                $templates []= $template_item;
             }
         }
         
-        
-        $fields [] = array(
+        $res = array(
             'label'  => fx::alang('Template', 'system'),
             'name'   => 'template',
-            'type'   => 'select',
-            'values' => $templates,
-            'value'  => $i2l['template']
+            'type'   => 'livesearch',
+            'values' => $templates
         );
-        
-        return $fields;
+        return $res;
     }
     
     protected function getWrapperContainer($visual)
@@ -942,7 +896,8 @@ class Infoblock extends Admin
         
         $visual = $infoblock->getVisual();
         
-        $layout_name = fx::data('layout', $visual->get('layout_id'))->get('keyword');
+        //$layout_name = fx::data('layout', $visual->get('layout_id'))->get('keyword');
+        $layout_name = fx::env('theme')->get('layout');
 
         $controller_name = $infoblock->getPropInherited('controller');
         
@@ -1423,6 +1378,44 @@ class Infoblock extends Admin
         
         return array(
             'fields' => $fields
+        );
+    }
+    
+    public function saveTemplateVariant($input)
+    {
+        $tv = isset($input['target_id']) && !$input['save_as_new'] 
+                    ?  fx::data('template_variant', $input['target_id'])
+                    : fx::data('template_variant')->create(array(
+                        'theme_id' => fx::env('theme_id'),
+                        'template' => $input['basic_template']
+                    ));
+        if ($tv->isSaved() && $input['pressed_button'] === 'delete') {
+            $template_value = $tv['template'];
+            $tv->delete();
+        } else {
+            foreach (array('params', 'name', 'is_locked') as $prop) {
+                if (isset($input[$prop])) {
+                    $tv[$prop] = $input[$prop];
+                }
+            }
+            /*
+            $tv['params'] = $input['params'];
+            $tv['name'] = $input['name'];
+            $tv['is_locked'] = $input['is_locked'];
+             * 
+             */
+            $tv->save();
+            $template_value = $tv['id'];
+        }
+        
+        $template_field = $this->getTemplatesField(
+            fx::controller($input['controller']), 
+            $input['area']
+        );
+        
+        return array(
+            'template_value' => $template_value,
+            'template_field' => $template_field
         );
     }
 }

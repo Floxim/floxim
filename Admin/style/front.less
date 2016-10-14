@@ -1070,11 +1070,48 @@ span.fx_area_marker {
 
 .fx-side-panel {
     background: #FFF;
-    width: 40%;
-    min-width:500px;
     position: absolute;
     top: 0;
-    right: -42%;
+    
+    &_overlap_on {
+        width: 40%;
+        min-width:500px;    
+        right: -42%;
+    }
+    
+    &.fx-side-panel_overlap_off {
+        width:400px;
+        .field, .input_container {
+            margin-bottom:15px;
+        }
+        .fx_admin_form__tab_labels {
+            margin:-15px;
+        }
+        .fx_tab_label {
+            padding-left:10px;
+            padding-right:10px;
+            &__icon + .fx_tab_label__title {
+                max-width:80px;
+                overflow:hidden;
+                transition:all 1s ease;
+                display:inline-block;
+            }
+        }
+        .fx_tab_label:not(.fx_tab_label-active) .fx_tab_label__icon + .fx_tab_label__title {
+            max-width:0;
+        }
+        &.fx-side-panel_side_left {
+            left:-400px;
+        }
+        .fx_admin_form {
+            &__body, &__header, &__footer {
+                padding:15px !important;
+            }
+        }
+        .fx_input, .livesearch {
+            display:inline-block;
+        }
+    }
     box-shadow: -3px 1px 20px rgba(0,0,0,0.3);
     
     &.fx-side-panel_fluid {
@@ -1972,4 +2009,128 @@ html {
 
 .fx_entity_last_hidden {
     display:none !important;
+}
+
+.fx-template-variant-options {
+    padding-left: 4px;
+    border-left: 1px solid #ccc;
+    border-right: 1px solid #ccc;
+    height: 34px;
+    display: inline-block;
+    margin-top: -4px;
+    margin-bottom: -3px;
+    vertical-align: top;
+    margin-left: 10px;
+    margin-right: 5px;
+    .fx_icon {
+        position:relative;
+        margin-right:5px;
+        margin-top:3px;
+        
+        &-type-locked {
+            //width:25px;
+        }
+        &:not(:last-child) {
+            &:after {
+                content:'';
+                position:absolute;
+                height:34px;
+                top:-3px;
+                right:-5px;
+                width:1px;
+                display:block;
+                border-right:1px solid #CCC;
+            }
+        }
+    }
+    &_locked {
+        .fx_icon {
+            &-type-locked, &-type-place {
+                display:none;
+            }
+        }
+    }
+}
+
+.fx-template-visual-fields {
+    display:inline-block;
+    position:relative;
+    min-width:600px;
+    min-height:90px;
+    //outline:1px dotted #999;
+    &_locked &__items {
+        opacity:0.4;
+    }
+    &_locked {
+        padding: 20px;
+        margin: -20px;
+        &:after {
+            content:'';
+            display:block;
+            position:absolute;
+            top:0;
+            right:0;
+            bottom:0;
+            left:0;
+            z-index:2;
+            opacity:0;
+            background:#FEE;
+            transition:opacity 0.2s ease;
+            opacity:0.7;
+        }
+        &:hover:after {
+            opacity:0.7;
+        }
+    }
+    &__unlock-options {
+        position:absolute;
+        top:0;
+        right:0;
+        bottom:0;
+        left:0;
+        z-index:3;
+        opacity:0;
+        transition:opacity 0.2s ease;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        display:none;
+    }
+    &__unlock-option {
+        width: 90px;
+        height: 90px;
+        //background: #FFF;
+        background:rgba(255,255,255,0.3);
+        font-size:13.5px;
+        padding: 0 15px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor:pointer;
+        transition:all 0.2s ease;
+        //border: 1px solid #CCC;
+        border-radius: 140px;
+        border:1px solid #FFF;
+        &:hover {
+            background:rgba(255,255,255,1);
+            width: 94px;
+            height: 94px;
+        }
+        overflow: hidden;
+        justify-content: center;
+        &:first-child {
+            margin-right: 30px;
+        }
+        .fx_icon {
+            display:block;
+            margin-bottom:3px;
+            margin-top:-5px;
+        }
+        
+    }
+    &_locked &__unlock-options {
+        opacity:1;
+        display: flex;
+    }
 }

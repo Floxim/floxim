@@ -588,19 +588,17 @@ class Template
     {
         $bundle_keyword = $block.'_'.$value;
         $bundle = fx::assets('style', $bundle_keyword, $params);
+        
         if (!$is_temp || $value === 'default') {
             fx::page()->getDefaultCssBundle()->push( array($bundle) );
         }
-        /*
-        $main_bundle = $is_temp ? 
-                                fx::page()->getTempCssBundle() 
-                                : 
-                                fx::page()->getDefaultCssBundle();
         
-        $main_bundle->push(array($bundle));
-         * 
-         */
-        $export_file = $bundle->getExportFile();
+        if (fx::isAdmin() && fx::input('post', 'override_infoblock') ) {
+            $export_file = $bundle->getTempExportFile();
+        } else {
+            $export_file = $bundle->getExportFile();
+        }
+        
         return $export_file;
     }
     
@@ -636,5 +634,16 @@ class Template
         } catch (\Exception $e) {
             fx::log('incorrect yaml', $e);
         }
+    }
+    
+    public function getCurrentVariantId()
+    {
+        $ib = $this->context->getFromTop('infoblock');
+        if (!$ib) {
+            return;
+        }
+        $visual = $ib->getVisual();
+        $variant_id = $this->isWrapper() ? $visual['wrapper_variant_id'] : $visual['template_variant_id'];
+        return $variant_id;
     }
 }

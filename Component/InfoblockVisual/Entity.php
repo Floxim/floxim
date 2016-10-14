@@ -174,17 +174,57 @@ class Entity extends System\Entity
         }
         return $res;
     }
-
-    public function addInfoblockIdToParams()
+    
+    public function _getTemplate()
     {
-        $ib_id = $this['infoblock_id'];
-        if (!$ib_id || !is_array($this['wrapper_visual'])) {
-            return;
+        $tv = $this['template_variant'];
+        if (!$tv) {
+            return $this->getReal('template');
         }
-        $new_wrapper_params = array();
-        foreach ($this['wrapper_visual'] as $k => $v) {
-            $new_wrapper_params[ str_replace("wrapper_new", 'wrapper_'.$ib_id, $k) ] = $v;
+        return $tv['template'];
+    }
+    
+    public function _getTemplateVisual()
+    {
+        $tv = $this['template_variant'];
+        fx::cdebug($tv);
+        if (!$tv) {
+            return $this->getReal('template_visual');
         }
-        $this['wrapper_visual'] = $new_wrapper_params;
+        return $tv['params'];
+    }
+    
+    public function _getWrapper()
+    {
+        $wv = $this['wrapper_variant'];
+        if (!$wv) {
+            return $this->getReal('wrapper');
+        }
+        return $wv['template'];
+    }
+    
+    public function _getWrapperVisual()
+    {
+        $wv = $this['wrapper_variant'];
+        if (!$wv) {
+            return $this->getReal('wrapper_visual');
+        }
+        return $wv['params'];
+    }
+    
+    public function offsetSet($offset, $value) {
+        if (!$this->is_loaded) {
+            return parent::offsetSet($offset, $value);
+        }
+        if ($offset === 'template_visual' && ($tv = $this['template_variant']) ) {
+            $tv['params'] = $value;
+            return $this;
+        }
+        
+        if ($offset === 'wrapper_visual' && ($wv = $this['wrapper_variant']) ) {
+            $wv['params'] = $value;
+            return $this;
+        }
+        return parent::offsetSet($offset, $value);
     }
 }

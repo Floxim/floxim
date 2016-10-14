@@ -47,6 +47,7 @@ class Suitable
 
     public function suit(System\Collection $infoblocks, $layout_id, $layout_style_id)
     {
+        throw new \Exception('No more suitable!!!!');
         $layout = fx::data('layout', $layout_id);
         $layout_ib = null;
         $stub_ibs = new System\Collection();

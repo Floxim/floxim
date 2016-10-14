@@ -12,6 +12,16 @@ class Entity extends \Floxim\Floxim\System\Entity
         return trim($name) ? $name : '#'.$this['id'];
     }
     
+    public function deleteBundles()
+    {
+        $b = $this->getBundle();
+        $bundle_dir = $b->getDirPath();
+        if ($bundle_dir) {
+            $dir = dirname($bundle_dir);
+            return fx::files()->rm($dir);
+        }
+    }
+    
     public function _getLessVars()
     {
         $vars = $this->getReal('less_vars');
@@ -32,16 +42,7 @@ class Entity extends \Floxim\Floxim\System\Entity
     
     public function getLessVars()
     {
-        $res = $this['less_vars'];
-        $defaults = array(
-            'max_width' => '1200px',
-            'layout_width' => '80%'
-        );
-        if (!is_array($res)) {
-            $res = array();
-        }
-        $res = array_merge($defaults, $res);
-        return $res;
+        return $this['less_vars'];
     }
 
     public function getLessVar($var_name)
@@ -52,6 +53,7 @@ class Entity extends \Floxim\Floxim\System\Entity
     
     protected $colors = null;
     
+    /*
     public function getColor($code) 
     {
         $parts = explode(" ", $code);
@@ -113,7 +115,8 @@ class Entity extends \Floxim\Floxim\System\Entity
         }
         return $res;
     }
-
+    */
+    
     public function getStyleKeyword()
     {
         return $this['style'].($this['id'] ? '_variant_'.$this['id'] : '');
@@ -142,14 +145,13 @@ class Entity extends \Floxim\Floxim\System\Entity
     {
         
         parent::afterSave();
-        //$this->getStyleLessFile(true);
-        $this->getBundle()->delete();
+        $this->deleteBundles();
     }
     
     
     public function afterDelete()
     {
-        $this->getBundle()->delete();
+        $this->deleteBundles();
         $this->unbindFromVisuals();
     }
     
@@ -192,33 +194,9 @@ class Entity extends \Floxim\Floxim\System\Entity
         return $this['block'] .'_'.$this['style'].($this->is_saved ? '_variant_'.$this['id'] : '');
     }
 
-    public function getStyleLessFilePath()
-    {
-        $kw = $this->getStyleBundleKeyword();
-        $bundle = $this->getLessBundle();
-        return fx::path($bundle->getDirPath().'/'.$kw.'.less');
-    }
     
     public function getBundle() 
     {
         return fx::assets('style', $this->getBundleKeyword());
-    }
-
-    public function getStyleLessFile($force_update = false)
-    {
-        $path = $this->getStyleLessFilePath();
-        if ($force_update || !file_exists($path)) {
-            $less = $this->getStyleLess();
-            fx::files()->writefile($path, $less);
-            $meta = $this->getPayload('style_meta');
-            if ($meta && is_array($meta) && isset($meta['export'])) {
-                \Floxim\Floxim\Asset\Less\MetaParser::generateExportFile(
-                    $this['style'].'-'.$this['id'], 
-                    $meta['export'], 
-                    $this['less_vars']
-                );
-            }
-        }
-        return $path;
     }
 }

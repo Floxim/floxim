@@ -20,7 +20,36 @@ class Entity extends System\Entity implements Template\Entity
         }
         return parent::beforeSave();
     }
+    
+    public function setVisual(Component\InfoblockVisual\Entity $visual)
+    {
+        $this->_visual[$visual['theme_id']] = $visual;
+    }
+    
+    public function getVisual($theme_id = null)
+    {
+        if (!$theme_id) {
+            $theme_id = fx::env('theme_id');
+        }
+        if (isset($this->_visual[$theme_id])) {
+            return $this->_visual[$theme_id];
+        }
+        $visual = $this['visuals']->findOne('theme_id', $theme_id);
+        if (!$visual) {
+            $visual = fx::data('infoblock_visual')->create(
+                array(
+                    'theme_id' => $theme_id,
+                    'is_stub' => true,
+                    'infoblock_id' => $this['id']
+                )
+            );
+            $this['visuals'][]= $visual;
+            $this->_visual[$theme_id] = $visual;
+        }
+        return $visual;
+    }
 
+    /*
     public function setVisual(Component\InfoblockVisual\Entity $visual)
     {
         $this->_visual[$visual['layout_id'].','.$visual['layout_style_id']] = $visual;
@@ -57,6 +86,8 @@ class Entity extends System\Entity implements Template\Entity
         }
         return $this->_visual[$layout_id];
     }
+     * 
+     */
 
     public function getType()
     {
@@ -324,15 +355,35 @@ class Entity extends System\Entity implements Template\Entity
         }
         if (isset($data['visual'])) {
             $vis = $this->getVisual();
-            //$vis['']
+            
+            $defined_variants = array();
+            
+            $template_fields = array('template', 'wrapper');
+            
+            $visuals = array();
+            
             foreach ($data['visual'] as $k => $v) {
                 if (in_array($k, array('template_visual', 'wrapper_visual'))) {
-                    if (!is_array($vis[$k])) {
-                        $vis[$k] = array();
-                    }
-                    $vis[$k] = array_merge($vis[$k], $v);
+                    //$vis[$k] = array_merge($vis[$k], $v);
+                    $visuals[$k] = array_merge( (array) $vis[$k], $v);
                 } else {
+                    if (in_array($k, $template_fields) && is_numeric($v)) {
+                        $defined_variants[$k] = true;
+                        $k = $k.'_variant_id';
+                    }
                     $vis[$k] = $v;
+                }
+            }
+            
+            
+            foreach ($template_fields as $f) {
+                if (!isset($defined_variants[$f])) {
+                    $vis[$f.'_variant_id'] = null;
+                    unset($vis[$f.'_variant']);
+                }
+                $vis_key = $f.'_visual';
+                if (isset($visuals[$vis_key])) {
+                    $vis[$vis_key] = $visuals[$vis_key];
                 }
             }
         }
@@ -354,8 +405,6 @@ class Entity extends System\Entity implements Template\Entity
             return $output;
         }
         if (fx::isAdmin() || (!$this->isDisabled() && !$this->isHidden())) {
-            //$output = $this->getOutput();
-            //$output = $this->wrapOutput($output);
             $output = $this->getWrappedOutput();
         }
         $output = $this->addInfoblockMeta($output);
@@ -386,7 +435,7 @@ class Entity extends System\Entity implements Template\Entity
             try {
                 $res = $controller->process();
             } catch (\Exception $e) {
-                fx::log('controller exception', $controller, $e->getMessage());
+                fx::log('controller exception', $controller, $e->getMessage(), $e);
                 $res = '';
             }
         }
@@ -509,16 +558,13 @@ class Entity extends System\Entity implements Template\Entity
         if (!is_array($wrap_params)) {
             $wrap_params = array();
         }
-        //$wrap_params['content'] = $output;
         $wrap_params['infoblock'] = $this;
         
         $is_admin = fx::isAdmin();
         
         try {
             if ($this->parent_container_props) {
-                //$tpl_wrap->getContext()->pushContainer($this->parent_container);
                 $tpl_wrap->getContext()->pushContainerProps($this->parent_container_props);
-                //$this->parent_container = null;
                 $this->parent_container_props = null;
             }
             $result = $tpl_wrap->render($wrap_params);

@@ -530,15 +530,20 @@ window.condition_builder = function(params) {
             vals.push(op);
         }
         
-        var op_value = value && value.type ? value.type : vals[0].id,
-            op_value_exists = false;
-        for (var i = 0; i < vals.length; i++) {
-            if (vals[i].id === op_value) {
-                op_value_exists = true;
-                break;
+        var op_value = value && value.type ? value.type : vals[0].id;
+        
+        function find_op_value(vals) {
+            for (var i = 0; i < vals.length; i++) {
+                if (vals[i].id === op_value) {
+                    return true;
+                }
+                if (vals[i].children && find_op_value(vals[i].children)) {
+                    return true;
+                }
             }
+            return false;
         }
-        if (!op_value_exists) {
+        if (!find_op_value(vals)) {
             op_value = vals[0].id;
             value = undefined;
         }
@@ -602,9 +607,9 @@ window.condition_builder = function(params) {
             that.drawOperators($cond, field, value);
             $cond.data('current_field', field);
         });
-        if (value || true) {
-            $field_control.trigger('change');
-        }
+        //if (value || true) {
+        $field_control.trigger('change');
+        //}
         var invertor_class = ccl+'__invertor';
         var $invertor = $('.'+invertor_class, $cond);
         var $invertor_checkbox = $fx_fields.control({

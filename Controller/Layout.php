@@ -13,14 +13,13 @@ class Layout extends System\Controller
     {
 
         $page_id = $this->getParam('page_id', fx::env('page_id'));
-        $layout_id = $this->getParam('layout_id', fx::env('layout_id'));
-
+        
         // add admin files bundle BEFORE site scripts/styles
         if (!$this->getParam('ajax_mode') && fx::isAdmin()) {
             Admin\Controller\Admin::addAdminFiles();
             fx::page()->addLayoutVars();
         }
-        $page_infoblocks = fx::router('front')->getPageInfoblocks($page_id, $layout_id);
+        $page_infoblocks = fx::router('front')->getPageInfoblocks($page_id);
         fx::page()->setInfoblocks($page_infoblocks);
         
         

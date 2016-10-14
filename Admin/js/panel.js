@@ -15,8 +15,16 @@
         };
         
         this.init_sidebar = function(params) {
-            var style = params.current_panel_style || 'default',
-                $sidebar = $('<div class="fx-side-panel fx-side-panel_style_'+style+'"></div>'),
+            var c_params = $.extend({side:'right'}, params.current_params),
+                style = params.current_panel_style || 'default',
+                $sidebar = $(
+                    '<div class="'+
+                        ' fx-side-panel '+
+                        ' fx-side-panel_style_'+style+
+                        ' fx-side-panel_side_'+c_params.side+
+                        ' fx-side-panel_overlap_'+ (c_params.overlap !== false ? 'on' : 'off')+
+                        '"></div>'
+                ),
                 $sidebar_body = $('<div class="fx-side-panel__body"></div>');
             $sidebar.append($sidebar_body);
             $('#fx_admin_control').append($sidebar);
@@ -31,6 +39,10 @@
                     return prev_panel;
                 }
             }
+        };
+        
+        this.has_active_panels = function() {
+            return this.panels.length > 0;
         };
 
         this.init_top_bar = function(params) {
@@ -135,6 +147,10 @@
                };
             }
             
+            if (params.active_tab && data.tabs && data.tabs[params.active_tab]) {
+                data.tabs[params.active_tab].active = true;
+            }
+            
             c_panel.current_params = params;
             
             var $form = null;
@@ -178,39 +194,66 @@
                     }
                 }
             });
-            setTimeout(function() {
-                var callback = function() {
-                    if (!params.skip_focus) {
-                        var $first_inp = $(':input:visible, .monosearch_has-value .monosearch__container', $form).first();
-                        if ($first_inp.length > 0 && $first_inp.attr('type') !== 'submit') {
-                            $first_inp.focus();
-                        }
-                    }
-                    if (params.onready) {
-                        params.onready($form);
-                    }
-                    $form.trigger('fx_panel_form_ready');
-                };
-                if (c_panel.current_panel_type === 'top') {
-                    c_panel.$container.css('visibility', 'visible');
-                    
-                    $fx.front_panel.animate_panel_height(null, function () {
-                        $form.resize(function() {
-                            $fx.front_panel.animate_panel_height();
-                        });
-                        $form.resize();
-                        callback();
-                    });
-                } else {
-                    front_panel.show_sidebar(callback);
-                }
-            }, 100);
             
-            $('body').off('.fx_front_panel').on('keydown.fx_front_panel', function(e) {
-                if (e.which === 27) {
-                    $fx.front_panel.get_current_panel().$form.trigger('fx_form_cancel');
-                    return false;
+            var load_promise = new Promise(function(resolve, reject) {
+                if (!params.onload) {
+                    resolve();
+                } else {
+                    var load_res = params.onload($form);
+                    if (load_res instanceof Promise) {
+                        load_res.then(function() {
+                            resolve();
+                        });
+                    } else {
+                        resolve();
+                    }
                 }
+            });
+            
+            load_promise.then(function() {
+            
+                setTimeout(function() {
+                    var callback = function() {
+                        if (!params.skip_focus) {
+                            var $focusable = $(
+                                    ':input, ' +
+                                    '.monosearch_has-value .monosearch__container, ' +
+                                    '[tabindex]', 
+                                    $form
+                                )
+                                .filter(':visible')
+                                .not('[type="submit"], .fx_button');
+                            
+                            if ($focusable.length) {
+                                $focusable.first().focus();
+                            }
+                        }
+                        if (params.onready) {
+                            params.onready($form);
+                        }
+                        $form.trigger('fx_panel_form_ready');
+                    };
+                    if (c_panel.current_panel_type === 'top') {
+                        c_panel.$container.css('visibility', 'visible');
+
+                        $fx.front_panel.animate_panel_height(null, function () {
+                            $form.resize(function() {
+                                $fx.front_panel.animate_panel_height();
+                            });
+                            $form.resize();
+                            callback();
+                        });
+                    } else {
+                        front_panel.show_sidebar(callback);
+                    }
+                }, 100);
+
+                $('body').off('.fx_front_panel').on('keydown.fx_front_panel', function(e) {
+                    if (e.which === 27) {
+                        $fx.front_panel.get_current_panel().$form.trigger('fx_form_cancel');
+                        return false;
+                    }
+                });
             });
             return $form;
         };
@@ -263,10 +306,18 @@
             
             switch (style) {
                 case 'default':
-                    $body.css({
-                        overflow:'hidden',
-                        width: $body.width()
-                    });
+                    var c_params = c_panel.current_params,
+                        overlap = c_params.overlap !== false,
+                        side = c_params.side === 'left' ? 'left' : 'right';
+                        
+                    if (overlap) {
+                        $body.css({
+                            overflow:'hidden',
+                            width: $body.width()
+                        });
+                    } else {
+                        $body.css('padding-'+side, 0);
+                    }
 
                     this.recount_sidebar();
                     $(window).on(
@@ -277,12 +328,24 @@
                             }
                         }
                     );
-                    $sidebar.css({
-                        right:'-' + ($sidebar.outerWidth() + 30)+'px',
-                        'z-index': that.get_sidebars().length + 1
-                    }).animate({
-                        right:0
-                    }, duration);
+                    var start_css = {
+                            'z-index': that.get_sidebars().length + 1
+                        },
+                        end_css = {},
+                        sidebar_width = $sidebar.outerWidth();
+                
+                    start_css[ side ] = '-' + (sidebar_width + 30)+'px';
+                    end_css[ side ] = 0;
+                    
+                    if (!overlap) {
+                        var body_css = {};
+                        
+                        body_css['padding-'+side] = sidebar_width;
+                        
+                        $body.css('padding-'+side, 0).animate(body_css, duration);
+                    }
+                    
+                    $sidebar.css(start_css).animate(end_css, duration);
                     var that = this;
                     $('.fx_admin_form__body', $sidebar).on('resize.fx_recount_sidebar', function(e) {
                         that.recount_sidebar();
@@ -323,14 +386,26 @@
                 $sidebar = c_panel.$container;
             
             if (c_panel.current_panel_style === 'default') {
+                var c_params = c_panel.current_params,
+                    side = c_params.side,
+                    overlap = c_panel.overlap !== false,
+                    end_css = {};
+                
+                end_css[side] = '-' + ($sidebar.outerWidth() + 30)+'px'; 
+                
                 $sidebar.animate(
-                    {
-                        right:'-' + ($sidebar.outerWidth() + 30)+'px'
-                    }, 
+                    end_css, 
                     duration,
                     function() {
                         $sidebar.remove();
-                    });
+                    }
+                );
+                if (overlap) {
+                    $(document.body).animate(
+                        {'padding-left':0},
+                        duration    
+                    );
+                }
             } else {
                 $sidebar.hide().remove();
             }

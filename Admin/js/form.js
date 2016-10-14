@@ -329,10 +329,7 @@ fx_form = {
             if (field.tab && typeof field.tab === 'object') {
                 var tab_key = field.tab.key;
                 if (!settings.tabs[tab_key]) {
-                    settings.tabs[tab_key] = {
-                        key:tab_key,
-                        label:field.tab.label
-                    };
+                    settings.tabs[tab_key] = field.tab;
                 }
                 field.tab = tab_key;
             }
@@ -362,8 +359,6 @@ fx_form = {
             $tab_labels.append($tab_label);
             $tab_data.append($tab_data_item);
         });
-        //$tab_labels.html(tab_labels_html);
-        //$tab_data.html(tab_data_html);
         
         function select_tab($tab_label) {
             var key = $tab_label.data('key'),
@@ -386,6 +381,8 @@ fx_form = {
         
         if (!has_active) {
             select_tab($tab_labels.find('.'+c_label).first());
+        } else {
+            select_tab($tab_labels.find('.'+c_label+'-active'));
         }
     },
     
@@ -767,13 +764,17 @@ fx_form = {
         };
         
         $container.on('change', change_handler);
+        
         // initial call
+        /*
         setTimeout(
             function() {
                 callback(conds, $container);
             },
             1
         );
+        */
+        callback(conds, $container);
         change_handler.unbind = function() {
             $container.off('change', change_handler);
         };
@@ -890,7 +891,7 @@ $fx.form = window.fx_form = window.$fx_form = fx_form;
             //data = $form.formToArray(true),
             data = formToArray($form),
             res = {};
-    
+        
         filter = filter || function(f) {return true;}
         
         for (var i = 0; i < data.length; i++) {
@@ -916,6 +917,9 @@ $fx.form = window.fx_form = window.$fx_form = fx_form;
                         c_res[part] = name_path[j + 1] === '' ? [] : {};
                     } else if (is_last) {
                         if (part === '') {
+                            if (! (c_res instanceof Array) ) {
+                                console.log(c_res, name_path, f);
+                            }
                             c_res.push(value);
                         } else {
                             c_res[part] = value;

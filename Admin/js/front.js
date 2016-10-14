@@ -1295,13 +1295,14 @@ fx_front.prototype.select_item = function(node) {
         this.make_node_panel($node);
     }
     
-    
     if ($node.is('.fx_entity')) {
         $fx.front.select_content_entity($node);
     }
+    
 
     if ($node.is('.fx_template_var, .fx_template_var_in_att')) {
         $node.edit_in_place();
+        
         var $closest_entity = $node.closest('.fx_entity');
         if ($closest_entity.length && $closest_entity[0] !== $node[0]) {
             $fx.front.select_content_entity($closest_entity, $node);
@@ -1327,8 +1328,7 @@ fx_front.prototype.select_item = function(node) {
     $fx.front.disable_hilight();
     $('html').on('keydown.fx_selected', function(e) {
         if (
-            $fx.front_panel.is_visible
-            // || $fx.front.hilight_disabled
+            $fx.front_panel.has_active_panels()
         ) {
             return;
         }
@@ -1395,7 +1395,7 @@ fx_front.prototype.select_styled = function($node) {
         var k = tps[0],
             tp = tps[1];
         
-        if (tp.style_id && tp.style_id !== style_id) {
+        if (!tp.style_id || tp.style_id !== style_id) {
             return;
         }
         param_key = k;
@@ -2350,16 +2350,8 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
     $from_field = $from_field || false;
     
     var entity_meta = $entity.data('fx_entity'),
-        entity_meta_props = $entity.data('fx_entity_meta'),
-        is_linker_placeholder = false,
         $ib_node = $entity.closest('.fx_infoblock');
 
-    if (entity_meta_props) {
-        is_linker_placeholder = entity_meta_props.placeholder_linker;
-    }
-
-    var entity = $entity[0];
-    
     $('html').one('fx_deselect', function(e) {
         $fx.front.outline_block_off($entity);
     });
@@ -2368,20 +2360,12 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
         return;
     }
     
-    
-    
-    
     var panel_params = {};
     if ($from_field) {
         panel_params.offset = 7;
-        //panel_params.align = 'right';
     }
     
     var entity_panel = $fx.front.node_panel.create($entity, panel_params);
-    
-    if (!is_linker_placeholder) {
-        //entity_panel.add_label($entity.data('fx_entity_name')+':');
-    }
     
     var ce_id = entity_meta[2] || entity_meta[0];
     
@@ -2393,8 +2377,7 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
         entity_panel.add_button(
             {
                 keyword:'edit',
-                type:'icon'//,
-                //label:$fx.lang('do_edit')+' '+$entity.data('fx_entity_name').toLowerCase()
+                type:'icon'
             }, 
             $fx.front.get_edit_closure($entity)
         );
@@ -2453,14 +2436,6 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
                 icon_set($publish_button.find('.fx_icon'), $ch[0].checked);
             }
         }, 10);
-        /*
-        var is_bound_to_ib = $fx.front.is_equal_rect($entity, $ib_node);
-        if (is_bound_to_ib) {
-            $fx.front.select_infoblock($ib_node, entity_panel);
-        } else {
-            
-        }
-        */
     }
     
     var $sortable_entities = $fx.front.get_sortable_entities($entity.parent());
@@ -2521,29 +2496,10 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
         $entity.edit_in_place();
     }
     
-    
-    /*
-    function add_text_field_label(panel, $field_node) {
-        var field_meta = $field_node.data('fx_var');
-        if (!field_meta) {
-            return;
-        }
-        if (field_meta.type === 'string' || field_meta.type === 'text' || field_meta.type === 'html') {
-            panel.$panel.append('<div class="fx_node_panel_separator"></div>');
-            panel.add_label(
-                'Editing: '+field_meta.label
-            );
-        }
-    }
-    */
-    
     if (!$from_field) {
         var $bound_to_edit = $fx.front.get_entity_bound_vars($entity);
         $bound_to_edit.edit_in_place();
-    }/* else if ($from_field.is('.fx_template_var')) {
-        var field_panel = $fx.front.node_panel.get($from_field);
-        //add_text_field_label(field_panel, $from_field);
-    }*/
+    }
 };
 
 fx_front.prototype.get_entity_bound_vars = function($entity) {
@@ -2562,54 +2518,91 @@ fx_front.prototype.get_entity_bound_vars = function($entity) {
     return $bound_to_edit;
 };
 
+fx_front.prototype.cached_style_variants = {};
+
 
 fx_front.prototype.prepare_infoblock_visual_fields = function(all_props, callback) {
-    var style_props = [];
-    $.each(all_props, function(prop_type, props){
-        if (!props) {
-            return;
+    function extend_with_variants(prop, variants) {
+        var is_hidden = false;
+        if (prop.style_id) {
+            var $styled_el = $('.fx_selected').descendant_or_self('.'+prop.block+'_style-id_'+prop.style_id);
+            if ($styled_el.length === 0) {
+                is_hidden = true;
+            }
         }
-        $.each( props, function() {
-            var prop = this instanceof Array ? this[1] : this;
-            if (prop.type === 'style') {
-                style_props.push(prop);
-            }
-        });
-    });
-    
-    if (style_props.length > 0) {
-        $fx.post({
-            entity:'layout',
-            action:'get_style_variants',
-            blocks: style_props
-        }, function(res) {
-            for (var i = 0; i < res.variants.length; i++) {
-                var variants = res.variants[i],
-                    prop = style_props[i],
-                    is_hidden = false;
-                if (prop.style_id) {
-                    var $styled_el = $('.fx_selected').descendant_or_self('.'+prop.block+'_style-id_'+prop.style_id);
-                    if ($styled_el.length === 0) {
-                        is_hidden = true;
+        if (is_hidden) {
+            prop.type = 'hidden';
+        } else {
+            if (prop.is_inline) {
+                var c_value = prop.value,
+                    res = $.extend(true, {}, prop, variants);
+                for (var i = 0; i < res.fields.length; i++) {
+                    var c_field = res.fields[i];
+                    if (typeof c_value[c_field.name] !== 'undefined') {
+                        c_field.value = c_value[c_field.name];
                     }
                 }
-                if (is_hidden) {
-                    prop.type = 'hidden';
-                } else {
-                    if (prop.is_inline) {
-                        prop = $.extend(prop, variants);
-                    } else {
-                        prop.type = 'livesearch';
-                        prop.values = variants;
-                        prop.allow_empty = false;
+                
+                $.extend(
+                    res.tweaker, 
+                    {
+                        style_id: prop.style_id,
+                        style_class: prop.block + '_style_'+prop.mod_value
                     }
-                }
+                );
+                $.extend(prop, res);
+            } else {
+                prop.type = 'livesearch';
+                prop.values = variants;
+                prop.allow_empty = false;
             }
-            callback(all_props);
-        });
-    } else {
-        callback(all_props);
+        }
     }
+    
+    return new Promise(
+        function(resolve, reject) {
+            var style_props = [];
+            $.each(all_props, function(prop_type, props){
+                if (!props) {
+                    return;
+                }
+                $.each( props, function(prop_index) {
+                    var is_arr = this instanceof Array,
+                        prop = is_arr ? this[1] : this;
+                        
+                    if (prop.type === 'style') {
+                        var c_block = prop.block;
+                        if ($fx.front.cached_style_variants[c_block]) {
+                            extend_with_variants(prop, $fx.front.cached_style_variants[c_block]);
+                        } else {
+                            style_props.push(prop);
+                        }
+                    }
+                });
+            });
+            
+            if (style_props.length === 0) {
+                resolve(all_props);
+                return;
+            }
+
+            $fx.post({
+                entity:'layout',
+                action:'get_style_variants',
+                blocks: style_props
+            }, function(res) {
+                for (var i = 0; i < res.variants.length; i++) {
+                    
+                    var prop = style_props[i],
+                        sp = $.extend(true, {}, prop),
+                        variants = res.variants[i];
+                    extend_with_variants(prop, variants);
+                    $fx.front.cached_style_variants[prop.block] = variants;
+                }
+                resolve(all_props);
+            });
+        }
+    );
 };
 
 fx_front.prototype.extract_infoblock_visual_fields = function($ib_node, $form) {
@@ -2618,24 +2611,57 @@ fx_front.prototype.extract_infoblock_visual_fields = function($ib_node, $form) {
     var all_props = {};
     $.each(types, function(index, type) {
         var source_props = $ib_node.data('fx_'+type+'_params') || null;
-        all_props[type] = $.extend(true, {}, source_props);
+        
+        all_props[type] = [];
+        if (!source_props) {
+            return;
+        }
+        for (var i = 0; i < source_props.length; i++) {
+            var c_prop = source_props[i];
+            all_props[type].push(
+                [
+                    c_prop[0], 
+                    $.extend(true, {}, c_prop[1])
+                ]
+            );
+        }
     });
     
-    this.prepare_infoblock_visual_fields(all_props, function() {
+    var promise = this.prepare_infoblock_visual_fields(all_props);
+    return promise.then(function(all_props) {
+        
         $.each(all_props, function(type, props) {
             var field_class = 'fx_infoblock_'+type+'_param_field';
             $('.'+field_class, $form).remove();
             if (!props) {
                 return;
             }
-            var $rel_field = $(':input[name="visual['+type+']"]', $form).closest('.field');
+            var $rel_field = $(':input[name="visual['+type+']"]', $form).closest('.field'),
+                cc = 'fx-template-visual-fields',
+                cc_items = cc+'__items', 
+                $container = $rel_field.parent().find('.'+cc_items);
+                
+            if ($container.length === 0) {
+                $rel_field.after(
+                    $(
+                        '<div class="'+cc+' '+cc+'_type_'+type+'">'+
+                            '<div class="'+cc_items+'"></div>'+
+                        '</div>'
+                    )
+                );
+                $container = $rel_field.parent().find('.'+cc_items);
+            } else {
+                $container.html('');
+            }
+            
             $.each(props, function() {
                 var prop_name = this[0],
                     prop_data = this[1],
                     field_name = 'visual['+type+'_visual]['+prop_name.replace(/\./, '][')+']',
                     meta = $.extend(
-                        {}, 
-                        prop_data, {
+                        true, 
+                        prop_data, 
+                        {
                             name:field_name,
                             view_context:'panel'
                         }
@@ -2660,7 +2686,8 @@ fx_front.prototype.extract_infoblock_visual_fields = function($ib_node, $form) {
                     });
                     meta.parent = real_parent;
                 }
-                var $field = $fx.form.draw_field(meta, $rel_field, 'after');
+                //var $field = $fx.form.draw_field(meta, $rel_field, 'after');
+                var $field = $fx.form.draw_field(meta, $container);
                 $field.addClass(field_class);
 
                 // show tab label if the tab contained no visible fields
@@ -2692,6 +2719,344 @@ fx_front.prototype.hilight_empty_infoblock_areas = function($ib, mode) {
     });
 };
 
+fx_front.prototype.edit_style_variant = function(template_ls, ib_data) {
+    var fields = [],
+
+        c_value = template_ls.getFullValue(),
+        c_variant = null;
+        
+
+    if (c_value.basic_template) {
+        c_variant = c_value;
+    }
+    /*else if (last_used_variant.template) {
+        c_variant = last_used_variant.template;
+    }
+    */
+    
+    var params = {
+        header: (c_variant ? 'Редактируем шаблон &laquo;' + c_variant.name+'&raquo;' : 'Создаем шаблон')
+    };
+   
+    if (c_variant) {
+        fields.push({
+            type:'hidden',
+            name: 'target_id',
+            value: c_variant.id
+        });
+        fields.push({
+            type:'checkbox',
+            name:'save_as_new',
+            label:'Сохранить как новый?'
+        });
+        params.form_button = [{key:'delete', class:'delete', label:'Удалить'}, 'save'];
+    }
+
+    fields.push({
+        type:'string',
+        label:'Название',
+        name:'name'
+    });
+    
+    fields.push({
+        type:'checkbox',
+        label:'Защищен от редактирования?',
+        name:'is_locked',
+        value: (c_variant ? c_variant.is_locked : 0)
+    });
+
+    params.fields = fields;
+
+    $fx.front_panel.show_form(
+        params, 
+        {
+            style:'alert',
+            onload: function($form) {
+                if (!c_variant){ 
+                    return;
+                }
+
+                var c_name = c_variant.real_name;
+
+                var $name = $form.find('input[name="name"]');
+
+                function handle_save_mode() {
+                    var data = $form.formToHash(),
+                        $del = $form.find('.fx_button_key_delete');
+                    
+                    if (data.save_as_new*1 === 1) {
+                        $del.hide();
+                        var prev_name = $name.val();
+                        if (prev_name && prev_name !== c_name) {
+                            c_name = prev_name;
+                        }
+                        $name.val('');
+                    } else {
+                        $del.show();
+                        $name.val(c_name);
+                    }
+                };
+                $name.on('focus', function() {
+                    $name.select();
+                });
+                handle_save_mode();
+                $form.on('change', function(e) {
+                    if (e.target.name === 'save_as_new') {
+                        handle_save_mode();
+                    }
+                });
+            },
+            onsubmit: function(e) {
+                var $vform = $(e.target);
+                var data = $vform.formToHash();
+
+                save_template_variant(data, template_ls).then(function() {
+                    $fx.front_panel.hide();
+                });
+                return false;
+            }
+        }
+    );
+};
+
+function save_template_variant(data, template_ls) {
+    var c_value = template_ls.getFullValue(),
+        ib_data = template_ls.$node.closest('form').formToHash();
+    $.extend(
+        data, 
+        {
+            entity:'infoblock',
+            action: 'save_template_variant',
+            basic_template: c_value.basic_template || c_value.id,
+            params : ib_data.visual['template_visual'],
+            controller: ib_data.controller,
+            area: JSON.parse(ib_data.area)
+        }
+    );
+
+    return new Promise(function(resolve, reject) {
+        $fx.post(
+            data,
+            function(res) {
+                var template_field = res.template_field;
+                template_ls.updatePresetValues(template_field.values);
+                template_ls.setValue(res.template_value);
+                resolve();
+            }
+        );
+    });
+}
+
+function handle_template_lock_state(template_ls) {
+    var is_locked = template_ls.getFullValue().is_locked*1 === 1,
+        $field = template_ls.$node.closest('.field'),
+        cl = 'fx-template-visual-fields',
+        $container = $field.closest('.fx_tab_data').find('.'+cl),
+        opts_cl = cl+'__unlock-options';
+    if (is_locked && !$container.find('.'+opts_cl).length) {
+        var $opts = $(
+            '<div class="'+opts_cl+'">'+
+                '<div class="'+cl+'__unlock-option" data-action="copy">'+
+                    '<div class="fx_icon fx_icon-type-place"></div>'+
+                    '<span>Только здесь</span>'+
+                '</div>'+
+                '<div class="'+cl+'__unlock-option" data-action="lock">'+
+                    '<div class="fx_icon fx_icon-type-unlocked"></div>'+
+                    '<span>Везде</span>'+
+                '</div>'+
+            '</div>'
+        );
+        $opts.on('click', '[data-action]', function(e) {
+            var action = $(this).data('action'),
+                $target = template_ls.$node.find('.monosearch__item .fx_icon[data-action="'+action+'"]');
+            
+            $target.click();
+        });
+        $container.append($opts);
+    }
+    $container.toggleClass('fx-template-visual-fields_locked', is_locked);
+}
+
+fx_front.prototype.show_infoblock_settings = function($node, tab) {
+    var ib_node = $node[0],
+        $ib_node = $node,
+        ib = $ib_node.data('fx_infoblock');
+
+    if (!ib) {
+        return;
+    }
+    tab = tab || 'settings';
+    
+    var $area_node = $fx.front.get_area_node($ib_node);//ib_node.closest('.fx_area');
+    var area_meta = $fx.front.get_area_meta($area_node);
+
+    var is_waiting = false, 
+        ib_loader = null,
+        has_changes = false;
+
+    var last_used_variant = {};
+
+    $fx.front_panel.load_form({
+        entity:'infoblock',
+        action:'select_settings',
+        id:ib.id,
+        visual_id:ib.visual_id,
+        page_id: $fx.front.get_page_id(), //$('body').data('fx_page_id'),
+        fx_admin:true,
+        area:area_meta
+    }, {
+        view:'horizontal',
+        //view:'vertical',
+        //overlap:false,
+        //side:'left',
+        active_tab: tab,
+        onfinish:function() {
+            $fx.front.reload_infoblock($('.fx_infoblock_'+ib.id));
+        },
+        onload: function($form) {
+            $form.data('ib_node', ib_node);
+            $fx.front.hilight_empty_infoblock_areas($ib_node, 'show');
+            var $saver = $('<a class="fx_icon fx_icon-type-settings"></a>'),
+                $template_ls = $('input[name="visual[template]"]', $form).closest('.livesearch'),
+                template_ls = $template_ls.data('livesearch');
+            
+           
+            function add_variant_controls($node, value) {
+                var locked = value.is_locked*1 ? 'locked' : 'unlocked',
+                    cl = 'fx-template-variant-options';
+                var $controls = $(
+                    '<span class="'+cl+' '+cl+'_'+locked+'">'+
+                        ( value.basic_template 
+                            ? 
+                            '<a data-action="lock" class="fx_icon fx_icon-type-'+locked+'" title="изменить пресет"></a> ' +
+                            '<a data-action="copy" class="fx_icon fx_icon-type-place" title="копировать в блок"></a> '
+                            : '' 
+                        ) +         
+                        '<a data-action="edit" class="fx_icon fx_icon-type-edit" title="сохранить"></a> '+
+                    '</span>'
+                );
+                $controls.on('click', 'a', function(e) {
+                    var $button = $(this),
+                        c_value = template_ls.getFullValue();
+                    switch ($button.data('action')) {
+                        case 'edit':
+                            $fx.front.edit_style_variant(template_ls, $form.formToHash());
+                            break;
+                        case 'lock':
+                            var data = {
+                                'is_locked': c_value.is_locked*1 === 0 ? 1 : 0,
+                                target_id: c_value.id
+                            };
+                            save_template_variant(data, template_ls);
+                            break;
+                        case 'copy':
+                            var c_data = $form.data('last_data');
+                            c_data.visual.template = c_value.basic_template;
+                            template_ls.setValue(c_value.basic_template);
+                            break;
+                            
+                    }
+                    return false;
+                });
+                $node.append($controls);
+            }
+           
+            $template_ls.on('livesearch_value_added', function(e) {
+                add_variant_controls(e.$value_node, e.value);
+            });
+            
+            add_variant_controls(
+                $template_ls.find('.monosearch__item'),
+                template_ls.getFullValue()
+            );
+            //$template_ls.after($saver);
+                
+            $saver.on('click', function() {
+                
+            });
+            return $fx.front.extract_infoblock_visual_fields($ib_node, $form).then(function() {
+                handle_template_lock_state(template_ls);
+            });
+        },
+        onready:function($form) {
+            //var c_data = $form.formToHash();
+            $form.data('last_data', $form.formToHash());
+            var template_types = ['template', 'wrapper'],
+                update_timeout = null;
+
+            $form.on('change.fx_front', function(e) {
+                if (e.target.name === 'livesearch_input' || e.target.name === 'scope[type]') {
+                    return;
+                }
+
+                var new_data = $form.formToHash(),
+                    c_data = $form.data('last_data');
+                /*
+                if (new_data === c_data && !e.fx_forced) {
+                    return;
+                }
+                */
+                
+                for (var i = 0; i < template_types.length; i++) {
+                    var tt = template_types[i];
+                        
+                    // поменяли шаблон
+                    if (new_data.visual[tt] != c_data.visual[tt]) {
+                        delete new_data.visual[tt+'_visual'];
+                    }
+                }
+                
+                var focused_name = $(document.activeElement).descendant_or_self(':input[name]').attr('name');
+                
+                
+                clearTimeout(update_timeout);
+                update_timeout = setTimeout(
+                    function() {
+                        $form.data('last_data', new_data);
+                        ib_loader = $fx.front.reload_infoblock(
+                            $form.data('ib_node'), 
+                            function($new_ib_node) {
+                                has_changes = true;
+                                $form.data('ib_node', $new_ib_node);
+                                $fx.front.extract_infoblock_visual_fields($new_ib_node, $form).then(function() {
+                                    
+                                    var $template_ls = $form.find('[name="visual[template]"]').closest('.livesearch'),
+                                        template_ls = $template_ls.data('livesearch');
+                                        
+                                    if (template_ls) {
+                                        handle_template_lock_state(template_ls);
+                                    }
+                                    
+                                    if (focused_name) {
+                                        var $focused_input = $form.find('[name="'+focused_name+'"]');
+                                        if ($focused_input.attr('type') === 'hidden') {
+                                            $focused_input = $focused_input.closest('[tabindex]');
+                                        }
+                                        $focused_input.focus();
+                                    }
+                                });
+                                $fx.front.hilight_empty_infoblock_areas($new_ib_node, 'show');
+                            }, 
+                            {override_infoblock:new_data}
+                        );
+                    },
+                    50
+                );
+            });
+        },
+        oncancel:function($form) {
+            if (has_changes) {
+                $fx.front.reload_infoblock($form.data('ib_node'));
+            } else {
+                var $c_ib_node = $($form.data('ib_node'));
+                if ($c_ib_node && $c_ib_node.length) {
+                    $fx.front.hilight_empty_infoblock_areas($ib_node, 'add');
+                }
+            }
+        }
+    });
+};
+
 fx_front.prototype.select_infoblock = function($node, panel) {
     if ($fx.front.mode === 'edit') {
         $node.edit_in_place();
@@ -2700,86 +3065,22 @@ fx_front.prototype.select_infoblock = function($node, panel) {
     if (!panel) {
         panel = $fx.front.node_panel.get();
     }
+    
+    if ($node.is('.fx_entity')) {
+        var $block_label = panel.add_label( 'Блок' );
+            $block_label.addClass('fx_node_panel__item-button-label');
+    }
 
     panel.add_button('settings', function() {
-        var ib_node = $node[0],
-            $ib_node = $node,
-            ib = $ib_node.data('fx_infoblock');
-        
-        if (!ib) {
-            return;
-        }
-        var $area_node = $fx.front.get_area_node($ib_node);//ib_node.closest('.fx_area');
-        var area_meta = $fx.front.get_area_meta($area_node);
-        
-        var is_waiting = false, 
-            ib_loader = null,
-            has_changes = false,
-            container_handler = null;
-
-        $fx.front_panel.load_form({
-            entity:'infoblock',
-            action:'select_settings',
-            id:ib.id,
-            visual_id:ib.visual_id,
-            page_id: $fx.front.get_page_id(), //$('body').data('fx_page_id'),
-            fx_admin:true,
-            area:area_meta
-        }, {
-            view:'horizontal',
-            onfinish:function() {
-                $fx.front.reload_infoblock($('.fx_infoblock_'+ib.id));
-            },
-            onready:function($form) {
-                
-                $fx.front.hilight_empty_infoblock_areas($ib_node, 'show');
-                
-                $form.data('ib_node', ib_node);
-                $fx.front.extract_infoblock_visual_fields($ib_node, $form);
-                //var c_data = $form.serialize();
-                var c_data = $form.formToHash();
-                
-                //container_handler = new $fx.container.form_handler($form, $ib_node);
-                
-                $form.on('change.fx_front', function(e) {
-                    if (e.target.name === 'livesearch_input' || e.target.name === 'scope[type]') {
-                        return;
-                    }
-                    
-                    var new_data = $form.formToHash();
-                    
-                    if (new_data === c_data && !e.fx_forced) {
-                        return;
-                    }
-                    c_data = new_data;
-                    if (is_waiting) {
-                        ib_loader.abort();
-                    }
-                    is_waiting = true;
-                    ib_loader = $fx.front.reload_infoblock(
-                        $form.data('ib_node'), 
-                        function($new_ib_node) {
-                            has_changes = true;
-                            $form.data('ib_node', $new_ib_node);
-                            $fx.front.extract_infoblock_visual_fields($new_ib_node, $form);
-                            is_waiting = false;
-                            $fx.front.hilight_empty_infoblock_areas($new_ib_node, 'show');
-                        }, 
-                        {override_infoblock:c_data}
-                    );
-                });
-            },
-            oncancel:function($form) {
-                if (has_changes) {
-                    $fx.front.reload_infoblock($form.data('ib_node'));
-                } else {
-                    var $c_ib_node = $($form.data('ib_node'));
-                    if ($c_ib_node && $c_ib_node.length) {
-                        $fx.front.hilight_empty_infoblock_areas($ib_node, 'add');
-                    }
-                }
-            }
-        });
+        $fx.front.show_infoblock_settings($node);
+    });
+    
+    panel.add_button('design', function() {
+        $fx.front.show_infoblock_settings($node, 'design');
+    });
+    
+    panel.add_button("container", function() {
+        $fx.front.show_infoblock_settings($node, 'wrapper');
     });
     
     panel.add_button({

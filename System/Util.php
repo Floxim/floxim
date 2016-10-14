@@ -814,4 +814,20 @@ class Util
         $res .= $uid;
         return $res;
     }
+    
+    public static function findInParams($params, $callback, $path = array())
+    {
+        $res = array();
+        foreach ($params as $k => $v) {
+            $sub_path  = $path;
+            $sub_path []= $k;
+            $path_str = join('.', $sub_path);
+            if (is_array($v)) {
+                $res = array_merge( $res, self::findInParams($v, $callback, $sub_path) );
+            } elseif (call_user_func($callback, $v, $k, $sub_path)) {
+                $res[$path_str] = $v;
+            }
+        }
+        return $res;
+    }
 }

@@ -507,21 +507,16 @@ class Page
     
     public function addLayoutVars()
     {
-        $style_variant = fx::env()->getLayoutStyleVariant();
-        $vars = $style_variant->get('less_vars');
+        $vars = fx::env('theme')->get('palette')->getVals();
         
         $fonts = array();
         
         $all_fonts = \Floxim\Floxim\Asset\Fonts::getAvailableFonts();
-        $font_types = array(
-            'text' => 'Основной',
-            'nav' => 'Для навигации',
-            'headers' => 'Для заголовков'
-        );
+        $font_types = \Floxim\Floxim\Component\Palette\Entity::getFontTypes();
         
         foreach ($vars as $k => $v) {
             if (preg_match("~^font_~", $k)) {
-                //$fonts [ preg_replace("~^font_~", '', $k) ]= $v;
+                $v = trim($v, '"');
                 if (isset($all_fonts[$v])) {
                     $font_styles = $all_fonts[$v];
                     $kw = preg_replace("~^font_~", '', $k);
@@ -539,7 +534,6 @@ class Page
         $js = '$fx.container.layout_sizes = ' .json_encode( \Floxim\Floxim\Template\Container::getLayoutSizes()).";\n";
         $js .= '$fx.layout_vars = '.json_encode( $vars ).";\n";
         $js .= '$fx.layout_fonts = '.json_encode( $fonts ).";\n";
-        
         $this->addJsText($js);
     }
 
@@ -574,7 +568,7 @@ class Page
         
         $this->setAfterBody( 
             \Floxim\Floxim\Asset\Fonts::getLoaderJS(
-                fx::env()->getLayoutStyleVariant()->getUsedFonts()
+                fx::env('theme')->get('palette')->getUsedFonts()
             ) 
         );
         
@@ -640,9 +634,14 @@ class Page
             $cache[$hash] = $ibs;
             foreach ($ibs  as $ib) {
                 if ($ib->getVisual()->get('is_stub')) {
+                    fx::log('suitable?', $ib);
+                    throw new \Exception('No more suitable (infoblock_id: '.$ib['id'].')');
+                    /*
                     $suitable = new \Floxim\Floxim\Template\Suitable();
                     $suitable->suit($ibs, fx::env('layout_id'), fx::env()->getLayoutStyleVariantId());
                     break;
+                     * 
+                     */
                 }
             }
             $ibs->sort(function($ib) {

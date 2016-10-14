@@ -64,15 +64,15 @@ class Front extends Base
 
     protected $_ib_cache = array();
 
-    public function  getPageInfoblocks($page_id = null, $layout_id = null)
+    public function  getPageInfoblocks($page_id = null, $theme_id = null)
     {
-        if (is_null($layout_id)) {
-            $layout_id = fx::env('layout_id');
+        if (is_null($theme_id)) {
+            $theme_id = fx::env('theme_id');
         }
         if (is_null($page_id)) {
             $page_id = fx::env('page_id');
         }
-        $cache_key = $page_id . '.' . $layout_id;
+        $cache_key = $page_id . '.' . $theme_id;
         if (isset($this->_ib_cache[$cache_key])) {
             return $this->_ib_cache[$cache_key];
         }
@@ -87,9 +87,9 @@ class Front extends Base
         $areas = fx::collection();
         $visual = fx::data('infoblock_visual')->
                     where('infoblock_id', $infoblocks->getValues('id'))->
-                    where('layout_id', $layout_id)->
+                    where('theme_id', $theme_id)->
                     all();
-
+        
         foreach ($infoblocks as $ib) {
             if (!$ib->isAvailableForUser()) {
                 continue;
@@ -98,8 +98,13 @@ class Front extends Base
             if (($c_visual = $visual->findOne('infoblock_id', $ib['id']))) {
                 $ib->setVisual($c_visual);
             } elseif ($ib->getVisual()->get('is_stub')) {
+                fx::log('suitable?!!', $ib);
+                throw new \Exception('No more suitable');
+                /*
                 $suitable = new Template\Suitable();
                 $suitable->suit($infoblocks, $layout_id);
+                 * 
+                 */
             }
 
             if (($visual_area = $ib->getPropInherited('visual.area'))) {
@@ -143,7 +148,9 @@ class Front extends Base
         }
 
         if ($layout_ib->getVisual()->get('is_stub') || !$layout_ib->getTemplate()) {
-            
+            fx::log('suitable for layout?!!', $layout_ib);
+            throw new \Exception('No more suitable');
+            /*
             $suitable = new Template\Suitable();
             //$infoblocks = $page->getPageInfoblocks();
             $infoblocks = fx::data('infoblock')->getForPage($page);
@@ -154,10 +161,11 @@ class Front extends Base
             });
             
             $suitable->suit($infoblocks, fx::env('layout_id'), fx::env()->getLayoutStyleVariantId());
-            fx::cdebug('suted', $infoblocks, fx::env('layout_id'), fx::env()->getLayoutStyleVariantId());
             return $infoblocks->findOne(function ($ib) {
                 return $ib->isLayout();
             });
+             * 
+             */
         }
         return $layout_ib;
     }

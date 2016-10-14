@@ -449,11 +449,12 @@ window.fx_suggest = function(params) {
     this.renderItem = function(item, level) {
         level = level || 0;
         var item_html = '';
-        if (item.path && item.path.length) {
+        if (item.path && item.path.length && !item.path_is_auto) {
             item_html += '<span class="search_item__path">';
             $.each(item.path, function() {
                 item_html += '<span class="search_item__path-chunk">'+this+'</span>';
-                item_html += '<span class="search_item__path-separator">&#9657;</span>';
+                //item_html += '<span class="search_item__path-separator">&#9657;</span>';
+                item_html += '<span class="search_item__path-separator">&gt;</span>';
             });
             item_html += '</span>';
         }
@@ -492,17 +493,19 @@ window.fx_suggest = function(params) {
                 $children.append( this.renderItem(item.children[i], level + 1) );
             }
             $group.append($children);
-            var $toggler = $('<div class="search_group_toggler">' + (is_collapsed ? toggle_right : toggle_down )+ '</div>');
-            $toggler.click(function() {
-                if ($group.hasClass('search_group_collapsed')) {
-                    Suggest.expandGroup($group);
-                } else {
-                    Suggest.collapseGroup($group);
-                }
-                Suggest.input.focus();
-                return false;
-            });
-            $item.append($toggler);
+            if (item.expanded !== 'always') {
+                var $toggler = $('<div class="search_group_toggler">' + (is_collapsed ? toggle_right : toggle_down )+ '</div>');
+                $toggler.click(function() {
+                    if ($group.hasClass('search_group_collapsed')) {
+                        Suggest.expandGroup($group);
+                    } else {
+                        Suggest.collapseGroup($group);
+                    }
+                    Suggest.input.focus();
+                    return false;
+                });
+                $item.append($toggler);
+            }
             return $group;
         }
         return $item;

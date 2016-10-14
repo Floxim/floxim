@@ -1458,13 +1458,22 @@ class Compiler
             if ($is_inline) {
                 $_visual_path = '$visual_path';
                 $_visual_id = '$visual_id';
-                $code .= $_visual_id . " = \$context->getVisualId();\n";
-                //$code .= $_bundle_is_temp ." = substr(".$_visual_id.", -5, 5) === '-temp';\n";
-                $code .= $_bundle_is_temp ." = ".$_visual_id." === 'new';\n";
-                $code .= $_visual_path . ' = ($this->isWrapper() ? "w" : "t")."-".'.$_style_value_path.";\n";
-                $code .= $_mod_value . ' = md5('.$_visual_id.'."-".'.$_visual_path.");\n";
-                $code .= $_bundle_id . ' = "default_inline_".'.$_visual_id.'."_".'.$_mod_value.";\n";
-                $code .= $_bundle_params . " = array('visual_path' => ".$_visual_path.");\n";
+                $_variant_id = '$variant_id';
+                $code .= $_variant_id ." = \$this->getCurrentVariantId();\n";
+                $code .= "if (!".$_variant_id.") {\n";
+                    $code .= $_visual_id . " = \$context->getVisualId();\n";
+                    $code .= $_bundle_is_temp ." = ".$_visual_id." === 'new';\n";
+                    $code .= $_visual_path . ' = ($this->isWrapper() ? "w" : "t")."-".'.$_style_value_path.";\n";
+                    $code .= $_mod_value . ' = md5('.$_visual_id.'."-".'.$_visual_path.");\n";
+                    $code .= $_bundle_id . ' = "default_inline_".'.$_visual_id.'."_".'.$_mod_value.";\n";
+                    $code .= $_bundle_params . " = array('visual_path' => ".$_visual_path.");\n";
+                $code .= "} else {\n";
+                    $code .= $_bundle_is_temp ." = false;\n";
+                    $code .= $_mod_value . ' = md5('.$_variant_id.'.'.$_style_value_path.");\n";
+                    $code .= $_bundle_id . ' = "default_tv_".'.$_variant_id.'."_".'.$_mod_value.";\n";
+                    $code .= $_bundle_params . " = array('visual_path' => ".$_style_value_path.");\n";
+                $code .= "}\n";
+                
             } else {
                 $code .= $_bundle_id .' = '.$_style_value.";\n";
                 $code .= $_bundle_params . " = array();\n";

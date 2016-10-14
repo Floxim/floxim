@@ -91,11 +91,29 @@ class Site extends Admin
     {
 
         $result = array();
+        
+        $palette = fx::data('palette')->create(
+            array(
+                'params' => array()
+            )
+        );
+        
+        $palette->save();
+        
+        $theme = fx::data('theme')->create(
+            array(
+                'palette_id' => $palette['id'],
+                'layout' => 'floxim.basic'
+            )
+        );
+        
+        $theme->save();
+        
         $site = fx::data('site')->create(array(
             'name'      => $input['name'],
             'domain'    => $input['domain'],
-            'layout_id' => $input['layout_id'],
-            'style_variant_id' => $this->getStyleVariantId($input),
+            'theme_id' => $theme['id'],
+            //'style_variant_id' => $this->getStyleVariantId($input),
             'mirrors'   => $input['mirrors'],
             'language'  => $input['language'],
             'checked'   => 1
@@ -128,13 +146,24 @@ class Site extends Admin
         $site['error_page_id'] = $error_page['id'];
         $site['index_page_id'] = $index_page['id'];
 
-        fx::data('infoblock')->create(array(
+        $layout_ib = fx::data('infoblock')->create(array(
             'controller' => 'layout',
             'action'     => 'show',
             'name'       => 'Layout',
             'site_id'    => $site['id'],
             'scope_type' => 'all_pages'
         ))->save();
+        
+        $layout_vis = fx::data('infoblock_visual')->create(
+            array(
+                'theme_id' => $theme['id'],
+                'infoblock_id' => $layout_ib['id'],
+                'template' => 'theme.floxim.basic:_layout_body'
+            )
+        );
+                
+        $layout_vis->save();
+        
         $site->save();
         fx::input()->setCookie('fx_target_location', '/floxim/#admin.site.all');
         $result = array(
@@ -184,7 +213,7 @@ class Site extends Admin
             'value'  => $site['language'],
             'label'  => fx::alang('Language', 'system')
         );
-        $main_fields = array_merge($main_fields, Layout::getThemeFields($site));
+        //$main_fields = array_merge($main_fields, Layout::getThemeFields($site));
         return $main_fields;
     }
 

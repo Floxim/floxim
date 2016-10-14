@@ -44,4 +44,18 @@ if (jQuery) {
         }
         return undefined;
     };
+    
+    if (console && typeof console === 'object') {
+        console.fix = function() {
+            var res = [];
+            for (var i = 0; i < arguments.length; i++) {
+                var arg = arguments[i];
+                if (typeof arg === 'object') {
+                    arg = $.extend(true, {}, arg);
+                }
+                res.push(arg);
+            }
+            return console.log.apply(console, res);
+        };
+    }
 }

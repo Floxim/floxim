@@ -368,6 +368,19 @@ abstract class Finder
                 );
                 $this->where($rel_alias.'.id', null, 'is null');
                 break;
+            case self::HAS_MANY:
+                $rel_finder = fx::data($rel[1]);
+                $linking_field = $rel[2];
+                $rel_table = $rel_finder->getColTable($linking_field);
+                $our_table = $this->getTable();
+                $rel_alias = 'tbl_without_'.$rel_name;
+                $this->join(
+                    array($rel_table, $rel_alias),
+                    $rel_alias.'.'.$linking_field .' = {{'.$our_table.'}}.id',
+                    'left'
+                );
+                $this->where($rel_alias.'.id', null, 'is null');
+                break;
         }
         return $this;
     }

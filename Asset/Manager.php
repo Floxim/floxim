@@ -20,9 +20,9 @@ class Manager {
             $bundle_class = '\\Floxim\\Floxim\\Asset\\'.$types[$type];
 
             $hash_params = $keyword === 'admin' ? array() : array(
-                'layout' => fx::env('layout_id'),
                 'site' => fx::env('site_id'),
-                'style' => fx::env()->getLayoutStyleVariantId()
+                'theme' => fx::env('theme_id')
+                //'style' => fx::env()->getLayoutStyleVariantId()
             );
             $params = array_merge($hash_params, $params);
 

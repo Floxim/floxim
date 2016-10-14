@@ -156,7 +156,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
                 $compare_type = self::FILTER_EQ;
             }
         } elseif ($compare_type == '!=') {
-            $compare_type = self::FILTER_NEQ;
+            $compare_type = is_array($prop) ? self::FILTER_NOT_IN : self::FILTER_NEQ;
         }
         $initial_key = key($this->data);
         $res = array();
@@ -181,6 +181,15 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         if ($compare_type == self::FILTER_IN) {
             foreach ($this->data as $key => $item) {
                 if (in_array($item[$field], $prop)) {
+                    $res [$key] = $item;
+                }
+            }
+            $this->setPosition($initial_key);
+            return $fork->load($res);
+        }
+        if ($compare_type == self::FILTER_NOT_IN) {
+            foreach ($this->data as $key => $item) {
+                if (!in_array($item[$field], $prop)) {
                     $res [$key] = $item;
                 }
             }

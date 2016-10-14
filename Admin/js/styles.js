@@ -126,7 +126,7 @@ less_tweaker.prototype.get_stylesheet = function() {
             $ss.data('is_tweaked', true);
         }
         if (!this.$stylesheet) {
-            this.$stylesheet = $('<style type="text/css"></style>');
+            this.$stylesheet = $('<style type="text/css" class="oh"></style>');
             $('head').append(this.$stylesheet);
         }
     }
@@ -312,10 +312,13 @@ less_tweaker.prototype.render_less = function(less_text) {
         options
     ).then(
         function(css) {
+            //css.css += '.src {is:tweaker;}';
             that.get_stylesheet().text(css.css);
         },
         function (error) {
-            console.log(error, less_text);
+            console.log(
+                error //, less_text
+            );
         }
     );
 };
@@ -353,8 +356,9 @@ less_tweaker.init_style_select = function($monosearch) {
     
     $monosearch.after ( $settings_button );
     $settings_button.on('click', function() {
-        var $ls = $(this).closest('.field').find('.livesearch'),
-            ls_json = $ls.data('json'),
+        var $c_field = $(this).closest('.field'),
+            $ls = $c_field.find('.livesearch'),
+            ls_json = $c_field.data('source_json'),
             ls = $ls.data('livesearch'),
             current_style = ls.getFullValue(),
             block_name = ls_json.block,
@@ -438,13 +442,14 @@ less_tweaker.init_style_group = function($g) {
     // or when the selected block is reloaded
     var $ib = $($fx.front.get_selected_item()).closest('.fx_infoblock');
 
-    if ($ib.length > 0) {
-        
+    if ($ib.length > 0 && tweaker.is_new) {
         $ib.on('fx_infoblock_unloaded', function(e, $new_ib) {
             if (tweaker.last_data) {
                 var $el = $new_ib.descendant_or_self('.'+ tweaker.style_id_class ),
-                    style_class = $el.attr('class').match( new RegExp( tweaker.block_name + '_style_[^\\s]+' ) );
-
+                    el_class = $el.attr('class'),
+                    style_class = el_class && el_class.match( 
+                        new RegExp( tweaker.block_name + '_style_[^\\s]+' ) 
+                    );
                 if (style_class) {
                     tweaker.set_style_class(style_class[0]);
                     tweaker.update( tweaker.last_data );

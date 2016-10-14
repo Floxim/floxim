@@ -117,34 +117,61 @@ class Test extends Admin {
     
     public function livesearch()
     {
+        $vals = array(
+            array(
+                'test', '1. My Test'
+            ),
+            array(
+                'west', 
+                '2. Oh West',
+                array(
+                    'children' => array(
+                        array('south.west', '2.1. Southern'),
+                        array('nord.west', '2.2. Northen')
+                    )
+                )
+            ),
+            array(
+                'soo', '3. Doo'
+            )
+        );
+        /*
+        $valus []= array(
+            'custom', 
+            null,
+            array(
+                'custom' => true,
+                'type' => 'number',
+                'units' => '%',
+                'min' => 10,
+                'max' => 100,
+                'step' => 5
+            )
+        );
+         * 
+         */
         $fields = array(
             'test' => array(
                 'label' => 'LS custom',
                 'type' => 'livesearch',
                 'allow_empty' => false,
-                'values' => array(
-                    array(
-                        'test', 'My Test'
-                    ),
-                    array(
-                        'west', 'Oh West'
-                    ),
-                    array(
-                        'custom', 
-                        null,
-                        array(
-                            'custom' => true,
-                            'type' => 'number',
-                            'units' => '%',
-                            'min' => 10,
-                            'max' => 100,
-                            'step' => 5
-                        )
-                    )
-                ),
-                'value' => 25
+                'values' => $vals,
+                'value' => 'west'
             )
         );
+        /*
+        $page = fx::data('floxim.main.page', 3843);
+        $fields []= $page->getFormField('parent_id');
+        
+        $fields['ajax'] = array(
+            'type' => 'livesearch',
+            "content_type" => "floxim.blog.news",
+            'label' => 'pages',
+            'is_multiple' => true,
+            'value' => array("3797", "3801")
+        );
+         * 
+         */
         $this->response->addFields($fields);
     }
     
@@ -521,5 +548,21 @@ class Test extends Admin {
         return array(
             'fields' => [$f]
         );
+    }
+    
+    public function multisearch()
+    {
+        $f = array(
+            'ajax_preload' => true,
+            'is_multiple' => true,
+            'label' => "Выбраны",
+            'name' => "params[selected]",
+            'value' => array(3797, 3796),
+            'type' => 'livesearch',
+            'params' => array( 
+                'content_type' => "floxim.blog.news" 
+            )
+        );
+        return array('fields' => array($f));
     }
 }

@@ -40,10 +40,15 @@ class Finder extends System\Finder
                 'infoblock',
                 'infoblock_id'
             ),
-            'style_variant' => array(
+            'template_variant' => array(
                 self::BELONGS_TO,
-                'style_variant',
-                'style_variant_id'
+                'template_variant',
+                'template_variant_id'
+            ),
+            'wrapper_variant' => array(
+                self::BELONGS_TO,
+                'template_variant',
+                'wrapper_variant_id'
             )
         );
     }

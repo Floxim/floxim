@@ -167,6 +167,16 @@ class Env
     {
         return ($user = $this->getUser()) ? $user->isAdmin() : false;
     }
+    
+    public function getThemeId()
+    {
+        return $this->getSite()->get('theme_id');
+    }
+    
+    public function getTheme()
+    {
+        return $this->getSite()->get('theme');
+    }
 
     public function getLayoutId()
     {
@@ -206,6 +216,7 @@ class Env
     
     public function getLayoutStyleVariant()
     {
+        throw new \Exception("no more layoutStyleVariant!");
         if (isset($this->current['style_variant'])) {
             return $this->current['style_variant'];
         }

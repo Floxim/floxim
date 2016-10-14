@@ -68,12 +68,15 @@ window.$fx = {
                             if (asset.blocks) {
                                 for (var j = 0 ; j < asset.blocks.length; j++) {
                                     var block = asset.blocks[j];
-                                    var $ss = $('style#'+block.style_class);
+                                    var $ss = $('style#'+block.style_class),
+                                        ss_len = $ss.length;
+                                    
                                     if (!$ss.length) {
                                         $ss = $('<style type="text/css" id="'+block.style_class+'"></style>');
                                         $ss.attr('data-declaration', block.declaration_keyword);
                                         $('head').append($ss);
                                     }
+                                    //block.css += '.src {is:ajax;}';
                                     if (!$ss.data('is_tweaked')) {
                                         $ss.text(block.css);
                                     }

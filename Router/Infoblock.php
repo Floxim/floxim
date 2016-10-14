@@ -36,10 +36,7 @@ class Infoblock extends Base
         }
         fx::env('ajax', true);
 
-        $page_infoblocks = fx::router('front')->getPageInfoblocks(
-            $page_id,
-            fx::env('layout_id')
-        );
+        $page_infoblocks = fx::router('front')->getPageInfoblocks($page_id);
         fx::page()->setInfoblocks($page_infoblocks);
         
         // import layout template to recreate real env

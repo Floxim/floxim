@@ -344,14 +344,15 @@ window.$fx_fields = {
             }
         }
         var handy_values = [];
-        $.each(values, function(code, label) {
-            var family_name = $fx.layout_vars['font_'+code];
-            handy_values.push(
-                {
-                    id:code,
-                    name:"<span style='font-family:"+family_name+";' title='"+family_name+"'>"+label+'</span>'
-                }
-            );
+        $.each($fx.layout_fonts, function(index, font) {
+            if (typeof values[font.keyword] !== 'undefined') {
+                handy_values.push(
+                    {
+                        id: font.keyword,
+                        name: "<span style='font-family:"+font.family+";' title='"+font.family+"'>"+font.type+'</span>'
+                    }
+                );
+            }
         });
         return this.livesearch({
             values:handy_values,
@@ -803,117 +804,7 @@ window.$fx_fields = {
     },
 
     livesearch: function(json, template) {
-        template = template || 'form_row';
-        json.params = json.params || {};
-        if (!json.type) {
-            json.type = 'livesearch';
-        }
-        
-        if (json.content_type && !json.params.content_type) {
-            json.params.content_type = json.content_type;
-        }
-        
-        function vals_to_obj(vals, path) {
-            var res = [];
-            if (path === undefined) {
-                path = [];
-            }
-            
-            for (var i = 0; i < vals.length; i++) {
-                var val = vals[i],
-                    res_val = val;
-                
-                if (val instanceof Array && val.length >= 2) {
-                    res_val = {
-                        id:val[0]
-                    };
-                    if (typeof val[1] === 'string' || typeof val[1] === 'number') {
-                        res_val.name = val[1] + '';
-                    } else if (typeof val[1] === 'object') {
-                        res_val = $.extend({}, res_val, val[1]);
-                    }
-                    if (val.length > 2) {
-                        res_val =  $.extend({}, res_val, val[2]);
-                    }
-                }
-                if ( !(json.value instanceof Array) && json.value == res_val.id) {
-                    json.value = res_val;
-                    json.value.path = path.slice(0);
-                }
-                path.push(res_val.name);
-                if (res_val.children && res_val.children.length) {
-                    res_val.children = vals_to_obj(res_val.children, path);
-                }
-                path.pop();
-                res.push(res_val);
-                
-            }
-            return res;
-        }
-        
-        if (json.fontpicker) {
-            window.fx_font_preview.init_stylesheet();
-            json.values = window.fx_font_preview.get_livesearch_values( json.fontpicker );
-        }
-        
-        if (json.values) {
-            var preset_vals = json.values,
-                custom = false;
-            if ( ! (json.values instanceof Array) ) {
-                preset_vals = [];
-                $.each(json.values, function(k, v) {
-                    preset_vals.push([k, v]);
-                });
-            }
-            
-            json.params.preset_values = vals_to_obj(preset_vals);
-            
-            for (var i = 0; i < json.params.preset_values.length; i++) {
-                if (json.params.preset_values[i].custom) {
-                    custom = json.params.preset_values[i];
-                    break;
-                }
-            }
-            
-            if (typeof json.allow_empty === 'undefined') {
-                json.allow_empty = false;
-            }
-            
-            if (json.allow_empty === false && (!json.value || typeof json.value.id === 'undefined')) {
-                if (!custom ) {
-                    json.value = json.params.preset_values[0];
-                } else if (custom.type === 'number' && !json.value.match(/^[0-9\.\,\-]*$/)) {
-                    json.value = json.params.preset_values[0];
-                }
-            }
-        }
-        if (json.allow_select_doubles) {
-            json.params.allow_select_doubles = json.allow_select_doubles;
-        }
-        
-        var $ls = $t.jQuery(template, json);
-        if (json.values && json.values.length === 0) {
-            $ls.hide();
-        }
-        if (json.fontpicker) {
-            var $input = $ls.find('.livesearch__input');
-            function add_input_style(value) {
-                if (!value) {
-                    return;
-                }
-                var $v = $(value);
-                $input.addClass($v.attr('class'));
-                $input.attr('style', $v.attr('style'));
-            }
-            if (json.value && json.value.name) {
-                add_input_style( json.value.name );
-            }
-            
-            $ls.on('livesearch_value_added', function(e) {
-                add_input_style(e.value_name);
-            });
-        }
-        return $ls;
+        return fx_livesearch.create(json, template);
     },
 
 

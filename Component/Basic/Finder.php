@@ -460,5 +460,15 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
         }
         return $res;
     }
-
+    
+    public function hasType($type)
+    {
+        if (!$this->getColTable('type')) {
+            return $this;
+        }
+        $com = fx::component($type);
+        $types = $com->getAllVariants()->getValues('keyword');
+        $this->where('type', $types, 'in');
+        return $this;
+    }
 }

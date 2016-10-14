@@ -603,7 +603,8 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
                
             var opacity = 1;
             if (size > 20) {
-                var show_distance = Math.max(Math.min(150, size/2), size/4),
+                //var show_distance = Math.max(Math.min(50, size/4), size/8),
+                var show_distance = Math.min(50, Math.max(20, size / 8)),
                     show_offset = show_distance - (is_after ? size - diff : diff);
                 
                 if (show_offset > 0) {
