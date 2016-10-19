@@ -37,6 +37,13 @@ class Entity extends \Floxim\Floxim\System\Entity {
         return null;
     }
     
+    public function getPageFinder()
+    {
+        $finder = fx::data('floxim.main.page');
+        $finder->applyConditions($this->getConditions());
+        return $finder;
+    }
+    
     public static function checkCondition(&$cond, $path = null) 
     {
         if ($cond['type'] === 'group') {

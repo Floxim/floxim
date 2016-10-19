@@ -540,7 +540,9 @@ class Fx
 
     public static function digSet(&$collection, $var_path, $var_value, $merge = false)
     {
-        $var_path = explode('.', $var_path);
+        if (!is_array($var_path)) {
+            $var_path = explode('.', $var_path);
+        }
 
         $arr =& $collection;
         $total = count($var_path);

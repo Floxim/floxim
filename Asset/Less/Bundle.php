@@ -185,16 +185,7 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
     
     protected function getLayoutVars()
     {
-        /*
-        $vars = fx::env()->getLayoutStyleVariant()->getLessVars();
-        foreach ($vars as $k => $v) {
-            if (preg_match("~^font_~", $k)) {
-                $vars[$k] = '"'.trim($v, '"').'"';
-            }
-        }
-         * 
-         */
-        $vars = fx::env('theme')->get('palette')->getVals();
+        $vars = fx::env('palette')->getVals();
         if (isset($this->meta['namespace'])) {
             $vars['namespace'] = $this->meta['namespace'];
         }

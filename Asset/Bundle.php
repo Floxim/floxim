@@ -110,18 +110,20 @@ abstract class Bundle {
     
     public function isFresh($file = null)
     {
-        fx::count('is fresh');
         $saved_time = (int) $this->version;
         if ($file !== null) {
             return file_exists($file) && filemtime($file) < $saved_time;
         }
         if ($this->is_new || $this->has_new_files) {
-            fx::count('fresh nu');
             return false;
         }
         if ($this->is_fresh !== null) {
-            fx::count('fresh no check');
             return $this->is_fresh;
+        }
+        
+        if (!file_exists($this->getFilePath())) {
+            $this->is_fresh = false;
+            return false;
         }
         
         $this->is_fresh = true;
@@ -144,7 +146,6 @@ abstract class Bundle {
                 break;
             }
         }
-        fx::count('fresh check');
         return $this->is_fresh;
     }
     
@@ -223,14 +224,12 @@ abstract class Bundle {
     
     public function save()
     {
-        fx::count('bundle try save');
         if ($this->isFresh()) {
             return;
         }
         if (!$this->is_new) {
             $this->delete();
         }
-        fx::count('bundle save');
         fx::files()->mkdir($this->getDirPath());
         $content = $this->getBundleContent();
         

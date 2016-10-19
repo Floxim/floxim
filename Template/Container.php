@@ -29,7 +29,7 @@ class Container {
     public static function getLayoutSizes()
     {
         if (is_null(self::$layout_sizes)) {
-            $palette = fx::env('theme')->get('palette');
+            $palette = fx::env('palette');
             $props = $palette['params'];
             $sizes = array(
                 'width' => (int) $props['vars']['layout_width'],

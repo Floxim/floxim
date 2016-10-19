@@ -507,7 +507,7 @@ class Page
     
     public function addLayoutVars()
     {
-        $vars = fx::env('theme')->get('palette')->getVals();
+        $vars = fx::env('palette')->getVals();
         
         $fonts = array();
         
@@ -568,7 +568,7 @@ class Page
         
         $this->setAfterBody( 
             \Floxim\Floxim\Asset\Fonts::getLoaderJS(
-                fx::env('theme')->get('palette')->getUsedFonts()
+                fx::env('palette')->getUsedFonts()
             ) 
         );
         

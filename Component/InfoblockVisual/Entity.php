@@ -187,7 +187,6 @@ class Entity extends System\Entity
     public function _getTemplateVisual()
     {
         $tv = $this['template_variant'];
-        fx::cdebug($tv);
         if (!$tv) {
             return $this->getReal('template_visual');
         }

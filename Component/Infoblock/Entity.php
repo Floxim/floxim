@@ -747,4 +747,98 @@ class Entity extends System\Entity implements Template\Entity
     {
         $this->parent_container_props = $props;
     }
+    
+    /*
+     * Get a finder to collect all pages where the infoblock is present
+     */
+    public function getPageFinder()
+    {
+        if ($this['scope_type'] === 'custom') {
+            return $this['scope_entity']
+                ->getPageFinder()
+                ->where('site_id', $this['site_id']);
+        }
+        $finder = fx::data('floxim.main.page')->where('site_id', $this['site_id']);
+        switch ($this['scope_type']) {
+            case 'all_pages':
+            default:
+                return $finder;
+            case 'one_page':
+                return $finder->where('id', $this['page_id']);
+            case 'infoblock_pages':
+                return $finder->where('infoblock_id', $this['scope_infoblock_id']);
+        }
+    }
+    
+    public function getSummary()
+    {
+        $vis = $this->getVisual();
+        $area = $vis['area'];
+        $template = fx::template($vis['template']);
+        if ($template) {
+            $template = $template->getInfo();
+            $template = $template['name'];
+        } else {
+            $template = $vis['template'];
+        }
+        
+        $res = array(
+            'name' => $this['name'],
+            'template_name' => $template,
+            'area_id' => $area,
+            'controller' => $this['controller']
+        );
+        
+        switch ($this['scope_type']) {
+            case 'one_page':
+                $page = fx::data('floxim.main.page', $this['page_id']);
+                $res['scope_type'] = 'Страница';
+                $res['scope_extra'] = $page['name'];
+                break;
+            case 'all_pages':
+                $res['scope_type'] = 'На всех страницах';
+                break;
+            case 'infoblock_pages':
+                $scope_ib = fx::data('infoblock', $this['scope_infoblock_id']);
+                $res['scope_type'] = 'Страницы блока';
+                $res['scope_extra'] = $scope_ib['name'];
+                break;
+        }
+        
+        $page_finder = $this->getPageFinder();
+        $example_page = $page_finder->one();
+        
+        if ($example_page) {
+            $res['example_url'] = $example_page['url'].'#fx-locate-infoblock_'.$this['id'];
+        }
+        
+        
+        if ($this['site_id'] !== fx::env('site_id')) {
+            $res['site'] = fx::data('site', $this['site_id'])->get('domain');
+        }
+        
+        $ctr_names = array(
+            'list_infoblock' => 'Собственные данные',
+            'list_selected' => 'Данные, отобранные вручную',
+            'list_filtered' => 'Данные по фильтру'
+        );
+        
+        if (isset($ctr_names[$this['action']])) {
+            $res['controller_name'] = $ctr_names[$this['action']];
+        } else {
+            $res['controller_name'] = 'Виджет';
+        }
+        
+        if ($this['action'] === 'list_infoblock' || $this['action'] === 'list_selected') {
+            $res['count_items'] = fx::db()->getVar(
+                array(
+                    'select count(*) as cnt from {{floxim_main_content}} where infoblock_id = %d',
+                    $this['id']
+                ),
+                'cnt'
+            );
+        }
+        
+        return $res;
+    }
 }

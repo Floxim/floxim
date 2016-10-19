@@ -434,7 +434,8 @@
         https://code.google.com/p/chromium/issues/detail?id=362398
     */
     -webkit-line-break: normal;
-    //word-wrap: normal;
+    
+    word-wrap: normal;
     
     cursor:text !important;
 }
@@ -519,8 +520,8 @@ body:not(.fx_mode_edit) .fx_entity_hidden {
     Placeholders, hidden fields & blocks etc.
 */
 .fx_inplace_mark() {
-    //background: #FFFF5C !important;
-    .fx_chess_background(@dark: #DDD; @light: #FFF; @size:10px);
+    //.fx_chess_background(@dark: #DDD; @light: #FFF; @size:10px);
+    .fx_chess_background(@dark: #f6f6f6; @light: #fcfcfc; @size:10px);
     color:#000 !important;
     outline: 1px dotted #000;
 }
@@ -529,10 +530,13 @@ body:not(.fx_mode_edit) .fx_entity_hidden {
     display: block;
     
     box-sizing: border-box !important;
-    outline: 1px dotted #000;
     
-    //margin:15px 0;
-    //padding: 5px;
+    //outline: 1px dotted #000;
+    
+    border:3px solid #dedede;
+    outline:none;
+    box-shadow:inset 0px 0px 0px 1px #ccc;
+    
     font-size: 16px;
     
     td&.fx_infoblock, td&.fx_area {
@@ -544,10 +548,15 @@ body:not(.fx_mode_edit) .fx_entity_hidden {
     }
 }
 
+.fx_placeholded_collection > .fx_hidden_placeholder_mark {
+    .fx_inplace_mark();
+    .fx_inplace_mark_block();
+    width:100%;
+}
 
 .fx_hidden_placeholded {
     .fx_inplace_mark();
-    &.fx_infoblock, &.fx_area, &.fx_placeholded_collection {
+    &.fx_infoblock, &.fx_area {
         .fx_inplace_mark_block();
     }
 }
@@ -2132,5 +2141,33 @@ html {
     &_locked &__unlock-options {
         opacity:1;
         display: flex;
+    }
+}
+
+
+.fx-infoblock-summary-list {
+    display: flex;
+    flex-wrap: wrap;
+    
+    max-height: 260px;
+    overflow: auto;
+    
+    .fx-infoblock-summary {
+        margin-right: 10px;
+        margin-bottom: 10px;
+    }
+}
+
+.fx-infoblock-summary {
+    padding: 5px;
+    background: #EEE;
+    
+    &__title {
+        font-weight:bold;
+    }
+    &__extra {
+        font-size:12px;
+        color:#666;
+        font-weight:100;
     }
 }

@@ -102,6 +102,15 @@ window.fx_front = function () {
             
             $role_control.trigger('change');
         }
+        
+        var target_ib = ( document.location.hash || '').match(/fx-locate-infoblock_(.+)$/);
+        if (target_ib) {
+            var $target_ib = $('.fx_infoblock_'+target_ib[1]);
+            if ($target_ib.length) {
+                $fx.front.select_item($target_ib);
+                $fx.front.scrollTo($target_ib);
+            }
+        }
     });
 };
 
@@ -358,6 +367,7 @@ fx_front.prototype.get_area_meta = function($area_node) {
 };
 
 fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, rel_position) {
+    
     var $placeholder_parent = $placeholder[0].$fx_placeholder_parent;
     
     var $hidden_block = $placeholder_parent.closest('.fx_hidden_placeholded');
@@ -368,6 +378,8 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
         $block_mark = $hidden_block.children('.fx_hidden_placeholder_mark');
         $hidden_block.children().show();
     }
+    
+    
     
     // store node right before placeholder to place placeholder back on cancel
     var $placeholder_pre = $placeholder.prev().first(),
@@ -836,7 +848,13 @@ fx_front.prototype.add_infoblock_select_controller = function($node, $rel_node, 
                 
                 $ib_node.find('.fx_adder_variant').first().click();
             } else {
-                return $fx.front.add_infoblock_select_settings(data);
+                //return $fx.front.add_infoblock_select_settings(data);
+                
+                var $c_ib_node = $('<div class="fx_infoblock fx_infoblock_fake" />');
+                $fx.front.append_ib_node($area_node, $c_ib_node);
+                $c_ib_node.data('fx_infoblock', {id:'fake'});
+                
+                $fx.front.show_infoblock_settings_form(data, $c_ib_node);
             }
         }
     });
@@ -1299,7 +1317,7 @@ fx_front.prototype.select_item = function(node) {
         $fx.front.select_content_entity($node);
     }
     
-
+    
     if ($node.is('.fx_template_var, .fx_template_var_in_att')) {
         $node.edit_in_place();
         
@@ -1415,7 +1433,7 @@ fx_front.prototype.select_styled = function($node) {
         }, 
         function() {
             var fields = [param_meta];
-            $fx.front.prepare_infoblock_visual_fields([fields], function(res) {
+            $fx.front.prepare_infoblock_visual_fields([fields]).then(function(res) {
                 fields = res[0];
                 $fx.front_panel.show_form({
                     header: 'Правим стиль',
@@ -2261,6 +2279,7 @@ fx_front.prototype.get_edit_closure = function($entity, params) {
                 onready: function($form) {
                     $fx.front.make_content_form_editable($form);
                     
+                    
                     fx_eip.stop();
                     var $att_var_nodes = $entity.descendant_or_self('*[data-has_var_in_att]');
                     $att_var_nodes.each(function() {
@@ -2292,6 +2311,7 @@ fx_front.prototype.get_edit_closure = function($entity, params) {
                         if ($var_node.closest('.fx_entity')[0] !== $entity[0]) {
                             return;
                         }
+                        
                         var_meta.target_type = 'var';
                         $form.find('.field_name__'+var_meta.name).on('input keyup change', function(e) {
                             var $field = $(this),
@@ -2324,6 +2344,7 @@ fx_front.prototype.get_edit_closure = function($entity, params) {
                         $entity.data('fx_has_full_form', false);
                         $fx.front.deselect_item();
                         $fx.front.select_item($stored_selected_node);
+                        
                     }
                 }
             }
@@ -2373,6 +2394,11 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
     if (ce_id) {
         var $entity_label = entity_panel.add_label( $entity.data('fx_entity_name') );
         $entity_label.addClass('fx_node_panel__item-button-label');
+        
+        $entity_label.click(function() {
+            var $test = $('.floxim--ui--box--value__value', $entity).first();
+            $fx.front.select_item($test);
+        });
         
         entity_panel.add_button(
             {
@@ -2877,47 +2903,50 @@ function handle_template_lock_state(template_ls) {
     $container.toggleClass('fx-template-visual-fields_locked', is_locked);
 }
 
-fx_front.prototype.show_infoblock_settings = function($node, tab) {
-    var ib_node = $node[0],
-        $ib_node = $node,
-        ib = $ib_node.data('fx_infoblock');
-
-    if (!ib) {
-        return;
-    }
+fx_front.prototype.show_infoblock_settings_form = function(data, $ib_node, tab) {
     tab = tab || 'settings';
+    var has_changes = false,
+        is_new = $ib_node.is('.fx_infoblock_fake');
     
-    var $area_node = $fx.front.get_area_node($ib_node);//ib_node.closest('.fx_area');
-    var area_meta = $fx.front.get_area_meta($area_node);
-
-    var is_waiting = false, 
-        ib_loader = null,
-        has_changes = false;
-
-    var last_used_variant = {};
-
-    $fx.front_panel.load_form({
-        entity:'infoblock',
-        action:'select_settings',
-        id:ib.id,
-        visual_id:ib.visual_id,
-        page_id: $fx.front.get_page_id(), //$('body').data('fx_page_id'),
-        fx_admin:true,
-        area:area_meta
-    }, {
+    $fx.front_panel.show_form(data, {
         view:'horizontal',
         //view:'vertical',
         //overlap:false,
         //side:'left',
         active_tab: tab,
-        onfinish:function() {
-            $fx.front.reload_infoblock($('.fx_infoblock_'+ib.id));
+        onfinish:function(res, $form) {
+            $ib_node = $form && $form.data('ib_node');
+            if (!$ib_node || !$ib_node.length) {
+                console.log('no ibnod');
+                return;
+            }
+            if (!is_new) {
+                $fx.front.reload_infoblock($ib_node);
+                return;
+            }
+            
+            if (!res.props || !res.props.infoblock_id) {
+                return;
+            }
+            $fx.front.reload_infoblock(
+                $ib_node,
+                function($new_ib_node) {
+                    setTimeout(function() {
+                        var $adder = $new_ib_node.find('.fx_adder_variant');
+                        if ($adder.length === 1) {
+                            $adder.click();
+                        }
+                    }, 50);
+                },
+                {
+                    real_infoblock_id:res.props.infoblock_id
+                }
+            );
         },
         onload: function($form) {
-            $form.data('ib_node', ib_node);
+            $form.data('ib_node', $ib_node);
             $fx.front.hilight_empty_infoblock_areas($ib_node, 'show');
-            var $saver = $('<a class="fx_icon fx_icon-type-settings"></a>'),
-                $template_ls = $('input[name="visual[template]"]', $form).closest('.livesearch'),
+            var $template_ls = $('input[name="visual[template]"]', $form).closest('.livesearch'),
                 template_ls = $template_ls.data('livesearch');
             
            
@@ -2969,92 +2998,119 @@ fx_front.prototype.show_infoblock_settings = function($node, tab) {
                 $template_ls.find('.monosearch__item'),
                 template_ls.getFullValue()
             );
-            //$template_ls.after($saver);
+            
+            return $fx.front.extract_infoblock_visual_fields($ib_node, $form)
+            .then(
+                function() {
                 
-            $saver.on('click', function() {
-                
-            });
-            return $fx.front.extract_infoblock_visual_fields($ib_node, $form).then(function() {
                 handle_template_lock_state(template_ls);
-            });
-        },
-        onready:function($form) {
-            //var c_data = $form.formToHash();
-            $form.data('last_data', $form.formToHash());
-            var template_types = ['template', 'wrapper'],
-                update_timeout = null;
-
-            $form.on('change.fx_front', function(e) {
-                if (e.target.name === 'livesearch_input' || e.target.name === 'scope[type]') {
-                    return;
-                }
-
-                var new_data = $form.formToHash(),
-                    c_data = $form.data('last_data');
-                /*
-                if (new_data === c_data && !e.fx_forced) {
-                    return;
-                }
-                */
                 
-                for (var i = 0; i < template_types.length; i++) {
-                    var tt = template_types[i];
-                        
-                    // поменяли шаблон
-                    if (new_data.visual[tt] != c_data.visual[tt]) {
-                        delete new_data.visual[tt+'_visual'];
+                $form.data('last_data', $form.formToHash());
+                var template_types = ['template', 'wrapper'],
+                    update_timeout = null;
+
+                $form.on('change.fx_front', function(e) {
+                    
+                    if (e.target.name === 'livesearch_input' || e.target.name === 'scope[type]') {
+                        return;
                     }
+
+                    var new_data = $form.formToHash(),
+                        c_data = $form.data('last_data');
+                    
+                    for (var i = 0; i < template_types.length; i++) {
+                        var tt = template_types[i];
+
+                        // поменяли шаблон
+                        if (new_data.visual[tt] != c_data.visual[tt]) {
+                            delete new_data.visual[tt+'_visual'];
+                        }
+                    }
+
+                    var focused_name = $(document.activeElement).descendant_or_self(':input[name]').attr('name');
+
+
+                    clearTimeout(update_timeout);
+                    update_timeout = setTimeout(
+                        function() {
+                            $form.data('last_data', new_data);
+                            $fx.front.reload_infoblock(
+                                $form.data('ib_node'), 
+                                function($new_ib_node) {
+                                    has_changes = true;
+                                    $form.data('ib_node', $new_ib_node);
+                                    $fx.front.extract_infoblock_visual_fields($new_ib_node, $form).then(function() {
+
+                                        if (!$fx.front.get_selected_item()) {
+                                            $fx.front.select_item($new_ib_node);
+                                        }
+                                        var $template_ls = $form.find('[name="visual[template]"]').closest('.livesearch'),
+                                            template_ls = $template_ls.data('livesearch');
+
+                                        if (template_ls) {
+                                            handle_template_lock_state(template_ls);
+                                        }
+
+                                        if (focused_name) {
+                                            var $focused_input = $form.find('[name="'+focused_name+'"]');
+                                            if ($focused_input.attr('type') === 'hidden') {
+                                                $focused_input = $focused_input.closest('[tabindex]');
+                                            }
+                                            $focused_input.focus();
+                                        }
+                                    });
+                                    $fx.front.hilight_empty_infoblock_areas($new_ib_node, 'show');
+                                }, 
+                                {override_infoblock:new_data}
+                            );
+                        },
+                        50
+                    );
+                });
+                if (is_new) {
+                    $form.trigger('change');
                 }
                 
-                var focused_name = $(document.activeElement).descendant_or_self(':input[name]').attr('name');
-                
-                
-                clearTimeout(update_timeout);
-                update_timeout = setTimeout(
-                    function() {
-                        $form.data('last_data', new_data);
-                        ib_loader = $fx.front.reload_infoblock(
-                            $form.data('ib_node'), 
-                            function($new_ib_node) {
-                                has_changes = true;
-                                $form.data('ib_node', $new_ib_node);
-                                $fx.front.extract_infoblock_visual_fields($new_ib_node, $form).then(function() {
-                                    
-                                    var $template_ls = $form.find('[name="visual[template]"]').closest('.livesearch'),
-                                        template_ls = $template_ls.data('livesearch');
-                                        
-                                    if (template_ls) {
-                                        handle_template_lock_state(template_ls);
-                                    }
-                                    
-                                    if (focused_name) {
-                                        var $focused_input = $form.find('[name="'+focused_name+'"]');
-                                        if ($focused_input.attr('type') === 'hidden') {
-                                            $focused_input = $focused_input.closest('[tabindex]');
-                                        }
-                                        $focused_input.focus();
-                                    }
-                                });
-                                $fx.front.hilight_empty_infoblock_areas($new_ib_node, 'show');
-                            }, 
-                            {override_infoblock:new_data}
-                        );
-                    },
-                    50
-                );
             });
         },
         oncancel:function($form) {
-            if (has_changes) {
-                $fx.front.reload_infoblock($form.data('ib_node'));
-            } else {
-                var $c_ib_node = $($form.data('ib_node'));
-                if ($c_ib_node && $c_ib_node.length) {
-                    $fx.front.hilight_empty_infoblock_areas($ib_node, 'add');
+            var $ib_node = $form.data('ib_node');
+            if (is_new) {
+                if ($ib_node) {
+                    $fx.front.deselect_item();
+                    $ib_node.remove();
                 }
+                return;
+            }
+            if (has_changes) {
+                $fx.front.reload_infoblock($ib_node);
+                return;
+            }
+            if ($ib_node && $ib_node.length) {
+                $fx.front.hilight_empty_infoblock_areas($ib_node, 'add');
             }
         }
     });
+};
+
+fx_front.prototype.show_infoblock_settings = function($ib_node, tab) {
+    var ib_meta = $ib_node.data('fx_infoblock') || {};
+
+    var $area_node = $fx.front.get_area_node($ib_node);//ib_node.closest('.fx_area');
+    var area_meta = $fx.front.get_area_meta($area_node);
+
+    $fx.post(
+        {
+            entity:'infoblock',
+            action:'select_settings',
+            id:ib_meta.id,
+            page_id: $fx.front.get_page_id(),
+            area:area_meta
+        }, 
+        function(res) {
+            $fx.front.show_infoblock_settings_form(res, $ib_node, tab);
+        }
+    );
 };
 
 fx_front.prototype.select_infoblock = function($node, panel) {
@@ -3319,6 +3375,7 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
     
     if (!meta ) {
         console.log('nometa', infoblock_node);
+        console.trace();
         return;
     }
     var selected = $infoblock_node.descendant_or_self('.fx_selected');

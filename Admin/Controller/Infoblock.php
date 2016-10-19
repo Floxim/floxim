@@ -478,6 +478,10 @@ class Infoblock extends Admin
                 if (is_numeric($template_val)) {
                     $c_variant = fx::data('template_variant', $template_val);
                     if ($c_variant) {
+                        $vis_props = array_merge(
+                            (array) $c_variant['params'],
+                            $vis_props
+                        );
                         $i2l[$template_type] = null;
                         $i2l[$template_type.'_variant_id'] = $template_val;
                         $c_variant->set('params', $vis_props)->save();
@@ -485,7 +489,10 @@ class Infoblock extends Admin
                 } else {
                     $i2l[$template_type] = $template_val;
                     $i2l[$template_type.'_variant_id'] = null;
-                    
+                    $vis_props = array_merge(
+                        (array) $i2l[$template_type.'_visual'],
+                        $vis_props
+                    );
                     $i2l[$template_type.'_visual'] = $vis_props;
                 }
             }

@@ -319,13 +319,17 @@ fx_form = {
             $tab_labels = $('<div class="'+bl+'__tab_labels"></div>'),
             $tab_data = $('<div class="'+bl+'__tab_data"></div>'),
             c_label = 'fx_tab_label',
-            c_data = 'fx_tab_data';
+            c_data = 'fx_tab_data',
+            has_default_tab = typeof (settings.tabs || {})._default !== 'undefined';
     
         $form_body.append($tab_data);
         $form_header.append($tab_labels);
         
         var has_active = false;
         $.each(settings.fields, function(field_index, field) {
+            if (typeof field.tab === 'undefined' && has_default_tab) {
+                field.tab = '_default';
+            }
             if (field.tab && typeof field.tab === 'object') {
                 var tab_key = field.tab.key;
                 if (!settings.tabs[tab_key]) {

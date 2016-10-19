@@ -26,6 +26,9 @@
                         '"></div>'
                 ),
                 $sidebar_body = $('<div class="fx-side-panel__body"></div>');
+            
+            params.current_params = c_params;
+            
             $sidebar.append($sidebar_body);
             $('#fx_admin_control').append($sidebar);
             params.$container = $sidebar;
@@ -68,15 +71,12 @@
 
         this.show_form = function(data, params) {
             
-            /*
-            $.traceFn(['css','height', 'animate'], '.fx-side-panel', function() {
-                console.log(this.attr('style'), arguments);
-            });
-            */
-            
             params = params || {};
             var c_panel = {};
             this.panels.push(c_panel);
+            
+            var req = (data && data.request || {} );
+            c_panel.req = req.entity +':'+req.action;
             
             if (!params.view) {
                 params.view = data.view ? data.view : 'vertical';
@@ -111,7 +111,9 @@
                 c_panel.current_panel_type = 'top';
                 if (c_panel.current_panel_style !== 'finish') {
                     $.each(data.fields, function() {
-                        this.view_context = 'panel';
+                        if (typeof this.view_context === 'undefined') {
+                            this.view_context = 'panel';
+                        }
                     });
                 }
             }
@@ -176,10 +178,11 @@
             c_panel.$form = $form;
             
             $form.on('fx_form_cancel', function() {
-                if (params.oncancel) {
-                    params.oncancel($form);
-                }
-                $fx.front_panel.hide();
+                $fx.front_panel.hide(function() {
+                    if (params.oncancel) {
+                        params.oncancel($form);
+                    }
+                });
             }).on('fx_form_sent', function(e, data) {
                 if (data.status === 'error') {
                     
@@ -189,7 +192,7 @@
                         $fx.front_panel.show_form(data, params);
                     } else {
                         if (params.onfinish) {
-                            params.onfinish(data);
+                            params.onfinish(data, $form);
                         }
                     }
                 }
@@ -393,6 +396,7 @@
                 
                 end_css[side] = '-' + ($sidebar.outerWidth() + 30)+'px'; 
                 
+                console.log(end_css, c_panel);
                 $sidebar.animate(
                     end_css, 
                     duration,
@@ -538,6 +542,7 @@
         this.hide = function(callback_final) {
             var that = this,
                 c_panel = this.get_current_panel();
+            
             if (!c_panel) {
                 if (callback_final) {
                     callback_final();
@@ -569,15 +574,18 @@
                 if (callback_final) {
                     callback_final();
                 }
-                that.panels.pop();
+                var c_index = that.panels.indexOf(c_panel);
+                if (c_index !== -1) {
+                    that.panels.splice(c_index, 1);
+                }
             };
             if (c_panel.current_panel_type === 'top') {
                 var prev_top_panel = this.get_previous_panel('top');
                 this.animate_panel_height(
                     0, 
                     function () {
-                        c_panel.$container.hide().html('');
                         callback();
+                        c_panel.$container.hide().html('');
                         c_panel.is_visible = false;
                         if (prev_top_panel) {
                             that.animate_panel_height(prev_top_panel.$container.data('saved_height'));

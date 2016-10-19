@@ -53,70 +53,6 @@ class Entity extends \Floxim\Floxim\System\Entity
     
     protected $colors = null;
     
-    /*
-    public function getColor($code) 
-    {
-        $parts = explode(" ", $code);
-        $color_key = 'color-'.$parts[0].'-'. (isset($parts[1]) ? $parts[1] : '0');
-
-        //$code = 'color-'.preg_replace("~\s~",'-', $code);
-        $colors = $this->getColors();
-        if (!isset($colors[$color_key])) {
-            return null;
-        }
-
-        $hex = $colors[$color_key];
-
-        if (!isset($parts[2]) || $parts[2] === 1) {
-            return $hex;
-        }
-
-        list($r, $g, $b) = sscanf($hex, "#%02x%02x%02x");
-        $rgb = 'rgba('.$r.', '.$g.', '.$b.', '.$parts[2].')';
-        return $rgb;
-    }
-    
-    public function getColors()
-    {
-        if (!is_null($this->colors)) {
-            return $this->colors;
-        }
-        $colors = array();
-        $vars = $this->getLessVars();
-        foreach ($vars as $var => $val) {
-                $parts = null;
-            preg_match("~^color-([a-z-]+)-(\d+)~", $var, $parts);
-            if (!$parts) {
-                continue;
-            }
-            $colors[$var] = $val;
-        }
-        $this->colors = $colors;
-        return $colors;
-    }
-    
-    public function getPalette()
-    {
-        $res = array();
-        $colors = $this->getColors();
-
-        foreach ($colors as $code => $val) {
-            $parts = null;
-            preg_match("~^color-([a-z-]+)-(\d+)~", $code, $parts);
-            if (!$parts) {
-                continue;
-            }
-            $name = $parts[1];
-            $level = $parts[2];
-            if (!isset($res[$name])) {
-                $res[$name] = array();
-            }
-            $res[$name][$name .' '.$level] = $val;
-        }
-        return $res;
-    }
-    */
-    
     public function getStyleKeyword()
     {
         return $this['style'].($this['id'] ? '_variant_'.$this['id'] : '');
@@ -175,18 +111,114 @@ class Entity extends \Floxim\Floxim\System\Entity
         }
     }
     
+    public function findUsingBlocks()
+    {
+        $visuals = $this->findUsingVisuals();
+        $preset_ids = $this->findUsingTemplateVariants()->getValues('id');
+        $preset_visuals = fx::data('infoblock_visual')
+            ->where(
+                array(
+                    array('template_variant_id', $preset_ids),
+                    array('wrapper_variant_id', $preset_ids)
+                ),
+                null,
+                'or'
+            )
+            ->all();
+        $ib_ids = $visuals->getValues('infoblock_id');
+        $ib_ids = array_merge($ib_ids, $preset_visuals->getValues('infoblock_id'));
+        $ib_ids = array_unique($ib_ids);
+        $ibs = fx::data('infoblock', $ib_ids);
+        return $ibs;
+    }
+    
     public function findUsingVisuals()
     {
         $kw = $this->getStyleKeyword();
-        $vis = fx::data('infoblock_visual')->where(
+        $that = $this;
+        $vis = fx::data('infoblock_visual')
+            ->where(
                 array(
                     array('template_visual', '%'.$kw.'%', 'like'),
                     array('wrapper_visual', '%'.$kw.'%', 'like')
                 ),
                 null,
                 'or'
-            )->all();
+            )
+            ->all()
+            ->find(function($v) use ($that) {
+                return $that->checkIsInProps($v);
+            });
         return $vis;
+    }
+    
+    protected function getStylePropsOfEntity($entity)
+    {
+        switch ($entity->getType()) {
+            case 'infoblock_visual':
+                $props = array('template_visual', 'wrapper_visual');
+                break;
+            case 'template_variant':
+                $props = array('params');
+                break;
+        }
+        return $props;
+    }
+    
+    protected function checkIsInProps($entity)
+    {
+        $kw = $this->getStyleKeyword();
+        $props = $this->getStylePropsOfEntity($entity);
+        $found = false;
+        foreach ($props as $prop ) {
+            $entity->traverseProp($prop, function($v) use (&$found, $kw) {
+                if ($v === $kw) {
+                    $found = true;
+                    return false;
+                }
+            });
+            if ($found) {
+                break;
+            }
+        }
+        return $found;
+    }
+    
+    public function appendInsteadOf($entity, $old_variant)
+    {
+        $new_keyword = $this->getStyleKeyword();
+        $old_keyword = $old_variant->getStyleKeyword();
+        $props = $this->getStylePropsOfEntity($entity);
+        foreach ($props as $prop) {
+            $data = $entity[$prop];
+            $found = false;
+            $entity->traverseProp(
+                $prop, 
+                function($v, $path) use (&$data, $old_keyword, $new_keyword, &$found) {
+                    if ($v !== $old_keyword) {
+                        return;
+                    }
+                    $found = true;
+                    fx::digSet($data, $path, $new_keyword);
+                }
+            );
+            if ($found) {
+                $entity[$prop] = $data;
+            }
+        }
+    }
+    
+    public function findUsingTemplateVariants()
+    {
+        $kw = $this->getStyleKeyword();
+        $that = $this;
+        $variants = fx::data('template_variant')
+            ->where('params', '%'.$kw.'%', 'like')
+            ->all()
+            ->find(function($v) use ($that) {
+                return $that->checkIsInProps($v);
+            });
+        return $variants;
     }
     
     public function getBundleKeyword()

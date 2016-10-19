@@ -41,6 +41,15 @@ class Entity extends \Floxim\Floxim\System\Entity {
         return $res;
     }
     
+    public function _getParams()
+    {
+        $params = $this->getReal('params');
+        if (!is_array($params)) {
+            return $this->getDefaults();
+        }
+        return $params;
+    }
+    
     public function getVals() 
     {
         $res = array();

@@ -377,6 +377,24 @@ less_tweaker.init_style_select = function($monosearch) {
             {
                 view:'horizontal',
                 onready: function($form) {
+                    var $as_new_inp = $('input[name="save_as_new"]', $form);
+                    if ($as_new_inp.length) {
+                        var $name_input = $('[name="style_name"]', $form),
+                            initial_name = $name_input.val(),
+                            last_name = initial_name;
+                        
+                        $as_new_inp.on('change', function() {
+                            if ($as_new_inp.val()*1 === 1) {
+                                last_name = $name_input.val();
+                                if (last_name === initial_name) {
+                                    $name_input.val('').focus();
+                                }
+                            } else {
+                                $name_input.val(last_name);
+                            }
+                        });
+                    }
+                    
                     var style_meta = $form.data('fx_response').tweaker,
                         params = $.extend(
                             {},
@@ -392,23 +410,24 @@ less_tweaker.init_style_select = function($monosearch) {
                     tweaker = new less_tweaker(params);
                 },
                 onfinish: function(res) {
-                    var $inp = $monosearch.find('input[type="hidden"]'),
-                        new_val = style_value+ (res.id ? '_variant_'+res.id : '');
-
-                    var change_event = $.Event('change');
-                    change_event.fx_forced = true;
-
-                    $inp.val(new_val).trigger(change_event);
+                    var new_val = style_value+ (res.id ? '_variant_'+res.id : ''),
+                        style_ls = $monosearch.data('livesearch');
                     
-                    /*
-                    // destroy when the selected block is reloaded
-                    var $ib = $($fx.front.get_selected_item()).closest('.fx_infoblock');
-                    if ($ib.length > 0) {
-                        $ib.on('fx_infoblock_unloaded', function() {
-                            tweaker.destroy();
-                        });
+                    delete $fx.front.cached_style_variants[block_name];
+                    
+                    style_ls.updatePresetValues(res.variants);
+                    style_ls.setValue(new_val);
+                    if (res.saved_as_new) {
+                        var $ib_node = $($fx.front.get_selected_item()).closest('.fx_infoblock');
+                        if ($ib_node.length) {
+                            $ib_node.on('fx_infoblock_unloaded', function() {
+                                console.log('canca');
+                                tweaker.cancel();
+                            });
+                        } else {
+                            tweaker.cancel();
+                        }
                     }
-                    */
                 },
                 oncancel: function() {
                     if (tweaker) {

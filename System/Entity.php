@@ -896,5 +896,38 @@ abstract class Entity implements \ArrayAccess, Template\Entity
     {
         return $res;
     }
+    
+    public function traverseProp($prop, $callback) 
+    {
+        $data = $this[$prop];
+        
+        if (!$data || !is_array($data)) {
+            return;
+        }
+        
+        $path = array();
+        
+        $traverse = function($data) use ($callback, &$path, &$traverse) {
+            foreach ($data as $k => $v) {
+                $path []= $k;
+                if (is_array($v)) {
+                    $sub_res = $traverse($v);
+                    if ($sub_res === false) {
+                        return false;
+                    }
+                    array_pop($path);
+                    continue;
+                }
+                
+                $cb_res = $callback($v, $path);
+                if ($cb_res === false) {
+                    return false;
+                }
+                array_pop($path);
+            }
+        };
+        
+        $traverse($data);
+    }
 }
 

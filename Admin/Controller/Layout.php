@@ -366,10 +366,13 @@ class Layout extends Admin
     public function styleSettings($input)
     {
         $fields = $this->getHiddenFields(array('style', 'block', 'style_variant_id'));
+        
+        $style_variant_id = isset($input['style_variant_id']) ? $input['style_variant_id'] : null;
+        $save_as_new = isset($input['save_as_new']) ? (bool) $input['save_as_new'] : false;
 
         $style_variant = 
-            isset($input['style_variant_id'])  && $input['style_variant_id']
-                ? fx::data('style_variant', $input['style_variant_id'])
+             $style_variant_id && !$save_as_new
+                ? fx::data('style_variant', $style_variant_id)
                 : fx::data('style_variant')->create(
                     array(
                         'block' => $input['block'],
@@ -423,7 +426,9 @@ class Layout extends Admin
             
             return array(
                 'id' => $id,
-                'name' => $style_variant['name']
+                'name' => $style_variant['name'],
+                'saved_as_new' => $save_as_new,
+                'variants' => \Floxim\Floxim\Asset\Less\StyleBundle::collectStyleVariants($input['block'])
             );
         }
         
@@ -433,8 +438,19 @@ class Layout extends Admin
             'type' => 'string',
             'label' => false,
             'placeholder' => 'название стиля',
+            'autocomplete' => false,
             'value' => $style_variant->getReal('name')
         );
+        
+        if (!$is_new) {
+            $fields[]= array(
+                'name' => 'save_as_new',
+                'tab' => 'header',
+                'label' => 'Сохранить как новый',
+                'type' => 'checkbox',
+                'view_context' => ''
+            );
+        }
         
         $mixin_name = substr($bundle->getMixinName(), 1);
         
@@ -455,6 +471,29 @@ class Layout extends Admin
         );
         if ($style['tabs']) {
             $res['tabs'] = $style['tabs'];
+        } else {
+            $res['tabs'] = array('_default' => 'Стиль');
+        }
+        
+        if (!$is_new) {
+            $using_blocks = $style_variant->findUsingBlocks();
+            
+            //$using_blocks = fx::data('infoblock')->all();
+            
+            $res['tabs']['usage_scope'] = 'Где используется ('.count($using_blocks).')';
+            
+            $using_list = $using_blocks->getValues(
+                function($ib) {
+                    return $ib->getSummary();
+                }
+            );
+            
+            $res['fields'][]= array(
+                'name' => 'using_block_list',
+                'type' => 'infoblock_list',
+                'value' => $using_list,
+                'tab' => 'usage_scope'
+            );
         }
         
         if ($style_variant['id']) {

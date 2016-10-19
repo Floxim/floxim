@@ -312,3 +312,47 @@ var url = _c.url == null ? null : (/^#/.test(_c.url) ? _c.url : '#' + $fx.mode +
 
 <!--[list_field_cell ? _c.field !== undefined]-->
 <span class="list_input"><?=$t.input(_c.field)?></span>
+
+<!--[infoblock_summary]-->
+<?
+var cl = 'fx-infoblock-summary',
+    el = $t.getBem(cl);
+?>
+<div class="<?=cl?>">
+    <div class="<?=el('title')?>"><?= _c.name ?></div>
+    <div class="<?=el('extra')?>">
+        <? if (_c.site) { ?>
+            <div class="<?=el('prop')?>">
+                сайт <?= _c.site?>
+            </div>
+        <? } ?>
+        <div class="<?=el('prop')?>">
+            <?= _c.controller_name ?>
+            <? if (typeof _c.count_items !== 'undefined') { ?>
+                <span class="<?=el('count')?>">(<?= _c.count_items ?>)</span>
+            <? } ?>
+        </div>
+        <? if (_c.scope_type) { ?>
+            <a class="<?=el('prop')?>" <?= _c.example_url ? ' target="_blank" href="'+_c.example_url+'"' : '' ?>>
+                <?= _c.scope_type ?>
+                <? if (_c.scope_extra) { ?>
+                    <span class="<?=el('scope-extra')?>">
+                        &laquo;<?= _c.scope_extra ?>&raquo;
+                    </span>
+                <? } ?>
+            </a>
+        <? } ?>
+    </div>
+</div>
+
+
+<!--[input ? _c.type == 'infoblock_list']-->
+<?
+var vals = _c.value || [];
+?>
+<div class="fx-infoblock-summary-list">
+    <? for (var i = 0; i < vals.length; i++) {
+        print( $t.infoblock_summary(vals[i]) );
+    } ?>
+</div>
+

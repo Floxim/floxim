@@ -51,9 +51,6 @@ class Entity extends System\Entity
     {
         $hosts = array();
         $hosts[] = trim($this['domain']);
-        if (empty($this['mirrors'])) {
-            return $hosts;
-        }
         $mirrors = preg_split("~\s~", $this['mirrors']);
         foreach ($mirrors as $m) {
             $m = trim($m);
@@ -61,14 +58,37 @@ class Entity extends System\Entity
                 $hosts[] = trim($m);
             }
         }
+        $base = fx::config('base_host');
+        if ( $base ) {
+            foreach ($hosts as &$host) {
+                if (preg_match("~\.$~", $host)) {
+                    $host=  $host.$base;
+                }
+            }
+        }
         return $hosts;
     }
     
+    public function getMainHost()
+    {
+        foreach ($this->getAllHosts() as $host) {
+            return $host;
+        }
+    }
+    
     /**
-     * If current host ends with .loc, returns site's .loc mirror, otherwise - main domain
+     * Return host for the current environment
      */
     public function getLocalDomain()
     {
+        if ( ($getter = fx::config('get_site_host')) ) {
+            $res = $getter($this);
+            if ($res) {
+                return $res;
+            }
+        }
+        return $this->getMainHost();
+        /*
         $is_loc = preg_match("~\.loc$~", $_SERVER['HTTP_HOST']);
         if (!$is_loc) {
             return $this['domain'];
@@ -80,5 +100,7 @@ class Entity extends System\Entity
             }
         }
         return $this['domain'];
+         * 
+         */
     }
 }

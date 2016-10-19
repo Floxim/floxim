@@ -625,7 +625,6 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
             is_empty
         );
         if (is_empty && !edit_in_place.is_wysiwyg) {
-            //debugger;
             $n.focus();
             edit_in_place.force_focus($n);
         }
@@ -763,7 +762,7 @@ fx_edit_in_place.prototype.stop = function() {
         window.stopped = [];
     }
     window.stopped.push(this);
-    var was_placeholded_by = this.node.data('was_placeholded_by'),
+    var was_placeholded_by = this.node.data('was_placeholded_by') || this.node.attr('fx_placeholder'),
         c_text = this.node.text();
     
     if (was_placeholded_by && this.is_text_empty(c_text)) {
@@ -1053,6 +1052,7 @@ fx_edit_in_place.prototype.make_wysiwyg = function () {
     if (toolbar === 'inline' && this.meta.linebreaks === undefined) {
         linebreaks = true;
     }
+    
     $fx_fields.make_redactor($node, {
         linebreaks:linebreaks,
         placeholder:false,
@@ -1088,7 +1088,12 @@ fx_edit_in_place.prototype.make_wysiwyg = function () {
                     $range_node.attr('class', null);
                 }
             }
-            this.code.sync();
+            
+            //this.code.sync();
+            
+            // use 'startSync' instead of 'sync' because 'sync' adds 10ms timeout, 
+            // so if we call redactor('core.destroy') immediately it will clear the node html
+            this.code.startSync();
         }
     });
     this.source_area = $('textarea[name="'+ $node.attr('id')+'"]');
@@ -1111,13 +1116,14 @@ fx_edit_in_place.prototype.make_wysiwyg = function () {
 
 fx_edit_in_place.prototype.destroy_wysiwyg = function() {
     this.node.before(this.node.data('redactor_box'));
+    
     this.node.redactor('core.destroy');
+    
     $('#fx_admin_control .editor_panel').remove();
     this.node.get(0).normalize();
     if (this.$owner_entity) {
         this.$owner_entity.off('.eip');
         delete this.$owner_entity;
-        console.log('leave oe');
     }
 };
 

@@ -298,7 +298,7 @@ class StyleBundle extends Bundle {
         }
         $css_file = $this->getFilePath();
         if (!file_exists($css_file)) {
-            fx::log('no file!!!', $this, $css_file);
+            fx::log('no file in GAO', $this, $css_file, debug_backtrace());
             throw new \Exception('style bundle error');
         }
         $css = file_get_contents($css_file);

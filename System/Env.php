@@ -175,7 +175,21 @@ class Env
     
     public function getTheme()
     {
-        return $this->getSite()->get('theme');
+        $theme = $this->getSite()->get('theme');
+        if (!$theme) {
+            $theme = fx::data('theme')->create();
+        }
+        return $theme;
+    }
+    
+    public function getPalette()
+    {
+        $theme = $this->getTheme();
+        $palette = $theme['palette'];
+        if (!$palette) {
+            $palette = fx::data('palette')->create();
+        }
+        return $palette;
     }
 
     public function getLayoutId()

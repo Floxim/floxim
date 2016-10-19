@@ -34,16 +34,16 @@ class Adminpanel extends Admin
             $other_sites = fx::data('site')->where('id', $site['id'], '!=')->all();
             if (count($other_sites) > 0) {
                 $main_menu['site'] = array(
-                    'name' => fx::env('site')->getLocalDomain(),
+                    'name' => fx::env('site')->getMainHost(),
                     'key'  => 'site',
                     'href' => '/'
                 );
                 $main_menu['site']['children'] = array();
                 foreach ($other_sites as $other_site) {
-                    $domain = $other_site->getLocalDomain();
+                    $domain = $other_site->getMainHost();
                     $main_menu['site']['children'] [] = array(
                         'name' => $domain,
-                        'href' => 'http://' . $domain . '/'
+                        'href' => 'http://' . $other_site->getLocalDomain() . '/'
                     );
                 }
             }

@@ -101,10 +101,21 @@ name="<?=_c.name?>" id="<?=_c.name || _c.id?>"
             extra_class += 'd';
         }
     }
+    var autocomplete = '';
+    
+    if (typeof _c.autocomplete === 'boolean') {
+        autocomplete = _c.autocomplete ? 'on' : 'off';
+    } else if (typeof _c.autocomplete === 'string') {
+        autocomplete = _c.autocomplete;
+    }
+    if (autocomplete !== '') {
+        autocomplete = ' autocomplete="'+autocomplete+'" ';
+    }
     ?>
 	<input 
 		type="<?= type_att ?>" 
                 <?= _c.disabled ? ' disabled="disabled"' : ''?>
+                <?= autocomplete ?>
         class="fx_input fx_input_<?=_c.type?> <?= extra_class ?>"
          <?
             if (_c.placeholder) {
