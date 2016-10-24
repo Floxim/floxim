@@ -570,11 +570,23 @@ var close_stack = function() {
             }
         };
         
+        handler.index = c_index;
+        
         // use timeout to avoid immediate close by click-out
         setTimeout(function() {
             that.stack.push(level);
         }, 10);
         return handler;
+    };
+    
+    this.close = function(index) {
+        for (var  i = this.stack.length - 1; i >= index; i--) {
+            var level = this.stack[i];
+            if (i > index) {
+                level[0]();
+            }
+            this.stack.pop();
+        }
     };
     
     

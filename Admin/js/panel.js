@@ -171,10 +171,16 @@
             
             c_panel.$form = $form;
             
+            var closer;
+            
             $form.on('fx_form_sent', function(e, data) {
                 if (data.status === 'error') {
                     
                 } else {
+                    if (closer) {
+                        $fx.close_stack.close(closer.index);
+                    }
+                    
                     $fx.front_panel.hide();
                     if (data.resume) {
                         $fx.front_panel.show_form(data, params);
@@ -244,7 +250,7 @@
                     }
                 }, 100);
                 
-                var closer = $fx.close_stack.push(
+                closer = $fx.close_stack.push(
                     function() {
                         $fx.front_panel.hide(function() {
                             if (params.oncancel) {
