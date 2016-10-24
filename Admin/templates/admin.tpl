@@ -46,12 +46,8 @@
     </div>
 </div>
 <div fx:if="$is_front" id="fx_admin_control" class="fx_overlay">
-    <div class="fx-top-panel"></div>
-    <!--
-    <div fx:b="fx-side-panel">
-        <div fx:e="body"></div>
-    </div>
-    -->
+    <!--<div class="fx-top-panel"></div>-->
+    <!--<div class="fx-top-panels fx-top-panels_empty"></div>-->
 </div>
 {/template}
 

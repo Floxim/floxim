@@ -340,8 +340,9 @@ class Infoblock extends Admin
         $settings = $controller->getActionSettings($action);
         
         if (!$infoblock['id']) {
-            $cfg = $controller->getConfig();
-            $infoblock['name'] = $cfg['actions'][$action]['name'];
+            $cfg = $controller->getConfig($action);
+            //$infoblock['name'] = $cfg['actions'][$action]['name'];
+            $infoblock['name'] = $cfg['name'];
         }
         
         foreach ($infoblock['params'] as $ib_param => $ib_param_value) {
@@ -378,10 +379,15 @@ class Infoblock extends Admin
         $container_is_one_page = isset($area_meta['container_scope_type']) && $area_meta['container_scope_type'] === 'one_page';
         
         if (!$infoblock['id']) {
-            if ($container_is_one_page) {
-                $infoblock['scope_type'] = 'one_page';
-            } elseif (isset($area_meta['scope'])) {
-                $infoblock['scope_type'] = $area_meta['scope'] === 'nav' ? 'all_pages' : 'one_page';
+            
+            if (isset($cfg['scope_type'])) {
+                $infoblock['scope_type'] = $cfg['scope_type'];
+            } else {
+                if ($container_is_one_page) {
+                    $infoblock['scope_type'] = 'one_page';
+                } elseif (isset($area_meta['scope'])) {
+                    $infoblock['scope_type'] = $area_meta['scope'] === 'nav' ? 'all_pages' : 'one_page';
+                }
             }
         }
         $scope_fields = $this->getScopeFields($infoblock);

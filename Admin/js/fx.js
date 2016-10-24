@@ -248,7 +248,7 @@ window.$fx = {
             });
         });
 
-        $(document).bind('keydown',$fx.key_down);
+        // $(document).bind('keydown',$fx.key_down);
             
         $('html').click(function(){
             $fx.panel.trigger('fx.click', 'main');
@@ -344,6 +344,7 @@ window.$fx = {
         $("#fx_admin_additionl_text").html('');
     },
           
+    /*
     key_down: function ( e ) {
         if ( e.keyCode === 46 ) {
             e.stopPropagation();
@@ -351,7 +352,8 @@ window.$fx = {
 
         return true;
     },
-    
+    */
+   
     alert: function(data, status, expire) {
         var b = 'fx-admin-alert',
             $body = $('body'),
@@ -541,4 +543,79 @@ window.$fx = {
     }
     
 };
+
+var close_stack = function() {
+    this.stack = [];
+    
+    var that = this;
+    
+    this.push = function(callback, $clickout_node, handle_escape) {
+        var level = [
+                callback, 
+                $clickout_node, 
+                typeof handle_escape  === 'undefined' ? true : handle_escape
+            ],
+            handler;
+        
+        var c_index = that.stack.length;
+        
+        handler = function(e) {
+            for (var i = that.stack.length - 1; i >= c_index; i--) {
+                var level = that.stack[i],
+                    res = level[0](e);
+                if (res === false) {
+                    return;
+                }
+                that.stack.pop();
+            }
+        };
+        
+        // use timeout to avoid immediate close by click-out
+        setTimeout(function() {
+            that.stack.push(level);
+        }, 10);
+        return handler;
+    };
+    
+    
+    $(document.body).on('click', function(e) {
+        for (var i = that.stack.length - 1; i >= 0; i--) {
+            var level = that.stack[i],
+                $nodes = level[1];
+            if (!$nodes || !$nodes.length) {
+                return;
+            }
+            if ($(e.target).closest($nodes).length) {
+                return;
+            }
+            var res = level[0](e);
+            if (res !== false) {
+                that.stack.pop();
+                e.stopImmediatePropagation();
+                return false;
+            }
+        }
+    }).on('keydown', function(e) {
+        if (e.which !== 27) {
+            return;
+        }
+        for (var i = that.stack.length - 1; i >= 0; i--) {
+            var level = that.stack[i];
+            if (level[2] === false) {
+                return;
+            }
+            var res = level[0](e);
+            if (res !== false) {
+                that.stack.pop();
+                e.stopImmediatePropagation();
+                return false;
+            }
+        }
+    });
+};
+
+$(function() {
+    window.$fx.close_stack = new close_stack();
+});
+
 })($fxj);

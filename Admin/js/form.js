@@ -842,6 +842,21 @@ fx_form = {
             var $group = $(this).closest('.fx_lock_group');
             lock_inputs($group);
         });
+    },
+    
+    focus_first: function($form) {
+        var $focusable = $(
+                ':input, ' +
+                '.monosearch_has-value .monosearch__container, ' +
+                '[tabindex]', 
+                $form
+            )
+            .filter(':visible')
+            .not('[type="submit"], .fx_button');
+
+        if ($focusable.length) {
+            $focusable.first().focus();
+        }
     }
     
     

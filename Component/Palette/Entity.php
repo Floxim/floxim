@@ -44,7 +44,7 @@ class Entity extends \Floxim\Floxim\System\Entity {
     public function _getParams()
     {
         $params = $this->getReal('params');
-        if (!is_array($params)) {
+        if (!is_array($params) || count($params) === 0) {
             return $this->getDefaults();
         }
         return $params;
@@ -94,7 +94,7 @@ class Entity extends \Floxim\Floxim\System\Entity {
         $tabs = array(
             'colors' => 'Цвета',
             'fonts' => 'Шрифты',
-            'sizes' => 'Размеры и отступы'
+            'sizes' => 'Ширина лейаута'
         );
         $fields = array();
         
@@ -138,6 +138,19 @@ class Entity extends \Floxim\Floxim\System\Entity {
         }
         
         $fields []= array(
+            'name' => 'vars-max_width',
+            'type' => 'number',
+            'min' => 300,
+            'max' => 2000,
+            'label' => 'Максимальная ширина',
+            'units' => 'px',
+            'value' => (int) (isset($vals['vars']['max_width']) 
+                            ? $vals['vars']['max_width'] 
+                            : $defaults['vars']['max_width']),
+            'tab' => 'sizes'
+        );
+        
+        $fields []= array(
             'name' => 'vars-layout_width',
             'type' => 'number',
             'min' => 50,
@@ -151,15 +164,15 @@ class Entity extends \Floxim\Floxim\System\Entity {
         );
         
         $fields []= array(
-            'name' => 'vars-max_width',
+            'name' => 'vars-min_width',
             'type' => 'number',
             'min' => 300,
             'max' => 2000,
-            'label' => 'Максимальная ширина',
+            'label' => 'Ширина, меньше которой лейаут тянется на 100%',
             'units' => 'px',
-            'value' => (int) (isset($vals['vars']['max_width']) 
-                            ? $vals['vars']['max_width'] 
-                            : $defaults['vars']['max_width']),
+            'value' => (int) (isset($vals['vars']['min_width']) 
+                            ? $vals['vars']['min_width'] 
+                            : $defaults['vars']['min_width']),
             'tab' => 'sizes'
         );
         
@@ -197,6 +210,7 @@ class Entity extends \Floxim\Floxim\System\Entity {
                 $var_type = $var_type[1];
                 switch ($var_type) {
                     case 'max_width':
+                    case 'min_width':
                         $v .= 'px';
                         break;
                     case 'layout_width':
@@ -211,7 +225,7 @@ class Entity extends \Floxim\Floxim\System\Entity {
     
     public static function getDefaults()
     {
-        return json_decode('{"fonts":{"text":"Roboto","nav":"Merriweather","headers":"Lora"},"colors":{"main":{"vals":["#000000","#51626e","#768b9a","#bbc5cd","#eaeef0","#ffffff"],"hue":206,"saturation":0.15},"alt":{"vals":["#293d8a","#364fb3","#5f75cf","#afbae7","#cbd2ef","#e4e7f7"],"hue":228,"saturation":0.537},"third":{"vals":["#47460c","#5c5a0f","#807e16","#c4c221","#dcd92d","#edeb93"],"hue":59,"saturation":0.711}},"vars":{"layout_width":"85%","max_width":"995px"}}', true);
+        return json_decode('{"fonts":{"text":"Roboto","nav":"Merriweather","headers":"Lora"},"colors":{"main":{"vals":["#000000","#51626e","#768b9a","#bbc5cd","#eaeef0","#ffffff"],"hue":206,"saturation":0.15},"alt":{"vals":["#293d8a","#364fb3","#5f75cf","#afbae7","#cbd2ef","#e4e7f7"],"hue":228,"saturation":0.537},"third":{"vals":["#47460c","#5c5a0f","#807e16","#c4c221","#dcd92d","#edeb93"],"hue":59,"saturation":0.711}},"vars":{"layout_width":"85%","max_width":"1100px","max_width":"995px"}}', true);
     }
     
     public static function getFontTypes()

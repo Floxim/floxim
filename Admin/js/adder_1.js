@@ -269,6 +269,7 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
         if (window.fx_no_hide) {
             return;
         }
+        console.log($button.is('.'+bl+'-visible'));
         if (!$button || !$button.is('.'+bl+'-visible')) {
             return;
         }

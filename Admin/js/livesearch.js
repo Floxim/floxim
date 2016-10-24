@@ -30,26 +30,6 @@ window.fx_livesearch = function (node, params) {
     
     this.$node.data('livesearch', this);
     
-    /*
-    if (data_params) {
-        this.datatype = data_params.content_type;
-        this.count_show = data_params.count_show;
-        this.conditions = data_params.conditions;
-        this.preset_values = data_params.preset_values;
-        this.ajax_preload = data_params.ajax_preload;
-        this.plain_values = data_params.plain_values || [];
-        this.skip_ids = data_params.skip_ids || [];
-        this.allow_new = data_params.allow_new || true;
-        this.allow_select_doubles = data_params.allow_select_doubles;
-    } else {
-        this.datatype = this.$node.data('content_type');
-        this.count_show = this.$node.data('count_show');
-        this.preset_values = this.$node.data('preset_values');
-    }
-    if (!this.preset_values) {
-        this.preset_values=[];
-    }
-    */
     if (this.preset_values.length) {
         this.count_show = this.preset_values.length;
     }
@@ -189,12 +169,13 @@ window.fx_livesearch = function (node, params) {
             livesearch.recountInputWidth();
         } else {
             livesearch.$container.removeClass('livesearch__container_focused');
-            if (value.custom) {
-                livesearch.$container.find('.search_item__custom-value input:visible').first().focus();
-            } else {
+            if (!value.custom) {
                 livesearch.$container.attr('tabindex', '0').focus();
             }
             livesearch.addValue(value, path);
+            if (value.custom) {
+                livesearch.$container.find('.search_item__custom-value input:visible').first().focus();
+            }
         }
     };
     
@@ -335,7 +316,9 @@ window.fx_livesearch = function (node, params) {
         if (this.is_multiple || !this.preset_values.length) {
             return;
         }
-        var res = false;
+        var res = false,
+            custom_value = null;
+        
         if (typeof id === 'object' && id.id) {
             id = id.id;
         }
@@ -345,7 +328,18 @@ window.fx_livesearch = function (node, params) {
                 livesearch.addValue(v);
                 return false;
             }
+            if (v.custom) {
+                if (v.type === 'number' && !/^[\d\,\.\-]+$/.test(id+'')) {
+                    return;
+                }
+                custom_value = v;
+            }
         });
+        if (custom_value) {
+            res = custom_value;
+            custom_value.value = id;
+            livesearch.addValue(custom_value);
+        }
         return res;
     };
     
@@ -755,42 +749,6 @@ window.fx_livesearch = function (node, params) {
                 this.loadValues( ids );
             }
         }
-        
-        /*
-         var inputs = this.$node.find('.preset_value');
-        if (!this.is_multiple) {
-            this.inputName = inputs.first().attr('name');
-        }
-        
-        
-        inputs.each(function() {
-            var $inp = $(this),
-                id = $inp.val(),
-                name = $inp.data('name'),
-                path = $inp.data('path'),
-                value_obj = null;
-                
-            if (!name && livesearch.preset_values) {
-                $.each(livesearch.preset_values, function(index, val) {
-                    if (val.id === id) {
-                        name = val.name;
-                        return false;
-                    }
-                    if (val.custom) {
-                        value_obj = val;
-                    }
-                });
-            }
-            livesearch.inpNames[id] = this.name;
-            if (value_obj === null) {
-                value_obj = {id:id, name:name, input_name:this.name};
-            } else {
-                value_obj.value = id;
-            }
-            livesearch.addValue(value_obj, path);
-            $(this).remove();
-        });
-         */
     };
     
     this.destroy = function() {

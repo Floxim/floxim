@@ -111,6 +111,7 @@ name="<?=_c.name?>" id="<?=_c.name || _c.id?>"
     if (autocomplete !== '') {
         autocomplete = ' autocomplete="'+autocomplete+'" ';
     }
+    var val = $t.clear( (typeof _c.value === 'undefined' ? '' : _c.value) );
     ?>
 	<input 
 		type="<?= type_att ?>" 
@@ -123,7 +124,7 @@ name="<?=_c.name?>" id="<?=_c.name || _c.id?>"
             }
          ?>
 		<?=$t.field_id_name(_c)?> 
-		value="<?=$t.clear(_c.value || '')?>" 
+		value="<?= val ?>" 
                 <? if (_c.type === 'number') {
                     var num_atts = ['min','max','step'];
                     if (units) {

@@ -3,6 +3,7 @@
 window.fx_font_control = function(json) {
     // nav 16px bold italic uppercase underline
     var $row =  $t.jQuery('form_row', json),
+        cl = $t.getBem('fx-css-font-field'),
         el = $t.getBemElementFinder('fx-css-font-field'),
         $controls = $row.find( el('controls')),
         $value = $row.find( el('value')),
@@ -126,6 +127,9 @@ window.fx_font_control = function(json) {
 
     function init_controls() {
         var c_value = parse_value(json.value);
+        
+        var $extras = $('<div class="'+cl('extras')+' fx_overlay fx_admin_form"></div>');
+        
         var $family = $fx_fields['css-font-family'](c_value.family, json.family);
         $controls.append($family);
 
@@ -161,18 +165,110 @@ window.fx_font_control = function(json) {
         $controls.append($size);
 
         controls.size = $size;
+        
+        var $handler = $('<div class="'+cl('handler')+'" title="Больше настроек" tabindex="0">...</div>'),
+            closer;
+        
+        function show_extras() {
+            $extras.show();
+            var handler_box = $handler[0].getBoundingClientRect(),
+                extra_box = $extras[0].getBoundingClientRect();
+            
+            $extras.css({
+                left: (handler_box.left - extra_box.width),
+                top: handler_box.bottom + 5
+            });
+            closer = $fx.close_stack.push(
+                function() {
+                    $extras.hide();
+                    $handler.focus();
+                },
+                $extras
+            );
+            $fx_form.focus_first($extras);
+        }
+        
+        $extras.on('keydown', function(e) {
+            if (e.which === 13) {
+                closer();
+            }
+        });
+        
+        $handler.click(function() {
+            show_extras();
+        }).keydown(function(e) {
+            if (e.which === 32 || e.which === 13) {
+                show_extras();
+                return false;
+            }
+        });
+        
+        $controls.append($handler);
+        
+        $extras.hide();
+        $(document.body).append($extras);
+        
+        
+        //$controls.append($extras);
 
         var $transform = $fx_fields['css-text-transform']({
-            value: c_value.transform
-        }, 'input');
-        $controls.append($transform);
-        controls.transform = $transform;
+            value: c_value.transform,
+            label:'Регистр'
+        });
         
-        var $decoration = $fx_fields.toggle_button('<u>Пч</u>', c_value.decoration === 'underline', 'Подчеркнутый');
-            $controls.append($decoration);
-            controls.decoration = $decoration;
+        
+        $extras.append($transform);
+        controls.transform = $transform.find('.livesearch');
+        
+        // var $decoration = $fx_fields.toggle_button('<u>Пч</u>', c_value.decoration === 'underline', 'Подчеркнутый');
+        
+        var $decoration = $fx_fields.livesearch(
+            {
+                values: [
+                    {id:'auto', name:'Авто', title:'Подчеркнутый для ссылок'},
+                    {id:'none', name:'Нет'},
+                    {id:'underline', name:'Подчеркнутый'},
+                    {id:'line-through', name:'Зачеркнутый'}
+                ],
+                value: c_value.decoration,
+                label: 'Оформление'
+            }
+        );
 
+        $extras.append($decoration);
+        controls.decoration = $decoration.find('.livesearch');
+        
+        var $letter_spacing = $fx_fields.number(
+            {
+                min:-0.15,
+                max:1,
+                units:'em',
+                step:0.025,
+                value: c_value['letter-spacing'],
+                label:'Межбуквенное'
+            }
+        );
+        $extras.append($letter_spacing);
+        controls['letter-spacing'] = $letter_spacing.find('input');
+        
+        var $line_height = $fx_fields.number(
+            {
+                min:0.5,
+                max:2,
+                units:'em',
+                step:0.05,
+                value: c_value['line-height'],
+                label:'Межстрочное'
+            }
+        );
+        $extras.append($line_height);
+        controls['line-height'] = $line_height.find('input');
+        
         $controls.on('change input', function(e) {
+            update_value();
+            return false;
+        });
+        $extras.on('change input', function(e) {
             update_value();
             return false;
         });
@@ -182,11 +278,11 @@ window.fx_font_control = function(json) {
         var res = [];
         res.push(controls.family.data('livesearch').getValue());
         res.push(controls.size.val() + 'px');
-        //res.push(controls.weight.val() ? 'bold' : 'normal');
-        //res.push(controls.style.val() ? 'italic' : 'normal');
         res.push(controls.style.data('livesearch').getValue());
         res.push(controls.transform.data('livesearch').getValue());
-        res.push(controls.decoration.val() ? 'underline' : 'none');
+        res.push(controls.decoration.data('livesearch').getValue());
+        res.push(controls['line-height'].val()+'em');
+        res.push(controls['letter-spacing'].val()+'em');
         $value.val( res.join(' ') ).trigger('change');
     }
 
@@ -206,8 +302,16 @@ window.fx_font_control = function(json) {
             weight: parts[2],
             style: parts[3],
             transform:parts[4],
-            decoration:parts[5]
+            decoration:parts[5],
+            'line-height':parts[6],
+            'letter-spacing':parts[7]
         };
+        if (typeof res['line-height'] === 'undefined') {
+            res['line-height'] = 1.4;
+        }
+        if (typeof res['letter-spacing'] === 'undefined') {
+            res['letter-spacing'] = 0;
+        }
         return res;
     }
 

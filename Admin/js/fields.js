@@ -411,9 +411,9 @@ window.$fx_fields = {
 
         function hide_colors() {
             $colors.css('display', 'none');
-            $cval.off('blur');
-            $('html').off('mousedown.fx_palette_clickout');
         }
+        
+        var closer = null;
 
         function parse_value(value) {
             var color_parts = value.match(/([a-z]+)\s+(\d+)(\s+[\d\.]+)?$/);
@@ -527,8 +527,9 @@ window.$fx_fields = {
         
         function handle_click() {
             var box = $cval[0].getBoundingClientRect();
-            if ($colors.is(':visible')) {
-                hide_colors();
+            if ($colors.is(':visible') && closer) {
+                //hide_colors();
+                closer();
                 return;
             }
             $colors.css({
@@ -536,6 +537,14 @@ window.$fx_fields = {
                 left: box.left,
                 display:'block'
             });
+            
+            closer = $fx.close_stack.push(
+                function() {
+                    hide_colors();
+                },
+                $colors
+            );
+            /*
             $cval.on('keydown', function(e) {
                 if (e.which === 27 || e.which === 13 || e.which === 32) {
                     hide_colors();
@@ -558,6 +567,7 @@ window.$fx_fields = {
                 },
                 10
             );
+            */
             if (first_opened) {
                 $value.parents().one('fx_destroy', function() {
                     $colors.remove();
@@ -567,6 +577,7 @@ window.$fx_fields = {
         }
 
         //$cval.click();
+        /*
         var mdt = null;
         $cval.on('mousedown', function() {
             mdt = new Date();
@@ -576,6 +587,11 @@ window.$fx_fields = {
             if (mut - mdt < 250) {
                 handle_click();
             }
+        });
+        */
+        $cval.on('click', function() {
+            handle_click();
+            return false;
         });
         return template  === 'input' ? $row.find('.fx-palette') : $row;
     },
@@ -684,6 +700,12 @@ window.$fx_fields = {
     number: function(json, template) {
         if (!json.type ) {
             json.type = 'number';
+        }
+        if (json.value && json.units) {
+            var urex = new RegExp(json.units+'\s*?$');
+            if ((json.value+'').match(urex)) {
+                json.value = json.value.replace(urex, '');
+            }
         }
         json.class_name = 'number' + (json.class_name || '');
         var $res = $t.jQuery(template ? template : 'form_row', json);

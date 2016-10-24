@@ -312,7 +312,7 @@ fx_front.prototype.unfreeze = function() {
 fx_front.prototype.disable_hilight = function() {
     this.hilight_disabled = true;
     $('.fx_front_overlay .fx_inline_adder-visible').each(function() {
-        this.fx_hide_inline_adder();
+        this.fx_hide_inline_adder(0);
     });
     this.disable_adders('infoblock');
     this.disable_adders('entity');
@@ -850,7 +850,7 @@ fx_front.prototype.add_infoblock_select_controller = function($node, $rel_node, 
             } else {
                 //return $fx.front.add_infoblock_select_settings(data);
                 
-                var $c_ib_node = $('<div class="fx_infoblock fx_infoblock_fake" />');
+                var $c_ib_node = $('<div class="fx_infoblock fx_infoblock_fake fx_infoblock_placeholder" />');
                 $fx.front.append_ib_node($area_node, $c_ib_node);
                 $c_ib_node.data('fx_infoblock', {id:'fake'});
                 
@@ -1882,7 +1882,7 @@ fx_front.prototype.hilight_area_empty = function($area, scenario) {
     var a_meta = $area.data('fx_area'),
         placeholder_text = null;
     
-    $area_placeholder = $('<span class="fx_area_placeholder"></span>');
+    var $area_placeholder = $('<span class="fx_area_placeholder"></span>');
     
     switch (scenario) {
         case 'add':
@@ -2550,12 +2550,14 @@ fx_front.prototype.cached_style_variants = {};
 fx_front.prototype.prepare_infoblock_visual_fields = function(all_props, callback) {
     function extend_with_variants(prop, variants) {
         var is_hidden = false;
+        /*
         if (prop.style_id) {
             var $styled_el = $('.fx_selected').descendant_or_self('.'+prop.block+'_style-id_'+prop.style_id);
             if ($styled_el.length === 0) {
                 is_hidden = true;
             }
         }
+        */
         if (is_hidden) {
             prop.type = 'hidden';
         } else {
@@ -2632,6 +2634,13 @@ fx_front.prototype.prepare_infoblock_visual_fields = function(all_props, callbac
 };
 
 fx_front.prototype.extract_infoblock_visual_fields = function($ib_node, $form) {
+    
+    if ($ib_node.is('.fx_infoblock_placeholder')) {
+        return new Promise(function(resolve) {
+            resolve();
+        });
+    }
+    
     var types = ['template', 'wrapper'];
     
     var all_props = {};
@@ -2655,7 +2664,6 @@ fx_front.prototype.extract_infoblock_visual_fields = function($ib_node, $form) {
     
     var promise = this.prepare_infoblock_visual_fields(all_props);
     return promise.then(function(all_props) {
-        
         $.each(all_props, function(type, props) {
             var field_class = 'fx_infoblock_'+type+'_param_field';
             $('.'+field_class, $form).remove();
@@ -3078,7 +3086,11 @@ fx_front.prototype.show_infoblock_settings_form = function(data, $ib_node, tab) 
             if (is_new) {
                 if ($ib_node) {
                     $fx.front.deselect_item();
+                    var $area = $ib_node.closest('.fx_area');
                     $ib_node.remove();
+                    if ($area.children().length === 0) {
+                        $fx.front.hilight_area_empty($area, 'add');
+                    }
                 }
                 return;
             }

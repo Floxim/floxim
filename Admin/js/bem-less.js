@@ -10,7 +10,7 @@ BemLessPlugin.prototype = {
 
 var BemLessVisitor = function(less) {
     this._visitor = new less.visitors.Visitor(this);
-}
+};
 
 var BemLessStack = function(path) {
     this.stack = [];
@@ -27,8 +27,6 @@ BemLessStack.prototype = {
         for (var i = 0; i < path.length; i++) {
             var p = path[i],
                 chunk = p.toCSS({});
-            //$chunk = $this->output->get($p, false);
-            //$s .= $chunk;
             s += chunk;
         }
         if (s.indexOf('#_') === -1) {
@@ -233,7 +231,8 @@ BemLessVisitor.prototype = {
     processPath: function (path) {
         var stack = new BemLessStack(path);
         if (stack.has_special_rules) {
-            return stack.getPath();
+            var res = stack.getPath();
+            return res;
         }
     }
 };

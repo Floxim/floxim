@@ -14,6 +14,10 @@
             return c_len ? this.panels[c_len - 1] : null;
         };
         
+        this.focus_form = function($form) {
+            $fx_form.focus_first($form);
+        };
+        
         this.init_sidebar = function(params) {
             var c_params = $.extend({side:'right'}, params.current_params),
                 style = params.current_panel_style || 'default',
@@ -55,17 +59,7 @@
             $top_bar.mod('style', params.current_panel_style);
             $('#fx_admin_control').append($top_bar);
             params.$container = $top_bar;
-            var prev_panel = front_panel.get_previous_panel('top');
-            if (prev_panel) {
-                prev_panel.$container
-                    .data('saved_height', prev_panel.$container.height())
-                    .animate(
-                        {
-                            height:'0px'
-                        },
-                        300
-                    );
-            }
+            
             return $top_bar;
         };
 
@@ -177,13 +171,7 @@
             
             c_panel.$form = $form;
             
-            $form.on('fx_form_cancel', function() {
-                $fx.front_panel.hide(function() {
-                    if (params.oncancel) {
-                        params.oncancel($form);
-                    }
-                });
-            }).on('fx_form_sent', function(e, data) {
+            $form.on('fx_form_sent', function(e, data) {
                 if (data.status === 'error') {
                     
                 } else {
@@ -218,18 +206,7 @@
                 setTimeout(function() {
                     var callback = function() {
                         if (!params.skip_focus) {
-                            var $focusable = $(
-                                    ':input, ' +
-                                    '.monosearch_has-value .monosearch__container, ' +
-                                    '[tabindex]', 
-                                    $form
-                                )
-                                .filter(':visible')
-                                .not('[type="submit"], .fx_button');
-                            
-                            if ($focusable.length) {
-                                $focusable.first().focus();
-                            }
+                            front_panel.focus_form($form);
                         }
                         if (params.onready) {
                             params.onready($form);
@@ -238,6 +215,22 @@
                     };
                     if (c_panel.current_panel_type === 'top') {
                         c_panel.$container.css('visibility', 'visible');
+                        
+                        var prev_panel = front_panel.get_previous_panel('top');
+                        if (prev_panel) {
+                            prev_panel.$container
+                                .data('saved_height', prev_panel.$container.height())
+                                .addClass('fx-top-panel_going-out')
+                                .animate(
+                                    {
+                                        opacity:0,
+                                        height:'0px'
+                                    },
+                                    {
+                                        duration:duration
+                                    }
+                                );
+                        }
 
                         $fx.front_panel.animate_panel_height(null, function () {
                             $form.resize(function() {
@@ -250,13 +243,29 @@
                         front_panel.show_sidebar(callback);
                     }
                 }, 100);
+                
+                var closer = $fx.close_stack.push(
+                    function() {
+                        $fx.front_panel.hide(function() {
+                            if (params.oncancel) {
+                                params.oncancel($form);
+                            }
+                        });
+                    }
+                );
+        
+                $form.on('fx_form_cancel', function() {
+                    closer();
+                });
 
+                /*
                 $('body').off('.fx_front_panel').on('keydown.fx_front_panel', function(e) {
                     if (e.which === 27) {
                         $fx.front_panel.get_current_panel().$form.trigger('fx_form_cancel');
                         return false;
                     }
                 });
+                */
             });
             return $form;
         };
@@ -396,7 +405,6 @@
                 
                 end_css[side] = '-' + ($sidebar.outerWidth() + 30)+'px'; 
                 
-                console.log(end_css, c_panel);
                 $sidebar.animate(
                     end_css, 
                     duration,
@@ -481,7 +489,13 @@
             var $selected = $($fx.front.get_selected_item());
 
             if ($selected.length) {
-                var scroll_top = $selected.offset().top - (panel_height + 50) + height_delta;
+                var common_panel_height = $fx.front.get_panel_height();
+
+                var scroll_top = $selected.offset().top - (
+                        //panel_height 
+                        Math.max(common_panel_height, panel_height)
+                        + 50
+                    ) + height_delta;
                 body_animate_props.scrollTop = scroll_top;
             }
             
@@ -581,17 +595,42 @@
             };
             if (c_panel.current_panel_type === 'top') {
                 var prev_top_panel = this.get_previous_panel('top');
-                this.animate_panel_height(
-                    0, 
-                    function () {
-                        callback();
-                        c_panel.$container.hide().html('');
-                        c_panel.is_visible = false;
-                        if (prev_top_panel) {
-                            that.animate_panel_height(prev_top_panel.$container.data('saved_height'));
+                if (prev_top_panel) {
+                    that.panels.pop();
+                    
+                    prev_top_panel.$container.before(c_panel.$container);
+                    
+                    prev_top_panel.$container
+                        .css('opacity', 1)
+                        .removeClass('fx-top-panel_going-out');
+                    
+                    this.animate_panel_height(null, function() {
+                        front_panel.focus_form(prev_top_panel.$form);
+                    });
+                    c_panel.$container.addClass('fx-top-panel_going-out');
+                    c_panel.$container.animate({
+                       height:0,
+                       opacity:0
+                    }, {
+                        duration: duration,
+                        complete: function() {
+                            c_panel.$container.remove();
                         }
-                    }
-                );
+                    });
+                } else {
+                    this.animate_panel_height(
+                        0, 
+                        function () {
+                            callback();
+                            //c_panel.$container.hide().html('');
+                            c_panel.$container.remove();
+                            c_panel.is_visible = false;
+                            if (prev_top_panel) {
+                                that.animate_panel_height(prev_top_panel.$container.data('saved_height'));
+                            }
+                        }
+                    );
+                }
             } else {
                 this.hide_sidebar();
                 callback();

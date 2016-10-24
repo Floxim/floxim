@@ -29,7 +29,7 @@ class Site extends Admin
             $theme_name = $v['theme']['name'];
             $r = array(
                 'id'       => $v['id'],
-                'domain'   => '<a href="http://'.$v['domain'].'" target="_blank">'.$v['domain'].'</a>',
+                'domain'   => '<a href="http://'.$v->getLocalDomain().'" target="_blank">'.$v['domain'].'</a>',
                 'name'     => array(
                     'url'  => 'site.settings(' . $v['id'] . ')',
                     'name' => $v['name']

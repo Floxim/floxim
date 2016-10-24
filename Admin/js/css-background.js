@@ -174,9 +174,20 @@ bg.prototype.init = function() {
     
     var first_open = true;
     
+    
+    
     function show_popup(){ 
         
         that.place_popup();
+        
+        that.closer = $fx.close_stack.push(
+            function() {
+                that.hide_popup();
+            },
+            that.$popup
+        );
+        
+        /*
         
         setTimeout(
             function() {
@@ -194,7 +205,8 @@ bg.prototype.init = function() {
             },
             10
         );
-        
+        */
+       
         if (first_open) {
             that.$container.parents().one('fx_destroy', function() {
                 that.$popup.remove();
@@ -205,10 +217,12 @@ bg.prototype.init = function() {
     
     this.$handler.on('click', function() {
         show_popup();
+        return false;
     });
     
-    this.$popup.find( bg.el('close') ).on('click', function() {
-        that.hide_popup();
+    this.$popup.find( bg.el('close') ).on('click', function(e) {
+        //that.hide_popup();
+        that.closer(e);
         return false;
     });
 
