@@ -139,7 +139,12 @@
                    if (res === false || e.isDefaultPrevented()) {
                        return false;
                    }
-                   return $fx_form.submit_handler(e);
+                   if (res instanceof Promise) {
+                       return res.then(function() {
+                           return $fx_form.submit_handler.apply($form);
+                       });
+                   }
+                   return $fx_form.submit_handler.apply($form);
                };
             }
             

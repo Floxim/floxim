@@ -210,14 +210,25 @@ BemLessVisitor.prototype = {
     run: function(root) {
         this._visitor.visit(root);
     },
-    visitRuleset: function(rulesetNode, visitArgs) {
+    
+    visitMedia: function(mediaNode) {
+        this.processRules(mediaNode.rules);
+        return mediaNode;
+    },
+    
+    visitRuleset: function(rulesetNode) {
+        this.processRules(rulesetNode.rules);
+        return rulesetNode;
+    },
+    
+    processRules: function(rules) {
+        if (!rules || !rules.length) {
+            return;
+        }
         var that = this;
-        $.each(rulesetNode.rules, function(index, rule) {
+        $.each(rules, function(index, rule) {
             if (!rule.paths) {
-                if (rule.rules) {
-                    that.run(rule);
-                }
-                return false;
+                return;
             }
             $.each(rule.paths, function (index, path) {
                 var res = that.processPath(path);
@@ -226,8 +237,8 @@ BemLessVisitor.prototype = {
                 }
             });
         });
-        return rulesetNode;
     },
+    
     processPath: function (path) {
         var stack = new BemLessStack(path);
         if (stack.has_special_rules) {

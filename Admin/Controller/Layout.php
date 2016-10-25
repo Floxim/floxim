@@ -418,6 +418,9 @@ class Layout extends Admin
             } else {
                 $style_variant['less_vars'] = $less_vars;
                 $style_variant['name'] = $input['style_name'];
+                if (isset($input['screenshot'])) {
+                    $style_variant->setPayload('screenshot', $input['screenshot']);
+                }
                 $style_variant->save();
                 $id = $style_variant['id'];
             }

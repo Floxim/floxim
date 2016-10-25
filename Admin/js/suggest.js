@@ -578,6 +578,7 @@ window.fx_suggest = function(params) {
             $('html').off('.suggest_clickout').on('mousedown.suggest_clickout', this.clickOut);
         }
         this.placeBox();
+        this.input.trigger('fx-livesearch-showbox', [this.box]);
     };
     
     this.hideBox = function(clear_input) {

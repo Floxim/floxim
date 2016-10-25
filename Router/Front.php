@@ -134,8 +134,11 @@ class Front extends Base
         return fx::template()->import(preg_replace('~\:.*$~', '', $layout_infoblock->getVisual()->get('template')));
     }
 
-    public function getLayoutInfoblock($page)
+    public function getLayoutInfoblock($page = null)
     {
+        if (is_null($page)) {
+            $page = fx::env('page');
+        }
         if (!is_object($page)) {
             fx::log(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
         }

@@ -21,6 +21,10 @@ less_tweaker.prototype.set_style_class = function(cl) {
     }
 };
 
+less_tweaker.prototype.get_first_affected = function() {
+    return $($fx.front.get_selected_item()).descendant_or_self('.'+this.style_id_class).first();
+};
+
 less_tweaker.prototype.init = function() {
     this.handle_form();
     var cl = this.style_class,
@@ -160,6 +164,21 @@ less_tweaker.prototype.update = function(vars) {
         },
         function(err) {
             
+        }
+    );
+};
+
+less_tweaker.prototype.make_screenshot = function() {
+    var $node = this.get_first_affected();
+    
+    var bg = $node.hasClass('fx-block_lightness_light') ? '#FFF' : '#000';
+    
+    return html2canvas($node[0], {
+        background: bg
+    }).then(
+        function(canvas) {
+            //document.body.appendChild(canvas);
+            return canvas.toDataURL('image/jpeg', 0.3);
         }
     );
 };
@@ -352,9 +371,61 @@ less_tweaker.init_style_select = function($monosearch) {
     var $settings_button = $('<a class="fx-style-tweaker-link fx_icon fx_icon-type-settings"></a>'),
         that = this,
         source_json = $monosearch.closest('.field').data('source_json'),
-        style_id = source_json.style_id;
+        style_id = source_json.style_id,
+        monosearch_ls = $monosearch.data('livesearch'),
+        has_screens = false;
+    
+    // preload images
+    monosearch_ls.traversePresetValues(function(v) {
+        if (v.screenshot) {
+            var img = new Image();
+            img.src = v.screenshot;
+            has_screens = true;
+            console.log('load screen', v.name, v.screenshot);
+        }
+    });
     
     $monosearch.after ( $settings_button );
+    
+    if (has_screens) {
+        var $screen_box = $('<div class="fx-stylevariant-screenbox"></div>');
+        $screen_box.css({
+            position:'fixed',
+            padding:'10px',
+            background:'#FFF',
+            border:'1px solid #CCC',
+            'border-radius':'3px',
+            'z-index':10000
+        });
+        $(document.body).append($screen_box);
+        var monobox_ready = false;
+        $monosearch.on('fx-livesearch-showbox', function(e, box) {
+            if (monobox_ready) {
+                return;
+            }
+            $(box).on('mouseenter', '.search_item', function() {
+                var $item = $(this),
+                    ss = $item.data('value').screenshot;
+                if (!ss) {
+                    $screen_box.hide();
+                } else {
+                    var itembox = this.getBoundingClientRect();
+                    $screen_box.html('');
+                    $screen_box.append(
+                        '<img src="'+ss+'" />'
+                    );
+                    
+                    $screen_box.css({
+                        top: itembox.top,
+                        left: itembox.right
+                    }).show();
+                }
+            }).on('mouseleave', '.search_item', function() {
+                $screen_box.hide();
+            });
+        });
+    }
+    
     $settings_button.on('click', function() {
         var $c_field = $(this).closest('.field'),
             $ls = $c_field.find('.livesearch'),
@@ -408,12 +479,33 @@ less_tweaker.init_style_select = function($monosearch) {
                         );
                     
                     tweaker = new less_tweaker(params);
+                    /*
+                    $form.find('.fx_admin_form__title').click(function() {
+                        tweaker.make_screenshot().then(function(img_data, canvas) {
+                            var $body = $(document.body),
+                                img = new Image();
+                            img.src = img_data;
+                            $body.append(img);
+                            $body.append(canvas);
+                        });
+                    });
+                    */
+                },
+                onsubmit: function(e) {
+                    var $form = $(e.target);
+                    return tweaker.make_screenshot().then(function(img_data) {
+                       var $inp = $('<input type="hidden" name="screenshot" />');
+                       $inp.val(img_data);
+                       $form.append($inp);
+                    });
                 },
                 onfinish: function(res) {
                     var new_val = style_value+ (res.id ? '_variant_'+res.id : ''),
                         style_ls = $monosearch.data('livesearch');
                     
                     delete $fx.front.cached_style_variants[block_name];
+                    
+                    console.log($.extend(true, {}, $fx.front.cached_style_variants));
                     
                     style_ls.updatePresetValues(res.variants);
                     style_ls.setValue(new_val);

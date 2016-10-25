@@ -536,12 +536,16 @@ class StyleBundle extends Bundle {
             );
             if (isset($variants[$style_name])) {
                 foreach ($variants[$style_name] as $variant) {
+                    $bundle = $variant->getBundle();
+                    $bundle->save();
+                    
                     $res[]= array(
                         $variant->getStyleKeyword(),
                         ' -- '.$variant['name'],
                         array(
                             'is_tweakable' => true,
-                            'style_variant_id' => $variant['id']
+                            'style_variant_id' => $variant['id'],
+                            'screenshot' => $bundle->getScreenshot()
                         )
                     );
                 }
@@ -671,5 +675,19 @@ class StyleBundle extends Bundle {
     public function getRootPath()
     {
         return fx::path()->http($this->meta['path']);
+    }
+    
+    public function getScreenPath()
+    {
+        return $this->getDirPath().'/screenshot.jpg';
+    }
+    
+    public function getScreenshot()
+    {
+        $f = $this->getScreenPath();
+        if (file_exists($f)) {
+            return fx::path()->http($f)."?v=".$this->version;
+        }
+        return null;
     }
 }

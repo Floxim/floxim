@@ -18,6 +18,7 @@ class Entity extends \Floxim\Floxim\System\Entity
         $bundle_dir = $b->getDirPath();
         if ($bundle_dir) {
             $dir = dirname($bundle_dir);
+            fx::log('del bundl dir', $dir);
             return fx::files()->rm($dir);
         }
     }
@@ -75,13 +76,16 @@ class Entity extends \Floxim\Floxim\System\Entity
         $res .= "}";
         return $res;
     }
-
-    
     public function afterSave()
     {
         
         parent::afterSave();
         $this->deleteBundles();
+        
+        $ss =  $this->getPayload('screenshot');
+        $data = end( explode(',', $ss) );
+        $file_path = $this->getBundle()->getScreenPath();
+        fx::files()->writefile($file_path, base64_decode($data));
     }
     
     
