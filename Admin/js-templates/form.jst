@@ -111,7 +111,7 @@ name="<?=_c.name?>" id="<?=_c.name || _c.id?>"
     if (autocomplete !== '') {
         autocomplete = ' autocomplete="'+autocomplete+'" ';
     }
-    var val = $t.clear( (typeof _c.value === 'undefined' ? '' : _c.value) );
+    var val = $t.clear( (!_c.value ? '' : _c.value) );
     ?>
 	<input 
 		type="<?= type_att ?>" 
