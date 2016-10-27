@@ -695,7 +695,7 @@ class Compiler
             }
             if ($var === 'lightness') {
                 if (preg_match("~^[^,]+~", $res_val, $lightness)) {
-                    $res_val = $lightness[0];
+                    $res_val = preg_replace("~^custom_~", '', $lightness[0]);
                 }
             }
             $container_props[$var] = $res_val;

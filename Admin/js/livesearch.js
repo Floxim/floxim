@@ -111,6 +111,16 @@ window.fx_livesearch = function (node, params) {
         return null;
     };
     
+    this.disable = function() {
+        this.$node.addClass(bl+'_disabled');
+        this.disabled = true;
+    };
+    
+    this.enable = function() {
+        this.$node.removeClass(bl+'_disabled');
+        this.disabled = false;
+    };
+    
     this.traversePresetValues = function(cb, vals) {
         vals = vals || this.preset_values;
         for (var i = 0; i < vals.length; i++) {
@@ -312,7 +322,7 @@ window.fx_livesearch = function (node, params) {
         return false;
     };
     
-    this.setValue = function (id) {
+    this.setValue = function (id, silent) {
         if (this.is_multiple || !this.preset_values.length) {
             return;
         }
@@ -321,6 +331,10 @@ window.fx_livesearch = function (node, params) {
         
         if (typeof id === 'object' && id.id) {
             id = id.id;
+        }
+        if (silent) {
+            var was_silent = this.addSilent;
+            this.addSilent = true;
         }
         this.traversePresetValues(function(v) {
             if (v.id == id) {
@@ -339,6 +353,9 @@ window.fx_livesearch = function (node, params) {
             res = custom_value;
             custom_value.value = id;
             livesearch.addValue(custom_value);
+        }
+        if (silent) {
+            this.addSilent = was_silent;
         }
         return res;
     };
@@ -748,6 +765,10 @@ window.fx_livesearch = function (node, params) {
             if (has_raw) {
                 this.loadValues( ids );
             }
+        }
+        
+        if (this.disabled) {
+            this.disable();
         }
     };
     

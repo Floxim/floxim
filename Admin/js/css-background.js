@@ -23,7 +23,12 @@ bg.parse_value = function(v) {
             levels: []
         },
         val = parse_css_value(v);
-    res.lightness = val.shift()[0];
+    
+    var lightness = val.shift()[0];
+        
+    res.lightness_locked = !lightness.match(/^custom_/);
+    res.lightness = lightness.replace(/^custom_/, '');
+    
     for (var i = 0; i < val.length; i += 3) {
         var params = val[i],
             type = params.shift(),
@@ -122,9 +127,12 @@ bg.prototype.get_value = function() {
 
 bg.prototype.update = function(skip_lightness) {
     
-    if (typeof skip_lightness === 'undefined' || skip_lightness === false) {
+    if (
+        (typeof skip_lightness === 'undefined' || skip_lightness === false)
+        && this.lightness_is_locked() 
+    ) {
         var lightness = this.count_lightness();
-        this.$lightness.data('livesearch').setValue(lightness);
+        this.$lightness.data('livesearch').setValue(lightness, true);
     }
     
     this.$input.val( this.get_value() ).trigger('change');
@@ -141,7 +149,9 @@ bg.prototype.update = function(skip_lightness) {
 
 bg.prototype.get_lightness_value = function() {
     
-    return this.$lightness.data('livesearch').getValue();
+    var val = this.$lightness.data('livesearch').getValue(),
+        res = (this.lightness_is_locked() ? '' : 'custom_') + val;
+    return res;
 };
 
 bg.prototype.place_popup = function() {
@@ -160,6 +170,22 @@ bg.prototype.place_popup = function() {
 bg.prototype.hide_popup = function() {
     this.$popup.hide();
     $('html').off('.fx_bg_clickout');
+};
+
+bg.prototype.lock_lightness = function() {
+    this.$lightness_container.addClass(bg.cl('lightness')+ '_locked');
+    this.$lightness_lock.find('input')[0].checked = true;
+    var lightness = this.count_lightness();
+    this.$lightness.data('livesearch').setValue(lightness, true);
+};
+
+bg.prototype.unlock_lightness = function() {
+    this.$lightness_container.removeClass(bg.cl('lightness')+ '_locked');
+    this.$lightness_lock.find('input')[0].checked = false;
+};
+
+bg.prototype.lightness_is_locked = function() {
+    return this.$lightness_lock.find('input').val() === "1";
 };
 
 bg.prototype.init = function() {
@@ -186,27 +212,6 @@ bg.prototype.init = function() {
             },
             that.$popup
         );
-        
-        /*
-        
-        setTimeout(
-            function() {
-                $('html').on('mousedown.fx_bg_clickout', function (e) {
-                    var $t = $(e.target);
-                    if (
-                        $t.closest(that.$popup).length === 0 && 
-                        $t.closest('.fx_suggest_box').length === 0 && 
-                        $t.closest('.fx-palette__colors').length === 0
-                    ) {
-                        that.hide_popup();
-                        return false;
-                    }
-                });
-            },
-            10
-        );
-        */
-       
         if (first_open) {
             that.$container.parents().one('fx_destroy', function() {
                 that.$popup.remove();
@@ -225,6 +230,8 @@ bg.prototype.init = function() {
         that.closer(e);
         return false;
     });
+    
+    var lightness_locked = value.lightness_locked;
 
     this.$lightness = $fx_fields.control({
         type: 'livesearch',
@@ -235,15 +242,35 @@ bg.prototype.init = function() {
             dark: 'Темный',
             none: 'Прозрачный'
         },
-        value: value.lightness
+        value: value.lightness,
+        disabled: true
     });
     
-    //this.$popup.append(this.$lightness);
-    this.$popup.find( bg.el('lightness') ).append(this.$lightness);
+    this.$lightness_lock = $fx_fields.input({
+        type: 'checkbox',
+        class_name:'locker'
+    });
+    
+    this.$lightness_lock.on('change', function() {
+        that.lightness_is_locked() ? that.lock_lightness() : that.unlock_lightness();
+        that.update();
+    });
+    
+    this.$lightness_container = this.$popup.find( bg.el('lightness') );
+    
+    this.$lightness_container.append(this.$lightness);
+    this.$lightness_container.append(this.$lightness_lock);
     
     this.$lightness.on('change', function() {
+        that.unlock_lightness();
         that.update(true);
     });
+    
+    if (lightness_locked) {
+        this.lock_lightness();
+    } else {
+        this.unlock_lightness();
+    }
     
     for (var i =0 ; i < value.levels.length; i++) {
         var level = background_level.create.apply(background_level, value.levels[i]);
@@ -259,8 +286,13 @@ bg.prototype.init = function() {
     });
     
     $levels.on('click', bg.el('level-drop'), function(e) {
-        $(e.target).closest(bg.el('level')).remove();
-        that.update();
+        setTimeout(
+            function() {
+                $(e.target).closest(bg.el('level')).remove();
+                that.update();
+            },
+            10
+        );
     });
     
     this.$popup.on('click', bg.el('add')+' a', function() {
@@ -272,7 +304,7 @@ bg.prototype.init = function() {
     $levels.on('change', function() {
         that.update();
     });
-    that.update();
+    that.update(true);
 };
 
 function background_level(params, value, sizing) {
@@ -419,8 +451,8 @@ background_level.linear.prototype.default_params = [
     '180deg'
 ];
 background_level.linear.prototype.default_value = [
-    'main', 5, 1, '0%',
-    'alt', 5, 1, '100%'
+    'main', 0, 0.3, '0%',
+    'main', 0, 0.1, '100%'
 ];
 
 background_level.linear.prototype.draw_sizing = function() {
@@ -455,8 +487,23 @@ background_level.linear.prototype.draw_value = function() {
             if ($p.length) {
                 that.slider.remove_point($p);
                 that.draw_gradient();
+                $vals.trigger('click');
             } else {
-                that.add_point('alt 0 1', that.slider.e_to_val(e));
+                var $closest_point = that.slider.get_closest_point(e),
+                    new_value = 'main 0 0.5';
+                if ($closest_point && $closest_point.length) {
+                    var closest_value = $closest_point.find('.fx-palette__value').val();
+                    if (closest_value) {
+                        new_value = closest_value;
+                    }
+                }
+                var $new_point = that.add_point(new_value, that.slider.e_to_val(e));
+                $(document.body).one(
+                    'mouseup',
+                    function() {
+                        $new_point.find('.fx-palette__value-color').trigger('fx-palette-toggle');
+                    }
+                );
             }
             e.stopImmediatePropagation();
             that.$slider.trigger('change');
@@ -469,8 +516,9 @@ background_level.linear.prototype.draw_value = function() {
         max:100,
         multiple:true,
         round:0,
-        change: function() {
+        change: function(val, $point) {
             that.draw_gradient();
+            $point.find('.fx-palette__value-color').trigger('fx-palette-toggle', [false]);
             that.$slider.trigger('change');
         }
     });
@@ -581,6 +629,7 @@ background_level.linear.prototype.add_point = function(color, distance) {
         that.draw_gradient();
     });
     this.draw_gradient();
+    return $p;
 };
 
 

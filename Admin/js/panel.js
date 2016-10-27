@@ -140,9 +140,10 @@
                        return false;
                    }
                    if (res instanceof Promise) {
-                       return res.then(function() {
+                       res.then(function() {
                            return $fx_form.submit_handler.apply($form);
                        });
+                       return false;
                    }
                    return $fx_form.submit_handler.apply($form);
                };

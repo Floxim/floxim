@@ -1280,6 +1280,10 @@ select.fx_input {
         background-position:-1813px -26px;
     }
     
+    &_style_transparent {
+        margin-bottom:0;
+    }
+    
     &_style_transparent &__fields {
         padding-top:0;
         display:block;
@@ -1703,10 +1707,16 @@ select.fx_input {
 .fx-background-control {
     &__levels {
         display:table;
-        margin:20px -15px 20px -15px;
+        margin:6px -10px 0 -10px;
         .fx_input_number {
             display:inline-block;
         }
+    }
+    
+    &__add-level {
+        border-top: 1px solid #ccc;
+        margin:0 -10px -10px -10px;
+        padding:10px;
     }
     
     &__handler {
@@ -1727,6 +1737,18 @@ select.fx_input {
     
     &__lightness {
         display:inline-block;
+        & > .field_class_locker {
+            margin-bottom: 0;
+            display: inline-block;
+            vertical-align: top;
+            margin-left: 10px;
+        }
+        & > .livesearch {
+            display:inline-block;
+        }
+        &_locked .livesearch {
+            opacity:0.4;
+        }
     }
     &__th, &__level {
         display:table-row;
@@ -1746,6 +1768,9 @@ select.fx_input {
         }
         &:first-child > div {
             border-top:1px solid #CCC;
+        }
+        &:last-child > div {
+            border-bottom:none;
         }
     }
     
@@ -1821,6 +1846,9 @@ select.fx_input {
             border-radius:2px;
             overflow:hidden;
         }
+    }
+    
+    &__level_type_color &__level-value {
         .fx-palette__value-color {
             width:200px;
             height:36px;
@@ -1888,7 +1916,7 @@ select.fx_input {
         top:100px;
         left:100px;
         background:#FFF;
-        padding:25px 15px;
+        padding:10px;
         border:1px solid #CCC;
         border-radius:3px;
         z-index:9999;

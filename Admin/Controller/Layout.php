@@ -381,6 +381,7 @@ class Layout extends Admin
                     )
                 );
 
+        fx::log($input);
         $is_new = !$style_variant->isSaved();
         
         $input['style'] = preg_replace("~_variant_[^_]+$~", '', $input['style']);

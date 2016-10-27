@@ -553,7 +553,8 @@ var close_stack = function() {
         var level = [
                 callback, 
                 $clickout_node, 
-                typeof handle_escape  === 'undefined' ? true : handle_escape
+                typeof handle_escape  === 'undefined' ? true : handle_escape,
+                new Date()
             ],
             handler;
         
@@ -589,22 +590,30 @@ var close_stack = function() {
         }
     };
     
+    var last_mousedown = null;
     
-    $(document.body).on('click', function(e) {
+    $(document.body).on('mousedown', function() {
+        last_mousedown = new Date();
+    }).on('click', function(e) {
         for (var i = that.stack.length - 1; i >= 0; i--) {
             var level = that.stack[i],
-                $nodes = level[1];
+                $nodes = level[1],
+                level_date = level[3];
             if (!$nodes || !$nodes.length) {
                 return;
             }
             if ($(e.target).closest($nodes).length) {
                 return;
             }
+            //console.log(level_date, last_mousedown, level_date - last_mousedown);
+            if( level_date > last_mousedown) {
+                return;
+            }
             var res = level[0](e);
             if (res !== false) {
                 that.stack.pop();
-                e.stopImmediatePropagation();
-                return false;
+                //e.stopImmediatePropagation();
+                //return false;
             }
         }
     }).on('keydown', function(e) {

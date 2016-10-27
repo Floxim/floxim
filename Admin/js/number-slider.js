@@ -82,6 +82,12 @@ var number_slider = function($node, params) {
         return $res;
     };
     
+    this.get_closest_point = function(e) {
+        var x = normalize_x(e.pageX);
+        var $point = closest_point(x);
+        return $point;
+    };
+    
     var normalize_x = function(x) {
         if (x < box.left) {
             x = box.left;
@@ -95,8 +101,10 @@ var number_slider = function($node, params) {
     var move = function(x, $point) {
         $point.css('left', x);
         var value = x_to_val(x);
-        $point.value = value;
-        change(value);
+        if (value !== $point.value) {
+            $point.value = value;
+            change(value, $point);
+        }
         return false;
     };
     
@@ -130,7 +138,7 @@ var number_slider = function($node, params) {
         
         $body
             .on('mousemove', h)
-            .one('mouseup', function() {
+            .one('mouseup click', function() {
                 $body.off('mousemove', h);
             });
     });

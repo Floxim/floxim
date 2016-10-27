@@ -375,12 +375,14 @@ window.$fx_fields = {
     palette: function(json, template) {
         var $row = $t.jQuery('form_row', json),
             el = $t.getBemElementFinder('fx-palette'),
+            $palette = $row.find('.fx-palette'),
             $colors = $row.find(el('colors')),
             $value = $row.find(el('value')),
             $cval = $row.find( el('value-color') ),
             opacity_slider = null,
-            $opacity = null;
-
+            $opacity = null,
+            c_color = [];
+        
         $fx.container.colors = json.colors;
 
         $('body').append($colors);
@@ -411,6 +413,7 @@ window.$fx_fields = {
 
         function hide_colors() {
             $colors.css('display', 'none');
+            $palette.removeClass('fx-palette_active');
         }
         
         var closer = null;
@@ -486,6 +489,9 @@ window.$fx_fields = {
                 $light_color.addClass(active_class);
                 var c1 = $color.data('color'),
                     c2 = $light_color.data('color');
+                
+                c_color = [c1, c2];
+                
                 $cval.css(
                     'background',
                     'linear-gradient(135deg, '+c1+', '+c1+' 55%, '+ c2 +' 55.5%, '+c2 +')'
@@ -502,6 +508,7 @@ window.$fx_fields = {
                     val_bg = tc.toRgbString();
                     $value.data('rgb-value', tc.toRgb());
                 }
+                c_color = [val_bg];
                 $cval.css('background', val_bg);
             }
             if (json.opacity) {
@@ -511,7 +518,6 @@ window.$fx_fields = {
                     'linear-gradient(to right, transparent, '+color_value+')'
                 );
             }
-            $cval.focus();
         }
 
         set_value( $value.val() );
@@ -525,13 +531,14 @@ window.$fx_fields = {
             $value.trigger('change');
         });
         
-        function handle_click() {
+        function show_colors() {
+            $('.fx-palette_active').each(function() {
+                if (this === $palette[0]) {
+                    return;
+                }
+                $(this).data('palette').hide();
+            });
             var box = $cval[0].getBoundingClientRect();
-            if ($colors.is(':visible') && closer) {
-                //hide_colors();
-                closer();
-                return;
-            }
             $colors.css({
                 top: box.top + box.height,
                 left: box.left,
@@ -544,30 +551,9 @@ window.$fx_fields = {
                 },
                 $colors
             );
-            /*
-            $cval.on('keydown', function(e) {
-                if (e.which === 27 || e.which === 13 || e.which === 32) {
-                    hide_colors();
-                    return false;
-                }
-            }).on('blur', function() {
-                $cval.focus();
-            });
-            setTimeout(
-                function() {
-                    $('html').on('mousedown.fx_palette_clickout', function (e) {
-                        var $t = $(e.target);
-                        if (
-                            $t.closest($colors).length === 0 &&
-                            $t.closest($cval).length === 0
-                        ) {
-                            hide_colors();
-                        }
-                    });
-                },
-                10
-            );
-            */
+    
+            $palette.addClass('fx-palette_active');
+    
             if (first_opened) {
                 $value.parents().one('fx_destroy', function() {
                     $colors.remove();
@@ -575,9 +561,19 @@ window.$fx_fields = {
                 first_opened = false;
             }
         }
+        
+        function handle_click() {
+            
+            if ($colors.is(':visible')) {
+                if (closer) {
+                    closer();
+                }
+                return;
+            }
+            show_colors();
+        }
 
-        //$cval.click();
-        /*
+        
         var mdt = null;
         $cval.on('mousedown', function() {
             mdt = new Date();
@@ -586,12 +582,42 @@ window.$fx_fields = {
             var mut = new Date();
             if (mut - mdt < 250) {
                 handle_click();
+                return false;
             }
         });
-        */
-        $cval.on('click', function() {
-            handle_click();
-            return false;
+        $palette.on('fx-palette-toggle', function(e, show) {
+            if (typeof show === 'undefined') {
+                handle_click();
+                return;
+            }
+            if (show) {
+                show_colors();
+            } else if (closer) {
+                closer();
+            }
+        });
+        $palette.data('palette', {
+            $colors: $colors,
+            show: function() {
+                show_colors();
+            },
+            hide: function() {
+                if (closer) {
+                    closer();
+                } else {
+                    console.log('no closr');
+                }
+            },
+            val: function(v) {
+                if (typeof v === 'undefined') {
+                    return $value.val();
+                }
+                set_value(v);
+            },
+            get_color: function(index) {
+                return typeof index === 'undefined' ? c_color : c_color[index];
+                //return $cval.css('background');
+            }
         });
         return template  === 'input' ? $row.find('.fx-palette') : $row;
     },

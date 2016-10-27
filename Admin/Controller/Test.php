@@ -46,17 +46,31 @@ class Test extends Admin {
     public function measures()
     {
         $fields = array(
+            /*
             'test' => array(
                 'label' => 'padding',
                 'type' => 'measures',
                 'prop' => 'padding',
                 'lock' => '1-3--2-4'
             ),
+             * 
+             */
             'cr' => array(
                 'label' => 'corners',
                 'type' => 'measures',
                 'prop' => 'corners',
                 'lock' => '1-2--3-4'
+            ),
+            'br' => array(
+                'label' => "borders",
+                'type' => 'measures',
+                'prop' => 'borders',
+                'lock' => '1-3--2-4'/*,
+                'value' => 
+                    '10 1px solid main 2 0.2, '.
+                    '7 3px dotted alt 2 0.2, '.
+                    '5 4px solid alt 6 0.1, '.
+                    '10 1px solid main 2 0.2'*/
             )
         );
         $this->response->addFields($fields);
@@ -95,7 +109,7 @@ class Test extends Admin {
                     alt 2 0.5,
                     none';
         
-        $val = 'light,
+        $val = '!light,
         
                     linear 80deg,
                     main 0 0.1 0 main 0 0.1 100%,

@@ -308,7 +308,7 @@ less_tweaker.get_container_props = function(container, vars) {
         }
         if (c_val && prop === 'lightness') {
             var lightness = c_val.match(/^[^,]+/);
-            c_val = lightness ? lightness[0] : null;
+            c_val = lightness ? lightness[0].replace(/^custom_/, '') : null;
         }
         if (c_val) {
             res[prop] = c_val;
@@ -359,6 +359,57 @@ less_tweaker.prototype.cancel = function() {
     }
 };
 
+less_tweaker.bind_style_preview = function(ls) {
+    
+    // preload images
+    ls.traversePresetValues(function(v) {
+        if (v.screenshot) {
+            var img = new Image();
+            img.src = v.screenshot;
+            //console.log('load screen', v.name, v.screenshot);
+        }
+    });
+    
+    var $monosearch = ls.$node;
+    
+    var $screen_box = $('<div class="fx-stylevariant-screenbox"></div>');
+    $screen_box.css({
+        position:'fixed',
+        padding:'10px',
+        background:'#FFF',
+        border:'1px solid #CCC',
+        'border-radius':'3px',
+        'z-index':10000
+    });
+    $(document.body).append($screen_box);
+    var monobox_ready = false;
+    $monosearch.on('fx-livesearch-showbox', function(e, box) {
+        if (monobox_ready) {
+            return;
+        }
+        $(box).on('mouseenter', '.search_item', function() {
+            var $item = $(this),
+                ss = $item.data('value').screenshot;
+            if (!ss) {
+                $screen_box.hide();
+            } else {
+                var itembox = this.getBoundingClientRect();
+                $screen_box.html('');
+                $screen_box.append(
+                    '<img src="'+ss+'" />'
+                );
+
+                $screen_box.css({
+                    top: itembox.top,
+                    left: itembox.right
+                }).show();
+            }
+        }).on('mouseleave', '.search_item', function() {
+            $screen_box.hide();
+        });
+    });
+};
+
 less_tweaker.init_style_select = function($monosearch) {
     var ls = $monosearch.data('livesearch');
     if (!ls || !ls.preset_values) {
@@ -371,60 +422,15 @@ less_tweaker.init_style_select = function($monosearch) {
     var $settings_button = $('<a class="fx-style-tweaker-link fx_icon fx_icon-type-settings"></a>'),
         that = this,
         source_json = $monosearch.closest('.field').data('source_json'),
-        style_id = source_json.style_id,
-        monosearch_ls = $monosearch.data('livesearch'),
-        has_screens = false;
+        style_id = source_json.style_id;
     
-    // preload images
-    monosearch_ls.traversePresetValues(function(v) {
-        if (v.screenshot) {
-            var img = new Image();
-            img.src = v.screenshot;
-            has_screens = true;
-            console.log('load screen', v.name, v.screenshot);
-        }
-    });
+    less_tweaker.bind_style_preview($monosearch.data('livesearch'));
     
     $monosearch.after ( $settings_button );
     
-    if (has_screens) {
-        var $screen_box = $('<div class="fx-stylevariant-screenbox"></div>');
-        $screen_box.css({
-            position:'fixed',
-            padding:'10px',
-            background:'#FFF',
-            border:'1px solid #CCC',
-            'border-radius':'3px',
-            'z-index':10000
-        });
-        $(document.body).append($screen_box);
-        var monobox_ready = false;
-        $monosearch.on('fx-livesearch-showbox', function(e, box) {
-            if (monobox_ready) {
-                return;
-            }
-            $(box).on('mouseenter', '.search_item', function() {
-                var $item = $(this),
-                    ss = $item.data('value').screenshot;
-                if (!ss) {
-                    $screen_box.hide();
-                } else {
-                    var itembox = this.getBoundingClientRect();
-                    $screen_box.html('');
-                    $screen_box.append(
-                        '<img src="'+ss+'" />'
-                    );
-                    
-                    $screen_box.css({
-                        top: itembox.top,
-                        left: itembox.right
-                    }).show();
-                }
-            }).on('mouseleave', '.search_item', function() {
-                $screen_box.hide();
-            });
-        });
-    }
+    
+    
+    
     
     $settings_button.on('click', function() {
         var $c_field = $(this).closest('.field'),
@@ -492,7 +498,13 @@ less_tweaker.init_style_select = function($monosearch) {
                     */
                 },
                 onsubmit: function(e) {
-                    var $form = $(e.target);
+                    var $form = $(e.target),
+                        data = $form.formToHash();
+                    
+                    if (data.pressed_button === "delete") {
+                        return;
+                    }
+                    
                     return tweaker.make_screenshot().then(function(img_data) {
                        var $inp = $('<input type="hidden" name="screenshot" />');
                        $inp.val(img_data);
