@@ -304,7 +304,7 @@ bg.prototype.init = function() {
     $levels.on('change', function() {
         that.update();
     });
-    that.update(true);
+    that.update();
 };
 
 function background_level(params, value, sizing) {
