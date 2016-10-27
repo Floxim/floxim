@@ -193,7 +193,7 @@ $fx.measures.prototype = {
             min:0,
             max:10,
             step:0.5,
-            focus:true
+            is_single:true
         }, params);
         var $inp = $(
                 '<input class="' + this.cl('number-input')
@@ -201,14 +201,18 @@ $fx.measures.prototype = {
             ),
             that = this;
             
-        $fx_fields.handle_number_wheel($inp, {$target:$c});
+        $fx_fields.handle_number_wheel(
+            $inp, {
+                $target: params.is_single ? $c : null
+            }
+        );
         
         $inp.on('change input', function() {
             that.recount_value(index);
             return false;
         });
         $c.append($inp);
-        if (params.focus) {
+        if (params.is_single) {
             $c.on('click', function() {
                 $inp.focus().select();
             });
@@ -361,7 +365,7 @@ $fx.measures.borders.prototype.init_controls = function() {
                 min:0,
                 max:50,
                 step:1,
-                focus:false
+                is_single:false
             }, 
             n
         );
@@ -373,7 +377,7 @@ $fx.measures.borders.prototype.init_controls = function() {
                 min:0,
                 max:50,
                 step:1,
-                focus:false
+                is_single:false
             }, 
             n
         );
@@ -415,13 +419,6 @@ $fx.measures.borders.prototype.init_controls = function() {
         
         
         var $style = $fx_fields.livesearch({
-            /*
-            values: [
-                {id:'solid', name:"Solid <span style='border-bottom:1px solid #000; display:inline-block;'></span>"},
-                {id:'dotted',name:'Dotted'},
-                {id:'dashed',name:'Dashed'}
-            ],
-            */
             values: style_values,
             value:'solid'
         }, 'input');
