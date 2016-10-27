@@ -3,7 +3,7 @@
 var cl = $t.getBem('fx-measures');
 ?>
 <div class="<?= cl(null, 'prop_'+_c.prop)?>">
-    <input type="text"  style="width:600px;" name="<?= _c.name ?>" class="<?=cl('value')?>" value="<?=_c.value?>" />
+    <input type="hidden" name="<?= _c.name ?>" class="<?=cl('value')?>" value="<?=_c.value?>" />
     <div class="<?= cl('preview') ?>">
         <? for (var i = 0; i < 4; i++ ) { ?>
             <div class="<?= cl('preview-item', 'num_'+i) ?>"></div>
