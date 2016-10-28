@@ -591,6 +591,75 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         }
         return $vals;
     }
+    
+    public function printValues()
+    {
+        $res = call_user_func_array(array($this, 'getValues'), func_get_args());
+        if (count($res) === 0) {
+            return $res;
+        }
+        $first = current($res);
+        $html = '<table>';
+        $html .= '<tr>';
+        
+        $get_keys = function($item) {
+            if (is_array($item)) {
+                return array_keys($item);
+            }
+            if ($item instanceof \Traversable) {
+                $keys = array();
+                foreach ($item as $k => $v) {
+                    $keys []= $k;
+                }
+                return $keys;
+            }
+            
+            if ($item instanceof \Floxim\Floxim\System\Entity) {
+                return array_keys( $item->get() );
+            }
+            return false;
+        };
+        
+        $show_item = function($item) {
+            $html = '<td>';
+            if (is_scalar($item)) {
+                $html .= $item;
+            } elseif (is_object($item)) {
+                $html .= get_class($item);
+            } else {
+                $html .= gettype($item);
+            }
+            $html .= '</td>';
+            return $html;
+        };
+        
+        $first_keys = $get_keys($first);
+        if (!$first_keys) {
+            $html .= '<th>[val]</th>';
+        } else {
+            foreach ($first_keys as $k) {
+                $html .= '<th>'.$k.'</th>';
+            }
+        }
+        $html .= '</tr>';
+        
+        foreach ($res as $item) {
+            $html .= '<tr>';
+            $keys = $get_keys($item);
+            if (!$keys) {
+                $html .= $show_item($item);
+            } else {
+                foreach ($keys as $k) {
+                    $prop = $item[$k];
+                    $html .= $show_item($prop);
+                }
+            }
+            $html .= '</tr>';
+        }
+        
+        $html .= '</table>';
+        return '%raw%'.$html;
+    }
 
     public function getValues($field = null, $key_field = null, $as_collection = false)
     {

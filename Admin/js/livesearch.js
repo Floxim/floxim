@@ -35,7 +35,7 @@ window.fx_livesearch = function (node, params) {
     }
     
     var f_postfix = params.name_postfix ? '['+params.name_postfix+']' : '';
-    this.inputNameTpl = this.name+'[prototype]'+f_postfix;
+    this.inputNameTpl = this.name ? this.name+'[prototype]'+f_postfix : false;
     
     this.$input = this.$node.find('.'+bl+'__input');
     
@@ -47,7 +47,7 @@ window.fx_livesearch = function (node, params) {
             if (value && this.inpNames[value]) {
                 return this.inpNames[value];
             }
-            var name = this.inputNameTpl.replace(/prototype[0-9]?/, '');
+            var name = this.inputNameTpl ? this.inputNameTpl.replace(/prototype[0-9]?/, '') : false;
             return name;
         }
         return this.name;
@@ -93,7 +93,7 @@ window.fx_livesearch = function (node, params) {
         var vals = [];
         this.$node.find('.'+bl+'__item input[type="hidden"]').each(function() {
             var v = $(this).val();
-            if (v) {
+            if (v || livesearch.preset_values.length) {
                 vals.push(v);
             }
         });
@@ -393,7 +393,7 @@ window.fx_livesearch = function (node, params) {
         }
         
         var res_value = id;
-        if (!id || (id*1 === 0) ) {
+        if ( !this.preset_values.length && (!id || (id*1 === 0) ) ) {
             id = false;
             input_name = input_name+'[title]';
             res_value = name;

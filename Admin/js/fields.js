@@ -107,6 +107,14 @@ window.$fx_fields = {
     },
 
     measures: function(json) {
+        if (typeof json.label === 'undefined') {
+            var labels = {
+                borders: 'Рамка и углы',
+                margin: 'Внешний отступ',
+                padding: 'Внутренний отступ'
+            };
+            json.label = labels[json.prop];
+        }
         var $row = $t.jQuery('form_row', json);
         $fx.measures.create($row, json);
         return $row;

@@ -196,7 +196,10 @@ class Entity extends \Floxim\Floxim\System\Entity {
     {
         if (is_null($this->conditions)) {
             $conds = $this['conditions'];
-            $this->conditions = $conds ? json_decode($conds, true) : false;
+            if (!is_array($conds)) {
+                $conds = $conds ? json_decode($conds, true) : false;
+            }
+            $this->conditions = $conds;
         }
         return $this->conditions;
     }

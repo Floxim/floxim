@@ -12,6 +12,8 @@ window.condition_builder = function(params) {
     this.name = params.name;
     this.context = params.context;
     
+    this.debug = !!params.debug;
+    
     this.$node.data('condition_builder', this);
     
     if (params.types) {
@@ -249,6 +251,7 @@ window.condition_builder = function(params) {
         var vals = this.getValues( $items );
         return vals[0];
     };
+    
     
     this.getValues = function($items) {
         var values = [];
@@ -785,7 +788,18 @@ window.condition_builder = function(params) {
     };
     
     this.init = function() {
-        this.$input = $('<input type="hidden" name="'+this.name+'" />');
+        
+        if (this.debug) {
+            this.$input = $('<textarea name="'+this.name+'"></textarea>');
+            this.$input.css({
+                dispay:'block',
+                width:'500px',
+                height:'70px',
+                'font-size':'12px'
+            });
+        } else {
+            this.$input = $('<input type="hidden" name="'+this.name+'" />');
+        }
         this.$node.append(this.$input);
         if (!this.value) {
             var $initer = $('<a class="'+cl+'__initer">Добавить условие</a>');
@@ -842,6 +856,7 @@ window.condition_builder = function(params) {
         }
         that.recountGrouppers();
         that.recountValue();
+        e.stopImmediatePropagation();
         return false;
     });
 };

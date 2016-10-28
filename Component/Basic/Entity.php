@@ -503,11 +503,11 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
                 $linker_type = $linker_collection_field['params']['content_type'];
             } else {
                 $linker_type = $this['type'];
-                $linker_field['params']['conditions'] = array(
+                $linker_field['conditions'] = array(
                     array('type', $linker_type)
                 );
             }
-            $linker_field['params']['content_type'] = $linker_type;
+            $linker_field['content_type'] = $linker_type;
             $linker_field['label'] = fx::alang('Select').' '. mb_strtolower(fx::component($linker_type)->getItemName('add'));
             
             if (!$linker_collection_field || !$linker_collection_field['allow_select_doubles']) {

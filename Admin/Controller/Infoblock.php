@@ -750,6 +750,7 @@ class Infoblock extends Admin
     }
     public function scope($input) 
     {
+        
         if (isset($input['params']) && isset($input['params'][0])) {
             $input['infoblock_id'] = $input['params'][0];
         }
@@ -766,7 +767,7 @@ class Infoblock extends Admin
         if ($has_type_field) {
             $type_field = $this->getScopeTypeField($ib);
             $type_field['tab'] = 'header';
-            $type_field['values'][2][1] = 'Специальные условия';
+            $type_field['values'][3][1] = 'Специальные условия';
             $fields []= $type_field;
         }
         
@@ -775,9 +776,9 @@ class Infoblock extends Admin
             $scope['conditions'] = $input['conditions'];
         }
         
-        $path = fx::env()->getPath();
+        /*
+        $path = fx::env()->getPath(); 
         $scope_page_id = $scope->getScopePageId($path);
-        
         $q_field = array(
             'type' => 'radio_facet',
             'label' => 'Быстрый выбор',
@@ -795,6 +796,8 @@ class Infoblock extends Admin
         }
             
         //$fields []= $q_field;
+         * 
+         */
         
         $fields []= array(
             'name' => 'scope[id]',
@@ -825,6 +828,76 @@ class Infoblock extends Admin
             'header' => 'Где показывать блок?'
         );
     }
+    
+    public function checkScope($input)
+    {
+        $scope = fx::data('scope')->create(
+            array(
+                'conditions' => $input['conditions']
+            )
+        );
+        $finder = $scope->getPageFinder();
+        $finder->where('site_id', fx::env('site_id'));
+        
+        $finder->limit(10);
+        $finder->calcFoundRows();
+        
+        $pages = $finder->all();
+        if (count($pages) === 0) {
+            $count = 0;
+            $has_current_page = false;
+        } else {
+            $count = $finder->getFoundRows();
+            
+            
+            $c_page_id = fx::env('page_id');
+            
+            $c_page_in_found = $pages->findOne('id', $c_page_id);
+            
+            if ($c_page_in_found) {
+                $has_current_page = true;
+            } else {
+                if (count($pages) === $count) {
+                    $has_current_page = false;
+                } else {
+                    $has_current_page = (bool) $finder->where('id', $c_page_id)->one();
+                }
+            }
+        }
+        
+        $pages = $pages->getValues(function($p) {
+            return array(
+                'name' => $p['name'],
+                'type' => $p['type'],
+                'type_name' => $p->getComponent()->getItemName(),
+                'url' => $p['url']
+            );
+        });
+        
+        
+        if ($count === 0) {
+            $total_readable = 'Не нашлось <b>ни одной</b> подходящей страницы';
+        } else {
+            $total_readable = fx::util()->getDeclensionByNumber(
+                array(
+                    'Нашлась %s подходящая страница', 
+                    'Нашлось %s подходящих страницы',
+                    'Нашлось %s подходящих страниц'
+                ), 
+                $count
+            );
+            $total_readable = sprintf($total_readable, '<b>'.$count.'</b>');
+        }
+        
+        $res = array(
+            'total_readable' => $total_readable,
+            'total' => $count,
+            'pages' => $pages,
+            'has_current_page' => $has_current_page
+        );
+        // fx::log($input, $scope, $finder, $finder->showQuery(), $pages, $c_page, $count);
+        return $res;
+    }
 
     protected function getFormatFields(CompInfoblock\Entity $infoblock, $area_meta = null)
     {
@@ -838,20 +911,28 @@ class Infoblock extends Admin
             )
         );
         
+        $controller = $infoblock->initController();
+        $tmps = $controller->getAvailableTemplates(fx::env('theme_id'), $area_meta);
+        
         $tpl_field = $this->getTemplatesField(
-            $infoblock->initController(),
+            $tmps,
+            $controller,
             $area_meta
         );
-        $tpl_field['value'] = $ib_visual['template_variant_id'] ? $ib_visual['template_variant_id'] : $ib_visual['template'];
+        $tpl_field['value'] = $ib_visual['template_variant_id'] 
+                                ? $ib_visual['template_variant_id'] 
+                                : $ib_visual['template'];
+        
         $fields []= $tpl_field;
         
         return $fields;
     }
     
-    public function getTemplatesField($controller, $area_meta)
+    //public function getTemplatesField($controller, $area_meta)
+    public function getTemplatesField($tmps, $controller = null, $area_meta = null)
     {
         // Collect the available templates
-        $tmps = $controller->getAvailableTemplates(fx::env('theme_id'), $area_meta);
+        //$tmps = $controller->getAvailableTemplates(fx::env('theme_id'), $area_meta);
         $theme_variants = fx::env('theme')->get('template_variants');
         if (!empty($tmps)) {
             foreach ($tmps as $template) {
@@ -904,43 +985,18 @@ class Infoblock extends Admin
         return $container;
     }
     
-    protected function getWrapperFields($infoblock, $area_meta)
+    protected static function collectWrapperTemplates($area_meta)
     {
         
-        $visual = $infoblock->getVisual();
-        
-        //$layout_name = fx::data('layout', $visual->get('layout_id'))->get('keyword');
-        $layout_name = fx::env('theme')->get('layout');
-
-        $controller_name = $infoblock->getPropInherited('controller');
-        
-        
-        $fields = array();
-        
-        $area_suit = Template\Suitable::parseAreaSuitProp(isset($area_meta['suit']) ? $area_meta['suit'] : '');
-        
-        
-        $force_wrapper = $area_suit['force_wrapper'];
-        $default_wrapper = $area_suit['default_wrapper'];
-
-        $wrappers = array();
-        $c_wrapper = '';
-        if (!$force_wrapper) {
-            $wrappers[]= array('', '-', array('title' => fx::alang('With no wrapper', 'system')));
-            if ($visual['id'] || !$default_wrapper) {
-                $c_wrapper = $visual['wrapper'];
-            } else {
-                $c_wrapper = $default_wrapper[0];
-            }
-        }
-        
+        $wrapper_tpl = fx::template('floxim.layout.wrapper');
+        return \Floxim\Floxim\Template\Suitable::getAvailableWrappers($wrapper_tpl, $area_meta);
+        /*
         // Collect available wrappers
         $wrapper_sources = array(
-            'floxim.layout.wrapper',
-            'theme.' . $layout_name,
+            'floxim.layout.wrapper'
         );
         
-        
+        $wrappers = array();
         
         $cnt = 0;
         foreach ($wrapper_sources as $wrapper_source_keyword) {
@@ -954,35 +1010,69 @@ class Infoblock extends Admin
                 $wrappers[]= array($avail_wrapper['full_id'], $cnt,  array('title' => $avail_wrapper['name']));
             }
         }
+        return $wrappers;
+         * 
+         */
+    }
+    
+    protected function getWrapperFields($infoblock, $area_meta)
+    {
+        
+        $wrappers = self::collectWrapperTemplates($area_meta);
+        $controller = $infoblock->initController();
+        
+        $field = $this->getTemplatesField($wrappers, $controller, $area_meta);
+        $field['name'] = 'wrapper';
+        
+        $visual = $infoblock->getVisual();
+        $field['value'] = $visual['wrapper_variant_id'] 
+                                ? $visual['wrapper_variant_id'] 
+                                : $visual['wrapper'];
+        
+        return array($field);
+       
+        
+        
+        //$controller_name = $infoblock->getPropInherited('controller');
+        
+        
+        $fields = array();
+        
+        $area_suit = Template\Suitable::parseAreaSuitProp(isset($area_meta['suit']) ? $area_meta['suit'] : '');
+        
+        
+        $force_wrapper = $area_suit['force_wrapper'];
+        $default_wrapper = $area_suit['default_wrapper'];
 
+        
+        $wrappers = array();
+        $c_wrapper = '';
+        if (!$force_wrapper) {
+            $wrappers[]= array(
+                '', 
+                '-нет-', 
+                array('title' => fx::alang('With no wrapper', 'system'))
+            );
+            if ($visual['id'] || !$default_wrapper) {
+                $c_wrapper = $visual['wrapper'];
+            } else {
+                $c_wrapper = $default_wrapper[0];
+            }
+        }
+        
         
         if ($controller_name != 'layout' && (count($wrappers) > 1 || !isset($wrappers['']))) {
             $fields [] = array(
                 'label'     => fx::alang('Wrapper', 'system'),
                 'name'      => 'wrapper',
-                'type'      => 'radio_facet',
+                //'type'      => 'radio_facet',
+                'type' => 'livesearch',
                 'hidden_on_one_value' => true,
                 'values'    => $wrappers,
                 'value'     => $c_wrapper
             );
         }
         
-        
-        /** start getContainerSettings */
-        
-        /*
-        $container = $this->getWrapperContainer($visual);
-        
-        $container_fields = $container->getForm();
-        
-        foreach ($container_fields as $field) {
-            $field = \Floxim\Floxim\Admin\Response::addFieldPrefix($field, 'wrapper_visual');
-            $fields []= $field;
-        }
-         * 
-         */
-
-        /** end gcs */
         
         return $fields;
     }
@@ -1397,11 +1487,12 @@ class Infoblock extends Admin
     public function saveTemplateVariant($input)
     {
         $tv = isset($input['target_id']) && !$input['save_as_new'] 
-                    ?  fx::data('template_variant', $input['target_id'])
+                    ? fx::data('template_variant', $input['target_id'])
                     : fx::data('template_variant')->create(array(
                         'theme_id' => fx::env('theme_id'),
                         'template' => $input['basic_template']
                     ));
+
         if ($tv->isSaved() && $input['pressed_button'] === 'delete') {
             $template_value = $tv['template'];
             $tv->delete();
@@ -1411,19 +1502,24 @@ class Infoblock extends Admin
                     $tv[$prop] = $input[$prop];
                 }
             }
-            /*
-            $tv['params'] = $input['params'];
-            $tv['name'] = $input['name'];
-            $tv['is_locked'] = $input['is_locked'];
-             * 
-             */
             $tv->save();
             $template_value = $tv['id'];
         }
         
+        $controller = fx::controller($input['controller']);
+        $area = $input['area'];
+        
+        if ($input['template_type'] === 'wrapper') {
+            $templates = self::collectWrapperTemplates($area);
+        } else {
+            $templates = $controller->getAvailableTemplates(null, $area);
+        }
+        
+        
         $template_field = $this->getTemplatesField(
-            fx::controller($input['controller']), 
-            $input['area']
+            $templates, 
+            $controller,
+            $area
         );
         
         return array(

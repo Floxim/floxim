@@ -133,6 +133,9 @@ class Test extends Admin {
     {
         $vals = array(
             array(
+                '', 'Empty val'
+            ),
+            array(
                 'test', '1. My Test'
             ),
             array(

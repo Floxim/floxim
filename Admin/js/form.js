@@ -34,8 +34,10 @@ fx_form = {
         $form.append('<iframe id="'+settings.form.target+'" name="'+settings.form.target+'" style="display:none;"></iframe>');
         $target.html('').append($form);
         
+        var header_order = settings.header_order || 'title-fields-tabs';
+        
         var $form_header = $(
-            '<div class="'+bl+'__header">'+
+            '<div class="'+bl+'__header '+bl+'__header_order_'+header_order+'">'+
                 (settings.header ? '<div class="'+bl+'__title">'+ settings.header +'</div>' : '')+
             '</div>'
         );
@@ -136,6 +138,7 @@ fx_form = {
                     target_class = bl+'__'+json.tab+'_fields',
                     $target = $tab_container.find('.'+target_class);
                 if ($target.length === 0) {
+                    
                     $target = $('<div class="'+target_class+'"></div>');
                     $tab_container.append($target);
                 }

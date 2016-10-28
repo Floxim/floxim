@@ -214,6 +214,8 @@
             });
             
             load_promise.then(function() {
+                
+                $form.trigger('fx_panel_form_loaded');
             
                 setTimeout(function() {
                     var callback = function() {

@@ -1145,6 +1145,7 @@ span.fx_area_marker {
         right:40px;
         min-width:450px;
         width:auto;
+        z-index:2;
         .fx_admin_form__header {
             border-bottom:none;
             padding-bottom:0;
@@ -2169,5 +2170,64 @@ html {
         font-size:12px;
         color:#666;
         font-weight:100;
+    }
+}
+
+
+.fx-scope-check-result {
+    margin-top: 50px;
+    margin-left:-40px;
+    margin-right:-40px;
+    padding: 10px 20px;
+    border: 1px solid #eee;
+    
+    //font-size:14px;
+    
+    &__title {
+        font-size:18px;
+        span {
+            font-size:14px;
+        }
+    }
+    
+    
+    &_valid {
+        background:#DFD;
+    }
+    &_invalid {
+        background:#FDD;
+    }
+    ul, li {
+        margin:0;
+        padding:0;
+    }
+    ul {
+        margin-left:15px;
+    }
+    &__warning {
+        color:#C00;
+    }
+    div&__warning {
+        font-size:17px;
+    }
+    &__unlock {
+        border-bottom:1px dashed #2d63ff;
+    }
+    li {
+        list-style-type:none;
+        &:before {
+            content:"\2014 ";
+            margin-right:5px;
+            display:inline-block;
+        }
+        
+        font-size:12px;
+        color:#666;
+        margin-bottom:4px;
+        
+        a {
+            
+            text-decoration:none;
+        }
     }
 }

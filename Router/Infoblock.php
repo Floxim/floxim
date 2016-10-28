@@ -56,6 +56,7 @@ class Infoblock extends Base
         $infoblock_overs = fx::input('post', 'override_infoblock');
         if (fx::isAdmin() && $infoblock_overs) {
             $infoblock->override($infoblock_overs);
+            fx::log($infoblock, $infoblock_overs);
         }
         $infoblock->overrideParam('ajax_mode', true);
         if (isset($_POST['content_parent_props'])) {

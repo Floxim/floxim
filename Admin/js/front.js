@@ -2753,7 +2753,7 @@ fx_front.prototype.hilight_empty_infoblock_areas = function($ib, mode) {
     });
 };
 
-fx_front.prototype.edit_style_variant = function(template_ls, ib_data) {
+fx_front.prototype.edit_style_variant = function(template_ls) {
     var fields = [],
 
         c_value = template_ls.getFullValue(),
@@ -2855,19 +2855,22 @@ fx_front.prototype.edit_style_variant = function(template_ls, ib_data) {
 
 function save_template_variant(data, template_ls) {
     var c_value = template_ls.getFullValue(),
-        ib_data = template_ls.$node.closest('form').formToHash();
+        ib_data = template_ls.$node.closest('form').formToHash(),
+        type = template_ls.template_type;
+
     $.extend(
         data, 
         {
             entity:'infoblock',
             action: 'save_template_variant',
             basic_template: c_value.basic_template || c_value.id,
-            params : ib_data.visual['template_visual'],
+            params : ib_data.visual[type+'_visual'],
             controller: ib_data.controller,
-            area: JSON.parse(ib_data.area)
+            area: JSON.parse(ib_data.area),
+            template_type: type
         }
     );
-
+    
     return new Promise(function(resolve, reject) {
         $fx.post(
             data,
@@ -2887,6 +2890,7 @@ function handle_template_lock_state(template_ls) {
         cl = 'fx-template-visual-fields',
         $container = $field.closest('.fx_tab_data').find('.'+cl),
         opts_cl = cl+'__unlock-options';
+    
     if (is_locked && !$container.find('.'+opts_cl).length) {
         var $opts = $(
             '<div class="'+opts_cl+'">'+
@@ -2954,30 +2958,55 @@ fx_front.prototype.show_infoblock_settings_form = function(data, $ib_node, tab) 
         onload: function($form) {
             $form.data('ib_node', $ib_node);
             $fx.front.hilight_empty_infoblock_areas($ib_node, 'show');
-            var $template_ls = $('input[name="visual[template]"]', $form).closest('.livesearch'),
-                template_ls = $template_ls.data('livesearch');
             
-           
             function add_variant_controls($node, value) {
-                var locked = value.is_locked*1 ? 'locked' : 'unlocked',
-                    cl = 'fx-template-variant-options';
+                if (value.id === '') {
+                    return;
+                }
+                var template_ls = $node.closest('.livesearch').data('livesearch'),
+                    locked = value.is_locked*1 ? 'locked' : 'unlocked',
+                    is_locked = locked === 'locked',
+                    cl = 'fx-template-variant-options',
+                    is_preset = !!value.basic_template,
+                    template_type = template_ls.template_type;
+                
+                var c_html = '<span class="'+cl+' '+cl+'_'+locked+'" '+
+                        (is_preset && is_locked ? 'style="display:none;"' : '')+'>';
+                if (is_preset) {
+                    c_html += '<a data-action="lock" style="display:none;" '+
+                                  'class="fx_icon fx_icon-type-'+locked+'"></a> ';
+                    
+                    c_html += '<a data-action="copy" class="fx_icon fx_icon-type-place"'+
+                                ' title="копировать в блок"></a> ';
+                }
+                c_html += '<a data-action="edit" '+
+                            ' class="fx_icon fx_icon-type-edit" '+
+                            (is_preset && is_locked ? ' style="display:none;" ' : '')+
+                            ' title="'+(is_preset ? 'изменить пресет' : 'сохранить как пресет')+'">'+
+                           '</a> ';
+                c_html += '</span>';
                 var $controls = $(
+                    c_html
+                        /*
                     '<span class="'+cl+' '+cl+'_'+locked+'">'+
                         ( value.basic_template 
                             ? 
-                            '<a data-action="lock" class="fx_icon fx_icon-type-'+locked+'" title="изменить пресет"></a> ' +
+                            '<a data-action="lock" style="display:none;" class="fx_icon fx_icon-type-'+locked+'" title="изменить пресет"></a> ' +
                             '<a data-action="copy" class="fx_icon fx_icon-type-place" title="копировать в блок"></a> '
                             : '' 
                         ) +         
                         '<a data-action="edit" class="fx_icon fx_icon-type-edit" title="сохранить"></a> '+
                     '</span>'
+                        */
                 );
                 $controls.on('click', 'a', function(e) {
                     var $button = $(this),
                         c_value = template_ls.getFullValue();
                     switch ($button.data('action')) {
                         case 'edit':
-                            $fx.front.edit_style_variant(template_ls, $form.formToHash());
+                            $fx.front.edit_style_variant(
+                                template_ls
+                            );
                             break;
                         case 'lock':
                             var data = {
@@ -2988,8 +3017,10 @@ fx_front.prototype.show_infoblock_settings_form = function(data, $ib_node, tab) 
                             break;
                         case 'copy':
                             var c_data = $form.data('last_data');
-                            c_data.visual.template = c_value.basic_template;
+                            // change template prop in current data to force visual props sending 
+                            c_data.visual[template_type] = c_value.basic_template;
                             template_ls.setValue(c_value.basic_template);
+                            console.log('copying');
                             break;
                             
                     }
@@ -2997,25 +3028,39 @@ fx_front.prototype.show_infoblock_settings_form = function(data, $ib_node, tab) 
                 });
                 $node.append($controls);
             }
-           
-            $template_ls.on('livesearch_value_added', function(e) {
-                add_variant_controls(e.$value_node, e.value);
+            
+            var template_types = ['template', 'wrapper'],
+                template_inputs = {};
+            
+            $.each(template_types, function(i, tt) {
+                var $ls = $('input[name="visual['+tt+']"]', $form).closest('.livesearch'),
+                    ls = $ls.data('livesearch');
+                template_inputs[tt] = {
+                    $input: $ls,
+                    livesearch: ls
+                };
+                
+                ls.template_type = tt;
+                
+                $ls.on('livesearch_value_added', function(e) {
+                    add_variant_controls(e.$value_node, e.value);
+                });
+
+                add_variant_controls(
+                    $ls.find('.monosearch__item'),
+                    ls.getFullValue()
+                );
             });
             
-            add_variant_controls(
-                $template_ls.find('.monosearch__item'),
-                template_ls.getFullValue()
-            );
-            
             return $fx.front.extract_infoblock_visual_fields($ib_node, $form)
-            .then(
-                function() {
+            .then( function() {
                 
-                handle_template_lock_state(template_ls);
+                $.each(template_inputs, function(type, inputs) {
+                    handle_template_lock_state(inputs.livesearch);
+                });
                 
                 $form.data('last_data', $form.formToHash());
-                var template_types = ['template', 'wrapper'],
-                    update_timeout = null;
+                var update_timeout = null;
 
                 $form.on('change.fx_front', function(e) {
                     
@@ -3031,6 +3076,7 @@ fx_front.prototype.show_infoblock_settings_form = function(data, $ib_node, tab) 
 
                         // поменяли шаблон
                         if (new_data.visual[tt] != c_data.visual[tt]) {
+                            console.log('change / unset', tt);
                             delete new_data.visual[tt+'_visual'];
                         }
                     }
@@ -3052,12 +3098,18 @@ fx_front.prototype.show_infoblock_settings_form = function(data, $ib_node, tab) 
                                         if (!$fx.front.get_selected_item()) {
                                             $fx.front.select_item($new_ib_node);
                                         }
+                                        
+                                        $.each(template_inputs, function(type, inputs) {
+                                            handle_template_lock_state(inputs.livesearch);
+                                        });
+                                        /*
                                         var $template_ls = $form.find('[name="visual[template]"]').closest('.livesearch'),
                                             template_ls = $template_ls.data('livesearch');
 
                                         if (template_ls) {
                                             handle_template_lock_state(template_ls);
                                         }
+                                        */
 
                                         if (focused_name) {
                                             var $focused_input = $form.find('[name="'+focused_name+'"]');

@@ -120,7 +120,11 @@ bg.prototype.get_value = function() {
         res = this.get_lightness_value() + ', ';
         res += level_vals.join(', ');
     } else {
-        res = 'none';
+        if (!this.lightness_is_locked()) {
+            res = this.get_lightness_value();
+        } else {
+            res = 'none';
+        }
     }
     return res;
 };

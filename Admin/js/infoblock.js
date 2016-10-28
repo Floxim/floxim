@@ -69,12 +69,12 @@ function handle_favorites($form) {
     */
 }
 
-$('html').on('fx_panel_form_ready', function(e) {
+$('html').on('fx_panel_form_loaded', function(e) {
     var $form = $(e.target),
         $scope_inp = $('input[name="scope[type]"]', $form),
         $scope_params_inp = $('input[name="scope[params]"]', $form);
         
-    handle_favorites($form);
+    // handle_favorites($form);
     
     if ($scope_inp.length === 0 ){ 
         return;
@@ -123,92 +123,124 @@ $('html').on('fx_panel_form_ready', function(e) {
             form_class:'fx_scope_form',
             is_fluid:true,
             onready: function($scope_form) {
-                var $page_control = $('input[name="scope[page_id]"]', $scope_form),
-                    $cond_control = $('.fx-condition-builder', $scope_form),
-                    cond_builder = $cond_control.data('condition_builder'),
-                    path_ids = [],
-                    last_page_id = $page_control.val();
-                    
-                $('.fx-radio-facet__variant', $page_control).each(function() {
-                    path_ids.push( $(this).data('value') );
-                });
                 
-                function is_page_cond(cond, page_id) {
-                    if (cond.field !== 'entity' || cond.inverted ) {
-                        return false;
+                var $cond_control = $('.fx-condition-builder', $scope_form),
+                    cond_builder = $cond_control.data('condition_builder'),
+                    $type_field = $('.field_name__type .livesearch', $scope_form),
+                    type_ls = $type_field.data('livesearch'),
+                    $check_res = $("<div class='fx-scope-check-result'></div>");
+            
+                $cond_control.after($check_res);
+            
+                function is_special_scope() {
+                    if (!type_ls) {
+                        return true;
                     }
-                    for (var i = 0; i < cond.value.length; i++) {
-                        if (cond.value[i] === page_id) {
-                            return true;
-                        }
-                    }
-                    return false;
+                    return type_ls.getValue() === 'custom';
                 }
                 
-                $page_control.on('change', function() {
-                    var c_cond = cond_builder.getValue(),
-                        c_page_id = $page_control.val(),
-                        is_last_page = $('.fx-radio-facet__variant_active', $page_control).is(':last-child'),
-                        page_cond = {
-                            field:'entity',
-                            type: is_last_page ? 'is_in' : 'is_under_or_equals',
-                            inverted:false,
-                            value:[c_page_id]
+                function validate_cond(e) {
+                    
+                    if (!is_special_scope()) {
+                        $check_res.hide();
+                        $fx_form.unlock_form($scope_form);
+                        return;
+                    }
+                    
+                    $fx_form.lock_form($scope_form);
+                    
+                    var conditions = cond_builder.getValue();
+                    if (!conditions) {
+                        $check_res.hide();
+                        return;
+                    }
+                    
+                    $fx.post(
+                        {
+                            entity:'infoblock',
+                            action:'check_scope',
+                            conditions: JSON.stringify(conditions)
                         },
-                        new_cond = null,
-                        replace_cond_page = function(cond, last_page_id, c_page_id) {
-                            for (var i = 0; i < cond.value; i++) {
-                                if (cond.value[i] === last_page_id) {
-                                    cond.value[i] = c_page_id;
+                        function(res) {
+                            var cl = 'fx-scope-check-result';
+                            var title = res.total_readable;
+                            var unlock = res.has_current_page;
+                            
+                            if (res.total > 1) {
+                                title += ',<br />';
+                                if (res.has_current_page) {
+                                    title += '<span>включая текущую</span>';
+                                } else {
+                                    title += '<span class="'+cl+'__warning">среди них нет текущей страницы!</span>';
                                 }
                             }
-                            if (!is_last_page && cond.type === 'is_in') {
-                                cond.type = page_cond.type;
+                            
+                            var h = '<p class="'+cl+'__title">'+title+'</p>',
+                                hide_list = res.pages.length > 5;
+                            
+                            if (res.total > 0) {
+                                if (hide_list) {
+                                    h += '<p class="'+cl+'__expander"><a>показать</a></p>';
+                                }
+                                h += '<ul '+ (hide_list ? 'style="display:none;" ' : '')+'>';
+                                for (var i = 0; i < res.pages.length; i++) {
+                                    var page = res.pages[i];
+                                    h += '<li>'+
+                                        '<span>'+page.type_name+'</span> &laquo;'+
+                                        '<a href="'+page.url+'" target="_blank">'+page.name+'</a>&raquo;'+
+                                        '</li>';
+                                }
+                                if (res.total > res.pages.length) {
+                                    h += '<li><b>и еще '+(res.total - res.pages.length)+'</b></li>';
+                                }
+                                h += '</ul>';
                             }
-                            return cond;
-                        };
-                    // no conditions
-                    if (c_cond === undefined) {
-                        new_cond = page_cond;
-                    } 
-                    // one condition
-                    else if (c_cond.type !== 'group') {
-                        if (is_page_cond(c_cond, last_page_id )) {
-                            new_cond = replace_cond_page(c_cond, last_page_id, c_page_id);
-                        } else {
-                            new_cond = {
-                                type:'group',
-                                logic:'AND',
-                                values:[
-                                    c_cond,
-                                    page_cond
-                                ]
-                            };
-                        }
-                    } 
-                    // many conditions
-                    else {
-                        new_cond = c_cond;
-                        var page_cond_found = false;
-                        for (var i = 0; i < new_cond.values.length; i++) {
-                            var c_prev_cond = new_cond.values[i];
-                            if (is_page_cond(c_prev_cond, last_page_id)) {
-                                new_cond.values[i] = replace_cond_page(c_prev_cond, last_page_id, c_page_id);
-                                page_cond_found = true;
+                            
+                            if (!res.has_current_page && res.total > 0) {
+                                h += '<div class="'+cl+'__warning">'+
+                                        '<p>Внимание! Блок <b>исчезнет</b> с текущей страницы!</p>'+
+                                        '<p><a class="'+cl+'__unlock">все равно хочу сохранить</a></p>'+
+                                     '</div>';
+                            }
+                            
+                            $check_res.html(h).show();
+                            
+                            if (hide_list) {
+                                $check_res.find('.'+cl+'__expander').click(function() {
+                                    $check_res.find('ul').show();
+                                    $(this).remove();
+                                });
+                            }
+                            
+                            $check_res.attr('class', cl);
+                            
+                            if (unlock) {
+                                $fx_form.unlock_form($scope_form);
+                                $check_res.addClass(cl+'_valid');
+                            } else {
+                                $check_res.addClass(cl+'_invalid');
+                                $check_res.find('.'+cl+'__unlock').click(function() {
+                                    $fx_form.unlock_form($scope_form);
+                                    $(this).remove();
+                                });
                             }
                         }
-                        if (!page_cond_found) {
-                            new_cond.values.push(page_cond);
-                        }
-                    }
-                    cond_builder.redraw(new_cond);
-                    last_page_id = c_page_id;
-                });
+                    );
+                    
+                    
+                }
+                
+                $cond_control.on('change', validate_cond);
+                $type_field.on('change', validate_cond);
+                validate_cond();
             },
             onsubmit: function(e) {
                 var $scope_form = $(e.target),
                     form_data = $scope_form.formToHash();
-            
+                    
+                if ($fx_form.form_is_locked($scope_form)) {
+                    return;
+                }
                 // no valid conditions
                 if (!form_data.scope.conditions) {
                     form_data.type = last_scope_type === 'custom' ? 'all_pages' : last_scope_type;
@@ -225,7 +257,7 @@ $('html').on('fx_panel_form_ready', function(e) {
                 return false;
             },
             oncancel: function(){
-                scope_ls.setValue(last_scope_type);
+                scope_ls.setValue(last_scope_type, true);
             }
         });
     }
