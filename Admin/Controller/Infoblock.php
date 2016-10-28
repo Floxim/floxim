@@ -1024,7 +1024,17 @@ class Infoblock extends Admin
         $field = $this->getTemplatesField($wrappers, $controller, $area_meta);
         $field['name'] = 'wrapper';
         
+        array_unshift(
+            $field['values'],
+            array(
+                '',
+                '-нет-'
+            )
+        );
+        
         $visual = $infoblock->getVisual();
+        
+        
         $field['value'] = $visual['wrapper_variant_id'] 
                                 ? $visual['wrapper_variant_id'] 
                                 : $visual['wrapper'];
