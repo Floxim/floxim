@@ -1,0 +1,11 @@
+<!--[input ? _c.type == 'iconpicker']-->
+<div class="fx-iconpicker">
+    <span class="fx-iconpicker__handler">
+        <span class="fx-iconpicker__preview"><span></span></span>
+        <input type="hidden" name="<?= _c.name ?>" value="<?= _c.value ?>"/>
+    </span>
+    <div class="fx-iconpicker__popup"></div>
+</div>
+
+<!--jquery-->
+new fx_iconpicker(_c, html);

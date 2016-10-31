@@ -410,6 +410,97 @@ less_tweaker.bind_style_preview = function(ls) {
     });
 };
 
+less_tweaker.handle_style_control = function(ls_json, ls) {
+    var current_style = ls.getFullValue(),
+        block_name = ls_json.block,
+        style_value = current_style.id.replace(/_variant_[^_]+$/, ''),
+        style_variant_id = current_style.style_variant_id,
+        style_id = ls_json.style_id,
+        tweaker = null;
+
+    $fx.front_panel.load_form(
+        {
+            entity:'layout',
+            action:'style_settings',
+            style_variant_id: style_variant_id,
+            block: block_name,
+            style:style_value
+        },
+        {
+            view:'horizontal',
+            onready: function($form) {
+                var $as_new_inp = $('input[name="save_as_new"]', $form);
+                if ($as_new_inp.length) {
+                    var $name_input = $('[name="style_name"]', $form),
+                        initial_name = $name_input.val(),
+                        last_name = initial_name;
+
+                    $as_new_inp.on('change', function() {
+                        if ($as_new_inp.val()*1 === 1) {
+                            last_name = $name_input.val();
+                            if (last_name === initial_name) {
+                                $name_input.val('').focus();
+                            }
+                        } else {
+                            $name_input.val(last_name);
+                        }
+                    });
+                }
+
+                var style_meta = $form.data('fx_response').tweaker,
+                    params = $.extend(
+                        {},
+                        style_meta,
+                        {
+                            $form: $form,
+                            style_id: style_id,
+                            vars: style_meta.tweaked_vars
+                        }
+                    );
+
+                tweaker = new less_tweaker(params);
+            },
+            onsubmit: function(e) {
+                var $form = $(e.target),
+                    data = $form.formToHash();
+
+                if (data.pressed_button === "delete") {
+                    return;
+                }
+
+                return tweaker.make_screenshot().then(function(img_data) {
+                   var $inp = $('<input type="hidden" name="screenshot" />');
+                   $inp.val(img_data);
+                   $form.append($inp);
+                });
+            },
+            onfinish: function(res) {
+                var new_val = style_value+ (res.id ? '_variant_'+res.id : '');
+
+                delete $fx.front.cached_style_variants[block_name];
+
+                ls.updatePresetValues(res.variants);
+                ls.setValue(new_val);
+                if (res.saved_as_new) {
+                    var $ib_node = $($fx.front.get_selected_item()).closest('.fx_infoblock');
+                    if ($ib_node.length) {
+                        $ib_node.on('fx_infoblock_unloaded', function() {
+                            tweaker.cancel();
+                        });
+                    } else {
+                        tweaker.cancel();
+                    }
+                }
+            },
+            oncancel: function() {
+                if (tweaker) {
+                    tweaker.cancel();
+                }
+            }
+        }
+    );
+};
+
 less_tweaker.init_style_select = function($monosearch) {
     var ls = $monosearch.data('livesearch');
     if (!ls || !ls.preset_values) {
@@ -419,127 +510,20 @@ less_tweaker.init_style_select = function($monosearch) {
     if (!c_value || !c_value.is_tweakable) {
         return;
     }
-    var $settings_button = $('<a class="fx-style-tweaker-link fx_icon fx_icon-type-settings"></a>'),
-        that = this,
-        source_json = $monosearch.closest('.field').data('source_json'),
-        style_id = source_json.style_id;
-    
-    less_tweaker.bind_style_preview($monosearch.data('livesearch'));
-    
-    $monosearch.after ( $settings_button );
+    var source_json = $monosearch.closest('.field').data('source_json'),
+        livesearch = $monosearch.data('livesearch');
+
+    less_tweaker.bind_style_preview(livesearch);
     
     
-    
-    
-    
-    $settings_button.on('click', function() {
-        var $c_field = $(this).closest('.field'),
-            $ls = $c_field.find('.livesearch'),
-            ls_json = $c_field.data('source_json'),
-            ls = $ls.data('livesearch'),
-            current_style = ls.getFullValue(),
-            block_name = ls_json.block,
-            style_value = current_style.id.replace(/_variant_[^_]+$/, ''),
-            style_variant_id = current_style.style_variant_id,
-            tweaker = null;
-            
-        $fx.front_panel.load_form(
-            {
-                entity:'layout',
-                action:'style_settings',
-                style_variant_id: style_variant_id,
-                block: block_name,
-                style:style_value
-            },
-            {
-                view:'horizontal',
-                onready: function($form) {
-                    var $as_new_inp = $('input[name="save_as_new"]', $form);
-                    if ($as_new_inp.length) {
-                        var $name_input = $('[name="style_name"]', $form),
-                            initial_name = $name_input.val(),
-                            last_name = initial_name;
-                        
-                        $as_new_inp.on('change', function() {
-                            if ($as_new_inp.val()*1 === 1) {
-                                last_name = $name_input.val();
-                                if (last_name === initial_name) {
-                                    $name_input.val('').focus();
-                                }
-                            } else {
-                                $name_input.val(last_name);
-                            }
-                        });
-                    }
-                    
-                    var style_meta = $form.data('fx_response').tweaker,
-                        params = $.extend(
-                            {},
-                            style_meta,
-                            {
-                                $form: $form,
-                                style_id: style_id,
-                                vars: style_meta.tweaked_vars//,
-                                //is_new: style_variant_id === null
-                            }
-                        );
-                    
-                    tweaker = new less_tweaker(params);
-                    /*
-                    $form.find('.fx_admin_form__title').click(function() {
-                        tweaker.make_screenshot().then(function(img_data, canvas) {
-                            var $body = $(document.body),
-                                img = new Image();
-                            img.src = img_data;
-                            $body.append(img);
-                            $body.append(canvas);
-                        });
-                    });
-                    */
-                },
-                onsubmit: function(e) {
-                    var $form = $(e.target),
-                        data = $form.formToHash();
-                    
-                    if (data.pressed_button === "delete") {
-                        return;
-                    }
-                    
-                    return tweaker.make_screenshot().then(function(img_data) {
-                       var $inp = $('<input type="hidden" name="screenshot" />');
-                       $inp.val(img_data);
-                       $form.append($inp);
-                    });
-                },
-                onfinish: function(res) {
-                    var new_val = style_value+ (res.id ? '_variant_'+res.id : ''),
-                        style_ls = $monosearch.data('livesearch');
-                    
-                    delete $fx.front.cached_style_variants[block_name];
-                    
-                    console.log($.extend(true, {}, $fx.front.cached_style_variants));
-                    
-                    style_ls.updatePresetValues(res.variants);
-                    style_ls.setValue(new_val);
-                    if (res.saved_as_new) {
-                        var $ib_node = $($fx.front.get_selected_item()).closest('.fx_infoblock');
-                        if ($ib_node.length) {
-                            $ib_node.on('fx_infoblock_unloaded', function() {
-                                console.log('canca');
-                                tweaker.cancel();
-                            });
-                        } else {
-                            tweaker.cancel();
-                        }
-                    }
-                },
-                oncancel: function() {
-                    if (tweaker) {
-                        tweaker.cancel();
-                    }
-                }
+    livesearch.bindValueControls(function() {
+        var value = livesearch.getFullValue();
+        livesearch.addValueControl({
+            icon: value.style_variant_id ? 'edit' : 'add-round',
+            action: function() {
+                less_tweaker.handle_style_control(source_json, livesearch);
             }
-        );
+        });
     });
 };
 

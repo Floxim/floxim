@@ -297,6 +297,38 @@
     &_no-empty &__container {
         background:#FFF;
     }
+    
+    &__item-controls {
+        padding-left: 4px;
+        border-left: 1px solid #ccc;
+        border-right: 1px solid #ccc;
+        height: 34px;
+        display: inline-block;
+        margin-top: -4px;
+        margin-bottom: -3px;
+        vertical-align: top;
+        margin-left: 10px;
+        margin-right: 5px;
+        
+        .fx_icon {
+            position:relative;
+            margin-right:5px;
+            margin-top:3px;
+
+            &:not(:last-child) {
+                &:after {
+                    content:'';
+                    position:absolute;
+                    height:34px;
+                    top:-3px;
+                    right:-5px;
+                    width:1px;
+                    display:block;
+                    border-right:1px solid #CCC;
+                }
+            }
+        }
+    }
 }
 
 /* Suggests */

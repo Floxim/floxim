@@ -261,15 +261,7 @@ window.fx_livesearch = function (node, params) {
             success:function(res){
                 livesearch.addSilent = true;
                 livesearch.$node.css('visibility', 'hidden');
-                /*
-                res.results.sort(function(a, b) {
-                    if (ids.indexOf(a.id) < ids.indexOf(b.id) )
-                        return -1;
-                    if (ids.indexOf(a.id) > ids.indexOf(b.id) )
-                        return 1;
-                    return 0;  
-                }); 
-                */
+                
                 $.each(res.results, function(index, item) {
                     livesearch.addValue(
                         $.extend({}, item, {input_name:livesearch.inpNames[item.id]})
@@ -380,13 +372,6 @@ window.fx_livesearch = function (node, params) {
         if (!this.is_multiple) {
             var current_value = this.getValue();
             if (current_value !== null) {
-                /*
-                // value did not changed
-                if (current_value === id) {
-                    this.showValue();
-                    return;
-                }
-                */
                 // remove old value
                 this.removeValue(this.getValueNode(), true);
             }
@@ -459,6 +444,38 @@ window.fx_livesearch = function (node, params) {
         }
         this.Suggest.hideBox();
     };
+    
+    this.bindValueControls = function(callback) {
+        this.$node.on('livesearch_value_added', function() {
+            callback(livesearch);
+        });
+        callback(this);
+    };
+    
+    this.addValueControl = function(params) {
+        var $item = this.$node.find('.'+bl+'__item'),
+            $controls = $item.find('.'+bl+'__item-controls');
+        if ($controls.length === 0) {
+            $controls = $('<span class="'+bl+'__item-controls"></span>');
+            $item.find('.'+bl+'__item-title').after($controls);
+        }
+        var html = '<span class="'+bl+'__item-control';
+        if (params.icon) {
+            html += ' fx_icon fx_icon-type-'+params.icon;
+        }
+        html += '"></span>';
+        var $control = $(html);
+        $controls.append($control);
+        if (params.action) {
+            $control.click(function() {
+                var c_value = livesearch.getFullValue();
+                params.action(c_value, livesearch);
+                return false;
+            });
+        }
+        return $control;
+    };
+    
     
     this.addDisabled = false;
     this.disableAdd = function() {
@@ -571,6 +588,10 @@ window.fx_livesearch = function (node, params) {
         this.$input.on('fx_livesearch_request_end', function(){
             $('.livesearch__control_spinner', livesearch.$container).remove();
             livesearch.$container.find('.livesearch__control').show();
+        });
+        
+        this.$input.on  ('change', function() {
+            return false;
         });
         
         if (this.is_multiple && $.sortable) {

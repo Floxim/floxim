@@ -205,12 +205,9 @@ class Entity extends System\Entity
     public function _getWrapperVisual()
     {
         $wv = $this['wrapper_variant'];
-        fx::log('gwv', $wv);
         if (!$wv) {
-            fx::log('ret real', $this);
             return $this->getReal('wrapper_visual');
         }
-        fx::log('ret wv');
         return $wv['params'];
     }
     

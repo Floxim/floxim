@@ -205,6 +205,7 @@ class Admin extends System\Controller
             $path_floxim . '/Admin/js/css-font.js',
             $path_floxim . '/Admin/js/font-preview.js',
             $path_floxim . '/Admin/js/bem-less.js',
+            $path_floxim . '/Admin/js/iconpicker.js',
             $path_floxim . '/lib/js/html2canvas.js'
         );
         $page = fx::page();

@@ -457,7 +457,7 @@ fx_edit_in_place.prototype.start = function(meta) {
             }
             var $field = this.add_panel_field(field_meta);
             if (is_linker_selector) {
-                $field.on('change', function() {
+                $field.on('change', function(e) {
                     edit_in_place.fix().save().stop();
                 });
             }

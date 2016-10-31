@@ -482,22 +482,23 @@ class Layout extends Admin
         if (!$is_new) {
             $using_blocks = $style_variant->findUsingBlocks();
             
-            //$using_blocks = fx::data('infoblock')->all();
             
-            $res['tabs']['usage_scope'] = 'Где используется ('.count($using_blocks).')';
-            
-            $using_list = $using_blocks->getValues(
-                function($ib) {
-                    return $ib->getSummary();
-                }
-            );
-            
-            $res['fields'][]= array(
-                'name' => 'using_block_list',
-                'type' => 'infoblock_list',
-                'value' => $using_list,
-                'tab' => 'usage_scope'
-            );
+            if ( count($using_blocks) > 1) {
+                $res['tabs']['usage_scope'] = 'Используется ('.count($using_blocks).')';
+
+                $using_list = $using_blocks->getValues(
+                    function($ib) {
+                        return $ib->getSummary();
+                    }
+                );
+
+                $res['fields'][]= array(
+                    'name' => 'using_block_list',
+                    'type' => 'infoblock_list',
+                    'value' => $using_list,
+                    'tab' => 'usage_scope'
+                );
+            }
         }
         
         if ($style_variant['id']) {

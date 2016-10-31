@@ -598,6 +598,7 @@ fx_front.prototype.show_adder_placeholder = function($placeholder, $rel_node, re
                     }
                 } else {
                     $fx.front.select_item($placeholder_focus);
+                    
                     var 
                         link_field_name = $placeholder.data('fx_entity_meta').placeholder_linker._link_field,
                         selector_selector = '.fx_node_panel__item-field_name-'+link_field_name,
@@ -1220,9 +1221,20 @@ fx_front.prototype.draw_select_path = function($node) {
         }
         if ($cp.is('.fx_infoblock')) {
             var ib_meta = $cp.data('fx_infoblock');
+            
+            var controller_parts = ib_meta.controller.split(':'),
+                controller = controller_parts[0],
+                action = controller_parts[1],
+                icon = 'ib-' + (action.match(/list_/) ? action.replace(/_/, '-') : 'widget');
+                
+                
+            
+            
             block_found = true;
             path_items.push({
                 type:'Блок',
+                icon: icon,
+                controller:controller,
                 label: ib_meta.name || '#'+ib_meta.id,
                 node:$cp,
                 controls:[
@@ -1262,11 +1274,19 @@ fx_front.prototype.draw_select_path = function($node) {
     }
     path_items[0].is_active = true;
     $path_panel.show();
-    $.each(path_items.reverse(), function() {
+    this.add_select_path_items(path_items.reverse());
+};
+
+fx_front.prototype.add_select_path_items = function(items) {
+    var $path_panel = $fx.front.get_select_path_panel(),
+        $path_container = $path_panel.find('.fx_select_path_panel__path');
+    
+    $.each(items, function() {
         var bl = 'fx_select_path_item',
             item = this;
-        var $item = $('<div class="'+bl+ (item.is_active ? ' '+ bl + "-active" : '')+'">'+
+        var $item = $('<div class="'+bl+ (item.is_active ? ' '+ bl + "-active" : '')+(item.icon ? ' '+bl+'_with-icon' : '')+'">'+
                         '<div class="'+bl+'__title">'+
+                            (item.icon ? '<div class="'+bl+'__icon fx_icon fx_icon-type-'+item.icon+'"></div>' : '')+
                             '<div class="'+bl+'__type">'+item.type+'</div>'+
                             '<div class="'+bl+'__label">'+item.label+'</div>'+
                         '</div>'+
@@ -2959,74 +2979,39 @@ fx_front.prototype.show_infoblock_settings_form = function(data, $ib_node, tab) 
             $form.data('ib_node', $ib_node);
             $fx.front.hilight_empty_infoblock_areas($ib_node, 'show');
             
-            function add_variant_controls($node, value) {
+            function add_variant_controls(template_ls) {
+                var value = template_ls.getFullValue();
                 if (value.id === '') {
                     return;
                 }
-                var template_ls = $node.closest('.livesearch').data('livesearch'),
-                    locked = value.is_locked*1 ? 'locked' : 'unlocked',
+                var locked = value.is_locked*1 ? 'locked' : 'unlocked',
                     is_locked = locked === 'locked',
-                    cl = 'fx-template-variant-options',
                     is_preset = !!value.basic_template,
                     template_type = template_ls.template_type;
                 
-                var c_html = '<span class="'+cl+' '+cl+'_'+locked+'" '+
-                        (is_preset && is_locked ? 'style="display:none;"' : '')+'>';
-                if (is_preset) {
-                    c_html += '<a data-action="lock" style="display:none;" '+
-                                  'class="fx_icon fx_icon-type-'+locked+'"></a> ';
-                    
-                    c_html += '<a data-action="copy" class="fx_icon fx_icon-type-place"'+
-                                ' title="копировать в блок"></a> ';
+                if (is_preset && is_locked) {
+                    return;
                 }
-                c_html += '<a data-action="edit" '+
-                            ' class="fx_icon fx_icon-type-edit" '+
-                            (is_preset && is_locked ? ' style="display:none;" ' : '')+
-                            ' title="'+(is_preset ? 'изменить пресет' : 'сохранить как пресет')+'">'+
-                           '</a> ';
-                c_html += '</span>';
-                var $controls = $(
-                    c_html
-                        /*
-                    '<span class="'+cl+' '+cl+'_'+locked+'">'+
-                        ( value.basic_template 
-                            ? 
-                            '<a data-action="lock" style="display:none;" class="fx_icon fx_icon-type-'+locked+'" title="изменить пресет"></a> ' +
-                            '<a data-action="copy" class="fx_icon fx_icon-type-place" title="копировать в блок"></a> '
-                            : '' 
-                        ) +         
-                        '<a data-action="edit" class="fx_icon fx_icon-type-edit" title="сохранить"></a> '+
-                    '</span>'
-                        */
-                );
-                $controls.on('click', 'a', function(e) {
-                    var $button = $(this),
-                        c_value = template_ls.getFullValue();
-                    switch ($button.data('action')) {
-                        case 'edit':
-                            $fx.front.edit_style_variant(
-                                template_ls
-                            );
-                            break;
-                        case 'lock':
-                            var data = {
-                                'is_locked': c_value.is_locked*1 === 0 ? 1 : 0,
-                                target_id: c_value.id
-                            };
-                            save_template_variant(data, template_ls);
-                            break;
-                        case 'copy':
+                if (is_preset) {
+                    template_ls.addValueControl({
+                        icon: 'place',
+                        action: function(c_value) {
                             var c_data = $form.data('last_data');
+                            
                             // change template prop in current data to force visual props sending 
                             c_data.visual[template_type] = c_value.basic_template;
                             template_ls.setValue(c_value.basic_template);
-                            console.log('copying');
-                            break;
-                            
+                        }
+                    });
+                }
+                template_ls.addValueControl({
+                    icon: is_preset ? 'edit' : 'add-round',
+                    action: function() {
+                        $fx.front.edit_style_variant(
+                            template_ls
+                        );
                     }
-                    return false;
                 });
-                $node.append($controls);
             }
             
             var template_types = ['template', 'wrapper'],
@@ -3041,15 +3026,7 @@ fx_front.prototype.show_infoblock_settings_form = function(data, $ib_node, tab) 
                 };
                 
                 ls.template_type = tt;
-                
-                $ls.on('livesearch_value_added', function(e) {
-                    add_variant_controls(e.$value_node, e.value);
-                });
-
-                add_variant_controls(
-                    $ls.find('.monosearch__item'),
-                    ls.getFullValue()
-                );
+                ls.bindValueControls(add_variant_controls);
             });
             
             return $fx.front.extract_infoblock_visual_fields($ib_node, $form)

@@ -582,4 +582,14 @@ class Test extends Admin {
         );
         return array('fields' => array($f));
     }
+    
+    public function icons()
+    {
+        $f = array(
+            'type' => 'iconpicker',
+            'label' => 'Иконка',
+            'value' => 'fa glass'
+        );
+        return array('fields' => array($f));
+    }
 }

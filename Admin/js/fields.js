@@ -482,8 +482,8 @@ window.$fx_fields = {
 
             $cval.toggleClass('fx-palette__value-color_empty', !value);
 
-            if (hide) {
-                hide_colors();
+            if (hide && closer) {
+                closer();
             }
 
             $value.val(value);

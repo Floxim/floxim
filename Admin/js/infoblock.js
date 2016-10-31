@@ -87,13 +87,28 @@ $('html').on('fx_panel_form_loaded', function(e) {
     }
 
     var infoblock_id = $form.find('input[name="id"]').val(),
-        $scope_link = $('<a class="fx_form_extra_link">Настроить...</a>'),
+        //$scope_link = $('<a class="fx_form_extra_link">Настроить...</a>'),
         last_scope_type = scope_ls.getValue();
         
-    $scope_ls.before($scope_link);
+    //$scope_ls.before($scope_link);
+    
+    scope_ls.bindValueControls(function() {
+        //var c_value = scope_ls.getFullValue();
+        if (scope_ls.getValue() !== 'custom') {
+            return;
+        }
+        scope_ls.addValueControl({
+            icon:'edit',
+            action: function() {
+                show_scope_dialog({
+                    force_scope_type:true
+                });
+            }
+        });
+    });
     
     
-    
+    /*
     function handle_scope_link_visibility() {
         if ($scope_ls.data('livesearch').getValue() !== 'custom') {
             $scope_link.hide();
@@ -105,7 +120,8 @@ $('html').on('fx_panel_form_loaded', function(e) {
     }
     
     handle_scope_link_visibility();
-    
+    */
+   
     function show_scope_dialog(dialog_params) {
         dialog_params = $.extend(
             {
@@ -250,7 +266,7 @@ $('html').on('fx_panel_form_loaded', function(e) {
                 } else {
                     $scope_params_inp.val( JSON.stringify(form_data.scope) );
                 }
-                handle_scope_link_visibility();
+                //handle_scope_link_visibility();
                 $fx.front_panel.hide();
                 e.stopImmediatePropagation();
                 last_scope_type = scope_ls.getValue();
@@ -262,12 +278,14 @@ $('html').on('fx_panel_form_loaded', function(e) {
         });
     }
     
+    /*
     $scope_link.on('click', function() {
         show_scope_dialog({
             force_scope_type:true
         });
     });
-    
+    */
+   
     $scope_ls.on('change', function() {
         var ls_value = $scope_ls.data('livesearch').getValue();
         if (ls_value !== 'custom') {
