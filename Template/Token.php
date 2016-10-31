@@ -262,7 +262,8 @@ class Token
                 'bem_element',
                 'param',
                 'preset',
-                'use'
+                'use',
+                'first'
             )
         ),
         'preset'  => array(
@@ -424,6 +425,10 @@ class Token
         'set' => array(
             'type' => 'both',
             'contains' => array('code', 'var', 'lang', 'call', 'apply', 'if', 'elseif', 'else', 'each')
+        ),
+        'first' => array(
+            'type' => 'double',
+            'contains' => array('param', 'set', 'default', 'code', 'var', 'lang', 'call', 'apply', 'if', 'elseif', 'else', 'each')
         )
     );
 

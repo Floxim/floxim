@@ -555,7 +555,6 @@ class Entity extends System\Entity implements Template\Entity
         }
         $tpl_wrap->isWrapper(true);
         $wrap_params = $this->getPropInherited('visual.wrapper_visual');
-        fx::log('wo', $wrapper, $wrap_params);
         
         if (!is_array($wrap_params)) {
             $wrap_params = array();

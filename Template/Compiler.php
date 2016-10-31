@@ -1935,11 +1935,46 @@ class Compiler
         }
         return '';
     }
+    
+    /**
+     * 
+     * @param \Floxim\Floxim\Template\Token $token
+     * @return \Floxim\Floxim\Template\Token $token First block
+     */
+    protected function findFirstBlock(Token $token)
+    {
+        $children = $token->getChildren();
+        if (!$children) {
+            return;
+        }
+        foreach ($children as $child) {
+            if ($child->name === 'first') {
+                return $child;
+            }
+            $inside = $this->findFirstBlock($child);
+            if ($inside) {
+                return $inside;
+            }
+        }
+    }
+    
+    protected function tokenFirstToCode($token)
+    {
+        return '';
+    }
 
     protected function childrenToCode(Token $token)
     {
         $parts = array();
         $param_parts = array();
+        
+        $first_block = $this->findFirstBlock($token);
+        if ($first_block && !$first_block->getProp('ready')) {
+            foreach ($first_block->getChildren() as $child) {
+                $param_parts [] = $this->getTokenCode($child, $token);
+            }
+            $first_block->setProp('ready', true);
+        }
         foreach ($token->getChildren() as $child) {
             if ($child->name === 'param') {
                 $param_parts []= $this->tokenParamToCode($child);
