@@ -18,7 +18,6 @@ class Entity extends \Floxim\Floxim\System\Entity
         $bundle_dir = $b->getDirPath();
         if ($bundle_dir) {
             $dir = dirname($bundle_dir);
-            fx::log('del bundl dir', $dir);
             return fx::files()->rm($dir);
         }
     }
