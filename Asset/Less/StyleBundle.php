@@ -331,20 +331,18 @@ class StyleBundle extends Bundle {
             )
         );
 
+        $less_vars = $this->getLayoutVars();
+        $less_call = $this->generateCallLess();
+        
         try {
-            $less_vars = $this->getLayoutVars();
-            $less_call = $this->generateCallLess();
-            
             $parser->parse( $less_call );
-            
-            $parser->ModifyVars($less_vars);
-            
+            $parser->ModifyVars($less_vars);    
             $res = $parser->getCss();
-            
             $this->generateExportFile();
-            
         } catch (\Less_Exception_Compiler $e) {
-            fx::log($e, fx::debug()->backtrace(), $parser);
+            fx::log($e, fx::debug()->backtrace(), $parser, $less_vars, $less_call);
+        } catch (\Less_Exception_Parser $e) {
+            fx::log('parser ex', $e, $e->getTrace(), fx::debug()->backtrace(), $parser, $less_vars, $less_call);
         }
         $res = self::minifyLess($res);
         return $res;

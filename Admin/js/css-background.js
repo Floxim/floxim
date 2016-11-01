@@ -695,6 +695,7 @@ background_level.color.prototype.draw_value = function() {
     var $c = $fx_fields.control({
         type:'palette',
         opacity:true,
+        empty:false,
         value: this.value.join(' ')
     });
     this.$color_inp = $c.find('.fx-palette__value');
