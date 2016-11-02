@@ -552,7 +552,9 @@ class Thumb
             $target_path = $this->source_path;
         } elseif ($target_path === null || $output) {
             header("Content-type: " . $this->info['mime']);
-            ob_end_clean();
+            while (ob_get_level() > 0) {
+                ob_end_clean();
+            }
         } else {
             fx::files()->mkdir(dirname($target_path));
         }
