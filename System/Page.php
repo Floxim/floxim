@@ -514,6 +514,8 @@ class Page
         $all_fonts = \Floxim\Floxim\Asset\Fonts::getAvailableFonts();
         $font_types = \Floxim\Floxim\Component\Palette\Entity::getFontTypes();
         
+        $theme_fonts = fx::env('theme')->getThemeFonts();
+        
         foreach ($vars as $k => $v) {
             if (preg_match("~^font_~", $k)) {
                 $v = trim($v, '"');
@@ -534,6 +536,7 @@ class Page
         $js = '$fx.container.layout_sizes = ' .json_encode( \Floxim\Floxim\Template\Container::getLayoutSizes()).";\n";
         $js .= '$fx.layout_vars = '.json_encode( $vars ).";\n";
         $js .= '$fx.layout_fonts = '.json_encode( $fonts ).";\n";
+        $js .= '$fx.theme_fonts = '.json_encode( $theme_fonts ).";\n";
         $this->addJsText($js);
     }
 
@@ -552,6 +555,13 @@ class Page
                 . strip_tags($this->metatags['seo_keywords']) . '" />' . PHP_EOL;
         }
         $r .= '<base href="'.(is_null($this->base_url) ? FX_BASE_URL : $this->base_url).'/" />';
+        
+        $this->setAfterBody( 
+            \Floxim\Floxim\Asset\Fonts::getLoaderJS(
+                fx::env('palette')->getUsedFonts()
+            ) 
+        );
+        
 
         $r .= $this->getAssetsCode();
         
@@ -565,12 +575,6 @@ class Page
 
         $buffer = preg_replace("~<title>.+</title>~i", '', $buffer);
         $buffer = preg_replace("~</head\s*?>~i", $r . '$0', $buffer);
-        
-        $this->setAfterBody( 
-            \Floxim\Floxim\Asset\Fonts::getLoaderJS(
-                fx::env('palette')->getUsedFonts()
-            ) 
-        );
         
         if (count($this->after_body)) {
             $after_body = $this->after_body;

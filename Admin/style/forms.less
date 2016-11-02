@@ -1464,6 +1464,24 @@ select.fx_input {
                 color:#FFF;
             }
         }
+        &_tweaked {
+            position:relative;
+            &:after {
+                content:'*';
+                position:absolute;
+                top:-13px;
+                left:14px;
+                color:#F00;
+            }
+        }
+    }
+    &__popup {
+        position:fixed;
+        z-index:10001;
+        padding:10px;
+        border-radius:3px;
+        background:#FFF;
+        .fx_shadow();
     }
 }
 

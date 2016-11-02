@@ -185,12 +185,14 @@ class Entity extends \Floxim\Floxim\System\Entity {
     public function paramsFromInput($input)
     {
         $res = array_merge((array) $this['params'], self::getDefaults());
+        fx::log($input);
         foreach ($input as $k => $v) {
             if (preg_match("~^font_(.+)~", $k, $font_type)) {
                 $res['fonts'][$font_type[1]] = $v;
                 continue;
             }
             if (preg_match("~^color-(.+)~", $k, $color_type)) {
+                /*
                 $v = json_decode($v, true);
                 $color = array('vals' => array());
                 foreach ($v as $cpk => $cpv) {
@@ -203,6 +205,9 @@ class Entity extends \Floxim\Floxim\System\Entity {
                         }
                     }
                 }
+                 * 
+                 */
+                $color = json_decode($v, true);
                 $res['colors'][$color_type[1]] = $color;
                 continue;
             }

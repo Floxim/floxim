@@ -105,7 +105,6 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
                 $f = $sub_bundle->getFilePath();
                 $href = fx::path()->http($f);
                 $styles []= $href;
-                //$res .= '<link type="text/css" href="'.$href.'" rel="stylesheet" />';
             }
         }
         $res = array(
@@ -114,11 +113,6 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
             'blocks' => $blocks
         );
         return $res;
-        /*
-        $res = join("\n", $declarations)."\n".$res;
-        return $res;
-         * 
-         */
     }
     
     public function isDefaultBundle()

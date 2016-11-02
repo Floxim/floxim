@@ -36,6 +36,16 @@ window.fx_font_preview = {
         
         var type_list = this.fonts.types[type],
             res = [];
+    
+        if ($fx.theme_fonts) {
+            $.each($fx.theme_fonts, function(font, props) {
+                res.push({
+                    id:font,
+                    name: font
+                });
+            });
+        };
+        
         
         for (var i = 0; i < type_list.length; i++) {
             //var font_name = this.fonts.fonts[i],

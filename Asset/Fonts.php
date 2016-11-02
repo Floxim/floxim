@@ -28,6 +28,12 @@ class Fonts {
             }
             $font = $font.':latin,cyrillic';
         }
+        $theme_fonts = fx::env('theme')->getThemeFonts();
+        foreach ($theme_fonts as $theme_font) {
+            if (isset($theme_font['css'])) {
+                fx::page()->addCssBundle(array($theme_font['css']));
+            }
+        }
         ?>
         <script>
         if (window.WebFont) {
@@ -62,7 +68,7 @@ class Fonts {
     
     public static function getAvailableFonts()
     {
-        return array (
+        $res = array (
             'Andika' => 
             array (
               'regular',
@@ -522,6 +528,12 @@ class Fonts {
               'regular',
             ),
           );
+        
+        $theme_fonts = fx::env('theme')->getThemeFonts();
+        foreach ($theme_fonts as $font => $params) {
+            $res[$font] = $params['styles'];
+        }
+        return $res;
     }
     
     public static function getAvailableFontValues()

@@ -377,6 +377,11 @@ abstract class Entity implements \ArrayAccess, Template\Entity
         $this->offsetSet($parts[0], $c_value);
         return $this;
     }
+    
+    public function dig($path)
+    {
+        return fx::dig($this, $path);
+    }
 
     public function getId()
     {

@@ -24,13 +24,17 @@ $fx.colorset = function($field, params) {
         params.value = {
             hue: color.h,
             saturation: color.s
-        }
+        };
     }
+    
+    console.log(params.value);
     
     var val = $.extend(
         {
             hue:0,
-            saturation:1
+            saturation:1,
+            tweaked: {},
+            vals: []
         },
         params.value
     );
@@ -56,13 +60,27 @@ $fx.colorset = function($field, params) {
     this.saturation = Math.min(val.saturation, saturation_range[1]);
     this.hue = val.hue;
     
+    this.tweaked = val.tweaked;
+    
     this.hue_slider = this.draw_hue( 
         this.find( 'common hue' ), 
         0, 
         359 
     );
     
-    this.count_colors = this.get_color_nodes().length;
+    var $colors = this.get_color_nodes();
+    
+    this.count_colors = $colors.length;
+    
+    $.each(val.tweaked, function(index, is_tweaked) {
+        if (!is_tweaked) {
+            return;
+        }
+        var c_value = val.vals[index],
+            $c_color = $colors.eq(index);
+        
+        $c_color.data('value', c_value);
+    });
     
     this.saturation_slider = this.draw_saturation( 
         this.find('common saturation'), 
@@ -72,9 +90,76 @@ $fx.colorset = function($field, params) {
     setTimeout(function() {
         that.recount_colors();
     },50);
+    
+    this.$node.on('click', '.'+cl+'__color', function() {
+        that.show_color_tweaker($(this));
+    });
 };
 
 $fx.colorset.prototype = {
+    
+    show_color_tweaker: function($color) {
+        var c_value = $color.data('value'),
+            box = $color[0].getBoundingClientRect(),
+            $popup = $(
+                '<div class="fx_overlay fx-colorset__popup">'+
+                    '<input type="text" value="'+c_value+'" />'+
+                    '<button>ok</button>'+
+                '</div>'
+            ),
+            index = this.get_color_nodes().index($color),
+            that = this;
+    
+        $('body').append($popup);
+        $popup.css({
+            top: box.bottom,
+            left: box.left
+        });
+        var $inp = $popup.find('input').first(),
+            $submit = $popup.find('button');
+        
+        $inp.focus();
+        
+        function get_color() {
+            var cv = $inp.val(),
+                color = tinycolor(cv);
+            if (!color.isValid()) {
+                return false;
+            } 
+            return color.toHexString();
+        }
+        
+        $inp.on('input', function() {
+            var color = get_color();
+            $submit.attr('disabled', color ? null : 'disabled');
+        })
+        .on('keydown', function(e) {
+            if (e.which === 13) {
+                save();
+                return false;
+            }
+        });
+        
+        var closer = $fx.close_stack.push(
+            function() {
+                $popup.remove();
+            },
+            $popup
+        );
+
+        function save() {
+            var color = get_color();
+            if (!color) {
+                return;
+            }
+            $color.data('value', color);
+            that.tweaked[index] = true;
+            that.recount_colors();
+            closer();
+        }
+
+        $submit.click(save);
+    },
     
     normalize_hue: function (val) {
         if (val < 0) {
@@ -186,13 +271,15 @@ $fx.colorset.prototype = {
         
         for (var i = 0; i < colors.length; i++) {
             var color = colors[i],
-                $c = $colors.eq(i);
-            var hex = color.toHexString();
-            
+                $c = $colors.eq(i),
+                is_tweaked = typeof this.tweaked[i] !== 'undefined' && this.tweaked[i],
+                hex = is_tweaked ? $c.data('value') : color.toHexString();
+        
             $c
                 .css('background', hex)
                 .attr('title', hex.toUpperCase() + ' | '+this.name+'_'+i)
-                .data('value', hex);
+                .data('value', hex)
+                .toggleClass('fx-colorset__color_tweaked', is_tweaked);
         }
         this.save();
     },
@@ -242,19 +329,23 @@ $fx.colorset.prototype = {
     },
     
     save: function() {
-        var props = {
+        var res = {
             hue: this.round(this.hue),
-            saturation: this.round ( this.saturation , 3 )
+            saturation: this.round ( this.saturation , 3 ),
+            vals: []
         };
-        this.get_color_nodes().each(function(i) {
-            props[i] = $(this).data('value');
+        this.get_color_nodes().each(function() {
+            res.vals.push( $(this).data('value') );
         });
-        var res = {},
-            that =  this;
+        
+        /*
         $.each(props, function (prop, val) {
             var key = that.name+'-'+prop;
             res[key] = val;
         });
+        */
+        res.tweaked = this.tweaked;
+        console.log(res);
         this.find('value').val( JSON.stringify(res) ).trigger('change');
     },
     

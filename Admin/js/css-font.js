@@ -34,7 +34,7 @@ window.fx_font_control = function(json) {
             '900':'Жирный'
         };
         for (var i = 0 ; i < font.styles.length; i++) {
-            var val = font.styles[i],
+            var val = font.styles[i]+'',
                 weight = val.match(/\d00/),
                 italic = val.match(/italic/);
 
