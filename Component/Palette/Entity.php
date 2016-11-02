@@ -192,21 +192,6 @@ class Entity extends \Floxim\Floxim\System\Entity {
                 continue;
             }
             if (preg_match("~^color-(.+)~", $k, $color_type)) {
-                /*
-                $v = json_decode($v, true);
-                $color = array('vals' => array());
-                foreach ($v as $cpk => $cpv) {
-                    if (preg_match("~-([^\-]+)$~", $cpk, $cp)) {
-                        $cp = $cp[1];
-                        if (is_numeric($cp)) {
-                            $color['vals'][$cp] = $cpv;
-                        } else {
-                            $color[$cp] = $cpv;
-                        }
-                    }
-                }
-                 * 
-                 */
                 $color = json_decode($v, true);
                 $res['colors'][$color_type[1]] = $color;
                 continue;

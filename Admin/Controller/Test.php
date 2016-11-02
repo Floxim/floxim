@@ -12,8 +12,8 @@ class Test extends Admin {
             'palette' => array(
                 'label' => 'Color',
                 'type' => 'colorset',
-                //'value' => fx::env('palette')->dig('params.colors.alt')
-                'value' =>json_decode('{"palette-0":"#870043","palette-1":"#ad0056","palette-2":"#ef0087","palette-3":"#ff9dce","palette-4":"#ffc1e0","palette-5":"#ffdeef","palette-hue":330,"palette-saturation":1,"tweaked":{"2":true}}',true)
+                'value' => fx::env('palette')->dig('params.colors.alt')
+                //'value' =>json_decode('{"palette-0":"#870043","palette-1":"#ad0056","palette-2":"#ef0087","palette-3":"#ff9dce","palette-4":"#ffc1e0","palette-5":"#ffdeef","palette-hue":330,"palette-saturation":1,"tweaked":{"2":true}}',true)
             )
         );
         $this->response->addFields($fields);

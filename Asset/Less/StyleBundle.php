@@ -639,10 +639,13 @@ class StyleBundle extends Bundle {
     
     protected function prepareStyleField($props)
     {
+        /*
         if ($props['type'] === 'palette') {
             $props['colors'] = fx::env()->getLayoutStyleVariant()->getPalette();
             //$props['empty'] = false;
         }
+         * 
+         */
         if ($props['units'] && $props['value']) {
             $props['value'] = preg_replace("~[^\d\.]+~", '', $props['value']);
         }

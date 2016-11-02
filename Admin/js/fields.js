@@ -880,11 +880,15 @@ window.$fx_fields = {
         return $t.jQuery('form_row', json);
     },
 
-    button: function (json) {
+    button: function (json, template) {
         if (!json.type) {
             json = $.extend({}, json, {type: 'button'} );
         }
-        return $t.jQuery('form_row', json);
+        var $res = $t.jQuery('form_row', json);
+        if (template !== 'input') {
+            return $res;
+        }
+        return $res.find('.fx_button');
     },
 
     link: function(json) {

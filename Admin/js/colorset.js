@@ -102,21 +102,57 @@ $fx.colorset.prototype = {
         var c_value = $color.data('value'),
             box = $color[0].getBoundingClientRect(),
             $popup = $(
-                '<div class="fx_overlay fx-colorset__popup">'+
-                    '<input type="text" value="'+c_value+'" />'+
-                    '<button>ok</button>'+
+                '<div class="fx_overlay fx_admin_form fx-colorset__popup">'+
+                    //'<input type="text" value="'+c_value+'" />'+
                 '</div>'
             ),
             index = this.get_color_nodes().index($color),
-            that = this;
+            that = this,
+            is_tweaked = typeof this.tweaked[index] !== 'undefined' && this.tweaked[index];
     
+        var $rgb = $fx_fields.input({
+                type:'text',
+                value: c_value
+            }),
+            $inp = $rgb.find('input'),
+            $preview = $('<span class="fx-colorset__popup-preview"></span>');
+            
+        $inp.after($preview);
+        
+        $preview.css('background-color', c_value);
+        
+        $popup.append($rgb);
+        
+        if (is_tweaked) {
+            var $cancel = $fx_fields.button(
+                {
+                    label:'Восстановить',
+                    class:'delete'
+                }, 
+                'input'
+            );
+            $popup.append($cancel);
+            $cancel.click(function() {
+                delete that.tweaked[index];
+                that.recount_colors();
+                closer();
+            });
+        }
+        
+        var $submit = $fx_fields.button(
+            {
+                label:'Заменить цвет'
+            }, 
+            'input'
+        );
+        $popup.append($submit);
+        
         $('body').append($popup);
         $popup.css({
             top: box.bottom,
             left: box.left
         });
-        var $inp = $popup.find('input').first(),
-            $submit = $popup.find('button');
+        var $inp = $popup.find('input').first();
         
         $inp.focus();
         
@@ -131,7 +167,10 @@ $fx.colorset.prototype = {
         
         $inp.on('input', function() {
             var color = get_color();
-            $submit.attr('disabled', color ? null : 'disabled');
+            $submit.toggleClass('fx_button-disabled', !color);
+            if (color) {
+                $preview.css('background-color', color);
+            }
         })
         .on('keydown', function(e) {
             if (e.which === 13) {
@@ -147,6 +186,7 @@ $fx.colorset.prototype = {
             $popup
         );
 
+        
         function save() {
             var color = get_color();
             if (!color) {
@@ -338,14 +378,7 @@ $fx.colorset.prototype = {
             res.vals.push( $(this).data('value') );
         });
         
-        /*
-        $.each(props, function (prop, val) {
-            var key = that.name+'-'+prop;
-            res[key] = val;
-        });
-        */
         res.tweaked = this.tweaked;
-        console.log(res);
         this.find('value').val( JSON.stringify(res) ).trigger('change');
     },
     
