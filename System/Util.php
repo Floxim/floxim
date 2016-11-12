@@ -785,7 +785,10 @@ class Util
     {
         $map = array(
             'assets' => fx::path('@files/asset_cache'),
-            'templates' => fx::path('@files/compiled_templates')
+            'templates' => fx::path('@files/compiled_templates'),
+            'meta' => function() {
+                fx::cache('meta')->flush();
+            }
         );
         
         if ($what === null) {
@@ -801,7 +804,11 @@ class Util
                 continue;
             }
             $dir = $map[$c_what];
-            fx::files()->rm($dir);
+            if (is_callable($dir)) {
+                call_user_func($dir);
+            } else {
+                fx::files()->rm($dir);
+            }
         }
     }
     
@@ -829,5 +836,47 @@ class Util
             }
         }
         return $res;
+    }
+    
+    public static function findUsedPics()
+    {
+        $all_pics = [];
+
+        $paths = array(
+            'infoblock_visual.template_visual',
+            'infoblock_visual.wrapper_visual',
+            'template_variant.params',
+            'style_variant.less_vars'
+        );
+
+        foreach ($paths as $path) {
+            list($com, $field) = explode('.', $path);
+            $items = fx::data($com)->where($field, '%floxim_files%', 'like')->all();
+            foreach ($items as $entity) {
+                $entity->traverseProp($field, function($val, $path) use (&$all_pics) {
+                    if ( preg_match("~(/floxim_files[^\\\"]+)~", $val, $found_path)) {
+                        $all_pics []= $found_path[1];
+                    }
+                });
+            }
+        }
+
+        $image_fields = fx::data('field')->where('type', 'image')->all()->group('component_id');
+
+        foreach ($image_fields as $com_id => $com_fields) {
+            $com = fx::component($com_id);
+            $q = fx::data($com['keyword']);
+            foreach ($com_fields as $f) {
+                $q->where($f['keyword'], '', '!=');
+            }
+            $data = $q->all();
+            foreach ($data as $entity) {
+                foreach ($com_fields as $f) {
+                    $all_pics []= $entity[$f['keyword']];
+                }
+            }
+        }
+        
+        return $all_pics;
     }
 }

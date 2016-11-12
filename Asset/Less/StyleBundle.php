@@ -680,7 +680,7 @@ class StyleBundle extends Bundle {
     
     public function getScreenPath()
     {
-        return $this->getDirPath().'/screenshot.jpg';
+        return $this->getDirPath().'/screenshot.png';
     }
     
     public function getScreenshot()

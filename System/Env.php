@@ -231,16 +231,6 @@ class Env
     public function getLayoutStyleVariant()
     {
         throw new \Exception("no more layoutStyleVariant!");
-        if (isset($this->current['style_variant'])) {
-            return $this->current['style_variant'];
-        }
-        $id = $this->getLayoutStyleVariantId();
-        $variant = fx::data('style_variant', $id);
-        if (!$variant) {
-            $variant = fx::data('style_variant')->create();
-        }
-        $this->current['style_variant'] = $variant;
-        return $variant;
     }
     
     protected static function getLayoutPreviewCookieName($site_id = null)
@@ -315,6 +305,7 @@ class Env
 
     /**
      * Get currently runnnig template
+     * @return \Floxim\Floxim\Template\Template
      */
     public function getCurrentTemplate()
     {

@@ -1410,10 +1410,11 @@ abstract class Finder
             if ($scope === 'context') {
                 $is_true = \Floxim\Floxim\Component\Scope\Entity::checkCondition($cond);
                 $res = array(
-                    $is_true ? '1' : '0',
                     null,
+                    $is_true ? '1' : '0',
                     'RAW'
                 );
+                fx::cdebug($res);
                 return $res;
             }
         }

@@ -404,7 +404,7 @@ window.$fx = {
     show_error: function(json) {
         var errors = [];
         if (!json.errors) {
-            errors.push("unknown error");
+            errors.push(json.text || "unknown error");
         } else {
             $.each(json.errors, function(i, e) {
                 errors.push(typeof e === 'string' ? e : e.text);
@@ -433,8 +433,11 @@ window.$fx = {
         document.location.href = typeof new_location === 'string' ? new_location : document.location.href.replace(/#.*$/, '');  
     },
         
-    post: function ( data, callback ) {
+    post: function ( data, callback, error_callback ) {
         data.fx_admin = true;
+        
+        error_callback = error_callback || function() {};
+        
         if (!data._base_url) {
             data._base_url = document.location.href.replace(/#.*$/, '');
         }
@@ -453,6 +456,7 @@ window.$fx = {
                 }
                 if (json.status === 'error') {
                     $fx.show_error(json);
+                    error_callback();
                     return;
                 }
                 if (callback) {
@@ -463,6 +467,7 @@ window.$fx = {
                 if ( textStatus === 'parsererror') {
                     $fx.show_status_text( $fx.lang('Server error:') + jqXHR.responseText, 'error');
                 }
+                error_callback();
                 return false;
             }  
         });
@@ -540,6 +545,55 @@ window.$fx = {
                  .attr('unselectable', 'on')
                  .css('user-select', 'none')
                  .on('selectstart', false);
+    },
+    
+    
+    parse_css_value: function(s) {
+        var seps = [' ', ','],
+            res = [
+                ['']
+            ],
+            index = [
+                0,
+                0
+            ];
+
+        s = s.replace(/^\s+|\s+$/, '');
+        s = s.replace(/\s/g, ' ');
+
+        var q = null,
+            last_sep = null;
+
+        for (var i = 0; i < s.length; i++) {
+            var ch = s[i];
+            var sep_level = seps.indexOf(ch);
+            if (sep_level === -1 || q !== null) {
+
+                if (last_sep !== null) {
+                    if (last_sep === 1) {
+                        index[0]++;
+                        index[1] = 0;
+                        res[index[0]] = [''];
+                    } else {
+                        index[1]++;
+                        res[index[0]][index[1]] = '';
+                    }
+                    last_sep = null;
+                }
+
+                res[index[0]][index[1]] += ch;
+                if (['"', "'"].indexOf(ch) !== -1 && q === null) {
+                    q = ch;
+                } else if (ch === q && (i !== 0 && s[i-1] !== '\\') ) {
+                    q = null;
+                }
+                continue;
+            }
+            if (last_sep === null || last_sep < sep_level) {
+                last_sep = sep_level;
+            }
+        }
+        return res;
     }
     
 };
@@ -606,9 +660,10 @@ var close_stack = function() {
                 return;
             }
             //console.log(level_date, last_mousedown, level_date - last_mousedown);
-            if( level_date > last_mousedown) {
+            if( level_date > last_mousedown ) {
                 return;
             }
+            //console.log('closing', that.stack, e.target, $nodes);
             var res = level[0](e);
             if (res !== false) {
                 that.stack.pop();

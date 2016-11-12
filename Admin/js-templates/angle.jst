@@ -1,0 +1,19 @@
+<!--[input ? _c.type === 'angle']-->
+<?
+var cl = 'fx-angle-control';
+_c = fx_angle_control.add_defaults(_c);
+?>
+<div class="<?= cl ?>">
+    <input 
+        type="number"
+        name="<?= _c.name || '' ?>"
+        class="<?= cl ?>__input"
+        min="<?= _c.min ?>"
+        max="<?= _c.max ?>"
+        step="<?= _c.step ?>"
+        value="<?= _c.value?>" />
+    <span class="<?= cl?>__point"></span>
+</div>
+
+<!--jquery-->
+new fx_angle_control(html, _c);

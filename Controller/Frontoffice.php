@@ -84,9 +84,11 @@ class Frontoffice extends System\Controller
     public function ajaxForm($form = null)
     {
         if (!$form) {
-            $form = new Form\Form();
+            //$form = new Form\Form();
+            $form = fx::data('floxim.form.form')->generate();
         } elseif (is_array($form)) {
-            $form = new Form\Form($form);
+            //$form = new Form\Form($form);
+            $form = fx::data('floxim.form.form')->generate($form);
         }
         $form['action'] = '~ajax/';
         $form['method'] = 'POST';

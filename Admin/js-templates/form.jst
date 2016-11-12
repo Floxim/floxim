@@ -111,7 +111,10 @@ name="<?=_c.name?>" id="<?=_c.name || _c.id?>"
     if (autocomplete !== '') {
         autocomplete = ' autocomplete="'+autocomplete+'" ';
     }
-    var val = $t.clear( (!_c.value ? '' : _c.value) );
+    if (!_c.value) {
+        _c.value = _c.type === 'number' ? 0 : '';
+    }
+    var val = $t.clear( _c.value );
     ?>
 	<input 
 		type="<?= type_att ?>" 
@@ -149,7 +152,7 @@ name="<?=_c.name?>" id="<?=_c.name || _c.id?>"
 <input <?=$t.field_id_name(_c)?> value="<?=_c.value === false ? '' : $t.clear(_c.value)?>" type="hidden" />
 
 
-<!--[input ? _c.field_type == 'textarea']-->
+<!--[input ? (_c.field_type == 'textarea' || (_c.type === 'text' && _c.wysiwyg) ) ]-->
 <?
 var c_val = _c.value || '';
 if (typeof c_val !== 'string') {

@@ -75,6 +75,9 @@
             top:-8px;
             margin-bottom:-8px;
         }
+        .fx_admin_form__tab_data {
+            display:inline-block;
+        }
     }
     
     .fx_admin_form__header {
@@ -357,6 +360,9 @@
         &.field_checkbox {
             margin-top:0;
             margin-bottom:0;
+        }
+        &.field_group {
+            margin-right:0;
         }
     }
     .fx_input {
@@ -733,6 +739,9 @@
     
     td {
         white-space: nowrap;
+        &:not(:first-child) {
+            vertical-align:top;
+        }
     }
     
     input[type="text"], select, textarea {
@@ -1843,6 +1852,10 @@ select.fx_input {
         }
     }
     
+    .fx-angle-control {
+        display:inline-block;
+    }
+    
     
     &__level-drag, &__level-drop {
         cursor:pointer;
@@ -1968,5 +1981,229 @@ select.fx_input {
         display:inline-block;
         width:auto !important;
         vertical-align:middle;
+    }
+}
+
+.fx_unstyled_number_input() {
+    &::-webkit-inner-spin-button,
+    &::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    -moz-appearance:textfield;
+}
+
+.fx-angle-control {
+    @size: 40px;
+    @inp_height:15px;
+    @inp_width:30px;
+    @point_size: 10px;
+    
+    width: @size;
+    height: @size;
+    border-radius:@size;
+    border:1px solid #CCC;
+    position:relative;
+    cursor:pointer;
+    
+    &__input {
+        .fx_unstyled_number_input();
+        font-size:12px;
+        width:@inp_width;
+        height:@inp_height;
+        border:none;
+        outline:1px solid #EEE;
+        position:absolute;
+        top: ( @size - @inp_height ) / 2 - 1;
+        left: ( @size - @inp_width ) / 2 - 1;
+        text-align: center;
+        &, &:active, &:focus {
+            outline:none;
+        }
+    }
+    
+    &__point {
+        position:absolute;
+        height:@size;
+        z-index:1;
+        //outline:1px solid #999;
+        left:@size / 2;
+        &:after {
+            content:'';
+            display: inline-block;
+            position:absolute;
+            width:@point_size;
+            height:@point_size;
+            border-radius:@point_size;
+            background:#999;
+            left:@point_size / -2;
+            top:@point_size / -2;
+        }
+        &:hover:after {
+            background:#333;
+        }
+    }
+}
+
+
+
+.fx-shadow-control {
+    &__levels {
+        display:table;
+        margin:-6px -10px 0 -10px;
+        .fx_input_number {
+            display:inline-block;
+        }
+    }
+    
+    &__add-level {
+        border-top: 1px solid #ccc;
+        margin:0 -10px -10px -10px;
+        padding:10px;
+    }
+    
+    &__handler {
+        //.fx_chess_background(@size: 5px);
+        background:#FFF;
+        min-width:40px;
+        height:35px;
+        display:inline-block;
+        cursor:pointer;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        line-height:0;
+        span {
+            display: inline-block;
+            width:40px;
+            height:33px;
+        }
+    }
+    
+    &__level {
+        display:table-row;
+        & > div {
+            display:table-cell;
+            white-space:nowrap;
+            padding-right: 15px;
+            padding-top:10px;
+            padding-bottom: 10px;
+            border-bottom:1px solid #CCC;
+            &:last-child {
+                padding-right:50px;
+            }
+            & > div {
+                vertical-align:middle;
+                &.field {
+                    margin-bottom:0;
+                }
+            }
+        }
+        &:first-child > div {
+            //border-top:1px solid #CCC;
+        }
+        &:last-child > div {
+            border-bottom:none;
+        }
+    }
+    
+    &__th {
+        font-size:12px;
+        &_inactive {
+            display:none;
+        }
+    }
+    
+    &__level {
+        background:#FFF;
+    }
+    
+    .fx_image_field {
+        height: 36px;
+        display: inline-block;
+        
+        .fx_preview_block {
+            display:inline-block;
+        }
+        .fx_preview_filled img {
+            max-height:50px;
+            display:inline-block;
+            margin:0;
+        }
+        
+        .fx_file_controls {
+            vertical-align: top;
+        }
+        
+        .fx_file_info {
+            display:none;
+        }
+        .fx_file_killer {
+            display:none !important;
+        }
+    }
+    
+    .fx-angle-control {
+        display:inline-block;
+    }
+    
+    
+    &__level-drag, &__level-drop {
+        cursor:pointer;
+        display:inline-block;
+        font-size: 20px;
+        text-shadow: 2px 2px 1px #ccc;
+        width:10px;
+        height:10px;
+        line-height:0;
+    }
+    
+    &__level-drop {
+        color:#F00;
+        margin-right:15px;
+    }
+    
+    &__level-controls {
+        vertical-align:middle;
+        padding-left:20px;
+    }
+    
+    &__close {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        width: 40px;
+        height: 40px;
+        vertical-align: middle;
+        text-align: center;
+        font-size: 30px;
+        color: #999;
+        cursor: pointer;
+        &:hover {
+            color:#666;
+        }
+    }
+    
+    &__label {
+        font-size: 12px;
+        margin-bottom: 5px;
+    }
+    
+    &__popup {
+        display:none;
+        position:fixed;
+        top:100px;
+        left:100px;
+        background:#FFF;
+        padding:10px;
+        border:1px solid #CCC;
+        border-radius:3px;
+        z-index:9999;
+    }
+    
+    textarea&__value {
+        display:none;
+        width: 100%;
+        height: 50px;
+        font-size:12px;
     }
 }

@@ -245,6 +245,7 @@ class Infoblock extends Admin
         $area_meta = $input['area'];
         
         $blocks = $this->getAvailableBlocks($page, $area_meta);
+        fx::log($blocks['actions'][27]);
         //$presets = $this->getAvailablePresets($blocks['actions']);
         $blocks = $this->groupAvailableBlocksWithListTypesOnTop($blocks);
         /*
@@ -259,6 +260,8 @@ class Infoblock extends Admin
         }
          * 
          */
+        
+        fx::log($blocks);
 
         /* The list of controllers */
         $fields['controller'] = array(
@@ -1507,11 +1510,13 @@ class Infoblock extends Admin
             $template_value = $tv['template'];
             $tv->delete();
         } else {
-            foreach (array('params', 'name', 'is_locked') as $prop) {
+            foreach (array('name', 'is_locked') as $prop) {
                 if (isset($input[$prop])) {
                     $tv[$prop] = $input[$prop];
                 }
             }
+            $prev_params = $tv['params'] ? $tv['params'] : array();
+            $tv['params'] = fx::util()->fullMerge($prev_params, $input['params']);
             $tv->save();
             $template_value = $tv['id'];
         }

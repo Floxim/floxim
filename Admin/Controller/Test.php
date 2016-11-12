@@ -592,4 +592,25 @@ class Test extends Admin {
         );
         return array('fields' => array($f));
     }
+    
+    public function angle()
+    {
+        $f = [
+            'type' => 'angle',
+            'label' => 'Угол',
+            'value' => '90'
+        ];
+        return ['fields' => [$f]];
+    }
+    
+    public function shadow()
+    {
+        $f=  array(
+            'type' => 'css-shadow',
+            'label' => 'Тень',
+            'value' => 'outer 0 -20 2 10 alt 1 1, inset 20 0 2 10 third 2 0.48'
+        );
+        return array('fields' => [$f]);
+    }
+            
 }

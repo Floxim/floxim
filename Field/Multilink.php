@@ -17,6 +17,9 @@ class Multilink extends \Floxim\Floxim\Component\Field\Entity
     {
         $res = parent::getJsField($content);
         $render_type = $this['format']['render_type'];
+        if (!$render_type) {
+            $render_type = 'table';
+        }
         if ($render_type == 'livesearch') {
             $res['type'] = 'livesearch';
             $res['is_multiple'] = true;
@@ -128,8 +131,8 @@ class Multilink extends \Floxim\Floxim\Component\Field\Entity
                     return !isset($avail_coms[$e[0]]);
                 }
             )
-            ->getData();
-
+            ->getValues();
+            
         $fields[]= array(
             'name' => 'linking_component_id',
             'label' => 'Тип связанных объектов',

@@ -185,7 +185,6 @@ class Entity extends \Floxim\Floxim\System\Entity {
     public function paramsFromInput($input)
     {
         $res = array_merge((array) $this['params'], self::getDefaults());
-        fx::log($input);
         foreach ($input as $k => $v) {
             if (preg_match("~^font_(.+)~", $k, $font_type)) {
                 $res['fonts'][$font_type[1]] = $v;

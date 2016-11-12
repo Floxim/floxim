@@ -527,6 +527,7 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
     var $n = this.node;
     this.is_content_editable = true;
     
+    
     if ($n.hasClass('fx_hidden_placeholded')) {
         $n.data('was_placeholded_by', this.node.html());
         $n.removeClass('fx_hidden_placeholded');
@@ -640,7 +641,14 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
     
     this.$closest_button = $n.closest('button');
     if (this.$closest_button.length > 0) {
+        this.$closest_button.off('.edit_in_place');
         this.$closest_button.on('click.edit_in_place', function() {return false;});
+        this.$closest_button.on('keydown.edit_in_place', function(e) {
+            if (e.which === 32) { // space
+                document.execCommand('insertText',  false, ' ');
+                return false;
+            }
+        });
     }
     if (!this.is_wysiwyg || true) {
         handle_node_size();

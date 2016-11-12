@@ -142,7 +142,10 @@ window.fx_livesearch = function (node, params) {
         values = fx_livesearch.vals_to_obj(values);
         this.preset_values = values;
         this.Suggest.preset_values = values;
-        this.setValue(c_value);
+        var set_old_res = this.setValue(c_value);
+        if (!set_old_res && values.length > 0) {
+            this.setValue(values[0].id);
+        }
     };
 
     this.getFullValue = function() {
@@ -252,7 +255,7 @@ window.fx_livesearch = function (node, params) {
         params.data.ids = ids;
         params.data.term = null;
         params.data.limit = null;
-        
+        console.trace();
         $.ajax({
             url:params.url,
             type:'post',
@@ -261,7 +264,10 @@ window.fx_livesearch = function (node, params) {
             success:function(res){
                 livesearch.addSilent = true;
                 livesearch.$node.css('visibility', 'hidden');
-                
+                if (!res.results) {
+                    console.log(res, params.data);
+                    return;
+                }
                 $.each(res.results, function(index, item) {
                     livesearch.addValue(
                         $.extend({}, item, {input_name:livesearch.inpNames[item.id]})
@@ -314,7 +320,46 @@ window.fx_livesearch = function (node, params) {
         return false;
     };
     
+    this.findPresetValue = function(id) {
+        var res = false;
+        this.traversePresetValues(function(v) {
+            if (v.id == id) {
+                res = v;
+                return false;
+            }
+        });
+        return res;
+    };
+    
+    this.setValues = function(ids, silent) {
+        if (silent) {
+            var was_silent = this.addSilent;
+            this.addSilent = true;
+        }
+        
+        var vals = {};
+        this.traversePresetValues(function(v) {
+            if (ids.indexOf(v.id) !== -1) {
+                vals[v.id] = v;
+            }
+        });
+        
+        for (var i = 0; i < ids.length; i++) {
+            var id = ids[i];
+            if ( typeof vals[id] !== 'undefined') {
+                this.addValue(vals[id]);
+            }
+        }
+        
+        if (silent) {
+            this.addSilent = was_silent;
+        }
+    };
+    
     this.setValue = function (id, silent) {
+        if (this.is_multiple && this.preset_values.length && id instanceof Array) {
+            return this.setValues(id, silent);
+        }
         if (this.is_multiple || !this.preset_values.length) {
             return;
         }
@@ -773,20 +818,29 @@ window.fx_livesearch = function (node, params) {
             var vals = this.value || [],
                 ids = [],
                 has_raw = false;
+            
             for (var i = 0; i < vals.length; i++) {
                 var v = vals[i];
-                if (typeof v !== 'object') {
-                    has_raw = true;
-                    ids.push(v);
-                } else if (v.id) {
-                    ids.push(v.id);
+                if (!this.preset_values.length) {
+                    if (typeof v !== 'object') {
+
+                        has_raw = true;
+                        ids.push(v);
+                    } else if (v.id) {
+                        ids.push(v.id);
+                    }
+                } else {
+                    var preset_value = this.findPresetValue(v);
+                    if (preset_value !== false) {
+                        this.addValue(preset_value);
+                    }
                 }
             }
-            
+
             if (has_raw) {
                 this.loadValues( ids );
             }
-        }
+        };
         
         if (this.disabled) {
             this.disable();
@@ -864,7 +918,6 @@ window.fx_livesearch.create = function(json, template) {
                     preset_vals.push([k, v]);
                 });
             }
-            
             json.preset_values = fx_livesearch.vals_to_obj(preset_vals);
         }
         

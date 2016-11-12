@@ -27,8 +27,6 @@ $fx.colorset = function($field, params) {
         };
     }
     
-    console.log(params.value);
-    
     var val = $.extend(
         {
             hue:0,
@@ -38,6 +36,16 @@ $fx.colorset = function($field, params) {
         },
         params.value
     );
+    
+    if (val.tweaked instanceof Array) {
+        var tweaked_obj = {};
+        for (var i = 0; i < val.tweaked.length; i++) {
+            if (val.tweaked[i]) {
+                tweaked_obj[i] = true;
+            }
+        }
+        val.tweaked = tweaked_obj;
+    }
     
     this.luminance_map = params.luminance_map || params.neutral ? [
         0.00,
@@ -308,6 +316,8 @@ $fx.colorset.prototype = {
         var method = 'luminance',
             colors = this['colors_by_'+method](hue, saturation),
             $colors = this.get_color_nodes();
+    
+        console.log(this.tweaked);
         
         for (var i = 0; i < colors.length; i++) {
             var color = colors[i],

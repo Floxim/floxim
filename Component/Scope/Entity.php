@@ -46,6 +46,10 @@ class Entity extends \Floxim\Floxim\System\Entity {
     
     public static function checkCondition(&$cond, $path = null) 
     {
+        if (is_null($path)) {
+            $path = fx::env()->getPath();
+        }
+            
         if ($cond['type'] === 'group') {
             $res = self::checkGroup($cond, $path);
             $cond['res'] = $res;
@@ -88,6 +92,13 @@ class Entity extends \Floxim\Floxim\System\Entity {
             $tested_prop = $c_prop;
             $tested_entity = $tested_value;
             $tested_value = $tested_value[$c_prop];
+        }
+        
+        if (preg_match("~\.context$~", $cond['type'])) {
+            $tested_parts = explode(".", $value);
+            if ($tested_parts[0] === 'context' && isset($tested_parts[1])) {
+                $value = fx::env()->get($tested_parts[1]);
+            }
         }
         
         switch ($cond['type']) {
@@ -145,11 +156,12 @@ class Entity extends \Floxim\Floxim\System\Entity {
                     }
                 }
                 break;
+            case 'is_in.context':
             case 'is_in':
                 if ( $tested_value instanceof \Floxim\Floxim\System\Entity ) {
                     $tested_value = $tested_value['id'];
                 } 
-                $res = in_array($tested_value, $value);
+                $res = in_array($tested_value, (array) $value);
                 break;
             case 'has_type':
                 $res = false;

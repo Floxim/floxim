@@ -140,6 +140,9 @@ class Fx
     public static function getComponentFullName($com_name)
     {
         static $cache = array();
+        if (!is_string($com_name)) {
+            fx::log(debug_backtrace());
+        }
         if (isset($cache[$com_name])) {
             return $cache[$com_name];
         }
@@ -516,7 +519,7 @@ class Fx
         if (func_num_args() > 2) {
             $var_path = func_get_args();
             array_shift($var_path);
-        } else {
+        } elseif (is_string($var_path)) {
             $var_path = explode(".", $var_path);
         }
         $arr = $collection;

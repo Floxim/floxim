@@ -2,9 +2,7 @@
 
 namespace Floxim\Floxim\Component\Basic;
 
-use Floxim\Floxim\System;
-use Floxim\Floxim\Component\Field;
-use Floxim\Floxim\Component\Lang;
+use Floxim\Floxim\System\Collection;
 use Floxim\Floxim\System\Fx as fx;
 
 /**
@@ -183,14 +181,16 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
         if ($component['keyword'] != 'floxim.user.user' && ($user = fx::env()->getUser())) {
             $obj['user_id'] = $user['id'];
         }
-        $obj['type'] = $component['keyword'];
+        if (!isset($data['type'])) {
+            $obj['type'] = $component['keyword'];
+        }
         if (!isset($data['site_id'])) {
             $site = fx::env('site');
             if ($site) {
                 $obj['site_id'] = $site['id'];
             }
         }
-        $fields = $component->getAllFields()->find('default', '', System\Collection::FILTER_NEQ);
+        $fields = $component->getAllFields()->find('default', '', Collection::FILTER_NEQ);
         foreach ($fields as $f) {
             if ($f['default'] === 'null') {
                 continue;
@@ -235,15 +235,19 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
         if ( $id && ($obj = $registry->get($id)) ) {
             return $obj;
         }
-        $classname = $this->getEntityClassName($data);
         
-        
-        if (isset($data['type'])) {
-            $component_id = fx::getComponentByKeyword($data['type'])->offsetGet('id');
+        if (
+            isset($data['type']) && 
+            ($component = fx::getComponentByKeyword($data['type'])) 
+        ) {
+            $component_id = $component->offsetGet('id');
         } else {
-            $component_id = $this->getComponent()->offsetGet('id');
+            $component = $this->getComponent();
+            $component_id = $component->offsetGet('id');
+            $data['type'] = $component['keyword'];
         }
         
+        $classname = $this->getEntityClassName($data);
         $obj = new $classname($data, $component_id);
         if ($id) {
             $this->registerEntity($obj, $id);
@@ -469,6 +473,286 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
         $com = fx::component($type);
         $types = $com->getAllVariants()->getValues('keyword');
         $this->where('type', $types, 'in');
+        return $this;
+    }
+    
+    public function contentExists()
+    {
+        $base_table = current($this->getTables());
+        $cnt = fx::db()->getVar('select count(*) from {{'.$base_table.'}}');
+        return $cnt > 0;
+    }
+    
+    protected function isCollectionInverted($collection)
+    {
+        $f = $collection->finder;
+        if (!$f) {
+            return false;
+        }
+        $order = $f->getOrder();
+        if (!$order || !isset($order[0])) {
+            return false;
+        }
+        $order = $order[0];
+        if (!preg_match("~desc$~i", $order)) {
+            return false;
+        }
+        $keywords = 'date|created';
+        if (preg_match("~`".$keywords."~i", $order) || preg_match("~".$keywords."`~i", $order)) {
+            return true;
+        }
+        return false;
+    }
+    
+    public function removeAdderPlaceholder($collection)
+    {
+        $collection->findRemove(function($e) {
+            if (!$e instanceof Entity) {
+                return false;
+            }
+            return $e->isAdderPlaceholder();
+        });
+    }
+
+    /**
+     * 
+     * @param \Floxim\Floxim\System\Collection $collection
+     * @return null
+     */
+    public function createAdderPlaceholder($collection)
+    {
+        $params = array();
+        if ($this->limit && $this->limit['count'] == 1 && count($collection) > 0) {
+            return;
+        }
+        $replace_last = $this->limit && $this->limit['count'] === count($collection);
+        
+        $collection->findRemove(function($e)  {
+            if (!$e instanceof Entity) {
+                return false;
+            }
+            return $e->isAdderPlaceholder();
+        });
+        
+        // collection has linker map, so it contains final many-many related data, 
+        // and current finder can generate only linkers
+        // @todo invent something to add-in-place many-many items
+        if ($collection->linkers) {
+            return $this->createLinkerAdderPlaceholder($collection);
+        }
+        
+        // OH! My! God!
+        $add_to_top = $this->isCollectionInverted($collection);
+        
+        $params = self::extractCollectionParams($collection);
+        
+        if (!$params) {
+            return;
+        }
+        
+        $param_variants = array();
+        if (isset($params['parent_id']) && !isset($params['infoblock_id'])) {
+            $avail_infoblocks = fx::data('infoblock')->whereContent($params['_component']);
+            if (isset($params['parent_id'])) {
+                $avail_infoblocks = $avail_infoblocks->getForPage($params['parent_id'][0]);
+            } else {
+                $avail_infoblocks = $avail_infoblocks->all();
+            }
+            if (count($avail_infoblocks)) {
+                foreach ($avail_infoblocks as $c_ib) {
+                    $param_variants []= array_merge(
+                        $params,
+                        array(
+                            'infoblock_id' => array($c_ib['id'], Collection::FILTER_EQ),
+                            '_component' => $c_ib['controller']
+                        )
+                    );
+                }
+            } else {
+                $param_variants []= $params;
+            }
+        } else {
+            $param_variants[]= $params;
+        }
+        
+        foreach ($collection->getConcated() as $concated_coll) {
+            if (!$concated_coll->finder) {
+                continue;
+            }
+            $concated_params = self::extractCollectionParams($concated_coll);
+            if (!$concated_params || count($concated_params) === 0) {
+                continue;
+            }
+            if (!isset($concated_params['parent_id']) && isset($params['parent_id'])) {
+                $concated_params['parent_id'] = $params['parent_id'];
+            }
+            $param_variants []= $concated_params;
+        }
+        $placeholder_variants = array();
+        
+        foreach ($param_variants as $c_params) {
+            $com = fx::component($c_params['_component']);
+            if (isset($c_params['infoblock_id']) && isset($c_params['parent_id'])) {
+                $c_ib = fx::data('infoblock', $c_params['infoblock_id'][0]);
+                if (!$c_ib || !$c_ib['is_preset']) {
+                    $c_parent = fx::data('floxim.main.content', $c_params['parent_id'][0]);
+                    $c_ib_avail = 
+                            $c_ib && 
+                            $c_parent && 
+                            $c_ib->isAvailableOnPage($c_parent);
+
+                    if (!$c_ib_avail) {
+                        continue;
+                    }
+                }
+            }
+            $com_types = $com->getAllVariants();
+            $avail_types = null;
+            if (isset($c_params['type'])) {
+                $avail_types = $com_types->find('keyword', $c_params['type'][0], $c_params['type'][1])->getValues('keyword');
+            }
+            
+            foreach ($com_types as $com_type) {
+                // skip abstract components like "publication", "contact" etc.
+                if (
+                    $com_type['is_abstract'] && 
+                    (!isset($c_params['type']) || ($com_type['keyword'] !== $c_params['type'][0]) )
+                ) {
+                    continue;
+                }
+                $com_key = $com_type['keyword'];
+                if ($avail_types && !in_array($com_key, $avail_types)) {
+                    continue;
+                }
+                if (!isset($placeholder_variants[$com_key])) {
+                    $placeholder_params = array();
+                    foreach ($c_params as $c_prop => $c_vals) {
+                        if ($c_vals[1] === Collection::FILTER_EQ) {
+                            $placeholder_params[$c_prop] = $c_vals[0];
+                        }
+                    }
+                    $placeholder = fx::data($com_key)->create($placeholder_params);
+                    $placeholder_meta = array(
+                        'placeholder' => $placeholder_params + array('type' => $com_key),
+                        'placeholder_name' => $com_type->getItemName('add')
+                    );
+                    if ($add_to_top) {
+                        $placeholder_meta['add_to_top'] = true;
+                    }
+                    
+                    if ($replace_last) {
+                        $placeholder_meta['replace_last'] = true;
+                    }
+                    
+                    $placeholder['_meta'] = $placeholder_meta;
+                    
+                    $placeholder->isAdderPlaceholder(true);
+                    $collection[] = $placeholder;
+                    $placeholder_variants[$com_key] = $placeholder;
+                }
+            }
+        }
+    }
+    
+    public function createLinkerAdderPlaceholder($collection)
+    {
+        if (!isset($collection->linkers)) {
+            return;
+        }
+        
+        $linkers = $collection->linkers;
+        
+        $variants = $this->getComponent()->getAllVariants();
+        
+        $common_params = self::extractCollectionParams($linkers);
+        
+        
+        $content_params = self::extractCollectionParams($collection, false);
+        $strict_type = isset($content_params['type']) ? $content_params['type'] : null;
+        
+        foreach ($variants as $var_com) {
+            if ($var_com['is_abstract']) {
+                continue;
+            }
+            if ($strict_type && $var_com['keyword'] !== $strict_type) {
+                continue;
+            }
+            
+            $com_finder = fx::data($var_com['keyword']);
+            $placeholder = $com_finder->create();
+            
+            // skip components like floxim.nav.external_link
+            if (!$placeholder->isAvailableInSelectedBlock()) {
+                continue;
+            }
+            
+            $linker_params = $common_params;
+            $linker_params['type'] = $linker_params['_component'];
+            unset($linker_params['_component']);
+            $linker_params['_link_field'] = $linkers->linkedBy;
+            $placeholder['_meta'] = array(
+                'placeholder' => array('type' => $var_com['keyword']),
+                'placeholder_name' => $var_com->getItemName('add'),
+                'placeholder_linker' => $linker_params
+            );
+            $placeholder->isAdderPlaceholder(true);
+            $collection[]= $placeholder;
+            $linkers[]= fx::data('floxim.main.linker')->create();
+        }
+    }
+    
+    public function fake($props = array())
+    {
+        $content = $this->create();
+        $content->fake();
+        $content->set($props);
+        return $content;
+    }
+    
+    protected static function extractCollectionParams($collection, $skip_linkers = true)
+    {
+        $params = array();
+        if ($collection->finder && $collection->finder instanceof Finder) {
+            foreach ($collection->finder->where() as $cond) {
+                // original field
+                $field = isset($cond[3]) ? $cond[3] : null;
+                // collection was found by id, adder is impossible
+                if ($field === 'id') {
+                    if ($skip_linkers) {
+                        return false;
+                    }
+                    continue;
+                }
+                if (!preg_match("~\.~", $field) && $cond[2] == '=' && is_scalar($cond[1])) {
+                    $params[$field] = array($cond[1], Collection::FILTER_EQ);
+                }
+            }
+            $params['_component'] = $collection->finder->getComponent()->get('keyword');
+        }
+        if ($collection->linkers && $skip_linkers) {
+            return false;
+        }
+        foreach ($collection->getFilters() as $coll_filter) {
+            list($filter_field, $filter_value, $operator) = $coll_filter;
+            if (is_scalar($filter_value) || is_array($filter_value)) {
+                $params[$filter_field] = array($filter_value, $operator);
+            }
+        }
+        return  $params;
+    }
+    
+    public function whereSamePriorityGroup($entity)
+    {
+        $fields = array('parent_id', 'infoblock_id');
+        foreach ($fields as $f) {
+            if (!$entity->hasField($f)) {
+                continue;
+            }
+            $val = $entity[$f];
+            if (!is_null($val)) {
+                $this->where($f, $val);
+            }
+        }
         return $this;
     }
 }

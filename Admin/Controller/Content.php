@@ -363,7 +363,30 @@ class Content extends Admin
     {
         $content_type = $input['content_type'];
         $content = fx::data($content_type)->where('id', $input['content_id'])->one();
+        
+        if (!$content) {
+            return;
+        }
+        
+        if (isset($input['next_id']) && $input['next_id']) {
+            $content['__move_before'] = $input['next_id'];
+        } else {
+            $last_item = $content
+                ->getFinder()
+                ->whereSamePriorityGroup($content)
+                ->order('priority', 'desc')
+                ->one();
+            if (!$last_item) {
+                return;
+            }
+            $content['__move_after'] = $last_item['id'];
+        }
+        
+        $content->save();
+        return;
+        
         $next_id = isset($input['next_id']) ? $input['next_id'] : false;
+        
 
         $neighbours = fx::data('floxim.main.content')
                         ->where('parent_id', $content['parent_id'])

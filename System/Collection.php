@@ -59,9 +59,9 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         return $this;
     }
 
-    public function addFilter($field, $value)
+    public function addFilter($field, $value, $operator = self::FILTER_EQ)
     {
-        $this->filtered_by[] = array($field, $value);
+        $this->filtered_by[] = array($field, $value, $operator);
     }
 
     public function getFilters()
@@ -141,12 +141,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
     public function find($field, $prop = null, $compare_type = null)
     {
         $fork = $this->fork();
-        if ($compare_type == self::FILTER_EQ || $compare_type === null) {
-            $fork->addFilter($field, $prop);
-        }
-        if (count($this->data) == 0) {
-            return $fork;
-        }
+        
         if (is_null($prop)) {
             $compare_type = is_callable($field) ? self::FILTER_CALLBACK : self::FILTER_EXISTS;
         } elseif (is_null($compare_type)) {
@@ -158,6 +153,24 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         } elseif ($compare_type == '!=') {
             $compare_type = is_array($prop) ? self::FILTER_NOT_IN : self::FILTER_NEQ;
         }
+        
+        if (
+            in_array(
+                $compare_type,
+                array(
+                    self::FILTER_EQ,
+                    self::FILTER_IN,
+                    self::FILTER_NOT_IN,
+                    self::FILTER_NEQ
+                )
+            )
+        ) {
+            $fork->addFilter($field, $prop, $compare_type);
+        }
+        if (count($this->data) == 0) {
+            return $fork;
+        }
+        
         $initial_key = key($this->data);
         $res = array();
         if ($compare_type == self::FILTER_EQ) {
@@ -805,8 +818,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         // this = [user1, user2]
         // cond_field = 'author'
         // res_field = 'posts'
-
-
+        
         $res_index = array();
         foreach ($what as $what_item) {
             $index_key = $what_item[$cond_field];
@@ -840,7 +852,12 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         }
         foreach ($this as $our_item) {
             $check_value = $our_item[$check_field];
-            $res_collection = isset($res_index[$check_value]) ? $res_index[$check_value] : fx::collection();
+            if (isset($res_index[$check_value])) {
+                $res_collection = $res_index[$check_value];
+            } else {
+                $res_collection = $what->fork();
+                $res_collection->addFilter($cond_field, $check_value);
+            }
             $our_item[$res_field] = $res_collection;
             if ($our_item instanceof \Floxim\Main\Content\Entity && isset($res_collection->linkers)) {
                 $res_collection->linkers->selectField = $our_item->getFormField($res_field);

@@ -12,7 +12,7 @@ function bg($container, params) {
 
 bg.cl = $t.getBem('fx-background-control');
 
-cls = function() {
+var cls = function() {
     return ' class="'+bg.cl.apply(null, arguments)+'" ';
 };
 
@@ -22,7 +22,7 @@ bg.parse_value = function(v) {
     var res = {
             levels: []
         },
-        val = parse_css_value(v);
+        val = $fx.parse_css_value(v);
     
     var lightness = val.shift()[0];
         
@@ -145,10 +145,11 @@ bg.prototype.update = function(skip_lightness) {
     
     this.$popup.find( bg.el('add.type_color') ).toggleClass(bg.cl('add')+'_inactive', has_color);
     
+    this.update_handle();
+    
     if (this.$popup.is(':visible')) {
         this.place_popup();
     }
-    this.update_handle();
 };
 
 bg.prototype.get_lightness_value = function() {
@@ -173,7 +174,6 @@ bg.prototype.place_popup = function() {
 
 bg.prototype.hide_popup = function() {
     this.$popup.hide();
-    $('html').off('.fx_bg_clickout');
 };
 
 bg.prototype.lock_lightness = function() {
@@ -535,16 +535,14 @@ background_level.linear.prototype.draw_value = function() {
         this.add_point(c+ ' ' + l + ' ' + o, p);
     }
     
-    this.$angle = $fx_fields.control({
-        type:'number',
-        units:'&deg;',
-        min:0,
-        max:360,
-        step:5,
+    var $angle = $fx_fields.control({
+        type:'angle',
         value: this.params[0].replace(/deg/, '')
     });
     
-    $vals.append(this.$angle);
+    this.$angle = $angle.find('input');
+    
+    $vals.append($angle);
 };
 
 background_level.linear.prototype.get_value = function() {
@@ -721,55 +719,6 @@ background_level.color.prototype.count_lightness = function() {
 
 
 window.fx_background_control = bg;
-
-
-function parse_css_value(s) {
-    var seps = [' ', ','],
-        res = [
-            ['']
-        ],
-        index = [
-            0,
-            0
-        ];
-    
-    s = s.replace(/^\s+|\s+$/, '');
-    s = s.replace(/\s/g, ' ');
-    
-    var q = null,
-        last_sep = null;
-    
-    for (var i = 0; i < s.length; i++) {
-        var ch = s[i];
-        var sep_level = seps.indexOf(ch);
-        if (sep_level === -1 || q !== null) {
-            
-            if (last_sep !== null) {
-                if (last_sep === 1) {
-                    index[0]++;
-                    index[1] = 0;
-                    res[index[0]] = [''];
-                } else {
-                    index[1]++;
-                    res[index[0]][index[1]] = '';
-                }
-                last_sep = null;
-            }
-            
-            res[index[0]][index[1]] += ch;
-            if (['"', "'"].indexOf(ch) !== -1 && q === null) {
-                q = ch;
-            } else if (ch === q && (i !== 0 && s[i-1] !== '\\') ) {
-                q = null;
-            }
-            continue;
-        }
-        if (last_sep === null || last_sep < sep_level) {
-            last_sep = sep_level;
-        }
-    }
-    return res;
-};
     
     
 })();

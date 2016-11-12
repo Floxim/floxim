@@ -16,12 +16,36 @@ window.$fx_fields = {
         return json.value;
     },
     
+    wheel_freezer_added: false,
+    
     handle_number_wheel: function ($inp, params) {
+        
+        var that = this;
+        if (!this.wheel_freezer_added) {
+            var is_waiting = false;
+            
+            $('body').on('wheel', function(e) {
+                if (is_waiting) {
+                    return;
+                }
+                is_waiting = true;
+                that.wheel_target = e.target;
+                setTimeout(
+                    function() {
+                        that.wheel_target = null;
+                        is_waiting = false;
+                    }, 
+                    800
+                );
+            });
+            this.wheel_freezer_added = true;
+        }
         params = $.extend(
             {
                 min: $inp.attr('min')*1,
                 max: $inp.attr('max')*1,
-                step: $inp.attr('step')*1
+                step: $inp.attr('step')*1,
+                focus: true
             },
             params
         );
@@ -39,11 +63,22 @@ window.$fx_fields = {
         var decimal_part = (params.step % 1).toString().match(/\.(.+)/),
             multiplier = decimal_part ? decimal_part[1].length * 10 : 1;
         
-        var frozen = false;
+        var c_delta = 0;
         
-        $target.on('mousewheel', function(e) {
-            
-            if (!frozen) {
+        $target.on('wheel', function(e) {
+            if (that.wheel_target && that.wheel_target !== e.target) {
+                //console.log('skip');
+                return;
+            }
+            //console.log(that.wheel_target);
+            //if (!frozen) {
+                //console.log(e.originalEvent.deltaY);
+                c_delta += e.originalEvent.deltaY;
+                
+                if (Math.abs(c_delta) < 20) {
+                    return false;
+                }
+                //console.log('bam', c_delta);
                 
                 var delta = e.originalEvent.deltaY > 0 ? -1 : 1,
                     c_value = $inp.val() * 1,
@@ -53,12 +88,18 @@ window.$fx_fields = {
                 } else if (new_value > params.max ) {
                     new_value = params.max;
                 }
-                $inp.focus().val(new_value).trigger('change');
+                if (params.focus) {
+                    $inp.focus();
+                }
+                $inp.val(new_value).trigger('change');
+                c_delta = 0;
+                /*
                 frozen = true;
                 setTimeout(function() {
                     frozen = false;
                 }, 80);
-            }
+                */
+            //}
             return false;
         });
     },
@@ -293,6 +334,17 @@ window.$fx_fields = {
             $node = $row.find('.fx-background-control');
         var bg_control = new fx_background_control($node, json);
         $node.data('bg_control', bg_control);
+        return $row;
+    },
+    
+    'css-shadow': function(json) {
+        if (!json.label) {
+            json.label = 'Тень';
+        }
+        var $row = $t.jQuery('form_row', json),
+            $node = $row.find('.fx-shadow-control');
+        var bg_control = new fx_shadow_control($node, json);
+        $node.data('shadow_control', bg_control);
         return $row;
     },
     
@@ -792,18 +844,18 @@ window.$fx_fields = {
         return $node;
     },
     
-    bool:function(json) {
+    bool:function(json, tpl) {
         delete json.values;
         json.type = 'checkbox';
-        return $fx_fields.checkbox(json);
+        return $fx_fields.checkbox(json, tpl);
     },
 
-    checkbox: function(json) {
+    checkbox: function(json, template) {
         var is_toggler = json.class === 'toggler';
         if (is_toggler) {
             json.class_name = json.class;
         }
-        var $res = $t.jQuery('form_row', json);
+        var $res = $t.jQuery(template || 'form_row', json);
         if (is_toggler) {
             var $toggler = $('.fx_toggler', $res),
                 $input = $('input', $res),
@@ -824,6 +876,11 @@ window.$fx_fields = {
                     return false;
                 }
             });
+        }
+        if (template === 'input') {
+            var $wrapper = $('<div class="field_checkbox"></div>');
+            $wrapper.append($res);
+            return $wrapper;
         }
         return $res;
     },
@@ -958,7 +1015,9 @@ window.$fx_fields = {
         $node.redactor(options);
     },
     init_fieldset: function(html, _c) {
-        $('tbody.fx_fieldset_rows', html).sortable();
+        $('tbody.fx_fieldset_rows', html).sortable({
+            handle:'>td:first-child'
+        });
 
         var fs = $('.fx_fieldset', html);
 

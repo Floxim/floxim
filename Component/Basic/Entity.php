@@ -74,6 +74,7 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
     protected function beforeSave() {
         $this->saveFiles();
         //$this->saveLinks();
+        $this->handleMove();
         return parent::beforeSave();
     }
     
@@ -554,6 +555,11 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
         return isset($this['url']);
     }
     
+    public function getStructureFields()
+    {
+        return array();
+    }
+    
     public function getDefaultPublishState()
     {
         // entities without own page can be published immediately by default
@@ -615,5 +621,76 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
     public function isAvailableInSelectedBlock()
     {
         return $this->hasAvailableInfoblock();
+    }
+    
+    public function handleMove()
+    {
+        if (!$this->hasField('priority')) {
+            return;
+        }
+        $rel_item_id = null;
+        
+        $finder = $this->getFinder();
+        
+        $table = current($finder->getTables());
+        
+        if (isset($this['__move_before'])) {
+            $rel_item_id = $this['__move_before'];
+            $rel_dir = 'before';
+        } elseif (isset($this['__move_after'])) {
+            $rel_item_id = $this['__move_after'];
+            $rel_dir = 'after';
+        }
+        
+        fx::log($rel_item_id, $rel_dir);
+        
+        if (!$rel_item_id) {
+            return;
+        }
+        
+        $rel_item = $finder->where('id', $rel_item_id)->one();
+        if (!$rel_item) {
+            return;
+        }
+        $rel_priority = fx::db()->getVar(array(
+            'select priority from {{'.$table.'}} where id = %d',
+            $rel_item_id
+        ));
+        
+        if ($rel_priority === false) {
+            return;
+        }
+        // 1 2 3 |4| 5 6 7 (8) 9 10
+        $old_priority = $this['priority'];
+        $this['priority'] = $rel_dir == 'before' ? $rel_priority : $rel_priority + 1;
+        $q_params = array();
+        $q = 'update {{'.$table.'}} ' .
+            'set priority = ( IF(priority IS NULL, 0, priority + 1) ) ' .
+            'where ';
+        
+        if ($this->hasField('parent_id') && isset($this['parent_id'])) {
+            $q .= 'parent_id = %d and ';
+            $q_params []= $this['parent_id'];
+        }
+        
+        if ($this->hasField('infoblock_id') && isset($this['infoblock_id'])) {
+            $q .= 'infoblock_id = %d and ';
+            $q_params []= $this['infoblock_id'];
+        }
+
+        $q .=
+            'priority >= %d ' .
+            'and id != %d';
+        
+        $q_params []= $this['priority'];
+        $q_params []= $this['id'];
+        
+        if ($old_priority !== null) {
+            $q .= ' and priority < %d';
+            $q_params [] = $old_priority;
+        }
+        array_unshift($q_params, $q);
+
+        fx::db()->query($q_params);
     }
 }

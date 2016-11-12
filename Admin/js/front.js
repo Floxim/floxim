@@ -298,6 +298,8 @@ fx_front.prototype.freeze = function() {
     this.disable_select();
     this.disable_node_panel();
     this.is_frozen = true;
+    
+    $('.fx_front_overlay').css('opacity', 0);
 };
 
 fx_front.prototype.unfreeze = function() {
@@ -306,6 +308,7 @@ fx_front.prototype.unfreeze = function() {
     if (!this.get_selected_item()) {
         this.enable_hilight();
     }
+    $('.fx_front_overlay').css('opacity', 1);
     this.is_frozen = false;
 };
 
@@ -2151,6 +2154,7 @@ fx_front.prototype.add_field_config_controls = function($field) {
 };
 
 fx_front.prototype.make_content_form_editable = function($form) {
+    return;
     var $header = $('.fx_admin_form__header', $form),
         $control = $('<div class="fx_form_config_start_icon fx_icon fx_icon-type-settings"></div>');
     
@@ -2588,6 +2592,9 @@ fx_front.prototype.prepare_infoblock_visual_fields = function(all_props, callbac
                     var c_field = res.fields[i];
                     if (typeof c_value[c_field.name] !== 'undefined') {
                         c_field.value = c_value[c_field.name];
+                    } else {
+                        //c_field.value = undefined;
+                        delete c_field.value;
                     }
                 }
                 
@@ -3053,7 +3060,6 @@ fx_front.prototype.show_infoblock_settings_form = function(data, $ib_node, tab) 
 
                         // поменяли шаблон
                         if (new_data.visual[tt] != c_data.visual[tt]) {
-                            console.log('change / unset', tt);
                             delete new_data.visual[tt+'_visual'];
                         }
                     }

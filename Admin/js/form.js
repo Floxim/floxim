@@ -63,7 +63,7 @@ fx_form = {
         
         $form.off('submit.fx_submit');
         for (var i = 0; i < onsubmit.length; i++ ) {
-            $form.on('submit.fx_submit', onsubmit[i])
+            $form.on('submit.fx_submit', onsubmit[i]);
         }
         
         if (settings.lockable) {
@@ -72,6 +72,7 @@ fx_form = {
         var passed_settings = $.extend({request:{}}, settings);
         $form.data('fx_response', passed_settings);
         $form.trigger('fx_adm_form_created', passed_settings);
+        
         return $form;
     },
     // find fields that are placed before containing group and put it right after it
@@ -127,7 +128,8 @@ fx_form = {
             $fx.buttons.draw_buttons(settings.buttons);
         }
         var rendered_groups = {},
-            sorted_fields = this.sort_fields(settings.fields);
+            sorted_fields = this.sort_fields(settings.fields),
+            $rendered_fields = $([]);
         
         $.each(sorted_fields, function(i, json) {
             var $target = $form_body;
@@ -157,13 +159,9 @@ fx_form = {
             if (json.type === 'group') {
                 var $group_fields_container = $field_node.find('.fx-field-group__fields');
                 rendered_groups[json.keyword] = $group_fields_container;
-                /*
-                if (json.fields) {
-                    $.each(json.fields, function(index, field) {
-                        $fx_form.draw_field(field, $group_fields_container);
-                    });
-                }
-                */
+            }
+            if ($field_node && $field_node.find) {
+                $rendered_fields = $rendered_fields.add($field_node.find(':input[name]'));
             }
         });
         
@@ -232,6 +230,7 @@ fx_form = {
                 b.on('click', options.onclick);
             }
         });
+        $rendered_fields.trigger('fx_fields_ready');
     },
     lock_form: function($form) {
         $form.data('is_locked', true);
@@ -311,6 +310,9 @@ fx_form = {
                 } else {
                     $(window).hashchange();
                 }
+            },
+            function() {
+                $fx.form.unlock_form($form);
             }
         );
         return false;
@@ -529,21 +531,6 @@ fx_form = {
         }
         if (json.parent) {
             this.add_parent_condition(json.parent, node, $target);
-        } else if (json.type === 'joined_group') {
-            /*
-            $.each(json.fields, function() {
-                if (this.parent && this.$input) {
-                    $fx_form.add_parent_condition(this.parent, this.$input, $target);
-                }
-                if (this.values_filter) {
-                    console.log(this);
-                    if (!this.all_values) {
-                        this.all_values = this.values;
-                    }
-                    $fx_form.bind_values_filter(this.$input, this, $target);
-                }
-            });
-            */
         }
         if (json.values_filter) {
             if (!json.all_values) {
@@ -555,6 +542,7 @@ fx_form = {
     },
     
     bind_values_filter: function($field, json, $container) {
+        return;
         var all_conds = [],
             that = this,
             filters = json.values_filter;
@@ -567,55 +555,35 @@ fx_form = {
             }
         });
         
-        $container = $container.closest('form');
-        
-        var handler = this.bind_conditions(
-            all_conds, 
-            $container,
-            function () {
-                var new_vals = [],
-                    new_vals_hash = '';
-                for (var i = 0; i < json.all_values.length; i++) {
-                    var c_val = json.all_values[i],
-                        c_val_name = c_val[0];
-                    if (!filters[c_val_name]) {
-                        new_vals.push(c_val);
-                        new_vals_hash += c_val_name+'';
-                        continue;
+        $field.one('fx_fields_ready', function() {
+            var $form = $field.closest('form');
+            that.bind_conditions(
+                all_conds, 
+                $form,
+                function () {
+                    var new_vals = [];
+                    for (var i = 0; i < json.all_values.length; i++) {
+                        var c_val = json.all_values[i],
+                            c_val_name = c_val[0];
+                        if (!filters[c_val_name]) {
+                            new_vals.push(c_val);
+                            continue;
+                        }
+                        var value_avail = that.check_conditions(filters[c_val_name], $form);
+                        //console.log(c_val_name)
+                        if (value_avail) {
+                            new_vals.push(c_val);
+                        }
                     }
-                    var value_avail = that.check_conditions(filters[c_val_name], $container);
-                    if (value_avail) {
-                        new_vals.push(c_val);
-                        new_vals_hash += c_val_name+'';
-                    }
-                }
-                var is_diff = json.values.length !== new_vals.length,
-                    old_vals_hash = '';
-                if (!is_diff) {
-                    for (var i = 0; i < json.values.length; i++) {
-                        old_vals_hash += json.values[i][0]+'';
-                    }
-                    is_diff = old_vals_hash !== new_vals_hash;
-                }
-                if (is_diff) {
+                    
                     var $livesearch = $field.find('.livesearch'),
-                        prev_value;
-                    if ($livesearch.length) {
-                        var ls = $livesearch.data('livesearch');
-                        prev_value = ls.getValue();
-                        ls.destroy();
-                    }
-                    var new_params = $.extend({}, json, {values:new_vals});
-                    if (new_vals.length) {
-                        new_params.value = new_vals[0][0];
-                    }
-                    var $new_field = that.draw_field(new_params, $field, 'before');
-                    $new_field.find('input[type="hidden"]').trigger('change');
-                    $field.remove();
-                    handler.unbind();
+                        ls = $livesearch.data('livesearch');
+                
+                    ls.updatePresetValues(new_vals);
+                    ls.setValue( ls.preset_values[0].id);
                 }
-            }
-        );
+            );
+        });
     },
     
     make_conditions: function(conds) {
@@ -762,7 +730,6 @@ fx_form = {
         var change_handler = function(e) {
             var $changed_inp = $(e.target),
                 changed_inp_name = that.get_input_name($changed_inp);
-            
             // changed input is not mentioned in any rule
             if (!handled_input_names[ changed_inp_name ]) {
                 return;
@@ -771,6 +738,7 @@ fx_form = {
         };
         
         $container.on('change', change_handler);
+        
         
         // initial call
         /*

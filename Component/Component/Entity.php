@@ -283,7 +283,7 @@ class Entity extends System\Entity
 
         return $result;
     }
-
+    
     protected function afterInsert()
     {
         $this->createContentTable();

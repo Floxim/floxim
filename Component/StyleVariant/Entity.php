@@ -82,9 +82,13 @@ class Entity extends \Floxim\Floxim\System\Entity
         $this->deleteBundles();
         
         $ss =  $this->getPayload('screenshot');
-        $data = end( explode(',', $ss) );
         $file_path = $this->getBundle()->getScreenPath();
-        fx::files()->writefile($file_path, base64_decode($data));
+        if ($ss) {
+            $data = end( explode(',', $ss) );
+            fx::files()->writefile($file_path, base64_decode($data));
+        } elseif (file_exists($file_path)) {
+            fx::files()->rm($file_path);
+        }
     }
     
     

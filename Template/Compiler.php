@@ -665,8 +665,12 @@ class Compiler
                             }
                         }
                     }
+                    if ($c_val === '') {
+                      $c_val = 'null';
+                    }
                     return $c_val;
                 }
+                return 'null';
             },
             $expression
         );
@@ -1315,7 +1319,7 @@ class Compiler
         $code .= ' && ' . $arr_id . ' instanceof \\Floxim\\Floxim\\System\\Collection ';
         $code .= ' && isset(' . $arr_id . '->finder)';
         $code .= ' && $this->getMode("add") != "false" ';
-        $code .= ' && ' . $arr_id . '->finder instanceof \\Floxim\\Main\\Content\\Finder) {' . "\n";
+        $code .= ' && ' . $arr_id . '->finder instanceof \\Floxim\\Floxim\\Component\\Basic\\Finder) {' . "\n";
         if ($mode === 'add') {
             $code .= $arr_id . '->finder->createAdderPlaceholder(' . $arr_id . ');' . "\n";
         } else {
@@ -2619,9 +2623,12 @@ class Compiler
 
         $braces || $code = "if(0){{$code}\n}";
         
-        register_shutdown_function(function() use ($code) {
+        $result = false;
+        
+        register_shutdown_function(function() use ($code, $result) {
             if (!fx::env('complete_ok')) {
                 fx::log(
+                    $result,
                     'Died while compiling template', $code
                 );
             }

@@ -39,6 +39,10 @@ abstract class Entity implements \ArrayAccess, Template\Entity
     /** template entity interface */
     
 
+    /**
+     * 
+     * @return \Floxim\Floxim\System\Finder
+     */
     public function getFinder()
     {
         return fx::data($this->getType());

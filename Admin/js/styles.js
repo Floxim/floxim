@@ -178,7 +178,7 @@ less_tweaker.prototype.make_screenshot = function() {
     }).then(
         function(canvas) {
             //document.body.appendChild(canvas);
-            return canvas.toDataURL('image/jpeg', 0.3);
+            return canvas.toDataURL('image/png', 0.95);
         }
     );
 };
@@ -335,8 +335,15 @@ less_tweaker.prototype.render_less = function(less_text) {
             that.get_stylesheet().text(css.css);
         },
         function (error) {
+            /*
+            if (error.line) {
+                var lines = less_text.split("\n"),
+                    snippet = lines[ error.line - 1 ] + "\n" + lines[ error.line ] + "\n" + lines[error.line + 1];
+                console.log(snippet);
+            }
+            */
             console.log(
-                error //, less_text
+                error // , less_text
             );
         }
     );
@@ -467,6 +474,8 @@ less_tweaker.handle_style_control = function(ls_json, ls) {
                 if (data.pressed_button === "delete") {
                     return;
                 }
+                
+                return;
 
                 return tweaker.make_screenshot().then(function(img_data) {
                    var $inp = $('<input type="hidden" name="screenshot" />');

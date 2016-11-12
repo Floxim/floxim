@@ -1,0 +1,18 @@
+<!--[input ? _c.type == 'css-shadow']-->
+<?
+    _c.value = _c.value || '';
+    var cl = $t.getBem('fx-shadow-control');
+?>
+<div class="<?=cl()?>">
+    <textarea name="<?= _c.name ?>" class="<?=cl('value')?>"><?=_c.value?></textarea>
+    <div class="<?=cl('handler')?>"></div>
+    <div class="<?=cl('popup')?>">
+        <div class="<?=cl('close')?>">&times;</div>
+        <div class="<?=cl('levels')?>">
+
+        </div>
+        <div class="<?=cl('add-level')?>">
+            <a class="<?=cl('add')?>">Добавить</a>
+        </div>
+    </div>
+</div>

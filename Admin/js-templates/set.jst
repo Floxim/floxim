@@ -46,7 +46,7 @@ window.$fx_fields.init_fieldset(html, _c);
 
 <!--jquery-->
 for (var i = 0; i< _c.length; i++) {
-    var $input_node = _c[i].$input_node || $t.jQuery('input', _c[i]);
+    var $input_node = _c[i].$input_node || $fx_fields.control(_c[i]);
     $('.input_cell_'+i, html).append( $input_node  );
 }
 

@@ -324,8 +324,8 @@ class Component extends Admin
 
         $data['keyword'] = $this->getFullKeyword($input);
         
-        $data['parent_id'] = $input['parent_id'];
-
+        $data['parent_id'] = $input['parent_id'] ? (int) $input['parent_id'] : null;
+        
         $res_create = fx::data('component')->createFull($data);
         if (!$res_create['validate_result']) {
             $result['status'] = 'error';
@@ -584,6 +584,10 @@ class Component extends Admin
             $field['value'] = $component['parent_id'];
         }
         $field['values'] = $c_finder->getSelectValues();
+        $field['values'][]= array(
+            'id' => '',
+            'name' => ' - нет -'
+        );
         return $field;
     }
 

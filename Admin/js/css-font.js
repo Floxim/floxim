@@ -238,16 +238,21 @@ window.fx_font_control = function(json) {
         $extras.append($decoration);
         controls.decoration = $decoration.find('.livesearch');
         
+        if (c_value['letter-spacing'] === 'em') {
+            c_value['letter-spacing'] = 0;
+        }
+        
         var $letter_spacing = $fx_fields.number(
             {
                 min:-0.15,
                 max:1,
                 units:'em',
-                step:0.025,
+                step:0.01,
                 value: c_value['letter-spacing'],
                 label:'Межбуквенное'
             }
         );
+        
         $extras.append($letter_spacing);
         controls['letter-spacing'] = $letter_spacing.find('input');
         
@@ -258,7 +263,7 @@ window.fx_font_control = function(json) {
                 units:'em',
                 step:0.05,
                 value: c_value['line-height'],
-                label:'Межстрочное'
+                label:'Высота строки'
             }
         );
         $extras.append($line_height);
