@@ -11,6 +11,7 @@ class Config
         'dev.on'                     => false,
         'dev.css.minify'             => true,
         'dev.css.source_map'         => false,
+        'dev.mysqldump_path'         => 'mysqldump',
         'CHARSET'                    => 'utf-8',
         'lang.admin'                 => 'en',
         'auth.login_field'           => 'email',

@@ -35,8 +35,7 @@ class Entity extends System\Entity
     {
         if (is_null($this->chain)) {
             $parent_id = $this['parent_id'];
-            if ($parent_id) {
-                $parent = fx::getComponentById($parent_id);
+            if ($parent_id && ($parent = fx::getComponentById($parent_id)) ) {
                 $parent_chain = $parent->getChain()->copy();
                 $parent_chain[]= $this;
                 $this->chain = $parent_chain;

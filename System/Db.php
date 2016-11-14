@@ -167,6 +167,12 @@ class Db extends \PDO
         return $this->last_result;
     }
     
+    public function getDbName()
+    {
+        return $this->db_name;
+    }
+    
+    
     public function loadSchema() 
     {
         //$prefix = $this->prefix;
@@ -370,7 +376,6 @@ class Db extends \PDO
     
     public function dump($params) {
         $dump_path = fx::config('dev.mysqldump_path');
-        
         if (!$dump_path) {
             return;
         }
@@ -418,7 +423,8 @@ class Db extends \PDO
             $target_file = preg_replace("~\.gz$~", '', $target_file);
         }
         $command .= ($params['add'] ? ' >> ' : ' > ').$target_file;
-        fx::cdebug($command);
+        
+        fx::debug($command);
         exec($command);
         
         if ($do_gzip && file_exists($target_file)) {

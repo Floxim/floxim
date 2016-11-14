@@ -3,7 +3,7 @@
 namespace Floxim\Floxim\Router;
 
 class Closure extends Base {
-    public function create($closure) {
+    public static function create($closure) {
         return new Closure($closure);
     }
     

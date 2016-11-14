@@ -621,6 +621,7 @@ class Debug
                     }
                     if ($json !== '') {
                         ?>
+                        if (!window.fx_debug_data) {window.fx_debug_data = {};}
                         window.fx_debug_data['<?=$id?>'] = <?= $json ?>;
                         <?php
                     }

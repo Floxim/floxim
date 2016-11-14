@@ -341,8 +341,7 @@ class Util
             'patch',
             'patch_migration',
             'widget',
-            'select_value',
-            'style_variant'
+            'select_value'
         );
         
         foreach ($meta as &$table) {
@@ -453,6 +452,8 @@ class Util
             $target_file = fx::path()->abs($dir.'/data.sql');
         }
         
+        $site = fx::data('site', $site_id);
+        
         $prefix = fx::db()->getPrefix();
         
         // export the site
@@ -461,6 +462,45 @@ class Util
             'where' => 'id = '.$site_id,
             'schema' => false,
             'file' => $target_file
+        ));
+        
+        // export theme
+        fx::db()->dump(array(
+            'tables' => array($prefix.'theme'),
+            'where' => 'id = '.$site['theme_id'],
+            'schema' => false,
+            'file' => $target_file,
+            'add' => true
+        ));
+        
+        // export palette
+        $theme = fx::data('theme', $site['theme_id']);
+        if ($theme) {
+            fx::db()->dump(array(
+                'tables' => array($prefix.'palette'),
+                'where' => 'id = '.$theme['palette_id'],
+                'schema' => false,
+                'file' => $target_file,
+                'add' => true
+            ));
+        }
+        
+        // style variants
+        fx::db()->dump(array(
+            'tables' => array($prefix.'style_variant'),
+            'where' => 'theme_id = '.$site['theme_id'],
+            'schema' => false,
+            'file' => $target_file,
+            'add' => true
+        ));
+        
+        // template variants
+        fx::db()->dump(array(
+            'tables' => array($prefix.'template_variant'),
+            'where' => 'theme_id = '.$site['theme_id'],
+            'schema' => false,
+            'file' => $target_file,
+            'add' => true
         ));
         
         // export infoblocks
@@ -878,5 +918,31 @@ class Util
         }
         
         return $all_pics;
+    }
+    
+    public function nullify()
+    {
+        $cols = fx::db()->getResults(
+            'select 
+                COLUMNS.TABLE_NAME as `table`,
+                COLUMNS.COLUMN_NAME as `field`,
+                COLUMNS.COLUMN_TYPE as `type`,
+                COLUMNS.IS_NULLABLE as `is_nullable`,
+                COLUMNS.COLUMN_KEY as `key`
+
+                from INFORMATION_SCHEMA.COLUMNS 
+                    where TABLE_SCHEMA = "'.fx::db()->getDbName().'"
+                    AND COLUMNS.IS_NULLABLE = "NO"
+                    AND COLUMNS.COLUMN_KEY != "PRI"'
+        );
+        foreach ($cols as $col) {
+            $q = 'ALTER TABLE `'.$col['table'].'` CHANGE `'.$col['field'].'` `'.$col['field'].'` '.$col['type'].' NULL';
+            try {
+                fx::db()->query($q);
+            } catch (\Exception $e) {
+                fx::debug($e);
+            }
+        }
+        fx::debug($cols);
     }
 }

@@ -9,6 +9,8 @@ class Finder extends System\Finder
 {
 
     protected $cookie_name = 'fx_sid';
+    
+    protected $json_encode = array('params');
 
     public function start($data = array())
     {
