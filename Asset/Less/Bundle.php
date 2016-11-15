@@ -130,8 +130,8 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
         if (!$is_admin) {
             $meta_parser = new MetaParser();
             $options['plugins'] = array(
-                $meta_parser,
-                new Bem\Processor()
+                $meta_parser 
+                , new Bem\Processor()
             );
         }
         

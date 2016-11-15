@@ -158,6 +158,11 @@ abstract class Finder
         return $fields;
     }
     
+    public function getJsonEncodedFields()
+    {
+        return isset($this->json_encode) ? $this->json_encode : array();
+    }
+    
     /*
      * @return \Floxim\Floxim\System\Collection
      */

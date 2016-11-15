@@ -615,7 +615,7 @@ window.condition_builder = function(params) {
         //}
         var invertor_class = ccl+'__invertor';
         var $invertor = $('.'+invertor_class, $cond);
-        var $invertor_checkbox = $fx_fields.control({
+        var $invertor_checkbox = $fx_fields.checkbox({
             type:'checkbox',
             label:'не',
             value: value && value.inverted

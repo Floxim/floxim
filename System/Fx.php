@@ -634,7 +634,11 @@ class Fx
         }
         
         // load options from DB
-        self::config()->loadFromDb();
+        //self::config()->loadFromDb();
+        
+        if (self::config('session.start_auto')) {
+            session_start();
+        }
         
         self::loadComponents();
         
@@ -1059,6 +1063,11 @@ class Fx
         }
         $res = self::date($value, 'U') * 1;
         return $res;
+    }
+    
+    public static function icon($icon)
+    {
+        return \Floxim\Floxim\Asset\Icons::getClass( $icon );
     }
     
     public static function image($value, $format)

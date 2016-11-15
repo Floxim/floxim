@@ -245,7 +245,7 @@ class Infoblock extends Admin
         $area_meta = $input['area'];
         
         $blocks = $this->getAvailableBlocks($page, $area_meta);
-        fx::log($blocks['actions'][27]);
+        
         //$presets = $this->getAvailablePresets($blocks['actions']);
         $blocks = $this->groupAvailableBlocksWithListTypesOnTop($blocks);
         /*
@@ -261,8 +261,6 @@ class Infoblock extends Admin
          * 
          */
         
-        fx::log($blocks);
-
         /* The list of controllers */
         $fields['controller'] = array(
             'type'   => 'tree',

@@ -31,7 +31,11 @@ class Stack {
         }
         
         foreach ($parts[0] as $part) {
-            $this->pushPart($part);
+            $is_first = true;
+            foreach (explode(":", $part) as $subpart) {
+                $this->pushPart( ($is_first ? '' : ':').$subpart);
+                $is_first = false;
+            }
         }
         $this->has_special_rules = true;
     }

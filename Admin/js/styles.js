@@ -241,11 +241,13 @@ less_tweaker.prototype.recount_container = function(vars) {
         });
     }
     
+    
+    
     $.each(this.$affected, function() {
         var $item = $(this),
             own_vars = {},
-            c_mods = $fx.front.get_modifiers($item, 'fx-block');
-            
+            c_mods = $fx.front.get_modifiers($item, 'fx-block'),
+            item_vars = $.extend(true, {}, new_vars);
         
         $.each(new_vars, function(k, v) {
             if (v === 'none') {
@@ -257,7 +259,7 @@ less_tweaker.prototype.recount_container = function(vars) {
                     v = par_mods['own-'+k];
                 }
                 c_mods['has-'+k] = false;
-                new_vars[k] = v;
+                item_vars[k] = v;
             } else {
                 c_mods['has-'+k] = true;
             }
@@ -265,9 +267,11 @@ less_tweaker.prototype.recount_container = function(vars) {
                 own_vars[k] = v;
             }
         });
+        
         var new_mods = $.extend({}, c_mods, get_mods(own_vars));
+        
         $fx.front.set_modifiers($item, 'fx-block', new_mods);
-        traverse($item.children(), new_vars);
+        traverse($item.children(), item_vars);
     });
 };
 

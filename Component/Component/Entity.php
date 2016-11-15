@@ -65,14 +65,19 @@ class Entity extends System\Entity
                     'type' => self::OFFSET_FIELD
                 )
             );
+            
+            $finder = fx::data($this['keyword']);
+            $encoded_fields = $finder->getJsonEncodedFields();
             foreach ($fields as $f) {
                 $keyword = $f['keyword'];
                 $offsets[$keyword] = array(
                     'type' => self::OFFSET_FIELD
                 );
-                $cast = $f->getCastType();
-                if ($cast) {
-                    $offsets[$keyword]['cast'] = $cast;
+                if (!in_array($keyword, $encoded_fields)) {
+                    $cast = $f->getCastType();
+                    if ($cast) {
+                        $offsets[$keyword]['cast'] = $cast;
+                    }
                 }
                 if ( $f['type'] === 'select') {
                     $vals = array();
@@ -86,8 +91,9 @@ class Entity extends System\Entity
                     );
                 }
             }
+            
             try {
-                $finder = fx::data($this['keyword']);
+                
                 $relations = $finder->relations();
 
                 foreach ($relations as $rel_code => $rel) {

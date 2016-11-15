@@ -71,6 +71,8 @@ class Http
     {
         $header_string = '';
         if (is_null($headers) ) {
+            $headers = array();
+            /*
             $headers = array(
                 //'Connection' => 'keep-alive',
                 'Pragma' => 'no-cache',
@@ -81,6 +83,8 @@ class Http
                 'Accept-Encoding' => 'gzip, deflate, sdch',
                 'Accept-Language' => 'ru,en;q=0.8,fr;q=0.6'
             );
+             * 
+             */
         }
         if (is_array($headers)) {
             foreach ($headers as $h => $v) {

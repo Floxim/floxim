@@ -17,8 +17,6 @@ class Ajax extends Base
 
         $c_url = fx::input()->fetchGetPost('_ajax_base_url');
         
-        fx::log($c_url, $_POST);
-        
         if ($c_url) {
             $c_url = preg_replace("~^https?://[^/]+~", '', $c_url);
             

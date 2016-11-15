@@ -430,6 +430,7 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
     {
         $res = array();
         $chain = $this->getComponent()->getChain();
+        $json_encoded = $this->getJsonEncodedFields();
         foreach ($chain as $level_component) {
             $table_res = array();
             $fields = $level_component->fields();
@@ -461,6 +462,9 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
                 //if (isset($data[$field_keyword]) ) {
                 if (array_key_exists($field_keyword, $data)) {
                     $field_val = $data[$field_keyword];
+                    if (is_array($field_val) && in_array($field_keyword, $json_encoded)) {
+                        $field_val = json_encode($field_val);
+                    }
                     $sql_val = is_null($field_val) ? 'NULL' : "'" . fx::db()->escape($field_val) . "'";
                     $table_res['`' . fx::db()->escape($field_keyword) . '`'] = $sql_val;
                 }

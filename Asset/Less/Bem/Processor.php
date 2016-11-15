@@ -28,25 +28,9 @@ class Processor {
     
     public function processPath($p) {
         $stack = new Stack($p);
-        /*
-    	foreach ($p as $sel) {
-            $group = array();
-            foreach ($sel->elements as $el) {
-                if ($el->combinator !== '') {
-                    $stack->pushGroup($group);
-                    $group = array();
-                    
-                }
-                $group []= $el;
-                //$stack->push($el);
-            }
-            if (count($group) > 0) {
-                $stack->pushGroup($group);
-            }
-        }
-        */
         if ($stack->has_special_rules) {
-            return $stack->getPath();
+            $res = $stack->getPath();
+            return $res;
         }
     }
 }
