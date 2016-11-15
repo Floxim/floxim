@@ -151,8 +151,6 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
         if (!$com) {
             $class = get_called_class();
             return fx::getComponentNameByClass($class);
-            fx::debug(static::class, get_called_class());
-            die();
         }
         $keyword = static::getComponent()->get('keyword');
         $cache[$class] = $keyword;
