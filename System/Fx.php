@@ -560,27 +560,16 @@ class Fx
                 $arr[] = $var_value;
                 break;
             }
-            if (($is_arr && !array_key_exists($pp, $arr)) || ($is_aa && !isset($arr[$pp]))) {
-                if ($num + 1 === $total && !$merge) {
-                    $arr[$pp] = $var_value;
-                    break;
-                }
-                $arr[$pp] = array(); //fx::collection();
-            } elseif  ($is_aa && isset($arr[$pp]) && $num + 1 === $total) {
+            $is_last = $num + 1 === $total;
+            
+            if ($is_last) {
                 $arr[$pp] = $var_value;
                 break;
             }
+            
             @ $arr =& $arr[$pp];
         }
         return $collection;
-        /*
-        fx::cdebug($collection, $arr);
-        if ($merge && is_array($arr) && is_array($var_value)) {
-            $arr = array_merge_recursive($arr, $var_value);
-        } else {
-            $arr = $var_value;
-        }
-        */
     }
 
     /**
