@@ -79,4 +79,9 @@ class Datetime extends \Floxim\Floxim\Component\Field\Entity
         }
         return $v;
     }
+    
+    public function getCastType() 
+    {
+        return 'date';
+    }
 }

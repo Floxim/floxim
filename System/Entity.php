@@ -656,6 +656,11 @@ abstract class Entity implements \ArrayAccess, Template\Entity
                     case 'string':
                         $value = (string) $value;
                         break;
+                    case 'date':
+                        if (is_numeric($value)) {
+                            $value = fx::date($value);
+                        }
+                        break;
                 }
             }
         }

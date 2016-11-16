@@ -693,4 +693,9 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
 
         fx::db()->query($q_params);
     }
+    
+    public function getBoxFields()
+    {
+        return array();
+    }
 }

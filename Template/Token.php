@@ -53,9 +53,9 @@ class Token
             );
             $source = trim($source);
             $is_param = true;
-        } elseif ($first_char === '=') {
-            $source = preg_replace("~^=~", 'print ', $source);
-            $name = 'print';
+        } elseif ($first_char === '=' || $first_char === '-') {
+            $source = 'exec '.mb_substr($source, 1);
+            $name = 'exec';
         } else {
             preg_match("~^[^\s\/\\|}]+~", $source, $name);
             $name = $name[0];
@@ -102,9 +102,12 @@ class Token
             $type = 'unknown';
         }
         
-        if ($name === 'print' && !preg_match("~expression\s*?=~",$source)) {
+        if ($name === 'exec' && !preg_match("~expression\s*?=~",$source)) {
             $source = preg_replace('~([^\\\])"~', '$1\\"', $source);
             $source = ' expression="'.$source.'" ';
+            if ($first_char === '=') {
+                $source .= ' print="1" ';
+            }
         }
         
         if ($name === 'preset' && $type !== 'close' && !preg_match("~id\s*?=~", $source)) {
@@ -137,7 +140,7 @@ class Token
             $var_part = trim($parts[0]);
             
             // {set $var = 'value' /}
-            if (preg_match('~^\$[a-z0-9_]+$~i', $var_part)) {
+            if (preg_match('~^\$[a-z0-9_\.]+$~i', $var_part)) {
                 $props['var'] = $var_part;
                 if (isset($parts[1])) {
                     $props['value'] = trim($parts[1]);

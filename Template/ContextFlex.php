@@ -72,6 +72,17 @@ class ContextFlex extends Context {
         unset($this->misses[$this->level][$var]);
     }
     
+    public function digSet($var, $path, $val)
+    {
+        $cv = $this->get($var);
+        if (!$cv) {
+            return;
+        }
+        $level = $this->last_var_level;
+        $res = fx::digSet($cv, $path, $val);
+        $this->stack[$level][$var] = $res;
+    }
+    
     protected $misses = array();
     
     public function get($name = null, $context_offset = null)

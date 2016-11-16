@@ -53,6 +53,9 @@ window.$fx = {
                             }
                         } else if (typeof asset === 'object') {
                             if (asset.declarations) {
+                                if (typeof $fx.less_block_declarations === 'undefined') {
+                                    $fx.less_block_declarations = {};
+                                }
                                 $.each(asset.declarations, function(k,v) {
                                     $fx.less_block_declarations[k] = v;
                                 });

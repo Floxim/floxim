@@ -101,14 +101,17 @@ class Compiler
         return $token->getProp('value');
     }
     
-    protected function tokenPrintToCode($token)
+    protected function tokenExecToCode($token)
     {
         $expression = $token->getProp('expression');
         $expression = str_replace('\\"', '"', $expression);
         $ep = $this->getExpressionParser();
         $res = $ep->build($expression);
         $code = '<'."?php\n";
-        $code .= 'echo '.$res.";\n";
+        if ($token->getProp('print')) {
+            $code .= 'echo ';
+        }
+        $code .= $res.";\n";
         $code .= '?>';
         return $code;
     }
@@ -408,7 +411,7 @@ class Compiler
                 $use_tokens []= $call_child;
                 continue;
             }
-            if ($call_child->name != 'var') {
+            if ($call_child->name != 'var' && $call_child->name !== 'set') {
                 $has_content_param = true;
                 break;
             }
@@ -443,6 +446,14 @@ class Compiler
             }
         }
         foreach ($token->getChildren() as $param_var_token) {
+            if ($param_var_token->name === 'set') {
+                $set_var_name = trim($param_var_token->getProp('var'), '$');
+                $passed_vars[$set_var_name] = array(
+                    'string', 
+                    $param_var_token->getProp('value'), 
+                    null
+                );
+            }
             // internal call only handle var
             if ($param_var_token->name != 'var') {
                 continue;
@@ -473,7 +484,7 @@ class Compiler
                         );
                         $passed_value_type = 'buffer';
                     } else {
-                        $value_to_set = $raw_value;
+                        $value_to_set = "'".$raw_value."'";
                         $passed_value_type = 'string';
                     }
                 }
@@ -1637,7 +1648,6 @@ class Compiler
     protected function tokenSetToCode($token)
     {
         $code = "<?php\n";
-        
         $var = $token->getProp('var');
         
         $meta = null;
@@ -1671,7 +1681,8 @@ class Compiler
             $parts = explode('.', $var, 2);
             $var_name = trim($parts[0], '$');
             $var_path = $parts[1];
-            $code .= 'fx::digSet($context->get("' . $var_name . '"), "' . $var_path . '", ' . $value . ");\n";
+            //$code .= 'fx::digSet($context->get("' . $var_name . '"), "' . $var_path . '", ' . $value . ");\n";
+            $code .= '$context->digSet("' . $var_name . '", "' . $var_path . '", ' . $value . ");\n";
             $code .= "?>\n";
             return $code;
         }

@@ -558,26 +558,29 @@ class Fx
             }
             if ($pp === '') {
                 $arr[] = $var_value;
-                return;
+                break;
             }
             if (($is_arr && !array_key_exists($pp, $arr)) || ($is_aa && !isset($arr[$pp]))) {
                 if ($num + 1 === $total && !$merge) {
                     $arr[$pp] = $var_value;
-                    return;
+                    break;
                 }
                 $arr[$pp] = array(); //fx::collection();
             } elseif  ($is_aa && isset($arr[$pp]) && $num + 1 === $total) {
                 $arr[$pp] = $var_value;
-                return;
+                break;
             }
             @ $arr =& $arr[$pp];
         }
-
+        return $collection;
+        /*
+        fx::cdebug($collection, $arr);
         if ($merge && is_array($arr) && is_array($var_value)) {
             $arr = array_merge_recursive($arr, $var_value);
         } else {
             $arr = $var_value;
         }
+        */
     }
 
     /**
