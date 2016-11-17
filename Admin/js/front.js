@@ -2916,7 +2916,10 @@ function handle_template_lock_state(template_ls) {
         $field = template_ls.$node.closest('.field'),
         cl = 'fx-template-visual-fields',
         $container = $field.closest('.fx_tab_data').find('.'+cl),
-        opts_cl = cl+'__unlock-options';
+        opts_cl = cl+'__unlock-options',
+        template_type = template_ls.template_type,
+        $form = $field.closest('form'),
+        c_value  = template_ls.getFullValue();
     
     if (is_locked && !$container.find('.'+opts_cl).length) {
         var $opts = $(
@@ -2932,10 +2935,25 @@ function handle_template_lock_state(template_ls) {
             '</div>'
         );
         $opts.on('click', '[data-action]', function(e) {
-            var action = $(this).data('action'),
-                $target = template_ls.$node.find('.monosearch__item .fx_icon[data-action="'+action+'"]');
-            
-            $target.click();
+            var action = $(this).data('action');
+            switch (action) {
+                case 'copy':
+                    var c_data = $form.data('last_data');
+                            
+                    // change template prop in current data to force visual props sending 
+                    c_data.visual[template_type] = c_value.basic_template;
+                    template_ls.setValue(c_value.basic_template);
+                    break;
+                case 'lock':
+                    save_template_variant(
+                        {
+                            is_locked: "0",
+                            target_id: c_value.id
+                        }, 
+                        template_ls
+                    );
+                    break;
+            }
         });
         $container.append($opts);
     }

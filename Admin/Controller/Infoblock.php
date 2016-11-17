@@ -896,7 +896,6 @@ class Infoblock extends Admin
             'pages' => $pages,
             'has_current_page' => $has_current_page
         );
-        // fx::log($input, $scope, $finder, $finder->showQuery(), $pages, $c_page, $count);
         return $res;
     }
 
@@ -1497,13 +1496,14 @@ class Infoblock extends Admin
     
     public function saveTemplateVariant($input)
     {
+        
         $tv = isset($input['target_id']) && !$input['save_as_new'] 
                     ? fx::data('template_variant', $input['target_id'])
                     : fx::data('template_variant')->create(array(
                         'theme_id' => fx::env('theme_id'),
                         'template' => $input['basic_template']
                     ));
-
+        
         if ($tv->isSaved() && $input['pressed_button'] === 'delete') {
             $template_value = $tv['template'];
             $tv->delete();
