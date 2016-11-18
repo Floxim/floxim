@@ -2573,44 +2573,33 @@ fx_front.prototype.cached_style_variants = {};
 
 fx_front.prototype.prepare_infoblock_visual_fields = function(all_props, callback) {
     function extend_with_variants(prop, variants) {
-        var is_hidden = false;
-        /*
-        if (prop.style_id) {
-            var $styled_el = $('.fx_selected').descendant_or_self('.'+prop.block+'_style-id_'+prop.style_id);
-            if ($styled_el.length === 0) {
-                is_hidden = true;
-            }
-        }
-        */
-        if (is_hidden) {
-            prop.type = 'hidden';
-        } else {
-            if (prop.is_inline) {
-                var c_value = prop.value,
-                    res = $.extend(true, {}, prop, variants);
-                for (var i = 0; i < res.fields.length; i++) {
-                    var c_field = res.fields[i];
-                    if (typeof c_value[c_field.name] !== 'undefined') {
-                        c_field.value = c_value[c_field.name];
-                    } else {
-                        //c_field.value = undefined;
-                        delete c_field.value;
-                    }
+        if (prop.is_inline) {
+            var c_value = prop.value,
+                res = $.extend(true, {}, prop, variants);
+            for (var i = 0; i < res.fields.length; i++) {
+                var c_field = res.fields[i];
+                if (typeof c_value[c_field.name] !== 'undefined') {
+                    c_field.value = c_value[c_field.name];
+                } else if (typeof c_field.default !== 'undefined') {
+                    c_field.value = c_field.default;
+                } else {
+                    //c_field.value = undefined;
+                    delete c_field.value;
                 }
-                
-                $.extend(
-                    res.tweaker, 
-                    {
-                        style_id: prop.style_id,
-                        style_class: prop.block + '_style_'+prop.mod_value
-                    }
-                );
-                $.extend(prop, res);
-            } else {
-                prop.type = 'livesearch';
-                prop.values = variants;
-                prop.allow_empty = false;
             }
+
+            $.extend(
+                res.tweaker, 
+                {
+                    style_id: prop.style_id,
+                    style_class: prop.block + '_style_'+prop.mod_value
+                }
+            );
+            $.extend(prop, res);
+        } else {
+            prop.type = 'livesearch';
+            prop.values = variants;
+            prop.allow_empty = false;
         }
     }
     

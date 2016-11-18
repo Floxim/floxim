@@ -258,28 +258,25 @@
                     }
                 }, 100);
                 
+                var closed_by_escape = false;
+                
                 closer = $fx.close_stack.push(
                     function() {
-                        $fx.front_panel.hide(function() {
-                            if (params.oncancel) {
-                                params.oncancel($form);
-                            }
-                        });
+                        closed_by_escape = true;
+                        $form.trigger('fx_form_cancel');
                     }
                 );
         
                 $form.on('fx_form_cancel', function() {
-                    closer();
-                });
-
-                /*
-                $('body').off('.fx_front_panel').on('keydown.fx_front_panel', function(e) {
-                    if (e.which === 27) {
-                        $fx.front_panel.get_current_panel().$form.trigger('fx_form_cancel');
-                        return false;
+                    if (!closed_by_escape) {
+                        $fx.close_stack.close(closer.index);
                     }
+                    $fx.front_panel.hide(function() {
+                        if (params.oncancel) {
+                            params.oncancel($form);
+                        }
+                    });
                 });
-                */
             });
             return $form;
         };
@@ -629,6 +626,9 @@
                         duration: duration,
                         complete: function() {
                             c_panel.$container.remove();
+                            if (callback_final) {
+                                callback_final();
+                            }
                         }
                     });
                 } else {

@@ -99,7 +99,6 @@ less_tweaker.prototype.get_data = function() {
         }
         res[name] = value;
     }
-    
     return res;
 };
 
@@ -335,7 +334,6 @@ less_tweaker.prototype.render_less = function(less_text) {
         options
     ).then(
         function(css) {
-            //css.css += '.src {is:tweaker;}';
             that.get_stylesheet().text(css.css);
         },
         function (error) {

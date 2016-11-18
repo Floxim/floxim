@@ -639,21 +639,20 @@ class StyleBundle extends Bundle {
     
     protected function prepareStyleField($props)
     {
-        /*
-        if ($props['type'] === 'palette') {
-            $props['colors'] = fx::env()->getLayoutStyleVariant()->getPalette();
-            //$props['empty'] = false;
-        }
-         * 
-         */
-        if ($props['units'] && $props['value']) {
-            $props['value'] = preg_replace("~[^\d\.]+~", '', $props['value']);
+        
+        if (isset($props['units'])) {
+            foreach (array('value', 'default') as $prop) {
+                if (isset($props[$prop])) {
+                    $props[$prop] = preg_replace("~[^\d\.]+~", '', $props[$prop]);
+                }
+            }
         }
         return $props;
     }
     
     public function getFormFields($vals = array())
     {
+        
         $style = $this->getStyleMeta();
         
         if (!isset($style['vars'])) {
@@ -664,6 +663,9 @@ class StyleBundle extends Bundle {
         
         foreach ($style['vars'] as $var => $props) {
             $props['name'] = $var;
+            if (isset($props['value'])) {
+                $props['default'] = $props['value'];
+            }
             if (isset($vals[$var])) {
                 $props['value'] = $vals[$var];
             }
