@@ -437,12 +437,22 @@ window.$fx = {
     },
         
     post: function ( data, callback, error_callback ) {
-        data.fx_admin = true;
+        
+        var post_data = {};
+        post_data.fx_admin = true;
+        
+        
+        
+        $.each(data, function(k, v) {
+            if (typeof v !== 'function') {
+                post_data[k] = v;
+            }
+        });
         
         error_callback = error_callback || function() {};
         
-        if (!data._base_url) {
-            data._base_url = document.location.href.replace(/#.*$/, '');
+        if (!post_data._base_url) {
+            post_data._base_url = document.location.href.replace(/#.*$/, '');
         }
         if (!callback) {
             callback = function() {};
@@ -450,7 +460,7 @@ window.$fx = {
         $.ajax({
             url: $fx.settings.action_link,
             type: "POST",
-            data: data,
+            data: post_data,
             dataType: "JSON",
             success: function(json) {
                 if (json.reload) {

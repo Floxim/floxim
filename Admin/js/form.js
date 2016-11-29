@@ -230,6 +230,7 @@ fx_form = {
                 b.on('click', options.onclick);
             }
         });
+        
         $rendered_fields.trigger('fx_fields_ready');
     },
     lock_form: function($form) {
@@ -542,6 +543,92 @@ fx_form = {
     },
     
     bind_values_filter: function($field, json, $container) {
+        
+        var filter = json.values_filter,
+            all_values = json.values;
+        
+        if (typeof filter !== 'string' || json.type !== 'livesearch') {
+            return;
+        }
+        
+        
+        var cond_parts = filter.split(/\s*?(==|!=|>|<|>=|<=|!~|~|\sin\s)\s*/);
+        if (cond_parts.length !== 3) {
+            return;
+        }
+        
+        var cond = {
+            operator: cond_parts[1].replace(/^\s+|\s+$/g, '')
+        };
+        
+        if (cond_parts[0].match(/^this\./)) {
+            cond.value_prop = cond_parts[0].replace(/^this\./, '');
+            cond.field = cond_parts[2];
+            cond.order = 'direct';
+        } else {
+            cond.value_prop = cond_parts[2].replace(/^this\./, '');
+            cond.field = cond_parts[0];
+            cond.order = 'inverted';
+        }
+        
+        var $livesearch = $field.find('.livesearch'),
+            ls = $livesearch.data('livesearch');
+        
+        function handle() {
+            var $compare_field = $field.closest('form').find('[name="'+cond.field+'"]'),
+                compare_val = $compare_field.val();
+        
+            var new_values = [];
+            
+            for (var i = 0; i < all_values.length; i++) {
+                var cv = all_values[i],
+                    own_val = cv[cond.value_prop];
+            
+                switch (cond.operator) {
+                    case '==':
+                        if (own_val == compare_val) {
+                            new_values.push(cv);
+                        }
+                        break;
+                    case 'in':
+                        var found = false;
+                        if (cond.order === 'inverted') {
+                            $.each(own_val, function(j, c_own_val) {
+                                if (c_own_val == compare_val) {
+                                    found = true;
+                                    return false;
+                                }
+                            });
+                        } else {
+                            $.each(compare_val, function(j, c_compare_val) {
+                                if (c_compare_val == own_val) {
+                                    found = true;
+                                    return false;
+                                }
+                            });
+                        }
+                        if (found) {
+                            new_values.push(cv);
+                        }
+                        break;
+                }
+                
+            }
+            
+            ls.updatePresetValues(new_values);
+        }
+        
+        $field.closest('form').on('change', function(e) {
+            var target_name = e.target.name;
+            if (target_name !== cond.field) {
+                return;
+            }
+            handle();
+            //console.log(target_name, cond);
+        });
+        
+        setTimeout(handle, 500);
+        
         return;
         var all_conds = [],
             that = this,
@@ -718,6 +805,7 @@ fx_form = {
     },
     
     bind_conditions: function( conds, $container, callback) {
+        
         var that = this;
         
         conds = this.make_conditions(conds);
@@ -760,9 +848,20 @@ fx_form = {
     add_parent_condition: function(conds, $field, $container) {
         
         if (typeof conds === 'string') {
-            var cond_parts = conds.split(/\s*?(==|!=|>|<|>=|<=|!~|~)\s*/);
-            if (cond_parts.length === 3) {
-                conds = [cond_parts[0], cond_parts[2], cond_parts[1]];
+            
+            var cond_string = conds;
+            conds = [];
+            
+            var cond_groups = cond_string.split(/\s*&&\s*/);
+            
+            for (var i = 0; i < cond_groups.length; i++) {
+            
+                var c_cond = cond_groups[i];
+
+                var cond_parts = c_cond.split(/\s*?(==|!=|>|<|>=|<=|!~|~)\s*/);
+                if (cond_parts.length === 3) {
+                    conds.push([cond_parts[0], cond_parts[2], cond_parts[1]]);
+                }
             }
         }
         

@@ -20,72 +20,215 @@ class Multilink extends \Floxim\Floxim\Component\Field\Entity
         if (!$render_type) {
             $render_type = 'table';
         }
-        if ($render_type == 'livesearch') {
-            $res['type'] = 'livesearch';
-            $res['is_multiple'] = true;
-            $res['params'] = array(
-                'content_type' => $this->getEndDataType()
-            );
-            $rel = $this->getRelation();
-            $related_relation = fx::data($rel[1])->relations();
-            $linker_field = $related_relation[$rel[3]][2];
-            $res['name_postfix'] = $linker_field;
-            if (isset($content[$this['keyword']])) {
-                $res['value'] = array();
-                $linkers = $content[$this['keyword']]->linkers;
-                foreach ($content[$this['keyword']] as $num => $v) {
-                    $res['value'] [] = array(
-                        'id'       => $v['id'],
-                        'name'     => $v['name'],
-                        'value_id' => $linkers[$num]['id']
-                    );
-                }
-            }
-        } elseif ($render_type == 'table') {
-            $rel = $this->getRelation();
-            $entity = fx::data($rel[1])->create();
-            $entity_fields = $entity->getFormFields();
-            $res['tpl'] = array();
-            $res['labels'] = array();
-
-            foreach ($entity_fields as $ef) {
-                if ($ef['name'] == $rel[2]) {
-                    continue;
-                }
-                // do not show "is published" flag in this table
-                if ($ef['name'] == 'is_published') {
-                    continue;
-                }
-                $res['tpl'] [] = $ef;
-                $res['labels'] [] = $ef['label'];
-            }
-            $res['values'] = array();
-            if (isset($content[$this['keyword']])) {
-                if ($rel[0] === System\Finder::HAS_MANY) {
-                    $linkers = $content[$this['keyword']];
-                } else {
+        switch ($render_type) {
+            case 'livesearch':
+                $res['type'] = 'livesearch';
+                $res['is_multiple'] = true;
+                $res['params'] = array(
+                    'content_type' => $this->getEndDataType()
+                );
+                $rel = $this->getRelation();
+                $related_relation = fx::data($rel[1])->relations();
+                $linker_field = $related_relation[$rel[3]][2];
+                $res['name_postfix'] = $linker_field;
+                if (isset($content[$this['keyword']])) {
+                    $res['value'] = array();
                     $linkers = $content[$this['keyword']]->linkers;
-                }
-                foreach ($linkers as $linker) {
-                    $linker_fields = $linker->getFormFields();
-                    $val_array = array('_index' => $linker['id']);
-                    foreach ($linker_fields as $lf) {
-                        // skip the relation field
-                        if ($lf['name'] == $rel[2]) {
-                            continue;
-                        }
-                        // do not show "is published" flag in this table
-                        if ($lf['name'] == 'is_published') {
-                            continue;
-                        }
-                        // form field has "name" prop instead of "keyword"
-                        $val_array [$lf['name']] = $lf['value'];
+                    foreach ($content[$this['keyword']] as $num => $v) {
+                        $res['value'] [] = array(
+                            'id'       => $v['id'],
+                            'name'     => $v['name'],
+                            'value_id' => $linkers[$num]['id']
+                        );
                     }
-                    $res['values'] [] = $val_array;
                 }
-            }
-            $res['type'] = 'set';
+                break;
+            case 'table':
+                $res = $this->getJsFieldTable($content, $res);
+                break;
         }
+        return $res;
+    }
+    
+    protected function getJsFieldTable($content, $res)
+    {
+        
+        $res['type'] = 'set';
+        $res['tpl'] = array();
+        $res['values'] = array();
+        $res['types'] = array();
+        $res['labels'] = array();
+        
+        $rel = $this->getRelation();
+        
+        $com = fx::component($rel[1]);
+        
+        
+        $com_variants = $com->getAllVariants()->find(function($c) {
+            return !$c['is_abstract'];
+        });
+        
+        foreach ($com_variants as $com_variant) {
+            $res['types'] []= array(
+                'name' => $com_variant->getItemName(),
+                'name_add' => $com_variant->getItemName('add'),
+                'keyword' => $com_variant['keyword']
+            );
+        }
+        
+        $all_fields = $com->getAllFieldsWithChildren();
+        
+        $list_fields_type = $this->getFormat('list_fields_type', 'all');
+        $listed_fields = $this->getFormat('list_fields', array());
+        
+        switch ($list_fields_type) {
+            case 'all':
+                $all_fields = $all_fields->find(function($f) {
+                    return $f['is_editable'] !== 0;
+                });
+                break;
+            case 'only_listed':
+                $found_fields = array();
+                foreach ($listed_fields as $listed_field_id) {
+                    $found_field = $all_fields->findOne('id', $listed_field_id);
+                    if ($found_field) {
+                        $found_fields []= $found_field;
+                    }
+                }
+                $all_fields = fx::collection($found_fields);
+                break;
+            case 'not_listed':
+                $all_fields = $all_fields->find(function($f) use ($listed_fields) {
+                    return !in_array($f['id'], $listed_fields);
+                });
+                break;
+        }
+        
+        $fields_by_com = array();
+        
+        
+        foreach ($all_fields as $field) {
+            if ($field['keyword'] == $rel[2]) {
+                continue;
+            }
+            if ($field['keyword'] === 'is_published') {
+                continue;
+            }
+            $res['labels'][]= $field['name'];
+            $field_com = $field['component'];
+            $com_keyword = $field_com['keyword'];
+            if (!isset($fields_by_com[$com_keyword])) {
+                $entity = fx::data($com_keyword)->create(
+                   array( $rel[2] => $content['id'] )
+                );
+                $fields_by_com[$com_keyword] = $entity->getFormFields();
+            }
+            $com_fields = $fields_by_com[$com_keyword];
+            $c_form_field = $com_fields->findOne('name', $field['keyword']);
+            if (!$c_form_field) {
+                $c_form_field = array(
+                    'type' => 'html',
+                    'name' => $field['keyword']
+                );
+            }
+            $res['tpl'][]= $c_form_field;
+        }
+        
+        if (isset($content[$this['keyword']])) {
+            if ($rel[0] === System\Finder::HAS_MANY) {
+                $linkers = $content[$this['keyword']];
+            } else {
+                $linkers = $content[$this['keyword']]->linkers;
+            }
+            foreach ($linkers as $linker) {
+                
+                $val_array = array();
+                $val_array['_meta'] = array(
+                    'id' => $linker['id'],
+                    'type' => $linker->getType(),
+                    'type_id' => $linker->getComponent()->get('id')
+                );
+                
+                $linker_fields = $linker->getFormFields();
+                
+                foreach ($all_fields as $field) {
+                    $field_keyword = $field['keyword'];
+                    if ($field_keyword === 'type') {
+                        $val_array[$field_keyword] = $linker->getComponent()->getItemName();
+                        continue;
+                    }
+                    $linker_field = $linker_fields->findOne('name', $field_keyword);
+                    if ($linker_field) {
+                        $val_array[$field_keyword] = $linker_field['value'];
+                    } else {
+                        $val_array[$field_keyword] = $linker[$field_keyword];
+                    }
+                }
+                $res['values'] [] = $val_array;
+            }
+        }
+        
+        return $res;
+        
+        
+        $entity = fx::data($rel[1])->create();
+
+        $entity_fields = $entity->getFields();
+
+        $res['tpl'] = array();
+        $res['labels'] = array();
+
+        $rel_field = $entity_fields[$rel[2]];
+
+        if ($rel_field) {
+            $rel_prop_name = $rel_field->getPropertyName();
+            $entity[$rel_prop_name] = $content;
+        }
+
+        $entity_form_fields = $entity->getFormFields();
+
+        foreach ($entity_form_fields as $ef) {
+            if ($ef['name'] == $rel[2]) {
+                continue;
+            }
+            // do not show "is published" flag in this table
+            if ($ef['name'] == 'is_published') {
+                continue;
+            }
+            $res['tpl'] [] = $ef;
+            $res['labels'] [] = $ef['label'];
+        }
+        $res['values'] = array();
+        if (isset($content[$this['keyword']])) {
+            if ($rel[0] === System\Finder::HAS_MANY) {
+                $linkers = $content[$this['keyword']];
+            } else {
+                $linkers = $content[$this['keyword']]->linkers;
+            }
+            foreach ($linkers as $linker) {
+                $linker_fields = $linker->getFormFields();
+                $val_array = array('_index' => $linker['id']);
+                $val_array['_meta'] = array(
+                    'id' => $linker['id'],
+                    'type' => $linker->getType(),
+                    'type_id' => $linker->getComponent()->get('id')
+                );
+                foreach ($linker_fields as $lf) {
+                    // skip the relation field
+                    if ($lf['name'] == $rel[2]) {
+                        continue;
+                    }
+                    // do not show "is published" flag in this table
+                    if ($lf['name'] == 'is_published') {
+                        continue;
+                    }
+                    // form field has "name" prop instead of "keyword"
+                    $val_array [$lf['name']] = $lf['value'];
+                }
+                $res['values'] [] = $val_array;
+            }
+        }
+        $res['type'] = 'set';
         return $res;
     }
 
@@ -110,18 +253,18 @@ class Multilink extends \Floxim\Floxim\Component\Field\Entity
             if (!in_array($target_id, $com_variant_ids)) {
                 continue;
             }
-            $owner_variant_ids = $f['component']->getAllVariants()->getValues('id');
-            $field_filters[$f['id']] = array(array('format[linking_component_id]', $owner_variant_ids));
+            $field_com = $f['component'];
+            $owner_variant_ids = $field_com->getAllVariants()->getValues('id');
             $avail_coms = array_merge($avail_coms, $owner_variant_ids);
-            $linking_field_values []= array($f['id'], $f['component']['name'].' &rarr; '.$f['name']);
+            $linking_field_values []= array(
+                'id' => $f['id'], 
+                'name' => $f['component']['name'].' &rarr; '.$f['name'],
+                'component_id' => $f['component_id'],
+                'components' => $owner_variant_ids
+            );
         }
-        $avail_coms = array_flip(array_unique($avail_coms));
         
-        foreach ($field_filters as $field_id => $field_filter) {
-            if (count($avail_coms) === count($field_filter[0][1])) {
-                unset($field_filters[$field_id]);
-            }
-        }
+        $avail_coms = array_flip(array_unique($avail_coms));
 
         $all_coms = fx::collection(fx::data('component')->getSelectValues());
         
@@ -144,9 +287,64 @@ class Multilink extends \Floxim\Floxim\Component\Field\Entity
             'name' => 'linking_field_id',
             'label' => 'Ссылающееся поле',
             'type' => 'livesearch',
+            //'type' => 'hidden',
             'parent' => array('format[linking_component_id]'),
             'values' => $linking_field_values,
-            'values_filter' => $field_filters
+            'values_filter' => 'format[linking_component_id] in this.components'
+        );
+        
+        $all_fields = array();
+        
+        foreach ($com_values as $com_value) {
+            $c_com = fx::getComponentById($com_value[0]);
+            //$c_com_variants = $c_com->getChain()->getValues('id');
+            
+            $c_com_fields = $c_com->getAllFieldsWithChildren();
+            foreach ($c_com_fields as $c_com_field) {
+                $c_id = $c_com_field['id'];
+                if (isset($all_fields[$c_id])) {
+                    continue;
+                }
+                $all_fields[$c_id] = array(
+                    'id' => $c_id,
+                    'name' => $c_com_field['name'],
+                    'component_id' => $c_com_field['component_id'],
+                    'components' => $c_com_field['component']->getAllVariants()->getValues('id')
+                );
+            }
+        }
+        
+        $fields []= array(
+            'name' => 'render_type',
+            'type' => 'livesearch',
+            'label' => 'Способ отображения',
+            'values' => array(
+                array('table', 'Таблица значений'),
+                array('livesearch', 'Быстрый поиск')
+            )
+        );
+        
+        $fields []= array(
+            'name' => 'list_fields_type',
+            'label' => 'Отображаемые поля',
+            'parent' => 'format[render_type] == table',
+            'type' => 'radio_facet',
+            'values' => array(
+                array('all','все редактируемые'),
+                array('only_listed', 'только указанные'),
+                array('not_listed', 'кроме указанных')
+            ),
+            'default' => 'all',
+            'value' => 'all'
+        );
+        
+        $fields []= array(
+            'name' => 'list_fields',
+            'type' => 'livesearch',
+            'is_multiple' => true,
+            'parent' => 'format[list_fields_type] != all',
+            'values' => array_values($all_fields),
+            'values_filter' => 'format[linking_component_id] in this.components'
         );
 
         return $fields;

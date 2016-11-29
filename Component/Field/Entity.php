@@ -333,7 +333,8 @@ class Entity extends System\Entity
             if (!$is_real && isset($field['override']) && $field['override'] === false) {
                 continue;
             }
-            $field['name'] = 'format['. (isset($field['name']) ? $field['name'] : $key) .']';
+            $key = (isset($field['name']) ? $field['name'] : $key);
+            $field['name'] = 'format['. $key .']';
             $field['value'] = $this->getFormat($key);
             if (!$is_real) {
                 $field['locked'] = $this->getFormatReal($key) === null;
@@ -442,10 +443,10 @@ class Entity extends System\Entity
         return $this->root_field;
     }
     
-    public function getFormat($offset)
+    public function getFormat($offset, $default = null)
     {
         $f = $this['format'];
-        return isset($f[$offset]) ? $f[$offset] : null;
+        return isset($f[$offset]) ? $f[$offset] : $default;
     }
     
     public function getFormatReal($offset)

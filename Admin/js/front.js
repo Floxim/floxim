@@ -32,22 +32,21 @@ window.fx_front = function () {
         return false;
     });
     
-    $('html').on('keyup.fx_front_keyup', function(e) {
+    $('html').on('keydown.fx_front_keydown', function(e) {
         if ($fx.front_panel.parse_stris_visible) {
             return;
         }
-
+        
         switch (e.which) {
-            // F2
+            // F2 / Command + E
             case 113:
+            case 69:
+                if (e.which === 69 && !e.metaKey) {
+                    return;
+                }
                 $fx.front.load($fx.front.mode === 'edit' ? 'view' : 'edit');
                 break;
             /*
-            // F4
-            case 115:
-                $fx.front.load($fx.front.mode === 'design' ? 'view' : 'design');
-                break;
-            */
             // +
             case 187:
                 if ($(e.target).closest('.fx_var_editable').length > 0) {
@@ -75,6 +74,7 @@ window.fx_front = function () {
                 }
                 $('.fx_admin_button_delete', $panel).first().trigger('click');
                 break;
+            */
         }
     });
     
@@ -1689,6 +1689,8 @@ fx_front.prototype.hilight = function(container) {
     
     $('*[data-has_var_in_att="1"]', container).addClass('fx_template_var_in_att');
     
+    fx_eip.collect_nodes(container);
+    
     $fx.front.collect_adder_placeholders(container);
     
     var fx_selector = '.fx_template_var, .fx_area, .fx_template_var_in_att, .fx_entity, .fx_infoblock, '+
@@ -2253,126 +2255,181 @@ fx_front.prototype.make_content_form_editable = function($form) {
     });
 };
 
+fx_front.prototype.bind_content_form = function($form, content_type_id, content_id) {
+    var bound_hash = content_type_id+'-'+content_id;
+    $form.attr('data-fx_bound', bound_hash);
+    
+    $form.on('change input', function(e) {
+        var $inp = $(e.target),
+            $bound = $inp.closest('[data-fx_bound]');
+        
+        if (!$bound.length || $bound.attr('data-fx_bound') !== bound_hash) {
+            return;
+        }
+        var inp_name = $inp.attr('name');
+        if (!inp_name) {
+            return;
+        }
+        
+        var field_name = inp_name.match(/([^\[]+?)\]$/);
+        
+        field_name = field_name ? field_name[1] : inp_name;
+        
+        
+        if (!field_name) {
+            return;
+        }
+        fx_eip.set_value(content_type_id, content_id, field_name, $inp.val());
+    });
+};
+
+fx_front.prototype.show_edit_form = function(params) {
+    params = params || {};
+    
+    
+    fx_eip.fix();
+    
+    var entity_id = params.content_id;
+        
+    var entity_values = fx_eip.get_values(entity_id);
+    
+    fx_eip.stop();
+    
+    params = $.extend(
+        true,
+        params, 
+        {
+            entity:'content',
+            action:'add_edit',
+            entity_values: entity_values
+        }
+    );
+
+    $fx.front_panel.load_form(
+        params, 
+        {
+            onready: function($form) {
+                $fx.front.make_content_form_editable($form);
+                fx_eip.stop();
+                var response = $form.data('fx_response');
+                $fx.front.bind_content_form($form, response.content_type_id, entity_id);
+                /*
+                return;
+                var $att_var_nodes = $entity.descendant_or_self('*[data-has_var_in_att]');
+                $att_var_nodes.each(function() {
+                    var $c_node = $(this),
+                        c_data = $c_node.data();
+                    $.each(c_data, function(data_key,data) {
+                        if (!data_key.match(/fx_template_var_/)) {
+                            return;
+                        }
+                        if (data.type === 'image' && data.var_type === 'content') {
+                            var $target_field = $form.find('.field_name__'+data.name);
+                            $target_field.on('fx_change_file', function(e) {
+                                if (e.upload_response) {
+                                    fx_eip.append_value($c_node, data, e.upload_response.path, e.upload_response.formatted_value);
+                                }
+                            });
+                        }
+                    });
+                });
+                var $var_nodes = $entity.descendant_or_self('*[data-fx_var]');
+                $var_nodes.each(function() {
+                    var $var_node = $(this),
+                        var_meta = $var_node.data('fx_var');
+                    // skip template var
+                    if (var_meta.var_type === 'visual') {
+                        return;
+                    }
+                    // skip property of nested entity
+                    if ($var_node.closest('.fx_entity')[0] !== $entity[0]) {
+                        return;
+                    }
+
+                    var_meta.target_type = 'var';
+                    $form.find('.field_name__'+var_meta.name).on('input keyup change', function(e) {
+                        var $field = $(this),
+                            $target = $(e.target),
+                            val = null;
+                        if ($target.is('.redactor_fx_wysiwyg')) {
+                            val = $target.html();
+                        } else if ($field.is('.field_datetime')) {
+                            val = $field.find('.date_input').val();
+                        } else {
+                            val = $(e.target).val();
+                        }
+                        fx_eip.append_value($var_node, var_meta, val);
+                    });
+                });
+                */
+            },
+            onsubmit: params.onsubmit || function() {},
+            onfinish: function(res) {
+                fx_eip.stop();
+                if (params.onfinish) {
+                    params.onfinish(res);
+                }
+                $fx.front_panel.hide();
+            },
+            oncancel: function() {
+                if (params.oncancel) {
+                    params.oncancel();
+                }
+            }
+        }
+    );
+};
+
 fx_front.prototype.get_edit_closure = function($entity, params) {
     params = params || {};
     return function() {
         var entity_meta = $entity.data('fx_entity'),
             ce_id = entity_meta[0],
             $ib_node = $entity.closest('.fx_infoblock'),
-            edit_action_params = {
-                entity:'content',
-                action:'add_edit',
-                content_type:entity_meta[1]
-            },
             entity_meta_props = $entity.data('fx_entity_meta'),
             placeholder_data = entity_meta_props ? entity_meta_props.placeholder : null,
-            placeholder_linker = entity_meta_props ? entity_meta_props.placeholder_linker : null,
             $stored_selected_node = $fx.front.get_selected_item();
-
+    
+        params.placeholder_linker = entity_meta_props ? entity_meta_props.placeholder_linker : null;
+        
+        params.content_type = entity_meta[1];
+            
         if (ce_id) {
-            edit_action_params.content_id = entity_meta[0];
+            params.content_id = entity_meta[0];
         } else if (placeholder_data) {
-            edit_action_params = $.extend(edit_action_params, placeholder_data);
+            params = $.extend(params, placeholder_data);
         }
         var preset_params = $ib_node.data('fx_preset_params');
         if (preset_params) {
-            edit_action_params.preset_params = JSON.stringify(preset_params);
+            params.preset_params = JSON.stringify(preset_params);
         }
-        fx_eip.fix();
         
-        var entity_values = fx_eip.get_values(ce_id);
+        if (!params.oncancel) {
+            params.oncancel = function() {
+                $entity.data('fx_has_full_form', false);
+                $fx.front.deselect_item();
+                $fx.front.select_item($stored_selected_node);
+            };
+        }
+        
+        if (!params.onfinish) {
+            params.onfinish = function(res) {
+                var ib_reload_params = {};
+                if (res.real_infoblock_id) {
+                    ib_reload_params.real_infoblock_id = res.real_infoblock_id;
+                }
+                $fx.front.reload_infoblock($ib_node, null, ib_reload_params);
+            };
+        }
+            
         
         $fx.front.disable_node_panel();
-        
+
         if ($entity[0] !== $fx.front.get_selected_item()) {
             $fx.front.select_item($entity);
         }
         
-        fx_eip.stop();
-        
-        $fx.front_panel.load_form(
-            $.extend(
-                {}, 
-                edit_action_params, 
-                {
-                    entity_values:entity_values,
-                    placeholder_linker:placeholder_linker
-                }
-            ), 
-            {
-                onready: function($form) {
-                    $fx.front.make_content_form_editable($form);
-                    
-                    
-                    fx_eip.stop();
-                    var $att_var_nodes = $entity.descendant_or_self('*[data-has_var_in_att]');
-                    $att_var_nodes.each(function() {
-                        var $c_node = $(this),
-                            c_data = $c_node.data();
-                        $.each(c_data, function(data_key,data) {
-                            if (!data_key.match(/fx_template_var_/)) {
-                                return;
-                            }
-                            if (data.type === 'image' && data.var_type === 'content') {
-                                var $target_field = $form.find('.field_name__'+data.name);
-                                $target_field.on('fx_change_file', function(e) {
-                                    if (e.upload_response) {
-                                        fx_eip.append_value($c_node, data, e.upload_response.path, e.upload_response.formatted_value);
-                                    }
-                                });
-                            }
-                        });
-                    });
-                    var $var_nodes = $entity.descendant_or_self('*[data-fx_var]');
-                    $var_nodes.each(function() {
-                        var $var_node = $(this),
-                            var_meta = $var_node.data('fx_var');
-                        // skip template var
-                        if (var_meta.var_type === 'visual') {
-                            return;
-                        }
-                        // skip property of nested entity
-                        if ($var_node.closest('.fx_entity')[0] !== $entity[0]) {
-                            return;
-                        }
-                        
-                        var_meta.target_type = 'var';
-                        $form.find('.field_name__'+var_meta.name).on('input keyup change', function(e) {
-                            var $field = $(this),
-                                $target = $(e.target),
-                                val = null;
-                            if ($target.is('.redactor_fx_wysiwyg')) {
-                                val = $target.html();
-                            } else if ($field.is('.field_datetime')) {
-                                val = $field.find('.date_input').val();
-                            } else {
-                                val = $(e.target).val();
-                            }
-                            fx_eip.append_value($var_node, var_meta, val);
-                        });
-                    });
-                },
-                onfinish: function(res) {
-                    fx_eip.stop();
-                    var ib_reload_params = {};
-                    if (res.real_infoblock_id) {
-                        ib_reload_params.real_infoblock_id = res.real_infoblock_id;
-                    }
-                    $fx.front.reload_infoblock($ib_node, null, ib_reload_params);
-                    $fx.front_panel.hide();
-                },
-                oncancel: function() {
-                    if (params.oncancel) {
-                        params.oncancel();
-                    } else {
-                        $entity.data('fx_has_full_form', false);
-                        $fx.front.deselect_item();
-                        $fx.front.select_item($stored_selected_node);
-                        
-                    }
-                }
-            }
-        );
+        $fx.front.show_edit_form(params);
     };
 };
 

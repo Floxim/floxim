@@ -642,7 +642,7 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
             $rel_dir = 'after';
         }
         
-        fx::log($rel_item_id, $rel_dir);
+        //fx::log($rel_item_id, $rel_dir);
         
         if (!$rel_item_id) {
             return;

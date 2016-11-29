@@ -206,6 +206,7 @@ class Content extends Admin
         } else {
             $res['resume'] = true;
         }
+        $res['content_type_id'] = $content->getComponent()->get('id');
         $this->response->addFormButton('save');
         return $res;
     }

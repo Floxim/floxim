@@ -129,6 +129,29 @@ class Test extends Admin {
         $this->response->addFields($fields);
     }
     
+    public function parentCond()
+    {
+        $fields = array(
+            'ratio' => array(
+                'label' => 'rat',
+                'type' => 'ratio',
+                'auto' => true
+            ),
+            'size' => array(
+                'type' => 'livesearch',
+                'values' => array(
+                    array('small', 'Smal'),
+                    array('large', 'BIIIG')
+                )
+            ),
+            'test' => array(
+                'label' => "Tst",
+                'parent' => 'size != large && ratio != none'
+            )
+        );
+        $this->response->addFields($fields);
+    }
+    
     public function livesearch()
     {
         $vals = array(

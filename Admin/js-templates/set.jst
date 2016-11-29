@@ -2,7 +2,6 @@
 <div class="fx_fieldset_container">
     <div class="fx_fieldset">
         <table id="fx_fieldset_<?=_c.name?>">
-            <? if (!_c.is_cond_set) { ?>
             <thead>
                 <tr class="fx_fieldset_label">
                 <?if (!_c.without_delete) {?>
@@ -16,14 +15,30 @@
                 }?>
                 </tr>
             </thead>
-            <? } ?>
             <tbody class="fx_fieldset_rows">
 
             </tbody>
         </table>
-        <?if ( _c.without_add === undefined ) {?>
-            <a tabindex="0" class="fx_fieldset_add"><?=$fx.lang('Add')?></a>
-        <?}?>
+        <?if ( _c.without_add === undefined ) {
+            ?>
+            <div class="fx_fieldset__add"><?
+            if (_c.types.length < 2) {
+                ?>
+                <a tabindex="0" class="fx_fieldset_add"><?=$fx.lang('Add')?></a>
+                <?
+            } else {
+                ?>
+                    <span><?= $fx.lang('Add')?>:</span>
+                <?
+                for (var i = 0; i < _c.types.length; i++) {
+                    var c_type = _c.types[i];
+                    ?>
+                    <a><?= c_type.name_add ?></a>
+                    <?
+                }
+            }
+            ?></div><?
+        }?>
         <br style="clear:both;" />
     </div>
 </div>
@@ -31,17 +46,21 @@
 <!--jquery-->
 window.$fx_fields.init_fieldset(html, _c);
 
-<!--[fieldset_row ? _o.set_field.is_cond_set === undefined]-->
+<!--[fieldset_row]-->
 <tr class="fx_fieldset_row row_<?=_o.index?>">
-    <?if (!_o.set_field.without_delete) {?>
-    <td>
-        <a class="fx_fieldset_remove" tabindex="0" title="<?=$fx.lang('Delete')?>">&times;</a>
-    </td>
+    <?if (!_o.set_field.without_delete) {
+        console.log(_c, _o);
+        ?>
+        <td class="fx_fieldset_row__controls">
+            <a class="fx_icon fx_icon-type-delete fx_fieldset_remove" title="<?= $fx.lang('Delete') ?>"></a>
+            <a class="fx_icon fx_icon-type-edit"></a>
+        </td>
     <?
     }
     for (var i = 0; i< _c.length; i++) {
         ?><td class="input_cell_<?=i?>"></td><?
-    }?>
+    }
+    ?>
 </tr>
 
 <!--jquery-->
@@ -49,26 +68,3 @@ for (var i = 0; i< _c.length; i++) {
     var $input_node = _c[i].$input_node || $fx_fields.control(_c[i]);
     $('.input_cell_'+i, html).append( $input_node  );
 }
-
-<!--[fieldset_row ? _o.set_field.is_cond_set === true]-->
-<tr class="fx_fieldset_row row_<?=_o.index?>">
-    <td>
-        <a class="fx_fieldset_remove" title="<?=$fx.lang('Delete')?>">&times;</a>
-    </td>
-    <td class="input_cell_0">
-        <?
-            if (typeof _o.index === 'number') {
-                var name = 'new_'+_o.index;
-            } else {
-                var name = _o.index;
-            }
-        ?>
-        <select class="fx_input" name="params[conditions][<?=name?>][<?=_o.set_field.tpl[0].name?>]" >
-        </select>
-    </td>
-    <td class="input_cell_1"></td>
-    <td class="input_cell_2"></td>
-</tr>
-
-<!--jquery-->
-$fx_fields.init_condset(html, _c, _o);

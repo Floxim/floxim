@@ -26,6 +26,8 @@ abstract class Entity implements \ArrayAccess, Template\Entity
     
     protected $is_deleted = false;
     
+    public $is_generated = false;
+    
     public function isSaved() 
     {
         return $this->is_saved;
@@ -34,6 +36,11 @@ abstract class Entity implements \ArrayAccess, Template\Entity
     public function isDeleted()
     {
         return $this->is_deleted;
+    }
+    
+    public function isGenerated()
+    {
+        return (bool) $this->is_generated;
     }
     
     /** template entity interface */
@@ -135,6 +142,9 @@ abstract class Entity implements \ArrayAccess, Template\Entity
 
     public function save()
     {
+        if ($this->isGenerated()) {
+            return $this;
+        }
         // protect entity against recursion caused by link/multilink fields
         if (isset($this->now_saving)) {
             return $this;
@@ -394,6 +404,9 @@ abstract class Entity implements \ArrayAccess, Template\Entity
 
     public function delete()
     {
+        if ($this->isGenerated()) {
+            return;
+        }
         $pk = $this->getPk();
         $this->beforeDelete();
         $this->getFinder()->delete($pk, $this->data[$pk]);

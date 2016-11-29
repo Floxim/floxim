@@ -46,12 +46,19 @@ class Ajax extends Base
         
         $c_infoblock_id = fx::input()->fetchGetPost('_ajax_infoblock_id');
         
+        $container_props = fx::input()->fetchPost('_ajax_container_props');
+        
         if ($c_infoblock_id) {
             $infoblock = fx::data('infoblock', $c_infoblock_id);
             if ($infoblock) {
                 if ($controller_params) {
                     $infoblock->override(array('params' => $controller_params));
                 }
+                
+                if ($container_props) {
+                    $infoblock->bindLayoutContainerProps( $container_props );
+                }
+                
                 $res = $infoblock->render();
                 return $res;
             }

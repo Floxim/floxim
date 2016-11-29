@@ -144,6 +144,8 @@ window.fx_eip = {
                         formatted_value = formatted_value || value;
                         append_image(formatted_value);
                     }
+                } else {
+                    $node.attr(meta.inatt, value);
                 }
                 //fx_template_var
                 $node.data( 
@@ -155,6 +157,14 @@ window.fx_eip = {
                     )
                 );
                 break;
+        }
+    },
+    set_value: function(entity_type_id, entity_id, prop_name, prop_value) {
+        for (var i = 0; i < this.nodes.length; i++) {
+            var m = this.nodes[i][1];
+            if (m.content_id === entity_id && m.content_type_id === entity_type_id && m.name === prop_name) {
+                this.append_value(this.nodes[i][0], m, prop_value);
+            }
         }
     },
     save: function(callback) {
@@ -278,6 +288,29 @@ window.fx_eip = {
             c_eip.restore();
         });
         $fx.front.deselect_item();
+    },
+    nodes: [],
+    collect_nodes: function($container) {
+        var $var_nodes = $container.descendant_or_self('*[data-fx_var], *[data-has_var_in_att]'),
+            that = this;
+
+        $var_nodes.each(function() {
+            var $node = $(this);
+            var content_var = $node.data('fx_var');
+            if (content_var) {
+                content_var.target_type = 'var';
+                that.nodes.push([$node, content_var]);
+            }
+            for( var i in $node.data()) {
+                if (!/^fx_template_var/.test(i)) {
+                    continue;
+                }
+                var meta = $node.data(i);
+                meta.target_type = 'att';
+                meta.target_key = i;
+                that.nodes.push([$node, meta]);
+            }
+        });
     }
 };
 

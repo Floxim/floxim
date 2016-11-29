@@ -654,6 +654,13 @@ window.fx_livesearch = function (node, params) {
             livesearch.removeValue($(this).closest('.'+bl+'__item'));
         });
         
+        this.$node.on('set_value', function(e) {
+            var res = livesearch.setValue(e.value);
+            if (res) {
+                return false;
+            }
+        });
+        
         this.$node.find('.livesearch__control_arrow').click(function() {
             livesearch.$input.focus();
             livesearch.Suggest.Search('', {immediate:true});

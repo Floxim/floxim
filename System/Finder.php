@@ -1059,6 +1059,13 @@ abstract class Finder
         }
         return $entity;
     }
+    
+    public function generate($data = array())
+    {
+        $entity = $this->create($data);
+        $entity->is_generated = true;
+        return $entity;
+    }
 
     public $useStaticCache = true;
 

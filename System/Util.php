@@ -780,7 +780,7 @@ class Util
             chdir($rd);
             $res = shell_exec('git status');
             if (
-                strstr($res, 'nothing to commit, working directory clean')
+                strstr($res, 'nothing to commit')
                 && strstr($res, 'Your branch is up-to-date')
             ) {
                 continue;

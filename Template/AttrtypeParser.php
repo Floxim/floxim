@@ -29,6 +29,8 @@ class AttrtypeParser extends Fsm
     protected $res = '';
 
     protected $att_quot;
+    
+    protected $current_att = null;
 
     public function __construct()
     {
@@ -56,20 +58,23 @@ class AttrtypeParser extends Fsm
         $this->addRule(self::ATT_NAME, '~^href|title|alt$~', self::HREF, null);
         $this->addRule(self::HREF, '~^=[\'\"]$~', self::HREF_VAL, 'startVal');
         $this->addRule(self::HREF_VAL, '~^\{[\%\$]~', null, 'setHrefVar');
+        
+        $this->addRule(self::ATT_NAME, '~^[a-z0-9_-]+$~', self::ATT_NAME, 'readAttName');
 
 
         $this->addRule(self::ATT_VAL, '~^\{[\%\$]~', null, 'startVar');
-        $this->addRule(array(self::ATT_VAL, self::FX_VAL, self::STYLE_VAL, self::SRC_VAL, self::HREF_VAL),
-            '~^\s+|[\'\"]$~', self::TAG, 'endAtt');
+        $this->addRule(
+            array(
+                self::ATT_VAL, self::FX_VAL, self::STYLE_VAL, self::SRC_VAL, self::HREF_VAL
+            ),
+            '~^\s+|[\'\"]$~', 
+            self::TAG, 
+            'endAtt'
+        );
         $this->init_state = self::TAG;
+        
     }
-
-
-    public function startAtt($ch)
-    {
-        $this->res .= $ch;
-    }
-
+    
     public function startVal($ch)
     {
         $this->res .= $ch;
@@ -81,7 +86,7 @@ class AttrtypeParser extends Fsm
 
     public function startVar($ch)
     {
-        $this->res .= $this->setPropVal(array('inatt' => 'true'), $ch);
+        $this->res .= $this->setPropVal(array('inatt' => $this->current_att), $ch);
     }
 
 
@@ -97,7 +102,7 @@ class AttrtypeParser extends Fsm
 
     public function setImageVar($ch)
     {
-        $props = array('inatt' => 'true', 'type' => 'image');
+        $props = array('inatt' => $this->current_att, 'type' => 'image');
         if ($this->state === self::SRC_VAL) {
             $props['att'] = 'src';
         } elseif ($this->state === self::STYLE_BACKGROUND_URL) {
@@ -115,12 +120,12 @@ class AttrtypeParser extends Fsm
             $c_editable = 'false';
         }
 
-        $this->res .= $this->setPropVal(array('inatt' => 'true', 'editable' => $c_editable), $ch);
+        $this->res .= $this->setPropVal(array('inatt' => $this->current_att, 'editable' => $c_editable), $ch);
     }
 
     public function setColorVar($ch)
     {
-        $this->res .= $this->setPropVal(array('inatt' => 'true', 'type' => 'color'), $ch);
+        $this->res .= $this->setPropVal(array('inatt' => $this->current_att, 'type' => 'color'), $ch);
     }
 
     public function endAtt($ch)
@@ -144,8 +149,15 @@ class AttrtypeParser extends Fsm
                 break;
         }
         $this->att_quote = null;
+        $this->current_att = null;
         $this->res .= $ch;
 
+    }
+    
+    public function readAttName($ch)
+    {
+        $this->current_att = $ch;
+        $this->res .= $ch;
     }
 
     public function defaultCallback($ch)

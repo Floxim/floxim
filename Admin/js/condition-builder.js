@@ -51,11 +51,13 @@ window.condition_builder = function(params) {
             'has_type'
         ],
         text: [
-            'contains'
+            'contains',
+            'defined'
         ],
         string:[
             'contains',
-            'equals'
+            'equals',
+            'defined'
         ],
         number: [
             ['equals', {value_type:'number'}],
@@ -407,7 +409,6 @@ window.condition_builder = function(params) {
         switch (op_type) {
             case 'is_in':
                 var content_type = field.content_type;
-                //console.log(that.context, content_type);
                 res = find_fields( that.context, function(field) {
                     //var res = field.type === 'entity' && field.content_type === content_type;
                     if (field.type !== 'entity') {
@@ -471,11 +472,9 @@ window.condition_builder = function(params) {
                             || (new_control_type !== current_control_type);
         
         if (need_redraw) {
-            //console.log($current_control, $control);
             if ($current_control && $control) {
                 var current_livesearch = $current_control.data('livesearch');
                 var new_livesearch = $control.data('livesearch');
-                //console.log(current_livesearch, new_livesearch );
                 if (
                     current_livesearch && new_livesearch 
                     && current_livesearch.isMultiple && new_livesearch.isMultiple

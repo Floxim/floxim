@@ -598,7 +598,6 @@ class Template
         } else {
             $export_file = $bundle->getExportFile();
         }
-        
         return $export_file;
     }
     

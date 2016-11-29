@@ -363,6 +363,7 @@
         }
         &.field_group {
             margin-right:0;
+            white-space:nowrap;
         }
     }
     .fx_input {
@@ -728,27 +729,39 @@
         font-size:12px;
         margin-right:25px;
     }
-    .fx_fieldset_add {
-        margin:5px 0 5px 25px; 
+    .fx_fieldset__add {
+        margin:20px 0 5px 0; 
+        
+        font-size:13px;
         
         display: inline-block;
-        text-decoration: none;
-        border-bottom: 1px dashed #2d54ff;
         
+        a {
+            display:inline-block;
+            margin-right:5px;
+            text-decoration: none;
+            border-bottom: 1px dashed #2d54ff;
+        }
     } 
     
-    td {
-        white-space: nowrap;
-        &:not(:first-child) {
-            vertical-align:top;
-        }
+    table {
+        border-collapse: collapse;
+        min-width:100%;
     }
+    
+    td {
+        padding:10px 15px;
+        white-space: nowrap;
+        vertical-align:top;
+        border-bottom:1px solid #EEE;
+    }
+    
     
     input[type="text"], select, textarea {
         width:auto;
         margin:0;
         display:inline-block;
-        
+        min-width:100%;
     }
     
     input.fx_input_number {
@@ -766,6 +779,10 @@
         margin-right: 25px;
         margin-bottom:5px;
         margin-top:5px;
+    }
+    
+    .fx_fieldset_row__controls {
+        width:100px;
     }
 }
 

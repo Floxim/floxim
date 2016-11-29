@@ -335,10 +335,15 @@ class StyleBundle extends Bundle {
         $less_call = $this->generateCallLess();
         
         try {
+            ob_start();
             $parser->parse( $less_call );
             $parser->ModifyVars($less_vars);    
             $res = $parser->getCss();
             $this->generateExportFile();
+            $errors = ob_get_clean();
+            if ($errors !== '') {
+                fx::log('hm ers', $errors, fx::debug()->backtrace(), $parser, $less_vars, $less_call);
+            }
         } catch (\Less_Exception_Compiler $e) {
             fx::log($e, fx::debug()->backtrace(), $parser, $less_vars, $less_call);
         } catch (\Less_Exception_Parser $e) {

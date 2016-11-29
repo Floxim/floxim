@@ -271,11 +271,6 @@ window.$fx_fields = {
         
         function show_control () {
             $control.addClass(active_class);
-            /*
-            $control.attr('tabindex',0).focus().on('keydown.fx-ratio-input', function(e) {
-                
-            });
-            */
             $('html').on('click.fx-ratio-input', function(e) {
                 if ($(e.target).closest('.fx-ratio-input__control').length === 0) {
                     hide_control();
@@ -1013,8 +1008,23 @@ window.$fx_fields = {
         e.redactor_options = options;
         $node.trigger(e);
         $node.redactor(options);
+        $node.on('set_value', function(e) {
+            $node.val(e.value);
+            $node.redactor('code.set', e.value);
+        });
     },
+    
+    set_value: function($inp, value) {
+        var e = $.Event('set_value', {value:value});
+        $inp.trigger(e);
+        if (e.result === false) {
+            return;
+        }
+        $inp.val(value);
+    },
+    
     init_fieldset: function(html, _c) {
+        
         $('tbody.fx_fieldset_rows', html).sortable({
             handle:'>td:first-child'
         });
@@ -1024,11 +1034,13 @@ window.$fx_fields = {
         if (!_c.values) {
             _c.values = _c.value || [];
         }
-        var flag = false;
+        var set_path = _c.name.replace(/\]$/,'').split(/\]?\[/);
+        
         $.each(_c.values, function(row, val) {
-            var val_num = 0;
             var inputs = [];
-            var row_index = val._index || row;
+            var row_meta = val._meta || {},
+                row_index = row_meta.id || row;
+            
             $.each(_c.tpl, function(tpl_index, tpl_props) {
                 var inp_props = $.extend(
                     {}, 
@@ -1046,8 +1058,105 @@ window.$fx_fields = {
                 }
                 inputs.push(inp_props);
             });
-            $('.fx_fieldset_rows', html).append($t.jQuery('fieldset_row', inputs, {index:row, set_field: _c}));
+            
+            var $row = $t.jQuery('fieldset_row', inputs, {index:row, set_field: _c});
+            $row.data('row_meta', row_meta);
+            
+            if (row_meta.type_id) {
+                if ($fx.front) {
+                    $fx.front.bind_content_form($row, row_meta.type_id, row_meta.id);
+                }
+                /*
+                function append_values(vals) {
+                    $.each(vals, function(prop, val) {
+                        var c_name = _c.name+'['+row_index+']['+prop+']',
+                            $c_inp = $row.find('[name="'+c_name+'"]');
+                            
+                        if ($c_inp.length === 0) {
+                            $c_inp = $('<input type="hidden" name="'+c_name+'" />');
+                            $row.append($c_inp);
+                        }
+                        //$c_inp.val(val);
+                        $fx_fields.set_value($c_inp, val);
+                    });
+                }
+                
+                $row.find('.fx_icon-type-edit').click(function() {
+                    var c_vals = $row.formToHash();
+                    
+                    for (var j = 0; j < set_path.length; j++) {
+                        c_vals = c_vals[set_path[j]];
+                    }
+                    
+                    c_vals = c_vals[row_index];
+                    
+                    $fx.front.show_edit_form({
+                        content_id: row_meta.id,
+                        content_type: row_meta.type,
+                        entity_values: c_vals,
+                        onsubmit: function(e) {
+                            var $form = $(e.target),
+                                new_vals = $form.formToHash();
+                            
+                            append_values(new_vals.content);
+                            
+                            $fx.front_panel.hide();
+                            return false;
+                        }
+                    });
+                });
+                */
+            }
+            $('.fx_fieldset_rows', html).append($row);
+            
         });
+        
+        function append_row_values(vals, $row) {
+            var row_meta = $row.data('row_meta') || {},
+                row_index = row_meta.id;
+            
+            $.each(vals, function(prop, val) {
+                var c_name = _c.name+'['+row_index+']['+prop+']',
+                    $c_inp = $row.find('[name="'+c_name+'"]');
+
+                if ($c_inp.length === 0) {
+                    $c_inp = $('<input type="hidden" name="'+c_name+'" />');
+                    $row.append($c_inp);
+                }
+                
+                $fx_fields.set_value($c_inp, val);
+            });
+        }
+        
+        
+        html.on('click', '.fx_icon-type-edit', function(e) {
+            var $row = $(e.target).closest('.fx_fieldset_row'),
+                row_meta = $row.data('row_meta') || {},
+                c_vals = $row.formToHash();
+                
+            for (var j = 0; j < set_path.length; j++) {
+                c_vals = c_vals[set_path[j]];
+            }
+
+            c_vals = c_vals[row_meta.id];
+                
+            $fx.front.show_edit_form({
+                content_id: row_meta.id,
+                content_type: row_meta.type,
+                entity_values: c_vals,
+                onsubmit: function(e) {
+                    var $form = $(e.target),
+                        new_vals = $form.formToHash();
+
+                    append_row_values(new_vals.content, $row);
+
+                    $fx.front_panel.hide();
+                    return false;
+                }
+            });
+            
+        });
+        
         function remove_row($row) {
             var $next_row = $row.next('.fx_fieldset_row');
             $row.remove();
