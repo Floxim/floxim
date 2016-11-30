@@ -271,6 +271,7 @@ abstract class Entity implements \ArrayAccess, Template\Entity
                     $old_data = isset($this->modified_data[$relation_code]) ?
                         $this->modified_data[$relation_code] :
                         new Collection();
+                    
                     $c_priority = 0;
                     foreach ($val as $linked_item) {
                         $c_priority++;

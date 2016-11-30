@@ -546,7 +546,7 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
             $template_field = new \Floxim\Floxim\Template\Field($field_meta['current_value'], $field_meta);
             $entity_atts['data-fx_force_edit_'.$field_keyword] = $template_field->__toString();
         }
-        
+        fx::cdebug($att_fields, $entity_atts, $this);
         return $entity_atts;
     }
     

@@ -24,7 +24,7 @@
             <div class="fx_fieldset__add"><?
             if (_c.types.length < 2) {
                 ?>
-                <a tabindex="0" class="fx_fieldset_add"><?=$fx.lang('Add')?></a>
+                <a tabindex="0"><?=$fx.lang('Add')?></a>
                 <?
             } else {
                 ?>
@@ -33,7 +33,7 @@
                 for (var i = 0; i < _c.types.length; i++) {
                     var c_type = _c.types[i];
                     ?>
-                    <a><?= c_type.name_add ?></a>
+                    <a tabindex="0"><?= c_type.name_add ?></a>
                     <?
                 }
             }
@@ -49,7 +49,6 @@ window.$fx_fields.init_fieldset(html, _c);
 <!--[fieldset_row]-->
 <tr class="fx_fieldset_row row_<?=_o.index?>">
     <?if (!_o.set_field.without_delete) {
-        console.log(_c, _o);
         ?>
         <td class="fx_fieldset_row__controls">
             <a class="fx_icon fx_icon-type-delete fx_fieldset_remove" title="<?= $fx.lang('Delete') ?>"></a>

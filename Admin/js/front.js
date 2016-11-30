@@ -2256,6 +2256,10 @@ fx_front.prototype.make_content_form_editable = function($form) {
 };
 
 fx_front.prototype.bind_content_form = function($form, content_type_id, content_id) {
+    if (typeof content_id === 'undefined') {
+        content_id = null;
+    }
+    
     var bound_hash = content_type_id+'-'+content_id;
     $form.attr('data-fx_bound', bound_hash);
     

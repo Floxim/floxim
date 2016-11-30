@@ -61,6 +61,8 @@ class Multilink extends \Floxim\Floxim\Component\Field\Entity
         
         $rel = $this->getRelation();
         
+        $res['relation'] = $rel;
+        
         $com = fx::component($rel[1]);
         
         
@@ -72,7 +74,8 @@ class Multilink extends \Floxim\Floxim\Component\Field\Entity
             $res['types'] []= array(
                 'name' => $com_variant->getItemName(),
                 'name_add' => $com_variant->getItemName('add'),
-                'keyword' => $com_variant['keyword']
+                'keyword' => $com_variant['keyword'],
+                'content_type_id' => $com_variant['id']
             );
         }
         
@@ -635,14 +638,15 @@ class Multilink extends \Floxim\Floxim\Component\Field\Entity
      */
     protected function appendHasMany($content)
     {
-        // end type (for fields lot)
+        
         $linked_type = $this->getRelatedComponent()->get('keyword');
+        
         $new_value = fx::collection();
         foreach ($this->value as $item_id => $item_props) {
-            $linked_finder = fx::data($linked_type);
+            
             $linked_item = null;
             if (is_numeric($item_id)) {
-                $linked_item = $linked_finder->where('id', $item_id)->one();
+                $linked_item = fx::data($linked_type, $item_id);
             } else {
                 $is_empty = true;
                 foreach ($item_props as $item_prop_val) {
@@ -655,7 +659,21 @@ class Multilink extends \Floxim\Floxim\Component\Field\Entity
                 if ($is_empty) {
                     continue;
                 }
-                $linked_item = $linked_finder->create();
+                
+                $c_linked_finder = null;
+                
+                if (isset($item_props['type'])) {
+                    $item_com = fx::component($item_props['type']);
+                    if ($item_com && $item_com->isInstanceOfComponent($linked_type)) {
+                        $c_linked_finder = fx::data($item_com['keyword']);
+                    }
+                }
+                
+                if (is_null($c_linked_finder)) {
+                    $c_linked_finder = fx::data($linked_type);
+                }
+                
+                $linked_item = $c_linked_finder->create();
                 
                 // @todo: need more accurate check
                 $content_ib = fx::data('infoblock')->where('site_id', $content['site_id'])->getContentInfoblocks($linked_item['type']);
@@ -663,8 +681,10 @@ class Multilink extends \Floxim\Floxim\Component\Field\Entity
                     $linked_item['infoblock_id'] = $content_ib->first()->get('id');
                 }
             }
-            $linked_item->setFieldValues($item_props);
-            $new_value[] = $linked_item;
+            if ($linked_item) {
+                $linked_item->setFieldValues($item_props);
+                $new_value[] = $linked_item;
+            }
         }
         return $new_value;
     }

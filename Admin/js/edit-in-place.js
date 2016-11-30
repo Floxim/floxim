@@ -232,7 +232,7 @@ window.fx_eip = {
                 $fx.front.reload_infoblock($infoblock[0], null, ib_reload_data);
             };
         }
-
+        
         $fx.post(
             post_data, 
             function(res) {
@@ -453,6 +453,7 @@ fx_edit_in_place.prototype.start = function(meta) {
     
     var stored_var = fx_eip.vars[fx_eip.get_var_hash(meta)],
         stored_value = stored_var ? stored_var.value : null;
+    
     
     switch (meta.type) {
         case 'datetime':

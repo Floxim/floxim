@@ -1096,7 +1096,7 @@ class Infoblock extends Admin
         if (isset($input['page_id'])) {
             fx::env('page_id', $input['page_id']);
         }
-
+        
         $ib = fx::data('infoblock', $input['infoblock']['id']);
         
         // check if we are saving first content for an infoblock created from preset
@@ -1192,7 +1192,7 @@ class Infoblock extends Admin
                 if (isset($contents[$content_id_and_type])) {
                     $contents[$content_id_and_type]->setFieldValues($vals, array_keys($vals));
                 } else {
-                    fx::log('Content not found in group', $contents, $content_id, $vals);
+                    fx::log('Content not found in group', $contents, $content_id, $vals, $content_id_and_type);
                 }
             }
         }

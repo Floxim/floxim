@@ -314,7 +314,7 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
             parent::delete();
         }
         if ($cond_field != 'id' || !is_numeric($cond_val)) {
-            throw new Exception("Content can be killed only by id!");
+            throw new \Exception("Content can be killed only by id!");
         }
         $tables = $this->getTables();
 
@@ -695,7 +695,19 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
                 continue;
             }
             
-            $linker_params = $common_params;
+            $linker_params = array();
+            foreach ($common_params as $params_prop => $params_val) {
+                if (is_array($params_val)) {
+                    if (
+                        count($params_val) === 2 && $params_val[1] === \Floxim\Floxim\System\Collection::FILTER_EQ
+                    ) {
+                        $linker_params[$params_prop] = $params_val[0];
+                    }
+                } else {
+                    $linker_params[$params_prop] = $params_val;
+                }
+            }
+            
             $linker_params['type'] = $linker_params['_component'];
             unset($linker_params['_component']);
             $linker_params['_link_field'] = $linkers->linkedBy;

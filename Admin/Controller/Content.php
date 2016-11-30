@@ -67,6 +67,10 @@ class Content extends Admin
             $this->ui->hidden('fx_admin', true)
         );
         
+        if ($linker) {
+            $fields[]= $this->ui->hidden('placeholder_linker', serialize($input['placeholder_linker']));
+        }
+        
         if (isset($input['preset_params'])) {
             $fields []= $this->ui->hidden('preset_params', $input['preset_params']);
         }
@@ -102,10 +106,6 @@ class Content extends Admin
         
         $fields []= $this->ui->hidden('data_sent', true);
         
-        if ($linker) {
-            $fields[]= $this->ui->hidden('placeholder_linker', serialize($input['placeholder_linker']));
-        }
-        
         
 
         $move_meta = null;
@@ -126,6 +126,30 @@ class Content extends Admin
         
         if (isset($input['entity_values'])) {
             $content->setFieldValues($input['entity_values'], array_keys($input['entity_values']));
+        }
+        
+        if (isset($input['parent_form_data']) && isset($input['relation'])) {
+            $parent_form_data = json_decode($input['parent_form_data'], true);
+            $relation = json_decode($input['relation'], true);
+            
+            $related_entity_type = $parent_form_data['content_type'];
+            $related_entity_id = $parent_form_data['content_id'];
+            if ($related_entity_id) {
+                $related_entity = fx::data($related_entity_type, $related_entity_id);
+            } else {
+                $related_entity = fx::data($related_entity_type)->create();
+            }
+            $related_entity->setFieldValues($parent_form_data['content'], array_keys($parent_form_data['content']));
+            
+            $relation_field = $content->getField($relation[2]);
+            
+            if ($relation_field && ($relation_prop_name = $relation_field->getFormat('prop_name'))) {
+                $content[$relation_prop_name] = $related_entity;
+            }
+            
+            fx::log($content, $parent_form_data);
+            
+            //fx::log($relation_field, $input['parent_form_data'], $input['relation'], $parent_form_data, $relation, $related_entity);
         }
 
         if (isset($input['content_id'])) {
@@ -156,6 +180,7 @@ class Content extends Admin
         if (isset($input['data_sent']) && $input['data_sent']) {
             $res['is_new'] = !$content['id'];
             $set_res = $content->setFieldValues($input['content']);
+            
             if (is_array($set_res) && isset($set_res['status']) && $set_res['status'] === 'error') {
                 $res['status'] = 'error';
                 $res['errors'] = $set_res['errors'];
