@@ -2264,13 +2264,21 @@ fx_front.prototype.bind_content_form = function($form, content_type_id, content_
     $form.attr('data-fx_bound', bound_hash);
     
     $form.on('change input', function(e) {
+        
+        console.log(e, e.target);
+        
         var $inp = $(e.target),
             $bound = $inp.closest('[data-fx_bound]');
+        
         
         if (!$bound.length || $bound.attr('data-fx_bound') !== bound_hash) {
             return;
         }
+        if ($inp.is('.redactor-editor')) {
+            $inp = $inp.parent().find('textarea[name]').first();
+        }
         var inp_name = $inp.attr('name');
+        
         if (!inp_name) {
             return;
         }

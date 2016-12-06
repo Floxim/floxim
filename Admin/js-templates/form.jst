@@ -378,7 +378,11 @@ html.find('textarea.fx_code').each( function(){
 </div>
 
 <!--[input ? (_c.type == 'checkbox' && typeof _c.values == 'undefined') || _c.type == 'bool']-->
-
+<?
+if (typeof _c.id === 'undefined') {
+    _c.id = Math.round(Math.random()*100000);
+}
+?>
 <input 
     type="checkbox"
     style="display:inline;" 

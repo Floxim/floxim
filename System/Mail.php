@@ -30,7 +30,7 @@ class Mail
             $params['from'] = $from;
         }
 
-        foreach (array('host', 'password', 'user', 'port') as $smtp_prop) {
+        foreach (array('host', 'password', 'user', 'port', 'secure') as $smtp_prop) {
             if (!isset($params['smtp_' . $smtp_prop]) && ($conf_prop = fx::config('mail.smtp_' . $smtp_prop))) {
                 $params['smtp_' . $smtp_prop] = $conf_prop;
             }
@@ -64,7 +64,8 @@ class Mail
                 $params['smtp_host'],
                 isset($params['smtp_user']) ? $params['smtp_user'] : null,
                 isset($params['smtp_password']) ? $params['smtp_password'] : null,
-                isset($params['smtp_port']) ? $params['smtp_port'] : null
+                isset($params['smtp_port']) ? $params['smtp_port'] : null,
+                isset($params['smtp_secure']) ? $params['smtp_secure'] : null
             );
         }
 
@@ -117,7 +118,7 @@ class Mail
      * @param string $password
      * @return \Floxim\Floxim\System\Mail
      */
-    public function smtp($host, $user = null, $password = null, $port = null)
+    public function smtp($host, $user = null, $password = null, $port = null, $secure = null)
     {
         if ($host === false) {
             $this->mailer->isMail();
@@ -128,6 +129,10 @@ class Mail
             $this->mailer->SMTPAuth = true;
             $this->mailer->Password = $password;
             $this->mailer->Username = $user;
+        }
+        
+        if ($secure) {
+            $this->mailer->SMTPSecure = $secure;
         }
 
         $this->mailer->Host = $host;

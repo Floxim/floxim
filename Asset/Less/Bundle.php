@@ -155,7 +155,12 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
             }
             $res = $css;
         } catch (\Less_Exception_Compiler $e) {
-            fx::log($e, fx::debug()->backtrace(), $parser);
+            fx::cdebug(
+                $e, 
+                fx::debug()->backtrace(), 
+                $parser,
+                $this
+            );
         }
         $files = $this->getUniqueFiles();
         foreach ($files as $f) {
