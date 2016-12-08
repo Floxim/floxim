@@ -141,7 +141,7 @@ class Fx
     {
         static $cache = array();
         if (!is_string($com_name)) {
-            fx::log(debug_backtrace());
+            //fx::log(debug_backtrace());
         }
         if (isset($cache[$com_name])) {
             return $cache[$com_name];

@@ -30,7 +30,7 @@ class Console extends Admin
         return array('show_result' => 1);
     }
     
-    protected static function preProcess($code)
+    public static function preProcess($code)
     {
         $code = preg_replace("~^<\?(?:php)?~", '', $code);
         $lines = explode("\n", $code);

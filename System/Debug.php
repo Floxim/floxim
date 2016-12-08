@@ -392,17 +392,22 @@ class Debug
         $this->printEntry($e);
         static $head_files_added = false;
         if (!$head_files_added) {
-            fx::page()->addCssFile(fx::path('@floxim/Admin/style/debug.less'));
-            fx::page()->addJsFile(FX_JQUERY_PATH);
-            fx::page()->addJsFile(fx::path('@floxim/Admin/js/fxj.js'));
-            fx::page()->addJsFile(fx::path('@floxim/Admin/js/debug.js'));
-            register_shutdown_function(function () {
-                if (!fx::env()->get('complete_ok') && !fx::env('ajax')) {
-                    echo fx::page()->getAssetsCode();
-                }
-            });
+            $this->addAssets();
             $head_files_added = true;
         }
+    }
+    
+    public function addAssets()
+    {
+        fx::page()->addCssFile(fx::path('@floxim/Admin/style/debug.less'));
+        fx::page()->addJsFile(FX_JQUERY_PATH);
+        fx::page()->addJsFile(fx::path('@floxim/Admin/js/fxj.js'));
+        fx::page()->addJsFile(fx::path('@floxim/Admin/js/debug.js'));
+        register_shutdown_function(function () {
+            if (!fx::env()->get('complete_ok') && !fx::env('ajax')) {
+                echo fx::page()->getAssetsCode();
+            }
+        });
     }
 
     protected function entry()

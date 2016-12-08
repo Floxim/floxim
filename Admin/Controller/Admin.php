@@ -257,6 +257,7 @@ class Admin extends System\Controller
             fx::page()->addJsText("\$fx.init(" . $js_config->getConfig() . ");");
             fx::page()->addLayoutVars();
         } else {
+            fx::log('authing');
             $auth_form = fx::controller('floxim.user.user:auth_form')->render('floxim.user.user:auth_form');
 
             $recover_form = fx::controller(

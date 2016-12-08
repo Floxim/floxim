@@ -105,6 +105,11 @@ class Import {
         'field' => array(
             'component_id' => 'component',
             'format.target' => 'component',
+            'format.linking_datatype' => 'component',
+            'format.linking_component_id' => 'component',
+            'format.linking_field_id' => 'field',
+            'format.linking_field' => 'field',
+            'format.list_fields.*' => 'field',
             'parent_field_id' => 'field'
         ),
         'select_value' => array(
@@ -115,9 +120,11 @@ class Import {
 
     protected function importItem($item)
     {
+        
         list($id, $type, $props) = $item;
         
         $existing_id = $this->getExistingId($item);
+        
         if ($existing_id) {
             if (!isset($this->id_map[$type])) {
                 $this->id_map[$type] = array();
@@ -125,9 +132,6 @@ class Import {
             $this->id_map[$type][$id] = $existing_id;
             return;
         }
-        
-        $props = $this->appendLinks($props, $type);
-        
         $this->createItem($id, $type, $props);
     }
     
@@ -135,7 +139,24 @@ class Import {
     
     protected function createItem($id, $type, $props)
     {
+        
+        
+        $append_res = $this->appendLinks($props, $type);
+        
+        $props = $append_res[0];
+        $delayed = $append_res[1];
+        
         $item = fx::data($type)->create($props);
+        
+        
+        if (count($delayed) > 0) {
+            foreach ($delayed as $delayed_prop) {
+                $delayed_prop []= $item;
+                $this->delayed []= $delayed_prop;
+            }
+            
+        }
+        
         $item->save();
         
         $new_id = $item['id'];
@@ -145,7 +166,20 @@ class Import {
             $this->created[$type] = array();
         }
         $this->created[$type][$new_id]= $props;
+        
+        foreach ($this->delayed as $c_delayed) {
+            if ($c_delayed[2] != $id || $c_delayed[1] !== $type) {
+                continue;
+            }
+            $delayed_item = $c_delayed[3];
+            
+            $delayed_item->digSet($c_delayed[0], $new_id);
+            $delayed_item->save();
+        }
+        
     }
+    
+    protected $delayed = array();
     
     protected function appendLinks($props, $type) 
     {
@@ -154,24 +188,51 @@ class Import {
         }
         $links = self::$links[$type];
         
+        $delayed = array();
+        
         foreach ($links as $field => $target_type) {
             $path = explode(".", $field);
+            $is_list = end($path) === '*';
+            if ($is_list) {
+                array_pop($path);
+            }
             $value = fx::dig($props, $path);
+            
             if (!$value) {
                 continue;
             }
-            if (!isset($this->id_map[$target_type][$value])) {
-                if (!isset($this->source[$value.':'.$target_type])) {
-                    //fx::debug('use old');
+            
+            if ($is_list) {
+                if (!is_array($value)) {
                     continue;
                 }
-                throw new Exception('Lost id?');
+                foreach ($value as $c_key => $c_value) {
+                    $c_path = $path;
+                    $c_path []= $c_key;
+                    
+                    if (!isset($this->id_map[$target_type][$c_value])) {
+                        if (!isset($this->source[$c_value.':'.$target_type])) {
+                            continue;
+                        }
+                        $delayed []= array(join(".", $c_path), $target_type, $c_value);
+                        continue;
+                    }
+
+                    $new_value = $this->id_map[$target_type][$c_value];
+                    fx::digSet($props, $c_path, $new_value);
+                }
+            } else {
+                if (!isset($this->id_map[$target_type][$value])) {
+                    if (!isset($this->source[$value.':'.$target_type])) {
+                        continue;
+                    }
+                    $delayed []= array($field, $target_type, $value);
+                    continue;
+                }
+                $new_value = $this->id_map[$target_type][$value];
+                fx::digSet($props, $path, $new_value);
             }
-            
-            $new_value = $this->id_map[$target_type][$value];
-            fx::digSet($props, $path, $new_value);
-            //fx::debug('replaced', $props, $path, $field, $value, $new_value);
         }
-        return $props;
+        return [$props, $delayed];
     }
 }

@@ -65,6 +65,7 @@ class Multilink extends \Floxim\Floxim\Component\Field\Entity
         
         $com = fx::component($rel[1]);
         
+        fx::log($rel, $com, $this);
         
         $com_variants = $com->getAllVariants()->find(function($c) {
             return !$c['is_abstract'];

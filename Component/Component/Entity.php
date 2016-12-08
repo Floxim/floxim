@@ -333,7 +333,7 @@ class Entity extends System\Entity
         $this->deleteFields();
         $this->deleteInfoblocks();
         $this->deleteContentTable();
-        $this->deleteFiles();
+        //$this->deleteFiles();
     }
 
     protected function deleteFields()
