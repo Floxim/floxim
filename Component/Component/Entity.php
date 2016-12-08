@@ -343,7 +343,7 @@ class Entity extends System\Entity
         }
     }
 
-    protected function deleteFiles()
+    public function deleteFiles()
     {
         $path = $this->getPath();
         fx::files()->rm($path);
