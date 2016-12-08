@@ -333,7 +333,6 @@ class Entity extends System\Entity
         $this->deleteFields();
         $this->deleteInfoblocks();
         $this->deleteContentTable();
-        $this->deleteFiles();
     }
 
     protected function deleteFields()
@@ -343,7 +342,7 @@ class Entity extends System\Entity
         }
     }
 
-    protected function deleteFiles()
+    public function deleteFiles()
     {
         $path = $this->getPath();
         fx::files()->rm($path);
