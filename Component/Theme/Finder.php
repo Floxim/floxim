@@ -16,6 +16,11 @@ class Finder extends \Floxim\Floxim\System\Finder {
                 self::HAS_MANY,
                 'template_variant',
                 'theme_id'
+            ),
+            'style_variants' => array(
+                self::HAS_MANY,
+                'style_variant',
+                'theme_id'
             )
         );
     }
