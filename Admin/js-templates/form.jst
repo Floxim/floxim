@@ -565,6 +565,7 @@ html.on('fx_show_input fx_hide_input', recount_groups);
 <div>
     <input 
         class="fx_input fx_input_limit" 
+        type="number"
         <?=$t.field_id_name(_c)?> 
         <? if( !_c.value) {?>disabled="disabled"<?} else {?>value="<?=_c.value?>"<?}?>
          />
