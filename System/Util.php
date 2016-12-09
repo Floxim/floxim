@@ -452,124 +452,121 @@ class Util
             $target_file = fx::path()->abs($dir.'/data.sql');
         }
         
-        $site = fx::data('site', $site_id);
-        
         $prefix = fx::db()->getPrefix();
         
-        // export the site
-        fx::db()->dump(array(
-            'tables' => array($prefix.'site'),
-            'where' => 'id = '.$site_id,
-            'schema' => false,
-            'file' => $target_file
-        ));
         
-        // export theme
-        fx::db()->dump(array(
-            'tables' => array($prefix.'theme'),
-            'where' => 'id = '.$site['theme_id'],
-            'schema' => false,
-            'file' => $target_file,
-            'add' => true
-        ));
-        
-        // export palette
-        $theme = fx::data('theme', $site['theme_id']);
-        if ($theme) {
-            fx::db()->dump(array(
-                'tables' => array($prefix.'palette'),
-                'where' => 'id = '.$theme['palette_id'],
-                'schema' => false,
-                'file' => $target_file,
-                'add' => true
-            ));
-        }
-        
-        // style variants
-        fx::db()->dump(array(
-            'tables' => array($prefix.'style_variant'),
-            'where' => 'theme_id = '.$site['theme_id'],
-            'schema' => false,
-            'file' => $target_file,
-            'add' => true
-        ));
-        
-        // template variants
-        fx::db()->dump(array(
-            'tables' => array($prefix.'template_variant'),
-            'where' => 'theme_id = '.$site['theme_id'],
-            'schema' => false,
-            'file' => $target_file,
-            'add' => true
-        ));
-        
-        // export infoblocks
-        fx::db()->dump(array(
-            'tables' => array($prefix.'infoblock'),
-            'where' => 'site_id = '.$site_id,
-            'schema' => false,
-            'file' => $target_file,
-            'add' => true
-        ));
-        
-        // export URL aliases
-        fx::db()->dump(array(
-            'tables' => array($prefix.'url_alias'),
-            'where' => 'site_id = '.$site_id,
-            'schema' => false,
-            'file' => $target_file,
-            'add' => true
-        ));
-        
-        // export infoblock_visual
-        $infoblocks = fx::data('infoblock')->where('site_id', $site_id)->all();
-        
-        $infoblock_ids = $infoblocks->getValues('id');
-        
-        fx::db()->dump(array(
-            'tables' => array($prefix.'infoblock_visual'),
-            'where' => 'infoblock_id IN ('.join(", ", $infoblock_ids).')',
-            'schema' => false,
-            'file' => $target_file,
-            'add' => true
-        ));
-        
-        $scope_ids = $infoblocks->find('scope_type', 'custom')->getValues('scope_id');
-        
-        fx::db()->dump(array(
-            'tables' => array($prefix.'scope'),
-            'where' => 'id IN ('.join(", ", $scope_ids).')',
-            'schema' => false,
-            'file' => $target_file,
-            'add' => true
-        ));
-        
-        // export main content table
-        fx::db()->dump(array(
-            'tables' => array($prefix.'floxim_main_content'),
-            'where' => 'site_id  = '.$site_id,
-            'schema' => false,
-            'file' => $target_file,
-            'add' => true
-        ));
-        
-        // get existing content items
-        $items = fx::db()->getResults('select id, type from {{floxim_main_content}} where site_id = '.$site_id);
-        
-        $tables = $this->getContentDumpTables(fx::collection($items));
-        
-        foreach ($tables as $t => $item_ids) {
-            if ($t === $prefix.'floxim_main_content') {
-                continue;
+        $dump = function($params) use (&$dump, $site_id, $target_file, $prefix) {
+            
+            if (is_string($params)) {
+                $params = ['type' => $params];
             }
-            // export content table
+            
+            $where = isset($params['where']) ? $params['where'] : ['site_id', $site_id];
+            $add = !isset($params['add']) ? true : $params['add'];
+            
+            $type = $params['type'];
+            
+            $table = $prefix.str_replace('.', '_', $type);
+            
+            if (is_array($where[1])) {
+                $where[1] = array_filter($where[1], function($item) {
+                    return !empty($item);
+                });
+                if (count($where[1]) === 0) {
+                    return;
+                }
+                $where_raw = $where[0].' IN ('.join(',', $where[1]).')';
+            } else {
+                $where_raw = $where[0].' = '.$where[1];
+            }
+            
             fx::db()->dump(array(
-                'tables' => array($t),
-                'where' => 'id IN ('.join(',', $item_ids).')',
+                'tables' => array($table),
+                'where' => $where_raw,
                 'schema' => false,
                 'file' => $target_file,
-                'add' => true
+                'add' => $add
             ));
+            
+            $get_items = function() use ($type, $where) {
+                static $items = null;
+                if (!$items) {
+                    $items = fx::data($type)->where($where[0], $where[1])->all();
+                }
+                return $items;
+            };
+            
+            if (isset($params['with'])) {
+                foreach ($params['with'] as $rel_name => $rel_props) {
+                    if (is_string($rel_props)) {
+                        $rel_name = $rel_props;
+                        $rel_props = [];
+                    }
+                    $rel = fx::data($type)->getRelation($rel_name);
+                    
+                    $items = $get_items();
+                    $rel_props['type'] = $rel[1];
+                    
+                    switch ($rel[0]) {
+                        case \Floxim\Floxim\System\Finder::BELONGS_TO:        
+                            $rel_props['where'] = ['id', $items->getValues($rel[2])];
+                            break;
+                        case \Floxim\Floxim\System\Finder::HAS_MANY:
+                            $rel_props['where'] = [$rel[2], $items->getValues('id')];
+                            break;
+                    }
+                    $dump($rel_props);
+                }
+            }
+            
+            $com = fx::component($type);
+            
+            $com_has_type = $com && !$com['parent_id'] && $com->getAllFields()->findOne('keyword', 'type');
+            if ($com_has_type) {
+                $com_variants = $com->getAllVariants()->find('keyword', $com['keyword'], '!=');
+                foreach ($com_variants as $com_variant) {
+                    $variant_type = $com_variant['keyword'];
+                    $ids = $get_items()->find('type', $variant_type)->getValues('id');
+                    $dump([
+                        'type' => $variant_type,
+                        'where' => ['id', $ids]
+                    ]);
+                }
+            }
+        };
+        
+        // export the site
+        $dump(array(
+            'type' => 'site',
+            'where' => ['id', $site_id],
+            'add' => false,
+            'with' => [
+                'theme' => [
+                    'with' => [
+                        'palette',
+                        'style_variants',
+                        'template_variants'
+                    ]
+                ]
+            ]
+        ));
+        
+        $dump([
+            'type' => 'infoblock',
+            'with' => [
+                'visuals',
+                'scope_entity'
+            ]
+        ]);
+        
+        $dump('url_alias');
+        
+        $roots = fx::component()->find(function($c) {
+            return !$c['parent_id'] && $c->getAllFields()->findOne('keyword','site_id');
+        });
+        
+        foreach ($roots as $com) {
+            $dump($com['keyword']);
         }
     }
     
