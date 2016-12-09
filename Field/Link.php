@@ -31,7 +31,7 @@ class Link extends \Floxim\Floxim\Component\Field\Entity
     {
         return "INT";
     }
-    
+
     public function getCastType() {
         return 'int';
     }
@@ -85,14 +85,14 @@ class Link extends \Floxim\Floxim\Component\Field\Entity
         }
         return '';
     }
-    
+
     public function getTargetFinder($content)
     {
         $target_com = $this->getTargetName();
         $finder = fx::data($target_com);
         if (isset($content['site_id'])) {
             if (
-                $finder instanceof \Floxim\Floxim\Component\Basic\Finder && 
+                $finder instanceof \Floxim\Floxim\Component\Basic\Finder &&
                 $finder->create()->hasField('site_id')
             ) {
                 $finder->where('site_id', $content['site_id']);
@@ -109,11 +109,11 @@ class Link extends \Floxim\Floxim\Component\Field\Entity
     {
         $res = parent::getJsField($content);
         //$target_com_keyword = $this->getTargetName();
-        
+
         $finder = $this->getTargetFinder($content);
-        
+
         $render_type = $this['format']['render_type'];
-        
+
         if ($render_type == 'livesearch') {
             $res['type'] = 'livesearch';
             $res['params'] = array(
@@ -147,7 +147,7 @@ class Link extends \Floxim\Floxim\Component\Field\Entity
                 $linked_entity = $rel_finder->create();
             }
             $fields = $linked_entity->getFormFields()->getValues();
-            
+
             if ($linked_entity['id']) {
                 $fields[]= array(
                     'name' => 'id',
@@ -156,7 +156,7 @@ class Link extends \Floxim\Floxim\Component\Field\Entity
                     'value' => $linked_entity['id']
                 );
             }
-            
+
             $base_name = $this->getPropertyName();
             foreach ($fields as &$f) {
                 $f['name'] = $base_name. '['.$f['name'].']';
@@ -173,7 +173,12 @@ class Link extends \Floxim\Floxim\Component\Field\Entity
         if (!is_numeric($rel_target_id)) {
             $rel_target = $rel_target_id;
         } else {
-            $rel_target = fx::component($rel_target_id)->get('keyword');
+            $target_com = fx::component($rel_target_id);
+            if (!$target_com) {
+                fx::log('target com not found', $rel_target_id, $this);
+                return false;
+            }
+            $rel_target = $target_com->get('keyword');
         }
         return $rel_target;
     }
@@ -215,7 +220,7 @@ class Link extends \Floxim\Floxim\Component\Field\Entity
             $entity_params = array(
                 'name' => $title
             );
-            
+
             if ($content instanceof \Floxim\Main\Content\Entity) {
                 $entity_infoblock_id = isset($this->value['infoblock_id']) ? $this->value['infoblock_id'] : $content->getLinkFieldInfoblock($this['id']);
                 $entity_infoblock = null;
