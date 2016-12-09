@@ -525,10 +525,10 @@ class Util
             if ($com_has_type) {
                 $com_variants = $com->getAllVariants()->find('keyword', $com['keyword'], '!=');
                 foreach ($com_variants as $com_variant) {
-                    $variant_type = $com_variant['keyword'];
-                    $ids = $get_items()->find('type', $variant_type)->getValues('id');
+                    $variant_subtypes = $com_variant->getAllVariants()->getValues('keyword');
+                    $ids = $get_items()->find('type', $variant_subtypes)->getValues('id');
                     $dump([
-                        'type' => $variant_type,
+                        'type' => $com_variant['keyword'],
                         'where' => ['id', $ids]
                     ]);
                 }
