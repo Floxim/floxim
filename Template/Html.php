@@ -306,14 +306,20 @@ class Html
                 $n->removeAttribute('fx:else');
                 $n->wrap('{else}', '{/else}');
             }
-            if ($n->name === 'fx:a') {
+            if ($n->name === 'fx:a' || $n->hasAttribute('fx:link-if')) {
                 if (!$n->hasAttribute('href')) {
                     $n->setAttribute('href', '{$url}');
                 }
                 $url_value = preg_replace("~^\{|\}$~", '', $n->getAttribute('href'));
-                $n->setAttribute('fx:element-name', '{= '.$url_value. ' ? "a" : "span" /}');
+                if ($n->hasAttribute('fx:link-if')) {
+                    $test_value = $n->getAttribute('fx:link-if').' && '.$url_value;
+                    $n->removeAttribute('fx:link-if');
+                } else {
+                    $test_value = $url_value;
+                }
+                $n->setAttribute('fx:element-name', '{= '.$test_value. ' ? "a" : "span" /}');
                 $n->removeAttribute('href');
-                $n->setAttribute('{if '.$url_value.'}href', '{= '.$url_value.' /}');
+                $n->setAttribute('{if '.$test_value.'}href', '{= '.$url_value.' /}');
                 $n->setAttribute('#inj100', '{/if}');
             }
             if ($n->hasAttribute('fx:add')) {

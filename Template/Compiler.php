@@ -948,6 +948,11 @@ class Compiler
             
             if ($token_is_file) {
                 $code .= $this->makeFileCheck($display_val_var, !$has_default);
+            } elseif ( fx::dig($modifiers, '0.name') === 'fx::icon') {
+                $code .= 'if (!'.$display_val_var." && \$_is_admin) {\n";
+                $code .= $display_val_var." = 'fa ban';\n";
+                $code .= "echo ' fx-icon-placeholder ';\n";
+                $code .= "}\n";
             }
 
             

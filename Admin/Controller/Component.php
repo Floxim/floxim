@@ -50,9 +50,13 @@ class Component extends Admin
                 $r['buttons'] = array();
                 foreach ($submenu as $submenu_item_key => $submenu_item) {
                     if (!$submenu_item['parent']) { // && $submenu_item_key != 'fields') {
+                        if (in_array($submenu_item_key, ['fields', 'parent', 'templates','children'])) {
+                            continue;
+                        }
+                        $button_title = $submenu_item_key === 'add_child' ? '+' : $submenu_item['title'];
                         $r['buttons'] [] = array(
                             'type'  => 'button',
-                            'label' => $submenu_item['title'],
+                            'label' => $button_title,
                             'url'   => $submenu_item['url']
                         );
                     }
@@ -110,6 +114,32 @@ class Component extends Admin
                 'parent' => null
             );
         }
+        $res['children'] = [
+            'title' => 'Потомки',
+            'code' => 'children'
+        ];
+        if ($component['children']) {
+            foreach ($component['children'] as $child) {
+                $res ['child_'.$child['id']] = [
+                    'title' => $child['name'],
+                    'url' => 'component.edit('.$child['id'].')',
+                    'parent' => 'children'
+                ];
+            }
+        }
+        $res['add_child'] = [
+            'title' => 'Добавить потомка',
+            'code' => 'add_child',
+            'parent' => 'children',
+            'url' => 'component.add('.$component['id'].')'
+        ];
+        if ($component['parent_id']) {
+            $res['parent'] = [
+                'title' => '↑ '.$component['parent']['name'],
+                'code' => 'parent',
+                'url' => 'component.edit('.$component['parent_id'].')'
+            ];
+        }
         return $res;
     }
 
@@ -129,21 +159,20 @@ class Component extends Admin
         return fx::collection($templates);
     }
 
-    public function getModuleFields()
+public function getModuleFields()
     {
         $fields = array();
         $vf = $this->getVendorField();
         $fields [] = $vf;
         $vendors = $vf['values'];
         $module_field = array(
-            'label' => 'Module',
+            'label' => 'Модуль',
             'type' => 'livesearch',
-            'name' => 'module',
+            'name' => 'module'/*,
             'join_with' => 'vendor',
-            'join_type' => 'line',
-            'hidden_on_one_value' => true
+            'join_type' => 'line'*/
         );
-        $filter = array();
+        
         $modules = array();
         foreach ($vendors as $vendor_val) {
             $v =  $vendor_val[0];
@@ -153,9 +182,12 @@ class Component extends Admin
             if (!$module_dirs) {
                 continue;
             }
-            $vendor_modules = array();
             if ($v === 'Floxim') {
-                $vendor_modules []= array('System', '[System]');
+                $modules []= array(
+                    'id' => 'System', 
+                    'name' => '[System]',
+                    'venodor' => $v
+                );
             }
             foreach ($module_dirs as $md) {
                 if (!is_dir($md)) {
@@ -163,26 +195,20 @@ class Component extends Admin
                 }
                 $md = fx::path()->fileName($md);
                 $module_keyword = fx::util()->camelToUnderscore($md);
-                $vendor_modules[]= array($module_keyword, $md);
+                $modules[]= array(
+                    'id' => $module_keyword, 
+                    'name' => $md,
+                    'vendor' => $v
+                );
             }
-            
-            foreach ($vendor_modules as $vm) {
-                $module_keyword = $vm[0];
-                if (!isset($filter[$module_keyword])) {
-                    $filter[$module_keyword] = array(
-                        array(
-                            'vendor',
-                            array()
-                        )
-                    );
-                }
-                $filter[$module_keyword][0][1][]= $v;
-                $modules[]= $vm;
-            }
+            $modules []= array(
+                'id' => 'new',
+                'name' => '-- New --',
+                'vendor' => $v
+            );
         }
-        $modules [] = array('new', '-- New --');
         $module_field['values'] = $modules;
-        $module_field['values_filter'] = $filter;
+        $module_field['values_filter'] = 'vendor == this.vendor';
         $fields []= $module_field;
         $fields [] = array(
             'type'   => 'string',
@@ -228,7 +254,7 @@ class Component extends Admin
 
     public function add($input)
     {
-
+        
         $fields = array(
             $this->ui->hidden('action', 'add'),
             array(
@@ -249,18 +275,43 @@ class Component extends Admin
         foreach ($this->getModuleFields() as $mf) {
             $fields [] = $mf;
         }
-
+        
         $fields[] = $this->ui->hidden('source', $input['source']);
         $fields[] = $this->ui->hidden('posting');
         $fields[] = $this->getParentComponentField();
-
+        
+        
         $entity = $this->entity_type;
+        
+        $this->response->breadcrumb->addItem(self::entityTypes($entity), '#admin.' . $entity . '.all');
+        
+        $parent_component_id = fx::dig($input, 'params.0');
+        if ($parent_component_id) {
+            $parent_component = fx::getComponentById($parent_component_id);
+            foreach ($fields as &$f) {
+                switch($f['name']) {
+                    case 'vendor':
+                        $f['value'] = $parent_component->getVendorName();
+                        break;
+                    case 'module':
+                        $f['value'] = fx::util()->camelToUnderscore($parent_component->getModuleName());
+                        break;
+                    case 'parent_id':
+                        $f['value'] = $parent_component['id'];
+                        break;
+                }
+            }
+            $this->response->submenu->setMenu('component-' . $parent_component['id']);
+            $this->response->breadcrumb->addItem($parent_component['name'], '#admin.component.edit('.$parent_component_id.')');
+        } else {
+            $this->response->submenu->setMenu($entity);
+        }
+
         $fields[] = $this->ui->hidden('entity', $entity);
 
-        $this->response->breadcrumb->addItem(self::entityTypes($entity), '#admin.' . $entity . '.all');
+        
         $this->response->breadcrumb->addItem(fx::alang('Add new ' . $entity, 'system'));
-
-        $this->response->submenu->setMenu($entity);
+        
         $this->response->addFormButton('save');
 
         return array('fields' => $fields);

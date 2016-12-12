@@ -1031,7 +1031,6 @@ class Fx
     public static function date($value = null, $format = 'Y-m-d H:i:s') {
         if ($value === null) {
           return null;
-          $value = time();
         }
         if (empty($value)) {
             return $value;

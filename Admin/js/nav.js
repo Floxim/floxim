@@ -100,8 +100,13 @@ fx_submenu.prototype.show_items = function ( data ) {
         var free_children = {};
         if ( data.items ) {
             $.each ( data.items, function(k, item){
-                href = '#admin.'+item.href;
-                var item_link = $("<a/>").attr('href', href).attr('id', 'fx_admin_submenu_'+item.id).data('id', item.id).text(item.name);
+                href = item.href ? '#admin.'+item.href : '';
+                var item_link = $("<a/>").attr('id', 'fx_admin_submenu_'+item.id).data('id', item.id).text(item.name);
+                if (!href) {
+                    item_link.addClass('fx_admin_submenu_child__no-href');
+                } else {
+                    item_link.attr('href',href);
+                }
                 if (item.parent) {
                 	item_link.addClass('fx_admin_submenu_child');
                 	var parent_node = $('#fx_admin_submenu_'+item.parent);

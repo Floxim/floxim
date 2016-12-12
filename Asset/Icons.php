@@ -12,6 +12,10 @@ class Icons extends \Floxim\Floxim\Asset\Bundle {
     
     public static function getClass($icon_val) 
     {
+        $icon_val = trim($icon_val);
+        if (empty($icon_val)) {
+            return '';
+        }
         list($set, $icon) = explode(" ", $icon_val);
         
         static $added_styles = array();

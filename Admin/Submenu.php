@@ -31,6 +31,7 @@ class Submenu
         }
 
         preg_match("/^([a-z]+)(-([a-z0-9]+))?$/i", $type, $match);
+        
         if (!isset($match[3])) {
             $match[3] = null;
         }

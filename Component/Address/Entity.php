@@ -14,7 +14,6 @@ class Entity extends \Floxim\Floxim\Component\Basic\Entity
                 $f['lat_field'] = 'lat';
             }
         });
-        //fx::log($fields);
         return $fields;
     }
 }

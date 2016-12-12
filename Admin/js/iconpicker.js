@@ -12,6 +12,9 @@ var fx_iconpicker = function(params, $node) {
     
     this.$handler = $node.find('.'+cl+'__handler');
     this.$popup = $node.find('.'+cl+'__popup');
+    
+    this.$popup.addClass('fx_overlay');
+    
     this.$input = this.$handler.find('input');
     
     this.$icons = $('<div class="'+cl+'__icons"></div>');

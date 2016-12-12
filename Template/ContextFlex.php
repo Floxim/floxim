@@ -106,7 +106,10 @@ class ContextFlex extends Context {
                 if ($context_position < $context_offset) {
                     continue;
                 }
-                if (isset($this->stack[$i][$name])) {
+                if ( 
+                    (is_array($this->stack[$i]) && array_key_exists($name, $this->stack[$i])) 
+                    || isset($this->stack[$i][$name])
+                ) {
                     return $this->stack[$i][$name];
                 }
                 if ($context_position > $context_offset) {
@@ -121,7 +124,10 @@ class ContextFlex extends Context {
             if (isset($this->misses[$i][$name])) {
                 continue;
             }
-            if (isset($this->stack[$i][$name])) {
+            if ( 
+                    ( is_array($this->stack[$i]) && array_key_exists($name, $this->stack[$i]) ) 
+                    || isset($this->stack[$i][$name])
+            ) {
                 $this->last_var_level = $i;
                 return $this->stack[$i][$name];
             } 

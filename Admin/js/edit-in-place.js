@@ -144,6 +144,10 @@ window.fx_eip = {
                         formatted_value = formatted_value || value;
                         append_image(formatted_value);
                     }
+                } else if (meta.inatt === 'class') {
+                    if (meta.type === 'icon') {
+                        set_icon($node, value);
+                    }
                 } else {
                     $node.attr(meta.inatt, value);
                 }
@@ -313,6 +317,21 @@ window.fx_eip = {
         });
     }
 };
+
+/*
+ * @todo: more icon libs
+ */
+function set_icon($node, value) {
+    var class_parts = value.split(' '),
+        c_class = $node.attr('class').replace(/fa-[^\s]+/, '');
+    
+    if (!class_parts[1]) {
+        c_class += ' fa-ban';
+    } else {
+        c_class += ' fa-'+class_parts[1];
+    }
+    $node.attr('class', c_class);
+}
 
 function fx_edit_in_place( node ) {
     this.node = node;
@@ -484,7 +503,14 @@ fx_edit_in_place.prototype.start = function(meta) {
                 }
             });
             break;
-        case 'select': case 'livesearch': case 'bool': case 'color': case 'map': case 'link': case 'label':
+        case 'select': 
+        case 'livesearch': 
+        case 'bool': 
+        case 'color': 
+        case 'map': 
+        case 'link': 
+        case 'label':
+        case 'icon':
             var field_meta =$.extend({}, meta);
             if (stored_value !== null) {
                 field_meta.value = stored_value;
@@ -493,6 +519,11 @@ fx_edit_in_place.prototype.start = function(meta) {
             if (is_linker_selector) {
                 $field.on('change', function(e) {
                     edit_in_place.fix().save().stop();
+                });
+            }
+            if (meta.type === 'icon') {
+                $field.on('change', function(e) {
+                    set_icon(edit_in_place.node, e.target.value);
                 });
             }
             break;
@@ -719,6 +750,10 @@ fx_edit_in_place.prototype.add_panel_field = function(meta) {
     }
     if (!meta.type) {
         meta.type = 'string';
+    }
+    
+    if (meta.type === 'icon') {
+        meta.type = 'iconpicker';
     }
     
     if (!meta.label) {

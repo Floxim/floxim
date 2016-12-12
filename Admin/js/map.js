@@ -1,3 +1,12 @@
+window.init_google_maps = function() {
+    var listener;
+    while ( (listener = window.init_google_maps.listeners.pop()) ) {
+        listener();
+    }
+};
+
+window.init_google_maps.listeners = [];
+
 (function($) {
     window.fx_google_map_field = function($field, params) {
         var $map_container = $('.map_container', $field);
@@ -103,11 +112,15 @@
             
         }
         if( typeof google === 'undefined' ) {
-            $.getScript('https://www.google.com/jsapi', function(){
-                google.load('maps', '3', { other_params: 'sensor=false&libraries=places', callback: function(){
-                    setTimeout(init_gmap, 200);
-                }});
-            });
+            var url = 'https://maps.googleapis.com/maps/api/js',
+               libraries = ['places'],
+               key = 'AIzaSyAQIW4Tp8he1hwyzChjAw35vCNKeG0zXYo';
+            
+            window.init_google_maps.listeners.push(init_gmap);
+            $.getScript(
+                url+'?key='+key+'&libraries='+libraries.join(',')+'&callback=init_google_maps'
+            );
+    
         } else {
             setTimeout(init_gmap, 200);
         }

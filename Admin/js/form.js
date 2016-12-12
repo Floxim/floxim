@@ -571,6 +571,8 @@ fx_form = {
             cond.order = 'inverted';
         }
         
+        //console.log(cond, $field);
+        
         var $livesearch = $field.find('.livesearch'),
             ls = $livesearch.data('livesearch');
         
