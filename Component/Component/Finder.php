@@ -28,7 +28,7 @@ class Finder extends System\Finder
         );
     }
     
-    protected $json_encode = array('declension');
+    protected $json_encode = array('declension', 'settings');
 
     public function getMultiLangFields()
     {

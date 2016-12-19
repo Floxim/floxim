@@ -154,12 +154,14 @@ less_tweaker.prototype.get_mixin_call = function(data) {
 };
 
 less_tweaker.prototype.update = function(vars) {
-    var less = this.less + "\n" + this.get_mixin_call(vars),
+    var less_call = this.get_mixin_call(vars),
+        less = this.less + "\n" + less_call,
         less_promise = this.render_less(less),
         that = this;
     return less_promise.then(
         function() {
             that.recount_container(vars);
+            that.$affected.trigger('fx_style_tweaked');
         },
         function(err) {
             
@@ -559,18 +561,31 @@ less_tweaker.init_style_group = function($g) {
     
     // or when the selected block is reloaded
     var $ib = $($fx.front.get_selected_item()).closest('.fx_infoblock');
-
-    if ($ib.length > 0 && tweaker.is_new) {
+    
+    if ($ib.length > 0) {
         $ib.on('fx_infoblock_unloaded', function(e, $new_ib) {
-            if (tweaker.last_data) {
+            if (tweaker.last_data && tweaker.is_new) {
+                
                 var $el = $new_ib.descendant_or_self('.'+ tweaker.style_id_class ),
                     el_class = $el.attr('class'),
                     style_class = el_class && el_class.match( 
                         new RegExp( tweaker.block_name + '_style_[^\\s]+' ) 
                     );
+            
                 if (style_class) {
+                    var $stylesheet = $('#'+style_class[0]),
+                        $old_stylesheet = null;
+                        
+                    if ($stylesheet.length && tweaker.$stylesheet[0] !== $stylesheet[0]) {
+                        $old_stylesheet = tweaker.$stylesheet;
+                        tweaker.$stylesheet = $stylesheet;
+                    }
                     tweaker.set_style_class(style_class[0]);
-                    tweaker.update( tweaker.last_data );
+                    tweaker.update( tweaker.last_data ).then( function() {
+                        if ($old_stylesheet !== null) {
+                            $old_stylesheet.remove();
+                        }
+                    });
                 }
             }
         });

@@ -149,12 +149,15 @@ class Compiler
         $str = $this->childrenGetPlain($token);
         if ($str !== false) {
             $block_parts = Template::bemParseStr($str);
-            $code .= " \$this->bemStartBlock('".$ns.$block_parts['name']."'); ";
+            $block_name = isset($block_parts['ns']) ? 
+                            $block_parts['ns'].$block_parts['name'] : 
+                            $ns.$block_parts['name'];
+            
+            $code .= " \$this->bemStartBlock('".$block_name."'); ";
             $code .= "?>";
-            $block_parts['name'] = $ns.$block_parts['name'];
-            $class = $block_parts['name'].' ';
+            $class = $block_name.' ';
             foreach ($block_parts['modifiers'] as $mod) {
-                $class .= $block_parts['name'].'_'.$mod.' ';
+                $class .= $block_name.'_'.$mod.' ';
             }
             $class .= join(' ', $block_parts['plain']);
             $class = trim($class);
@@ -168,11 +171,11 @@ class Compiler
         $this->popState('edit');
         $code .= '$block_string = ob_get_clean();'."\n";
         $code .= '$block_parts = \\Floxim\\Floxim\\Template\\Template::bemParseStr($block_string);'."\n";
-        $code .= '$block_parts[\'name\'] = "'.$ns.'".$block_parts[\'name\'];'."\n";
-        $code .= "\$this->bemStartBlock(\$block_parts['name'], \$block_container_props);\n";
-        $code .= "echo \$block_parts['name'].' ';\n";
+        $code .= '$block_name = (isset($block_parts["ns"]) ? $block_parts["ns"] : "'.$ns.'").$block_parts[\'name\'];'."\n";
+        $code .= "\$this->bemStartBlock(\$block_name, \$block_container_props);\n";
+        $code .= "echo \$block_name.' ';\n";
         $code .= "foreach (\$block_parts['modifiers'] as \$mod) {\n";
-        $code .= "echo \$block_parts['name'].'_'.\$mod.' ';\n";
+        $code .= "echo \$block_name.'_'.\$mod.' ';\n";
         $code .= "}\n";
         $code .= "echo join(' ', \$block_parts['plain']);\n";
         $code .= "?>";
@@ -1404,8 +1407,15 @@ class Compiler
         $label = $token->getProp('label');
         
         if ($has_block) {
-            $code .= $_block_name . ' = "'.$ns.$token->getProp('block').'";'."\n";
-            $default_id = '"'.str_replace('-', '', $ns.$token->getProp('block')).'"';
+            $block_name = $token->getProp('block');
+            if (strstr($block_name, ':')) {
+                $block_parts = \Floxim\Floxim\Template\Template::bemParseStr($block_name);
+                $block_name = $block_parts['ns'].$block_parts['name'];
+            } else {
+                $block_name = $ns.$block_name;
+            }
+            $code .= $_block_name . ' = "'.$block_name.'";'."\n";
+            $default_id = '"'.str_replace('-', '', $block_name).'"';
         } else {
             $code .= $_block_name . ' = $this->bemGetBlock()."__'.$token->getProp('element').'";'."\n";
             $default_id = "str_replace('-', '', ".$_block_name.")";

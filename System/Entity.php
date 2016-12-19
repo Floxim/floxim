@@ -393,6 +393,21 @@ abstract class Entity implements \ArrayAccess, Template\Entity
         return $this;
     }
     
+    public function digUnset($path)
+    {
+        $parts = explode(".", $path, 2);
+        if (count($parts) == 1) {
+            $this->offsetUnset($path);
+            return $this;
+        }
+        $c_value = $this[$parts[0]];
+        if (!is_array($c_value)) {
+            $c_value = array();
+        }
+        fx::digUnset($c_value, $parts[1]);
+        $this->offsetSet($parts[0], $c_value);
+    }
+    
     public function dig($path)
     {
         return fx::dig($this, $path);

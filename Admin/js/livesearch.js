@@ -515,6 +515,8 @@ window.fx_livesearch = function (node, params) {
             $control.click(function() {
                 var c_value = livesearch.getFullValue();
                 params.action(c_value, livesearch);
+                livesearch.$input.trigger('suggest_blur');
+                livesearch.Suggest.hideBox();
                 return false;
             });
         }

@@ -79,8 +79,15 @@ class Infoblock extends Admin
             $ctrl = fx::controller($keyword);
             $actions = $ctrl->getActions();
             foreach ($actions as $action_code => $action_info) {
+                
                 // do not show actions starting with "_"
                 if (preg_match("~^_~", $action_code)) {
+                    continue;
+                }
+                
+                $com = fx::component($c['keyword']);
+                
+                if ( ($com && !$com->isBlockAllowed($action_code)) ) {
                     continue;
                 }
                 

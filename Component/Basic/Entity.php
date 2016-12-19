@@ -697,4 +697,10 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
     {
         return array();
     }
+    
+    public function _getShortType()
+    {
+        preg_match("~[^\.]+$~", $this['type'], $short_type);
+        return $short_type[0];
+    }
 }

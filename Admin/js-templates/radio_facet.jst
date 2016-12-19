@@ -10,8 +10,14 @@ var cl = 'fx-radio-facet',
         $.each(_c.values, function(i, v) {
             var title = null;
             if (! (v instanceof Array) ) {
-                var value = i,
-                    label = v;
+                if (typeof v === 'object') {
+                    var value = v.id,
+                        label = v.name;
+                } else {
+                    var value = i,
+                        label = v;
+                }
+                
             } else {
                 var value = v[0],
                     label = v[1];

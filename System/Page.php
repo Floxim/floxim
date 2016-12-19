@@ -539,6 +539,13 @@ class Page
         $js .= '$fx.theme_fonts = '.json_encode( $theme_fonts ).";\n";
         $this->addJsText($js);
     }
+    
+    protected $raw_head_items = [];
+    
+    public function addHeadItem($source)
+    {
+        $this->raw_head_items[]= $source;
+    }
 
     public function postProcess($buffer)
     {
@@ -546,6 +553,9 @@ class Page
         if (isset($this->metatags['seo_title'])) {
             $r = "<title>" . strip_tags($this->metatags['seo_title']) . "</title>" . PHP_EOL;
         }
+        
+        $r .= join("\n", $this->raw_head_items);
+        
         if (isset($this->metatags['seo_description'])) {
             $r .= '<meta name="description" content="'
                 . strip_tags($this->metatags['seo_description']) . '" />' . PHP_EOL;
@@ -564,6 +574,7 @@ class Page
         
 
         $r .= $this->getAssetsCode();
+        
         
         if (!preg_match("~<head(\s[^>]*?|)>~i", $buffer)) {
             if (preg_match("~<html[^>]*?>~i", $buffer)) {

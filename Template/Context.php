@@ -187,6 +187,12 @@ class Context {
                 $new_props[$p] = $v;
             }
         }
+        /*
+        if (isset($new_props['width'])) {
+            fx::log('push w', $new_props['width']);
+        }
+         * 
+         */
         self::$container_props []= $new_props;
     }
     

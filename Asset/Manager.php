@@ -24,6 +24,10 @@ class Manager {
                 'theme' => fx::env('theme_id')
                 //'style' => fx::env()->getLayoutStyleVariantId()
             );
+            if (!is_array($params)) {
+                fx::log('hm ', $params, debug_backtrace());
+                $params = [];
+            }
             $params = array_merge($hash_params, $params);
 
             $this->bundles[$type][$keyword] = new $bundle_class(

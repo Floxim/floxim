@@ -93,7 +93,11 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
             }
             if ($sub_bundle instanceof StyleBundle) {
                 $keyword = $sub_bundle->getDeclarationKeyword();
-                $blocks []= $sub_bundle->getAdminOutput();
+                try {
+                    $blocks []= $sub_bundle->getAdminOutput();
+                } catch (\Exception $e) {
+                    fx::log('adm output error', $sub_bundle, $e);
+                }
                 //$res .= $sub_bundle->getAdminOutput();
                 if (!isset($declarations[$keyword])) {
                     $declarations[$keyword] = $sub_bundle->getDeclarationOutput();

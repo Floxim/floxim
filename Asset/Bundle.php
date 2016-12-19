@@ -98,7 +98,7 @@ abstract class Bundle {
             return;
         }
         $parts = explode(":", substr($file, 7), 3);
-        $params = isset($parts[2]) && $parts[2] ? json_decode($parts[2]) : array();
+        $params = isset($parts[2]) && $parts[2] ? json_decode($parts[2], true) : array();
         $bundle = fx::assets($parts[0], $parts[1], $params);
         return $bundle;
     }

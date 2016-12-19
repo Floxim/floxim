@@ -317,7 +317,7 @@ class Html
                 } else {
                     $test_value = $url_value;
                 }
-                $n->setAttribute('fx:element-name', '{= '.$test_value. ' ? "a" : "span" /}');
+                $n->setAttribute('fx:element-name', '{= '.$test_value. ' ? "a" : "div" /}');
                 $n->removeAttribute('href');
                 $n->setAttribute('{if '.$test_value.'}href', '{= '.$url_value.' /}');
                 $n->setAttribute('#inj100', '{/if}');

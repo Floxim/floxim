@@ -404,6 +404,7 @@ public function getModuleFields()
         }
         $component['declension'] = $input['declension'];
         $component['is_abstract'] = $input['is_abstract'];
+        $component['settings'] = $input['settings'];
         $component->save();
         return array('status' => 'ok');
     }
@@ -662,11 +663,56 @@ public function getModuleFields()
             'value' => $component['is_abstract']
         );
         
+        $block_types = [
+            ['list_infoblock', 'Новые данные'], 
+            ['list_filtered', 'Данные по фильтру'], 
+            ['list_selected', 'Данные, отобранные вручную']
+        ];
+        
+        $settings = $component['settings'];
+        
+        $fields []= array(
+            'label' => 'Можно создавать блоки такого типа?',
+            'name' => 'settings[allow_blocks]',
+            'type' => 'radio_facet',
+            'values' => [
+                ['id' => "auto", 'name' => 'Наследовать'],
+                ['id' => "1", 'name' => 'Да'],
+                ['id' => "0", 'name' => 'Нет'],
+                ['id' => 'listed', 'name' => 'Только выбранные']
+            ],
+            'value' => isset($settings['allow_blocks']) ? $settings['allow_blocks'] : "auto"
+        );
+        
+        $fields []= array(
+            'label' => '',
+            'name' => 'settings[allowed_blocks]',
+            'type' => 'livesearch',
+            'is_multiple' => true,
+            'values' => $block_types,
+            'parent' => 'settings[allow_blocks] == listed',
+            'value' => isset($settings['allowed_blocks']) ? $settings['allowed_blocks'] : []
+        );
+        
+        $fields []= array(
+            'label' => 'Можно создавать блоки дочерних типов?',
+            'name' => 'settings[allow_child_blocks]',
+            'type' => 'radio_facet',
+            'values' => [
+                ['id' => "1", 'name' => 'Да'],
+                ['id' => "0", 'name' => 'Нет']
+            ],
+            'value' => isset($settings['allow_child_blocks']) ? $settings['allow_child_blocks'] : "1"
+        );
+        
         $lang = fx::data('lang')->where('lang_code', fx::alang()->getLang())->one();
         $decl = $lang->getDeclensionField($component['declension']);
         $decl['name'] = 'declension';
         $decl['label'] = fx::alang('Declension');
         $fields[]= $decl;
+        
+        
+        
 
         $fields[] = array('type' => 'hidden', 'name' => 'phase', 'value' => 'settings');
         $fields[] = array('type' => 'hidden', 'name' => 'id', 'value' => $component['id']);

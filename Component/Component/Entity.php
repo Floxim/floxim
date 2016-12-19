@@ -556,4 +556,31 @@ class Entity extends System\Entity
     {
         return fx::data($this['keyword']);
     }
+    
+    public function isBlockAllowed($block_type)
+    {
+        $own_val = fx::dig($this, 'settings.allow_blocks');
+        switch ($own_val) {
+            case '1':
+                return true;
+            case '0':
+                return false;
+            case 'listed':
+                $listed = fx::dig($this, 'settings.allowed_blocks');
+                return is_array($listed) && in_array($block_type, $listed);
+            case 'auto':
+            default:
+                $parents = $this->getChain()->getValues('settings');
+                array_pop($parents);
+                $parents = array_reverse($parents); // skip own
+                foreach ($parents as $p) {
+                    $pval = fx::dig($p, 'allow_child_blocks');
+                    if (is_null($pval)) {
+                        continue;
+                    }
+                    return $pval === '1';
+                }
+                return true;
+        }
+    }
 }

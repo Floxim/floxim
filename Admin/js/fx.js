@@ -79,7 +79,6 @@ window.$fx = {
                                         $ss.attr('data-declaration', block.declaration_keyword);
                                         $('head').append($ss);
                                     }
-                                    //block.css += '.src {is:ajax;}';
                                     if (!$ss.data('is_tweaked')) {
                                         $ss.text(block.css);
                                     }

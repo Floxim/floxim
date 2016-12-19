@@ -55,11 +55,22 @@ class Template
     {
         $str = trim($str);
         $str = preg_split("~\s+~", $str);
-        $res = array(
-            'name' => array_shift($str),
-            'modifiers' => array(),
-            'plain' => array()
-        );
+        
+        $name = array_shift($str);
+        
+        $res = [
+            'modifiers' => [],
+            'plain' => []
+        ];
+        
+        if (strstr($name, ':')) {
+            $name_parts = explode(":", $name);
+            $name = $name_parts[1];
+            $res['ns'] = str_replace('.', '--', $name_parts[0]).'--';
+        }
+        
+        $res['name'] = $name;
+        
         foreach ($str as $c) {
             if ($c[0] === '.') {
                 $res['plain'][] = trim($c, '.');
@@ -126,7 +137,8 @@ class Template
     public function registerParam($name, $data)
     {
         if (count($this->template_param_handlers) > 0) {
-            end($this->template_param_handlers)->registerParam($name, $data, $this->context);
+            $c_handler = end($this->template_param_handlers);
+            $c_handler->registerParam($name, $data, $this->context);
             return;
         }
         if ($this->parent) {

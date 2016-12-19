@@ -571,6 +571,32 @@ class Fx
         }
         return $collection;
     }
+    
+    public static function digUnset(&$collection, $var_path)
+    {
+        if (!is_array($var_path)) {
+            $var_path = explode('.', $var_path);
+        }
+
+        $arr =& $collection;
+        $total = count($var_path);
+        foreach ($var_path as $num => $pp) {
+            $is_arr = is_array($arr);
+            $is_aa = $arr instanceof \ArrayAccess;
+            if (!$is_arr && !$is_aa) {
+                return $collection;
+            }
+            $is_last = $num + 1 === $total;
+            
+            if ($is_last) {
+                unset($arr[$pp]);
+                break;
+            }
+            
+            @ $arr =& $arr[$pp];
+        }
+        return $collection;
+    }
 
     /**
      *

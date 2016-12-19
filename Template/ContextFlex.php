@@ -211,9 +211,14 @@ class ContextFlex extends Context {
         array_pop($this->scope_path);
     }
     
-    public function getScopePath()
+    public function getScopePath($offset = 0)
     {
-        return join(".", $this->scope_path);
+        return join(".", array_slice($this->scope_path, $offset));
+    }
+    
+    public function getScopeDepth()
+    {
+        return count($this->scope_path);
     }
     
     public function getScopePrefix($separator = '-') 

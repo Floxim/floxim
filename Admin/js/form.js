@@ -867,8 +867,6 @@ fx_form = {
             }
         }
         
-        console.log(conds);
-        
         var that = this;
         $container = $container.closest('form');
         var handler = this.bind_conditions(

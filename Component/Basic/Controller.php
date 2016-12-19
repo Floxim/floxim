@@ -98,17 +98,20 @@ class Controller extends \Floxim\Floxim\Controller\Frontoffice {
 
     protected function getControllerVariants()
     {
-        return //array_reverse(
-                    $this->getComponent()
-                         ->getChain()
-                         ->getValues('keyword');
-                //);
+        $com = $this->getComponent();
+        if (!$com) {
+            return [];
+        }
+        return  $com->getChain()->getValues('keyword');
     }
 
     public function getActions()
     {
         $actions = parent::getActions();
         $com = $this->getComponent();
+        if (!$com) {
+            return [];
+        }
         foreach ($actions as $action => &$info) {
             if (!isset($info['name'])) {
                 $info['name'] = $com['name'] . ' / ' . $action;
