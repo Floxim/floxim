@@ -549,6 +549,9 @@ class Page
 
     public function postProcess($buffer)
     {
+        fx::trigger('before_postprocess', [
+            'html' => $buffer
+        ]);
         $r = '';
         if (isset($this->metatags['seo_title'])) {
             $r = "<title>" . strip_tags($this->metatags['seo_title']) . "</title>" . PHP_EOL;
