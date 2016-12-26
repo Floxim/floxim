@@ -10,6 +10,7 @@
         "floxim/module-user" : "*",
         "floxim/module-nav" : "*",
         "floxim/module-form" : "*",
+        "floxim/module-contacts" : "*",
         "floxim/cache" : "*",
         "oyejorge/less.php": "~1.5",
         "phpmailer/phpmailer": "5.2.8",
