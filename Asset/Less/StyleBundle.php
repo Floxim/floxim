@@ -655,6 +655,25 @@ class StyleBundle extends Bundle {
         return $props;
     }
     
+    public function getGroupField($vals)
+    {
+        $style = $this->getStyleMeta();
+        $fields = $this->getFormFields($vals);
+        return array(
+            'type' => 'group',
+            'style' => 'transparent',
+            'fields' =>  $fields,
+            'tabs' => isset($style['tabs']) ? $style['tabs'] : [],
+            'tweaker' => array(
+                'tweaker_file' => $this->getTweakerLessFile(),
+                'rootpath' => $this->getRootPath(),
+                'vars' => array_keys($style['vars']),
+                'mixin_name' => substr($this->getMixinName(), 1),
+                'container' => isset($style['container']) ? $style['container'] : array()
+            )
+        );
+    }
+    
     public function getFormFields($vals = array())
     {
         

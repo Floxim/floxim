@@ -105,11 +105,13 @@ window.fx_front = function () {
         
         var target_ib = ( document.location.hash || '').match(/fx-locate-infoblock_(.+)$/);
         if (target_ib) {
-            var $target_ib = $('.fx_infoblock_'+target_ib[1]);
-            if ($target_ib.length) {
-                $fx.front.select_item($target_ib);
-                $fx.front.scrollTo($target_ib);
-            }
+            $fx.front.load('edit').then(function() {
+                var $target_ib = $('.fx_infoblock_'+target_ib[1]);
+                if ($target_ib.length) {
+                    $fx.front.select_item($target_ib);
+                    $fx.front.scrollTo($target_ib);
+                }
+            });
         }
     });
 };
@@ -2127,16 +2129,19 @@ fx_front.prototype.load = function ( mode ) {
         $(this.mouseover_node).trigger('mouseover');
     }
     $('html').trigger('fx_set_front_mode', this.mode);
-    $overlay.stop().animate(
-        {
-            opacity:0
-        }, 
-        600,
-        null,
-        function() {
-            $overlay.remove();
-        }
-    );
+    return new Promise(function(resolve) {
+        $overlay.stop().animate(
+            {
+                opacity:0
+            }, 
+            600,
+            null,
+            function() {
+                $overlay.remove();
+                resolve();
+            }
+        );
+    });
 };
 
 fx_front.prototype.redraw_form_field = function($field, new_json) {
@@ -2264,8 +2269,6 @@ fx_front.prototype.bind_content_form = function($form, content_type_id, content_
     $form.attr('data-fx_bound', bound_hash);
     
     $form.on('change input', function(e) {
-        
-        console.log(e, e.target);
         
         var $inp = $(e.target),
             $bound = $inp.closest('[data-fx_bound]');
@@ -2409,7 +2412,14 @@ fx_front.prototype.get_edit_closure = function($entity, params) {
         if (ce_id) {
             params.content_id = entity_meta[0];
         } else if (placeholder_data) {
-            params = $.extend(params, placeholder_data);
+            params.entity_values = $.extend({}, placeholder_data);
+            ['before','after'].forEach(function(v) {
+                var k = '__move_'+v;
+                if (typeof placeholder_data[k] !== 'undefined') {
+                    params[k] = placeholder_data[k];
+                    delete params.entity_values[k];
+                }
+            });
         }
         var preset_params = $ib_node.data('fx_preset_params');
         if (preset_params) {
@@ -2440,7 +2450,7 @@ fx_front.prototype.get_edit_closure = function($entity, params) {
         if ($entity[0] !== $fx.front.get_selected_item()) {
             $fx.front.select_item($entity);
         }
-        
+        console.log(params);
         $fx.front.show_edit_form(params);
     };
 };
@@ -3511,26 +3521,27 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
     var xhr = $.ajax({
         type:'post',
         data:post_data,
-       url: document.baseURI+'~ib/'+real_infoblock_id+'@'+page_id,
-       success:function(res) {
-           $fx.front.c_hover = null;
-           $infoblock_node.off('click.fx_fake_click');
-           $fx.front.deselect_item();
-           
-           var is_layout = infoblock_node.nodeName === 'BODY';
-           
-           $('.fx_entity_hidden', $infoblock_node).each(function() {
-               $(this).removeClass('fx_entity_hidden');
-               $fx.front.outline_block_off($(this)); 
-           });
+        url: document.baseURI+'~ib/'+real_infoblock_id+'@'+page_id,
+        success:function(res) {
+            
+            $fx.front.c_hover = null;
+            $infoblock_node.off('click.fx_fake_click');
+            $fx.front.deselect_item();
 
-           if (is_layout) {
-               $fx.front.front_overlay = null;
-               var inserted = false,
-                   $res = $(res),
-                   res_root = $res[0];
-           
-                
+            var is_layout = infoblock_node.nodeName === 'BODY';
+
+            $('.fx_entity_hidden', $infoblock_node).each(function() {
+                $(this).removeClass('fx_entity_hidden');
+                $fx.front.outline_block_off($(this)); 
+            });
+
+            if (is_layout) {
+                $fx.front.front_overlay = null;
+                var inserted = false,
+                    $res = $(res),
+                    res_root = $res[0];
+
+
                 $infoblock_node.trigger('fx_infoblock_unloaded');
                 $infoblock_node.children().each(function() {
                     var $child = $(this);
@@ -3547,7 +3558,7 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
                     var att = res_root.attributes[i],
                         data_prop = att.name.match(/data-(.+)/),
                         data_val;
-                
+
                     $new_infoblock_node.attr(att.name, att.value);
                     if (!data_prop) {
                         continue;
@@ -3563,38 +3574,53 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
                 $new_infoblock_node
                     .removeClass('fx_infoblock_disabled')
                     .addClass('fx_mode_'+$fx.front.mode);
-           } else {
-               var $new_infoblock_node = $( $.trim(res) );
-               if ($new_infoblock_node.length > 0) {
-                   $new_infoblock_node = $new_infoblock_node.filter('.fx_infoblock').first();
-               }
-               $infoblock_node.hide();
-               $infoblock_node.before($new_infoblock_node);
-               $infoblock_node.trigger('fx_infoblock_unloaded', [$new_infoblock_node]);
-               $infoblock_node.remove();
-           }
+            } else {
+                var $new_infoblock_node = $( $.trim(res) );
+                if ($new_infoblock_node.length > 0) {
+                    $new_infoblock_node = $new_infoblock_node.filter('.fx_infoblock').first();
+                }
+                $infoblock_node.hide();
+                $infoblock_node.before($new_infoblock_node);
+                $infoblock_node.trigger('fx_infoblock_unloaded', [$new_infoblock_node]);
+                $infoblock_node.remove();
+            }
+
+            if (is_layout) {
+                $fx.front.move_down_body();
+            }
+            $fx.front.hilight($new_infoblock_node);
            
-           if (is_layout) {
-               $fx.front.move_down_body();
-           }
-           $fx.front.hilight($new_infoblock_node);
-           $new_infoblock_node.trigger('fx_infoblock_loaded');
-           $new_infoblock_node.css('opacity', $fx.front.disabled_infoblock_opacity).animate({opacity: 1},150);
-           $('body').removeClass('fx_stop_outline');
-           if (selected_selector) {
-               var sel_target = ib_parent.find(selected_selector);
-               if (sel_target.length > 0) {
-                   sel_target = sel_target.get(0);
-                   if (!$fx.front.is_selectable(sel_target)) {
-                       sel_target = $fx.front.get_selectable_up(sel_target);
-                   }
-                   $fx.front.select_item(sel_target);
-               }
-           }
-           
-           if (typeof callback === 'function') {
-               callback($new_infoblock_node);
-           }
+            $new_infoblock_node[0].setAttribute('data-fx_block_is_pending', '1');
+            
+            var finish = function() {
+                
+                $new_infoblock_node[0].removeAttribute('data-fx_block_is_pending');
+                $new_infoblock_node.trigger('fx_infoblock_loaded');
+            
+                $new_infoblock_node.css('opacity', $fx.front.disabled_infoblock_opacity).animate({opacity: 1},150);
+                $('body').removeClass('fx_stop_outline');
+                if (selected_selector) {
+                    var sel_target = ib_parent.find(selected_selector);
+                    if (sel_target.length > 0) {
+                        sel_target = sel_target.get(0);
+                        if (!$fx.front.is_selectable(sel_target)) {
+                            sel_target = $fx.front.get_selectable_up(sel_target);
+                        }
+                        $fx.front.select_item(sel_target);
+                    }
+                }
+
+                if (typeof callback === 'function') {
+                    callback($new_infoblock_node);
+                }
+            };
+            
+            if (typeof this.pending_scripts_loaded  === 'object' && this.pending_scripts_loaded instanceof Promise) {
+                
+                this.pending_scripts_loaded.then(finish);
+            } else {
+                finish();
+            }
        }
     });
     return xhr;

@@ -67,39 +67,27 @@ window.$fx_fields = {
         
         $target.on('wheel', function(e) {
             if (that.wheel_target && that.wheel_target !== e.target) {
-                //console.log('skip');
                 return;
             }
-            //console.log(that.wheel_target);
-            //if (!frozen) {
-                //console.log(e.originalEvent.deltaY);
-                c_delta += e.originalEvent.deltaY;
-                
-                if (Math.abs(c_delta) < 20) {
-                    return false;
-                }
-                //console.log('bam', c_delta);
-                
-                var delta = e.originalEvent.deltaY > 0 ? -1 : 1,
-                    c_value = $inp.val() * 1,
-                    new_value = ( c_value * multiplier + params.step * delta * multiplier ) / multiplier;
-                if (new_value < params.min) {
-                    new_value = params.min;
-                } else if (new_value > params.max ) {
-                    new_value = params.max;
-                }
-                if (params.focus) {
-                    $inp.focus();
-                }
-                $inp.val(new_value).trigger('change');
-                c_delta = 0;
-                /*
-                frozen = true;
-                setTimeout(function() {
-                    frozen = false;
-                }, 80);
-                */
-            //}
+            c_delta += e.originalEvent.deltaY;
+
+            if (Math.abs(c_delta) < 20) {
+                return false;
+            }
+
+            var delta = e.originalEvent.deltaY > 0 ? -1 : 1,
+                c_value = $inp.val() * 1,
+                new_value = ( c_value * multiplier + params.step * delta * multiplier ) / multiplier;
+            if (new_value < params.min) {
+                new_value = params.min;
+            } else if (new_value > params.max ) {
+                new_value = params.max;
+            }
+            if (params.focus) {
+                $inp.focus();
+            }
+            $inp.val(new_value).trigger('change');
+            c_delta = 0;
             return false;
         });
     },
@@ -684,10 +672,6 @@ window.$fx_fields = {
             $group = $('.'+b, $row),
             $fields = $('.'+b+'__fields', $group);
             
-        if (json.fields && json.fields.length > 0) {
-            $fx_form.draw_fields(json, $fields);
-        }
-        
         function is_expanded() {
             return $group.hasClass(exp_class);
         }
@@ -755,7 +739,12 @@ window.$fx_fields = {
                     return false;
                 }
             });
-        
+            
+        if (json.fields && json.fields.length > 0) {       
+            $row.one('fx_field_attached', function(e) {
+                $fx_form.draw_fields(json, $fields);
+            });
+        }
         return $row;
     },
 
@@ -1024,6 +1013,21 @@ window.$fx_fields = {
             return;
         }
         $inp.val(value);
+    },
+    
+    name_to_path: function(field_name) {
+        return field_name.replace(/\]$/, '').split(/\]?\[/);
+    },
+    
+    path_to_name: function(path) {
+        var base = path.shift();
+        return path.length === 0 ? base : base + '['+ path.join('][')+']';
+    },
+    
+    replace_last_name: function(old_full, new_last) {
+        var full = this.name_to_path(old_full);
+        full[full.length - 1] = new_last;
+        return this.path_to_name(full);
     },
     
     init_fieldset: function(html, _c) {

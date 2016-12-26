@@ -221,7 +221,7 @@ abstract class Finder
     }
     
     public function selectFromRelated($rel, $field, $alias = null) {
-        $cf = $this->prepareComplexField($rel.'.'.$field, 'select');
+        $cf = $this->prepareComplexField($rel.'.'.$field, 'left');
         $aliased = $cf;
         if ($alias) {
             $aliased .= ' as '.$alias;
@@ -234,8 +234,11 @@ abstract class Finder
      * For relational fields: join related item and prepare real field name
      * @param string $field
      */
-    protected function prepareComplexField($field, $operator = 'where')
+    protected function prepareComplexField($field, $join_type = null)
     {
+        if (is_null($join_type)) {
+            $join_type = 'left';
+        }
         list($rel, $field_name) = explode('.', $field, 2);
         if (preg_match("~^\{\{.+\}\}$~", $rel)) {
             return $field;
@@ -244,8 +247,8 @@ abstract class Finder
         if (!$relation) {
             return '`' . $rel . '`.`' . $field_name . '`';
         }
-        $with_type = $operator == 'where' ? 'inner' : 'left';
-        $this->with($rel, null, $with_type);
+        //$with_type = $operator == 'where' ? 'inner' : 'left';
+        $this->with($rel, null, $join_type);
         $c_with = $this->with[$rel];
         $with_name = $c_with[0];
         if ($relation[0] === self::MANY_MANY) {
@@ -259,7 +262,7 @@ abstract class Finder
         return $field;
     }
 
-    protected function prepareCondition($field, $value = null, $type = '=')
+    protected function prepareCondition($field, $value = null, $type = '=', $join_type = null)
     {
         $num_args = func_num_args();
         if ($num_args === 2 && is_string($field) && $value === null) {
@@ -297,6 +300,10 @@ abstract class Finder
         if (is_array($field) ) {
             if ($type === 'AND' || $type === 'OR') {
                 foreach ($field as $n => $c_cond) {
+                    $passed_join_type = !is_null($join_type) ? $join_type : ($type === 'OR' ? 'LEFT' : 'INNER');
+                    if (count($c_cond) === 3) {
+                        $c_cond[3] = $passed_join_type;
+                    }
                     $field[$n] = call_user_func_array( array($this, 'prepareCondition'), $c_cond );
                 }
                 return array($field, $value, $type);
@@ -316,7 +323,7 @@ abstract class Finder
             $field = $field.'.id';
         }
         if (strstr($field, '.')) {
-            $field = $this->prepareComplexField($field, 'where');
+            $field = $this->prepareComplexField($field, $join_type);
         } elseif (preg_match("~^[a-z0-9_-]~", $field)) {
             $table = $this->getColTable($field, false);
             if (in_array($field, $this->getMultiLangFields())) {
@@ -393,7 +400,8 @@ abstract class Finder
     public function whereOr()
     {
         $conditions = func_get_args();
-        $this->where [] = array($conditions, null, 'OR');
+        //$this->where [] = array($conditions, null, 'OR');
+        $this->where(array($conditions, null, 'OR'));
         return $this;
     }
 
@@ -423,7 +431,7 @@ abstract class Finder
             $direction = 'ASC';
         }
         if (strstr($field, '.')) {
-            $this->order [] = $this->prepareComplexField($field, 'order') . ' ' . $direction;
+            $this->order [] = $this->prepareComplexField($field, 'left') . ' ' . $direction;
         } else {
             $table = $this->getColTable($field);
             if ($table) {

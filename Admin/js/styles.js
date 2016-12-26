@@ -114,6 +114,7 @@ less_tweaker.prototype.handle_form = function() {
             },
             100
         );
+        $(e.target).trigger('fx_change_passed');
         return false;
     });
 };

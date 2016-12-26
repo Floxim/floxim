@@ -29,8 +29,13 @@ class Entity extends System\Entity implements Template\Entity
     public function getVisual($theme_id = null)
     {
         if (!$theme_id) {
-            $theme_id = fx::env('theme_id');
+            if ($this['site_id'] === fx::env('site_id')) {
+                $theme_id = fx::env('theme_id');
+            } else {
+                $theme_id = $this['site']['theme_id'];
+            }
         }
+        
         if (isset($this->_visual[$theme_id])) {
             return $this->_visual[$theme_id];
         }

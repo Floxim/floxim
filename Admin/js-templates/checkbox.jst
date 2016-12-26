@@ -1,0 +1,78 @@
+<!--[form_row ? ( (_c.type == 'checkbox' && typeof _c.values == 'undefined') || _c.type == 'bool' ) && (_c.class_name === 'locker' || _c.class_name === 'one-line')]-->
+<?
+var c_class = 'field field_checkbox';
+if (_c.class_name) {
+    c_class += ' field_class_'+_c.class_name;
+}
+c_class += ' field_name__'+(_c.id || _c.name);
+if (_c.lock_edit) {
+    c_class += ' fx_field_is_locked';
+}
+if (!_c.id) {
+    _c.id = 'checkbox_'+Math.round(Math.random() * 10000);
+}
+?>
+<div class="<?= c_class ?>">
+    <? _c.skip_label = true; ?>
+    <?=$t.input(_c)?>
+    <? if (_c.class !== 'toggler') {?>
+    <label style="display:inline;" for="<?= _c.name || _c.id ?>"><?=_c.label?></label>
+    <? } ?>
+</div>
+
+<!--[input ? (_c.type == 'checkbox' && typeof _c.values == 'undefined') || _c.type == 'bool']-->
+<?
+if (typeof _c.id === 'undefined') {
+    _c.id = Math.round(Math.random()*100000);
+}
+?>
+<input 
+    type="checkbox"
+    style="display:inline;" 
+    data-fx-unchecked-value="0"
+    <?=$t.field_id_name(_c)?> 
+    value="1" <?=_c.value && _c.value !== '0' ? ' checked="checked"' : ''?> 
+    <?= _c.disabled ? ' disabled="disabled" ' : '' ?> />
+<?
+if (!_c.skip_label) {
+    ?><label for="<?=_c.name || _c.id?>"></label><? 
+} 
+?>
+
+<!--[input ? (_c.type === 'checkbox' || _c.type === 'bool') && _c.class === 'toggler']-->
+<?
+var on = _c.value && _c.value !== '0';
+?>
+<div class="fx_toggler fx_toggler_<?= on ? 'on' : 'off'?>">
+    <input type="hidden" <?=$t.field_id_name(_c)?> value="<?= on ? 1 : 0 ?>" />
+    <div class="fx_toggler__label">
+        <label><?=_c.label?></label>
+        <div class="fx_toggler__state_on"><?= $fx.lang('On') ?></div>
+        <div class="fx_toggler__state_off"><?= $fx.lang('Off') ?></div>
+    </div>
+    <div class="fx_toggler__control" tabindex="0">
+        <div class="fx_toggler__runner"></div>       
+    </div>
+</div>
+
+<!--priority-->
+2
+
+<!--[input ? _c.type == 'checkbox' && typeof _c.values != 'undefined' ]-->
+<div class="fx_admin_group fx_admin_multi_checkbox">
+    <?
+    for (var vk in _c.values) {
+        var iid = _c.name+'_'+vk;
+        var is_checked = (_c.value instanceof Array && $.inArray(vk, _c.value) > -1) || ( _c.value == vk);
+        ?>
+        <div class="val">
+            <input 
+                style="display:inline;" 
+                type="checkbox"
+                id="<?=iid?>" name="<?=_c.name?>[]" 
+                value="<?=vk?>" 
+                <?=is_checked ? ' checked="checked"' : ''?> />
+            <label class="fx_admin_checkbox_label" for="<?=iid?>"><?=_c.values[vk]?></label>
+        </div>
+    <?}?>
+</div>

@@ -449,6 +449,7 @@ class Layout extends Admin
             $fields[]= array(
                 'name' => 'save_as_new',
                 'tab' => 'header',
+                'class_name' => 'one-line',
                 'label' => 'Сохранить как новый',
                 'type' => 'checkbox',
                 'view_context' => ''
@@ -630,23 +631,7 @@ class Layout extends Admin
                 $bundle_id = $block['block'].'_default';
                 
                 $bundle = fx::assets('style', $bundle_id);
-                $style = $bundle->getStyleMeta();
-                $fields = $bundle->getFormFields($block['value']);
-                $res []= array(
-                    'type' => 'group',
-                    'style' => 'transparent',
-                    'fields' =>  $fields,
-                    'tweaker' => array(
-                        'tweaker_file' => $bundle->getTweakerLessFile(),
-                        'rootpath' => $bundle->getRootPath(),
-                        //'is_new' => true,
-                        'vars' => array_keys($style['vars']),
-                        'mixin_name' => substr($bundle->getMixinName(), 1),
-                        //'style_class' => $block['block'].'_style_'.$block['mod_value'],
-                        //'style_id' => $block['style_id'],
-                        'container' => isset($style['container']) ? $style['container'] : array()
-                    )
-                );
+                $res []= $bundle->getGroupField($block['value']);
             } else {
                 $res []= \Floxim\Floxim\Asset\Less\StyleBundle::collectStyleVariants($block['block']);
             }

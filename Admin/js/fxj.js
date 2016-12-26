@@ -58,4 +58,8 @@ if (jQuery) {
             return console.log.apply(console, res);
         };
     }
+    
+    window.fix = function(data) {
+        return JSON.parse(JSON.stringify(data));
+    };
 }

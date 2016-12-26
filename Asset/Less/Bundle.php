@@ -142,12 +142,13 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
         $parser = $this->startParser($options);
         
         $res = '';
+        
+        if (!$is_admin) {
+            $less_vars = $this->getLayoutVars();
+            $parser->ModifyVars($less_vars);
+        }
 
         try {
-            if (!$is_admin) {
-                $less_vars = $this->getLayoutVars();
-                $parser->ModifyVars($less_vars);
-            }
             $css = $parser->getCss();
             // collect common vars (colors, fonts etc.) for "theme settings" dialog
             if ($is_default) {
@@ -159,11 +160,12 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
             }
             $res = $css;
         } catch (\Less_Exception_Compiler $e) {
-            fx::cdebug(
+            fx::log(
                 $e, 
-                fx::debug()->backtrace(), 
+                //fx::debug()->backtrace(), 
                 $parser,
-                $this
+                $this,
+                $less_vars
             );
         }
         $files = $this->getUniqueFiles();

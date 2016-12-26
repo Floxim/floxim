@@ -56,6 +56,9 @@ window.fx_eip = {
     },
     get_values: function(entity_id) {
         var res = {};
+        if (typeof entity_id === 'undefined') {
+            entity_id = null;
+        }
         $.each(this.vars, function() {
             if (this.var.content_id === entity_id) {
                 res[this.var.name] = this.value;
@@ -719,7 +722,7 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
         handle_node_size();
         $n.on(
             //'keyup.edit_in_place keydown.edit_in_place click.edit_in_place change.edit_in_place', 
-            'input.edit_in_place',
+            'input.edit_in_place paste.edit_in_place',
             function () {setTimeout(handle_node_size,1);}
         );
     }
@@ -727,7 +730,7 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
     if (this.nodes_to_sync.length > 0) {
         $n.on(
             //'keyup.edit_in_place keydown.edit_in_place click.edit_in_place change.edit_in_place', 
-            'input.edit_in_place',
+            'input.edit_in_place paste.edit_in_place',
             function () {
                 var c_html = fx_edit_in_place.prototype.clear_spaces($n.html());
                 $.each(that.nodes_to_sync, function() {

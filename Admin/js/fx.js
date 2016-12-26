@@ -19,7 +19,9 @@ window.$fx = {
                     return data;
                 }
                 
-                var js_assets = json.js;
+                var js_assets = json.js,
+                    pending_js = [];
+                
                 if (js_assets) {
                     if (!window.fx_assets_js) {
                         window.fx_assets_js = [];
@@ -30,18 +32,24 @@ window.$fx = {
                         if (is_loaded !== -1) {
                             continue;
                         }
+                        
+                        
                         (function(asset) {
-                            $.ajax({
-                                url:asset,
-                                async:false,
-                                dataType: 'script',
-                                success: function() {
-                                    window.fx_assets_js.push(asset);
-                                }
-                            });
+                            pending_js.push(new Promise(function(resolve) {
+                                $.ajax({
+                                    url:asset,
+                                    dataType: 'script',
+                                    success: function() {
+                                        window.fx_assets_js.push(asset);
+                                        resolve();
+                                    }
+                                });
+                            }));
                         })(asset);
                     }
                 }
+                
+                this.pending_scripts_loaded = Promise.all(pending_js);
                 
                 var css_assets = json.css;
                 if (css_assets) {
@@ -466,14 +474,26 @@ window.$fx = {
                     $fx.reload(json.reload);
                     return;
                 }
-                if (json.status === 'error') {
-                    $fx.show_error(json);
-                    error_callback();
-                    return;
+                var that = this,
+                    args = arguments,
+                    go_on = function() {
+                        if (json.status === 'error') {
+                            $fx.show_error(json);
+                            error_callback();
+                            return;
+                        }
+                        if (callback) {
+                            callback.apply(that, args);
+                        }
+                    };
+                if (this.pending_scripts_loaded && this.pending_scripts_loaded instanceof Promise) {
+                    this.pending_scripts_loaded.then(function() {
+                        go_on();
+                    });
+                } else {
+                    go_on();
                 }
-                if (callback) {
-                    callback.apply(this, arguments);
-                }
+                
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 if ( textStatus === 'parsererror') {

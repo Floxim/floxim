@@ -75,7 +75,21 @@ class Content extends Admin
             $fields []= $this->ui->hidden('preset_params', $input['preset_params']);
         }
         
-        if (!isset($input['infoblock_id']) && !$content['id']  && $content instanceof \Floxim\Main\Content\Entity) {
+        if (isset($input['entity_values'])) {
+            $entity_values = $input['entity_values'];
+            if (is_string($entity_values)) {
+                $entity_values = json_decode($entity_values, true);
+            }
+            $content->setFieldValues($entity_values, array_keys($entity_values));
+            $fields []= $this->ui->hidden('entity_values', json_encode($entity_values));
+        }
+        
+        if (
+            !isset($input['infoblock_id']) 
+            && !$content['id']  
+            && $content instanceof \Floxim\Main\Content\Entity
+            && !$content['infoblock_id']
+        ) {
             $avail_infoblocks = $content->getRelationFinderInfoblockId()->all();
             
             $avail_infoblocks = $content->filterAvailableInfoblocksByParent($avail_infoblocks, $content['parent_id']);
@@ -93,7 +107,8 @@ class Content extends Admin
                 $res['fields'] = $fields;
                 $this->response->addFormButton(array('key' => 'save', 'label' => fx::alang('Continue')));
                 return $res;
-            } elseif (count($avail_infoblocks) === 1) {
+            } 
+            if (count($avail_infoblocks) === 1) {
                 $avail_infoblock_id = $avail_infoblocks->first()->get('id');
                 $fields []= array(
                     'type' => 'hidden',
@@ -122,10 +137,6 @@ class Content extends Admin
                 }
                 break;
             }
-        }
-        
-        if (isset($input['entity_values'])) {
-            $content->setFieldValues($input['entity_values'], array_keys($input['entity_values']));
         }
         
         if (isset($input['parent_form_data']) && isset($input['relation'])) {

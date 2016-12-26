@@ -596,14 +596,19 @@ class Template
         return $res;
     }
     
-    public function addStyleLess($block, $value, $params = array(), $is_temp = false)
+    public function addStyleLess(
+        $block, 
+        $value, 
+        $params = array()
+        //, $is_temp = false
+    )
     {
         $bundle_keyword = $block.'_'.$value;
         $bundle = fx::assets('style', $bundle_keyword, $params);
         
-        if (!$is_temp || $value === 'default') {
-            fx::page()->getDefaultCssBundle()->push( array($bundle) );
-        }
+        //if (!$is_temp || $value === 'default' || true) {
+        fx::page()->getDefaultCssBundle()->push( array($bundle) );
+        //}
         
         if (fx::isAdmin() && fx::input('post', 'override_infoblock') ) {
             $export_file = $bundle->getTempExportFile();

@@ -25,6 +25,11 @@ class Finder extends System\Finder
                 self::BELONGS_TO,
                 'scope',
                 'scope_id'
+            ),
+            'site' => array(
+                self::BELONGS_TO,
+                'site',
+                'site_id'
             )
         );
     }

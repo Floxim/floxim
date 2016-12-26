@@ -120,7 +120,7 @@ fx_form = {
         settings.fields = $fx.form.init_joins(settings.fields);
         
         if (use_tabs) {
-            $fx_form.init_tabs(settings, $form);
+            $fx_form.init_tabs(settings, $form, $form_body);
         }
         
         // draw list buttons in backoffice
@@ -230,7 +230,6 @@ fx_form = {
                 b.on('click', options.onclick);
             }
         });
-        
         $rendered_fields.trigger('fx_fields_ready');
     },
     lock_form: function($form) {
@@ -319,9 +318,13 @@ fx_form = {
         return false;
     },
 
-    init_tabs: function ( settings, $form) {
-        var $form_body = $('.'+bl+'__body', $form),
-            $form_header = $('.'+bl+'__header', $form),
+    init_tabs: function ( settings, $form, $form_body) {
+        
+        if (typeof $form_body === 'undefined') {
+            $form_body = $('.'+bl+'__body', $form);
+        }
+        
+        var $form_header = $('.'+bl+'__header', $form),
             $tab_labels = $('<div class="'+bl+'__tab_labels"></div>'),
             $tab_data = $('<div class="'+bl+'__tab_data"></div>'),
             c_label = 'fx_tab_label',
@@ -469,7 +472,8 @@ fx_form = {
             $rel_node = $target;
             $target = $rel_node.parent();
         }
-        var node = $fx_fields.row(json);
+        var node = $($fx_fields.row(json));
+        
         switch (position) {
             case 'into':
                 $target.append(node);
@@ -486,6 +490,10 @@ fx_form = {
         if (node === '') {
             return null;
         }
+        
+        node.trigger('fx_field_attached');
+        
+        
         // ajax change
         if (json.post && json.type !== 'button') {
             // creating container for extra json-loaded fields
@@ -571,8 +579,6 @@ fx_form = {
             cond.order = 'inverted';
         }
         
-        //console.log(cond, $field);
-        
         var $livesearch = $field.find('.livesearch'),
             ls = $livesearch.data('livesearch');
         
@@ -626,7 +632,6 @@ fx_form = {
                 return;
             }
             handle();
-            //console.log(target_name, cond);
         });
         
         setTimeout(handle, 500);
@@ -659,7 +664,6 @@ fx_form = {
                             continue;
                         }
                         var value_avail = that.check_conditions(filters[c_val_name], $form);
-                        //console.log(c_val_name)
                         if (value_avail) {
                             new_vals.push(c_val);
                         }
@@ -820,6 +824,7 @@ fx_form = {
         var change_handler = function(e) {
             var $changed_inp = $(e.target),
                 changed_inp_name = that.get_input_name($changed_inp);
+        
             // changed input is not mentioned in any rule
             if (!handled_input_names[ changed_inp_name ]) {
                 return;
@@ -827,26 +832,15 @@ fx_form = {
             callback(conds, $container, $changed_inp);
         };
         
-        $container.on('change', change_handler);
+        $container.on('change fx_change_passed', change_handler);
         
-        
-        // initial call
-        /*
-        setTimeout(
-            function() {
-                callback(conds, $container);
-            },
-            1
-        );
-        */
         callback(conds, $container);
         change_handler.unbind = function() {
-            $container.off('change', change_handler);
+            $container.off('change fx_change_passed', change_handler);
         };
         return change_handler;
     },
 
-    //add_parent_condition: function(parent, _el, container) {
     add_parent_condition: function(conds, $field, $container) {
         
         if (typeof conds === 'string') {
@@ -862,7 +856,18 @@ fx_form = {
 
                 var cond_parts = c_cond.split(/\s*?(==|!=|>|<|>=|<=|!~|~)\s*/);
                 if (cond_parts.length === 3) {
-                    conds.push([cond_parts[0], cond_parts[2], cond_parts[1]]);
+                    var handled_name = cond_parts[0],
+                        own_name = $field.find('[name]').first().attr('name');
+                
+                    if (!own_name) {
+                        console.log($field);
+                    } else {
+                        if (own_name.match(/\]$/) && !handled_name.match(/\]$/)) {
+                            handled_name = $fx_fields.replace_last_name(own_name, handled_name);
+                        }
+                    }
+                    
+                    conds.push([handled_name, cond_parts[2], cond_parts[1]]);
                 }
             }
         }
