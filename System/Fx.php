@@ -1222,7 +1222,6 @@ class Fx
 
     public static function path($key = null, $tale = null)
     {
-        fx::count('getpath');
         static $path = null;
         if (!$path) {
             $path = new Path();

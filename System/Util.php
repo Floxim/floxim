@@ -894,7 +894,7 @@ class Util
                     if ( preg_match("~(/floxim_files[^\\\"]+)~", $val, $found_path)) {
                         $all_pics []= $found_path[1];
                     }
-                });
+                }, false);
             }
         }
 
@@ -941,5 +941,36 @@ class Util
             }
         }
         fx::debug($cols);
+    }
+    
+    public function traverse($data, $callback, $callback_on_arrays = true)
+    {
+        $path = array();
+        
+        $traverse = function($data) use ($callback, &$path, &$traverse, $callback_on_arrays) {
+            foreach ($data as $k => $v) {
+                $path []= $k;
+                
+                $is_arr = is_array($v);
+                
+                if (!$is_arr || $callback_on_arrays) {
+                    $cb_res = $callback($v, $path);
+                    if ($cb_res === false) {
+                        return false;
+                    }
+                }
+                
+                if (is_array($v)) {
+                    $sub_res = $traverse($v);
+                    if ($sub_res === false) {
+                        return false;
+                    }
+                }
+                
+                array_pop($path);
+            }
+        };
+        
+        $traverse($data);
     }
 }

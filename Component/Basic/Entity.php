@@ -446,6 +446,13 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
             'class'          => 'fx_entity' . (is_object($collection) && $collection->is_sortable ? ' fx_sortable' : '')
         );
         
+        if (isset($this['url'])) {
+            $url = $this['url'];
+            if ($url) {
+                $entity_atts ['data-fx_url'] = $url;
+            }
+        }
+        
         if (!$this->isVisible()) {
             $is_single = 
                 !$collection || 

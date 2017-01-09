@@ -59,9 +59,11 @@ class Debug
      */
     public function start()
     {
-        $file_name = $this->getFileName();
-        $this->file = fx::files()->open($file_name, 'w');
-        register_shutdown_function(array($this, 'stopLog'));
+        if (is_null($this->file)) {
+            $file_name = $this->getFileName();
+            $this->file = fx::files()->open($file_name, 'w');
+            register_shutdown_function(array($this, 'stopLog'));
+        }
     }
     
     protected $metalog_handler = null;

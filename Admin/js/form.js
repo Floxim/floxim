@@ -75,6 +75,15 @@ fx_form = {
         
         return $form;
     },
+    
+    update: function (data, $form) {
+        var $body = $('.fx_admin_form__body', $form);
+        $body.html('');
+        this.draw_fields(data, $body);
+        $form.trigger('fx_adm_form_updated');
+        //console.log('upd', $form, 'set data', data);
+    },
+    
     // find fields that are placed before containing group and put it right after it
     sort_fields: function(fields) {
         var groups = {},
@@ -109,7 +118,6 @@ fx_form = {
     },
     draw_fields: function(settings, $form_body) {
         if (settings.fields === undefined) {
-            //return;
             settings.fields = [];
         }
         

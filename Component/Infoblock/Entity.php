@@ -815,7 +815,11 @@ class Entity extends System\Entity implements Template\Entity
         $example_page = $page_finder->one();
         
         if ($example_page) {
-            $res['example_url'] = $example_page['url'].'#fx-locate-infoblock_'.$this['id'];
+            $example_site = fx::data('site', $example_page['site_id']);
+            $res['example_url'] = 'http://'
+                                    .$example_site->getLocalDomain()
+                                    .$example_page['url']
+                                    .'#fx-locate-infoblock_'.$this['id'];
         }
         
         
@@ -846,5 +850,16 @@ class Entity extends System\Entity implements Template\Entity
         }
         
         return $res;
+    }
+    
+    public function showSummary()
+    {
+        $summary = $this->getSummary();
+        ob_start();?>
+        <div>
+            <a href="<?=$summary['example_url']?>" target="_blank"><?=$this['id']?></a>
+        </div>
+        <?php
+        return ob_get_clean();
     }
 }

@@ -46,7 +46,7 @@ class Config
         'templates.context_class'    => 'ContextFlex',
         'cache.gzip_bundles'         => true,
         'cache.meta'                 => true,
-        'date.timezone'              => 'America/New_York',
+        'date.timezone'              => 'Europe/Moscow',
         'image.max_filesize'         => 10485760, // ~10m,
         'path.admin_dir_name'        => 'floxim'
     );

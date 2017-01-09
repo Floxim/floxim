@@ -199,6 +199,9 @@ window.fx_livesearch = function (node, params) {
             found_next = null;
     
         this.traversePresetValues(function(v) {
+            if (v.disabled) {
+                return;
+            }
             if (first_value === null) {
                 first_value = v;
             }
@@ -225,6 +228,9 @@ window.fx_livesearch = function (node, params) {
             is_first = true;
         
         this.traversePresetValues(function(v) {
+            if (v.disabled) {
+                return;
+            }
             if (v.id == current_value) {
                 if (!is_first) {
                     return false;
@@ -255,7 +261,6 @@ window.fx_livesearch = function (node, params) {
         params.data.ids = ids;
         params.data.term = null;
         params.data.limit = null;
-        console.trace();
         $.ajax({
             url:params.url,
             type:'post',

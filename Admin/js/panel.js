@@ -499,7 +499,7 @@
             var body_animate_props = {'padding-top':body_offset + 'px'};
             var $selected = $($fx.front.get_selected_item());
 
-            if ($selected.length) {
+            if (false && $selected.length) {
                 var common_panel_height = $fx.front.get_panel_height();
 
                 var scroll_top = $selected.offset().top - (

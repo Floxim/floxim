@@ -34,7 +34,8 @@ class ContextFlex extends Context {
         $this->meta[$l] = array_merge(
             array(
                 'transparent' => false,
-                'autopop'     => false
+                'autopop'     => false,
+                'scope_depth' => count($this->scope_path)
                 ), 
             $meta
         );
@@ -87,6 +88,7 @@ class ContextFlex extends Context {
     
     public function get($name = null, $context_offset = null)
     {
+        fx::count('get');
         // neither var name nor context offset - return current context
         if (is_null($name) && is_null($context_offset)) {
             for ($i = $this->level; $i >= 0; $i--) {
@@ -119,7 +121,7 @@ class ContextFlex extends Context {
             return null;
         }
         
-        for ($i = $this->level; $i >= 0; $i--) {
+        for ($i = $this->level; $i > 0; $i--) {
             
             if (isset($this->misses[$i][$name])) {
                 continue;
@@ -134,6 +136,29 @@ class ContextFlex extends Context {
             $this->misses[$i][$name] = true;
         }
         $this->last_var_level = null;
+        return null;
+    }
+    
+    public function getFromScope($name)
+    {
+        $c_depth = count($this->scope_path) - 1;
+        for ($i = $this->level; $i > 0; $i--) {
+            
+            if ($this->meta[$i]['scope_depth'] < $c_depth) {
+                break;
+            }
+            if (isset($this->misses[$i][$name])) {
+                continue;
+            }
+            if ( 
+                    ( is_array($this->stack[$i]) && array_key_exists($name, $this->stack[$i]) ) 
+                    || isset($this->stack[$i][$name])
+            ) {
+                $this->last_var_level = $i;
+                return $this->stack[$i][$name];
+            } 
+            $this->misses[$i][$name] = true;
+        }
         return null;
     }
     
@@ -201,8 +226,11 @@ class ContextFlex extends Context {
         return array();
     }
     
+    protected $scope_depth = 0;
+    
     public function startScope($name)
     {
+        fx::count('start_scope');
         $this->scope_path []= $name;
     }
     
@@ -213,22 +241,25 @@ class ContextFlex extends Context {
     
     public function getScopePath($offset = 0)
     {
+        fx::count('scope_path');
         return join(".", array_slice($this->scope_path, $offset));
     }
     
     public function getScopeDepth()
     {
+        fx::count('scope_depth');
         return count($this->scope_path);
     }
     
     public function getScopePrefix($separator = '-') 
     {
+        fx::count('scope_prefix_'.$separator);
         return count($this->scope_path) === 0 ? '' : join($separator, $this->scope_path).$separator;
     }
     
     public function getVisualId()
     {
-        if (is_null($this->visual_id)) {    
+        if (is_null($this->visual_id)) {
             $ib = $this->getFromTop('infoblock');
             if (!$ib) {
                 $this->visual_id = 'new';

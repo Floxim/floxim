@@ -85,21 +85,15 @@ class Html
             }
             
             $tpl_id = $n->getAttribute('fx:template');
-            $macro_id = $n->getAttribute('fx:macro');
-            if ($tpl_id || $macro_id) {
-                if ($macro_id) {
-                    $tpl_id = $macro_id;
-                }
-
+            if ($tpl_id) {
+                
                 if (preg_match("~\[(.+?)\]~s", $tpl_id, $tpl_test)) {
                     $tpl_test = preg_replace("~[\r\n]~", ' ', $tpl_test[1]);
                     $tpl_id = preg_replace("~\[.+?\]~s", '', $tpl_id);
                 }
                 
                 $tpl_macro_tag = '{template id="' . $tpl_id . '" ';
-                if ($macro_id) {
-                    $tpl_macro_tag .= ' is_macro="true" ';
-                }
+                
                 $tpl_macro_tag .= $subroot;
                 
                 if ($n->hasAttribute('fx:apply')) {
@@ -144,7 +138,9 @@ class Html
                 $tpl_macro_tag .= '}';
                 $n->wrap($tpl_macro_tag, '{/template}');
                 $n->removeAttribute('fx:template');
-                $n->removeAttribute('fx:macro');
+                if (!$n->hasAttribute('fx:e')) {
+                    $n->setAttribute('fx:e', '');
+                }
             }
             if ($n->hasAttribute('fx:each')) {
                 $each_id = $n->getAttribute('fx:each');
@@ -357,13 +353,21 @@ class Html
                 $n->removeAttribute('fx:styled');
                 
                 $styled_call = '{styled %s ';
+                $style_defaults = null;
                 if ($style_is_inline) {
                     $styled_call .= ' inline="true" ';
+                    if ($n->hasAttribute('fx:style-defaults')) {
+                        $style_defaults = $n->getAttribute('fx:style-defaults');
+                        $n->removeAttribute('fx:style-defaults');
+                    }
                 }
                 if ($styled_value !== '' && !preg_match("~(?:[a-z_-]+\:|\{)~", $styled_value)) {
                     $styled_call .= 'label="'.$styled_value.'"}';
                 } else {
                     $styled_call .= '}'.$styled_value;
+                }
+                if ($style_defaults) {
+                    $styled_call .= '{defaults}'.$style_defaults.'{/defaults}';
                 }
                 $styled_call .= '{/styled}';
             }
@@ -376,7 +380,7 @@ class Html
                     $styled_call = sprintf($styled_call, 'element="'.$el_name.'"');
                     $el_value .= $styled_call;
                 }
-                $n->addClass('{bem_element}'.$el_value.'{/bem_element}');
+                $n->addClass('{bem_element'. ($tpl_id ? ' is_template="true"' : '').'}'.$el_value.'{/bem_element}');
                 $n->removeAttribute('fx:e');
             }
             
@@ -392,8 +396,6 @@ class Html
                 $n->removeAttribute('fx:b');
                 $n->parent->addChildAfter(HtmlToken::create('<?php $this->bemStopBlock(); ?>'), $n);
             }
-            
-            
         });
         $res = $tree->serialize();
         return $res;

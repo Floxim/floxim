@@ -183,7 +183,7 @@ class Entity extends \Floxim\Floxim\System\Entity
                     $found = true;
                     return false;
                 }
-            });
+            }, false);
             if ($found) {
                 break;
             }
@@ -207,7 +207,8 @@ class Entity extends \Floxim\Floxim\System\Entity
                     }
                     $found = true;
                     fx::digSet($data, $path, $new_keyword);
-                }
+                },
+                false
             );
             if ($found) {
                 $entity[$prop] = $data;

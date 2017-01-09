@@ -182,41 +182,70 @@ class Compiler
         return $code;
     }
     
-    
-    protected function tokenBemElementToCode($token)
+    protected function getBemElementInlineProcessingCode($el_var)
     {
-        $code =  "<?php";
-        $str = $this->childrenGetPlain($token);
-        if ($str !== false) {
-            $el_parts = Template::bemParseStr($str);
-            $full_name = "\$this->bemGetBlock().'__".$el_parts['name']."'";
-            if (count($el_parts['modifiers']) === 0) {
-                $code .= ' echo '.$full_name.'; ?>';
-            } else {
-                $code .= " \$full_name = ".$full_name."; ";
-                $class = array("\$full_name");
-                foreach ($el_parts['modifiers'] as $mod) {
-                    $class []= "\$full_name.'_".$mod."'";
-                }
-                $code .= " echo ".join(".' '.", $class)."; ?>";
-            }
-            if (count($el_parts['plain']) > 0) {
-                $code .= ' '.join(' ', $el_parts['plain']);
-            }
-            return $code;
-        }
-        $code .= "\nob_start();\n";
-        $this->pushState('edit', false);
-        $code .= $this->childrenToCode($token);
-        $this->popState('edit');
-        $code .= '$el_string = ob_get_clean();'."\n";
-        $code .= '$el_parts = \\Floxim\\Floxim\\Template\\Template::bemParseStr($el_string);'."\n";
-        $code .= "\$full_name = \$this->bemGetBlock().'__'.\$el_parts['name'];\n";
+        $code = '$el_parts = \\Floxim\\Floxim\\Template\\Template::bemParseStr('.$el_var.');'."\n";
+        $code .= "if (\$el_parts['name']) {\n";
+        $code .= "\$full_name = \$block_name.'__'.\$el_parts['name'];\n";
         $code .= "echo \$full_name.' ';\n";
         $code .= "foreach (\$el_parts['modifiers'] as \$mod) {\n";
         $code .= "echo \$full_name.'_'.\$mod.' ';\n";
         $code .= "}\n";
         $code .= "echo join(' ', \$el_parts['plain']);\n";
+        $code .= "}\n";
+        return $code;
+    }
+    
+    protected function tokenBemElementToCode(Token $token)
+    {
+        $code =  "<?php\n";
+        $code .= "\$block_name = \$this->bemGetBlock();\n";
+        $code .= "if (\$block_name) {\n";
+        
+        $is_tpl = $token->getProp('is_template');
+        $str = $this->childrenGetPlain($token);
+        $has_value = $token->hasChildren() && $str !== '';
+        if ($is_tpl) {
+            $code .= "\nif (\$this->as_bem_element) {\n";
+            $code .= $this->getBemElementInlineProcessingCode('$this->as_bem_element');
+            $code .= "}";
+            if ($has_value) {
+                $code .= " else {";
+            }
+            $code .= "\n";
+        }
+        if ($has_value) {
+            if ($str !== false) {
+                $el_parts = Template::bemParseStr($str);
+                $full_name = "\$block_name.'__".$el_parts['name']."'";
+                if (count($el_parts['modifiers']) === 0) {
+                    $code .= ' echo '.$full_name.";\n";
+                } else {
+                    $code .= " \$full_name = ".$full_name.";\n";
+                    $class = array("\$full_name");
+                    foreach ($el_parts['modifiers'] as $mod) {
+                        $class []= "\$full_name.'_".$mod."'";
+                    }
+                    $code .= " echo ".join(".' '.", $class).";\n";
+                }
+                if (count($el_parts['plain']) > 0) {
+                    $code .= ' '.join(' ', $el_parts['plain']);
+                }
+            } elseif ($has_value) {
+                $code .= "\nob_start();\n";
+                $this->pushState('edit', false);
+                $code .= $this->childrenToCode($token);
+                $this->popState('edit');
+
+                $code .= $this->getBemElementInlineProcessingCode('ob_get_clean()');
+            }
+        }
+        
+        if ($is_tpl && $has_value) {
+            $code .= "}\n";
+        }
+        
+        $code .= "}";
         $code .= "?>";
         return $code;
     }
@@ -621,6 +650,15 @@ class Compiler
         }
         
         $code .= "if ( ".$tpl." ) {\n";
+        if ( ($bem_el = $token->getProp('el')) ) {
+            $bem_el = trim($bem_el, '"\'');
+            if ($bem_el[0] === '$') {
+                $bem_el = "\$context->get('".substr($bem_el, 1)."')";
+            } else {
+                $bem_el = "'".$bem_el."'";
+            }
+            $code .= $tpl."->setAsBemElement(".$bem_el.");\n";
+        }
         $code .= "echo ".$tpl."->setParent(\$this)->render();\n";
         if ( ($subroot_var = $token->getProp('extract_subroot'))) {
             $code .= $subroot_var. " = ".$tpl."->is_subroot;\n";
@@ -1400,6 +1438,16 @@ class Compiler
         $id = $token->getProp('id');
         
         $children = $token->getChildren();
+        
+        $defaults_token = null;
+        foreach ($children as $child_index => $child) {
+            if ($child->name === 'defaults') {
+                $defaults_token = $child;
+                unset($children[$child_index]);
+                break;
+            }
+        }
+        
         $has_info = count($children) > 0;
         
         $has_block = $token->getProp('block');
@@ -1452,7 +1500,16 @@ class Compiler
         }
         $code .= ";\n";
         
-        $code .= $_style_value . "  = \$context->get(".$_style_id.".'_style');\n";
+        $code .= $_style_value . "  = \$context->getFromScope(".$_style_id.".'_style');\n";
+        //$code .= $_style_value . "  = \$context->get(".$_style_id.".'_style');\n";
+        
+        if ($defaults_token && $is_inline) {
+            $code .= "if (!".$_style_value.") {\n";
+            $code .= "ob_start();\n";
+            $code .= $this->childrenToCode($defaults_token);
+            $code .= $_style_value ." = \Floxim\Floxim\Template\Compiler::parseCssLikeProps(ob_get_clean());\n";
+            $code .= "}\n";
+        }
         
         $code .= $_style_value_path .' = $context->getScopePrefix().'.$_style_id.";\n";
  
@@ -1517,7 +1574,7 @@ class Compiler
             $exported_props []= '"'.$p.'" => '.$v;
         }
         
-        $code .= 'if ( ($export_style_file = $this->addStyleLess('.
+        $code .= 'if ( ($export_style_file = fx::page()->addStyleLess('.
                     $_block_name.', '.$_bundle_id.', '.$_bundle_params.', '.$_bundle_is_temp.
                 ') ) ) {'."\n";
         $code .= 'require( $export_style_file );'."\n";

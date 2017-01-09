@@ -415,6 +415,34 @@ class Page
         return json_encode($response);
     }
     
+    public function addStyleLess(
+        $block, 
+        $value, 
+        $params = array()
+    )
+    {
+        static $bundle_is_temp = null;
+        if (is_null($bundle_is_temp)) {
+            $bundle_is_temp = fx::isAdmin() && fx::input('post', 'override_infoblock');
+        }
+        
+        if ($bundle_is_temp) {
+            $params['is_temp'] = true;
+        }
+        
+        $bundle_keyword = $block.'_'.$value;
+        $bundle = fx::assets('style', $bundle_keyword, $params);
+        
+        $this->getDefaultCssBundle()->push( array($bundle) );
+        
+        if ( $bundle_is_temp ) {
+            $export_file = $bundle->getTempExportFile();
+        } else {
+            $export_file = $bundle->getExportFile();
+        }
+        return $export_file;
+    }
+    
     public function getCssFilesFinal() 
     {
         $res = array();
@@ -462,6 +490,8 @@ class Page
                     foreach ($file_info['blocks'] as $block) {
                         $r .= '<style type="text/css"';
                         $r .= ' id="'.$block['style_class'].'"';
+                        $r .= ' data-file="'.$block['file'].'"';
+                        $r .= ' data-filemtime="'.$block['filemtime'].'"';
                         $r .= ' data-declaration="'.$block['declaration_keyword'].'">'."\n";
                         $r .= $block['css'];
                         $r .= '</style>';

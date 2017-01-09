@@ -274,7 +274,8 @@ class Controller
                     }
                 }
                 // if current layout is defined, we should rate layout templates greater than standard ones
-                $tplv['layout_match_rate'] = $layout_defined && preg_match("~^theme\.~", $tplv['full_id']) ? 1 : 0;
+                //$tplv['layout_match_rate'] = $layout_defined && preg_match("~^theme\.~", $tplv['full_id']) ? 1 : 0;
+                $tplv['layout_match_rate'] = 0;
 
                 if ($area_size && isset($tplv['size'])) {
                     $size = Template\Suitable::getSize($tplv['size']);
@@ -598,5 +599,14 @@ class Controller
             }
         }
     }
-
+    
+    public function  getTemplateAvailForTypeField()
+    {
+        return;
+    }
+    
+    public function checkTemplateAvailForType()
+    {
+        return true;
+    }
 }

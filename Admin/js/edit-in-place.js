@@ -356,6 +356,7 @@ function fx_edit_in_place( node ) {
         this.start(this.meta);
     }
     
+    
     // edit the attributes of the node
     for( var i in this.node.data()) {
         if (!/^fx_template_var/.test(i)) {
@@ -380,7 +381,7 @@ function fx_edit_in_place( node ) {
 
     $(this.node)
     .closest('.fx_selected')
-    .off('fx_deselect.edit_in_place')
+    //.off('fx_deselect.edit_in_place')
     .one('fx_deselect.edit_in_place', function(e) {
         fx_eip.fix();
         eip.stop();

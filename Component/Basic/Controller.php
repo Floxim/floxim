@@ -119,4 +119,54 @@ class Controller extends \Floxim\Floxim\Controller\Frontoffice {
         }
         return $actions;
     }
+    
+    public function hasTypedAction()
+    {
+        return preg_match("~^list|record~", $this->action);
+    }
+    
+    public function getTemplateAvailForTypeField()
+    {
+        if (!$this->hasTypedAction()) {
+            return;
+        }
+        
+        $com = $this->getComponent();
+        
+        $chain = $com->getChain();
+        
+        $avail_coms = [];
+        foreach ($chain as $level) {
+            $avail_coms []= [
+                'id' => $level['keyword'],
+                'name' => $level['name']
+            ];
+        }
+        
+        $res = [
+            'name' => 'avail_for_type',
+            'label' => 'Подходит для данных',
+            'type' => 'livesearch',
+            'values' => $avail_coms,
+            //'is_multiple' => true,
+            'value' => $com['keyword']
+        ];
+        return $res;
+    }
+    
+    public function checkTemplateAvailForType($tv)
+    {
+        if (!$this->hasTypedAction()) {
+            return true;
+        }
+        $val = $tv['avail_for_type'];
+        if (!$val || $val === 'any') {
+            return true;
+        }
+        $com = $this->getComponent();
+        if ($com->isInstanceOfComponent($val)) {
+            return true;
+        }
+        return false;
+    }
 }

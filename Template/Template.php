@@ -14,6 +14,8 @@ class Template
     protected $admin_disabled = false;
     protected $current_template_dir = null;
     
+    protected $as_bem_element = null;
+    
     public function getCurrentDir()
     {
         return $this->current_template_dir;
@@ -596,27 +598,7 @@ class Template
         return $res;
     }
     
-    public function addStyleLess(
-        $block, 
-        $value, 
-        $params = array()
-        //, $is_temp = false
-    )
-    {
-        $bundle_keyword = $block.'_'.$value;
-        $bundle = fx::assets('style', $bundle_keyword, $params);
-        
-        //if (!$is_temp || $value === 'default' || true) {
-        fx::page()->getDefaultCssBundle()->push( array($bundle) );
-        //}
-        
-        if (fx::isAdmin() && fx::input('post', 'override_infoblock') ) {
-            $export_file = $bundle->getTempExportFile();
-        } else {
-            $export_file = $bundle->getExportFile();
-        }
-        return $export_file;
-    }
+    
     
     public function addTempStyleLess($block, $value, $params = array())
     {
@@ -662,4 +644,10 @@ class Template
         $variant_id = $this->isWrapper() ? $visual['wrapper_variant_id'] : $visual['template_variant_id'];
         return $variant_id;
     }
+    
+    public function setAsBemElement($el)
+    {
+        $this->as_bem_element = $el;
+    }
+    
 }

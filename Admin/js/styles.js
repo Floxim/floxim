@@ -105,6 +105,7 @@ less_tweaker.prototype.get_data = function() {
 less_tweaker.prototype.handle_form = function() {
     var timer = null,
         that = this;
+    
     this.$form.on('change', function(e) {
         that.last_data = that.get_data();
         clearTimeout(timer);
@@ -121,17 +122,25 @@ less_tweaker.prototype.handle_form = function() {
 
 less_tweaker.prototype.get_stylesheet = function() {
     if (!this.$stylesheet) {
+        var has_updates =  false;
         if (!this.is_new) {
             var $ss = $('style#'+this.style_class);
             if ($ss.length > 0) {
                 this.$stylesheet = $ss;
                 this.initial_css = $ss.text();
             }
+            if (!$ss.data('is_tweaked')) {
+                has_updates = true;
+            }
             $ss.data('is_tweaked', true);
         }
         if (!this.$stylesheet) {
-            this.$stylesheet = $('<style type="text/css" class="oh"></style>');
+            this.$stylesheet = $('<style type="text/css" id="'+this.get_tweaked_class()+'" data-created_by="tweaker"></style>');
             $('head').append(this.$stylesheet);
+            has_updates = true;
+        }
+        if (has_updates) {
+            window.style_watcher.update();
         }
     }
     return this.$stylesheet;
@@ -369,6 +378,7 @@ less_tweaker.prototype.cancel = function() {
     if (this.$affected && this.is_new) {
         this.$affected.removeClass(this.get_tweaked_class()).addClass(this.style_class);
     }
+    window.style_watcher.update();
 };
 
 less_tweaker.bind_style_preview = function(ls) {
@@ -378,7 +388,6 @@ less_tweaker.bind_style_preview = function(ls) {
         if (v.screenshot) {
             var img = new Image();
             img.src = v.screenshot;
-            //console.log('load screen', v.name, v.screenshot);
         }
     });
     
@@ -581,10 +590,12 @@ less_tweaker.init_style_group = function($g) {
                         $old_stylesheet = tweaker.$stylesheet;
                         tweaker.$stylesheet = $stylesheet;
                     }
+                    
                     tweaker.set_style_class(style_class[0]);
                     tweaker.update( tweaker.last_data ).then( function() {
                         if ($old_stylesheet !== null) {
                             $old_stylesheet.remove();
+                            window.style_watcher.update();
                         }
                     });
                 }
@@ -613,8 +624,246 @@ less_tweaker.init_form_controls = function($form) {
     });
 };
 
-$('html').on('fx_adm_form_created', function(e, data) {
+$('html').on('fx_adm_form_created fx_adm_form_updated', function(e, data) {
     less_tweaker.init_form_controls($(e.target));
 });
+
+window.style_watcher = {
+    ready: false,
+    init: function() {
+        var term = localStorage.getItem('fx_stylewatcher_term', term) || '';
+        var $container = $(
+            "<div class='sw'>"+
+                '<input type="text" value="'+term+'" />'+
+                '<div class="sw__toggler"><span>&lt;</span></div>'+
+                '<div class="sw__steps"></div>'+
+                '<div class="sw__data"></div>'+
+            "</div>"
+        );
+        this.$steps = $('.sw__steps', $container);
+        this.$data = $('.sw__data', $container);
+        this.$term = $('input', $container);
+        $('body').append($container);
+        this.ready = true;
+        var that = this;
+        $container.on('click', '.sw__step', function(e) {
+            var $step = $(e.target),
+                index = that.$steps.children().index($step);
+            that.select(index);
+            
+        });
+        $container.on('click', '.sw__sheet-header', function(e) {
+            $(this).closest('.sw__sheet').toggleClass('sw__sheet_active');
+        });
+        $container.on('click', '.sw__count', function() {
+            var $sheet = $(this).closest('.sw__sheet'),
+                $items = that.getNodes($sheet);
+            
+            if ($items.length > 0) {
+                $fx.front.scrollTo($items.first());
+            }
+            
+            return false;
+        });
+        $container.on('click', '.sw__toggler', function() {
+            var $ts = $(this).find('span');
+            
+            if ($container.is('.sw_hidden')) {
+                $container.removeClass('sw_hidden').css('left', 0);
+                $ts.html("&lt;");
+            } else {
+                $container.addClass('sw_hidden').css(
+                    'left',
+                    $container.outerWidth() * -1 + 10
+                );
+                $ts.html("&gt;");
+            }
+        });
+        
+        $container.on('mouseenter', '.sw__sheet-id', function() {
+            var $id = $(this),
+                id = $id.text(),
+                $items = $('.'+id),
+                hl_class = 'fx-stylewtacher-hilighted';
+            
+            $items.addClass(hl_class);
+            
+            $id.one('mouseleave', function() {
+                $items.removeClass(hl_class);
+            });
+        });
+        
+        var $adm_control = $('#fx_admin_control'),
+            $top_panel = $('.fx-admin-panel');
+    
+        this.place = function() {
+            var ach = $adm_control.height(),
+                tph = $top_panel.height(),
+                mh = Math.max(ach, tph),
+                swh = $(window).height() - mh - 90;
+            
+            $('.sw__data').css(
+                'max-height',
+                swh
+            );
+        };
+        
+        setInterval(this.place, 200);
+        
+        setInterval(function() {
+            var $last_data = that.$data.children().last();
+            $last_data.children().each(function() {
+                var $entry  = $(this);
+                that.updateEntry($entry);
+            });
+        }, 500);
+        
+        this.$term.on('input', function() {
+            that.filter();
+        });
+    },
+    select: function(index) {
+        var sac = 'sw__step_active',
+            iac = 'sw__item_active',
+            $item = this.$data.children().eq(index),
+            $step = this.$steps.children().eq(index);
+        
+        this.$steps.find('.'+sac).removeClass(sac);
+        this.$data.find('.'+iac).removeClass(iac);    
+        
+        $item.addClass(iac);
+        $step.addClass(sac);
+        
+    },
+    getCss: function($ss) {
+        var css = $ss.text();
+        
+        var res = css.replace(
+            /\{(.+?)\}/g, 
+            function(all, rule) {
+                rule = rule.replace(/;/g, ";\n\t");
+                rule = rule.replace(/\{/g, "\n\t{\n\t");
+                return "\n{\n\t"+rule+"\n}\n";
+            }
+        );
+        res = res.replace(/#[0-9a-f]{6}/g, function(m) {
+            return '<span style="background:'+m+';">'+m+'</span>';
+        });
+        return res;
+    },
+    getNodes: function($ss) {
+        var id = $ss.data('stylesheet').attr('id');
+        return $('.'+id);
+    },
+    
+    updateEntry: function($entry) {
+        var $ss = $entry.data('stylesheet'),
+            file = $ss.data('file'),
+            filemtime = $ss.data('filemtime'),
+            $nodes = this.getNodes($entry),
+            filename = '';
+    
+        if (file && file !== 'temp') {
+            filename = file.replace(/^\/[^\/]+\/[^\/]+/, '');
+        } else if (!file) {
+            filename = 'none';
+        }
+        
+        $entry.find('.sw__file a').text(filename).attr('href', file);
+        $entry.find('.sw__filemtime').text(filemtime);
+        $entry.find('.sw__css').html( this.getCss($ss) );
+        $entry.find('.sw__count').text($nodes.length);
+    },
+    state_flag: 'fx_style_watcher',
+    on: function() {
+        localStorage.setItem(this.state_flag, 'on');
+    },
+    off: function() {
+        localStorage.setItem(this.state_flag, 'off');
+    },
+    update: function() {
+        if (localStorage.getItem(this.state_flag) !== 'on') {
+            return;
+        }
+        if (!this.ready) {
+            this.init();
+        }
+        var $sheets = $('style'),
+            $step = $('<div class="sw__step">'+$sheets.length+'</div>'),
+            $data = $('<div class="sw__item"></div>'),
+            that = this;
+        
+        this.$steps.append($step);
+        this.$data.append($data);
+        
+        $sheets.each(function() {
+            var $sheet = $(this),
+                id = $sheet.attr('id'),
+                $entry = $(
+                    '<div class="sw__sheet">'+
+                        '<div class="sw__sheet-header">'+
+                            '<div class="sw__sheet-id">'+id+'</div>'+
+                            '<div class="sw__count"></div>'+
+                        '</div>'+
+                        '<div class="sw__sheet-body">'+
+                            '<div class="sw__file">' +
+                                '<a></a>' + 
+                                ' - <span class="sw__filemtime"></span>' +
+                            '</div>'+
+                            '<pre class="sw__css"></pre>'+
+                        '</div>'+
+                    '</div>'
+                ),
+                $sh = $entry.find('.sw__sheet-header');
+                
+            $entry.data('stylesheet', $sheet);
+            
+            that.updateEntry($entry);
+            
+            if ($sheet.data('is_tweaked')) {
+                $sh.append('<span>tweaked</span>');
+            }
+            var cb = $sheet.data('created_by');
+            if (cb) {
+                $sh.append('<span>'+cb+'</span>');
+            }
+            
+            $data.append(
+                $entry
+            );
+        });
+        
+        this.select( this.$steps.children().length - 1 );
+        this.filter();
+    },
+    check: function($sheet, term) {
+        if (term === '') {
+            return true;
+        }
+        var id = $('.sw__sheet-id', $sheet).text();
+        return id.indexOf(term) !== -1;
+    },
+    filter: function() {
+        var term = this.$term.val(),
+            that = this;
+        
+        this.$data.children().each(function(step) {
+            var cnt = 0,
+                $sheets = $(this).find('.sw__sheet');
+                
+            $sheets.each(function() {
+                var $sheet = $(this);
+                if (that.check($sheet, term)) {
+                    cnt++;
+                    $sheet.show();
+                } else {
+                    $sheet.hide();
+                }
+            });
+            that.$steps.children().eq(step).text(cnt);
+        });
+        localStorage.setItem('fx_stylewatcher_term', term);
+    }
+};
 
 })($fxj);

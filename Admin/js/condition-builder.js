@@ -126,8 +126,9 @@ window.condition_builder = function(params) {
                         }
                     },
                     type_hash = 'livesearch_type';
+                
                 if (field_props.content_type) {
-                    field.params.conditions = [ [null, field_props.content_type, 'is'] ];
+                    field.conditions = [ [null, field_props.content_type, 'is'] ];
                     type_hash += '_'+field_props.content_type;
                 }
                 if (value && value.length) {
@@ -617,7 +618,8 @@ window.condition_builder = function(params) {
         var $invertor_checkbox = $fx_fields.checkbox({
             type:'checkbox',
             label:'не',
-            value: value && value.inverted
+            value: value && value.inverted,
+            class_name: 'one-line'
         });
         $invertor.append($invertor_checkbox);
         return $cond;

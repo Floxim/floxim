@@ -53,6 +53,7 @@ window.$fx = {
                 
                 var css_assets = json.css;
                 if (css_assets) {
+                    var has_updates = false;
                     for (var i = 0; i < css_assets.length; i++) {
                         var asset = css_assets[i];
                         if (typeof asset === 'string') {
@@ -79,20 +80,30 @@ window.$fx = {
                             if (asset.blocks) {
                                 for (var j = 0 ; j < asset.blocks.length; j++) {
                                     var block = asset.blocks[j];
-                                    var $ss = $('style#'+block.style_class),
-                                        ss_len = $ss.length;
+                                    var $ss = $('style#'+block.style_class);
                                     
                                     if (!$ss.length) {
                                         $ss = $('<style type="text/css" id="'+block.style_class+'"></style>');
                                         $ss.attr('data-declaration', block.declaration_keyword);
+                                        
                                         $('head').append($ss);
+                                        has_updates = true;
                                     }
-                                    if (!$ss.data('is_tweaked')) {
+                                    //if (true || !$ss.data('is_tweaked')) {
+                                    
+                                    if ($ss.text() !== block.css || $ss.data('file') !== block.file) {
+                                        has_updates = true;
+                                        $ss.data('created_by', 'ajax');
+                                        $ss.data('file', block.file);
+                                        $ss.data('filemtime', block.filemtime);
                                         $ss.text(block.css);
                                     }
                                 }
                             }
                         }
+                    }
+                    if (has_updates) {
+                        window.style_watcher.update();
                     }
                 }
                 

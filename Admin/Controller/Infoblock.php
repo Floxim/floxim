@@ -277,9 +277,16 @@ class Infoblock extends Admin
         
         $this->response->addFormButton('cancel');
         
+        
+        $header = fx::alang('Adding infoblock', 'system');
+        
+        if ( ($area_name = fx::dig($input, 'area.name')) ) {
+            $header .= ' в область &laquo;'.$area_name.'&raquo;';
+        }
+        
         $result = array(
             'fields'        => $fields,
-            'header'        => fx::alang('Adding infoblock', 'system')
+            'header'        => $header
         );
         return $result;
     }
@@ -921,55 +928,122 @@ class Infoblock extends Admin
         $controller = $infoblock->initController();
         $tmps = $controller->getAvailableTemplates(fx::env('theme_id'), $area_meta);
         
+        $c_value = $ib_visual['template_variant_id'] 
+                                ? $ib_visual['template_variant_id'] 
+                                : $ib_visual['template'];
+        
         $tpl_field = $this->getTemplatesField(
             $tmps,
             $controller,
-            $area_meta
+            $area_meta,
+            'template',
+            $c_value
         );
-        $tpl_field['value'] = $ib_visual['template_variant_id'] 
-                                ? $ib_visual['template_variant_id'] 
-                                : $ib_visual['template'];
+        
+        if ($tpl_field['value'] && !$c_value) {
+            $ib_visual['template_variant_id'] = $c_value;
+        }
         
         $fields []= $tpl_field;
         
         return $fields;
     }
     
-    //public function getTemplatesField($controller, $area_meta)
-    public function getTemplatesField($tmps, $controller = null, $area_meta = null)
+    public function getTemplatesField(
+        $templates, 
+        $controller = null, 
+        $area_meta = null, 
+        $role = 'template',
+        $c_value = null
+    )
     {
-        // Collect the available templates
-        //$tmps = $controller->getAvailableTemplates(fx::env('theme_id'), $area_meta);
-        $theme_variants = fx::env('theme')->get('template_variants');
-        if (!empty($tmps)) {
-            foreach ($tmps as $template) {
-                $template_item = array('id' => $template['full_id'], 'name' => $template['name']);
-                $template_variants =  $theme_variants->find('template', $template['full_id']);
-                if ( count($template_variants) > 0) {
-                    $template_item['children'] = array();
-                    $template_item['expanded'] = 'always';
-                    foreach ($template_variants as $variant) {
-                        $template_item['children'] []= array(
-                            (string) $variant['id'],
-                            $variant['name'],
-                            array(
-                                'basic_template' => $template['full_id'],
-                                'real_name' => $variant->getReal('name'),
-                                'is_locked' => $variant['is_locked']
-                            )
-                        );
-                    }
-                }
-                $templates []= $template_item;
-            }
+        
+        if (empty($templates)) {
+            return array(
+                'type' => 'hidden',
+                'name' => 'template',
+                'value' => $c_value
+            );
         }
         
+        // Collect the available templates
+        $theme_variants = fx::env('theme')->get('template_variants');
+        
+        $area_size = isset($area_meta['size']) ? $area_meta['size'] : '';
+        $area_size = \Floxim\Floxim\Template\Suitable::getSize($area_size);
+        
+        $template_codes = fx::collection($templates)->getValues('full_id');
+        
+        $template_variants = $theme_variants->find(
+            function($variant) use ($area_size, $template_codes, &$c_value, $controller) {
+                if ($variant['id'] === $c_value) {
+                    return true;
+                }
+                if (!in_array($variant['template'], $template_codes)) {
+                    return false;
+                }
+                if ($variant['size'] && $variant['size'] !== 'any' && $variant['size'] !== $area_size['width']) {
+                    return false;
+                }
+                if ($controller) {
+                    $avail_for_type = $controller->checkTemplateAvailForType($variant);
+                    if (!$avail_for_type) {
+                        return false;
+                    }
+                }
+                if (!$c_value) {
+                    $c_value = $variant['id'];
+                }
+                return true;
+            }
+        );
+        
+        $values = [];
+        
+        foreach ($templates as $template) {
+            
+            $template_item = array(
+                'name' => $template['name'],
+                'disabled' => true,
+                'children' => array(),
+                'expanded' => 'always'
+            );
+            
+            $c_template_variants = $template_variants->find('template', $template['full_id']);
+                
+            foreach ($c_template_variants as $variant) {
+                $template_item['children'] []= array(
+                    (string) $variant['id'],
+                    $variant['name'],
+                    array(
+                        'basic_template' => $template['full_id'],
+                        'real_name' => $variant->getReal('name'),
+                        'is_locked' => $variant['is_locked'],
+                        'size' => $variant['size'] ? $variant['size'] : 'any',
+                        'avail_for_type' => $variant['avail_for_type'],
+                        'wrapper_variant_id' => $variant['wrapper_variant_id']
+                    )
+                );
+            }
+            $template_item['children'][]= array(
+                'id' => $template['full_id'], 
+                'name' => '* Специальные настройки'
+            );
+            $values []= $template_item;
+        }
         $res = array(
             'label'  => fx::alang('Template', 'system'),
             'name'   => 'template',
             'type'   => 'livesearch',
-            'values' => $templates
+            'values' => $values,
+            'value' => $c_value
         );
+        if ($controller && $role !== 'wrapper') {
+            $avail_for_type_field = $controller->getTemplateAvailForTypeField();
+            if ($avail_for_type_field) {
+                $res['template_variant_params'] = [$avail_for_type_field];
+            }
+        }
         return $res;
     }
     
@@ -994,32 +1068,8 @@ class Infoblock extends Admin
     
     protected static function collectWrapperTemplates($area_meta)
     {
-        
         $wrapper_tpl = fx::template('floxim.layout.wrapper');
         return \Floxim\Floxim\Template\Suitable::getAvailableWrappers($wrapper_tpl, $area_meta);
-        /*
-        // Collect available wrappers
-        $wrapper_sources = array(
-            'floxim.layout.wrapper'
-        );
-        
-        $wrappers = array();
-        
-        $cnt = 0;
-        foreach ($wrapper_sources as $wrapper_source_keyword) {
-            $wrapper_tpl = fx::template($wrapper_source_keyword);
-            if (!$wrapper_tpl) {
-                continue;
-            }
-            $avail_wrappers = \Floxim\Floxim\Template\Suitable::getAvailableWrappers($wrapper_tpl, $area_meta);
-            foreach ($avail_wrappers as $avail_wrapper) {
-                $cnt++;
-                $wrappers[]= array($avail_wrapper['full_id'], $cnt,  array('title' => $avail_wrapper['name']));
-            }
-        }
-        return $wrappers;
-         * 
-         */
     }
     
     protected function getWrapperFields($infoblock, $area_meta)
@@ -1028,70 +1078,22 @@ class Infoblock extends Admin
         $wrappers = self::collectWrapperTemplates($area_meta);
         $controller = $infoblock->initController();
         
-        $field = $this->getTemplatesField($wrappers, $controller, $area_meta);
-        $field['name'] = 'wrapper';
-        
-        array_unshift(
-            $field['values'],
-            array(
-                '',
-                '-нет-'
-            )
-        );
-        
         $visual = $infoblock->getVisual();
         
-        
-        $field['value'] = $visual['wrapper_variant_id'] 
+        $c_value = $visual['wrapper_variant_id'] 
                                 ? $visual['wrapper_variant_id'] 
                                 : $visual['wrapper'];
         
+        if (!$c_value && ($template_variant = $visual['template_variant'])) {
+            $c_value = $template_variant['wrapper_variant_id'];
+        }
+        
+        $field = $this->getTemplatesField($wrappers, $controller, $area_meta, 'wrapper', $c_value);
+        $field['name'] = 'wrapper';
+        
+        $field['values'][]= ['', '-нет-'];
+        
         return array($field);
-       
-        
-        
-        //$controller_name = $infoblock->getPropInherited('controller');
-        
-        
-        $fields = array();
-        
-        $area_suit = Template\Suitable::parseAreaSuitProp(isset($area_meta['suit']) ? $area_meta['suit'] : '');
-        
-        
-        $force_wrapper = $area_suit['force_wrapper'];
-        $default_wrapper = $area_suit['default_wrapper'];
-
-        
-        $wrappers = array();
-        $c_wrapper = '';
-        if (!$force_wrapper) {
-            $wrappers[]= array(
-                '', 
-                '-нет-', 
-                array('title' => fx::alang('With no wrapper', 'system'))
-            );
-            if ($visual['id'] || !$default_wrapper) {
-                $c_wrapper = $visual['wrapper'];
-            } else {
-                $c_wrapper = $default_wrapper[0];
-            }
-        }
-        
-        
-        if ($controller_name != 'layout' && (count($wrappers) > 1 || !isset($wrappers['']))) {
-            $fields [] = array(
-                'label'     => fx::alang('Wrapper', 'system'),
-                'name'      => 'wrapper',
-                //'type'      => 'radio_facet',
-                'type' => 'livesearch',
-                'hidden_on_one_value' => true,
-                'values'    => $wrappers,
-                'value'     => $c_wrapper
-            );
-        }
-        
-        
-        return $fields;
     }
 
     /*
@@ -1515,11 +1517,13 @@ class Infoblock extends Admin
             $template_value = $tv['template'];
             $tv->delete();
         } else {
-            foreach (array('name', 'is_locked') as $prop) {
+            $variant_props = ['name', 'is_locked', 'size', 'avail_for_type', 'wrapper_variant_id'];
+            foreach ($variant_props as $prop) {
                 if (isset($input[$prop])) {
                     $tv[$prop] = $input[$prop];
                 }
             }
+            fx::log($input, $tv);
             $prev_params = $tv['params'] ? $tv['params'] : array();
             $tv['params'] = fx::util()->fullMerge($prev_params, $input['params']);
             $tv->save();

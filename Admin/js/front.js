@@ -272,27 +272,42 @@ fx_front.prototype.handle_click = function(e) {
     var $link = $target.closest('a[href], .fx_click_handler');
     $fx.front.select_item(closest_selectable);
     if ($link.length && $link.closest('.fx_entity_adder_placeholder').length === 0) {
-        var panel = $fx.front.node_panel.get(),
-            is_link = !$link.is('.fx_click_handler'),
-            button = {
-                type:'icon',
-                keyword:'follow'
-            };
-        if (is_link) {
-            button.href = $link.attr('href');
-        }
-        var $button = panel.add_button(
-            button, 
-            null, 
-            panel.$panel.find('>*:visible').first()
-        );
+        var is_link = !$link.is('.fx_click_handler'),
+            url = is_link && $link.attr('href');
+        
+        var $follow_button = $fx.front.add_follow_button(url);
         if (!is_link) {
-            $button.click(function() {
+            $follow_button.click(function() {
                 $link.data('fx_click_handler')();
             });
         }
+        
     }
     return false;
+};
+
+
+fx_front.prototype.add_follow_button = function(url) {
+    var panel = $fx.front.node_panel.get();
+    
+    if (panel.$panel.find('.fx_icon-type-follow').length > 0) {
+        return;
+    }
+        
+    
+    var button = {
+            type:'icon',
+            keyword:'follow'
+        };
+    if (url) {
+        button.href = url;
+    }
+    var $button = panel.add_button(
+        button, 
+        null, 
+        panel.$panel.find('>*:visible').first()
+    );
+    return $button;
 };
 
 fx_front.prototype.freeze = function() {
@@ -2565,6 +2580,11 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
                 icon_set($publish_button.find('.fx_icon'), $ch[0].checked);
             }
         }, 10);
+        
+        var entity_url = $entity.data('fx_url');
+        if (entity_url) {
+            $fx.front.add_follow_button(entity_url);
+        }
     }
     
     var $sortable_entities = $fx.front.get_sortable_entities($entity.parent());
@@ -2858,10 +2878,7 @@ fx_front.prototype.edit_style_variant = function(template_ls) {
     if (c_value.basic_template) {
         c_variant = c_value;
     }
-    /*else if (last_used_variant.template) {
-        c_variant = last_used_variant.template;
-    }
-    */
+    
     
     var params = {
         header: (c_variant ? 'Редактируем шаблон &laquo;' + c_variant.name+'&raquo;' : 'Создаем шаблон')
@@ -2888,11 +2905,73 @@ fx_front.prototype.edit_style_variant = function(template_ls) {
     });
     
     fields.push({
-        type:'checkbox',
+        //type:'checkbox',
+        type:'hidden',
         label:'Защищен от редактирования?',
         name:'is_locked',
         value: (c_variant ? c_variant.is_locked : 0)
     });
+    
+    var $form = template_ls.$node.closest('form');
+    
+    var template_variant_params = template_ls.template_variant_params || [];
+    
+    for (var i = 0 ; i < template_variant_params.length; i++) {
+        var c_param_field = template_variant_params[i];
+        if (c_variant && c_variant[c_param_field.name]) {
+            c_param_field.value = c_variant[c_param_field.name];
+        }
+        fields.push(c_param_field);
+    }
+    
+    var $area_inp = $form.find('input[name="area"]'),
+        area_meta = JSON.parse($area_inp.val()),
+        c_width = 'any';
+    
+    if (area_meta.size) {
+        var area_width = area_meta.size.match(/wide|narrow/);
+        if (area_width) {
+            c_width = area_width[0];
+        }
+    }
+    
+    fields.push({
+        label: 'Подходит для области',
+        type: 'radio_facet',
+        name: 'size',
+        values: [
+            ['any', 'Любая'],
+            ['wide', 'Широкая'],
+            ['narrow', 'Узкая']
+        ],
+        value: c_value.size || c_width
+    });
+    
+    if (template_ls.template_type === 'template') {
+        var c_wrapper_ls = $form.find('input[name="visual[wrapper]"]').closest('.livesearch').data('livesearch');
+        if (c_wrapper_ls) {
+            var bound_wrapper_values = [
+                {id:'', name:'- нет -'}
+            ];
+            c_wrapper_ls.traversePresetValues(function(v) {
+                if (!v.children) {
+                    return;
+                }
+                v = $.extend(true, {}, v, {disabled:true});
+                bound_wrapper_values.push(v);
+            });
+            var c_wrapper = c_wrapper_ls.getFullValue();
+            if (c_wrapper && c_wrapper.basic_template) {
+                fields.push({
+                    type:'livesearch',
+                    label:'Связать с шаблоном блока',
+                    name:'wrapper_variant_id',
+                    values: bound_wrapper_values,
+                    value: c_variant && c_variant.wrapper_variant_id
+                });
+            }
+        }
+    }
 
     params.fields = fields;
 
@@ -3637,6 +3716,8 @@ fx_front.prototype.is_fixed = function($node){
 };
 
 fx_front.prototype.scrollTo = function($node, if_invisible, callback) {
+    //console.log('scrto', $node, if_invisible);
+    //console.trace();
     // if the whole node is invisible, do nothing
     if (!$node.is(':visible')) {
         if (callback instanceof Function) {
@@ -3688,9 +3769,13 @@ fx_front.prototype.scrollTo = function($node, if_invisible, callback) {
         $('body')
             //.stop()
             .scrollTo(
-            top_offset,
-            speed
-        );
+                {
+                    top:top_offset,
+                    left:0
+                },
+                speed
+            );
+        
         if (callback instanceof Function) {
             setTimeout(callback, speed);
         }

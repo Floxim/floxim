@@ -41,12 +41,20 @@ class Entity extends \Floxim\Floxim\System\Entity {
         return $res;
     }
     
+    protected $params = null;
+    
     public function _getParams()
     {
+        if (!is_null($this->params)) {
+            return $this->params;
+        }
         $params = $this->getReal('params');
         if (!is_array($params) || count($params) === 0) {
             return $this->getDefaults();
         }
+        $defaults = $this->getDefaults();
+        $params['vars'] = array_merge($defaults['vars'], $params['vars']);
+        $this->params = $params;
         return $params;
     }
     
@@ -214,7 +222,7 @@ class Entity extends \Floxim\Floxim\System\Entity {
     
     public static function getDefaults()
     {
-        return json_decode('{"fonts":{"text":"Roboto","nav":"Merriweather","headers":"Lora"},"colors":{"main":{"vals":["#000000","#51626e","#768b9a","#bbc5cd","#eaeef0","#ffffff"],"hue":206,"saturation":0.15},"alt":{"vals":["#293d8a","#364fb3","#5f75cf","#afbae7","#cbd2ef","#e4e7f7"],"hue":228,"saturation":0.537},"third":{"vals":["#47460c","#5c5a0f","#807e16","#c4c221","#dcd92d","#edeb93"],"hue":59,"saturation":0.711}},"vars":{"layout_width":"85%","max_width":"1100px","max_width":"995px"}}', true);
+        return json_decode('{"fonts":{"text":"Roboto","nav":"Merriweather","headers":"Lora"},"colors":{"main":{"vals":["#000000","#51626e","#768b9a","#bbc5cd","#eaeef0","#ffffff"],"hue":206,"saturation":0.15},"alt":{"vals":["#293d8a","#364fb3","#5f75cf","#afbae7","#cbd2ef","#e4e7f7"],"hue":228,"saturation":0.537},"third":{"vals":["#47460c","#5c5a0f","#807e16","#c4c221","#dcd92d","#edeb93"],"hue":59,"saturation":0.711}},"vars":{"layout_width":"85%","max_width":"1100px","max_width":"995px","min_width":"600px"}}', true);
     }
     
     public static function getFontTypes()

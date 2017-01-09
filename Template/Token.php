@@ -126,7 +126,7 @@ class Token
             $props['test'] = $source;
         } elseif ($name == 'call' && $type != 'close' && !preg_match('~id=~', $source)) {
             $source = trim($source);
-            $parts = preg_split("~\s+(with|each)\s+~", $source, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
+            $parts = preg_split("~\s+(el|with|each)\s+~", $source, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
             $props['id'] = array_shift($parts);
             foreach ($parts as $prop_num => $prop) {
                 if ($prop_num % 2 == 0 && isset($parts[$prop_num + 1])) {

@@ -30,6 +30,11 @@ class StyleBundle extends Bundle {
             unset($params['visual_path']);
         }
         
+        if (isset($params['is_temp'])) {
+            $this->meta['is_temp'] = true;
+            unset($params['is_temp']);
+        }
+        
         parent::__construct($keyword, $params);
         
         if ($this->is_new) {
@@ -68,7 +73,7 @@ class StyleBundle extends Bundle {
             return parent::isFresh($file);
         }
         if (isset($this->meta['is_temp']) && $this->meta['is_temp']) {
-            return false;
+            return true;
         }
         return parent::isFresh();
     }
@@ -235,9 +240,11 @@ class StyleBundle extends Bundle {
     public static function deleteForVisual($visual_id)
     {
         $dir = self::getCacheDir().'/inline/'.$visual_id;
+        fx::log('try to drop', $dir);
         if (!file_exists($dir)) {
             return false;
         }
+        fx::log('dropng', $dir);
         fx::files()->rm($dir);
         return true;
     }
@@ -293,28 +300,40 @@ class StyleBundle extends Bundle {
     
     public function getAdminOutput()
     {
-        if (!$this->isFresh()) {
-            $this->save();
-        }
-        $css_file = $this->getFilePath();
-        if (!file_exists($css_file)) {
-            fx::log('no file in GAO', $this, $css_file, debug_backtrace());
-            throw new \Exception('style bundle error');
-        }
-        $css = file_get_contents($css_file);
         $declaration_keyword = $this->getDeclarationKeyword();
-        return array(
+        $res = array(
             'keyword' => $this->keyword,
             'style_class' => $this->getStyleClass(),
             'declaration_keyword' => $declaration_keyword,
             'version' => $this->version,
-            'css' => $css
         );
+        $type = $this->meta['type'];
+        if (
+            ($type === 'inline' || $type === 'tv') 
+            && isset($this->meta['is_temp']) && $this->meta['is_temp']
+        ) {
+            $res['css'] = $this->getBundleContent();
+            //$res['css'] = 'html{}';
+            $res['file'] = 'temp';
+            $res['filemtime'] = date('d, H:i:s');
+        } else {
+            if (!$this->isFresh()) {
+                $this->save();
+            }
+            $css_file = $this->getFilePath();
+            if (!file_exists($css_file)) {
+                fx::log('no file in GAO', $this, $css_file, debug_backtrace());
+                throw new \Exception('style bundle error');
+            }
+            $res['css'] = file_get_contents($css_file);
+            $res['file'] = fx::path()->http($css_file);
+            $res['filemtime'] = date('d, H:i:s', filemtime($css_file));
+        }
+        return $res;
     }
     
     public function getBundleContent() 
     {
-        
         $res = '';
         
         $meta = $this->getStyleMeta();

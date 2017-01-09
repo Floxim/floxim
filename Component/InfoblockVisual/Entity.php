@@ -64,7 +64,6 @@ class Entity extends System\Entity
                     }
                 }
                 if ($pv['old'] && (!$is_moved  || $pv['old'] !== $all_params[$pk])) {
-                    //$old_path = $fxPath->abs(FX_BASE_URL.$pv['old']);
                     $old_path = $pv['old'];
                     if (self::checkValueIsFile($old_path)) {
                         fx::files()->rm($old_path);
@@ -211,7 +210,13 @@ class Entity extends System\Entity
         return $wv['params'];
     }
     
-    public function offsetSet($offset, $value) {
+    public function setReal($offset, $value) 
+    {
+        return parent::offsetSet($offset, $value);
+    }
+    
+    public function offsetSet($offset, $value) 
+    {
         if (!$this->is_loaded) {
             return parent::offsetSet($offset, $value);
         }
