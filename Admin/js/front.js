@@ -2927,6 +2927,9 @@ function save_template_variant(data, template_ls) {
 }
 
 function handle_template_lock_state(template_ls) {
+    if (!template_ls || !template_ls.getFullValue()) {
+        return;
+    }
     var is_locked = template_ls.getFullValue().is_locked*1 === 1,
         $field = template_ls.$node.closest('.field'),
         cl = 'fx-template-visual-fields',
@@ -2979,7 +2982,7 @@ fx_front.prototype.show_infoblock_settings_form = function(data, $ib_node, tab) 
     tab = tab || 'settings';
     var has_changes = false,
         is_new = $ib_node.is('.fx_infoblock_fake');
-    
+
     $fx.front_panel.show_form(data, {
         view:'horizontal',
         //view:'vertical',

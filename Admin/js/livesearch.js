@@ -137,6 +137,15 @@ window.fx_livesearch = function (node, params) {
         }
     };
     
+    this.selectFirstValue = function() {
+        this.traversePresetValues(function(v) {
+            if (!v.disabled) {
+                livesearch.setValue(v.id);
+                return false;
+            }
+        });
+    };
+    
     this.updatePresetValues = function(values) {
         var c_value = this.getValue();
         values = fx_livesearch.vals_to_obj(values);
@@ -144,7 +153,8 @@ window.fx_livesearch = function (node, params) {
         this.Suggest.preset_values = values;
         var set_old_res = this.setValue(c_value);
         if (!set_old_res && values.length > 0) {
-            this.setValue(values[0].id);
+            //this.setValue(values[0].id);
+            this.setFirstValue();
         }
     };
 
@@ -822,10 +832,7 @@ window.fx_livesearch = function (node, params) {
                     val_set = this.setValue(this.value);
                 }
                 if (!this.allow_empty && !val_set) {
-                    this.traversePresetValues(function(v) {
-                        livesearch.setValue(v.id);
-                        return false;
-                    });
+                    this.selectFirstValue();
                 }
             }
         } else {
