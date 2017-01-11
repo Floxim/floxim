@@ -949,6 +949,30 @@ class Infoblock extends Admin
         return $fields;
     }
     
+    protected function getTemplateVariantCounts($variants)
+    {
+        if (count($variants) === 0) {
+            return [];
+        }
+        $q = fx::data('template_variant');
+
+        $q->join(
+                '{{infoblock_visual}} as vis', 
+            '(vis.template_variant_id = {{template_variant}}.id '.
+                ' or vis.wrapper_variant_id = {{template_variant}}.id)'
+        );
+
+        $q->where('id', $variants->getValues('id'));
+
+        $q->group('{{template_variant}}.id');
+
+        $q->select('id', 'count(*) as cnt');
+        
+        $data = $q->getData();
+        $res = $data->getValues('cnt', 'id');
+        return $res;
+    }
+    
     public function getTemplatesField(
         $templates, 
         $controller = null, 
@@ -998,6 +1022,8 @@ class Infoblock extends Admin
             }
         );
         
+        $template_variant_counts = $this->getTemplateVariantCounts($template_variants);
+        
         $values = [];
         
         foreach ($templates as $template) {
@@ -1021,7 +1047,10 @@ class Infoblock extends Admin
                         'is_locked' => $variant['is_locked'],
                         'size' => $variant['size'] ? $variant['size'] : 'any',
                         'avail_for_type' => $variant['avail_for_type'],
-                        'wrapper_variant_id' => $variant['wrapper_variant_id']
+                        'wrapper_variant_id' => $variant['wrapper_variant_id'],
+                        'count_using_blocks' => isset($template_variant_counts[$variant['id']]) ?
+                                                    $template_variant_counts[$variant['id']] :
+                                                    0
                     )
                 );
             }
@@ -1054,7 +1083,6 @@ class Infoblock extends Admin
         $container = new \Floxim\Floxim\Template\Container(
             null, 
             'wrapper_'.($visual['infoblock_id'] ? $visual['infoblock_id'] : 'new'),
-            //'wrapper',
             'wrapper_visual',
             array(
                 \Floxim\Floxim\Template\Container::create($parent_props)
@@ -1550,5 +1578,31 @@ class Infoblock extends Admin
             'template_value' => $template_value,
             'template_field' => $template_field
         );
+    }
+    
+    public function getTemplateVariantUsingBlocks($input)
+    {
+        $id = (int) $input['template_variant_id'];
+        if (!$id) {
+            return;
+        }
+        $blocks = fx::data('infoblock_visual')
+                ->whereOr(
+                    ['template_variant_id', $id],
+                    ['wrapper_variant_id', $id]
+                )
+                ->with('infoblock')
+                ->all()
+                ->getValues(function($vis) {
+                    return $vis['infoblock']->getSummary();
+                });
+        return [
+            'fields' => [
+                [
+                    'type' => 'infoblock_list',
+                    'value' => $blocks
+                ]
+            ]
+        ];
     }
 }

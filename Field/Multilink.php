@@ -350,166 +350,6 @@ class Multilink extends \Floxim\Floxim\Component\Field\Entity
         );
 
         return $fields;
-        
-        /*
-        $fields = array();
-
-        if (!$this['component_id']) {
-            return $fields;
-        }
-
-        $com = fx::data('component', $this['component_id']);
-        $chain = $com->getChain();
-        $chain_ids = $chain->getValues('id');
-        $link_fields = fx::data('field')
-            ->where('type', 'link')
-            ->where('component_id', 0, '!=')
-            ->all();
-
-        // select from the available fields-links
-        $linking_field_values = array();
-
-        // array of InputB with specification of the data type
-        $res_datatypes = array();
-
-        // array of InputB with specification of the field for many-many
-        $res_many_many_fields = array();
-
-        // array of InputB with specification of the type for many-many
-        $res_many_many_types = array();
-
-        foreach ($link_fields as $lf) {
-            if (in_array($lf['format']['target'], $chain_ids)) {
-                // the component that owns the current box-link
-                $linking_field_owner_component = fx::data('component', $lf['component_id']);
-
-                $linking_field_values[] = array(
-                    $lf['id'],
-                    $linking_field_owner_component['keyword'] . '.' . $lf['keyword']
-                );
-
-                // get the list of references component and all of its descendants
-                $component_tree = fx::data('component')->getSelectValues($lf['component_id']);
-
-                $res_datatypes[$lf['id']] = array();
-                foreach ($component_tree as $com_variant) {
-                    $linking_component = fx::data('component', $com_variant[0]);
-                    $res_datatypes[$lf['id']] [] = array(
-                        $com_variant[0],
-                        $com_variant[1]
-                    );
-
-                    // For links many_many relations
-                    // get the field-component links that point to other components
-                    $linking_component_links = $linking_component
-                            ->getAllFields()
-                            ->find('type', 'link')
-                            ->find('id', $lf['id'], '!=');
-
-                    // exclude fields, connected to the parent
-                    if ($lf['format']['is_parent']) {
-                        $linking_component_links = $linking_component_links->find('keyword', 'parent_id', '!=');
-                    }
-                    if (count($linking_component_links) === 0) {
-                        continue;
-                    }
-                    // key for many-many
-                    $mmf_key = $lf['id'] . '_' . $com_variant[0];
-
-                    $res_many_many_fields[$mmf_key] = array(array('', '--'));
-                    foreach ($linking_component_links as $linking_component_link) {
-                        // skip pseudo-components
-                        // @todo needs a better workaround
-                        if (in_array($linking_component_link['format']['target'], array('lang', 'site', 'infoblock'))) {
-                            continue;
-                        }
-                        $res_many_many_fields[$mmf_key] [] = array(
-                            $linking_component_link['id'],
-                            $linking_component_link['keyword'],
-                        );
-
-                        $target_component = fx::data('component', $linking_component_link['format']['target']);
-                        $end_tree = fx::data('component')->getSelectValues($target_component['id']);
-                        $mmt_key = $mmf_key . '|' . $linking_component_link['id'];
-                        $res_many_many_types[$mmt_key] = array();
-                        foreach ($end_tree as $end_com) {
-                            $end_component = fx::data('component', $end_com[0]);
-                            $res_many_many_types[$mmt_key] [] = array(
-                                $end_com[0],
-                                $end_component['keyword']
-                            );
-                        }
-                    }
-                }
-            }
-        }
-
-        $fields[] = array(
-            'id'     => 'format[linking_field]',
-            'name'   => 'format[linking_field]',
-            'label'  => fx::alang('Linking field'),
-            'type'   => 'select',
-            'values' => $linking_field_values,
-            'value'  => $this['format']['linking_field']
-        );
-        foreach ($res_datatypes as $rel_field_id => $linking_datatype) {
-            $field_id = 'format[linking_field_' . $rel_field_id . '_datatype]';
-            $fields[] = array(
-                'id'     => $field_id,
-                'name'   => $field_id,
-                'type'   => 'select',
-                'label'  => fx::alang('Linked datatype'),
-                'parent' => array('format[linking_field]' => $rel_field_id),
-                'values' => $linking_datatype,
-                'value'  => $this['format']['linking_datatype']
-            );
-        }
-
-        foreach ($res_many_many_fields as $res_mmf_key => $mm_fields) {
-            list($check_field, $check_type) = explode("_", $res_mmf_key);
-            $field_id = 'format[linking_mm_field_' . $res_mmf_key . ']';
-            $fields[] = array(
-                'id'     => $field_id,
-                'name'   => $field_id,
-                'type'   => 'select',
-                'label'  => 'Many-many field',
-                'parent' => array(
-                    'format[linking_field_' . $check_field . '_datatype]' => $check_type,
-                    'format[linking_field]' => $check_field
-                ),
-                'values' => $mm_fields,
-                'value'  => $this['format']['mm_field']
-            );
-        }
-        foreach ($res_many_many_types as $res_mmt_key => $mmt_fields) {
-            list($check_mmf, $check_field) = explode("|", $res_mmt_key);
-            $field_id = 'format[linking_mm_type_' . str_replace("|", "_", $res_mmt_key) . ']';
-            $fields[] = array(
-                'id'     => $field_id,
-                'name'   => $field_id,
-                'type'   => 'select',
-                'label'  => 'Many-many datatype',
-                'parent' => array(
-                    'format[linking_mm_field_' . $check_mmf . ']' => $check_field
-                ),
-                'values' => $mmt_fields,
-                'value'  => $this['format']['mm_datatype']
-            );
-        }
-        $fields[] = array(
-            'id'     => 'format[render_type]',
-            'name'   => 'format[render_type]',
-            'label'  => fx::alang('Render type', 'system'),
-            'type'   => 'select',
-            'values' => array(
-                'livesearch' => fx::alang('Live search', 'system'),
-                'table'      => fx::alang('Fields table', 'system')
-            ),
-            'value'  => $this['format']['render_type']
-        );
-        return $fields;
-         * 
-         */
     }
 
     public function setValue($value)
@@ -523,24 +363,6 @@ class Multilink extends \Floxim\Floxim\Component\Field\Entity
             $format = $this['format'];
             $format['linking_datatype'] = $format['linking_component_id'];
             $format['linking_field'] = $format['linking_field_id'];
-            /*
-            $c_lf = $this['format']['linking_field'];
-            $c_ldt = $this['format']['linking_field_' . $c_lf . '_datatype'];
-            if ($c_ldt) {
-                $format = array(
-                    'render_type'   => $this['format']['render_type'],
-                    'linking_field' => $c_lf
-                );
-                $format['linking_datatype'] = $c_ldt;
-                $mm_field = $this['format']['linking_mm_field_' . $c_lf . '_' . $c_ldt];
-                if ($mm_field) {
-                    $format['mm_field'] = $mm_field;
-                    $format['mm_datatype'] = $this['format']['linking_mm_type_' . $c_lf . '_' . $c_ldt . '_' . $mm_field];
-                }
-                $this['format'] = $format;
-            }
-             * 
-             */
             $this['format'] = $format;
         }
         parent::beforeSave();
@@ -674,11 +496,14 @@ class Multilink extends \Floxim\Floxim\Component\Field\Entity
                 
                 $linked_item = $c_linked_finder->create();
                 
+                /*
                 // @todo: need more accurate check
                 $content_ib = fx::data('infoblock')->where('site_id', $content['site_id'])->getContentInfoblocks($linked_item['type']);
                 if (count($content_ib) > 0) {
                     $linked_item['infoblock_id'] = $content_ib->first()->get('id');
                 }
+                 * 
+                 */
             }
             if ($linked_item) {
                 $linked_item->setFieldValues($item_props);

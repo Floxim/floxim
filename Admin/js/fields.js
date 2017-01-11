@@ -670,13 +670,26 @@ window.$fx_fields = {
             b = 'fx-field-group',
             exp_class = b+'_expanded',
             $group = $('.'+b, $row),
-            $fields = $('.'+b+'__fields', $group);
+            $fields = $('.'+b+'__fields', $group),
+            data_loaded = false;
             
         function is_expanded() {
             return $group.hasClass(exp_class);
         }
         
         function expand() {
+            if (json.loader && !data_loaded) {
+                json.loader().then(function(data) {
+                    if (typeof data === 'string') {
+                        $fields.append(data);
+                    } else {
+                        $fx_form.draw_fields(data, $fields);
+                    }
+                    data_loaded = true;
+                    expand();
+                });
+                return;
+            }
             $group.addClass(exp_class);
             var fields_height = $fields.height();
             $fields.css({
@@ -1181,6 +1194,10 @@ window.$fx_fields = {
                 $new_row.append(
                     '<input type="hidden" name="'+_c.name+'['+id+'][type]" value="'+row_meta.type+'" />'
                 );
+            }
+            
+            if (row_meta.type_id && $fx.front) {
+                $fx.front.bind_content_form($new_row, row_meta.type_id, row_meta.id);
             }
         }
         

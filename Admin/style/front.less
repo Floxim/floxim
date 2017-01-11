@@ -19,10 +19,14 @@
 
 
 .fx_infoblock_placeholder {
+    /*
     min-height: 5px;
     min-width: 50px;
     background: #FFF;
     border:3px solid #000;
+    */
+    height:1px;
+    opacity:0;
 }
 
 .fx_entity_placeholder {
@@ -2166,6 +2170,17 @@ html {
     .fx-infoblock-summary {
         margin-right: 10px;
         margin-bottom: 10px;
+    }
+    
+    .fx-side-panel & {
+        max-width:365px;
+        
+        .fx-infoblock-summary {
+            width:~"calc(50% - 5px)";
+            &:nth-child(2n) {
+                margin-right:0;
+            }
+        }
     }
 }
 

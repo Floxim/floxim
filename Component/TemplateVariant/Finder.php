@@ -7,4 +7,5 @@ class Finder extends \Floxim\Floxim\System\Finder {
     protected $json_encode = array(
         'params'
     );
+    
 }

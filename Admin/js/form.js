@@ -178,66 +178,69 @@ fx_form = {
             settings.form_button = [];
         }
         var submit_added = false;
-        var button_container = settings.button_container || 'footer',
-            $button_container = button_container,
-            $buttons = $('<div class="'+bl+'__buttons"></div>');
-    
-        if (typeof button_container === 'string') {
-            $button_container = $('.'+bl+'__'+button_container, $form);
-            $button_container.show();
-            $buttons.addClass(bl+'__buttons-in_'+button_container);
-        }
         
-        $button_container.append($buttons);
-        $form.data('button_container', $button_container);
-        
-        $.each(settings.form_button, function (key,options) {
-            if (typeof options === 'string') {
-                options = {key:options};
+        if (settings.form_button.length) {
+            var button_container = settings.button_container || 'footer',
+                $button_container = button_container,
+                $buttons = $('<div class="'+bl+'__buttons"></div>');
+
+            if (typeof button_container === 'string') {
+                $button_container = $('.'+bl+'__'+button_container, $form);
+                $button_container.show();
+                $buttons.addClass(bl+'__buttons-in_'+button_container);
             }
-            if (!options.type) {
-                options.type = 'button';
-            }
-            if (!options.label) {
-                options.label = $fx.lang(options.key);
-            }
-            if (typeof options.is_submit === 'undefined') {
-                options.is_submit = true;
-            }
-            if (options.key ==='cancel') {
-                options['class'] = 'cancel';
-                options.is_submit = false;
-            } else if (options.is_active !== false) {
-                options.is_active = true;
-            }
-            var b = $t.jQuery('input', options);
-            b.data('key', options.key);
-            $buttons.append(b);
-            if (options.key === 'cancel') {
-                b.on('click', function() {
-                    $form.trigger('fx_form_cancel');
-                });
-            }
-            if (options.is_submit) {
-                b.on('click', function() {
-                    $form.append(
-                        '<input type="hidden" name="pressed_button" '+
-                            ' value="'+$(this).data('key')+'" />'
-                    );
-                    $form.submit();
-                });
-                if (!submit_added) {
-                    $form.append(
-                        '<input '+
-                            ' type="submit" tabindex="-1" '+
-                            ' style="position:absolute; top:-10000px; left:-10000px" />'
-                    );
-                    submit_added = true;
+
+            $button_container.append($buttons);
+            $form.data('button_container', $button_container);
+
+            $.each(settings.form_button, function (key,options) {
+                if (typeof options === 'string') {
+                    options = {key:options};
                 }
-            } else if (options.onclick) {
-                b.on('click', options.onclick);
-            }
-        });
+                if (!options.type) {
+                    options.type = 'button';
+                }
+                if (!options.label) {
+                    options.label = $fx.lang(options.key);
+                }
+                if (typeof options.is_submit === 'undefined') {
+                    options.is_submit = true;
+                }
+                if (options.key ==='cancel') {
+                    options['class'] = 'cancel';
+                    options.is_submit = false;
+                } else if (options.is_active !== false) {
+                    options.is_active = true;
+                }
+                var b = $t.jQuery('input', options);
+                b.data('key', options.key);
+                $buttons.append(b);
+                if (options.key === 'cancel') {
+                    b.on('click', function() {
+                        $form.trigger('fx_form_cancel');
+                    });
+                }
+                if (options.is_submit) {
+                    b.on('click', function() {
+                        $form.append(
+                            '<input type="hidden" name="pressed_button" '+
+                                ' value="'+$(this).data('key')+'" />'
+                        );
+                        $form.submit();
+                    });
+                    if (!submit_added) {
+                        $form.append(
+                            '<input '+
+                                ' type="submit" tabindex="-1" '+
+                                ' style="position:absolute; top:-10000px; left:-10000px" />'
+                        );
+                        submit_added = true;
+                    }
+                } else if (options.onclick) {
+                    b.on('click', options.onclick);
+                }
+            });
+        }
         $rendered_fields.trigger('fx_fields_ready');
     },
     lock_form: function($form) {

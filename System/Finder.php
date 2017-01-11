@@ -543,7 +543,6 @@ abstract class Finder
 
     public function buildQuery()
     {
-        // 1. To get tables-parents
         $tables = $this->getTables();
         if (is_null($this->select)) {
             foreach ($tables as $t) {

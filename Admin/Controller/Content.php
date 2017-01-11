@@ -157,10 +157,6 @@ class Content extends Admin
             if ($relation_field && ($relation_prop_name = $relation_field->getFormat('prop_name'))) {
                 $content[$relation_prop_name] = $related_entity;
             }
-            
-            fx::log($content, $parent_form_data);
-            
-            //fx::log($relation_field, $input['parent_form_data'], $input['relation'], $parent_form_data, $relation, $related_entity);
         }
 
         if (isset($input['content_id'])) {
@@ -187,7 +183,7 @@ class Content extends Admin
                 $this->ui->hidden('reload_url', $input['reload_url'])
             ));
         }
-
+        
         if (isset($input['data_sent']) && $input['data_sent']) {
             $res['is_new'] = !$content['id'];
             $set_res = $content->setFieldValues($input['content']);
@@ -222,7 +218,9 @@ class Content extends Admin
                             $content['infoblock_id'] = $infoblock['id'];
                         }
                     }
+                    
                     $content->save();
+                    
                     $res['saved_id'] = $content['id'];
                     if ($is_backoffice) {
                         $res['reload'] = str_replace("%d", $content['id'], $input['reload_url']);
