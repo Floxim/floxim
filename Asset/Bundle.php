@@ -107,6 +107,11 @@ abstract class Bundle {
     {
         return $this->is_new;
     }
+   
+    public function isTemp()
+    {
+        return isset($this->meta['is_temp']) && $this->meta['is_temp'];
+    }
     
     public function isFresh($file = null)
     {
@@ -132,8 +137,9 @@ abstract class Bundle {
             
             $sub_bundle = self::getSubBundle($f);
             if ($sub_bundle) {
-                $sub_is_fresh = $sub_bundle->isFresh() && $sub_bundle->getVersion() <= $saved_time;
-                if (!$sub_is_fresh) {
+                $sub_is_fresh = $sub_bundle->isFresh() && 
+                                $sub_bundle->getVersion() <= $saved_time;
+                if (!$sub_is_fresh && !$sub_bundle->isTemp()) {
                     $this->is_fresh = false;
                     break;
                 }

@@ -154,7 +154,7 @@ window.fx_livesearch = function (node, params) {
         var set_old_res = this.setValue(c_value);
         if (!set_old_res && values.length > 0) {
             //this.setValue(values[0].id);
-            this.setFirstValue();
+            this.selectFirstValue();
         }
     };
 

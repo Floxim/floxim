@@ -63,6 +63,9 @@ class Debug
             $file_name = $this->getFileName();
             $this->file = fx::files()->open($file_name, 'w');
             register_shutdown_function(array($this, 'stopLog'));
+            if (count($_POST) > 0) {
+                $this->log('$_POST', $_POST);
+            }
         }
     }
     

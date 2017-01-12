@@ -277,6 +277,28 @@ class Token
                 'use'
             )
         ),
+        'defaults' => array(
+            'type' => 'double',
+            'contains' => [
+                'code',
+                'template',
+                'area',
+                'var',
+                'call',
+                'each',
+                'if',
+                'with_each',
+                'separator',
+                'with',
+                'lang', 
+                'bem_block', 
+                'bem_element',
+                'param',
+                'preset',
+                'use',
+                'first'
+            ]
+        ),
         'styled' => array(
             'type' => 'double',
             'contains' => array(

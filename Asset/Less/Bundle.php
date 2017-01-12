@@ -179,7 +179,7 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
                 if (file_exists($sub_file)) {
                     $res .= file_get_contents($sub_file);
                 } else {
-                    fx::log('no file', $sub_file, $sub_bundle);
+                    fx::log('no file', $this, $sub_file, $sub_bundle, debug_backtrace());
                 }
             }
         }

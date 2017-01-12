@@ -415,16 +415,22 @@ class Page
         return json_encode($response);
     }
     
+    public function isOverriden()
+    {
+        static $is_overriden = null;
+        if (is_null($is_overriden)) {
+            $is_overriden = fx::isAdmin() && fx::input('post', 'override_infoblock');
+        }
+        return $is_overriden;
+    }
+    
     public function addStyleLess(
         $block, 
         $value, 
         $params = array()
     )
     {
-        static $bundle_is_temp = null;
-        if (is_null($bundle_is_temp)) {
-            $bundle_is_temp = fx::isAdmin() && fx::input('post', 'override_infoblock');
-        }
+        $bundle_is_temp = $this->isOverriden();
         
         if ($bundle_is_temp) {
             $params['is_temp'] = true;
@@ -448,8 +454,14 @@ class Page
         $res = array();
         foreach ($this->files_css as $f) {
             if ($f instanceof \Floxim\Floxim\Asset\Less\Bundle) {
-                $f->save();
-                if (fx::isAdmin() && $f->isDefaultBundle()) {
+                $is_default = $f->isDefaultBundle();
+                
+                // don't save main bundle in IB override mode
+                if (!$this->isOverriden() || !$is_default) {
+                    $f->save();
+                }
+                
+                if (fx::isAdmin() && $is_default) {
                     $f = $f->getAdminOutput();
                 } else {
                     $f = array(

@@ -31,7 +31,9 @@ class StyleBundle extends Bundle {
         }
         
         if (isset($params['is_temp'])) {
-            $this->meta['is_temp'] = true;
+            if (in_array($this->meta['type'], ['tv','inline'])) {
+                $this->meta['is_temp'] = true;
+            }
             unset($params['is_temp']);
         }
         
@@ -240,11 +242,9 @@ class StyleBundle extends Bundle {
     public static function deleteForVisual($visual_id)
     {
         $dir = self::getCacheDir().'/inline/'.$visual_id;
-        fx::log('try to drop', $dir);
         if (!file_exists($dir)) {
             return false;
         }
-        fx::log('dropng', $dir);
         fx::files()->rm($dir);
         return true;
     }
@@ -313,11 +313,11 @@ class StyleBundle extends Bundle {
             && isset($this->meta['is_temp']) && $this->meta['is_temp']
         ) {
             $res['css'] = $this->getBundleContent();
-            //$res['css'] = 'html{}';
             $res['file'] = 'temp';
             $res['filemtime'] = date('d, H:i:s');
         } else {
-            if (!$this->isFresh()) {
+            $is_fresh = $this->isFresh();
+            if (!$is_fresh) {
                 $this->save();
             }
             $css_file = $this->getFilePath();

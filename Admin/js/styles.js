@@ -378,6 +378,7 @@ less_tweaker.prototype.cancel = function() {
     if (this.$affected && this.is_new) {
         this.$affected.removeClass(this.get_tweaked_class()).addClass(this.style_class);
     }
+    this.is_canceled = true;
     window.style_watcher.update();
 };
 
@@ -574,7 +575,7 @@ less_tweaker.init_style_group = function($g) {
     
     if ($ib.length > 0) {
         $ib.on('fx_infoblock_unloaded', function(e, $new_ib) {
-            if (tweaker.last_data && tweaker.is_new) {
+            if (tweaker.last_data && tweaker.is_new && !tweaker.is_canceled) {
                 
                 var $el = $new_ib.descendant_or_self('.'+ tweaker.style_id_class ),
                     el_class = $el.attr('class'),
@@ -592,6 +593,7 @@ less_tweaker.init_style_group = function($g) {
                     }
                     
                     tweaker.set_style_class(style_class[0]);
+                    
                     tweaker.update( tweaker.last_data ).then( function() {
                         if ($old_stylesheet !== null) {
                             $old_stylesheet.remove();

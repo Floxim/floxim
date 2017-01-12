@@ -1504,10 +1504,13 @@ class Compiler
         //$code .= $_style_value . "  = \$context->get(".$_style_id.".'_style');\n";
         
         if ($defaults_token && $is_inline) {
-            $code .= "if (!".$_style_value.") {\n";
+            $_use_inline_default = '$use_inline_default';
+            $code .= $_use_inline_default." = !".$_style_value.";\n";
+            $code .= "if (".$_use_inline_default.") {\n";
             $code .= "ob_start();\n";
             $code .= $this->childrenToCode($defaults_token);
             $code .= $_style_value ." = \Floxim\Floxim\Template\Compiler::parseCssLikeProps(ob_get_clean());\n";
+            $code .= "\$this->pushParamDefaultValue(".$_style_id.".'_style', ".$_style_value.");\n";
             $code .= "}\n";
         }
         
@@ -1533,6 +1536,10 @@ class Compiler
             'asset_id' => $_bundle_id,
             'mod_value' => $_mod_value
         );
+        
+        if ($defaults_token && $is_inline) {
+            $param_props ['use_inline_default'] = $_use_inline_default;
+        }
         
         
         $code .= "if (!".$_style_value.") {\n";

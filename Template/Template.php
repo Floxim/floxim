@@ -650,4 +650,25 @@ class Template
         $this->as_bem_element = $el;
     }
     
+    public function pushParamDefaultValue($name, $value)
+    {
+        $vid = $this->getCurrentVariantId();
+        if ($vid) {
+            $entity = fx::data('template_variant', $vid);
+            $prop = 'params';
+        } else {
+            $entity = $this->getVisual();
+            $prop = $this->isWrapper() ? 'wrapper_visual' : 'template_visual';
+        }
+        $entity->digSet($prop.'.'.$this->context->getScopePrefix('.').$name, $value);
+    }
+    
+    public function getVisual()
+    {
+        $id = $this->context->getVisualId();
+        if ($id !== 'new') {
+            return fx::data('infoblock_visual', $id);
+        }
+        return fx::env('new_infoblock_visual');
+    }
 }
