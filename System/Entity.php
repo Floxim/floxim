@@ -115,6 +115,9 @@ abstract class Entity implements \ArrayAccess, Template\Entity
                     'type' => self::OFFSET_RELATION, 
                     'relation' => $rel
                 );
+                if (isset($res[$rel[2]])) {
+                    $res[$rel[2]]['relation_prop'] = $rel_name;
+                }
             }
             foreach ($finder->getMultiLangFields() as $f) {
                 $res[$f] = array(
@@ -700,6 +703,9 @@ abstract class Entity implements \ArrayAccess, Template\Entity
                         }
                         break;
                 }
+            }
+            if (isset($offset_meta['relation_prop'])) {
+                unset($this->data[$offset_meta['relation_prop']]);
             }
         }
         

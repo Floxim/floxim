@@ -2739,6 +2739,7 @@ fx_front.prototype.edit_template_variant = function(template_ls) {
         
         if (c_variant.count_using_blocks > 0) {
             fields.push({
+                name:'using_blocks_group',
                 type: 'group',
                 label: 'Где используется ('+c_variant.count_using_blocks+')',
                 loader: function() {
@@ -2753,11 +2754,6 @@ fx_front.prototype.edit_template_variant = function(template_ls) {
                                 resolve(res);
                             }
                         );
-                        /*
-                        setTimeout(function() {
-                            resolve('ebaaat');
-                        }, 1000);
-                        */
                     });
                 }
             });
@@ -2846,7 +2842,7 @@ fx_front.prototype.edit_template_variant = function(template_ls) {
     $fx.front_panel.show_form(
         params, 
         {
-            style:'alert',
+            //style:'alert',
             onload: function($form) {
                 if (!c_variant){ 
                     return;
@@ -2858,17 +2854,23 @@ fx_front.prototype.edit_template_variant = function(template_ls) {
 
                 function handle_save_mode() {
                     var data = $form.formToHash(),
-                        $del = $form.find('.fx_button_key_delete');
+                        $del = $form.find('.fx_button_key_delete'),
+                        $using = $form.find('.field_name__using_blocks_group');
+                        
                     
                     if (data.save_as_new*1 === 1) {
                         $del.hide();
+                        $using.hide();
                         var prev_name = $name.val();
                         if (prev_name && prev_name !== c_name) {
                             c_name = prev_name;
                         }
-                        $name.val('');
+                        if (c_name === c_variant.real_name) {
+                            $name.val('');
+                        }
                     } else {
                         $del.show();
+                        $using.show();
                         $name.val(c_name);
                     }
                 };
@@ -3087,9 +3089,25 @@ fx_front.prototype.show_infoblock_settings_form = function(data, $ib_node, tab) 
                     if (e.target.name === 'livesearch_input' || e.target.name === 'scope[type]') {
                         return;
                     }
-
+                    
                     var new_data = $form.formToHash(),
                         c_data = $form.data('last_data');
+                        
+                    if (e.target.name === 'visual[template]') {
+                        var c_template_data = $(e.target)
+                                                .closest('.livesearch')
+                                                .data('livesearch')
+                                                .getFullValue();
+                                        
+                        if (c_template_data.wrapper_variant_id) {
+                            new_data.visual.wrapper = c_template_data.wrapper_variant_id;
+                            $form
+                                .find('[name="visual[wrapper]"]')
+                                .closest('.livesearch')
+                                .data('livesearch')
+                                .setValue(c_template_data.wrapper_variant_id, true);
+                        }
+                    }
                     
                     for (var i = 0; i < template_types.length; i++) {
                         var tt = template_types[i];
@@ -3121,15 +3139,7 @@ fx_front.prototype.show_infoblock_settings_form = function(data, $ib_node, tab) 
                                         $.each(template_inputs, function(type, inputs) {
                                             handle_template_lock_state(inputs.livesearch);
                                         });
-                                        /*
-                                        var $template_ls = $form.find('[name="visual[template]"]').closest('.livesearch'),
-                                            template_ls = $template_ls.data('livesearch');
-
-                                        if (template_ls) {
-                                            handle_template_lock_state(template_ls);
-                                        }
-                                        */
-
+                                        
                                         if (focused_name) {
                                             var $focused_input = $form.find('[name="'+focused_name+'"]');
                                             if ($focused_input.attr('type') === 'hidden') {

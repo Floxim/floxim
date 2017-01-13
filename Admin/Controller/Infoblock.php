@@ -941,7 +941,8 @@ class Infoblock extends Admin
         );
         
         if ($tpl_field['value'] && !$c_value) {
-            $ib_visual['template_variant_id'] = $c_value;
+            $ib_visual['template_variant_id'] = $tpl_field['value'];
+            fx::log('pushed to vis', $ib_visual, $tpl_field['value'], $ib_visual['template_variant']);
         }
         
         $fields []= $tpl_field;
@@ -1112,8 +1113,12 @@ class Infoblock extends Admin
                                 ? $visual['wrapper_variant_id'] 
                                 : $visual['wrapper'];
         
-        if (!$c_value && ($template_variant = $visual['template_variant'])) {
+        if (!$c_value) {
+            $template_variant = $visual['template_variant'];
             $c_value = $template_variant['wrapper_variant_id'];
+            fx::log('tv', $template_variant, $visual, $c_value);
+        } else {
+            fx::log('has val', $c_value, $visual);
         }
         
         $field = $this->getTemplatesField($wrappers, $controller, $area_meta, 'wrapper', $c_value);
