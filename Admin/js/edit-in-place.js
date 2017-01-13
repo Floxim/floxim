@@ -3,13 +3,16 @@
 
 $.fn.edit_in_place = function(command) {
     var $nodes = this;
+    
     if ($fx.front.is_frozen) {
         return;
     }
+    
     $nodes.each(function() {
         var $node = $(this);
 
         var eip = $node.data('edit_in_place');
+        
         if (!eip || !eip.panel_fields.length) {
             eip = new fx_edit_in_place($node);
         }
@@ -174,7 +177,15 @@ window.fx_eip = {
             }
         }
     },
+    is_saving: false,
     save: function(callback) {
+        if (this.is_saving) {
+            console.log('eip is busy!');
+            return;
+        }
+        
+        this.is_saving = true;
+        
         var vars = [],
             $node = null;
 
@@ -240,9 +251,6 @@ window.fx_eip = {
             };
         }
 
-        console.log('posting', post_data, this);
-        console.trace();
-
         $fx.post(
             post_data,
             function(res) {
@@ -270,13 +278,14 @@ window.fx_eip = {
                     }
                     $fx.front.enable_infoblock($infoblock[0]);
                     $fx.front.select_item($node_to_focus);
-                    return;
+                } else {
+                    if ($entity.data('fx_finish_form')) {
+                        $fx.front_panel.hide();
+                    }
+                    fx_eip.stop();
+                    callback(res);
                 }
-                if ($entity.data('fx_finish_form')) {
-                    $fx.front_panel.hide();
-                }
-                fx_eip.stop();
-                callback(res);
+                fx_eip.is_saving = false;
             }
         );
         return vars;
@@ -341,8 +350,7 @@ function set_icon($node, value) {
 
 function fx_edit_in_place( node ) {
     this.uid = $fx.uid();
-    console.log('created eip', this.uid, node);
-    console.trace();
+    
     this.node = node;
 
     node.data('edit_in_place', this);
@@ -384,7 +392,7 @@ function fx_edit_in_place( node ) {
         });
     }
     var $selected_entity = this.node.closest('.fx_entity');
-
+    
     $(this.node)
     .closest('.fx_selected')
     //.off('fx_deselect.edit_in_place')
@@ -392,11 +400,8 @@ function fx_edit_in_place( node ) {
         fx_eip.fix();
         eip.stop();
 
-        console.log('deselected', eip, this);
-
         if ($selected_entity[0] !== this) {
             $selected_entity.edit_in_place('destroy');
-            console.log('call destroy');
         }
         var c_vars = fx_eip.get_vars();
 
@@ -408,7 +413,6 @@ function fx_edit_in_place( node ) {
             }
             var do_save = true;
             var selected = $fx.front.get_selected_item();
-            console.log('now selected', selected, eip);
             if (selected) {
                 var $selected = $(selected);
                 var new_entity = $selected
