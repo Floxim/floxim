@@ -342,6 +342,7 @@ function set_icon($node, value) {
 function fx_edit_in_place( node ) {
     this.uid = $fx.uid();
     console.log('created eip', this.uid, node);
+    console.trace();
     this.node = node;
 
     node.data('edit_in_place', this);
