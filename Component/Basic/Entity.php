@@ -214,6 +214,18 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
 
     public function getFieldMeta($field_keyword)
     {
+        if ($field_keyword[0] === ':') {
+            $field_keyword = mb_substr($field_keyword, 1);
+            $path = explode('.', $field_keyword);
+            if (count($path) > 1) {
+                $real_prop = end($path);
+                $real_owner = $this->dig(array_slice($path, 0, -1));
+                if ($real_owner && $real_owner instanceof \Floxim\Floxim\System\Entity) {
+                    return $real_owner->getFieldMeta($real_prop);
+                }
+                return false;
+            }
+        }
         $fields = $this->getFields();
         $is_template_var = self::isTemplateVar($field_keyword);
         if ($is_template_var) {

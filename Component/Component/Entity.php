@@ -66,7 +66,12 @@ class Entity extends System\Entity
                 )
             );
             
-            $finder = fx::data($this['keyword']);
+            try {
+                $finder = fx::data($this['keyword']);
+            } catch (\Exception $e) {
+                $this->entity_offsets = fx::collection();
+                return $this->entity_offsets;
+            }
             $encoded_fields = $finder->getJsonEncodedFields();
             foreach ($fields as $f) {
                 $keyword = $f['keyword'];

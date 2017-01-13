@@ -8,7 +8,7 @@ $.fn.edit_in_place = function(command) {
     }
     $nodes.each(function() {
         var $node = $(this);
-        
+
         var eip = $node.data('edit_in_place');
         if (!eip || !eip.panel_fields.length) {
             eip = new fx_edit_in_place($node);
@@ -72,7 +72,7 @@ window.fx_eip = {
     get_edited_vars: function() {
         var vars = [],
             $edited = this.get_edited_nodes();
-        
+
         $edited.each(function() {
             var c_eip = $(this).data('edit_in_place');
             if (c_eip){
@@ -95,13 +95,13 @@ window.fx_eip = {
         }
         switch (meta.target_type) {
             case 'var':
-                
+
                 formatted_value = value;
                 if (meta.type === 'datetime' && meta.format_modifier){
                     var timestamp = $fx_fields.parse_std_date(value).getTime() / 1000;
                     formatted_value = fx_date_format(meta.format_modifier, timestamp);
                 }
-                
+
                 $node.html(formatted_value);
                 if (formatted_value === '') {
                     $node.addClass('fx_hidden_placeholded');
@@ -155,7 +155,7 @@ window.fx_eip = {
                     $node.attr(meta.inatt, value);
                 }
                 //fx_template_var
-                $node.data( 
+                $node.data(
                     meta.target_key,
                     $.extend(
                         {},
@@ -177,9 +177,9 @@ window.fx_eip = {
     save: function(callback) {
         var vars = [],
             $node = null;
-    
+
         this.fix();
-        
+
         $.each(this.vars, function() {
             vars.push({
                 'var':this.var,
@@ -187,13 +187,13 @@ window.fx_eip = {
             });
             $node = this.node;
         });
-        
+
         if (vars.length === 0) {
             return vars;
         }
         var $infoblock = $node.closest('.fx_infoblock'),
             ib_meta = $infoblock.data('fx_infoblock');
-    
+
         var post_data = {
             entity:'infoblock',
             action:'save_var',
@@ -202,15 +202,15 @@ window.fx_eip = {
             fx_admin:true,
             page_id:$fx.front.get_page_id()
         };
-        
+
         var preset_params = $infoblock.data('fx_preset_params');
         if (preset_params) {
             post_data.preset_params = preset_params;
         }
-        
+
         var $adder_placeholder = $node.closest('.fx_entity_adder_placeholder'),
             entity_meta = $adder_placeholder.data('fx_entity_meta');
-    
+
         if ($adder_placeholder.length > 0 && entity_meta) {
             if (entity_meta.placeholder_linker) {
                 post_data.new_entity_props = entity_meta.placeholder_linker;
@@ -227,9 +227,9 @@ window.fx_eip = {
                 post_data.new_entity_props = entity_meta.placeholder;
             }
         }
-        
+
         $fx.front.disable_infoblock($infoblock);
-        
+
         if (!callback) {
             callback = function(res) {
                 var ib_reload_data = {};
@@ -239,9 +239,12 @@ window.fx_eip = {
                 $fx.front.reload_infoblock($infoblock[0], null, ib_reload_data);
             };
         }
-        
+
+        console.log('posting', post_data, this);
+        console.trace();
+
         $fx.post(
-            post_data, 
+            post_data,
             function(res) {
                 var $entity = $node.closest('.fx_entity');
                 if (res.status === 'error') {
@@ -327,7 +330,7 @@ window.fx_eip = {
 function set_icon($node, value) {
     var class_parts = value.split(' '),
         c_class = $node.attr('class').replace(/fa-[^\s]+/, '');
-    
+
     if (!class_parts[1]) {
         c_class += ' fa-ban';
     } else {
@@ -337,26 +340,27 @@ function set_icon($node, value) {
 }
 
 function fx_edit_in_place( node ) {
+    this.uid = $fx.uid();
     this.node = node;
-    
+
     node.data('edit_in_place', this);
     node.addClass('fx_edit_in_place');
-        
+
     this.panel_fields = [];
     this.is_content_editable = false;
-    
+
     this.ib_meta = node.closest('.fx_infoblock').data('fx_infoblock');
-    
+
     var eip = this;
-    
+
     // need to edit the contents of the site
     if (this.node.data('fx_var')) {
         this.meta = node.data('fx_var');
         this.meta.target_type = 'var';
         this.start(this.meta);
     }
-    
-    
+
+
     // edit the attributes of the node
     for( var i in this.node.data()) {
         if (!/^fx_template_var/.test(i)) {
@@ -365,7 +369,7 @@ function fx_edit_in_place( node ) {
         var meta = this.node.data(i);
         meta.target_type = 'att';
         meta.target_key = i;
-        
+
         this.start(meta);
     }
     // edit fields from fx_controller_meta['field']
@@ -385,18 +389,24 @@ function fx_edit_in_place( node ) {
     .one('fx_deselect.edit_in_place', function(e) {
         fx_eip.fix();
         eip.stop();
-        
+
+        console.log('deselected', eip, this);
+
         if ($selected_entity[0] !== this) {
             $selected_entity.edit_in_place('destroy');
+            console.log('call destroy');
         }
         var c_vars = fx_eip.get_vars();
-        
+
+
+
         setTimeout(function() {
             if (c_vars.length === 0 && !$selected_entity.is('.fx_entity_adder_placeholder')) {
                 return;
             }
             var do_save = true;
             var selected = $fx.front.get_selected_item();
+            console.log('now selected', selected, eip);
             if (selected) {
                 var $selected = $(selected);
                 var new_entity = $selected
@@ -411,7 +421,7 @@ function fx_edit_in_place( node ) {
             }
         }, 50);
     });
-    
+
     $('html').on('keydown.edit_in_place', function(e) {
         return eip.handle_keydown(e);
     });
@@ -441,7 +451,7 @@ fx_edit_in_place.prototype.start = function(meta) {
         meta.name = meta.id;
     }
     this.node.trigger('fx_before_editing');
-    
+
     var is_linker_selector = false;
     // skip "select entity" field if user is adding new entity
     if (meta.type === 'livesearch') {
@@ -453,11 +463,11 @@ fx_edit_in_place.prototype.start = function(meta) {
             is_linker_selector = true;
         }
     }
-    
+
     if (is_linker_selector && !this.node.is('.fx_linker_placeholder')) {
         return;
     }
-    
+
     if (meta.initial_value === undefined) {
         if (meta.real_value !== undefined) {
             meta.initial_value = meta.real_value;
@@ -473,11 +483,11 @@ fx_edit_in_place.prototype.start = function(meta) {
             meta.initial_value = meta.value;
         }
     }
-    
+
     var stored_var = fx_eip.vars[fx_eip.get_var_hash(meta)],
         stored_value = stored_var ? stored_var.value : null;
-    
-    
+
+
     switch (meta.type) {
         case 'datetime':
             var $field = this.add_panel_field(
@@ -491,10 +501,10 @@ fx_edit_in_place.prototype.start = function(meta) {
                 fx_eip.append_value(edit_in_place.node, meta, $date_inp.val());
             });
             break;
-        case 'image': case 'file': 
+        case 'image': case 'file':
             var field_meta = $.extend(
-                {}, 
-                meta, 
+                {},
+                meta,
                 {real_value:{path: meta.real_value || ''}}
             );
             this.add_panel_field(
@@ -507,12 +517,12 @@ fx_edit_in_place.prototype.start = function(meta) {
                 }
             });
             break;
-        case 'select': 
-        case 'livesearch': 
-        case 'bool': 
-        case 'color': 
-        case 'map': 
-        case 'link': 
+        case 'select':
+        case 'livesearch':
+        case 'bool':
+        case 'color':
+        case 'map':
+        case 'link':
         case 'label':
         case 'icon':
             var field_meta =$.extend({}, meta);
@@ -577,7 +587,7 @@ fx_edit_in_place.prototype.handle_keydown = function(e) {
 var force_focus = function($n) {
     var selection = window.getSelection(),
         range = document.createRange();
-    
+
     range.setStart($n[0], 0);
     range.collapse(true);
     selection.removeAllRanges();
@@ -595,20 +605,20 @@ fx_edit_in_place.prototype.is_text_empty = function(text) {
 fx_edit_in_place.prototype.start_content_editable = function(meta) {
     var $n = this.node;
     this.is_content_editable = true;
-    
-    
+
+
     if ($n.hasClass('fx_hidden_placeholded')) {
         $n.data('was_placeholded_by', this.node.html());
         $n.removeClass('fx_hidden_placeholded');
         $n.html('');
     }
-    
+
     var $var_nodes = $('*[data-fx_var], *[data-has_var_in_att]'),
         c_node = $n[0],
         that = this;
-    
+
     this.nodes_to_sync = [];
-    
+
     $var_nodes.each(function() {
         if (this === c_node) {
             return;
@@ -619,17 +629,17 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
             return;
         }
         if (
-            content_var.var_type === meta.var_type && 
+            content_var.var_type === meta.var_type &&
             (
                 (
-                    content_var.content_id && 
-                    content_var.var_type === 'content' && 
+                    content_var.content_id &&
+                    content_var.var_type === 'content' &&
                     content_var.content_id === meta.content_id &&
                     content_var.id === meta.id
                 ) || (
                     content_var.var_type === 'visual' &&
                     content_var.id === meta.id &&
-                    content_var.scope_path === meta.scope_path && 
+                    content_var.scope_path === meta.scope_path &&
                     $node.closest('.fx_infoblock').data('fx_infoblock').id === that.ib_meta.id
                 )
             )
@@ -640,7 +650,7 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
     });
 
     // create css stylesheet for placeholder color
-    // we cannot just append styles to an element, 
+    // we cannot just append styles to an element,
     // because placeholder is implemented by css :before property
     var c_color = window.getComputedStyle($n[0]).color.replace(/[^0-9,]/g, '').split(',');
     var avg_color = (c_color[0]*1 + c_color[1]*1 + c_color[2]*1) / 3;
@@ -657,7 +667,7 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
             "min-width:10px;"+
         "}"+
     "</style>").appendTo( $('head') );
-   
+
     $n.addClass('fx_var_editable');
     $n.attr('fx_placeholder', meta.placeholder || meta.label || meta.name || meta.id);
 
@@ -682,7 +692,7 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
             );
         });
     }
-    
+
     var edit_in_place = this;
     var handle_node_size = function () {
         var text = $.trim($n.text());
@@ -691,23 +701,23 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
             $n.html('&#8203;');
         }
         $n.toggleClass(
-            'fx_editable_empty', 
+            'fx_editable_empty',
             is_empty
         );
         if (is_empty && !edit_in_place.is_wysiwyg) {
             $n.focus();
             edit_in_place.force_focus($n);
         }
-    }; 
+    };
     // force node to have size
     $n.addClass('fx_setting_focus');
-    
+
     $n.attr('contenteditable', 'true').focus();
-    
+
     if ($n.text().length === 0) {
         this.force_focus($n);
     }
-    
+
     this.$closest_button = $n.closest('button');
     if (this.$closest_button.length > 0) {
         this.$closest_button.off('.edit_in_place');
@@ -722,7 +732,7 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
     if (!this.is_wysiwyg || true) {
         handle_node_size();
         $n.on(
-            //'keyup.edit_in_place keydown.edit_in_place click.edit_in_place change.edit_in_place', 
+            //'keyup.edit_in_place keydown.edit_in_place click.edit_in_place change.edit_in_place',
             'input.edit_in_place paste.edit_in_place',
             function () {setTimeout(handle_node_size,1);}
         );
@@ -730,7 +740,7 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
     $n.removeClass('fx_setting_focus');
     if (this.nodes_to_sync.length > 0) {
         $n.on(
-            //'keyup.edit_in_place keydown.edit_in_place click.edit_in_place change.edit_in_place', 
+            //'keyup.edit_in_place keydown.edit_in_place click.edit_in_place change.edit_in_place',
             'input.edit_in_place paste.edit_in_place',
             function () {
                 var c_html = fx_edit_in_place.prototype.clear_spaces($n.html());
@@ -748,22 +758,22 @@ fx_edit_in_place.prototype.add_panel_field = function(meta) {
         meta.value = meta.real_value;
     }
     meta = $.extend({}, meta);
-    
+
     if (meta.var_type === 'visual') {
         meta.name = meta.id;
     }
     if (!meta.type) {
         meta.type = 'string';
     }
-    
+
     if (meta.type === 'icon') {
         meta.type = 'iconpicker';
     }
-    
+
     if (!meta.label) {
         meta.label = meta.id;
     }
-    
+
     if (meta.type === 'livesearch' && !meta.params) {
         meta.params = {
             'content_type':meta['content_type']
@@ -773,7 +783,7 @@ fx_edit_in_place.prototype.add_panel_field = function(meta) {
             meta.ajax_preload = true;
         }
     }
-    
+
     var $finish_form = this.node.data('fx_finish_form'),
         $field_container = null;
     if ($finish_form) {
@@ -782,15 +792,15 @@ fx_edit_in_place.prototype.add_panel_field = function(meta) {
     } else {
         var $panel = $fx.front.node_panel.get(this.node).$panel,
             npi = 'fx_node_panel__item';
-        
+
         $field_container = $(
             '<div class="'+npi+' '+npi+'-type-field '+npi+'-field_type-'+meta.type+' '+npi+'-field_name-'+meta.name+'"></div>'
         );
         $panel.append($field_container);
         $panel.show();
     }
-    
-    
+
+
     var $field_node = $fx_form.draw_field(meta, $field_container);
     $field_node.data('meta', meta);
     this.panel_fields.push($field_node);
@@ -801,11 +811,11 @@ fx_edit_in_place.prototype.add_panel_field = function(meta) {
     // use last() to find real checkbox instead of hidden helper
     var $value_inp = $field_node.descendant_or_self(':input[name="'+meta.name+'"]').last(),
         default_value = $value_inp.val();
-    
+
     if ($value_inp.attr('type') === 'checkbox') {
         default_value = $value_inp.attr('checked') ? '1' : '0';
     }
-    
+
     meta.computed_default_value = default_value;
     return $field_node;
 };
@@ -827,11 +837,11 @@ fx_edit_in_place.prototype.stop = function() {
         this.panel_fields[i].remove();
     }
     this.panel_fields = [];
-    
+
     this.node.attr('contenteditable', null);
-    
+
     $('.fx_var_editable', this.node).attr('contenteditable', null);
-    
+
     this.node.removeClass('fx_var_editable');
     if (this.is_content_editable && this.is_wysiwyg) {
         this.destroy_wysiwyg();
@@ -845,7 +855,7 @@ fx_edit_in_place.prototype.stop = function() {
     window.stopped.push(this);
     var was_placeholded_by = this.node.data('was_placeholded_by') || this.node.attr('fx_placeholder'),
         c_text = this.node.text();
-    
+
     if (was_placeholded_by && this.is_text_empty(c_text)) {
         this.node.addClass('fx_hidden_placeholded').html(was_placeholded_by);
     }
@@ -855,7 +865,7 @@ fx_edit_in_place.prototype.stop = function() {
 };
 
 /**
- * Clear extra \n after block level tags inserted by Redactor 
+ * Clear extra \n after block level tags inserted by Redactor
  * see method cleanParagraphy() in Redactor's source code
  */
 fx_edit_in_place.prototype.clear_redactor_val = function (v) {
@@ -918,15 +928,15 @@ fx_edit_in_place.prototype.get_vars = function() {
             //new_val = $.trim(new_val);
             var clear_new = this.clear_redactor_val(new_val);
             var clear_old = this.clear_redactor_val(saved_val);
-            
+
             is_changed = clear_new !== clear_old;
         } else {
             var new_val = $.trim(node.text());
-            
-            
+
+
             new_val = this.clear_spaces(new_val);
             saved_val = this.clear_spaces(saved_val);
-            
+
             // put empty val instead of zero-width space
             if (!new_val) {
                 node.html('');
@@ -952,7 +962,7 @@ fx_edit_in_place.prototype.get_vars = function() {
         var $pf = this.panel_fields[i],
             pf_meta = $pf.data('meta'),
             formatted_value = null;
-        
+
         if (!pf_meta) {
             continue;
         }
@@ -968,10 +978,10 @@ fx_edit_in_place.prototype.get_vars = function() {
             }
         } else if (pf_meta.type === 'livesearch') {
             var livesearch = $('.livesearch', $pf).data('livesearch');
-            
-            if (livesearch.isMultiple) {   
+
+            if (livesearch.isMultiple) {
                 var new_value = livesearch.getValues();
-                // if the loaded value contained full objects (with name and id) 
+                // if the loaded value contained full objects (with name and id)
                 // let's convert it to the same format as new value has - plain array of ids
                 // we copy old value
                 if (old_value instanceof Array) {
@@ -988,15 +998,15 @@ fx_edit_in_place.prototype.get_vars = function() {
                 }
             } else {
                 var new_value = livesearch.getValue();
-                
-                if (typeof(new_value) === 'string' && !new_value.match(/^\d+$/)) { 
+
+                if (typeof(new_value) === 'string' && !new_value.match(/^\d+$/)) {
                     new_value = null;
                 }
-                
+
                 if (new_value !== null) {
                      new_value = new_value * 1;
                 }
-                
+
                 if (old_value && old_value.id) {
                     old_value = old_value.id * 1;
                 }
@@ -1005,17 +1015,17 @@ fx_edit_in_place.prototype.get_vars = function() {
             $c_input = $pf.descendant_or_self(':input[name="'+pf_meta['name']+'"]');
             var new_value = $c_input.val();
         }
-        
+
         var value_changed = false;
         if (pf_meta.type === 'image' || pf_meta.type === 'file') {
             value_changed = new_value !== old_value.path;
-            
+
             var file_data = $c_input.data('fx_upload_response');
-            
+
             if (new_value && file_data && file_data.formatted_value) {
                 formatted_value = file_data.formatted_value;
             }
-            
+
             if (file_data && file_data.action === "save_image_meta") {
                 value_changed = true;
             }
@@ -1051,9 +1061,9 @@ fx_edit_in_place.prototype.fix = function(stop_on_empty) {
     if (this.stopped) {
         return this;
     }
-    
+
     var vars = fx_eip.fix();
-    
+
     // nothing has changed
     if (vars.length === 0 && stop_on_empty) {
         this.stop();
@@ -1091,7 +1101,7 @@ fx_edit_in_place.prototype.make_wysiwyg = function () {
         $node = this.node,
         node = $node[0],
         eip = this;
-    
+
     $node.on('keydown.edit_in_place', function(e) {
         if (e.which === 13 && e.ctrlKey) {
             eip.fix();
@@ -1100,7 +1110,7 @@ fx_edit_in_place.prototype.make_wysiwyg = function () {
             return false;
         }
     });
-    
+
     if (sel && $.contains(node, sel.focusNode)) {
         var range = sel.getRangeAt(0);
         range.collapse(true);
@@ -1133,7 +1143,7 @@ fx_edit_in_place.prototype.make_wysiwyg = function () {
     if (toolbar === 'inline' && this.meta.linebreaks === undefined) {
         linebreaks = true;
     }
-    
+
     $fx_fields.make_redactor($node, {
         linebreaks:linebreaks,
         placeholder:false,
@@ -1145,7 +1155,7 @@ fx_edit_in_place.prototype.make_wysiwyg = function () {
             $box.after($node);
             $('body').append($box);
             $node.data('redactor_box', $box);
-            
+
             var $range_node = $node.parent().find('.fx_click_range_marker');
             if ($range_node.length) {
                 var range_text = $range_node[0].childNodes[range_text_position];
@@ -1169,10 +1179,10 @@ fx_edit_in_place.prototype.make_wysiwyg = function () {
                     $range_node.attr('class', null);
                 }
             }
-            
+
             //this.code.sync();
-            
-            // use 'startSync' instead of 'sync' because 'sync' adds 10ms timeout, 
+
+            // use 'startSync' instead of 'sync' because 'sync' adds 10ms timeout,
             // so if we call redactor('core.destroy') immediately it will clear the node html
             this.code.startSync();
         }
@@ -1184,7 +1194,7 @@ fx_edit_in_place.prototype.make_wysiwyg = function () {
         top:'0px',
         left:'0px'
     });
-    
+
     if ($node.is('.fx_var_bound_to_entity')) {
         this.$owner_entity = $node.closest('.fx_entity');
         this.$owner_entity.on('mousedown.eip', function(e) {
@@ -1197,9 +1207,9 @@ fx_edit_in_place.prototype.make_wysiwyg = function () {
 
 fx_edit_in_place.prototype.destroy_wysiwyg = function() {
     this.node.before(this.node.data('redactor_box'));
-    
+
     this.node.redactor('core.destroy');
-    
+
     $('#fx_admin_control .editor_panel').remove();
     this.node.get(0).normalize();
     if (this.$owner_entity) {
@@ -1218,7 +1228,7 @@ $(function() {
         } catch (e) {
             continue;
         }
-        
+
         for (var j = 0; j < sheet.cssRules.length; j++) {
             var rule = sheet.cssRules[j];
             if (rule.type !== 1 || !rule.cssText) {
@@ -1282,7 +1292,7 @@ var fx_date_format = function(format, timestamp) {
 };
 
 var php_date_format = function ( format, timestamp ) {	// Format a local time/date
-    // 
+    //
     // +   original by: Carlos R. L. Rodrigues
     // +	  parts by: Peter-Paul Koch (http://www.quirksmode.org/js/beat.html)
     // +   improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
@@ -1487,7 +1497,7 @@ window.dumpSelection = function(name) {
 window.dumpNode = function(node, title) {
 	var r = window.getSelection().getRangeAt(0),
         rc = r.startContainer;
-        
+
 	var indom = ' ('+$(node).closest('body') ? 'indom' : 'outofdom'+')';
 	console.group(node, title ? title : '', rc, r.startOffset, r.endOffset);
 	for (var jj = 0; jj < node.childNodes.length; jj++)  {

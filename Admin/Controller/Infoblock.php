@@ -1551,7 +1551,6 @@ class Infoblock extends Admin
                     $tv[$prop] = $input[$prop];
                 }
             }
-            fx::log($input, $tv);
             $prev_params = $tv['params'] ? $tv['params'] : array();
             $tv['params'] = fx::util()->fullMerge($prev_params, $input['params']);
             $tv->save();

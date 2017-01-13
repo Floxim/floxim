@@ -34,16 +34,28 @@ var fx_iconpicker = function(params, $node) {
 
 fx_iconpicker.prototype.show = function() {
     var that = this,
-        box = this.$handler[0].getBoundingClientRect();
+        box = this.$handler[0].getBoundingClientRect(),
+        win_width = $(window).width();
+    
+    this.$popup.show();
+    
+    var popup_width = this.$popup.width(),
+        left = box.left,
+        right = left + popup_width + 25;
+    
+    if (right > win_width) {
+        left -= (right - win_width);
+    }
+    
     this.closer = $fx.close_stack.push(
         function() {
             that.$popup.hide();
         },
         that.$popup
     );
-    this.$popup.show().css({
+    this.$popup.css({
         top: box.bottom,
-        left: box.left
+        left: left
     });
     this.$search.focus();
 };

@@ -187,12 +187,14 @@ class Context {
                 $new_props[$p] = $v;
             }
         }
-        /*
-        if (isset($new_props['width'])) {
-            fx::log('push w', $new_props['width']);
+        $level = count(self::$container_props);
+        if ($level > 2) {
+            unset($new_props['align-container']);
         }
-         * 
-         */
+        if ($level > 3) {
+            unset($new_props['width']);
+        }
+        //fx::log('pcp', $props, $new_props, count(self::$container_props));
         self::$container_props []= $new_props;
     }
     

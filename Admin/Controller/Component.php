@@ -179,9 +179,6 @@ public function getModuleFields()
             $path = fx::path()->abs('/module/' . $v) . '/*';
             $module_dirs = glob($path);
             
-            if (!$module_dirs) {
-                continue;
-            }
             if ($v === 'Floxim') {
                 $modules []= array(
                     'id' => 'System', 
@@ -189,6 +186,11 @@ public function getModuleFields()
                     'venodor' => $v
                 );
             }
+            
+            if (!$module_dirs) {
+                $module_dirs = [];
+            }
+            
             foreach ($module_dirs as $md) {
                 if (!is_dir($md)) {
                     continue;
@@ -375,9 +377,11 @@ public function getModuleFields()
 
         $data['keyword'] = $this->getFullKeyword($input);
         
+        
         $data['parent_id'] = $input['parent_id'] ? (int) $input['parent_id'] : null;
         
         $res_create = fx::data('component')->createFull($data);
+        
         if (!$res_create['validate_result']) {
             $result['status'] = 'error';
             $result['errors'] = $res_create['validate_errors'];

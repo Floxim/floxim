@@ -571,12 +571,16 @@ abstract class Entity implements \ArrayAccess, Template\Entity
     /* Array access */
     public function offsetGet($offset)
     {
+        if (is_array($offset)) {
+            return $this->dig($offset);
+        }
         if ($offset === 'id') {
             return isset($this->data['id']) ? $this->data['id'] : null;
         }
         
+        $first_char = $offset[0];
         // handle template-content vars like $item['%description']
-        if ($offset[0] === '%') {
+        if ($first_char === '%') {
             $offset = mb_substr($offset, 1);
             if (!isset($this[$offset]) || $this->allowTemplateOverride) {
                 $template = fx::env()->getCurrentTemplate();
@@ -587,6 +591,11 @@ abstract class Entity implements \ArrayAccess, Template\Entity
                     }
                 }
             }
+        }
+        
+        if ($first_char === ':') {
+            $offset = mb_substr($offset, 1);
+            return $this->dig($offset);
         }
         
         $offset_type = null;
@@ -746,8 +755,8 @@ abstract class Entity implements \ArrayAccess, Template\Entity
         if (array_key_exists($offset, $this->data)) {
             return true;
         }
-        //if (self::isTemplateVar($offset)) {
-        if ($offset[0] === '%') {
+        $fc = $offset[0];
+        if ($fc === '%' || $fc === ':') {
             return true;
         }
         $offsets = $this->getAvailableOffsets();

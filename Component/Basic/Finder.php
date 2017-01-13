@@ -34,7 +34,12 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
             if (!$type) {
                 continue;
             }
-            $type_tables = array_reverse(fx::data($type)->getTables());
+            try {
+                $type_tables = array_reverse(fx::data($type)->getTables());
+            } catch (\Exception $e) {
+                $data = $data->findRemove('type', $type);
+                continue;
+            }
             $missed_tables = array();
             foreach ($type_tables as $table) {
                 if ($table == $base_table) {
@@ -72,7 +77,12 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
             return $cache[$class];
         }
         $tables = array();
-        $chain = static::getComponent()->getChain();
+        $com = static::getComponent();
+        if (!$com) {
+            fx::log('no com', $this);
+            return [];
+        }
+        $chain = $com->getChain();
         foreach ($chain as $com) {
             $tables []= $com->getContentTable();
         }
@@ -110,7 +120,12 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
         }
 
         $relations = array();
-        $fields = $this->getComponent()
+        $com = $this->getComponent();
+        if (!$com) {
+            fx::log('no com', $this);
+            return [];
+        }
+        $fields = $com
                        ->getAllFields()
                         ->find(
                             'type', 

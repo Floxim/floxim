@@ -1660,7 +1660,9 @@ class Compiler
 
         $loop_id = '$' . $item_alias . '_loop';
         $code .= $loop_id . ' = new \\Floxim\\Floxim\\Template\\Loop(' . $arr_id . ', ' . $loop_key . ', ' . $loop_alias . ");\n";
-        
+        if ($has_scope) {
+            $code .= $loop_id ."['has_scope'] = true;\n";
+        }
         $counter_id = $loop_id.'_counter';
         $code .= $counter_id." = 1;\n";
         
