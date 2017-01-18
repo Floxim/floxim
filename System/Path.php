@@ -45,6 +45,7 @@ class Path
      */
     public function resolve($path)
     {
+        
         if ($path[0] !== '@') {
             return $path;
         }
@@ -71,16 +72,44 @@ class Path
         return $path;
     }
     
+    protected function resolveParents($value, $sep) 
+    {
+        if (!strstr($value, '.'.$sep)) {
+            return $value;
+        }
+        
+        $parts = explode($sep, $value);
+        
+        $path = array();
+        
+        foreach($parts as $dir) {
+            switch( $dir) {
+                case '.':
+                    // Don't need to do anything here
+                    break;
+                case '..':
+                    array_pop( $path);
+                break;
+                default:
+                    $path[] = $dir;
+                break;
+            }
+        }
+        
+        return join($sep, $path);
+        return 'ooo';
+    }
+    
     protected function processAbs($value)
     {
         $value = str_replace("/", DIRECTORY_SEPARATOR, trim($value));
         if (mb_substr($value, 0, $this->root_len) !== $this->root) {
             $value = $this->root . DIRECTORY_SEPARATOR . trim($value, DIRECTORY_SEPARATOR);
         }
-        //$value = preg_replace("~^" . preg_quote($root) . "~", '', $value);
-        //$value = trim($value, DIRECTORY_SEPARATOR);
-        //$value = $root . DIRECTORY_SEPARATOR . $value;
+        
         $value = preg_replace("~" . preg_quote(DIRECTORY_SEPARATOR) . "+~", DIRECTORY_SEPARATOR, $value);
+        
+        $value = $this->resolveParents($value, DIRECTORY_SEPARATOR);
         return $value;
     }
     
