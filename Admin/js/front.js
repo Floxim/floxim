@@ -3430,6 +3430,9 @@ fx_front.prototype.get_content_parent_props = function($n) {
     
     $.each($pars, function() {
         var mods = $fx.front.get_modifiers($(this), 'fx-block');
+        if (mods.rw && !res.rw) {
+            res.rw = mods.rw;
+        }
         $.each(mods, function( k, v) {
             var p = k.match(/own-(.+)/);
             if (!p) {

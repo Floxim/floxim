@@ -180,7 +180,31 @@ class Context {
     
     public function pushContainerProps($props) 
     {
+        
         $current_props = count(self::$container_props) > 0 ? end(self::$container_props) : array();
+        
+        if (
+            isset($props['width'])
+            && $props['width'] !== 'none'
+            && (
+                !isset($current_props['width']) || $current_props['width'] !== $props['width']
+            )
+        ) {
+            switch ($props['width']) {
+                case 'full':
+                    $this->pushContainerWidth(1, 'screen');
+                    $props['rel-width'] = true;
+                    break;
+                case 'layout':
+                    $props['rel-width'] = true;
+                    $this->pushContainerWidth(1, 'layout');
+                    break;
+                default:
+                    break;
+            }
+        }
+        
+        unset($current_props['rel-width']);
         $new_props = $current_props;
         foreach ($props as $p => $v) {
             if ($v !== 'none') {
@@ -194,13 +218,43 @@ class Context {
         if ($level > 3) {
             unset($new_props['width']);
         }
-        //fx::log('pcp', $props, $new_props, count(self::$container_props));
+        
         self::$container_props []= $new_props;
     }
     
+    protected static $container_width = [[1,'screen']];
+    
+    public function pushContainerWidth($value, $base = null)
+    {
+        $c_value = end(self::$container_width);
+        
+        if (is_null($base)) {
+            self::$container_width []= [$c_value[0] * $value, $c_value[1]];
+        } else {
+            self::$container_width []= [$value, $base];
+        }
+    }
+    
+    public function popContainerWidth()
+    {
+        array_pop(self::$container_width);
+    }
+    
+    public function getContainerWidth()
+    {
+        $val = end(self::$container_width);
+        $base = $val[1] === 'screen' ? 1600 : 1200;
+        $res = round($val[0] * $base);
+        return $res;
+    }
+
+
     public function popContainerProps() 
     {
-        array_pop(self::$container_props);
+        $popped = array_pop(self::$container_props);
+        if (isset($popped['rel-width'])) {
+            $this->popContainerWidth();
+        }
     }
     
     public function getContainerClasses($current_props = false) {
@@ -218,6 +272,9 @@ class Context {
         $apply_to_self = array('lightness');
         
         foreach ($last as $p => $v) {
+            if ($p === 'rel-width') {
+                continue;
+            }
             if (in_array($p, $apply_to_self)) {
                 $res .= ' fx-block_'.$p.'_'.$v;
                 continue;
@@ -237,6 +294,11 @@ class Context {
                     $res .= ' fx-block_own-'.$k.'_'.$v;
                 }
             }
+        }
+        if (fx::isAdmin()) {
+            $rw = end(self::$container_width);
+            $rw = $rw[1].'-'.str_replace('.', '-', (string) $rw[0]);
+            $res .= ' fx-block_rw_'.$rw;
         }
         return $res.' ';
     }

@@ -156,8 +156,10 @@ abstract class Entity implements \ArrayAccess, Template\Entity
         fx::trigger('before_save', array('entity' => $this));
         $this->beforeSave();
         $pk = $this->getPk();
+        
+        $is_stored = isset($this->data[$pk]) && $this->data[$pk];
         // update
-        if (isset($this->data[$pk]) && $this->data[$pk]) {
+        if ($is_stored) {
             $this->beforeUpdate();
             if (!$this->isValid()) {
                 $this->throwInvalid();
@@ -187,7 +189,13 @@ abstract class Entity implements \ArrayAccess, Template\Entity
             $this->afterInsert();
         }
         $this->afterSave();
-        fx::trigger('after_save', array('entity' => $this));
+        fx::trigger(
+            'after_save', 
+            array(
+                'entity' => $this,
+                'is_new' => !$is_stored
+            )
+        );
         $this->modified = array();
         $this->modified_data = array();
         $this->afterSaveDone();

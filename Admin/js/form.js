@@ -79,9 +79,9 @@ fx_form = {
     update: function (data, $form) {
         var $body = $('.fx_admin_form__body', $form);
         $body.html('');
+        $form.find('.fx_admin_form__tab_labels').remove();
         this.draw_fields(data, $body);
         $form.trigger('fx_adm_form_updated');
-        //console.log('upd', $form, 'set data', data);
     },
     
     // find fields that are placed before containing group and put it right after it
@@ -117,6 +117,7 @@ fx_form = {
         return res;
     },
     draw_fields: function(settings, $form_body) {
+        
         if (settings.fields === undefined) {
             settings.fields = [];
         }
@@ -170,6 +171,9 @@ fx_form = {
             }
             if ($field_node && $field_node.find) {
                 $rendered_fields = $rendered_fields.add($field_node.find(':input[name]'));
+            }
+            if (json.tab && !use_tabs) {
+                $field_node.addClass('fx-untabbed fx-untabbed_tab_'+json.tab);
             }
         });
         
@@ -387,6 +391,8 @@ fx_form = {
         function select_tab($tab_label) {
             var key = $tab_label.data('key'),
                 $tab_data = $form_body.find('.fx_tab_data-key-'+key),
+                $untabbed_current = $form.find('.fx-untabbed_tab_'+key),
+                $untabbed_others = $form.find('.fx-untabbed:not(.fx-untabbed_tab_'+key+')'),
                 map = {};
             map[c_label] = $tab_label;
             map[c_data] = $tab_data;
@@ -395,6 +401,10 @@ fx_form = {
                 $('.'+c_class+'-active', $node.closest('.'+bl+'__tab_data, .'+bl+'__tab_labels')).removeClass(c_class+'-active');
                 $node.addClass(c_class+'-active').trigger('fx_tab_focus');
             });
+            
+            $untabbed_others.hide();
+            $untabbed_current.show();
+            
             $('.'+c_label+' .fx_icon').addClass('fx_icon-clickable');
             $('.'+c_label+'-active .fx_icon').removeClass('fx_icon-clickable');
         }

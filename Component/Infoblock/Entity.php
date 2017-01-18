@@ -491,6 +491,24 @@ class Entity extends System\Entity implements Template\Entity
     protected $output_is_cached = false;
     protected $output_cache = null;
     protected $output_is_subroot = false;
+    
+    protected function applyParentContainerProps(\Floxim\Floxim\Template\Context $context)
+    {
+        if ($this->parent_container_props) {
+            $rw = null;
+            if (isset($this->parent_container_props['rw'])) {
+                $rw = $this->parent_container_props['rw'];
+                unset($this->parent_container_props['rw']);
+            }
+            $context->pushContainerProps($this->parent_container_props);
+            if ($rw) {
+                $rw = explode('-', $rw, 2);
+                $rw[1] = (float) str_replace('-', '.', $rw[1]);
+                $context->pushContainerWidth($rw[1], $rw[0]);
+            }
+        }
+        $this->parent_container_props = null;
+    }
 
     /**
      * get result rendered by ib's template (with no wrapper and meta)
@@ -525,10 +543,8 @@ class Entity extends System\Entity implements Template\Entity
         $tpl_params['infoblock'] = $this;
         $is_admin = fx::isAdmin();
         
-        if ($this->parent_container_props) {
-            //$tpl->getContext()->pushContainer($this->parent_container);
-            $tpl->getContext()->pushContainerProps($this->parent_container_props);
-        }
+        $this->applyParentContainerProps($tpl->getContext());
+        
         try {
             $this->output_cache = $tpl->render($tpl_params);
         } catch (\Exception $e) {
@@ -569,10 +585,7 @@ class Entity extends System\Entity implements Template\Entity
         $is_admin = fx::isAdmin();
         
         try {
-            if ($this->parent_container_props) {
-                $tpl_wrap->getContext()->pushContainerProps($this->parent_container_props);
-                $this->parent_container_props = null;
-            }
+            $this->applyParentContainerProps($tpl_wrap->getContext());
             $result = $tpl_wrap->render($wrap_params);
             if ($is_admin) {
                 $this->infoblock_meta['wrapper_params'] = $tpl_wrap->getRegisteredParams();

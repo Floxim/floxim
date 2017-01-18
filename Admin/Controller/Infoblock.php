@@ -1027,19 +1027,22 @@ class Infoblock extends Admin
         
         $values = [];
         
+        $special_values = [];
+        
         foreach ($templates as $template) {
-            
+            /*
             $template_item = array(
                 'name' => $template['name'],
                 'disabled' => true,
                 'children' => array(),
                 'expanded' => 'always'
             );
+            */
             
             $c_template_variants = $template_variants->find('template', $template['full_id']);
                 
             foreach ($c_template_variants as $variant) {
-                $template_item['children'] []= array(
+                $values []= array(
                     (string) $variant['id'],
                     $variant['name'],
                     array(
@@ -1055,12 +1058,26 @@ class Infoblock extends Admin
                     )
                 );
             }
-            $template_item['children'][]= array(
-                'id' => $template['full_id'], 
-                'name' => '* Специальные настройки'
-            );
-            $values []= $template_item;
+            
+            $special_values []= [
+                'id' => $template['full_id'],
+                'name' => $template['name']
+            ];
+            
         }
+        
+        if (count($special_values) > 1) {
+            $values []= [
+                'name' => 'Специальные настройки',
+                'children' => $special_values,
+                'expanded' => 'always',
+                'disabled' => true
+            ];
+        } else {
+            $special_values[0]['name'] = 'Специальные настройки';
+            $values []= $special_values[0];
+        }
+        
         $res = array(
             'label'  => fx::alang('Template', 'system'),
             'name'   => 'template',
