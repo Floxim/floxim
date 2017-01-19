@@ -105,10 +105,14 @@ abstract class Entity implements \ArrayAccess, Template\Entity
                 return $res;
             }
             $db_fields = array_keys($table_schema);
+            
             foreach ($db_fields as $field) {
                 $res[$field] = array(
                     'type' => self::OFFSET_FIELD
                 );
+                if (strstr($table_schema[$field]['type'], 'int(')) {
+                    $res[$field]['cast'] = 'int';
+                }
             }
             foreach ($finder->relations() as $rel_name => $rel) {
                 $res[$rel_name] = array(
