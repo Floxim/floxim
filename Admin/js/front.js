@@ -2972,7 +2972,7 @@ function handle_template_lock_state(template_ls) {
             '<div class="'+opts_cl+'">'+
                 '<div class="'+cl+'__unlock-description">'+
                     '<p>Этот шаблон используется <a class="'+cl+'__unlock-get-using-blocks">еще в '+count+' '+count_word+'</a>.</p>'+
-                    '<p>Где применить изменения?</p>'+
+                    '<p>Для редактирования выберите, где применить изменения.</p>'+
                 '</div>'+
                 '<div class="'+cl+'__unlock-option" data-action="lock">'+
                     '<div class="fx_icon fx_icon-type-unlocked"></div>'+
