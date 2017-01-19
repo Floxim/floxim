@@ -2817,23 +2817,28 @@ fx_front.prototype.edit_template_variant = function(template_ls) {
         var c_wrapper_ls = $form.find('input[name="visual[wrapper]"]').closest('.livesearch').data('livesearch');
         if (c_wrapper_ls) {
             var bound_wrapper_values = [
-                {id:'', name:'- нет -'}
-            ];
+                    {id:'', name:'- нет -'}
+                ],
+                c_bound_wrapper = c_variant && c_variant.wrapper_variant_id,
+                c_selected_wrapper = c_wrapper_ls.getValue();
+            
             c_wrapper_ls.traversePresetValues(function(v) {
-                if (!v.children) {
+                if (!v.basic_template) {
                     return;
                 }
-                v = $.extend(true, {}, v, {disabled:true});
-                bound_wrapper_values.push(v);
+                if (v.id == c_bound_wrapper || v.id == c_selected_wrapper) {
+                    v = $.extend(true, {}, v);
+                    bound_wrapper_values.push(v);
+                }
             });
-            var c_wrapper = c_wrapper_ls.getFullValue();
-            if (c_wrapper && c_wrapper.basic_template) {
+            
+            if (bound_wrapper_values.length > 1) {
                 fields.push({
                     type:'livesearch',
                     label:'Связать с шаблоном блока',
                     name:'wrapper_variant_id',
                     values: bound_wrapper_values,
-                    value: c_variant && c_variant.wrapper_variant_id
+                    value: c_bound_wrapper
                 });
             }
         }
