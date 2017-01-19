@@ -937,12 +937,12 @@ class Infoblock extends Admin
             $controller,
             $area_meta,
             'template',
-            $c_value
+            $c_value,
+            $infoblock
         );
         
         if ($tpl_field['value'] && !$c_value) {
             $ib_visual['template_variant_id'] = $tpl_field['value'];
-            fx::log('pushed to vis', $ib_visual, $tpl_field['value'], $ib_visual['template_variant']);
         }
         
         $fields []= $tpl_field;
@@ -950,7 +950,7 @@ class Infoblock extends Admin
         return $fields;
     }
     
-    protected function getTemplateVariantCounts($variants)
+    protected function getTemplateVariantCounts($variants, $skip_infoblock_id = null)
     {
         if (count($variants) === 0) {
             return [];
@@ -960,7 +960,8 @@ class Infoblock extends Admin
         $q->join(
                 '{{infoblock_visual}} as vis', 
             '(vis.template_variant_id = {{template_variant}}.id '.
-                ' or vis.wrapper_variant_id = {{template_variant}}.id)'
+                ' or vis.wrapper_variant_id = {{template_variant}}.id)'.
+                ($skip_infoblock_id ? ' and vis.infoblock_id != '. ( (int) $skip_infoblock_id) : '')
         );
 
         $q->where('id', $variants->getValues('id'));
@@ -968,6 +969,7 @@ class Infoblock extends Admin
         $q->group('{{template_variant}}.id');
 
         $q->select('id', 'count(*) as cnt');
+        
         
         $data = $q->getData();
         $res = $data->getValues('cnt', 'id');
@@ -979,7 +981,8 @@ class Infoblock extends Admin
         $controller = null, 
         $area_meta = null, 
         $role = 'template',
-        $c_value = null
+        $c_value = null,
+        $infoblock = null
     )
     {
         
@@ -1023,7 +1026,10 @@ class Infoblock extends Admin
             }
         );
         
-        $template_variant_counts = $this->getTemplateVariantCounts($template_variants);
+        $template_variant_counts = $this->getTemplateVariantCounts(
+            $template_variants,
+            $infoblock ? $infoblock['id'] : null
+        );
         
         $values = [];
         
@@ -1133,12 +1139,16 @@ class Infoblock extends Admin
         if (!$c_value) {
             $template_variant = $visual['template_variant'];
             $c_value = $template_variant['wrapper_variant_id'];
-            fx::log('tv', $template_variant, $visual, $c_value);
-        } else {
-            fx::log('has val', $c_value, $visual);
         }
         
-        $field = $this->getTemplatesField($wrappers, $controller, $area_meta, 'wrapper', $c_value);
+        $field = $this->getTemplatesField(
+            $wrappers, 
+            $controller, 
+            $area_meta, 
+            'wrapper', 
+            $c_value,
+            $infoblock
+        );
         $field['name'] = 'wrapper';
         
         $field['values'][]= ['', '-нет-'];
@@ -1574,7 +1584,8 @@ class Infoblock extends Admin
                 }
             }
             $prev_params = $tv['params'] ? $tv['params'] : array();
-            $tv['params'] = fx::util()->fullMerge($prev_params, $input['params']);
+            $new_params = isset($input['params']) && is_array($input['params']) ? $input['params'] : [];
+            $tv['params'] = fx::util()->fullMerge($prev_params, $new_params);
             $tv->save();
             $template_value = $tv['id'];
         }
@@ -1588,11 +1599,15 @@ class Infoblock extends Admin
             $templates = $controller->getAvailableTemplates(null, $area);
         }
         
+        $ib_id = isset($input['infoblock_id']) && $input['infoblock_id'] ? $input['infoblock_id'] : null;
         
         $template_field = $this->getTemplatesField(
             $templates, 
             $controller,
-            $area
+            $area,
+            $input['template_type'],
+            null,
+            $ib_id ? fx::data('infoblock', $ib_id) : null
         );
         
         return array(
@@ -1607,12 +1622,16 @@ class Infoblock extends Admin
         if (!$id) {
             return;
         }
-        $blocks = fx::data('infoblock_visual')
+        $q = fx::data('infoblock_visual')
                 ->whereOr(
                     ['template_variant_id', $id],
                     ['wrapper_variant_id', $id]
                 )
-                ->with('infoblock')
+                ->with('infoblock');
+        if (isset($input['infoblock_id']) && $input['infoblock_id']) {
+            $q->where('infoblock_id', $input['infoblock_id'], '!=');
+        }
+        $blocks = $q
                 ->all()
                 ->getValues(function($vis) {
                     return $vis['infoblock']->getSummary();

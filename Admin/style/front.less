@@ -2036,52 +2036,13 @@ html {
     display:none !important;
 }
 
-/*
-.fx-template-variant-options {
-    padding-left: 4px;
-    border-left: 1px solid #ccc;
-    border-right: 1px solid #ccc;
-    height: 34px;
-    display: inline-block;
-    margin-top: -4px;
-    margin-bottom: -3px;
-    vertical-align: top;
-    margin-left: 10px;
-    margin-right: 5px;
-    .fx_icon {
-        position:relative;
-        margin-right:5px;
-        margin-top:3px;
-        
-        &:not(:last-child) {
-            &:after {
-                content:'';
-                position:absolute;
-                height:34px;
-                top:-3px;
-                right:-5px;
-                width:1px;
-                display:block;
-                border-right:1px solid #CCC;
-            }
-        }
-    }
-    &_locked {
-        .fx_icon {
-            &-type-locked, &-type-place {
-                display:none;
-            }
-        }
-    }
-}
-*/
 .fx-template-visual-fields {
     display:inline-block;
     white-space:nowrap;
     position:relative;
-    min-width:600px;
+    min-width:800px;
     min-height:90px;
-    //outline:1px dotted #999;
+    
     &_locked &__items {
         opacity:0.4;
     }
@@ -2096,11 +2057,11 @@ html {
             right:0;
             bottom:0;
             left:0;
-            z-index:2;
+            z-index:1;
             opacity:0;
-            background:#FEE;
+            background:#fafafa;
             transition:opacity 0.2s ease;
-            opacity:0.7;
+            opacity:0.9;
         }
         &:hover:after {
             opacity:0.7;
@@ -2112,7 +2073,7 @@ html {
         right:0;
         bottom:0;
         left:0;
-        z-index:3;
+        z-index:2;
         opacity:0;
         transition:opacity 0.2s ease;
         flex-direction: row;
@@ -2141,8 +2102,14 @@ html {
             width: 94px;
             height: 94px;
         }
+        
         overflow: hidden;
-        justify-content: center;
+        justify-content: flex-start;
+        padding-top:21px;
+        white-space:normal;
+        
+        margin:0 10px;
+        
         &:first-child {
             margin-right: 30px;
         }
@@ -2153,6 +2120,14 @@ html {
         }
         
     }
+    
+    &__unlock-description {
+        margin-right:20px;
+        p {
+            margin:5px 0;
+        }
+    }
+    
     &_locked &__unlock-options {
         opacity:1;
         display: flex;

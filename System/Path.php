@@ -85,19 +85,17 @@ class Path
         foreach($parts as $dir) {
             switch( $dir) {
                 case '.':
-                    // Don't need to do anything here
                     break;
                 case '..':
                     array_pop( $path);
-                break;
+                    break;
                 default:
                     $path[] = $dir;
-                break;
+                    break;
             }
         }
         
         return join($sep, $path);
-        return 'ooo';
     }
     
     protected function processAbs($value)

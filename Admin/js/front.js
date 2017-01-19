@@ -2712,9 +2712,10 @@ fx_front.prototype.edit_template_variant = function(template_ls) {
     var fields = [],
 
         c_value = template_ls.getFullValue(),
-        c_variant = null;
+        c_variant = null,
+        $form = template_ls.$node.closest('form'),
+        ib_data = $form.formToHash();
         
-
     if (c_value.basic_template) {
         c_variant = c_value;
     }
@@ -2741,14 +2742,15 @@ fx_front.prototype.edit_template_variant = function(template_ls) {
             fields.push({
                 name:'using_blocks_group',
                 type: 'group',
-                label: 'Где используется ('+c_variant.count_using_blocks+')',
+                label: 'Где еще используется ('+c_variant.count_using_blocks+')',
                 loader: function() {
                     return new Promise(function(resolve) {
                         $fx.post(
                             {
                                 entity:'infoblock',
                                 action:'get_template_variant_using_blocks',
-                                template_variant_id: c_variant.id
+                                template_variant_id: c_variant.id,
+                                infoblock_id: ib_data.id
                             },
                             function(res) {
                                 resolve(res);
@@ -2768,16 +2770,16 @@ fx_front.prototype.edit_template_variant = function(template_ls) {
         name:'name'
     });
     
+    /*
     fields.push({
-        //type:'checkbox',
-        type:'hidden',
+        type:'checkbox',
+        //type:'hidden',
         label:'Защищен от редактирования?',
         name:'is_locked',
         value: (c_variant ? c_variant.is_locked : 0)
     });
-    
-    var $form = template_ls.$node.closest('form');
-    
+    */
+   
     var template_variant_params = template_ls.template_variant_params || [];
     
     for (var i = 0 ; i < template_variant_params.length; i++) {
@@ -2910,6 +2912,7 @@ function save_template_variant(data, template_ls) {
             basic_template: c_value.basic_template || c_value.id,
             params : ib_data.visual[type+'_visual'],
             controller: ib_data.controller,
+            infoblock_id: ib_data.id,
             area: JSON.parse(ib_data.area),
             template_type: type
         }
@@ -2928,11 +2931,28 @@ function save_template_variant(data, template_ls) {
     });
 }
 
+function is_template_variant_locked(template_ls) {
+    var $form = template_ls.$node.closest('form'),
+        unlocked = $form.data('unlocked_template_variants') || {},
+        value = template_ls.getFullValue();
+        
+    if (!value || !value.basic_template || unlocked[value.id]) {
+        return false;
+    }
+    
+    return value.is_locked*1 === 1 || value.count_using_blocks > 0;
+}
+
 function handle_template_lock_state(template_ls) {
-    if (!template_ls || !template_ls.getFullValue()) {
+    
+    var c_value = template_ls.getFullValue();
+    
+    if (!template_ls || !c_value) {
         return;
     }
-    var is_locked = template_ls.getFullValue().is_locked*1 === 1,
+    
+    var count = c_value.count_using_blocks,
+        is_locked = is_template_variant_locked(template_ls),
         $field = template_ls.$node.closest('.field'),
         cl = 'fx-template-visual-fields',
         $container = $field.closest('.fx_tab_data').find('.'+cl),
@@ -2942,15 +2962,20 @@ function handle_template_lock_state(template_ls) {
         c_value  = template_ls.getFullValue();
     
     if (is_locked && !$container.find('.'+opts_cl).length) {
+        var count_word = (count % 10 === 1 && count % 100 !== 11 ? 'месте' : 'местах');
         var $opts = $(
             '<div class="'+opts_cl+'">'+
-                '<div class="'+cl+'__unlock-option" data-action="copy">'+
-                    '<div class="fx_icon fx_icon-type-place"></div>'+
-                    '<span>Только здесь</span>'+
+                '<div class="'+cl+'__unlock-description">'+
+                    '<p>Этот шаблон используется <a class="'+cl+'__unlock-get-using-blocks">еще в '+count+' '+count_word+'</a>.</p>'+
+                    '<p>Где применить изменения?</p>'+
                 '</div>'+
                 '<div class="'+cl+'__unlock-option" data-action="lock">'+
                     '<div class="fx_icon fx_icon-type-unlocked"></div>'+
                     '<span>Везде</span>'+
+                '</div>'+
+                '<div class="'+cl+'__unlock-option" data-action="copy">'+
+                    '<div class="fx_icon fx_icon-type-place"></div>'+
+                    '<span>Только здесь</span>'+
                 '</div>'+
             '</div>'
         );
@@ -2965,19 +2990,82 @@ function handle_template_lock_state(template_ls) {
                     template_ls.setValue(c_value.basic_template);
                     break;
                 case 'lock':
-                    save_template_variant(
-                        {
-                            is_locked: "0",
-                            target_id: c_value.id
-                        }, 
-                        template_ls
-                    );
+                    template_ls.$node.find('.monosearch__item-controls').show();
+                    $container.toggleClass('fx-template-visual-fields_locked', false);
+                    var unlocked = $form.data('unlocked_template_variants') || {};
+                    unlocked[c_value.id] = true;
+                    $form.data('unlocked_template_variants', unlocked);
                     break;
             }
+        }).on('click', '.'+cl+'__unlock-get-using-blocks', function() {
+            var ib_data = $form.formToHash();
+                
+            $fx.post(
+                {
+                    entity:'infoblock',
+                    action:'get_template_variant_using_blocks',
+                    template_variant_id: c_value.id,
+                    infoblock_id: ib_data.id
+                },
+                function(res) {
+                    $fx.front_panel.show_form(
+                        {
+                            header: 'Где еще используется шаблон',
+                            fields: res.fields,
+                            form_button: [{key:'cancel',label:'Понятно!'}]
+                        },
+                        {
+                            style:'alert'
+                        }
+                    );
+                }
+            );
         });
         $container.append($opts);
     }
     $container.toggleClass('fx-template-visual-fields_locked', is_locked);
+}
+
+function add_template_variant_controls(template_ls) {
+    var value = template_ls.getFullValue(),
+        $form = template_ls.$node.closest('form');
+    
+    if (!value || value.id === '') {
+        return;
+    }
+    var is_locked = is_template_variant_locked(template_ls),
+        is_preset = !!value.basic_template,
+        template_type = template_ls.template_type;
+
+    if (is_preset && is_locked) {
+        //return;
+    }
+
+    if (is_preset) {
+        template_ls.addValueControl({
+            icon: 'place',
+            action: function(c_value) {
+                var c_data = $form.data('last_data');
+
+                // change template prop in current data to force visual props sending 
+                c_data.visual[template_type] = c_value.basic_template;
+                template_ls.setValue(c_value.basic_template);
+            }
+        });
+    }
+
+    template_ls.addValueControl({
+        icon: is_preset ? 'edit' : 'add-round',
+        action: function() {
+            $fx.front.edit_template_variant(
+                template_ls
+            );
+        }
+    });
+
+    if (is_locked) {
+        template_ls.$node.find('.monosearch__item-controls').hide();
+    }
 }
 
 fx_front.prototype.show_infoblock_settings_form = function(data, $ib_node, tab) {
@@ -2987,9 +3075,6 @@ fx_front.prototype.show_infoblock_settings_form = function(data, $ib_node, tab) 
 
     $fx.front_panel.show_form(data, {
         view:'horizontal',
-        //view:'vertical',
-        //overlap:false,
-        //side:'left',
         active_tab: tab,
         onfinish:function(res, $form) {
             $ib_node = $form && $form.data('ib_node');
@@ -3024,41 +3109,6 @@ fx_front.prototype.show_infoblock_settings_form = function(data, $ib_node, tab) 
             $form.data('ib_node', $ib_node);
             $fx.front.hilight_empty_infoblock_areas($ib_node, 'show');
             
-            function add_variant_controls(template_ls) {
-                var value = template_ls.getFullValue();
-                if (!value || value.id === '') {
-                    return;
-                }
-                var locked = value.is_locked*1 ? 'locked' : 'unlocked',
-                    is_locked = locked === 'locked',
-                    is_preset = !!value.basic_template,
-                    template_type = template_ls.template_type;
-                
-                if (is_preset && is_locked) {
-                    return;
-                }
-                if (is_preset) {
-                    template_ls.addValueControl({
-                        icon: 'place',
-                        action: function(c_value) {
-                            var c_data = $form.data('last_data');
-                            
-                            // change template prop in current data to force visual props sending 
-                            c_data.visual[template_type] = c_value.basic_template;
-                            template_ls.setValue(c_value.basic_template);
-                        }
-                    });
-                }
-                template_ls.addValueControl({
-                    icon: is_preset ? 'edit' : 'add-round',
-                    action: function() {
-                        $fx.front.edit_template_variant(
-                            template_ls
-                        );
-                    }
-                });
-            }
-            
             var template_types = ['template', 'wrapper'],
                 template_inputs = {};
             
@@ -3071,7 +3121,7 @@ fx_front.prototype.show_infoblock_settings_form = function(data, $ib_node, tab) 
                 };
                 
                 ls.template_type = tt;
-                ls.bindValueControls(add_variant_controls);
+                ls.bindValueControls(add_template_variant_controls);
             });
             
             return $fx.front.extract_infoblock_visual_fields($ib_node, $form)

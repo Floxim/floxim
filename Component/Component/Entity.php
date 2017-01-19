@@ -59,7 +59,8 @@ class Entity extends System\Entity
 
             $offsets = array(
                 'id' => array(
-                    'type' => self::OFFSET_FIELD
+                    'type' => self::OFFSET_FIELD,
+                    'cast' => 'int'
                 ),
                 'type' => array(
                     'type' => self::OFFSET_FIELD
