@@ -2076,53 +2076,48 @@ html {
         z-index:2;
         opacity:0;
         transition:opacity 0.2s ease;
-        flex-direction: row;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
         display:none;
+        padding:10px;
+    }
+    
+    &__unlock-actions {
+        display:flex;
+        flex-direction:row;
+        margin-top:10px;
     }
     &__unlock-option {
-        width: 90px;
-        height: 90px;
-        //background: #FFF;
-        background:rgba(255,255,255,0.3);
-        font-size:13.5px;
-        padding: 0 15px;
+        
+        background:#FFF;
+        font-size:15px;
+        //color:#2d63ff;
+        padding: 5px 15px;
         text-align: center;
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
         align-items: center;
         cursor:pointer;
         transition:all 0.2s ease;
-        //border: 1px solid #CCC;
-        border-radius: 140px;
-        border:1px solid #FFF;
-        &:hover {
-            background:rgba(255,255,255,1);
-            width: 94px;
-            height: 94px;
-        }
+        
+        border-radius: 3px;
+        border:1px solid #aac0ff;
         
         overflow: hidden;
-        justify-content: flex-start;
-        padding-top:21px;
-        white-space:normal;
-        
-        margin:0 10px;
         
         &:first-child {
             margin-right: 30px;
         }
         .fx_icon {
             display:block;
-            margin-bottom:3px;
-            margin-top:-5px;
+            margin-right:10px;
         }
         
     }
     
     &__unlock-description {
-        margin-right:20px;
+        text-align:center;
         p {
             margin:5px 0;
         }

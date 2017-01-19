@@ -47,7 +47,7 @@ class Finder extends System\Finder
             return parent::getById($id);
         }
         if (preg_match("~fake~", $id)) {
-            return $this->create(array('id' => $id));
+            return $this->create(array('is_fake' => true));
         }
     }
     

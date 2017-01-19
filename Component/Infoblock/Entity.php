@@ -342,6 +342,7 @@ class Entity extends System\Entity implements Template\Entity
 
     public function isFake()
     {
+        return $this['is_fake'];
         return preg_match("~^fake~", $this['id']);
     }
 

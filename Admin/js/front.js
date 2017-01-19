@@ -2972,15 +2972,17 @@ function handle_template_lock_state(template_ls) {
             '<div class="'+opts_cl+'">'+
                 '<div class="'+cl+'__unlock-description">'+
                     '<p>Этот шаблон используется <a class="'+cl+'__unlock-get-using-blocks">еще в '+count+' '+count_word+'</a>.</p>'+
-                    '<p>Для редактирования выберите, где применить изменения.</p>'+
+                    '<p>Если хотите его отредактировать, выберите, где применить изменения.</p>'+
                 '</div>'+
-                '<div class="'+cl+'__unlock-option" data-action="lock">'+
-                    '<div class="fx_icon fx_icon-type-unlocked"></div>'+
-                    '<span>Везде</span>'+
-                '</div>'+
-                '<div class="'+cl+'__unlock-option" data-action="copy">'+
-                    '<div class="fx_icon fx_icon-type-place"></div>'+
-                    '<span>Только здесь</span>'+
+                '<div class="'+cl+'__unlock-actions">'+
+                    '<div class="'+cl+'__unlock-option" data-action="lock">'+
+                        '<div class="fx_icon fx_icon-type-unlocked"></div>'+
+                        '<span>Везде</span>'+
+                    '</div>'+
+                    '<div class="'+cl+'__unlock-option" data-action="copy">'+
+                        '<div class="fx_icon fx_icon-type-place"></div>'+
+                        '<span>Только здесь</span>'+
+                    '</div>'+
                 '</div>'+
             '</div>'
         );
@@ -3534,7 +3536,7 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
     if(selected.length > 0) {
          selected_selector = selected.first().generate_selector(ib_parent);
     }
-    var real_infoblock_id = (extra_data || {}).real_infoblock_id || meta.id;
+    var real_infoblock_id = (extra_data || {}).real_infoblock_id || meta.id || 'fake';
     
     var xhr = $.ajax({
         type:'post',
