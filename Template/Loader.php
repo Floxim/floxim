@@ -119,8 +119,13 @@ class Loader
         return $this->is_aliased;
     }
     
+    protected static $name_path_cache = [];
+    
     public static function nameToPath($name)
     {
+        if (isset(self::$name_path_cache[$name])) {
+            return self::$name_path_cache[$name];
+        }
         $ns = fx::getComponentNamespace($name);
         $ns = explode("\\", trim($ns, "\\"));
         if ($ns[0] === 'Theme') {
@@ -128,7 +133,9 @@ class Loader
         } else {
             array_unshift($ns, 'module');
         }
-        return fx::path()->abs('@home/' . join("/", $ns));
+        $res = fx::path()->abs('@home/' . join("/", $ns));
+        self::$name_path_cache[$name] = $res;
+        return $res;
     }
 
     public function addDefaultSourceDirs()

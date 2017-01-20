@@ -229,28 +229,12 @@ class Fx
         
         $full_name = fx::getComponentFullName($name);
         $path = explode(".", $full_name);
-        /*
-        if ($path[0] === 'floxim' && $path[1] === 'component') {
-            array_unshift($path, "floxim");
-        }
-         * 
-         */
+        
         if (count($path) === 1) {
-            if (in_array($name, array('user', 'page','content'))) {
-                fx::log('oldstyle com', $name, fx::debug()->backtrace());
-            }
             $res = '\\Floxim\\Floxim\\Component\\' . fx::util()->underscoreToCamel($full_name);
         } else {
             foreach ($path as &$part) {
                 $part = fx::util()->underscoreToCamel($part);
-                /*
-                $chunks = explode("_", $part);
-                foreach ($chunks as &$chunk) {
-                    $chunk = fx::util()->underscoreToCamel($chunk);
-                }
-                $part = join('', $chunks);
-                 * 
-                 */
             }
             $res = '\\' . join('\\', $path);
         }

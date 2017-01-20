@@ -130,16 +130,29 @@ class Compiler
         return $res;
     }
     
+    protected static $name_to_namespace_cache = [];
+    
+    protected static function nameToBemNamespace($name)
+    {
+        if (isset(self::$name_to_namespace_cache[$name])) {
+            return self::$name_to_namespace_cache[$name];
+        }
+        
+        if ($name === 'admin') {
+            $res = '';
+        } else {
+            $res = str_replace(".", '--', $name);
+            $res = str_replace("_", '-', $res);
+            $res .= '--';
+        }
+        
+        self::$name_to_namespace_cache[$name] = $res;
+        return $res;
+    }
+    
     protected function getBemNamespace()
     {
-        $ns = $this->template_set_name;
-        if ($ns === 'admin') {
-            return '';
-        }
-        $ns = str_replace(".", '--', $ns);
-        $ns = str_replace("_", '-', $ns);
-        $ns .= '--';
-        return $ns;
+        return self::nameToBemNamespace($this->template_set_name);
     }
     
     protected function tokenBemBlockToCode($token)
@@ -1958,9 +1971,25 @@ class Compiler
             }
         }
         $code .= $this->childrenToCode($token)."\n";
-        $dirs = $token->getProp('extend') ? "\$this->getAllDirs()" : "\$template_dir";
-        $bundle_params = var_export(array('name' => $token->getProp('bundle'), 'namespace' => $this->getBemNamespace()), true);
-        $code .= 'fx::page()->addCssBundleFromString(ob_get_clean(), '.$dirs.', '.$bundle_params.');'."\n";
+        
+        if ( ($from = $token->getProp('from')) ) {
+            $dir = "\\Floxim\\Floxim\\Template\\Loader::nameToPath('".$from."').DIRECTORY_SEPARATOR";
+            $namespace = self::nameToBemNamespace($from);
+        } else {
+            $dir = "\$template_dir";
+            $namespace = $this->getBemNamespace();
+        }
+        
+        $bundle_params = var_export(
+            array(
+                'name' => $token->getProp('bundle'), 
+                'namespace' => $namespace
+            ), 
+            true
+        );
+        
+        //$bundle_params = var_export(array('name' => $token->getProp('bundle'), 'namespace' => $this->getBemNamespace()), true);
+        $code .= 'fx::page()->addCssBundleFromString(ob_get_clean(), '.$dir.', '.$bundle_params.');'."\n";
         return $code;
     }
 
