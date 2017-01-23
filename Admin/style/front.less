@@ -2049,6 +2049,7 @@ html {
     &_locked {
         padding: 20px;
         margin: -20px;
+        min-height:140px;
         &:after {
             content:'';
             display:block;
@@ -2086,6 +2087,7 @@ html {
     &__unlock-actions {
         display:flex;
         flex-direction:row;
+        flex-shrink:0;
         margin-top:10px;
     }
     &__unlock-option {

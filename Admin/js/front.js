@@ -2945,7 +2945,7 @@ function is_template_variant_locked(template_ls) {
         return false;
     }
     
-    return value.is_locked*1 === 1 || value.count_using_blocks > 0;
+    return value.count_using_blocks*1 > 0; // || value.is_locked*1 === 1
 }
 
 function handle_template_lock_state(template_ls) {
@@ -2965,7 +2965,7 @@ function handle_template_lock_state(template_ls) {
         template_type = template_ls.template_type,
         $form = $field.closest('form'),
         c_value  = template_ls.getFullValue();
-    
+
     if (is_locked && !$container.find('.'+opts_cl).length) {
         var count_word = (count % 10 === 1 && count % 100 !== 11 ? 'месте' : 'местах');
         var $opts = $(

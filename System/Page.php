@@ -411,7 +411,8 @@ class Page
             'format' => 'fx-response',
             'response' => $result,
             'js' => $this->files_js,
-            'css' => $css_res
+            'css' => $css_res,
+            'request' => $_POST
         );
         return json_encode($response);
     }

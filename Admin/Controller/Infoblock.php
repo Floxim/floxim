@@ -1019,12 +1019,13 @@ class Infoblock extends Admin
                         return false;
                     }
                 }
-                if (!$c_value) {
+                if (is_null($c_value)) {
                     $c_value = $variant['id'];
                 }
                 return true;
             }
         );
+        
         
         $template_variant_counts = $this->getTemplateVariantCounts(
             $template_variants,
@@ -1036,14 +1037,6 @@ class Infoblock extends Admin
         $special_values = [];
         
         foreach ($templates as $template) {
-            /*
-            $template_item = array(
-                'name' => $template['name'],
-                'disabled' => true,
-                'children' => array(),
-                'expanded' => 'always'
-            );
-            */
             
             $c_template_variants = $template_variants->find('template', $template['full_id']);
                 
@@ -1136,7 +1129,7 @@ class Infoblock extends Admin
                                 ? $visual['wrapper_variant_id'] 
                                 : $visual['wrapper'];
         
-        if (!$c_value) {
+        if (is_null($c_value)) {
             $template_variant = $visual['template_variant'];
             $c_value = $template_variant['wrapper_variant_id'];
         }

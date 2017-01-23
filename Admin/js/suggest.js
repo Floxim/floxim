@@ -254,9 +254,8 @@ window.fx_suggest = function(params) {
             Suggest.box.html('').append($res);
             Suggest.showBox();
             var selected_node = [];
-            if (Suggest.currentId) {
+            if (typeof Suggest.currentId !== 'undefined') {
                 selected_node = Suggest.box.find('.search_item').filter(
-                    //'*[data-id="'+Suggest.currentId+'"]'
                     function() {
                         return $(this).data('id') === Suggest.currentId;
                     }

@@ -449,7 +449,7 @@ class Token
         ),
         'set' => array(
             'type' => 'both',
-            'contains' => array('code', 'var', 'lang', 'call', 'apply', 'if', 'elseif', 'else', 'each')
+            'contains' => array('code', 'var', 'lang', 'call', 'apply', 'if', 'elseif', 'else', 'each', 'with')
         ),
         'first' => array(
             'type' => 'double',

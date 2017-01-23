@@ -156,10 +156,10 @@ class Test extends Admin {
     {
         $vals = array(
             array(
-                '', 'Empty val'
+                'test', '1. My Test'
             ),
             array(
-                'test', '1. My Test'
+                '', 'Empty val'
             ),
             array(
                 'west', 
@@ -196,7 +196,7 @@ class Test extends Admin {
                 'type' => 'livesearch',
                 'allow_empty' => false,
                 'values' => $vals,
-                'value' => 'west'
+                'value' => ''
             )
         );
         /*
