@@ -107,6 +107,7 @@ less_tweaker.prototype.handle_form = function() {
         that = this;
     
     this.$form.on('change', function(e) {
+        var prev_data = that.last_data;
         that.last_data = that.get_data();
         clearTimeout(timer);
         timer = setTimeout(
@@ -115,8 +116,16 @@ less_tweaker.prototype.handle_form = function() {
             },
             100
         );
+        var source_json = $(e.target).closest('.field').data('source_json'),
+            force_redraw = false;
+        
+        if (source_json && source_json.force_redraw) {
+            force_redraw = typeof source_json.force_redraw === 'function' ? 
+                            source_json.force_redraw(e) : 
+                            source_json.force_redraw;
+        }
         $(e.target).trigger('fx_change_passed');
-        return false;
+        return !!force_redraw;
     });
 };
 

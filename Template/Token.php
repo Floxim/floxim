@@ -277,7 +277,7 @@ class Token
                 'use'
             )
         ),
-        'defaults' => array(
+        'data' => array(
             'type' => 'double',
             'contains' => [
                 'code',

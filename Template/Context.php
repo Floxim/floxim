@@ -211,14 +211,6 @@ class Context {
                 $new_props[$p] = $v;
             }
         }
-        $level = count(self::$container_props);
-        if ($level > 2) {
-            unset($new_props['align-container']);
-        }
-        if ($level > 3) {
-            unset($new_props['width']);
-        }
-        
         self::$container_props []= $new_props;
     }
     
@@ -233,6 +225,11 @@ class Context {
         } else {
             self::$container_width []= [$value, $base];
         }
+        if ( (int) $value !== 1) {
+            $cp =& self::$container_props[count(self::$container_props) - 1];
+            unset($cp['width']);
+            unset($cp['align-container']);
+        }
     }
     
     public function popContainerWidth()
@@ -246,6 +243,18 @@ class Context {
         $base = $val[1] === 'screen' ? 1600 : 1200;
         $res = round($val[0] * $base);
         return $res;
+    }
+    
+    public function getContainerWidthType()
+    {
+        $val = end(self::$container_width);
+        return $val[1];
+    }
+    
+    public function getContainerWidthValue()
+    {
+        $val = end(self::$container_width);
+        return $val[0];
     }
 
 

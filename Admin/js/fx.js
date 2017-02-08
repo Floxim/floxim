@@ -42,6 +42,10 @@ window.$fx = {
                                     success: function() {
                                         window.fx_assets_js.push(asset);
                                         resolve();
+                                    },
+                                    error: function() {
+                                        console.log('whatsup', arguments, this);
+                                        resolve();
                                     }
                                 });
                             }));

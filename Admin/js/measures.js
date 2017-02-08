@@ -46,6 +46,15 @@ $fx.measures.prototype = {
             var new_class = that.get_lock_class();
             
             that.$lock.removeClass(prev_class).addClass(new_class);
+            var $control = that.$last_active_control || that.$controls.find(':input:visible').first();
+            $control.focus();
+        }).mousedown(function() {
+            var $active = $(document.activeElement);
+            if ($active.parents().index(that.$controls) !== -1 && $active.is(':input')) {
+                that.$last_active_control = $active;
+            } else {
+                that.$last_active_control = null;
+            }
         });
     },
     

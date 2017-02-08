@@ -1438,8 +1438,6 @@ class Compiler
         
         $_bundle_params = '$bundle_params';
         
-        $_bundle_is_temp = '$bundle_is_temp';
-        
         $_style_id = '$style_id';
         
         $_style_id_mod = '$style_id_mod';
@@ -1453,12 +1451,23 @@ class Compiler
         $children = $token->getChildren();
         
         $defaults_token = null;
+        $params_token = null;
+        
+        $children_to_drop = [];
+        
         foreach ($children as $child_index => $child) {
-            if ($child->name === 'defaults') {
-                $defaults_token = $child;
-                unset($children[$child_index]);
-                break;
+            if ($child->name === 'data') {
+                if ($child->getProp('name') === 'defaults') {
+                    $defaults_token = $child;
+                } else {
+                    $params_token = $child;
+                }
+                $children_to_drop []= $child_index;
             }
+        }
+        
+        foreach ($children_to_drop as $index_to_drop) {
+            unset($children[$index_to_drop]);
         }
         
         $has_info = count($children) > 0;
@@ -1560,7 +1569,6 @@ class Compiler
             $code .= $_bundle_id . " = 'default';\n";
             $code .= $_mod_value . " = 'default';\n";
             $code .= $_bundle_params . " = array();\n";
-            $code .= $_bundle_is_temp ." = false;\n";
         $code .= "} else {\n";
             if ($is_inline) {
                 $_visual_path = '$visual_path';
@@ -1569,13 +1577,11 @@ class Compiler
                 $code .= $_variant_id ." = \$this->getCurrentVariantId();\n";
                 $code .= "if (!".$_variant_id.") {\n";
                     $code .= $_visual_id . " = \$context->getVisualId();\n";
-                    $code .= $_bundle_is_temp ." = ".$_visual_id." === 'new';\n";
                     $code .= $_visual_path . ' = ($this->isWrapper() ? "w" : "t")."-".'.$_style_value_path.";\n";
                     $code .= $_mod_value . ' = md5('.$_visual_id.'."-".'.$_visual_path.");\n";
                     $code .= $_bundle_id . ' = "default_inline_".'.$_visual_id.'."_".'.$_mod_value.";\n";
                     $code .= $_bundle_params . " = array('visual_path' => ".$_visual_path.");\n";
                 $code .= "} else {\n";
-                    $code .= $_bundle_is_temp ." = false;\n";
                     $code .= $_mod_value . ' = md5('.$_variant_id.'.'.$_style_value_path.");\n";
                     $code .= $_bundle_id . ' = "default_tv_".'.$_variant_id.'."_".'.$_mod_value.";\n";
                     $code .= $_bundle_params . " = array('visual_path' => ".$_style_value_path.");\n";
@@ -1585,17 +1591,31 @@ class Compiler
                 $code .= $_bundle_id .' = '.$_style_value.";\n";
                 $code .= $_bundle_params . " = array();\n";
                 $code .= $_mod_value . " = str_replace('_variant_', '--', ".$_bundle_id.");\n";
-                $code .= $_bundle_is_temp ." = false;\n";
             }
         $code .= "}\n";
+        
+        if ($is_inline && $params_token) {
+            $_style_context_params = '$style_context_params';
+            $param_props ['style_context_params']= $_style_context_params;
+        }
         
         $exported_props = array();
         foreach ($param_props as $p => $v) {
             $exported_props []= '"'.$p.'" => '.$v;
         }
         
+        if ($is_inline && $params_token) {
+            $code .= "if (\$_is_admin) {\n";
+                $code .= "ob_start();\n";
+                $code .= $this->childrenToCode($params_token);
+                $code .= $_style_context_params .
+                            " = \Floxim\Floxim\Template\Compiler::parseCssLikeProps(ob_get_clean());\n";
+                $code .= 'fx::page()->addStyleFilter('.$_block_name.");\n";
+            $code .= "}\n";
+        }
+        
         $code .= 'if ( ($export_style_file = fx::page()->addStyleLess('.
-                    $_block_name.', '.$_bundle_id.', '.$_bundle_params.', '.$_bundle_is_temp.
+                    $_block_name.', '.$_bundle_id.', '.$_bundle_params.
                 ') ) ) {'."\n";
         $code .= 'require( $export_style_file );'."\n";
         $code .= "}\n";
@@ -1603,7 +1623,7 @@ class Compiler
         $code .= " echo ' style_'.".$_mod_value.";\n";
         
         $code .= "if (\$_is_admin) {\n";
-            //$code .= $_style_id_mod .' = md5('.$_style_value_path.'.'.$_mod_value.");\n";
+            
             $code .= $_style_id_mod .' = md5('.$_style_value_path.");\n";
             $code .= " echo ' ".($is_inline ? '.fx-styled-inline' : '')." style-id_'.".$_style_id_mod.";\n";
             $code .= "\$this->registerParam(".

@@ -258,11 +258,10 @@ function fx_debug_init($container) {
         }
         
         var data = window.fx_debug_data[hash];
-        if (!data || data[0] === undefined) {
-            console.log('invalid');
+        if (typeof data !== 'string' && (!data || data[0] === undefined)) {
+            console.log('invalid', data, typeof data);
             return;
         }
-        
         $entry.html('');
         fx_debug_draw(data, $(this));
         $entry.addClass(ready_class).attr('style', '');

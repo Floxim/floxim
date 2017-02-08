@@ -1002,20 +1002,22 @@ class Infoblock extends Admin
         
         $template_codes = fx::collection($templates)->getValues('full_id');
         
+        $mismatched = fx::collection();
+        
+        
         $template_variants = $theme_variants->find(
-            function($variant) use ($area_size, $template_codes, &$c_value, $controller) {
-                if ($variant['id'] === $c_value) {
-                    return true;
-                }
+            function($variant) use ($area_size, $template_codes, &$c_value, $controller, $mismatched) {
                 if (!in_array($variant['template'], $template_codes)) {
                     return false;
                 }
                 if ($variant['size'] && $variant['size'] !== 'any' && $variant['size'] !== $area_size['width']) {
+                    $mismatched []= $variant;
                     return false;
                 }
                 if ($controller) {
                     $avail_for_type = $controller->checkTemplateAvailForType($variant);
                     if (!$avail_for_type) {
+                        $mismatched []= $variant;
                         return false;
                     }
                 }
@@ -1036,26 +1038,31 @@ class Infoblock extends Admin
         
         $special_values = [];
         
+        
+        $variant_to_value = function($variant) use ($template_variant_counts) {
+            return array(
+                (string) $variant['id'],
+                $variant['name'],
+                array(
+                    'basic_template' => $variant['template'],
+                    'real_name' => $variant->getReal('name'),
+                    'is_locked' => $variant['is_locked'],
+                    'size' => $variant['size'] ? $variant['size'] : 'any',
+                    'avail_for_type' => $variant['avail_for_type'],
+                    'wrapper_variant_id' => $variant['wrapper_variant_id'],
+                    'count_using_blocks' => isset($template_variant_counts[$variant['id']]) ?
+                                                $template_variant_counts[$variant['id']] :
+                                                0
+                )
+            );
+        };
+        
         foreach ($templates as $template) {
             
             $c_template_variants = $template_variants->find('template', $template['full_id']);
                 
             foreach ($c_template_variants as $variant) {
-                $values []= array(
-                    (string) $variant['id'],
-                    $variant['name'],
-                    array(
-                        'basic_template' => $template['full_id'],
-                        'real_name' => $variant->getReal('name'),
-                        'is_locked' => $variant['is_locked'],
-                        'size' => $variant['size'] ? $variant['size'] : 'any',
-                        'avail_for_type' => $variant['avail_for_type'],
-                        'wrapper_variant_id' => $variant['wrapper_variant_id'],
-                        'count_using_blocks' => isset($template_variant_counts[$variant['id']]) ?
-                                                    $template_variant_counts[$variant['id']] :
-                                                    0
-                    )
-                );
+                $values []= $variant_to_value($variant);
             }
             
             $special_values []= [
@@ -1075,6 +1082,30 @@ class Infoblock extends Admin
         } else {
             $special_values[0]['name'] = 'Специальные настройки';
             $values []= $special_values[0];
+        }
+        if (is_null($c_value)) {
+            $c_value = $special_values[0]['id'];
+        }
+        
+        if (count($mismatched) > 0) {
+            $mismatched_values = [
+                'name' => '<span style="color:#F00;">Не подходят</span>',
+                'children' => [],
+                //'expanded' => 'always',
+                'expanded' => false,
+                'disabled' => true
+            ];
+            foreach ($mismatched as $variant) {
+                $mismatched_value = $variant_to_value($variant);
+                if (isset($mismatched_value[2]['avail_for_type'])) {
+                    $target_com = fx::getComponentByKeyword($mismatched_value[2]['avail_for_type']);
+                    if ($target_com) {
+                        $mismatched_value[2]['target_type_name'] = $target_com['name'];
+                    }
+                }
+                $mismatched_values['children'] []= $mismatched_value;
+            }
+            $values []= $mismatched_values;
         }
         
         $res = array(

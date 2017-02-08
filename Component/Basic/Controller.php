@@ -59,7 +59,14 @@ class Controller extends \Floxim\Floxim\Controller\Frontoffice {
         if (!is_null($this->_finder)) {
             return $this->_finder;
         }
-        $finder = fx::data($this->getContentType());
+        
+        $com = $this->getComponent();
+        
+        $finder = fx::data($com['keyword']);
+        
+        if ($com->getFieldByKeyword('site_id')) {
+            $finder->where('site_id', fx::env('site_id'));
+        }
         if (!fx::isAdmin()) {
             $finder
                 ->where('is_published', 1)

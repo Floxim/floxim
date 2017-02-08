@@ -113,7 +113,8 @@ window.$fx_fields = {
             type = 'default';
         }
         
-        var source_json = JSON.parse(JSON.stringify(json));
+        //var source_json = JSON.parse(JSON.stringify(json));
+        var source_json = $.extend(true, {}, json);
         
         var $node = this[type](json);
         if ($node && $node.length && typeof $node !== 'string') {

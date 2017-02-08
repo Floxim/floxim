@@ -30,13 +30,6 @@ class StyleBundle extends Bundle {
             unset($params['visual_path']);
         }
         
-        if (isset($params['is_temp'])) {
-            if (in_array($this->meta['type'], ['tv','inline'])) {
-                $this->meta['is_temp'] = true;
-            }
-            unset($params['is_temp']);
-        }
-        
         parent::__construct($keyword, $params);
         
         if ($this->is_new) {
@@ -54,9 +47,7 @@ class StyleBundle extends Bundle {
                         .'/'.$this->meta['style_name'];
                 break;
             case 'inline':
-                $res .= '/inline/'.$this->meta['visual_id']
-                       .(isset($this->meta['is_temp']) && $this->meta['is_temp'] ? '-temp' : '')
-                       .'/'.$this->meta['visual_path_hash'];
+                $res .= '/inline/'.$this->meta['visual_id'].'/'.$this->meta['visual_path_hash'];
                 break;
             case 'variant':
                 $res .= '/variant/'.$this->meta['style_variant_id'].'/'.$this->getHash();
@@ -73,9 +64,6 @@ class StyleBundle extends Bundle {
     public function isFresh($file = null) {
         if ($file !== null) {
             return parent::isFresh($file);
-        }
-        if (isset($this->meta['is_temp']) && $this->meta['is_temp']) {
-            return true;
         }
         return parent::isFresh();
     }
@@ -298,6 +286,33 @@ class StyleBundle extends Bundle {
         );
     }
     
+    protected function isOverriden()
+    {
+        $types = [
+            'inline' => ['infoblock_visual', 'visual_id'],
+            'tv' => ['template_variant', 'template_variant_id']
+        ];
+        $type = $this->meta['type'];
+        
+        if(!isset($types[$type])) {
+            return false;
+        }
+        $overriden = \Floxim\Floxim\System\Page::getOverridenVisual();
+        if ($overriden === true) {
+            return true;
+        }
+        if (!$overriden) {
+            return false;
+        }
+        $props = $types[$type];
+        foreach ($overriden as $c_overriden) {
+            if ($c_overriden[0] === $props[0] && $this->meta[$props[1]] == $c_overriden[1]) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     public function getAdminOutput()
     {
         $declaration_keyword = $this->getDeclarationKeyword();
@@ -307,11 +322,7 @@ class StyleBundle extends Bundle {
             'declaration_keyword' => $declaration_keyword,
             'version' => $this->version,
         );
-        $type = $this->meta['type'];
-        if (
-            ($type === 'inline' || $type === 'tv') 
-            && isset($this->meta['is_temp']) && $this->meta['is_temp']
-        ) {
+        if ( $this->isOverriden() ) {
             $res['css'] = $this->getBundleContent();
             $res['file'] = 'temp';
             $res['filemtime'] = date('d, H:i:s');
@@ -341,7 +352,6 @@ class StyleBundle extends Bundle {
         if (!$meta) {
             return $res;
         }
-        
         $parser = $this->startParser(
             array(
                 'plugins' => array(

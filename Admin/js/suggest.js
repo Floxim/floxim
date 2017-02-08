@@ -485,10 +485,8 @@ window.fx_suggest = function(params) {
             $item.addClass('search_item_disabled');
         }
         if (item.children && item.children.length) {
-            var is_collapsed = item.collapsed;
-            if (is_collapsed === undefined) {
-                is_collapsed = level > 1;
-            }
+            var is_collapsed = item.collapsed || item.expanded === false || level > 1;
+            
             var $group = $('<div class="search_group search_group_' + (is_collapsed ? 'collapsed' : 'expanded') +'"></div>');
             $group.append($item);
             var $children = $('<div class="search_group_children"></div>');
@@ -646,6 +644,13 @@ window.fx_suggest = function(params) {
             if (!$item.is('.search_item_disabled')) {
                 Suggest.onSelect($item);
                 Suggest.hideBox();
+            } else {
+                var $toggler = $('.search_group_toggler', $item);
+                if ($toggler.length) {
+                    $toggler.click();
+                } else {
+                    Suggest.input.focus();
+                }
             }
             return false;
         });

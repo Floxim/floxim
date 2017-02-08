@@ -4,7 +4,11 @@ window.fx_livesearch = function (node, params) {
     
     this.$node = $(node);
     
-    params || {};
+    if (!params){
+        console.log('nopars');
+        console.trace();
+    }
+    params = params || {};
     
     params = $.extend({
         allow_new: false,
@@ -138,7 +142,6 @@ window.fx_livesearch = function (node, params) {
     };
     
     this.selectFirstValue = function() {
-        console.trace();
         this.traversePresetValues(function(v) {
             if (!v.disabled) {
                 livesearch.setValue(v.id);

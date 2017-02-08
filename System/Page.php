@@ -426,6 +426,63 @@ class Page
         return $is_overriden;
     }
     
+    public static function getOverridenVisual()
+    {
+        static $res = null;
+        if (is_null($res)) {
+            $data = fx::input('post', 'override_infoblock');
+            if (!$data) {
+                $res = false;
+            } elseif (!$data['id']) {
+                $res = true;
+            } else {
+                $res = [];
+                $vis = $data['visual'];
+                
+                $infoblock = fx::data('infoblock', $data['id']);
+                $infoblock_visual = $infoblock->getVisual();
+                
+                $rex = '~\:~';
+                foreach (['template','wrapper'] as $vis_prop) {
+                    $template = $vis[$vis_prop];
+                    if (preg_match($rex, $template)) {
+                        $res []= [
+                            'infoblock_visual',
+                            $infoblock_visual['id'],
+                            $vis_prop
+                        ];
+                    } else {
+                        $res []= [
+                            'template_variant',
+                            $template,
+                            $vis_prop
+                        ];
+                    }
+                }
+            }
+        }
+        return $res;
+    }
+    
+    public function addStyleFilter($block)
+    {
+        static $added = [];
+        if (isset($added[$block])) {
+            return;
+        }
+        $parts = explode("--", $block);
+        
+        $last_name = array_pop($parts);
+        $namespace = join(".", $parts);
+        
+        $res = \Floxim\Floxim\Template\Loader::nameToPath($namespace).DIRECTORY_SEPARATOR.$last_name.'_style_filter.js';
+        
+        $this->addJsFile($res);
+        
+        //fx::log('asf', $block, $res, file_exists($res));
+        $added[$block] = true;
+    }
+    
     public function addStyleLess(
         $block, 
         $value, 
@@ -433,10 +490,6 @@ class Page
     )
     {
         $bundle_is_temp = $this->isOverriden();
-        
-        if ($bundle_is_temp) {
-            $params['is_temp'] = true;
-        }
         
         $bundle_keyword = $block.'_'.$value;
         $bundle = fx::assets('style', $bundle_keyword, $params);
@@ -698,12 +751,6 @@ class Page
                 if ($ib->getVisual()->get('is_stub')) {
                     fx::log('suitable?', $ib);
                     throw new \Exception('No more suitable (infoblock_id: '.$ib['id'].')');
-                    /*
-                    $suitable = new \Floxim\Floxim\Template\Suitable();
-                    $suitable->suit($ibs, fx::env('layout_id'), fx::env()->getLayoutStyleVariantId());
-                    break;
-                     * 
-                     */
                 }
             }
             $ibs->sort(function($ib) {

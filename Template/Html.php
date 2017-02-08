@@ -354,11 +354,16 @@ class Html
                 
                 $styled_call = '{styled %s ';
                 $style_defaults = null;
+                $style_params = null;
                 if ($style_is_inline) {
                     $styled_call .= ' inline="true" ';
                     if ($n->hasAttribute('fx:style-defaults')) {
                         $style_defaults = $n->getAttribute('fx:style-defaults');
                         $n->removeAttribute('fx:style-defaults');
+                    }
+                    if ($n->hasAttribute('fx:style-params')) {
+                        $style_params = $n->getAttribute('fx:style-params');
+                        $n->removeAttribute('fx:style-params');
                     }
                 }
                 if ($styled_value !== '' && !preg_match("~(?:[a-z_-]+\:|\{)~", $styled_value)) {
@@ -367,7 +372,10 @@ class Html
                     $styled_call .= '}'.$styled_value;
                 }
                 if ($style_defaults) {
-                    $styled_call .= '{defaults}'.$style_defaults.'{/defaults}';
+                    $styled_call .= '{data name="defaults"}'.$style_defaults.'{/data}';
+                }
+                if ($style_params) {
+                    $styled_call .= '{data name="params"}'.$style_params.'{/data}';
                 }
                 $styled_call .= '{/styled}';
             }
