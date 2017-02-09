@@ -742,3 +742,19 @@ $(function() {
 });
 
 })($fxj);
+
+
+// call debugger with Shift + S
+function add_debugger_shortcut() {
+
+    document.documentElement.addEventListener(
+        'keydown', 
+        function(e) {
+            if (e.which === 68 && e.shiftKey) {
+                debugger;
+                return false;
+            }
+        },
+        true
+    );
+}
