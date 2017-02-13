@@ -580,20 +580,7 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
     
     public function getDefaultPublishState()
     {
-        // entities without own page can be published immediately by default
-        if (!$this->hasPage()) {
-            return true;
-        }
-        // @todo:
-        // if we are inside hidden branch, make this entity visible by default
-        // so user can publish the whole branch at once when ready
-        /*
-        if ($this['parent'] && !$this['parent']['is_branch_published']) {
-            return true;
-        }
-         * 
-         */
-        return false;
+        return true;
     }
     
     

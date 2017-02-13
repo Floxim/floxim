@@ -2145,8 +2145,13 @@ fx_front.prototype.bind_content_form = function($form, content_type_id, content_
     
     $form.on('change input', function(e) {
         
-        var $inp = $(e.target),
-            $bound = $inp.closest('[data-fx_bound]');
+        var $inp = $(e.target);
+        
+        if ($inp.is('.fx_wysiwyg') && !e.isTrigger) {
+            return;
+        }
+        
+        var $bound = $inp.closest('[data-fx_bound]');
         
         
         if (!$bound.length || $bound.attr('data-fx_bound') !== bound_hash) {

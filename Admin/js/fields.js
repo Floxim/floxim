@@ -997,7 +997,12 @@ window.$fx_fields = {
             cleanSpaces:false,
             lang: $fx.lang('lang'),
             formatting: ['p', 'h2', 'h3'],
-            tabKey:false
+            tabKey:false,
+            changeCallback: function() {
+                if (this.$textarea) {
+                    this.$textarea.trigger('input');
+                }
+            }
         }, options);
         
         if (options.toolbarPreset === 'inline') {
