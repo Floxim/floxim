@@ -1149,7 +1149,6 @@ window.$fx_fields = {
             }
             
             edit_form_params.parent_form_data = JSON.stringify($row.closest('form').formToHash());
-            
             $fx.front.show_edit_form(edit_form_params);
             
         });

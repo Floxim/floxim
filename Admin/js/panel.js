@@ -271,6 +271,7 @@
                     if (!closed_by_escape) {
                         $fx.close_stack.close(closer.index);
                     }
+                    
                     $fx.front_panel.hide(function() {
                         if (params.oncancel) {
                             params.oncancel($form);
@@ -585,6 +586,7 @@
             
             
             var callback = function() {
+                
                 var reset_hilight = true;
                 if (!is_last) {
                     var prev_panel = that.panels[that.panels.length - 2];

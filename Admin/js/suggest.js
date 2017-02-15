@@ -251,6 +251,9 @@ window.fx_suggest = function(params) {
         res.results=this.sliceShowLimit(res.results,requestParams.count_show);
         var $res = Suggest.renderResults(res);
         if ($res && $res.length) {
+            if (!Suggest.box) {
+                return;
+            }
             Suggest.box.html('').append($res);
             Suggest.showBox();
             var selected_node = [];

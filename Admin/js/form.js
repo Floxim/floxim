@@ -222,6 +222,7 @@ fx_form = {
                 if (options.key === 'cancel') {
                     b.on('click', function() {
                         $form.trigger('fx_form_cancel');
+                        return false;
                     });
                 }
                 if (options.is_submit) {

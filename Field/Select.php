@@ -33,7 +33,8 @@ class Select extends \Floxim\Floxim\Component\Field\Entity
             $res['type'] = 'select';
         }
         $res['value'] = $content[$this['keyword']];
-        if (!$content['id'] || !$res['value']) {
+        //if (!$content['id'] || !$res['value']) {
+        if (!$res['value']) {
             $res['value'] = $this['default'];
         }
         return $res;

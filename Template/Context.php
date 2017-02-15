@@ -180,8 +180,15 @@ class Context {
     
     public function pushContainerProps($props) 
     {
+        $c_width_value = $this->getContainerWidthValue() * 1;
         
         $current_props = count(self::$container_props) > 0 ? end(self::$container_props) : array();
+        
+        if ( $c_width_value !== 1) {
+            //fx::log('pcp', self::$container_props, $props, $c_width_value);
+            unset($current_props['align-container']);
+            unset($current_props['width']);
+        }
         
         if (
             isset($props['width'])
@@ -212,6 +219,7 @@ class Context {
             }
         }
         self::$container_props []= $new_props;
+        //fx::log('pushd', $new_props);
     }
     
     protected static $container_width = [[1,'screen']];
@@ -224,11 +232,6 @@ class Context {
             self::$container_width []= [$c_value[0] * $value, $c_value[1]];
         } else {
             self::$container_width []= [$value, $base];
-        }
-        if ( (int) $value !== 1) {
-            $cp =& self::$container_props[count(self::$container_props) - 1];
-            unset($cp['width']);
-            unset($cp['align-container']);
         }
     }
     
