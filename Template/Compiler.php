@@ -2173,6 +2173,13 @@ class Compiler
             }
         }
         
+        /*if (isset($props['source'])) {
+            $props = array_merge(
+                $props,
+                call_user_func($props['source'])
+            );
+        }*/
+        
         unset($props['name']);
         
         $vname = $this->varialize($name);
@@ -2212,7 +2219,11 @@ class Compiler
             }
             $exported_props []= $c_prop;
         }
-        $code .= "\$this->registerParam('".$name."', array(".join(", ", $exported_props).") );\n";
+        $_param_props = "array(".join(", ", $exported_props).")";
+        if (isset($props['source'])) {
+            $_param_props = 'array_merge('.$_param_props.', call_user_func("'.$props['source'].'", $context))';
+        }
+        $code .= "\$this->registerParam('".$name."',  ".$_param_props.");\n";
         $code .= "}\n";
         $code .= "?>";
         return $code;

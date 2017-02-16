@@ -180,12 +180,11 @@ class Context {
     
     public function pushContainerProps($props) 
     {
-        $c_width_value = $this->getContainerWidthValue() * 1;
+        $c_width_value = (double) $this->getContainerWidthValue() * 1;
         
         $current_props = count(self::$container_props) > 0 ? end(self::$container_props) : array();
         
-        if ( $c_width_value !== 1) {
-            //fx::log('pcp', self::$container_props, $props, $c_width_value);
+        if ( $c_width_value !== (double) 1) {
             unset($current_props['align-container']);
             unset($current_props['width']);
         }

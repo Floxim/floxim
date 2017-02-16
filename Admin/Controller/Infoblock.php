@@ -1010,7 +1010,10 @@ class Infoblock extends Admin
                 if (!in_array($variant['template'], $template_codes)) {
                     return false;
                 }
-                if ($variant['size'] && $variant['size'] !== 'any' && $variant['size'] !== $area_size['width']) {
+                if (
+                    $area_size['width'] !== 'any' && 
+                    ($variant['size'] && $variant['size'] !== 'any' && $variant['size'] !== $area_size['width'])
+                ) {
                     $mismatched []= $variant;
                     return false;
                 }
