@@ -8,6 +8,7 @@ class Config
         'db.driver'                  => 'mysql',
         'db.prefix'                  => 'fx',
         'db.charset'                 => 'utf8',
+        'session.start_auto'         => true,
         'dev.on'                     => false,
         'dev.css.minify'             => true,
         'dev.css.source_map'         => false,

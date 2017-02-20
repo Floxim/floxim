@@ -1433,7 +1433,6 @@ abstract class Finder
                     $is_true ? '1' : '0',
                     'RAW'
                 );
-                fx::cdebug($res);
                 return $res;
             }
         }

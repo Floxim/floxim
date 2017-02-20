@@ -44,7 +44,8 @@ class Input
             "_POST"   => $_POST,
             "_FILES"  => $_FILES,
             "_ENV"    => $_ENV,
-            "_SERVER" => $_SERVER
+            "_SERVER" => $_SERVER,
+            "_SESSION" => $_SESSION
         );
         // set default
 

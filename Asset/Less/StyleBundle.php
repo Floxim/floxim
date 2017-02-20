@@ -83,7 +83,11 @@ class StyleBundle extends Bundle {
                 }
                 return $res;
             default:
-                return $var['default'];
+                $res = $var['default'];
+                if (is_array($res)) {
+                    $res = join(", ",$res);
+                }
+                return $res;
         }
     }
     
