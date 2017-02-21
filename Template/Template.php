@@ -660,7 +660,7 @@ class Template
             $entity = $this->getVisual();
             $prop = $this->isWrapper() ? 'wrapper_visual' : 'template_visual';
         }
-        if ($entity) {
+        if ($entity && $entity instanseof \Floxim\Floxim\System\Entity) {
             $entity->digSet($prop.'.'.$this->context->getScopePrefix('.').$name, $value);
         }
     }
