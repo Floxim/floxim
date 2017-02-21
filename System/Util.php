@@ -973,4 +973,55 @@ class Util
         
         $traverse($data);
     }
+    
+    public function traverseTemplateParams(
+        $term,
+        $callback
+    )
+    {
+        $vis_finder = fx::data('infoblock_visual');
+        $tv_finder = fx::data('template_variant');
+        
+        $terms = (array) $term;
+        
+        $template_conds = [];
+        $wrapper_conds = [];
+        $tv_conds = [];
+        foreach ($terms as $term) {
+            $template_conds []= ['template_visual','%'.$term.'%', 'like'];
+            $wrapper_conds []= ['wrapper_visual','%'.$term.'%', 'like'];
+            $tv_conds []= ['params', '%'.$term.'%', 'like'];
+        }
+        
+        $vis_finder->whereOr(
+            [$template_conds, null, 'and'],
+            [$wrapper_conds, null, 'and']
+        );
+        
+        $tv_finder->where($tv_conds, null, 'and');
+        
+        $res = $vis_finder->all();
+        
+        $res = $res->concat( $tv_finder->all() );
+        
+        foreach ($res as $item) {
+            if ($item->getType() === 'template_variant') {
+                $props = ['params'];
+            } else {
+                $props = [];
+                foreach (['template','wrapper'] as $prop) {
+                    if (preg_match("~:~", $item->getReal($prop))) {
+                        $props []= $prop.'_visual';
+                    }
+                }
+            }
+            foreach ($props as $prop) {
+                $prop_res = call_user_func($callback, $item[$prop], $item, $prop);
+                if ($prop_res) {
+                    $item[$prop] = $prop_res;
+                }
+            }
+        }
+        return $res;
+    }
 }

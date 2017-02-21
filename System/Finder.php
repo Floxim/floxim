@@ -304,6 +304,9 @@ abstract class Finder
                     if (count($c_cond) === 3) {
                         $c_cond[3] = $passed_join_type;
                     }
+                    if (!is_array($c_cond)) {
+                        fx::log(func_get_args(), debug_backtrace());
+                    }
                     $field[$n] = call_user_func_array( array($this, 'prepareCondition'), $c_cond );
                 }
                 return array($field, $value, $type);

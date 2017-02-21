@@ -660,7 +660,9 @@ class Template
             $entity = $this->getVisual();
             $prop = $this->isWrapper() ? 'wrapper_visual' : 'template_visual';
         }
-        $entity->digSet($prop.'.'.$this->context->getScopePrefix('.').$name, $value);
+        if ($entity) {
+            $entity->digSet($prop.'.'.$this->context->getScopePrefix('.').$name, $value);
+        }
     }
     
     public function getVisual()
