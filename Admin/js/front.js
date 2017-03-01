@@ -177,6 +177,12 @@ fx_front.prototype.handle_mouseover = function(e) {
                     $fx.front.outline_block($node, 'hover', 300);
                 }
                 if (make_content_editable) {
+                    var node_html = $editable.html();
+                    // fix strange behavior caused by -webkit-line-break:after-white-space set by contenteditable
+                    // see http://codepen.io/dubrowsky/pen/NpKOOK/
+                    if (/[ ]+$/.test(node_html)) {
+                        $editable.html( node_html.replace(/[ ]+$/, ''));
+                    }
                     $editable.addClass('fx_var_editable').attr('contenteditable', 'true');
                 }
             }

@@ -21,19 +21,23 @@ class Thumb extends Base
         $source_path = $parts[2];
         $source_abs = fx::path($source_path);
         
+        
+        
         if (!file_exists($source_abs)) {
+            fx::log('no file', $source_abs);
             return null;
         }
+        
         $target_dir = dirname(fx::path('@home/'.$url));
         
         if (!file_exists($target_dir) || !is_dir($target_dir)) {
+            fx::log('no dir', $target_dir);
             return null;
         }
         
         $config = $config.'.async-false.output-true';
         
         $config = \Floxim\Floxim\System\Thumb::readConfigFromPathString($config);
-        
         fx::image($source_path, $config);
         fx::complete();
         die();
