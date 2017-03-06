@@ -913,7 +913,11 @@ abstract class Finder
                     }
                 }
                 if (count($rel_item_ids) > 0) {
-                    $rel_items = $rel_finder->where($rel_target_field, $rel_item_ids)->all();
+                    if (count($rel_item_ids) === 1 ) {
+                        $rel_items = fx::collection($rel_finder->getById($rel_item_ids[0]));
+                    } else {
+                        $rel_items = $rel_finder->where($rel_target_field, $rel_item_ids)->all();
+                    }
                     $entities->attach($rel_items, $rel_field, $rel_name, $rel_target_field);    
                 }
                 break;

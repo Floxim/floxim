@@ -86,6 +86,8 @@ class Front extends Base
             });
         $areas = fx::collection();
         $visual = fx::data('infoblock_visual')->
+                    with('template_variant')->
+                    with('wrapper_variant')->
                     where('infoblock_id', $infoblocks->getValues('id'))->
                     where('theme_id', $theme_id)->
                     all();

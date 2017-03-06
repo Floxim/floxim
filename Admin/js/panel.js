@@ -33,6 +33,7 @@
             
             params.current_params = c_params;
             
+            $sidebar.css('display','none');
             $sidebar.append($sidebar_body);
             $('#fx_admin_control').append($sidebar);
             params.$container = $sidebar;
@@ -64,7 +65,6 @@
         };
 
         this.show_form = function(data, params) {
-            
             params = params || {};
             var c_panel = {};
             this.panels.push(c_panel);
@@ -79,6 +79,12 @@
                 params.style = 'default';
             }
             c_panel.is_visible = true;
+            
+            
+            
+            if (typeof data.panel === 'object') {
+                params = $.extend(params, data.panel);
+            }
             
             // disable hilight & select, hide node panel
             if (!params.keep_hilight_on) {
@@ -284,6 +290,7 @@
         
         
         this.recount_sidebar = function() {
+            return;
             var c_panel = front_panel.get_current_panel(),
                 $sidebar = c_panel.$container,
                 $form = $('.fx_admin_form', $sidebar),
@@ -293,6 +300,7 @@
             
             $form_body.css('height', 'auto');
             $form_footer.removeClass('fx_admin_form__footer-sticky');
+            
             
             var total_height = $(window).outerHeight(),
                 header_height = $form_header.outerHeight(),
@@ -369,7 +377,9 @@
                         $body.css('padding-'+side, 0).animate(body_css, duration);
                     }
                     
-                    $sidebar.css(start_css).animate(end_css, duration);
+                    $sidebar.css(start_css);
+                            
+                    $sidebar.animate(end_css, duration);
                     var that = this;
                     $('.fx_admin_form__body', $sidebar).on('resize.fx_recount_sidebar', function(e) {
                         that.recount_sidebar();

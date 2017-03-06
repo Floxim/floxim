@@ -453,8 +453,8 @@ class Fx
             fx::debug(func_get_args(), fx::debug()->backtrace());
             die("Failed loading controller class " . $c_class);
         }
-        fx::debug(func_get_args(), fx::debug()->backtrace());
-        die("Failed loading class controller " . $controller);
+        fx::log(func_get_args(), fx::debug()->backtrace());
+        throw new \Exception("Failed loading class controller " . $controller);
     }
 
     // todo: psr0 need fix

@@ -76,7 +76,12 @@ class Infoblock extends Admin
                 'keyword' => $keyword,
                 'type' => $type
             );
-            $ctrl = fx::controller($keyword);
+            try {
+                $ctrl = fx::controller($keyword);
+            } catch (\Exception $e) {
+                fx::log('faild ctr loading', $e);
+                continue;
+            }
             $actions = $ctrl->getActions();
             foreach ($actions as $action_code => $action_info) {
                 
@@ -617,15 +622,18 @@ class Infoblock extends Admin
         }
 
         $list = array(
-            'type'   => 'list',
-            'entity' => 'infoblock',
+            'type'   => 'set',
+            //'entity' => 'infoblock',
             'values' => array(),
             'labels' => array(
-                'name'       => fx::alang('Name', 'system'),
-                //'type'       => fx::alang('Type', 'system'),
-                //'visibility' => fx::alang('Visibility', 'system'),
-                'area'       => fx::alang('Area', 'system'),
-            )
+                'Блок',
+                'Область'
+            ),
+            'without_delete' => true,
+            'tpl' => [
+                ['name' => 'name', 'type' => 'html'],
+                ['name' => 'area', 'type' => 'livesearch']
+            ]
         );
 
         foreach ($infoblocks as $ib) {
@@ -651,6 +659,10 @@ class Infoblock extends Admin
         $res = array(
             'fields' => $fields,
             'id'     => 'page_infoblocks',
+            'panel' => [
+                'is_fluid' => true,
+                'keep_hilight_on' => true
+            ],
             'header' => fx::alang('Page infoblocks')
         );
         return $res;

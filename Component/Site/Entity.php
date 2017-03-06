@@ -69,11 +69,30 @@ class Entity extends System\Entity
         return $hosts;
     }
     
+    protected static function getHostZone($host)
+    {
+        preg_match("~\.([^\.]+?)$~", $host, $c_zone);
+        $c_zone = isset($c_zone[1]) ? $c_zone[1] : null;
+        return $c_zone;
+    }
+            
+
+
     public function getMainHost()
     {
+        $c_zone = self::getHostZone($_SERVER['HTTP_HOST']);
+        $first_host = null;
+        $zone_host = null;
         foreach ($this->getAllHosts() as $host) {
-            return $host;
+            if (!$first_host) {
+                $first_host = $host;
+            }
+            $c_host_zone = self::getHostZone($host);
+            if ($c_zone && !$zone_host && $c_host_zone === $c_zone) {
+                $zone_host = $host;
+            }
         }
+        return $zone_host ? $zone_host : $first_host;
     }
     
     /**

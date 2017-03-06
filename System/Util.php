@@ -635,6 +635,18 @@ class Util
 	}
     }
     
+    public function dump()
+    {
+        $file_name = fx::config('db.name').'.'.date('d-m-Y-H-i-s').'.sql.gz';
+        $file = fx::path('@files/'.$file_name);
+        fx::db()->dump([
+            'file' => $file
+        ]);
+        $http_path = fx::path()->http($file);
+        $js = '<script type="text/javascript">document.location.href = "'.$http_path.'";</script>';
+        fx::complete($js);
+    }
+    
     public function htmlEntitiesDecode($s)
     {
         // see: http://stackoverflow.com/a/7590056

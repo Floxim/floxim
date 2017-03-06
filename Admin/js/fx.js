@@ -459,7 +459,6 @@ window.$fx = {
     },
         
     post: function ( data, callback, error_callback ) {
-        
         var post_data = {};
         post_data.fx_admin = true;
         

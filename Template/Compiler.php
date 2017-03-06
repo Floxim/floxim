@@ -2093,7 +2093,7 @@ class Compiler
             return;
         }
         foreach ($children as $child) {
-            if ($child->name === 'first') {
+            if ($child->name === 'first' && !$child->getProp('ready')) {
                 return $child;
             }
             $inside = $this->findFirstBlock($child);
@@ -2107,14 +2107,41 @@ class Compiler
     {
         return '';
     }
+    
+    protected function tokenLinkToCode($token)
+    {
+        $lid = $token->getProp('lid');
+        $param_name = 'link_info';
+        
+        $param = Token::create('{@'.$param_name.' source="\Floxim\Ui\Box\Box::getLinkParam" /}');
+        
+        $code = $this->tokenParamToCode($param);
+        
+        $code .= "<?php\n";
+        $_href = '$'.$lid.'_href';
+        $_target = '$'.$lid.'_target';
+        $_param_val = '$'.$lid.'_param_val';
+        $code .= $_param_val. " = \$context->get('".$param_name."');\n";
+        $code .= $_href . " = false;\n";
+        $code .= $_target . " = false;\n";
+        $code .= "if (".$_param_val.") {\n";
+        $code .= $_href ." = \$context->get('url');\n";
+        $code .= "if (".$_param_val." === 'blank') {\n";
+        $code .= $_target . " = '_blank';\n";
+        $code .= "} elseif (".$_param_val."[0] === '#') {\n";
+        $code .= $_href . ' .= '.$_param_val.";\n";
+        $code .= "}\n";
+        $code .= "}\n";
+        $code .= "?>";
+        return $code;
+    }
 
     protected function childrenToCode(Token $token)
     {
         $parts = array();
         $param_parts = array();
         
-        $first_block = $this->findFirstBlock($token);
-        if ($first_block && !$first_block->getProp('ready')) {
+        while ( ($first_block = $this->findFirstBlock($token)) ) {
             foreach ($first_block->getChildren() as $child) {
                 $param_parts [] = $this->getTokenCode($child, $token);
             }

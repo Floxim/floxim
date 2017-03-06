@@ -23,9 +23,31 @@ class Import {
     
     public function run()
     {
+        $this->initLinks();
         $this->loadExisting();
         foreach ( $this->source as $item) {
             $this->importItem($item);
+        }
+    }
+    
+    public function initLinks()
+    {
+        foreach ($this->source as $item) {
+            $type = $item[1];
+            if (isset(self::$links[$type])) {
+                continue;
+            }
+            $com = fx::component($type);
+            $links = [];
+            if (!$com) {
+                self::$links[$type] = $links;
+                continue;
+            }
+            $fields = $com->getAllFields()->find('type', 'link');
+            foreach ($fields as $field) {
+                $links[$field['keyword']] = $field->getTargetName();
+            }
+            self::$links[$type] = $links;
         }
     }
     
@@ -57,6 +79,8 @@ class Import {
                 return $existing['keyword'] === $imported['keyword'];
             case 'field':
                 return $existing['keyword'] === $imported['keyword'];
+            default:
+                return true;
         }
     }
     
@@ -148,6 +172,7 @@ class Import {
         
         $item = fx::data($type)->create($props);
         
+        $item->setPayload('is_imported', true);
         
         if (count($delayed) > 0) {
             foreach ($delayed as $delayed_prop) {
@@ -184,7 +209,7 @@ class Import {
     protected function appendLinks($props, $type) 
     {
         if (!isset(self::$links[$type])) {
-            return $props;
+            return [$props, []];
         }
         $links = self::$links[$type];
         

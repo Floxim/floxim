@@ -1050,7 +1050,6 @@ window.$fx_fields = {
     },
     
     init_fieldset: function(html, _c) {
-        
         $('tbody.fx_fieldset_rows', html).sortable({
             handle:'>td:first-child'
         });
@@ -1059,6 +1058,9 @@ window.$fx_fields = {
 
         if (!_c.values) {
             _c.values = _c.value || [];
+        }
+        if (!_c.name) {
+            _c.name = '';
         }
         var set_path = _c.name.replace(/\]$/,'').split(/\]?\[/);
         
@@ -1070,13 +1072,17 @@ window.$fx_fields = {
             //console.log(row_meta, );
             
             $.each(_c.tpl, function(tpl_index, tpl_props) {
+                var c_val  = val[tpl_props.name];
+                if (typeof c_val !== 'object') {
+                    c_val = {value: c_val};
+                }
                 var inp_props = $.extend(
                     {}, 
                     tpl_props, 
                     {
-                        name:_c.name+'['+row_index+']['+tpl_props.name+']',
-                        value:val[tpl_props.name]
-                    }
+                        name:_c.name+'['+row_index+']['+tpl_props.name+']'
+                    },
+                    c_val
                 );
                 if (tpl_props.type === 'radio' && !tpl_props.values) {
                     inp_props.$input_node = $('<input type="radio" name="'+_c.name+'['+tpl_props.name+']" value="'+row_index+'" />');
@@ -1086,7 +1092,6 @@ window.$fx_fields = {
                 }
                 inputs.push(inp_props);
             });
-            
             var $row = $t.jQuery('fieldset_row', inputs, {index:row, set_field: _c});
             $row.data('row_meta', row_meta);
             

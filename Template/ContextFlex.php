@@ -276,4 +276,26 @@ class ContextFlex extends Context {
         }
         return $this->visual_id;
     }
+    
+    public function getClosestEntity($type = null)
+    {
+        if ( $type instanceof \Closure ) {
+            $check_callback = $type;
+        } else {
+            $check_callback = function($entity) use ($type) {
+                if ( ! ($entity instanceof \Floxim\Floxim\System\Entity) ) {
+                    return false;
+                }
+                if (!$type) {
+                    return true;
+                }
+                return $entity->isInstanceOf($type);
+            };
+        }
+        for ($i = $this->level; $i >= 0; $i--) {
+            if ($check_callback($this->stack[$i])) {
+                return $this->stack[$i];
+            }
+        }
+    }
 }

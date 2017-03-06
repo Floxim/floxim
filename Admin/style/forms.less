@@ -120,6 +120,28 @@
 
 }
 
+.fx-side-panel_style_default {
+    .fx_admin_form {
+        
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        
+        &__header, &__footer {
+            flex-shrink: 0;
+        }
+        
+        &__footer {
+            border-top:1px solid #eaeaea;
+        }
+        
+        &__body {
+            flex-shrink: 1;
+            flex-grow:1;
+        }
+    }
+}
+
 
 .fx_admin_form a, .fx_admin_form .ui-state-default a {
     cursor: pointer;
@@ -787,9 +809,15 @@
     }
 }
 
-.fx_admin_form__body .fx_fieldset > table {
+//.fx_admin_form__body .fx_fieldset > table {
+.fx_admin_form__body .field_set {
     margin-left:-40px;
     margin-right:-40px;
+    & > .form_label, .fx_fieldset__add {
+        margin-left:40px;
+        margin-right:40px;
+    }
+    
 }
 
 .fx_number_field_units {

@@ -302,6 +302,28 @@ class Html
                 $n->removeAttribute('fx:else');
                 $n->wrap('{else}', '{/else}');
             }
+            
+            
+            if ($n->hasAttribute('fx:link')) {
+                $link_uid = 'link_'.fx::util()->uid();
+                $n->parent->addChildBefore(
+                    HtmlToken::create('{link lid="'.$link_uid.'"}'.$n->getAttribute('fx:link').'{/link}'),
+                    $n
+                );
+                $_href = '$'.$link_uid.'_href';
+                $_target = '$'.$link_uid.'_target';
+                $n->setAttribute('fx:element-name', '<?= '.$_href .' ? "a" : "div" ?>' );
+                $n->setAttribute(
+                    '#inj300', 
+                    '<?php if ('.$_href.') { echo \'href="\'.'.$_href.'.\'"\';} ?>'
+                );
+                $n->setAttribute(
+                    '#inj400', 
+                    '<?php if ('.$_href.' && '.$_target.') { echo \'target="\'.'.$_target.'.\'"\';} ?>'
+                );
+                $n->removeAttribute('fx:link');
+            }
+            
             if ($n->name === 'fx:a' || $n->hasAttribute('fx:link-if')) {
                 if (!$n->hasAttribute('href')) {
                     $n->setAttribute('href', '{$url}');

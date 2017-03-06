@@ -47,12 +47,16 @@ class Finder extends System\Finder
 
     public function getById($id)
     {
+        return fx::component($id);
+        /*
         if (!is_numeric($id)) {
             $this->where('keyword', self::prepareSearchKeyword($id));
         } else {
             $this->where('id', $id);
         }
         return $this->one();
+         * 
+         */
     }
 
     public static function prepareSearchKeyword($keyword)

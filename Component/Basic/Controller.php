@@ -5,11 +5,16 @@ namespace Floxim\Floxim\Component\Basic;
 use Floxim\Floxim\System\Fx as fx;
 
 class Controller extends \Floxim\Floxim\Controller\Frontoffice {
+    
     protected function getConfigSources()
     {
         $sources = array();
-        //$sources [] = fx::path('@module/' . fx::getComponentPath('floxim.main.content') . '/cfg.php');
+        $sources [] = fx::path('@floxim/Component/Basic/cfg.php');
         $com = $this->getComponent();
+        // component has been removed from DB but for some reason hasen't been removed from source code
+        if (!$com) {
+            return [];
+        }
         $chain = $com->getChain();
         foreach ($chain as $com) {
             $com_file = fx::path('@module/' . fx::getComponentPath($com['keyword']) . '/cfg.php');
@@ -18,6 +23,11 @@ class Controller extends \Floxim\Floxim\Controller\Frontoffice {
             }
         }
         return $sources;
+    }
+    
+    public function gcs()
+    {
+        return $this->getConfigSources();
     }
     
     /**
@@ -175,5 +185,83 @@ class Controller extends \Floxim\Floxim\Controller\Frontoffice {
             return true;
         }
         return false;
+    }
+    
+    public function getConditionsField() {
+        $com = $this->getComponent();
+        $cond_fields = array(
+            $com->getFieldForFilter('entity')
+        );
+        $context = fx::env()->getFieldsForFilter();
+        
+        foreach ($context as $context_prop) {
+            $cond_fields []= $context_prop;
+        }
+        
+        $field = array(
+            'name' => 'conditions',
+            'type' => 'condition',
+            'context' => $context,
+            'fields' => $cond_fields,
+            'label' => false,
+            'types' => fx::data('component')->getTypesHierarchy(),
+            'tab' => array(
+                'icon' => 'ib-list-filtered',
+                'key' => 'conditions',
+                'label' => fx::alang('Conditions', 'controller_component')
+            )
+        );
+        return $field;
+    }
+    
+    public function doListFiltered()
+    {
+        $conds = $this->getParam('conditions');
+        if (!is_string($conds)) {
+            return;
+        }
+        $conds = json_decode($conds, true);
+        $this->listen('query_ready', function ($e) use ($conds) {
+            $q = $e['query'];
+            if ($conds) {
+                $q->applyConditions($conds);
+            }
+        });
+        $this->doList();
+    }
+    
+    public function doList()
+    {
+        $items = $this->getResult('items');
+        
+        if (!$items) {
+            $f = $this->getFinder();
+            $this->trigger('query_ready', array('query' => $f));
+            $items = $f->all();
+
+            if (count($items) === 0) {
+                $this->_meta['hidden'] = true;
+            }
+        }
+        
+        $items_event = fx::event('items_ready', array('items' => $items));
+        
+        $this->trigger($items_event);
+        
+        $items = $items_event['items'];
+        
+        $this->assign('items', $items);
+        
+        $items->limit = $this->getParam('limit');
+        
+        if (($pagination = $this->getPagination())) {
+            $this->assign('pagination', $pagination);
+        }
+        $this->trigger('result_ready');
+    }
+    
+    public function getParentConfigFields()
+    {
+        return [];
     }
 }

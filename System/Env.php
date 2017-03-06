@@ -54,7 +54,12 @@ class Env
     }
     
     public function getPath() {
-        return fx::router()->getPath($this->getUrl());
+        static $path_cache = [];
+        $url = $this->getUrl();
+        if (!isset($path_cache[$url])) {
+            $path_cache[$url] = fx::router()->getPath($this->getUrl());
+        }
+        return $path_cache[$url];
     }
 
 

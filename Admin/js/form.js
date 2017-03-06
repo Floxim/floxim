@@ -18,7 +18,7 @@ fx_form = {
             $.extend(true, settings, options);
         }
         
-        $('html').trigger('fx_before_adm_form_created', settings);
+        $target.trigger('fx_before_adm_form_created', settings);
         
         var $form = $(
                 '<form '+

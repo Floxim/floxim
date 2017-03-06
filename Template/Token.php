@@ -454,6 +454,10 @@ class Token
         'first' => array(
             'type' => 'double',
             'contains' => array('param', 'set', 'default', 'code', 'var', 'lang', 'call', 'apply', 'if', 'elseif', 'else', 'each')
+        ),
+        'link' => array(
+            'type' => 'double',
+            'contains' => array('param', 'set', 'default', 'code', 'var', 'lang', 'call', 'apply', 'if', 'elseif', 'else', 'each')
         )
     );
 

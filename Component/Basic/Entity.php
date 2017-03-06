@@ -629,6 +629,11 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
         return $this->hasAvailableInfoblock();
     }
     
+    public function getSiblingFinder()
+    {
+        return $this->getFinder();
+    }
+    
     public function handleMove()
     {
         if (!$this->hasField('priority')) {
@@ -636,7 +641,7 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
         }
         $rel_item_id = null;
         
-        $finder = $this->getFinder();
+        $finder = $this->getSiblingFinder();
         
         $table = current($finder->getTables());
         
@@ -647,8 +652,6 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
             $rel_item_id = $this['__move_after'];
             $rel_dir = 'after';
         }
-        
-        //fx::log($rel_item_id, $rel_dir);
         
         if (!$rel_item_id) {
             return;
