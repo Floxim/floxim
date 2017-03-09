@@ -13,9 +13,13 @@ class Entity extends System\Entity
     {
         parent::beforeSave();
         unset($this['is_stub']);
+        /*
         if ($this->needRecountFiles) {
             $this->recountFiles();
         }
+         * 
+         */
+        $this->recountFiles();
     }
     
     protected function afterSave() {
@@ -42,6 +46,23 @@ class Entity extends System\Entity
     
     public function recountFiles()
     {
+        $props = [
+            'template_visual' => 'template_variant_id', 
+            'wrapper_visual' => 'wrapper_variant_id'
+        ];
+        $recounted = false;
+        foreach ($props as $prop => $alias) {
+            if ($this[$alias]) {
+                continue;
+            }
+            $res = fx::files()->handleVisualFiles($this[$prop]);
+            if ($res) {
+                $this[$prop] = $res;
+                $recounted = true;
+            }
+        }
+        return $recounted;
+        /*
         $modified_params = $this->getModifiedParams();
         $fxPath = fx::path();
         foreach ($modified_params as $field => $params) {
@@ -72,6 +93,8 @@ class Entity extends System\Entity
             }
             $this[$field] = $all_params;
         }
+         * 
+         */
     }
     
     /**
@@ -172,6 +195,10 @@ class Entity extends System\Entity
             }
         }
         return $res;
+    }
+    
+    public function isVariant($prop) {
+        return (bool) $this[$prop.'_variant_id'];
     }
     
     public function _getTemplate()

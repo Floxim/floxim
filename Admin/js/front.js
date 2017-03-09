@@ -1335,6 +1335,9 @@ fx_front.prototype.select_styled = function($node) {
     if (!style_id) {
         return;
     }
+    if (!ib_meta || ib_meta.controller !== 'layout:show') {
+        return;
+    }
     style_id = style_id[1];
     
     var template_params = $ib.data('fx_template_params'),
@@ -3132,6 +3135,9 @@ fx_front.prototype.show_infoblock_settings_form = function(data, $ib_node, tab) 
             $.each(template_types, function(i, tt) {
                 var $ls = $('input[name="visual['+tt+']"]', $form).closest('.livesearch'),
                     ls = $ls.data('livesearch');
+                if (!ls) {
+                    return;
+                }
                 template_inputs[tt] = {
                     $input: $ls,
                     livesearch: ls
@@ -3996,8 +4002,6 @@ fx_front.prototype.outline_block = function(n, style, speed) {
     var draw_lens = (style === 'selected_light') || (style === 'selected' && n.is('.fx_entity'));
     
     //draw_lens = false;
-    
-    console.log(pane_position, pane_z_index);
     
     if (draw_lens) {
         n.data('fx_has_lens', true);

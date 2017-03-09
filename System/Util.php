@@ -837,6 +837,15 @@ class Util
             'templates' => fx::path('@files/compiled_templates'),
             'meta' => function() {
                 fx::cache('meta')->flush();
+            },
+            'controller_defaults' => function() {
+                $files = glob( fx::path('@files/cache/ctr_defaults*'));
+                if (!$files || count($files) === 0) {
+                    return;
+                }
+                foreach ($files as $file) {
+                    fx::files()->rm($file);
+                }
             }
         );
         
@@ -960,6 +969,9 @@ class Util
         $path = array();
         
         $traverse = function($data) use ($callback, &$path, &$traverse, $callback_on_arrays) {
+            if (!is_array($data)) {
+                return;
+            }
             foreach ($data as $k => $v) {
                 $path []= $k;
                 
@@ -994,7 +1006,7 @@ class Util
         $vis_finder = fx::data('infoblock_visual');
         $tv_finder = fx::data('template_variant');
         
-        $terms = (array) $term;
+        $terms = $term ? (array) $term : [];
         
         $template_conds = [];
         $wrapper_conds = [];

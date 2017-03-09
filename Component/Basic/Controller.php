@@ -74,7 +74,7 @@ class Controller extends \Floxim\Floxim\Controller\Frontoffice {
         
         $finder = fx::data($com['keyword']);
         
-        if ($com->getFieldByKeyword('site_id')) {
+        if ($com->getFieldByKeyword('site_id', true)) {
             $finder->where('site_id', fx::env('site_id'));
         }
         if (!fx::isAdmin()) {
@@ -217,16 +217,15 @@ class Controller extends \Floxim\Floxim\Controller\Frontoffice {
     public function doListFiltered()
     {
         $conds = $this->getParam('conditions');
-        if (!is_string($conds)) {
-            return;
+        if (is_string($conds)) {
+            $conds = json_decode($conds, true);
+            $this->listen('query_ready', function ($e) use ($conds) {
+                $q = $e['query'];
+                if ($conds) {
+                    $q->applyConditions($conds);
+                }
+            });
         }
-        $conds = json_decode($conds, true);
-        $this->listen('query_ready', function ($e) use ($conds) {
-            $q = $e['query'];
-            if ($conds) {
-                $q->applyConditions($conds);
-            }
-        });
         $this->doList();
     }
     

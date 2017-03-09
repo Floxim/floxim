@@ -139,10 +139,12 @@ class Debug
         while (($line = fgets($ifh)) !== false) {
             if ($is_first) {
                 $item = unserialize(trim($line));
-                $first_file = $this->getFileName($item['id']);
-                fx::files()->rm($first_file);
-                $write_offset = ftell($ifh);
-                $is_first = false;
+                if ($item && isset($item['id'])) {
+                    $first_file = $this->getFileName($item['id']);
+                    fx::files()->rm($first_file);
+                    $write_offset = ftell($ifh);
+                    $is_first = false;
+                }
             }
             if (isset($write_position)) {
                 $read_position = ftell($ifh);

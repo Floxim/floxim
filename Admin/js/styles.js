@@ -584,6 +584,9 @@ less_tweaker.init_style_group = function($g) {
     
     if ($ib.length > 0) {
         $ib.on('fx_infoblock_unloaded', function(e, $new_ib) {
+            if (!$new_ib || !$new_ib.length) {
+                return;
+            }
             if (tweaker.last_data && tweaker.is_new && !tweaker.is_canceled) {
                 
                 var $el = $new_ib.descendant_or_self('.'+ tweaker.style_id_class ),

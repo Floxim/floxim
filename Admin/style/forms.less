@@ -1821,11 +1821,16 @@ select.fx_input {
         border: 1px solid #ccc;
         border-radius: 3px;
         line-height:0;
-        span {
+        & > span {
             display: inline-block;
             width:40px;
             height:33px;
+            vertical-align: middle;
+            text-align: center;
         }
+    }
+    &__image-handler {
+        background:rgba(255,255,255,0.9);
     }
     
     &__lightness {
@@ -1908,7 +1913,7 @@ select.fx_input {
     }
     
     
-    &__level-drag, &__level-drop {
+    &__level-drag-up, &__level-drag-down, &__level-drop {
         cursor:pointer;
         display:inline-block;
         font-size: 20px;
@@ -1916,6 +1921,12 @@ select.fx_input {
         width:10px;
         height:10px;
         line-height:0;
+        margin-right:10px;
+    }
+    
+    &__level:first-child &__level-drag-up, 
+    &__level:last-child &__level-drag-down {
+        visibility: hidden;
     }
     
     &__level-drop {
@@ -2123,10 +2134,12 @@ select.fx_input {
         border: 1px solid #ccc;
         border-radius: 3px;
         line-height:0;
-        span {
+        & > span {
             display: inline-block;
             width:40px;
             height:33px;
+            vertical-align: middle;
+            text-align: center;
         }
     }
     

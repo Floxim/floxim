@@ -613,6 +613,53 @@ class Files
             return $perms;
         }
     }
+    
+    public function handleVisualFiles($params)
+    {
+        static $rex = null;
+        static $path_service = null;
+        static $visual_base = null;
+        if (is_null($rex)) {
+            $path_service = fx::path();
+            $rex = "~".preg_quote($path_service->http('@files/upload/'))."[^\\\"\']+~";
+            $visual_base = $path_service->abs('@content_files/visual/'.fx::env('site_id'));
+        }
+        $has_files = false;
+        $files_to_move = [];
+        
+        fx::util()->traverse(
+            $params, 
+            function($val, $path) use ($rex, &$params, &$has_files, $path_service, $visual_base, &$files_to_move) {
+                if (!is_string($val)) {
+                    return;
+                }
+
+                $new_val = preg_replace_callback(
+                    $rex, 
+                    function($m) use ($path_service, $visual_base, &$files_to_move) {
+                        $path = $m[0];
+                        $source_path = $path_service->abs($path);
+                        if (isset($files_to_move[$source_path])) {
+                            $new_path = $files_to_move[$source_path];
+                        } else {
+                            $new_path = $visual_base.'/'.fx::util()->uid().'-'.$path_service->fileName($path);
+                            $files_to_move[$source_path] = $new_path;
+                        }
+                        return $path_service->http($new_path);
+                    }, 
+                    $val
+                );
+                if ($val !== $new_val) {
+                    $has_files = true;
+                    fx::digSet($params, $path, $new_val);
+                }
+            }
+        );
+        foreach ($files_to_move as $from => $to) {
+            fx::files()->move($from , $to);
+        }
+        return $has_files ? $params : null;
+    }
 
     public function rename($filename, $new_filename)
     {

@@ -141,10 +141,6 @@ bg.prototype.update = function(skip_lightness) {
     
     this.$input.val( this.get_value() ).trigger('change');
     
-    var has_color = this.$popup.find(bg.el('level.type_color')).length > 0;
-    
-    this.$popup.find( bg.el('add.type_color') ).toggleClass(bg.cl('add')+'_inactive', has_color);
-    
     this.update_handle();
     
     if (this.$popup.is(':visible')) {
@@ -281,6 +277,19 @@ bg.prototype.init = function() {
         level.draw($levels);
     }
     
+    $levels.on('click', bg.el('level-drag-up'), function(e) {
+        var $l = $(e.target).closest( bg.el('level') );
+        $l.prev().before($l);
+        that.update();
+    });
+    
+    $levels.on('click', bg.el('level-drag-down'), function(e) {
+        var $l = $(e.target).closest( bg.el('level') );
+        $l.next().after($l);
+        that.update();
+    });
+    
+    
     $levels.sortable({
         items:'>div:not('+bg.el('level.type_color')+')',
         handle: bg.el('level-drag'),
@@ -339,7 +348,9 @@ background_level.prototype.draw = function($target) {
         '<div' + cls('level', 'type_'+this.type) + '>'+
             '<div'+cls('level-controls')+'>'+
                 '<span '+cls('level-drop')+'>&times</span>'+
-                (this.type === 'color' ? '' : '<span '+cls('level-drag')+'>&#8597;</span>')+
+                '<span '+cls('level-drag-up')+'>&uarr;</span>'+
+                '<span '+cls('level-drag-down')+'>&darr;</span>'+
+                // (this.type === 'color' ? '' : '<span '+cls('level-drag')+'>&#8597;</span>')+
             '</div>'+
             '<div'+cls('level-value')+'"></div>'+
             '<div'+cls('level-size')+'"></div>'+
@@ -358,12 +369,15 @@ background_level.prototype.draw = function($target) {
     };
     this.draw_value();
     this.draw_sizing();
+    $target.append(this.$node);
+    /*
     var $color_level = $(bg.el('level.type_color'), $target);
     if ($color_level.length) {
         $color_level.before(this.$node);
     } else {
         $target.append(this.$node);
     }
+    */
 };
 
 background_level.prototype.draw_value = function() {};
@@ -399,7 +413,8 @@ background_level.prototype.draw_sizing = function() {
     this.sizing_controls.$attachment = $attachment.find('input[type="checkbox"]');
     
     var pos_and_size = this.sizing[0].replace(/^[~"]+|\"$/g, '').split(/\s*\/\s*/),
-        size = pos_and_size[1].match(/^(\d+)%/)[1],
+        size_d = pos_and_size[1].match(/^(\d+)%/),
+        size = size_d ? size_d[1] : '100%',
         pos = pos_and_size[0].replace(/\s+$/, '').split(/\s/);
     
     this.sizing_controls.$size = $fx_fields.control({
@@ -672,6 +687,12 @@ background_level.image.prototype.count_lightness = function() {
         brightness:0,
         opacity:0
     };
+};
+
+background_level.image.prototype.get_handler = function() {
+    return '<span class="'+bg.cl('image-handler')+'" title="Изображение">'+
+                '<span class="fx_icon fx_icon-type-upload"></span>'+
+            '</span>';
 };
 
 // Color BG

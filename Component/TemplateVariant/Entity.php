@@ -12,13 +12,29 @@ class Entity extends \Floxim\Floxim\System\Entity {
         return $n ? $n  : '#'.$this['id'];
     }
     
+    protected function beforeSave() {
+        $this->recountFiles();
+    }
+
+
     protected function afterSave() {
         parent::afterSave();
+        
         if ($this->isModified('params')) {
             $this->deleteInlineStyles();
         }
     }
     
+    public function recountFiles()
+    {
+        $res = fx::files()->handleVisualFiles($this['params']);
+        if ($res) {
+            $this['params'] = $res;
+            return true;
+        }
+    }
+
+
     protected function deleteInlineStyles()
     {
         if ($this['id']) {
