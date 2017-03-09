@@ -264,8 +264,9 @@ class Files
 
     protected function copyFile($local_old_filename, $local_new_filename)
     {
+        
         $res = @copy($local_old_filename, $local_new_filename);
-
+        fx::cdebug($res, $local_old_filename, $local_new_filename);
         if ($res !== false) {
             @chmod($local_new_filename, $this->new_file_mods);
             if (!self::isMetaFile($local_old_filename)) {
@@ -622,7 +623,7 @@ class Files
         if (is_null($rex)) {
             $path_service = fx::path();
             $rex = "~".preg_quote($path_service->http('@files/upload/'))."[^\\\"\']+~";
-            $visual_base = $path_service->abs('@content_files/visual/'.fx::env('site_id'));
+            $visual_base = $path_service->abs('@content_files/'.fx::env('site_id').'/visual');
         }
         $has_files = false;
         $files_to_move = [];
@@ -731,7 +732,7 @@ class Files
         $local_new_filename = fx::path()->abs($new_filename);
         
         $local_parent_dir = dirname($local_new_filename);
-
+        
         if (!is_dir($local_parent_dir)) {  // check whether there is a destination directory
             if ($make_dir) {
                 $res = $this->mkdir($local_parent_dir);
@@ -739,8 +740,7 @@ class Files
                 return null;
             }
         }
-
-
+        
         if (!is_dir($local_old_filename)) {  // copy 1 file
             return $this->copyFile($local_old_filename, $local_new_filename);
         }
