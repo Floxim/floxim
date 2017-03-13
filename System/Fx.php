@@ -600,7 +600,7 @@ class Fx
     /*
      * @return \Floxim\Floxim\System\Input
      */
-    public static function input()
+    public static function input($source = null, $key = null)
     {
         static $input = false;
         if ($input === false) {
@@ -609,7 +609,7 @@ class Fx
         if (func_num_args() === 0) {
             return $input;
         }
-        $superglobal = strtolower(func_get_arg(0));
+        $superglobal = strtolower($source);
         if (!in_array($superglobal, array('get', 'post', 'cookie', 'session'))) {
             return $input;
         }
@@ -617,7 +617,7 @@ class Fx
         if (func_num_args() === 1) {
             return call_user_func($callback);
         }
-        return call_user_func($callback, func_get_arg(1));
+        return call_user_func($callback, $key);
     }
     
     protected static $module_manager = null;

@@ -30,7 +30,7 @@ class Http
             ob_start();
             ?>
             <script type="text/javascript">
-            document.location.href = '<?= $target_url ?>';    
+                document.location.href = '<?= $target_url ?>';    
             </script>
             <?php
             echo trim(ob_get_clean());

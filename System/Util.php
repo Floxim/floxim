@@ -637,14 +637,19 @@ class Util
     
     public function dump()
     {
+        ob_start();
         $file_name = fx::config('db.name').'.'.date('d-m-Y-H-i-s').'.sql.gz';
         $file = fx::path('@files/'.$file_name);
+        fx::debug('starting...');
         fx::db()->dump([
             'file' => $file
         ]);
         $http_path = fx::path()->http($file);
-        $js = '<script type="text/javascript">document.location.href = "'.$http_path.'";</script>';
-        fx::complete($js);
+        
+        fx::debug('dumped!');
+        echo '<a href="'.$http_path.'">'.$http_path.'</a>';
+        echo '<script type="text/javascript">document.location.href = "'.$http_path.'";</script>';
+        fx::complete(ob_get_clean());
     }
     
     public function htmlEntitiesDecode($s)
