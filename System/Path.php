@@ -113,6 +113,7 @@ class Path
     
     protected function processHttp($value)
     {
+        $value = preg_replace("~^https?://[^/]+~", '', $value);
         if (mb_substr($value, 0, $this->root_len) === $this->root) {
             $value = mb_substr($value, $this->root_len);
         }

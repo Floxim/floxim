@@ -75,7 +75,7 @@ class Env
             ],
             parse_url($url)
         );
-        $request_uri = $c_url['scheme'].'//'.$c_url['host'].$c_url['path'].($c_url['query'] ? '?'.$c_url['query'] : '');
+        $request_uri = $c_url['scheme'].'://'.$c_url['host'].$c_url['path'].($c_url['query'] ? '?'.$c_url['query'] : '');
         $_SERVER['REQUEST_URI'] = $request_uri;
         $path = fx::router()->getPath( $url );
         if ($path) {
