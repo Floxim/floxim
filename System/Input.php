@@ -76,6 +76,11 @@ class Input
     {
         $target = '_'.strtoupper($target);
         $this->{$target}[$key] = $value;
+        switch ($target) {
+            case '_SESSION':
+                $_SESSION[$key] = $value;
+                break;
+        }
     }
 
 
@@ -149,7 +154,7 @@ class Input
     {
 
         if (empty($this->_SESSION)) {
-            return array();
+            return $item ? null : array();
         }
 
         if ($item) {

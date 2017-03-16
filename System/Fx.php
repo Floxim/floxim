@@ -611,7 +611,7 @@ class Fx
         }
         $superglobal = strtolower($source);
         if (!in_array($superglobal, array('get', 'post', 'cookie', 'session'))) {
-            return $input;
+            return '';
         }
         $callback = array($input, 'fetch' . fx::util()->underscoreToCamel($superglobal));
         if (func_num_args() === 1) {
