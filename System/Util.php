@@ -998,6 +998,23 @@ class Util
         $traverse($data);
     }
     
+    public function findByTemplate($term = null)
+    {
+        $tvs = fx::data('template_variant');
+        $ibvs = fx::data('infoblock_visual');
+        if ($term) {
+            $term = '%'.$term.'%';
+            $tvs->where('template', $term, 'like');
+            $ibvs->whereOr(
+                ['template', $term, 'like'],
+                ['wrapper', $term, 'like']
+            );
+        }
+        $items = $tvs->all();
+        $items = $items->concat($ibvs->all());
+        return $items;
+    }
+    
     public function traverseTemplateParams(
         $term,
         $callback

@@ -174,7 +174,7 @@ class Entity extends System\Entity implements Template\Entity
 
     protected $controller_cache = null;
 
-    public function getIbController()
+    public function getBlockController()
     {
         if (!$this->controller_cache) {
             $this->controller_cache = $this->initController();
@@ -414,7 +414,7 @@ class Entity extends System\Entity implements Template\Entity
             $output = $this->getWrappedOutput();
         }
         $output = $this->addInfoblockMeta($output);
-        if (($controller = $this->getIbController())) {
+        if (($controller = $this->getBlockController())) {
             $output = $controller->postprocess($output);
         }
         return $output;
@@ -434,7 +434,7 @@ class Entity extends System\Entity implements Template\Entity
         if ($this->isFake()) {
             $this->data['params']['is_fake'] = true;
         }
-        $controller = $this->getIbController();
+        $controller = $this->getBlockController();
         if (!$controller) {
             $res = false;
         } else {
@@ -567,6 +567,8 @@ class Entity extends System\Entity implements Template\Entity
      */
     protected function getWrappedOutput()
     {
+        $this->getResult();
+        
         $wrapper = $this->getPropInherited('visual.wrapper');
         if (!$wrapper) {
             return $this->getOutput();
@@ -582,6 +584,7 @@ class Entity extends System\Entity implements Template\Entity
             $wrap_params = array();
         }
         $wrap_params['infoblock'] = $this;
+        $wrap_params['controller'] = $this->getBlockController();
         
         $is_admin = fx::isAdmin();
         
@@ -651,7 +654,7 @@ class Entity extends System\Entity implements Template\Entity
 
         if ($this->isFake()) {
             $meta['class'] .= ' fx_infoblock_fake';
-            if (!$this->getIbController()) {
+            if (!$this->getBlockController()) {
                 $controller_meta['hidden_placeholder'] = fx::alang('Fake infoblock data', 'system');
             }
         }
@@ -790,6 +793,22 @@ class Entity extends System\Entity implements Template\Entity
         }
     }
     
+    public function getExampleUrl()
+    {
+        $page_finder = $this->getPageFinder();
+        $example_page = $page_finder->one();
+        
+        if (!$example_page) {
+            return false;
+        }
+        $example_site = fx::data('site', $example_page['site_id']);
+        $res = 'http://'
+                        .$example_site->getLocalDomain()
+                        .$example_page['url']
+                        .'#fx-locate-infoblock_'.$this['id'];
+        return $res;
+    }
+    
     public function getSummary()
     {
         $vis = $this->getVisual();
@@ -825,15 +844,9 @@ class Entity extends System\Entity implements Template\Entity
                 break;
         }
         
-        $page_finder = $this->getPageFinder();
-        $example_page = $page_finder->one();
-        
-        if ($example_page) {
-            $example_site = fx::data('site', $example_page['site_id']);
-            $res['example_url'] = 'http://'
-                                    .$example_site->getLocalDomain()
-                                    .$example_page['url']
-                                    .'#fx-locate-infoblock_'.$this['id'];
+        $example_url = $this->getExampleUrl();
+        if ($url) {
+            $res['url'] = $example_url;
         }
         
         

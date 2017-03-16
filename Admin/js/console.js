@@ -40,22 +40,34 @@
         $('span', $b).text('...');
         var $form = $b.closest('form');
         $form.off('.fx_submit').trigger('fx_form_submit');
-        $form.ajaxSubmit(function(data) {
+        
+        function append_result(res) {
             var $container = $('.fx_admin_console_container');
             if (!$container.length) {
                 $container = $('<div class="fx_admin_console_container"></div>');
                 $b.parent().after($container);
             }
-            try {
-                data = $.parseJSON( data );
-                res = data.result;
-            } catch (e) {
-                var res = data;
-            }
+
             $container.html(res);
             $container.trigger('fx_render');
             $b.data('is_pending', false);
             $button_text.text(init_button_text);
+        }
+        
+        $form.ajaxSubmit({
+            success: function(data) {
+                try {
+                    data = $.parseJSON( data );
+                    res = data.result;
+                } catch (e) {
+                    var res = data;
+                }
+                append_result(res);
+            },
+            error: function(xhr, status, error) {
+                error = (error || 'Error')+' #'+xhr.status;
+                append_result('<p style="color:#F00;">'+error+'</p>');
+            }
         });
     }
     $('html').off('.execute').on('click.execute', '.fx_button-class-execute', console_exec);

@@ -305,7 +305,7 @@ abstract class Finder
                         $c_cond[3] = $passed_join_type;
                     }
                     if (!is_array($c_cond)) {
-                        fx::log(func_get_args(), debug_backtrace());
+                        fx::log(func_get_args(), debug_backtrace(), $this);
                     }
                     $field[$n] = call_user_func_array( array($this, 'prepareCondition'), $c_cond );
                 }
@@ -502,7 +502,8 @@ abstract class Finder
 
     public function calcFoundRows($on = true)
     {
-        $this->calc_found_rows = (bool)$on;
+        $this->calc_found_rows = (bool) $on;
+        return $this;
     }
 
     public function getFoundRows()

@@ -55,6 +55,14 @@ class MixinDefaultsParser {
                 $value = StyleBundle::getDefaultValue($c_var);
             } else {
                 $value = $this->output->get($arg['value'], false);
+                //$value = preg_replace("~(^|\s+)\.(\d)~", '$1i.$2', $value);
+                $value = preg_replace_callback(
+                    "~(^|\s+)\.(\d)~", 
+                    function($m) {
+                        return $m[1].'0.'.$m[2];
+                    }, 
+                    $value
+                );
             }
             $parts = null;
             $match_units = preg_match("~^[\d\.]+(em|rem|px|pt|%|vh|vw)~", $value, $parts);

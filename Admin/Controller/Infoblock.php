@@ -603,27 +603,30 @@ class Infoblock extends Admin
         
         $c_page = fx::env('page');
 
-        //$infoblocks = fx::data('infoblock')->getForPage($c_page);
         $infoblocks = fx::page()->getInfoblocks();
 
         if ($input['data_sent']) {
             foreach ($infoblocks as $ib) {
-                if (isset($input['area'][$ib['id']])) {
+                $ib_data = fx::dig($input, ['infoblocks', $ib['id']]);
+                if (isset($ib_data['area'])) {
                     $vis = $ib->getVisual();
-                    $vis['area'] = $input['area'][$ib['id']];
+                    $vis['area'] = $ib_data['area'];
                     $vis->save();
                 }
+                /*
                 if (isset($input['visibility'][$ib['id']])) {
                     $ib->digSet('scope.visibility', $input['visibility'][$ib['id']]);
                     $ib->save();
                 }
+                 * 
+                 */
             }
             return;
         }
 
         $list = array(
             'type'   => 'set',
-            //'entity' => 'infoblock',
+            'name' => 'infoblocks',
             'values' => array(),
             'labels' => array(
                 'Блок',

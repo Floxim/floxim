@@ -126,14 +126,18 @@ class Loader
         if (isset(self::$name_path_cache[$name])) {
             return self::$name_path_cache[$name];
         }
-        $ns = fx::getComponentNamespace($name);
-        $ns = explode("\\", trim($ns, "\\"));
-        if ($ns[0] === 'Theme') {
-            $ns[0] = 'theme';
+        if (strstr($name, '.')) {
+            $ns = fx::getComponentNamespace($name);
+            $ns = explode("\\", trim($ns, "\\"));
+            if ($ns[0] === 'Theme') {
+                $ns[0] = 'theme';
+            } else {
+                array_unshift($ns, 'module');
+            }
+            $res = fx::path()->abs('@home/' . join("/", $ns));
         } else {
-            array_unshift($ns, 'module');
+            $res = fx::path()->abs('@floxim/Component/'.fx::util()->underscoreToCamel($name));
         }
-        $res = fx::path()->abs('@home/' . join("/", $ns));
         self::$name_path_cache[$name] = $res;
         return $res;
     }

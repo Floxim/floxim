@@ -509,8 +509,16 @@ class Content extends Admin
         foreach ($items as $item) {
             $r = array('id' => $item['id']);
             $r['type'] = $item['type'];
-            $c_ib = $infoblocks->findOne('id', $item['infoblock_id']);
-            $r['infoblock'] = $c_ib ? $c_ib['name'] : '-';
+            $r['infoblock'] = '-';
+            if ($item['infoblock_id']) {
+                $c_ib = $infoblocks->findOne('id', $item['infoblock_id']);
+                if ($c_ib) {
+                    $ib_url = $c_ib->getExampleUrl();
+                    $r['infoblock'] = $ib_url ? 
+                                        '<a href="'.$ib_url.'" target="_blank">'.$c_ib['name'].'</a>' :
+                                        $c_ib['name'];
+                }
+            }
             foreach ($fields as $f) {
                 $val = $item[$f['keyword']];
                 switch ($f['type']) {

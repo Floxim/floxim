@@ -247,4 +247,11 @@ class Link extends \Floxim\Floxim\Component\Field\Entity
         }
         return parent::getSavestring();
     }
+    
+    public function fakeValue($entity = null) {
+        $item = $this->getTargetFinder($entity)->one();
+        if ($item) {
+            return $item['id'];
+        }
+    }
 }

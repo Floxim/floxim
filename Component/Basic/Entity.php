@@ -604,7 +604,7 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
         $fields = $this->getFields();
         foreach ($fields as $f) {
             if (!$this[$f['keyword']]) {
-                $this[$f['keyword']] = $f->fakeValue();
+                $this[$f['keyword']] = $f->fakeValue($this);
             }
         }
     }

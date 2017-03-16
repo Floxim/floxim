@@ -372,7 +372,7 @@ class Entity extends System\Entity
         return $field->getSqlType();
     }
 
-    public function fakeValue()
+    public function fakeValue($entity = null)
     {
         $c_type = preg_replace("~\(.+?\)~", '', $this->getSqlType());
         $val = '';

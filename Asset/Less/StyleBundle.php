@@ -144,7 +144,6 @@ class StyleBundle extends Bundle {
             }
             
             $res['vars'] = $this->extractDefaults($res['vars']);
-            
             $this->meta['style'] = $res;
             $this->meta_updated = true;
             

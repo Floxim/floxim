@@ -213,7 +213,6 @@ class Page
         if ($params['name'] === 'auto') {
             $params['name'] = md5(join(',', $files));
         }
-        
         $bundle = fx::assets('css', $params['name'], array('namespace' => $params['namespace']));
         $bundle->push($files);
         $main_bundle = $this->getDefaultCssBundle();
