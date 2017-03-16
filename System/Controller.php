@@ -241,7 +241,7 @@ class Controller
             if (isset($tplv['is_abstract'])) {
                 continue;
             }
-            if (!isset($tplv['of']) || !is_array($tplv['of'])) {
+            if (!isset($tplv['of']) || !is_array($tplv['of']) || count($tplv['of']) === 0) {
                 continue;
             }
             foreach ($tplv['of'] as $tpl_of => $tpl_of_priority) {
@@ -252,7 +252,7 @@ class Controller
                 list($tpl_of_controller, $tpl_of_action) = $of_parts;
 
                 $tpl_of_action = fx::util()->underscoreToCamel($tpl_of_action, false);
-                if (!in_array($tpl_of_controller, $controller_variants)) {
+                if ($tpl_of_controller !== '*' && !in_array($tpl_of_controller, $controller_variants)) {
                     continue;
                 }
 

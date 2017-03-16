@@ -25,12 +25,13 @@ class Http
 
     public function redirect($target_url, $status = 301)
     {
+        $target_url = preg_replace("~^https?://[^/]+~", '', $target_url);
         $target_url = fx::path()->http($target_url);
         if (fx::env('ajax')) {
             ob_start();
             ?>
             <script type="text/javascript">
-            document.location.href = '<?= $target_url ?>';    
+                document.location.href = '<?= $target_url ?>';    
             </script>
             <?php
             echo trim(ob_get_clean());

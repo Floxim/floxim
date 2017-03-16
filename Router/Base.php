@@ -33,5 +33,4 @@ abstract class Base
         }
         return $base_url;
     }
-
 }

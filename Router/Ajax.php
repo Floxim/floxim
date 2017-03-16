@@ -16,7 +16,8 @@ class Ajax extends Base
         fx::env('ajax', true);
 
         $c_url = fx::input()->fetchGetPost('_ajax_base_url');
-        
+        fx::env()->forceUrl($c_url);
+        /*
         if ($c_url) {
             $c_url = preg_replace("~^https?://[^/]+~", '', $c_url);
             
@@ -35,7 +36,7 @@ class Ajax extends Base
                 parse_str($c_url['query'], $_GET);
             }
         }
-        
+        */
         // import layout template to recreate real env
         fx::router('front')->importLayoutTemplate();
         

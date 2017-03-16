@@ -14,20 +14,10 @@ class Infoblock extends Base
         if (!preg_match("~^/\~ib/(\d+|fake(?:\-\d+)?)@(\d+)~", $url, $ib_info)) {
             return null;
         }
+        
         $c_url = fx::input()->fetchGetPost('_ajax_base_url');
-        if ($c_url) {
-            $_SERVER['REQUEST_URI'] = $c_url;
-            $path = fx::router()->getPath( $c_url );
-            if ($path) {
-                fx::env('page', $path->last());
-            } else {
-                fx::env('page', fx::router('error')->getErrorPage());
-            }
-            $c_url = parse_url($c_url);
-            if (isset($c_url['query'])) {
-                parse_str($c_url['query'], $_GET);
-            }
-        }
+        fx::env()->forceUrl($c_url);
+        
         $ib_id = $ib_info[1];
         $page_id = $ib_info[2];
         if (!fx::env('page') && $page_id) {

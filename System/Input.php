@@ -71,6 +71,12 @@ class Input
 
         return $output;
     }
+    
+    public function set($target, $key, $value)
+    {
+        $target = '_'.strtoupper($target);
+        $this->{$target}[$key] = $value;
+    }
 
 
     public static function prepareSuperglobal($array)

@@ -161,10 +161,16 @@ return array(
         '*listing_by' => array(
             'disabled' => 1
         ),
+        '*form*' => [
+            'disabled' => true
+        ],
         '*form_create' => array(
+            /*
             'check_context' => function() use ($component_infoblocks) {
                 return count($component_infoblocks) > 0;
             },
+             * 
+             */
             'settings' => array(
                 'target_infoblock' => array(
                     'type' => 'select',

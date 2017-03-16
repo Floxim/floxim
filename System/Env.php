@@ -61,6 +61,38 @@ class Env
         }
         return $path_cache[$url];
     }
+    
+    public function forceUrl($url)
+    {
+        if (!$url) {
+            return;
+        }
+        $c_url = array_merge(
+            [
+                'scheme' => 'http',
+                'query' => '',
+                'path' => '/'
+            ],
+            parse_url($url)
+        );
+        $request_uri = $c_url['scheme'].'://'.$c_url['host'].$c_url['path'].($c_url['query'] ? '?'.$c_url['query'] : '');
+        $_SERVER['REQUEST_URI'] = $request_uri;
+        $path = fx::router()->getPath( $url );
+        if ($path) {
+            $this->setPage($path->last());
+        } else {
+            $this->setPage(fx::router('error')->getErrorPage());
+        }
+
+        if (isset($c_url['query'])) {
+            $forced_query = [];
+            parse_str($c_url['query'], $forced_query);
+            foreach ($forced_query as $k => $v) {
+                $_GET[$k] = $v;
+                fx::input()->set('get', $k, $v);
+            }
+        }
+    }
 
 
     /**
