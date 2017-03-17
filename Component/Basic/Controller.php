@@ -232,7 +232,6 @@ class Controller extends \Floxim\Floxim\Controller\Frontoffice {
     public function doList()
     {
         $items = $this->getResult('items');
-        
         if (!$items) {
             $f = $this->getFinder();
             $this->trigger('query_ready', array('query' => $f));
@@ -252,12 +251,6 @@ class Controller extends \Floxim\Floxim\Controller\Frontoffice {
         $this->assign('items', $items);
         
         $items->limit = $this->getParam('limit');
-        /*
-        if (($pagination = $this->getPagination())) {
-            $this->assign('pagination', $pagination);
-        }
-         * 
-         */
         $this->trigger('result_ready');
     }
     

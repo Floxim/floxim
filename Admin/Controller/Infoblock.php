@@ -83,6 +83,7 @@ class Infoblock extends Admin
                 continue;
             }
             $actions = $ctrl->getActions();
+            
             foreach ($actions as $action_code => $action_info) {
                 // do not show actions starting with "_"
                 if (preg_match("~^_~", $action_code)) {

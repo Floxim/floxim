@@ -41,6 +41,9 @@ class Tree extends Collection {
                 continue;
             }
             $pid = $item[$this->parentKey];
+            if (is_null($pid)) {
+                continue;
+            }
             if (!isset($index_by_parent[$pid])) {
                 $index_by_parent[$pid] = $this->fork();
                 $index_by_parent[$pid]->addFilter($this->parentKey, $pid);
