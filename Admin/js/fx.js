@@ -690,6 +690,10 @@ var close_stack = function() {
         }
     };
     
+    this.closed = function(index) {
+        console.log('set closd', index);
+    };
+    
     var last_mousedown = null;
     
     $(document.body).on('mousedown', function() {

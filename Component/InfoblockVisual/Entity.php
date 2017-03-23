@@ -259,15 +259,13 @@ class Entity extends System\Entity
         return parent::offsetSet($offset, $value);
     }
     
-    /* ! not ready ! */
-    public function __getTemplatesField($area, $role = 'template')
+    public function getTemplatesField($area = null, $role = 'template')
     {
         $infoblock = $this['infoblock'];
         switch ($role) {
             case 'template':
                 $controller = $infoblock->initController();
                 $templates = $controller->getAvailableTemplates($this['theme_id'], $area);
-                $c_value = $this['template'];
                 break;
             case 'wrapper':
                 $controller = null;
@@ -275,11 +273,10 @@ class Entity extends System\Entity
                     fx::template('floxim.layout.wrapper'), 
                     $area
                 );
-                $c_value = $this['wrapper'];
                 break;
-            
         }
-        
+        $c_variant = $this[$role.'_variant_id'];
+        $c_value = $c_variant ? $c_variant : $this[$role];
         if (empty($templates)) {
             return array(
                 'type' => 'hidden',
@@ -298,32 +295,54 @@ class Entity extends System\Entity
         
         $mismatched = fx::collection();
         
+        $variants_meta = [];
         
         $template_variants = $theme_variants->find(
-            function($variant) use ($area_size, $template_codes, &$c_value, $controller, $mismatched) {
+            function($variant) use ($area_size, $template_codes, $controller, $mismatched, &$variants_meta) {
                 if (!in_array($variant['template'], $template_codes)) {
                     return false;
                 }
+                $c_variant_meta = [
+                    'area_rate' => 1,
+                    'type_rate' => 1,
+                    'priority' => $variant['priority']
+                ];
+                if (
+                    $variant['size'] !== 'any' && 
+                    $area_size['width'] !== 'any' && 
+                    $variant['size'] === $area_size['width']
+                ) {
+                    $c_variant_meta['area_rate'] = 2;
+                }
                 if ($variant['size'] && $variant['size'] !== 'any' && $variant['size'] !== $area_size['width']) {
-                    $mismatched []= $variant;
-                    return false;
+                    //$mismatched []= $variant;
+                    $c_variant_meta['area_rate'] = 0;
+                    //return false;
                 }
                 if ($controller) {
                     $avail_for_type = $controller->checkTemplateAvailForType($variant);
                     if (!$avail_for_type) {
-                        $mismatched []= $variant;
-                        return false;
+                        $c_variant_meta['type_rate'] = 0;
                     }
                 }
-                if (is_null($c_value)) {
-                    $c_value = $variant['id'];
+                $variants_meta[$variant['id']] = $c_variant_meta;
+                if ($c_variant_meta['area_rate'] === 0 || $c_variant_meta['type_rate'] === 0) {
+                    $mismatched []= $variant;
+                    return false;
                 }
                 return true;
             }
         );
         
+        $template_variants = $template_variants->sort(function($a, $b) use ($variants_meta) {
+            $am = $variants_meta[$a['id']];
+            $bm = $variants_meta[$b['id']];
+            if ($am['priority'] !== $bm['priority']) {
+                return $am['priority'] > $bm['priority'] ? -1 : 1;
+            }
+        });
         
-        $template_variant_counts = $this->getTemplateVariantCounts(
+        $template_variant_counts = self::getTemplateVariantCounts(
             $template_variants,
             $infoblock ? $infoblock['id'] : null
         );
@@ -334,6 +353,8 @@ class Entity extends System\Entity
         
         
         $variant_to_value = function($variant) use ($template_variant_counts) {
+            $priority = $variant['priority']*1;
+            $priority = $priority > 0 ? "1" : ($priority < 0 ? "-1" : "0");
             return array(
                 (string) $variant['id'],
                 $variant['name'],
@@ -346,24 +367,31 @@ class Entity extends System\Entity
                     'wrapper_variant_id' => $variant['wrapper_variant_id'],
                     'count_using_blocks' => isset($template_variant_counts[$variant['id']]) ?
                                                 $template_variant_counts[$variant['id']] :
-                                                0
+                                                0,
+                    'priority' => $priority
                 )
             );
         };
         
         foreach ($templates as $template) {
-            
+            /*
             $c_template_variants = $template_variants->find('template', $template['full_id']);
                 
             foreach ($c_template_variants as $variant) {
                 $values []= $variant_to_value($variant);
             }
-            
+            */
             $special_values []= [
                 'id' => $template['full_id'],
                 'name' => $template['name']
             ];
             
+        }
+        foreach ($template_variants as $variant) {
+            if (is_null($c_value)) {
+                $c_value = $variant['id'];
+            }
+            $values []= $variant_to_value($variant);
         }
         
         if (count($special_values) > 1) {
@@ -415,6 +443,32 @@ class Entity extends System\Entity
                 $res['template_variant_params'] = [$avail_for_type_field];
             }
         }
+        return $res;
+    }
+    
+    protected function getTemplateVariantCounts($variants, $skip_infoblock_id = null)
+    {
+        if (count($variants) === 0) {
+            return [];
+        }
+        $q = fx::data('template_variant');
+
+        $q->join(
+                '{{infoblock_visual}} as vis', 
+            '(vis.template_variant_id = {{template_variant}}.id '.
+                ' or vis.wrapper_variant_id = {{template_variant}}.id)'.
+                ($skip_infoblock_id ? ' and vis.infoblock_id != '. ( (int) $skip_infoblock_id) : '')
+        );
+
+        $q->where('id', $variants->getValues('id'));
+
+        $q->group('{{template_variant}}.id');
+
+        $q->select('id', 'count(*) as cnt');
+        
+        
+        $data = $q->getData();
+        $res = $data->getValues('cnt', 'id');
         return $res;
     }
 }

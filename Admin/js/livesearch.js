@@ -528,6 +528,9 @@ window.fx_livesearch = function (node, params) {
         }
         html += '"></span>';
         var $control = $(html);
+        if (params.title) {
+            $control.attr('title', params.title);
+        }
         $controls.append($control);
         if (params.action) {
             $control.click(function() {

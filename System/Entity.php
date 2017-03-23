@@ -646,13 +646,17 @@ abstract class Entity implements \ArrayAccess, Template\Entity
         
         // relation lazy-loading
         if ($offset_type === self::OFFSET_RELATION) {
+            $fake_level = $this->getPayload('fake_level');
             $finder = $this->getFinder();
-            $finder->addRelated($offset, new Collection(array($this)));
-            
-            if (!array_key_exists($offset, $this->data)) {
-                $this->data[$offset] = null;
+            if (is_null($fake_level) || $fake_level > 1) {
+                $finder->addRelated($offset, new Collection(array($this)));
+
+                if (!array_key_exists($offset, $this->data)) {
+                    $this->data[$offset] = null;
+                }
+                return $this->data[$offset];
             }
-            return $this->data[$offset];
+            return $this->getFakeRelated($offset);
         }
         
         if ($offset_type === self::OFFSET_SELECT) {
@@ -662,7 +666,12 @@ abstract class Entity implements \ArrayAccess, Template\Entity
         }
     }
     
-        
+    public function getFakeRelated($offset)
+    {
+        return fx::collection([]);
+    }
+
+
     public function getReal($offset)
     {
         //if (isset($this->data[$offset])) {

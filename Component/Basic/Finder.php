@@ -737,10 +737,18 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
         }
     }
     
-    public function fake($props = array())
+    protected static $fake_variants = [];
+    
+    public function fake($props = array(), $level = 0)
     {
-        $content = $this->create();
-        $content->fake();
+        $com_kw = $this->getComponent()['keyword'];
+        if (is_null(self::$fake_variants[$com_kw])) {
+            self::$fake_variants[$com_kw] = $this->getComponent()->getAllVariants()->find('is_abstract', 0)->getValues();
+        }
+        $com = fx::util()->circle(self::$fake_variants[$com_kw]);
+        $finder = $com->getEntityFinder();
+        $content = $finder->create();
+        $content->fake($level);
         $content->set($props);
         return $content;
     }

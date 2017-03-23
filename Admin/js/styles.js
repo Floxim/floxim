@@ -13,7 +13,8 @@ function less_tweaker(params) {
 
 less_tweaker.prototype.set_style_class = function(cl) {
     this.style_class = cl;
-    this.is_new = !!this.style_class.match(/_style_default$/);
+    this.is_new = !!this.style_class.match(/_style_default$/) && this.mode !== 'edit';
+    
     if (!this.is_new) {
         this.$affected = $('.'+cl);
     } else {
@@ -35,6 +36,8 @@ less_tweaker.prototype.init = function() {
     //this.style_class = cl;
     
     this.style_id_class = this.block_name+'_style-id_'+this.style_id;
+    
+    console.log(cl);
     
     this.set_style_class(cl);
     
@@ -441,60 +444,81 @@ less_tweaker.bind_style_preview = function(ls) {
     });
 };
 
-less_tweaker.handle_style_control = function(ls_json, ls) {
+less_tweaker.handle_style_control = function(ls_json, ls, mode) {
     var current_style = ls.getFullValue(),
-        block_name = ls_json.block,
-        style_value = current_style.id.replace(/_variant_[^_]+$/, ''),
-        style_variant_id = current_style.style_variant_id,
-        style_id = ls_json.style_id,
-        tweaker = null;
+        params = {
+            ls: ls,
+            mode: mode,
+            block_name: ls_json.block,
+            style_value: current_style.id.replace(/_variant_[^_]+$/, ''),
+            style_variant_id: current_style.style_variant_id,
+            style_id: ls_json.style_id
+        };
+    this.edit_style_variant(params);    
+};
 
+less_tweaker.edit_style_variant = function(params) {
+    var tweaker = null,
+        mode = params.mode,
+        style_variant_id = params.style_variant_id,
+        style_value = params.style_value,
+        ls = params.ls,
+        block_name = params.block_name,
+        style_id = params.style_id,
+        source_vars = params.source_vars || {};
+        
     $fx.front_panel.load_form(
         {
             entity:'layout',
             action:'style_settings',
+            mode: mode,
             style_variant_id: style_variant_id,
             block: block_name,
-            style:style_value
+            style:style_value,
+            source_vars: source_vars
         },
         {
             view:'horizontal',
             onready: function($form) {
-                var $as_new_inp = $('input[name="save_as_new"]', $form);
-                if ($as_new_inp.length) {
-                    var $name_input = $('[name="style_name"]', $form),
-                        initial_name = $name_input.val(),
-                        last_name = initial_name;
-
-                    $as_new_inp.on('change', function() {
-                        if ($as_new_inp.val()*1 === 1) {
-                            last_name = $name_input.val();
-                            if (last_name === initial_name) {
-                                $name_input.val('').focus();
+                var $as_new_button = $('.fx_admin_form__title .fx_icon-type-place', $form);
+                $as_new_button.click(function() {
+                    var data = $form.formToHash(),
+                        new_params = $.extend(
+                            {},
+                            params, 
+                            {
+                                mode:'copy',
+                                source_vars: data,
+                                source_form: $form
                             }
-                        } else {
-                            $name_input.val(last_name);
-                        }
-                    });
-                }
-
+                        );
+                    
+                    less_tweaker.edit_style_variant(new_params);
+                });
+                
+                var $name_input = $('[name="style_name"]', $form),
+                    $name_editable = $('.fx_admin_form__title-inline-editable', $form);
+                
+                $name_editable.on('input paste', function() {
+                    $name_input.val( $name_editable.text() );
+                });
+                
                 var style_meta = $form.data('fx_response').tweaker,
-                    params = $.extend(
+                    tweaker_params = $.extend(
                         {},
                         style_meta,
                         {
                             $form: $form,
                             style_id: style_id,
-                            vars: style_meta.tweaked_vars
+                            vars: style_meta.tweaked_vars,
+                            mode: mode
                         }
                     );
-
-                tweaker = new less_tweaker(params);
+                tweaker = new less_tweaker(tweaker_params);
             },
             onsubmit: function(e) {
                 var $form = $(e.target),
                     data = $form.formToHash();
-
                 if (data.pressed_button === "delete") {
                     return;
                 }
@@ -508,6 +532,9 @@ less_tweaker.handle_style_control = function(ls_json, ls) {
                 });
             },
             onfinish: function(res) {
+                if (params.source_form) {
+                    $fx.front_panel.hide(null, 1);
+                }
                 var new_val = style_value+ (res.id ? '_variant_'+res.id : '');
 
                 delete $fx.front.cached_style_variants[block_name];
@@ -532,7 +559,7 @@ less_tweaker.handle_style_control = function(ls_json, ls) {
             }
         }
     );
-};
+}
 
 less_tweaker.init_style_select = function($monosearch) {
     var ls = $monosearch.data('livesearch');
@@ -552,11 +579,23 @@ less_tweaker.init_style_select = function($monosearch) {
     livesearch.bindValueControls(function() {
         var value = livesearch.getFullValue();
         livesearch.addValueControl({
-            icon: value.style_variant_id ? 'edit' : 'add-round',
+            //icon: value.style_variant_id ? 'edit' : 'add-round',
+            icon: 'edit',
+            title: 'Изменить стиль',
             action: function() {
-                less_tweaker.handle_style_control(source_json, livesearch);
+                less_tweaker.handle_style_control(source_json, livesearch, 'edit');
             }
         });
+        /*
+        livesearch.addValueControl({
+            //icon: value.style_variant_id ? 'edit' : 'add-round',
+            icon: 'place',
+            title: 'Скопировать в новый стиль',
+            action: function() {
+                less_tweaker.handle_style_control(source_json, livesearch, 'copy');
+            }
+        });
+        */
     });
 };
 

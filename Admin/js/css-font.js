@@ -172,10 +172,12 @@ window.fx_font_control = function(json) {
         function show_extras() {
             $extras.show();
             var handler_box = $handler[0].getBoundingClientRect(),
-                extra_box = $extras[0].getBoundingClientRect();
+                extra_box = $extras[0].getBoundingClientRect(),
+                extra_left = Math.max(handler_box.left - extra_box.width, 10);
+            
             
             $extras.css({
-                left: (handler_box.left - extra_box.width),
+                left: extra_left,
                 top: handler_box.bottom + 5
             });
             closer = $fx.close_stack.push(

@@ -549,6 +549,10 @@ class StyleBundle extends Bundle {
                 array('theme_id', fx::env('theme_id')),
                 array('theme_id', null, 'is null')
             )
+            ->whereOr(
+                ['is_default', 0],
+                ['is_default', null, 'is null']
+            )
             ->all()
             ->group('style');
         
@@ -560,9 +564,11 @@ class StyleBundle extends Bundle {
             $style_name = $style_name[1];
             $bundle = fx::assets('style', $block.'_'.$style_name);
             $style_meta = $bundle->getStyleMeta();
+            //fx::log($style_meta);
             $res[]= array(
                 $style_name,
-                $style_meta['name'] ? $style_meta['name'] : $style_name,
+                //$style_meta['name'] ? $style_meta['name'] : $style_name,
+                '- по умолчанию -',
                 array(
                     'title' => $style_name,
                     'is_tweakable' => count($style_meta['vars']) > 0,
@@ -576,7 +582,8 @@ class StyleBundle extends Bundle {
                     
                     $res[]= array(
                         $variant->getStyleKeyword(),
-                        ' -- '.$variant['name'],
+                        //' -- '.$variant['name'],
+                        $variant['name'],
                         array(
                             'is_tweakable' => true,
                             'style_variant_id' => $variant['id'],
@@ -597,12 +604,14 @@ class StyleBundle extends Bundle {
     
     public function getStyleVariant()
     {
-        if (!isset($this->meta['style_variant_id']) || isset($this->meta['visual_path'])) {
+        
+        if (isset($this->meta['visual_path'])) {
             return null;
         }
-        $id = $this->meta['style_variant_id'];
+        $id = isset($this->meta['style_variant_id']) ? $this->meta['style_variant_id'] : null;
         if (!$id) {
-            return null;
+            $default = fx::data('style_variant')->getDefault($this->meta['block_name']);
+            return $default;
         }
         return fx::data('style_variant', $id);
     }

@@ -2826,6 +2826,18 @@ fx_front.prototype.edit_template_variant = function(template_ls) {
         value: c_value.size || c_width
     });
     
+    fields.push({
+        label: 'Приоритет',
+        type: 'radio_facet',
+        name: 'priority',
+        values: [
+            ["-1", 'Низкий'],
+            ["0", 'Обычный'],
+            ["1", 'Высокий']
+        ],
+        value: c_value.priority || "0"
+    });
+    
     if (template_ls.template_type === 'template') {
         var c_wrapper_ls = $form.find('input[name="visual[wrapper]"]').closest('.livesearch').data('livesearch');
         if (c_wrapper_ls) {
@@ -3057,10 +3069,6 @@ function add_template_variant_controls(template_ls) {
         is_preset = !!value.basic_template,
         template_type = template_ls.template_type;
 
-    if (is_preset && is_locked) {
-        //return;
-    }
-
     if (is_preset) {
         template_ls.addValueControl({
             icon: 'place',
@@ -3084,7 +3092,7 @@ function add_template_variant_controls(template_ls) {
     });
 
     if (is_locked) {
-        template_ls.$node.find('.monosearch__item-controls').hide();
+        //template_ls.$node.find('.monosearch__item-controls').hide();
     }
 }
 
@@ -3165,12 +3173,13 @@ fx_front.prototype.show_infoblock_settings_form = function(data, $ib_node, tab) 
                     var new_data = $form.formToHash(),
                         c_data = $form.data('last_data');
                         
-                    if (e.target.name === 'visual[template]') {
+                    // set specified wrapper (for new ibs only)
+                    if (e.target.name === 'visual[template]' && new_data.id === '') {
                         var c_template_data = $(e.target)
                                                 .closest('.livesearch')
                                                 .data('livesearch')
                                                 .getFullValue();
-                                        
+                        
                         if (c_template_data.wrapper_variant_id) {
                             new_data.visual.wrapper = c_template_data.wrapper_variant_id;
                             $form

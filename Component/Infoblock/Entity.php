@@ -24,6 +24,7 @@ class Entity extends System\Entity implements Template\Entity
     public function setVisual(Component\InfoblockVisual\Entity $visual)
     {
         $this->_visual[$visual['theme_id']] = $visual;
+        $visual['infoblock'] = $this;
     }
     
     public function getVisual($theme_id = null)
@@ -48,6 +49,9 @@ class Entity extends System\Entity implements Template\Entity
                     'infoblock_id' => $this['id']
                 )
             );
+            if (!$this['id']) {
+                $visual['infoblock'] = $this;
+            }
             $this['visuals'][]= $visual;
             $this->_visual[$theme_id] = $visual;
         }
@@ -845,8 +849,8 @@ class Entity extends System\Entity implements Template\Entity
         }
         
         $example_url = $this->getExampleUrl();
-        if ($url) {
-            $res['url'] = $example_url;
+        if ($example_url) {
+            $res['example_url'] = $example_url;
         }
         
         

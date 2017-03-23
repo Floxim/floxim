@@ -9,9 +9,9 @@
         
         this.panels = [];
         
-        this.get_current_panel = function() {
-            var c_len = this.panels.length;
-            return c_len ? this.panels[c_len - 1] : null;
+        this.get_current_panel = function(offset) {
+            var panel_offset = this.panels.length - (offset || 0) - 1;
+            return (typeof this.panels[panel_offset] === 'undefined') ? null : this.panels[panel_offset];
         };
         
         this.focus_form = function($form) {
@@ -193,12 +193,14 @@
                         $fx.close_stack.close(closer.index);
                     }
                     
-                    $fx.front_panel.hide();
+                    
                     if (data.resume) {
+                        $fx.front_panel.hide();
                         $fx.front_panel.show_form(data, params);
                     } else {
                         if (params.onfinish) {
                             params.onfinish(data, $form);
+                            $fx.front_panel.hide();
                         }
                     }
                 }
@@ -266,7 +268,7 @@
                 
                 var closed_by_escape = false;
                 
-                closer = $fx.close_stack.push(
+                closer = c_panel.closer = $fx.close_stack.push(
                     function() {
                         closed_by_escape = true;
                         $form.trigger('fx_form_cancel');
@@ -451,13 +453,14 @@
         
         this.panel_height_queue = [];
         
-        this.animate_panel_height = function(panel_height, callback) {
+        this.animate_panel_height = function(panel_height, callback, c_panel) {
             
+            
+            c_panel = c_panel || front_panel.get_current_panel();
             
             var max_height = Math.round(
-                $(window).height() * 0.75
-            );
-            var c_panel = front_panel.get_current_panel(),
+                    $(window).height() * 0.75
+                ),
                 $top_bar = c_panel.$container,
                 $form = $('form', $top_bar);
         
@@ -575,9 +578,10 @@
                 }
             );
         };
-        this.hide = function(callback_final) {
+        this.hide = function(callback_final, offset) {
+            offset = offset || 0;
             var that = this,
-                c_panel = this.get_current_panel();
+                c_panel = this.get_current_panel(offset);
             
             if (!c_panel) {
                 if (callback_final) {
@@ -594,6 +598,21 @@
                 $('body').off('.fx_front_panel');
             }
             
+            var complete = function() {
+                var c_index = that.panels.indexOf(c_panel);
+                if (c_index !== -1) {
+                    that.panels.splice(c_index, 1);
+                }
+                if (c_panel.closer) {
+                    $fx.close_stack.close(c_panel.closer.index);
+                }
+            };
+            
+            if (offset) {
+                c_panel.$container.remove();
+                complete();
+                return;
+            }
             
             var callback = function() {
                 
@@ -602,7 +621,7 @@
                     var prev_panel = that.panels[that.panels.length - 2];
                     reset_hilight = prev_panel.current_params.keep_hilight_on;
                 } else {
-                    reset_hilight = !c_panel.current_params.keep_hilight_on;
+                    reset_hilight = offset === 0 ? !c_panel.current_params.keep_hilight_on : false;
                 }
                 
                 if (reset_hilight) {
@@ -611,15 +630,11 @@
                 if (callback_final) {
                     callback_final();
                 }
-                var c_index = that.panels.indexOf(c_panel);
-                if (c_index !== -1) {
-                    that.panels.splice(c_index, 1);
-                }
+                complete();
             };
             if (c_panel.current_panel_type === 'top') {
-                var prev_top_panel = this.get_previous_panel('top');
+                var prev_top_panel = !offset && this.get_previous_panel('top');
                 if (prev_top_panel) {
-                    that.panels.pop();
                     
                     prev_top_panel.$container.before(c_panel.$container);
                     
@@ -627,9 +642,13 @@
                         .css('opacity', 1)
                         .removeClass('fx-top-panel_going-out');
                     
-                    this.animate_panel_height(null, function() {
-                        front_panel.focus_form(prev_top_panel.$form);
-                    });
+                    this.animate_panel_height(
+                        null, 
+                        function() {
+                            front_panel.focus_form(prev_top_panel.$form);
+                        },
+                        prev_top_panel
+                    );
                     c_panel.$container.addClass('fx-top-panel_going-out');
                     c_panel.$container.animate({
                        height:0,
@@ -638,6 +657,7 @@
                         duration: duration,
                         complete: function() {
                             c_panel.$container.remove();
+                            complete();
                             if (callback_final) {
                                 callback_final();
                             }
