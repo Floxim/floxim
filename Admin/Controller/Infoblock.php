@@ -427,6 +427,7 @@ class Infoblock extends Admin
         );
 
         $format_fields = $this->getFormatFields($infoblock, $area_meta);
+        
         $this->response->addFields(
             $format_fields, 
             'design', // tab
@@ -940,13 +941,15 @@ class Infoblock extends Admin
             )
         );
         
-        $controller = $infoblock->initController();
-        $tmps = $controller->getAvailableTemplates(fx::env('theme_id'), $area_meta);
+        //$controller = $infoblock->initController();
+        //$tmps = $controller->getAvailableTemplates(fx::env('theme_id'), $area_meta);
         
         $c_value = $ib_visual['template_variant_id'] 
                                 ? $ib_visual['template_variant_id'] 
                                 : $ib_visual['template'];
         
+        $tpl_field = $ib_visual->getTemplatesField($area_meta, 'template');
+        /*
         $tpl_field = $this->getTemplatesField(
             $tmps,
             $controller,
@@ -955,7 +958,7 @@ class Infoblock extends Admin
             $c_value,
             $infoblock
         );
-        
+        */
         if ($tpl_field['value'] && !$c_value) {
             $ib_visual['template_variant_id'] = $tpl_field['value'];
         }
@@ -1169,8 +1172,8 @@ class Infoblock extends Admin
     protected function getWrapperFields($infoblock, $area_meta)
     {
         
-        $wrappers = self::collectWrapperTemplates($area_meta);
-        $controller = $infoblock->initController();
+        //$wrappers = self::collectWrapperTemplates($area_meta);
+        //$controller = $infoblock->initController();
         
         $visual = $infoblock->getVisual();
         
@@ -1180,9 +1183,15 @@ class Infoblock extends Admin
         
         if (is_null($c_value)) {
             $template_variant = $visual['template_variant'];
-            $c_value = $template_variant['wrapper_variant_id'];
+            $forced_wrapper_id = $template_variant['wrapper_variant_id'];
+            if ($forced_wrapper_id) {
+                $visual['wrapper_variant_id'] = $forced_wrapper_id;
+            }
+            //$c_value = $template_variant['wrapper_variant_id'];
+            //fx::log($template_variant, $c_value);
         }
-        
+        $field = $visual->getTemplatesField($area_meta, 'wrapper');
+        /*
         $field = $this->getTemplatesField(
             $wrappers, 
             $controller, 
@@ -1191,6 +1200,8 @@ class Infoblock extends Admin
             $c_value,
             $infoblock
         );
+         * 
+         */
         $field['name'] = 'wrapper';
         
         $field['values'][]= ['', '-нет-'];
@@ -1619,7 +1630,7 @@ class Infoblock extends Admin
             $template_value = $tv['template'];
             $tv->delete();
         } else {
-            $variant_props = ['name', 'is_locked', 'size', 'avail_for_type', 'wrapper_variant_id'];
+            $variant_props = ['name', 'is_locked', 'size', 'avail_for_type', 'wrapper_variant_id', 'priority'];
             foreach ($variant_props as $prop) {
                 if (isset($input[$prop])) {
                     $tv[$prop] = $input[$prop];
@@ -1632,26 +1643,22 @@ class Infoblock extends Admin
             $template_value = $tv['id'];
         }
         
-        $controller = fx::controller($input['controller']);
-        $area = $input['area'];
-        
-        if ($input['template_type'] === 'wrapper') {
-            $templates = self::collectWrapperTemplates($area);
-        } else {
-            $templates = $controller->getAvailableTemplates(null, $area);
-        }
-        
         $ib_id = isset($input['infoblock_id']) && $input['infoblock_id'] ? $input['infoblock_id'] : null;
+        if ($ib_id) {
+            $infoblock = fx::data('infoblock', $ib_id);
+        } else {
+            $ctr_parts = explode(':', $input['controller']);
+            fx::log($input, $ctr_parts);
+            $infoblock = fx::data('infoblock')->create([
+                'controller' => $ctr_parts[0],
+                'action' => $ctr_parts[1]
+            ]);
+        }
+        $visual = $infoblock->getVisual();
+        $area = $input['area'];
+        $role = $input['template_type'] === 'wrapper' ? 'wrapper' : 'template';
         
-        $template_field = $this->getTemplatesField(
-            $templates, 
-            $controller,
-            $area,
-            $input['template_type'],
-            null,
-            $ib_id ? fx::data('infoblock', $ib_id) : null
-        );
-        
+        $template_field = $visual->getTemplatesField($area, $role);
         return array(
             'template_value' => $template_value,
             'template_field' => $template_field

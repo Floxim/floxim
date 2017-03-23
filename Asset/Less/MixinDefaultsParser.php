@@ -55,7 +55,6 @@ class MixinDefaultsParser {
                 $value = StyleBundle::getDefaultValue($c_var);
             } else {
                 $value = $this->output->get($arg['value'], false);
-                //$value = preg_replace("~(^|\s+)\.(\d)~", '$1i.$2', $value);
                 $value = preg_replace_callback(
                     "~(^|\s+)\.(\d)~", 
                     function($m) {
@@ -65,7 +64,7 @@ class MixinDefaultsParser {
                 );
             }
             $parts = null;
-            $match_units = preg_match("~^[\d\.]+(em|rem|px|pt|%|vh|vw)~", $value, $parts);
+            $match_units = preg_match("~^[\-\d\.]+(em|rem|px|pt|%|vh|vw)~", $value, $parts);
             if ($match_units) {
                 if (!isset($c_var['type'])) {
                     $c_var['type'] = 'number';

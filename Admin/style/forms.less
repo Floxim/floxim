@@ -19,6 +19,35 @@
         font-weight:500;
         color:#222;
     }
+    &__title-counter {
+        font-size: 12px;
+        font-weight: 300;
+        text-decoration: none;
+        display:block;
+        //position: relative;
+        //top: -11px;
+    }
+    &__title-inline-editable {
+        border: 1px solid #ddd;
+        border-radius: 2px;
+        display: inline-block;
+        padding: 8px 10px 7px 10px;
+        margin: 0 2px 0 5px;
+        
+        font-weight: normal;
+        font-size: 16px;
+        &:empty {
+            color:#999;
+        }
+        &:empty:after {
+            color:#999;
+            content:attr(fx_placeholder);
+        }
+        &, &:focus, &:active {
+            outline:none;
+        }
+    }
+    
     &__header {
         padding: 8px 20px;
         position:relative;
@@ -1035,6 +1064,10 @@
     width:70px !important;
 }
 
+.fx_input_number_dddd {
+    width:75px !important;
+}
+
 .fx_input_number_dd {
     width:60px !important;
 }
@@ -1699,6 +1732,8 @@ select.fx_input {
     &__handler {
         display:inline-block;
         cursor:pointer;
+        font-weight:bold;
+        margin-left:5px;
         color:@button_color;
     }
     &__extras {

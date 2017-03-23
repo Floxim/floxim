@@ -358,30 +358,55 @@ class Layout extends Admin
     protected function prepareStyleVar($props)
     {
         if ($props['units'] && $props['value']) {
-            $props['value'] = preg_replace("~[^\d\.]+~", '', $props['value']);
+            $props['value'] = preg_replace("~[^\-\d\.]+~", '', $props['value']);
         }
         return $props;
     }
     
     public function styleSettings($input)
     {
-        $fields = $this->getHiddenFields(array('style', 'block', 'style_variant_id'));
+        $fields = $this->getHiddenFields(array('style', 'block', 'style_variant_id', 'mode'));
         
         $style_variant_id = isset($input['style_variant_id']) ? $input['style_variant_id'] : null;
-        $save_as_new = isset($input['save_as_new']) ? (bool) $input['save_as_new'] : false;
+        $mode = isset($input['mode']) ? $input['mode'] : 'edit';
+        $save_as_new = $mode === 'copy';
 
-        $style_variant = 
-             $style_variant_id && !$save_as_new
-                ? fx::data('style_variant', $style_variant_id)
-                : fx::data('style_variant')->create(
-                    array(
-                        'block' => $input['block'],
-                        'style' => $input['style'],
-                        'theme_id' => fx::env('theme_id')
-                    )
-                );
+        // edit existing real style
+        if ($style_variant_id && !$save_as_new) {
+            $style_variant = fx::data('style_variant', $style_variant_id);
+        } 
+        // edit default style
+        elseif (!$style_variant_id && !$save_as_new) {
+            $style_variant = fx::data('style_variant')->getDefault($input['block']);
+        } 
+        // create new style
+        else {
+            $style_variant = fx::data('style_variant')->create(
+                [
+                    'block' => $input['block'],
+                    'style' => $input['style'],
+                    'theme_id' => fx::env('theme_id')
+                ]
+            );
+        }
 
         $is_new = !$style_variant->isSaved();
+        
+        // copy mode
+        if ($is_new && $style_variant_id) {
+            $proto_variant = fx::data('style_variant', $style_variant_id);
+            $style_variant['less_vars'] = $proto_variant['less_vars'];
+        }
+        
+        if (isset($input['source_vars'])) {
+            $less_vars = $style_variant['less_vars'];
+            foreach ($input['source_vars'] as $k => $v) {
+                if (isset($less_vars[$k])) {
+                    $less_vars[$k] = $v;
+                }
+            }
+            $style_variant['less_vars'] = $less_vars;
+        }
         
         $input['style'] = preg_replace("~_variant_[^_]+$~", '', $input['style']);
         
@@ -411,7 +436,10 @@ class Layout extends Admin
             }
         }
         
+        $is_default = $style_variant['is_default'];
+        
         if ($is_sent) {
+            
             if ($style_variant['id'] && isset($input['pressed_button']) && $input['pressed_button'] === 'delete') {
                 $style_variant->delete();
                 $id = '';
@@ -421,6 +449,9 @@ class Layout extends Admin
                 if (isset($input['screenshot'])) {
                     $style_variant->setPayload('screenshot', $input['screenshot']);
                 }
+                if ($is_default) {
+                    $style_variant['name'] = '';
+                }
                 $style_variant->save();
                 $id = $style_variant['id'];
             }
@@ -429,6 +460,7 @@ class Layout extends Admin
             
             return array(
                 'id' => $id,
+                'is_default' => $is_default,
                 'name' => $style_variant['name'],
                 'saved_as_new' => $save_as_new,
                 'variants' => \Floxim\Floxim\Asset\Less\StyleBundle::collectStyleVariants($input['block'])
@@ -437,42 +469,17 @@ class Layout extends Admin
         
         $fields[]= array(
             'name' => 'style_name',
-            'tab' => 'header',
-            'type' => 'string',
+            'type' => 'hidden',
             'label' => false,
-            'placeholder' => 'название стиля',
-            'autocomplete' => false,
             'value' => $style_variant->getReal('name')
         );
-        
-        if (!$is_new) {
-            $fields[]= array(
-                'name' => 'save_as_new',
-                'tab' => 'header',
-                'class_name' => 'one-line',
-                'label' => 'Сохранить как новый',
-                'type' => 'checkbox',
-                'view_context' => ''
-            );
-        }
         
         $mixin_name = substr($bundle->getMixinName(), 1);
         
         $is_saved = $style_variant->isSaved();
         
-        $res = array(
-            'tweaker' => array(
-                'tweaker_file' => $bundle->getTweakerLessFile(),
-                'rootpath' => fx::path()->http( dirname($style['file']) ) . '/',
-                'tweaked_vars' => array_keys($style['vars']),
-                'mixin_name' => $mixin_name,
-                'style_class' => $style_variant['block'].'_style_'.$style_variant['style']. ($is_saved ? '--'.$style_variant['id'] : ''),
-                'is_new' => !$is_saved,
-                'container' => isset($style['container']) ? $style['container'] : array()
-            ),
-            'fields' => $fields,
-            'header' => $is_new ? 'Создаем новый стиль' : 'Настраиваем стиль'
-        );
+        $res = [];
+        
         if ($style['tabs']) {
             $res['tabs'] = $style['tabs'];
         } else {
@@ -482,29 +489,84 @@ class Layout extends Admin
         if (!$is_new) {
             $using_blocks = $style_variant->findUsingBlocks();
             
-            
             if ( count($using_blocks) > 1) {
-                $res['tabs']['usage_scope'] = 'Используется ('.count($using_blocks).')';
+                
+                $res['tabs']['usage_scope'] = 'Используется '.
+                    '<span style="font-size:12px; position:relative; top:-10px; left:3px;">'.
+                        count($using_blocks).
+                    '</span>';
 
                 $using_list = $using_blocks->getValues(
                     function($ib) {
                         return $ib->getSummary();
                     }
                 );
-
-                $res['fields'][]= array(
+                
+                $fields[]= array(
                     'name' => 'using_block_list',
                     'type' => 'infoblock_list',
+                    'label' => false,
                     'value' => $using_list,
                     'tab' => 'usage_scope'
                 );
             }
         }
         
-        if ($style_variant['id']) {
-            $this->response->addFormButton(array('class' => 'delete', 'key' => 'delete', 'label' => fx::alang('Delete')));
-            $this->response->addFormButton(array('key' => 'save'));
+        $inline_editable = 
+                    '<span '.
+                        'contenteditable="true" '.
+                        'class="fx_admin_form__title-inline-editable" '.
+                        'fx_placeholder="%s">'.
+                        '%s'.
+                    '</span>';
+        if ($save_as_new) {
+            $header = 'Создаем стиль '.sprintf($inline_editable, 'название', '');
+        } else {
+            $header = 'Стиль ';
+            if (!$style_variant['is_default']) {
+                $header .= sprintf($inline_editable, $style_variant['name'], $style_variant->getReal('name'));
+            } else {
+                $header .= ' по умолчанию';
+            }
         }
+        
+        if (!$save_as_new) {
+            $header .= 
+                '<span '.
+                    'class="fx_icon fx_icon-type-place" '.
+                    'style="margin-left:25px; margin-top:-5px;" '.
+                    'title="Сохранить как новый">'.
+                '</span>';
+        }
+        
+        $res['tweaker'] = array(
+            'tweaker_file' => $bundle->getTweakerLessFile(),
+            'rootpath' => fx::path()->http( dirname($style['file']) ) . '/',
+            'tweaked_vars' => array_keys($style['vars']),
+            'mixin_name' => $mixin_name,
+            'style_class' => $style_variant['block'].'_style_default'. 
+                                ($is_saved && !$is_default ? '--'.$style_variant['id'] : ''),
+            'container' => isset($style['container']) ? $style['container'] : array()
+        );
+        
+        $res['fields'] = $fields;
+        $res['header'] = $header;
+        
+        
+        $this->response->addFormButton(
+            ['class' => 'cancel', 'key' => 'cancel', 'label' => '&larr;']
+        );
+        if ($style_variant['id'] && !$is_default) {
+            
+            $this->response->addFormButton(
+                [
+                    'class' => 'delete', 
+                    'key' => 'delete', 
+                    'label' => fx::alang('Delete')
+                ]
+            );
+        }
+        $this->response->addFormButton(['key' => 'save']);
         return $res;
     }
 

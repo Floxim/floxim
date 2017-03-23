@@ -599,16 +599,34 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
 
     }
 
-    public function fake()
+    public function fake($level = 0)
     {
+        $this->setPayload('fake_level', $level);
         $fields = $this->getFields();
         foreach ($fields as $f) {
-            if (!$this[$f['keyword']]) {
+            if ($f['type'] !== 'multilink' && !$this[$f['keyword']]) {
                 $this[$f['keyword']] = $f->fakeValue($this);
             }
         }
     }
     
+    public function getFakeRelated($offset) {
+        $offsets = $this->getAvailableOffsets();
+        $offset_meta = $offsets[$offset];
+        $rel = $offset_meta['relation'];
+        if ($rel[0] === \Floxim\Floxim\System\Finder::BELONGS_TO) {
+            $field = $this->getField($rel[2]);
+            $finder = $field->getTargetFinder($this);
+            $res = $finder->fake([], $this->getPayload('fake_level') + 1);
+        } elseif ($rel[0] === \Floxim\Floxim\System\Finder::HAS_MANY) {
+            $field = $this->getField($offset);
+            $res = $field->fakeValue($this);
+        }
+        $this->data[$offset] = $res;
+        return $res;
+    }
+
+
     public function validate() {
         $fields = $this->getComponent()->getAllFields();
         foreach ($fields as $f) {

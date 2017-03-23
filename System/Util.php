@@ -1070,4 +1070,13 @@ class Util
         }
         return $res;
     }
+    
+    public function circle(&$array) 
+    {
+        if(($result = current($array)) === false) {
+            $result = reset($array);
+        }
+        next($array);
+        return $result;
+    }
 }

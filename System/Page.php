@@ -492,7 +492,6 @@ class Page
         
         $bundle_keyword = $block.'_'.$value;
         $bundle = fx::assets('style', $bundle_keyword, $params);
-        
         $this->getDefaultCssBundle()->push( array($bundle) );
         
         if ( $bundle_is_temp ) {

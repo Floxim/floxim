@@ -600,4 +600,16 @@ class Multilink extends \Floxim\Floxim\Component\Field\Entity
     {
         return $this['keyword'];
     }
+    
+    public function fakeValue($entity = null)
+    {
+        $target_finder = $this->getTargetFinder($entity);
+        $fake_level = $entity->getPayload('fake_level');
+        $res = fx::collection();
+        foreach (range(0, rand(0, 2)) as $n) {
+            $item = $target_finder->fake([], $fake_level + 1);
+            $res []= $item;
+        }
+        return $res;
+    }
 }
