@@ -48,15 +48,6 @@ class Finder extends System\Finder
     public function getById($id)
     {
         return fx::component($id);
-        /*
-        if (!is_numeric($id)) {
-            $this->where('keyword', self::prepareSearchKeyword($id));
-        } else {
-            $this->where('id', $id);
-        }
-        return $this->one();
-         * 
-         */
     }
 
     public static function prepareSearchKeyword($keyword)
@@ -166,12 +157,14 @@ class Finder extends System\Finder
         try {
             $component->save();
             $result['component'] = $component;
-
+            fx::log('com saved', $component, fx::component());
             fx::console('component scaffold --keyword=' . $component['id']);
+            fx::log('scaffolded');
             return $result;
         } catch (\Exception $e) {
             $result['status'] = 'error';
             $result['error'] = $e->getMessage();
+            fx::log('catching', $component['id']);
             if ($component['id']) {
                 $component->delete();
             }

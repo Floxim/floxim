@@ -309,6 +309,7 @@ class Entity extends System\Entity
             $q = 'update {{'.$root->getContentTable().'}} set type = "'.$root['keyword'].'"';
             fx::db()->query($q);
         }
+        fx::registerComponent($this);
         fx::cache('meta')->delete('schema');
     }
     

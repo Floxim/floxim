@@ -703,6 +703,13 @@ class Fx
         }
     }
     
+    public static function registerComponent($com)
+    {
+        self::$components_collection[] = $com;
+        self::$components[$com['id']] = $com;
+        self::$components_by_keyword[$com['keyword']] = $com;
+    }
+    
     /**
      * @param type $id_or_keyword
      * @return \Floxim\Floxim\Component\Component\Entity;

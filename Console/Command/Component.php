@@ -22,7 +22,7 @@ class Component extends Console\Command
     public function loadComponent($keyword, $name = false, $itemName = false, $parent = 'content')
     {
         if (is_numeric($keyword)) {
-            $com = fx::data('component', $keyword);
+            $com = fx::getComponentById($keyword);
         } else {
             $keyword_parts = explode('.', $keyword);
             if (count($keyword_parts) != 3) {
@@ -59,7 +59,6 @@ class Component extends Console\Command
     {
         $source_path = fx::path('@floxim/Console/protected/component');
         $component_path = $com->getPath();
-        fx::log($com, $component_path);
         $file_list = $this->buildFileList($source_path, $component_path);
         foreach ($file_list as &$file_data) {
             $file_data['callback_content'] = function ($content) use ($com) {
