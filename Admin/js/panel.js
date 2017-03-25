@@ -200,6 +200,14 @@
                     } else {
                         if (params.onfinish) {
                             params.onfinish(data, $form);
+                        }
+                        if (params.onafterfinish) {
+                            $fx.front_panel.hide(
+                                function() {
+                                    params.onafterfinish(data, $form);
+                                }
+                            );
+                        } else {
                             $fx.front_panel.hide();
                         }
                     }

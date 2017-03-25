@@ -37,8 +37,6 @@ less_tweaker.prototype.init = function() {
     
     this.style_id_class = this.block_name+'_style-id_'+this.style_id;
     
-    console.log(cl);
-    
     this.set_style_class(cl);
     
     this.initial_data = this.get_data();

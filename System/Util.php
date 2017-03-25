@@ -875,6 +875,33 @@ class Util
         }
     }
     
+    protected static $encrypt_algo = 'AES-128-CTR';
+    
+    public static function encrypt($data, $key)
+    {
+        $is_string = is_string($data);
+        if (!$is_string) {
+            $data = json_encode($data);
+        }
+        $algo = self::$encrypt_algo;
+        $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length($algo));
+        
+        $encrypted = openssl_encrypt($data, $algo, $key, 0, $iv);
+        
+        $res = $encrypted.' '.base64_encode($iv).' '.($is_string ? 0 : 1);
+        return $res;
+    }
+    
+    public static function decrypt($data, $key)
+    {
+        $parts = explode(" ", $data);
+        $res = openssl_decrypt($parts[0], self::$encrypt_algo, $key, 0, base64_decode($parts[1]));
+        if (isset($parts[2]) && $parts[2] === "1") { 
+            $res = json_decode($res, true);
+        }
+        return $res;
+    }
+    
     public static function uid()
     {
         $time = round(microtime(true)*1000);

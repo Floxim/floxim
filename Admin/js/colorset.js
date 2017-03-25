@@ -317,8 +317,6 @@ $fx.colorset.prototype = {
             colors = this['colors_by_'+method](hue, saturation),
             $colors = this.get_color_nodes();
     
-        console.log(this.tweaked);
-        
         for (var i = 0; i < colors.length; i++) {
             var color = colors[i],
                 $c = $colors.eq(i),

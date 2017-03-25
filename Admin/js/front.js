@@ -790,30 +790,11 @@ fx_front.prototype.get_page_id = function() {
     return $('body').data('fx_page_id');
 };
 
-fx_front.prototype.active_dialogs = {};
-
-fx_front.prototype.push_dialog_once = function(dialog) {
-    if (this.active_dialogs[dialog]) {
-        return false;
-    }
-    this.active_dialogs[dialog] = 1;
-    return 1;
-};
-
-fx_front.prototype.pop_dialog = function(dialog) {
-    this.active_dialogs[dialog]--;
-};
-
 /**
  * Function to show controller selection dialog
  */
 
 fx_front.prototype.add_infoblock_select_controller = function($node, $rel_node, rel_position) {
-    
-    var dialog = 'infoblock_select_controller';
-    if (!this.push_dialog_once(dialog)) {
-        return;
-    }
     
     var $area_node = $node.closest('.fx_area'),
         container_infoblock = $node.closest('.fx_infoblock').not('body').data('fx_infoblock'),
@@ -845,10 +826,8 @@ fx_front.prototype.add_infoblock_select_controller = function($node, $rel_node, 
         oncancel:function() {
             $('.fx_infoblock_stub').remove();
             $fx.front.deselect_item();
-            $fx.front.pop_dialog(dialog);
         },
-        onfinish: function(data) {
-            $fx.front.pop_dialog(dialog);
+        onafterfinish: function(data) {
             if (data.preset_id) {
                 var $ib_node = $(data.html);
                 $fx.front.append_ib_node($area_node, $ib_node);
