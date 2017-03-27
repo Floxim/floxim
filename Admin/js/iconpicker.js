@@ -52,9 +52,12 @@ fx_iconpicker.init = function() {
         '/vendor/floxim/floxim/lib/icons/themify/themify.css'
     ];
     for (var i = 0; i < sheets.length; i++) {
-        $('head').append(
-            '<link type="text/css" href="'+sheets[i]+'" rel="stylesheet" />'
-        );
+        var $c_sheet = $('link[href="'+sheets[i]+'"]');
+        if ($c_sheet.length === 0) {
+            $('head').append(
+                '<link type="text/css" href="'+sheets[i]+'" rel="stylesheet" />'
+            );
+        }
     }
     this.inited = true;
 };
