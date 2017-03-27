@@ -152,7 +152,7 @@ window.fx_eip = {
                     }
                 } else if (meta.inatt === 'class') {
                     if (meta.type === 'icon') {
-                        set_icon($node, value);
+                        fx_iconpicker.set_class($node, value);
                     }
                 } else {
                     $node.attr(meta.inatt, value);
@@ -332,21 +332,6 @@ window.fx_eip = {
         });
     }
 };
-
-/*
- * @todo: more icon libs
- */
-function set_icon($node, value) {
-    var class_parts = value.split(' '),
-        c_class = $node.attr('class').replace(/fa-[^\s]+/, '');
-
-    if (!class_parts[1]) {
-        c_class += ' fa-ban';
-    } else {
-        c_class += ' fa-'+class_parts[1];
-    }
-    $node.attr('class', c_class);
-}
 
 function fx_edit_in_place( node ) {
     this.uid = $fx.uid();
@@ -543,7 +528,7 @@ fx_edit_in_place.prototype.start = function(meta) {
             }
             if (meta.type === 'icon') {
                 $field.on('change', function(e) {
-                    set_icon(edit_in_place.node, e.target.value);
+                    fx_iconpicker.set_class(edit_in_place.node, e.target.value);
                 });
             }
             break;
