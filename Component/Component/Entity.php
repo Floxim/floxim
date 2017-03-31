@@ -84,6 +84,8 @@ class Entity extends System\Entity
                     if ($cast) {
                         $offsets[$keyword]['cast'] = $cast;
                     }
+                } else {
+                    $offsets[$keyword]['json'] = true;
                 }
                 if ( $f['type'] === 'select') {
                     $vals = array();

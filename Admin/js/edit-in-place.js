@@ -330,6 +330,15 @@ window.fx_eip = {
                 that.nodes.push([$node, meta]);
             }
         });
+    },
+    make_editable: function($editable) {
+        var node_html = $editable.html();
+        // fix strange behavior caused by -webkit-line-break:after-white-space set by contenteditable
+        // see http://codepen.io/dubrowsky/pen/NpKOOK/
+        if (/[ ]+$/.test(node_html)) {
+            $editable.html( node_html.replace(/[ ]+$/, ''));
+        }
+        $editable.addClass('fx_var_editable').attr('contenteditable', 'true');
     }
 };
 
@@ -703,7 +712,9 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
     // force node to have size
     $n.addClass('fx_setting_focus');
 
-    $n.attr('contenteditable', 'true').focus();
+    fx_eip.make_editable($n);
+    $n.focus();
+    //$n.attr('contenteditable', 'true').focus();
 
     if ($n.text().length === 0) {
         this.force_focus($n);
