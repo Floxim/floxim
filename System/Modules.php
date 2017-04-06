@@ -11,6 +11,7 @@ class Modules
         if ($all_modules_data === false) {
             $all_modules_data = fx::collection();
             $vendor_dirs = glob(fx::path('@module/*'));
+            
             foreach ($vendor_dirs as $vendor_dir) {
                 if (!is_dir($vendor_dir)) {
                     continue;

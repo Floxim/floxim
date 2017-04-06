@@ -962,8 +962,9 @@ window.$fx_fields = {
         return $t.jQuery(template, json);
     },
 
-    float: function (json ) {
-        return $t.jQuery('form_row', json);
+    float: function (json , template) {
+        template = template || 'form_row';
+        return $t.jQuery(template, json);
     },
     
     password: function(json){
@@ -1073,7 +1074,10 @@ window.$fx_fields = {
             
             $.each(_c.tpl, function(tpl_index, tpl_props) {
                 var c_val  = val[tpl_props.name];
-                if (typeof c_val !== 'object') {
+                if (
+                    typeof c_val !== 'object' || 
+                    (c_val && typeof c_val.value === 'undefined')
+                ) {
                     c_val = {value: c_val};
                 }
                 var inp_props = $.extend(

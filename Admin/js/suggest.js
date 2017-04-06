@@ -37,6 +37,7 @@ window.fx_suggest = function(params) {
     this.input = params.input;
     this.setRequestParams(params.requestParams);
     this.onSelect = params.onSelect;
+    this.onRender = params.onRender || function($res) {return $res;};
     this.minTermLength = typeof params.minTermLength === 'undefined' ? 1 : params.minTermLength;
     this.resultType = params.resultType || 'html';
     this.offsetNode = params.offsetNode || this.input;
@@ -446,6 +447,7 @@ window.fx_suggest = function(params) {
         $.each(res.results, function(index, item) {
             $res = $res.add( Suggest.renderItem(item) );
         });
+        $res = Suggest.onRender($res, res);
         return $res;
     };
 
@@ -586,6 +588,7 @@ window.fx_suggest = function(params) {
     };
 
     this.hideBox = function(clear_input) {
+        
         if (window.fx_no_hide) {
             return;
         }

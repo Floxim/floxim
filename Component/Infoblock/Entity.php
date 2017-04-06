@@ -635,7 +635,8 @@ class Entity extends System\Entity implements Template\Entity
 
         $meta = array(
             'data-fx_infoblock' => $ib_info, // todo: psr0 need fix
-            'class'             => 'fx_infoblock fx_infoblock_' . $this['id']
+            'class'             => 'fx_infoblock fx_infoblock_' . $this['id'],
+            'data-controller'   => $ib_info['controller']
         );
         
         if ($this['user_scope'] && is_array($this['user_scope'])) {

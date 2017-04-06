@@ -2160,6 +2160,7 @@ fx_front.prototype.bind_content_form = function($form, content_type_id, content_
 };
 
 fx_front.prototype.show_edit_form = function(params) {
+    
     params = params || {};
     
     fx_eip.fix();
@@ -2197,7 +2198,7 @@ fx_front.prototype.show_edit_form = function(params) {
                 if (params.onfinish) {
                     params.onfinish(res);
                 }
-                $fx.front_panel.hide();
+                //$fx.front_panel.hide();
             },
             oncancel: function() {
                 if (params.oncancel) {

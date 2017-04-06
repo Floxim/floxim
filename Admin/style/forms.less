@@ -137,6 +137,7 @@
     }
     &.fx_form_vertical &__body {
         margin-right: 0;
+        max-width:80vw;
     }
     &.fx_form_vertical &__footer {
         padding:20px 40px;
@@ -687,17 +688,10 @@
                 margin-top:1px;
                 border: none;
             }
-            //margin-right:-30px;
         }
         a {
             cursor:pointer;
         }
-        /*
-        a, span {
-            line-height:30px;
-            vertical-align:middle;
-        }
-        */
     }
     
     .fx_form_horizontal & {
@@ -714,6 +708,26 @@
             max-height:50px;
             margin:0;
         }
+    }
+    .fx_fieldset_row & {
+        //.fx_file_name {
+        .fx_file_info {
+            display:none;
+        }
+        .fx_preview_filled .fx_file_controls {
+            display:none;
+        }
+        .fx_preview_filled img {
+            margin-top:0;
+        }
+    }
+    .fx_fieldset_row td:hover & .fx_preview_filled .fx_file_controls {
+        display:inline-flex;
+        position:absolute;
+        right:0;
+        top:-25px;
+        background:#FFF;
+        .fx_shadow();
     }
 }
 
@@ -1051,7 +1065,7 @@
     }
 }
 
-.fx_input_number {
+.fx_input_number, .fx_input_float {
     width:85px !important;
     padding-right:5px !important;
 }

@@ -68,6 +68,11 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
         }
         return $data;
     }
+    
+    public function getType()
+    {
+        return $this->getComponent()->get('keyword');
+    }
 
     public static function getTables() 
     {

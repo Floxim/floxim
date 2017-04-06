@@ -80,6 +80,21 @@ class Multilink extends \Floxim\Floxim\Component\Field\Entity
         
         $all_fields = $com->getAllFieldsWithChildren();
         
+        
+        $ckw = $this['keyword'];
+        
+        $all_fields = $all_fields->find(
+            function($f) use ($ckw) {
+                if ($f['keyword'] === $ckw) {
+                    return false;
+                }
+                if (!$f['is_editable']) {
+                    return false;
+                }
+                return true;
+            }
+        );
+        
         $list_fields_type = $this->getFormat('list_fields_type', 'all');
         $listed_fields = $this->getFormat('list_fields', array());
         
@@ -105,6 +120,12 @@ class Multilink extends \Floxim\Floxim\Component\Field\Entity
                 });
                 break;
         }
+        
+        $field_groups = $all_fields->find('type', 'group');
+        
+        $all_fields = $all_fields->find(function($f) use ($field_groups) {
+            return true;
+        });
         
         $fields_by_com = array();
         
@@ -161,6 +182,12 @@ class Multilink extends \Floxim\Floxim\Component\Field\Entity
                     }
                     $linker_field = $linker_fields->findOne('name', $field_keyword);
                     if ($linker_field) {
+                        /*
+                        $val_array[$field_keyword] = $linker_field['type'] === 'livesearch' ?
+                                        $linker_field : 
+                                        $linker_field['value'];
+                         * 
+                         */
                         $val_array[$field_keyword] = $linker_field['value'];
                     } else {
                         $val_array[$field_keyword] = $linker[$field_keyword];
@@ -170,67 +197,6 @@ class Multilink extends \Floxim\Floxim\Component\Field\Entity
             }
         }
         
-        return $res;
-        
-        
-        $entity = fx::data($rel[1])->create();
-
-        $entity_fields = $entity->getFields();
-
-        $res['tpl'] = array();
-        $res['labels'] = array();
-
-        $rel_field = $entity_fields[$rel[2]];
-
-        if ($rel_field) {
-            $rel_prop_name = $rel_field->getPropertyName();
-            $entity[$rel_prop_name] = $content;
-        }
-
-        $entity_form_fields = $entity->getFormFields();
-
-        foreach ($entity_form_fields as $ef) {
-            if ($ef['name'] == $rel[2]) {
-                continue;
-            }
-            // do not show "is published" flag in this table
-            if ($ef['name'] == 'is_published') {
-                continue;
-            }
-            $res['tpl'] [] = $ef;
-            $res['labels'] [] = $ef['label'];
-        }
-        $res['values'] = array();
-        if (isset($content[$this['keyword']])) {
-            if ($rel[0] === System\Finder::HAS_MANY) {
-                $linkers = $content[$this['keyword']];
-            } else {
-                $linkers = $content[$this['keyword']]->linkers;
-            }
-            foreach ($linkers as $linker) {
-                $linker_fields = $linker->getFormFields();
-                $val_array = array('_index' => $linker['id']);
-                $val_array['_meta'] = array(
-                    'id' => $linker['id'],
-                    'type' => $linker->getType(),
-                    'type_id' => $linker->getComponent()->get('id')
-                );
-                foreach ($linker_fields as $lf) {
-                    // skip the relation field
-                    if ($lf['name'] == $rel[2]) {
-                        continue;
-                    }
-                    // do not show "is published" flag in this table
-                    if ($lf['name'] == 'is_published') {
-                        continue;
-                    }
-                    // form field has "name" prop instead of "keyword"
-                    $val_array [$lf['name']] = $lf['value'];
-                }
-                $res['values'] [] = $val_array;
-            }
-        }
-        $res['type'] = 'set';
         return $res;
     }
 
@@ -377,6 +343,7 @@ class Multilink extends \Floxim\Floxim\Component\Field\Entity
     {
         $rel = $this->getRelation();
         $is_mm = $rel[0] == System\Finder::MANY_MANY;
+        
         if ($is_mm) {
             $res = $this->appendManyMany($content);
         } else {
@@ -470,8 +437,8 @@ class Multilink extends \Floxim\Floxim\Component\Field\Entity
                 $linked_item = fx::data($linked_type, $item_id);
             } else {
                 $is_empty = true;
-                foreach ($item_props as $item_prop_val) {
-                    if (!empty($item_prop_val)) {
+                foreach ($item_props as $item_prop_keyword => $item_prop_val) {
+                    if ($item_prop_keyword !== 'type' && !empty($item_prop_val)) {
                         $is_empty = false;
                         break;
                     }

@@ -16,12 +16,14 @@ class Image extends \Floxim\Floxim\Field\File
     
     public static function prepareValue($val) {
         $res = parent::prepareValue($val);
+        
         if (!$res || !is_array($res) || !isset($res['path']) || empty($res['path'])) {
             return $res;
         }
         $abs = $res['path'];
         $thumb = new \Floxim\Floxim\System\Thumb($abs);
         $info = $thumb->getInfo();
+        
         if ($info && isset($info['width']) && isset($info['height'])) {
             $res = array_merge(
                 $res,

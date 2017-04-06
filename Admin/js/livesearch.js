@@ -536,13 +536,18 @@ window.fx_livesearch = function (node, params) {
             $control.click(function() {
                 var c_value = livesearch.getFullValue();
                 params.action(c_value, livesearch);
-                livesearch.$input.trigger('suggest_blur');
-                livesearch.Suggest.hideBox();
+                livesearch.triggerBlur();
                 return false;
             });
         }
         return $control;
     };
+    
+    this.triggerBlur = function() {
+        livesearch.$input.trigger('suggest_blur');
+        livesearch.Suggest.hideBox();
+    };
+    
     
     
     this.addDisabled = false;
@@ -644,7 +649,27 @@ window.fx_livesearch = function (node, params) {
             onSelect:this.Select,
             offsetNode: this.is_multiple ? this.$input : this.$container,
             minTermLength:0,
-            preset_values: this.preset_values
+            preset_values: this.preset_values,
+            onRender: function($res, res) {
+                if (livesearch.allow_new && $fx && $fx.front) {
+                    var $adder = livesearch.Suggest.renderItem({
+                        name:'Добавить'
+                    });
+                    $res = $res.add( $adder );
+                    $adder.click(function() {
+                        livesearch.triggerBlur();
+                        $fx.front.show_edit_form({
+                            content_type: res.content_type,
+                            onfinish: function(res) {
+                                var saved_id = res.saved_id;
+                                livesearch.loadValues(saved_id);
+                            }
+                        });
+                        return false;
+                    });
+                }
+                return $res;
+            }
         });
         
         
@@ -829,8 +854,12 @@ window.fx_livesearch = function (node, params) {
         
         if (!this.is_multiple) {
             if (!this.preset_values.length) {
-                if (this.value && typeof this.value === 'object') {
-                    this.addValue(this.value);
+                if (this.value) {
+                    if (typeof this.value === 'object') {
+                        this.addValue(this.value);
+                    } else {
+                        this.loadValues(this.value);
+                    }
                 }
             } else {
                 var val_set = false;

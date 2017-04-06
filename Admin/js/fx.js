@@ -116,6 +116,13 @@ window.$fx = {
                     $fx.merge_inline_styles(css_inline);
                 }
                 
+                if (json.redraw) {
+                    $.each(json.redraw, function(ib_id, html) {
+                        var $old = $('.fx_infoblock_'+ib_id);
+                        Floxim.updateInfoblock($old, html);
+                    });
+                }
+                
                 var response = json.response;
                 if ( typeof response !== 'string') {
                     response = JSON.stringify(response);

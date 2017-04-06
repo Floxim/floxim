@@ -54,6 +54,16 @@ class Frontoffice extends System\Controller
             return fx::profiler();
         }
     }
+    
+    protected function setMeta($key, $value = true)
+    {
+        $this->_meta[$key] = $value;
+    }
+    
+    public function getMeta($key)
+    {
+        return isset($this->_meta[$key]) ? $this->_meta[$key] : null;
+    }
 
     public function process()
     {
@@ -107,5 +117,15 @@ class Frontoffice extends System\Controller
         }
         $this->_meta['ajax_access'] = true;
         return $form;
+    }
+    
+    protected function setAjaxAccess($value)
+    {
+        $this->_meta['ajax_access'] = (bool) $value;
+    }
+    
+    public function getAjaxAccess()
+    {
+        return isset($this->_meta['ajax_access']) ? (bool) $this->_meta['ajax_access'] : false;
     }
 }

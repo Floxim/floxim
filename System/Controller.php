@@ -237,6 +237,7 @@ class Controller
         // now - filtered
         $result = array();
         $replace = array();
+        
         foreach ($template_variants as $k => $tplv) {
             if (isset($tplv['is_abstract'])) {
                 continue;
@@ -252,6 +253,7 @@ class Controller
                 list($tpl_of_controller, $tpl_of_action) = $of_parts;
 
                 $tpl_of_action = fx::util()->underscoreToCamel($tpl_of_action, false);
+                
                 if ($tpl_of_controller !== '*' && !in_array($tpl_of_controller, $controller_variants)) {
                     continue;
                 }
