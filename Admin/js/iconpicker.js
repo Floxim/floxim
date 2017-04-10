@@ -32,6 +32,7 @@ var fx_iconpicker = function(params, $node) {
     });
     
     this.recommended = params.recommended || [];
+    this.store_code = !!params.store_code;
     this.allow_empty = typeof params.allow_empty === 'undefined' ? true : params.allow_empty;
     
     this.draw_popup();
@@ -257,7 +258,16 @@ fx_iconpicker.prototype.filter = function() {
     that.place();
 };
 
+
 fx_iconpicker.prototype.set_value = function(val) {
+    if (this.store_code === true) {
+        var vm = fx_iconpicker.get_meta(val);
+        if (!vm) {
+            val = '';
+        } else {
+            val += ' '+vm[2].toString(16);
+        }
+    }
     this.$input.val(val).trigger('change');
     this.hide();
     this.redraw_value();
@@ -366,6 +376,27 @@ fx_iconpicker.traverse = function(callback) {
             callback(set[1][j], set);
         }
     }
+};
+
+fx_iconpicker.get_meta = function(val) {
+    if (!val) {
+        return null;
+    }
+    var v = val.split(' ');
+    
+    for (var i = 0; i < this.icons.length; i++) {
+        var set = this.icons[i];
+        if (set[0] !== v[0]) {
+            continue;
+        }
+        for (var j = 0; j < set[1].length; j++) {
+            var icon = set[1][j];
+            if (icon[0] === v[1]) {
+                return icon;
+            }
+        }
+    }
+    return null;
 };
 
 fx_iconpicker.set_class = function($node, value) {

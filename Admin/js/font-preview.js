@@ -46,7 +46,6 @@ window.fx_font_preview = {
             });
         };
         
-        
         for (var i = 0; i < type_list.length; i++) {
             //var font_name = this.fonts.fonts[i],
             var font_index = type_list[i],
@@ -56,10 +55,17 @@ window.fx_font_preview = {
             res.push(
                 {
                     id:font_name,
-                    name: "<span class='fx-font-preview-item' style='font-family:"+font_family+"'>"+font_name+'</span>'
+                    name: "<span class='fx-font-preview-item' style='font-family:"+font_family+"'>"+font_name+'</span>',
+                    font_name: font_name
                 }
             );
         }
+        
+        res = res.sort(function(fa, fb) {
+            var a = fa.font_name,
+                b = fb.font_name;
+            return a === b ? 0 : (a > b ? 1 : -1);
+        });
         
         return res;
     }
