@@ -140,14 +140,10 @@ class Fx
     public static function getComponentFullName($com_name)
     {
         static $cache = array();
-        if (!is_string($com_name)) {
-            //fx::log(debug_backtrace());
-        }
+        
         if (isset($cache[$com_name])) {
             return $cache[$com_name];
         }
-        
-        static $coms_by_module = null;
         
         $name = $com_name;
         $action = null;
@@ -156,37 +152,7 @@ class Fx
             list($name, $action) = $c_parts;
         }
         $path = explode(".", $name);
-        if (count($path) === 1) {
-            /*
-            if (is_null($coms_by_module)) {
-                $coms_by_module = array();
-                foreach (Fx::$floxim_components as $module => $coms) {
-                    foreach ($coms as $com) {
-                        $coms_by_module[$com] = $module;
-                    }
-                }
-            }
-
-            $short_com_name = fx::util()->camelToUnderscore($path[0]);
-
-            // one of floxim default modules
-            if (isset($coms_by_module[$short_com_name])) {
-                array_unshift($path, $coms_by_module[$short_com_name]);
-            } else 
-            // system component such as 'site', 'session' etc.
-            {
-                array_unshift($path, 'component');
-            }
-             * 
-             */
-            
-        }
-        /*
-        if (count($path) === 2) {
-            array_unshift($path, 'floxim');
-        }
-         * 
-         */
+        
         $res = join(".", $path) . ($action ? ':' . $action : '');
         $cache[$com_name] = $res;
         return $res;

@@ -407,7 +407,7 @@ class Template
         }
     }
     
-    public function render($data = array())
+    public function render($data = array(), $action = null)
     {
         if (isset($data['_idle'])) {
             $this->context->isIdle(true);
@@ -415,6 +415,9 @@ class Template
         }
         if (count($data) > 0) {
             $this->context->push($data);
+        }
+        if (!is_null($action)) {
+            $this->action = $action;
         }
         ob_start();
         if (!is_null($this->forced_method)){

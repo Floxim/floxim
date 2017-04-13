@@ -55,6 +55,7 @@ class Compiler
      */
     public function compile($tree, $class_name)
     {
+        fx::cdebug($tree);
         $code = $this->makeCode($tree, $class_name);
         $code = self::addTabs($code);
         if (fx::config('templates.check_php_syntax')) {
@@ -2016,7 +2017,6 @@ class Compiler
     protected function tokenHeadfileToCode($token, $type)
     {
         $code = "<?php\n";
-        $code .= 'if (!$context->isIdle()) {'."\n";
         if (!$token->getProp('bundle') && $type === 'css') {
             $token->setProp('bundle', 'auto');
         }
@@ -2067,7 +2067,6 @@ class Compiler
                 }
             }
         }
-        $code .= "}\n";
         $code .= "\n?>";
         return $code;
     }
