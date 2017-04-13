@@ -12,20 +12,26 @@ class Finder extends System\Finder
     
     protected $json_encode = array('params');
 
-    public function start($data = array())
+    public function start($data = array(), $start_immediately = true)
     {
         $ip = $_SERVER['REMOTE_ADDR'];
         $now = time();
-        $data = array_merge(array(
-            'ip'                 => sprintf("%u", ip2long($ip)),
-            'session_key'        => md5(time() . rand(0, 1000) . $ip),
-            'start_time'         => $now,
-            'last_activity_time' => $now
-        ), $data);
+        $data = array_merge(
+            array(
+                'ip'                 => sprintf("%u", ip2long($ip)),
+                'session_key'        => md5( fx::util()->uid() . $ip),
+                'start_time'         => $now,
+                'last_activity_time' => $now,
+                'remember' => 1
+            ), 
+            $data
+        );
         $data['remember'] = $data['remember'] ? 1 : 0;
         $session = $this->create($data);
-        $session->save();
-        $session->setCookie();
+        if ($start_immediately) {
+            $session->save();
+        }
+        //$session->setCookie();
         return $session;
     }
 

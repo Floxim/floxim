@@ -231,7 +231,13 @@ class Entity extends \Floxim\Floxim\System\Entity
     
     public function getBundleKeyword()
     {
-        return $this['block'] .'_default_'.($this->is_saved && !$this['is_default'] ? '_variant_'.$this['id'] : '');
+        return 
+            $this['block'] .'_default'.
+            (
+                $this->is_saved && !$this['is_default'] ? 
+                    '_variant_'.$this['id'] : 
+                    ''
+            );
     }
 
     

@@ -21,7 +21,10 @@ class Icons extends \Floxim\Floxim\Asset\Bundle {
         static $added_styles = array();
         
         static $set_files = array(
-            'fa' => '/vendor/floxim/floxim/lib/fontawesome/css/font-awesome.css'
+            'fa' => '/vendor/floxim/floxim/lib/icons/fontawesome/css/font-awesome.css',
+            'gmdi' => '/vendor/floxim/floxim/lib/icons/gmdi/gmdi.css',
+            'lnr' => '/vendor/floxim/floxim/lib/icons/linearicons/style.css',
+            'ti' => '/vendor/floxim/floxim/lib/icons/themify/themify.css'
         );
         
         if (!isset($added_styles[$set])) {

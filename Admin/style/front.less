@@ -1787,6 +1787,7 @@ span.fx_area_marker {
 .fx_field_is_locked {
     .fx_admin_form & {
         max-height:1px;
+        max-width:100px;
         overflow:hidden;
         margin-bottom:0;
         transition:all 0.8s ease;
@@ -2247,11 +2248,14 @@ html {
 }
 
 .fx-iconpicker {
-    &__icons {
-        
+    
+    &__set-icons {
+        display:flex;
+        flex-wrap:wrap;
+        margin-top:-10px;
     }
     
-    &__icons span {
+    &__icon {
         padding:5px;
         margin:5px;
         font-size:22px;
@@ -2261,16 +2265,27 @@ html {
         color:#666;
         border:1px solid transparent;
         border-radius:5px;
-        &:hover {
-            color:#000;
-            border:1px solid #CCC;
-        }
+        transition:all 0.07s ease;
     }
     
-    &__icons &__icon-none {
+    &__popup &__icon:hover {
+        color:#000;
+        border:1px solid #CCC;
+        transform:scale(1.25, 1.25);
+    }
+    
+    &__icon_recommended {
+        color:#393;
+        background:rgba(51, 153, 51, 0.05);
+    }
+    
+    &__icon-none {
         font-size: 16px;
         padding-left: 3px;
         padding-right: 3px;
+        white-space:nowrap;
+        cursor:pointer;
+        margin-left:10px;
         &, &:hover {
             color: #F00;
         }
@@ -2278,8 +2293,10 @@ html {
     
     &__popup {
         position:fixed;
+        display:flex;
+        flex-direction:column;
         z-index:10001;
-        width:530px;
+        width:542px;
         box-shadow: -1px 1px 10px rgba(0,0,0,0.3);
         border:1px solid #CCC;
         padding:10px;
@@ -2298,12 +2315,63 @@ html {
     &__icons {
         max-height:350px;
         overflow:auto;
+        border-top:1px dashed #CCC;
+        margin-top:10px;
     }
     
+    &__icon-set {
+        border-bottom:1px dashed #CCC;
+    }
+    
+    &__icon-set_hidden {
+        display:none !important;
+    }
+    
+    &__icon_hidden {
+        display:none !important;
+    }
+    
+    &__icon-set_collapsed &__set-icons {
+        display:none;
+    }
+    
+    &__set-title {
+        font-size:13px;
+        color:#333;
+        cursor:pointer;
+        display: flex;
+        padding: 15px 0;
+        span {
+            display:inline-block;
+            margin-left:5px;
+            font-size:15px;
+        }
+        span:after {
+            content:'\e313';
+        }
+    }
+    
+    &__icon-set_collapsed &__set-title span:after {
+        content:'\e315';
+    }
+    
+    &__searchline {
+        display: flex;
+        flex-shrink: 0;
+        align-items:center;
+        
+        .fx_input_string {
+            flex-grow:1;
+            margin-left:10px;
+        }
+    }
     &__search {
-        display: block;
-        width: 100%;
         font-size: 18px;
+        flex-grow:1;
+    }
+    &__popup_on-top &__searchline {
+        order:2;
+        padding-top:10px;
     }
 }
 

@@ -21,7 +21,7 @@ fc.prototype.handle_upload = function(data) {
     var $panel = $res_inp.closest('.fx_node_panel');
     if ($panel.length === 0) {
         if (field_type === 'image') {
-            $('.fx_preview img', $block).attr('src', data.path).show();
+            $('.fx_preview img', $block).attr('src', data.path+'?r='+Math.random()).show();
         }
         var $fi = $('.fx_file_info', $block);
         
@@ -141,7 +141,7 @@ fc.prototype.init = function() {
        $field.find('.fx_file_control:visible').last().focus();
     });
 
-    $n.on('paste.fx', '.remote_file_location', function() {
+    $n.on('paste', '.remote_file_location', function() {
         var $inp = $(this);
         var $block = $inp.closest('.fx_image_field');
         var $real_inp = $('.real_value', $block);

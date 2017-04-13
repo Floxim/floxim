@@ -177,13 +177,7 @@ fx_front.prototype.handle_mouseover = function(e) {
                     $fx.front.outline_block($node, 'hover', 300);
                 }
                 if (make_content_editable) {
-                    var node_html = $editable.html();
-                    // fix strange behavior caused by -webkit-line-break:after-white-space set by contenteditable
-                    // see http://codepen.io/dubrowsky/pen/NpKOOK/
-                    if (/[ ]+$/.test(node_html)) {
-                        $editable.html( node_html.replace(/[ ]+$/, ''));
-                    }
-                    $editable.addClass('fx_var_editable').attr('contenteditable', 'true');
+                    fx_eip.make_editable($editable);
                 }
             }
         },
@@ -2166,6 +2160,7 @@ fx_front.prototype.bind_content_form = function($form, content_type_id, content_
 };
 
 fx_front.prototype.show_edit_form = function(params) {
+    
     params = params || {};
     
     fx_eip.fix();
@@ -2195,6 +2190,7 @@ fx_front.prototype.show_edit_form = function(params) {
                 fx_eip.stop();
                 var response = $form.data('fx_response');
                 $fx.front.bind_content_form($form, response.content_type_id, entity_id);
+                $form.trigger('fx_content_form_ready');
             },
             onsubmit: params.onsubmit || function() {},
             onfinish: function(res) {
@@ -2202,7 +2198,7 @@ fx_front.prototype.show_edit_form = function(params) {
                 if (params.onfinish) {
                     params.onfinish(res);
                 }
-                $fx.front_panel.hide();
+                //$fx.front_panel.hide();
             },
             oncancel: function() {
                 if (params.oncancel) {
@@ -3947,6 +3943,7 @@ fx_front.prototype.outline_block = function(n, style, speed) {
     }
     
     var o = n.offset();
+    
     var overlay_offset = parseInt(this.get_front_overlay().css('top'));
     o.top -= overlay_offset > 0 ? overlay_offset : 0 ;
     var nw = n.outerWidth() + 1;

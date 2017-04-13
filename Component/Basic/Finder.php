@@ -68,6 +68,11 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
         }
         return $data;
     }
+    
+    public function getType()
+    {
+        return $this->getComponent()->get('keyword');
+    }
 
     public static function getTables() 
     {
@@ -570,6 +575,8 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
         
         $params = self::extractCollectionParams($collection);
         
+        fx::cdebug($collection, $params);
+        
         if (!$params) {
             return;
         }
@@ -758,6 +765,19 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
         $params = array();
         if ($collection->finder && $collection->finder instanceof Finder) {
             foreach ($collection->finder->where() as $cond) {
+                
+                if ($cond[2] === 'AND') {
+                    $conds = $cond[0];
+                    if (
+                        count($conds) === 2 && 
+                        $conds[0][0] === $conds[1][0] &&
+                        $conds[1][2] === 'IS NOT NULL'
+                    ) {
+                        $cond = $conds[0];
+                    }
+                }
+                
+                
                 // original field
                 $field = isset($cond[3]) ? $cond[3] : null;
                 // collection was found by id, adder is impossible
@@ -767,6 +787,7 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
                     }
                     continue;
                 }
+                //fx::cdebug($cond, $field);
                 if (!preg_match("~\.~", $field) && $cond[2] == '=' && is_scalar($cond[1])) {
                     $params[$field] = array($cond[1], Collection::FILTER_EQ);
                 }

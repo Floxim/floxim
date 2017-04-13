@@ -514,6 +514,17 @@ class Entity extends System\Entity implements Template\Entity
         }
         $this->parent_container_props = null;
     }
+    
+    public function getParamsForTemplate()
+    {
+        $tpl_params = $this->getPropInherited('visual.template_visual');
+        if (!is_array($tpl_params)) {
+            $tpl_params = array();
+        }
+
+        $tpl_params['infoblock'] = $this;
+        return $tpl_params;
+    }
 
     /**
      * get result rendered by ib's template (with no wrapper and meta)
@@ -536,19 +547,16 @@ class Entity extends System\Entity implements Template\Entity
         if (!$tpl) {
             return '';
         }
-        $tpl_params = $this->getPropInherited('visual.template_visual');
-        if (!is_array($tpl_params)) {
-            $tpl_params = array();
-        }
-
+        
+        $is_admin = fx::isAdmin();
+        
+        $this->applyParentContainerProps($tpl->getContext());
+        
+        $tpl_params = $this->getParamsForTemplate();
         // @todo: what if the result is object?
         if (is_array($result)) {
             $tpl_params = array_merge($tpl_params, $result);
         }
-        $tpl_params['infoblock'] = $this;
-        $is_admin = fx::isAdmin();
-        
-        $this->applyParentContainerProps($tpl->getContext());
         
         try {
             $this->output_cache = $tpl->render($tpl_params);
@@ -635,7 +643,8 @@ class Entity extends System\Entity implements Template\Entity
 
         $meta = array(
             'data-fx_infoblock' => $ib_info, // todo: psr0 need fix
-            'class'             => 'fx_infoblock fx_infoblock_' . $this['id']
+            'class'             => 'fx_infoblock fx_infoblock_' . $this['id'],
+            'data-controller'   => $ib_info['controller']
         );
         
         if ($this['user_scope'] && is_array($this['user_scope'])) {

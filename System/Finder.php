@@ -84,6 +84,7 @@ abstract class Finder
         if (!isset($term)) {
             return;
         }
+        
         $term = trim($term);
         if (!empty($term)) {
             $terms = explode(" ", $term);
@@ -121,6 +122,7 @@ abstract class Finder
             }
             $res['results'][] = $c_res;
         }
+        $res['content_type'] = $this->getType();
         return $res;
     }
 
@@ -156,6 +158,18 @@ abstract class Finder
             }
         }
         return $fields;
+    }
+    
+    protected $type_keyword = null;
+
+    public function getType()
+    {
+        if (is_null($this->type_keyword)) {
+            $class = array_reverse(explode("\\", get_class($this)));
+            $type = $class[1];
+            $this->type_keyword = fx::util()->camelToUnderscore($type);
+        }
+        return $this->type_keyword;
     }
     
     public function getJsonEncodedFields()
@@ -815,14 +829,34 @@ abstract class Finder
     {
         return fx::db()->prepareQuery($this->buildQuery());
     }
+    
+    public function getRaw()
+    {
+        $query = $this->buildQuery();
+        $res = fx::db()->getResults($query);
+        return $res;
+    }
+    
+    public function getVar($var = null)
+    {
+        $rows = $this->getRaw();
+        if (count($rows) === 0) {
+            return null;
+        }
+        $row = $rows[0];
+        if (is_null($var)) {
+            return current($row);
+        }
+        return isset($row[$var]) ? $row[$var] : null;
+    }
 
     /*
     * Method collects flat data
     */
     public function getData()
     {
-        $query = $this->buildQuery();
-        $res = fx::db()->getResults($query);
+        
+        $res = $this->getRaw();
         
         if ($this->calc_found_rows) {
             if (fx::db()->getDriver() === 'sqlite') {

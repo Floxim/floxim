@@ -199,6 +199,11 @@ class Content extends Admin
                     }
                 }
                 try {
+                    if (isset($input['mode']) && $input['mode'] === 'sync_fields') {
+                        $synced = $content->syncFields();
+                        fx::complete($synced);
+                        return;
+                    }
                     if (isset($content['infoblock_id']) && $content['infoblock_id']) {
                         $infoblock = fx::data('infoblock', $content['infoblock_id']);
                         if ($infoblock['is_preset']) {
@@ -242,6 +247,13 @@ class Content extends Admin
         }
         $res['content_type_id'] = $content->getComponent()->get('id');
         $this->response->addFormButton('save');
+        fx::trigger(
+            'content_form_ready', 
+            [
+                'response' => $res,
+                'entity' => $content
+            ]
+        );
         return $res;
     }
 

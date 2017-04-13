@@ -263,6 +263,43 @@ class Loader
         self::$registered_names = array();
     }
     
+    public static function compileForInfoblock($infoblock)
+    {
+        
+        $tpl_full = $infoblock->getPropInherited('visual.template');
+        list($template, $action) = explode(":", $tpl_full);
+        
+        $context = new ContextFlex();
+        $data = $infoblock->getParamsForTemplate();
+        if (count($data) > 0) {
+            $context->push($data);
+        }
+        
+        return self::compileForContext($template, $action, $context);
+    }
+    
+    public static function compileForContext($template, $action, $context)
+    {
+        $processor = new self();
+        $processor->setTemplateName($template);
+        $processor->addDefaultSourceDirs();
+        
+        try {
+            $source = $processor->buildSource();
+            
+            $parser = new Parser();
+            $tree = $parser->parse($source);
+            
+            unset($parser);
+
+            $compiler = new contextCompiler($context, $action);
+            $res = $compiler->compile($tree, $processor->getCompiledClassName());
+            return $res;
+        } catch (\Exception $e) {
+            fx::debug($e);
+        }
+    }
+    
     public static function import($tpl_name)
     {
         $is_aliased = preg_match("~^\@(.+)~", $tpl_name, $real_name);
@@ -459,7 +496,7 @@ class Loader
             $this->runEval($source);
         }
     }
-
+    
     public function virtual($source = null, $action = null)
     {
         static $count_virtual = 0;

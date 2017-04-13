@@ -72,6 +72,12 @@ class Link extends \Floxim\Floxim\Component\Field\Entity
             ),
             'value'  => $this['format']['render_type']
         );
+        $fields['allow_new'] = array(
+            'label' => 'Можно добавлять значения',
+            'type' => 'checkbox',
+            'parent' => 'render_type == livesearch',
+            'value' => isset($this['format']['allow_new']) ? $this['format']['allow_new'] : 1
+        );
         return $fields;
     }
 
@@ -113,9 +119,10 @@ class Link extends \Floxim\Floxim\Component\Field\Entity
         $finder = $this->getTargetFinder($content);
 
         $render_type = $this['format']['render_type'];
-
+        
         if ($render_type == 'livesearch') {
             $res['type'] = 'livesearch';
+            $res['allow_new'] = (bool) $this->getFormat('allow_new');
             $res['params'] = array(
                 //'content_type' => $target_com_keyword
                 'relation_field_id' => $this['id'],
@@ -123,6 +130,7 @@ class Link extends \Floxim\Floxim\Component\Field\Entity
                 'send_form' => true,
                 'hidden_on_one_value' => true
             );
+            
             $c_val = $content[$this['keyword']];
             if ($c_val) {
                 $c_vals = $finder->where('id', $c_val)->livesearch();

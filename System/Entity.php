@@ -728,6 +728,9 @@ abstract class Entity implements \ArrayAccess, Template\Entity
             if (isset($offset_meta['relation_prop'])) {
                 unset($this->data[$offset_meta['relation_prop']]);
             }
+            if (isset($offset_meta['json']) && $offset_meta['json'] && is_string($value)) {
+                $value = json_decode($value, true);
+            }
         }
         
         switch($offset_type) {
@@ -985,6 +988,11 @@ abstract class Entity implements \ArrayAccess, Template\Entity
         }
         
         return fx::util()->traverse($data, $callback, $callback_on_arrays);
+    }
+    
+    public function syncFields()
+    {
+        return [];
     }
 }
 

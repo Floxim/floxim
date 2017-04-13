@@ -116,6 +116,13 @@ window.$fx = {
                     $fx.merge_inline_styles(css_inline);
                 }
                 
+                if (json.redraw) {
+                    $.each(json.redraw, function(ib_id, html) {
+                        var $old = $('.fx_infoblock_'+ib_id);
+                        Floxim.updateInfoblock($old, html);
+                    });
+                }
+                
                 var response = json.response;
                 if ( typeof response !== 'string') {
                     response = JSON.stringify(response);
@@ -478,44 +485,47 @@ window.$fx = {
         if (!callback) {
             callback = function() {};
         }
-        $.ajax({
-            url: $fx.settings.action_link,
-            type: "POST",
-            data: post_data,
-            dataType: "JSON",
-            success: function(json) {
-                if (json.reload) {
-                    $fx.reload(json.reload);
-                    return;
-                }
-                var that = this,
-                    args = arguments,
-                    go_on = function() {
-                        if (json.status === 'error') {
-                            $fx.show_error(json);
-                            error_callback();
-                            return;
-                        }
-                        if (callback) {
-                            callback.apply(that, args);
-                        }
-                    };
-                if (this.pending_scripts_loaded && this.pending_scripts_loaded instanceof Promise) {
-                    this.pending_scripts_loaded.then(function() {
+        return new Promise(function(resolve, reject) {
+            $.ajax({
+                url: $fx.settings.action_link,
+                type: "POST",
+                data: post_data,
+                dataType: "JSON",
+                success: function(json) {
+                    if (json.reload) {
+                        $fx.reload(json.reload);
+                        return;
+                    }
+                    var that = this,
+                        args = arguments,
+                        go_on = function() {
+                            if (json.status === 'error') {
+                                $fx.show_error(json);
+                                error_callback();
+                                return;
+                            }
+                            if (callback) {
+                                callback.apply(that, args);
+                            }
+                            resolve(json);
+                        };
+                    if (this.pending_scripts_loaded && this.pending_scripts_loaded instanceof Promise) {
+                        this.pending_scripts_loaded.then(function() {
+                            go_on();
+                        });
+                    } else {
                         go_on();
-                    });
-                } else {
-                    go_on();
-                }
-                
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                if ( textStatus === 'parsererror') {
-                    $fx.show_status_text( $fx.lang('Server error:') + jqXHR.responseText, 'error');
-                }
-                error_callback();
-                return false;
-            }  
+                    }
+
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    if ( textStatus === 'parsererror') {
+                        $fx.show_status_text( $fx.lang('Server error:') + jqXHR.responseText, 'error');
+                    }
+                    error_callback();
+                    return false;
+                }  
+            });
         });
     },
     

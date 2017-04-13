@@ -324,9 +324,57 @@ class Test extends Admin {
         $f = array(
             'type' => 'iconpicker',
             'label' => 'Иконка',
-            'value' => 'fa glass'
+            'value' => 'fa glass',
+            'recommended' => [
+                'fa caret-left',
+                'fa angle-double-left',
+                'fa arrow-left',
+                'fa hand-o-left',
+                'fa arrow-circle-left',
+                'fa caret-square-o-left',
+                'lnr arrow-left',
+                'gmdi keyboard_arrow_left'
+            ]
         );
-        return array('fields' => array($f));
+        $set = [
+            'type' => 'set',
+            'labels' => [
+                'Somtheing',
+                'Icon'
+            ],
+            'tpl' => [
+                [
+                    'type' => 'html',
+                    'name' => 'smth'
+                ],
+                [
+                    'type' => 'iconpicker',
+                    'name' => 'icon',
+                    'recommended' => [
+                        'fa caret-left',
+                        'fa angle-double-left',
+                        'fa arrow-left',
+                        'fa hand-o-left',
+                        'fa arrow-circle-left',
+                        'fa caret-square-o-left'
+                    ]
+                ]
+            ],
+            'values' => []
+        ];
+        foreach (range(0, 10) as $n) {
+            $set['values'][]= [
+                'smth' => str_repeat('oh so long str ', 8).'<br />and<br />more'.
+                    '<span class="gmdi gmdi-flight  floxim--ui--box--group__field testicon  fx-block  fx-block_parent-align_center fx-block_lightness_dark fx-block_rw_screen-0-33333333333333 floxim--ui--box--icon-value floxim--ui--box--icon-value_style_default floxim--ui--box--icon-value_style-id_6bb0a1cbd94b2a7a324f9e98577b9326  fx_template_var_in_att fx_hilight fx_hilight_hover fx_selected fx_has_selection fx_edit_in_place"></span>', 
+                'icon' => 'fa glass'
+            ];
+        }
+        return array(
+            'fields' => array(
+                $f, 
+                $set
+            )
+        );
     }
     
     public function angle()

@@ -397,6 +397,7 @@ class Page
 
     public function ajaxResponse($result)
     {
+        $redrawn = fx::router('ajax')->handleRedraw();
         $css = $this->getCssFilesFinal();
         $css_res = array();
         foreach ($css as $set) {
@@ -413,6 +414,9 @@ class Page
             'css' => $css_res,
             'request' => $_POST
         );
+        if ($redrawn) {
+            $response['redraw'] = $redrawn;
+        }
         return json_encode($response);
     }
     

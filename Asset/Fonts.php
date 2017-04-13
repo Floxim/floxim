@@ -9,6 +9,7 @@ class Fonts {
     
     public static function getLoaderJS($fonts)
     {
+        fx::log($fonts);
         static $is_loaded = false;
         if (count($fonts) === 0) {
             return '';
@@ -16,18 +17,19 @@ class Fonts {
         ob_start();
         if (!$is_loaded) {
             $is_loaded = true;
-            /* <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.16/webfont.js"></script> */
             ?>
             <script src="<?= fx::path()->http('@floxim_js') ?>/webfont.js"></script>
             <?php
         }
-        $avail = self::getAvailableFonts();
-        foreach ($fonts as &$font) {
-            if (isset($avail[$font])) {
-                $font = $font.':'.join(',', $avail[$font]);
+        $avail_google = self::getGoogleFonts();
+        $google = [];
+        foreach ($fonts as $font) {
+            if (!isset($avail_google[$font])) {
+                continue;
             }
-            $font = $font.':latin,cyrillic';
+            $google []= $font.':'.join(',', $avail_google[$font]).':latin,cyrillic';
         }
+        
         $theme_fonts = fx::env('theme')->getThemeFonts();
         foreach ($theme_fonts as $theme_font) {
             if (isset($theme_font['css'])) {
@@ -39,7 +41,7 @@ class Fonts {
         if (window.WebFont) {
           WebFont.load({
             google: {
-              families: <?= json_encode($fonts) ?>
+              families: <?= json_encode($google) ?>
             }
           });
           }
@@ -66,9 +68,9 @@ class Fonts {
         return $cyr;
     }
     
-    public static function getAvailableFonts()
+    public static function getGoogleFonts()
     {
-        $res = array (
+        return array (
             'Andika' => 
             array (
               'regular',
@@ -528,9 +530,37 @@ class Fonts {
               'regular',
             ),
           );
-        
+    }
+    
+    public static function getCommonFonts()
+    {
+        $styles = array (
+            '300',
+            '300italic',
+            'regular',
+            'italic',
+            '500',
+            '500italic',
+            '700',
+            '700italic',
+        );
+        $fonts = ['Arial', 'Times', 'Tahoma', 'Verdana', 'Georgia'];
+        $res = [];
+        foreach ($fonts as $f) {
+            $res[$f] = ['styles' => $styles];
+        }
+        return $res;
+    }
+    
+    public static function getAvailableFonts()
+    {
+        $res = self::getGoogleFonts();
         $theme_fonts = fx::env('theme')->getThemeFonts();
         foreach ($theme_fonts as $font => $params) {
+            $res[$font] = $params['styles'];
+        }
+        $common_fonts = self::getCommonFonts();
+        foreach ($common_fonts as $font => $params) {
             $res[$font] = $params['styles'];
         }
         return $res;

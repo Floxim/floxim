@@ -266,7 +266,7 @@ class Files
     {
         
         $res = @copy($local_old_filename, $local_new_filename);
-        fx::cdebug($res, $local_old_filename, $local_new_filename);
+        
         if ($res !== false) {
             @chmod($local_new_filename, $this->new_file_mods);
             if (!self::isMetaFile($local_old_filename)) {
@@ -777,6 +777,7 @@ class Files
         }
 
         $res = $this->copy($old_filename, $new_filename, $make_dir);
+        
         if ($res !== 0) {
             return null;
         }

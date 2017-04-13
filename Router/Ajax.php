@@ -14,29 +14,10 @@ class Ajax extends Base
         }
         
         fx::env('ajax', true);
-
+        
         $c_url = fx::input()->fetchGetPost('_ajax_base_url');
         fx::env()->forceUrl($c_url);
-        /*
-        if ($c_url) {
-            $c_url = preg_replace("~^https?://[^/]+~", '', $c_url);
-            
-            $_SERVER['REQUEST_URI'] = $c_url;
-            
-            $base_path = fx::router()->getPath( $c_url );
-            if ($base_path) {
-                $page = $base_path->last();
-                fx::env('page', $page);
-            } else {
-                fx::env('page', fx::router('error')->getErrorPage());
-            }
-
-            $c_url = parse_url($c_url);
-            if (isset($c_url['query'])) {
-                parse_str($c_url['query'], $_GET);
-            }
-        }
-        */
+        
         // import layout template to recreate real env
         fx::router('front')->importLayoutTemplate();
         
@@ -65,7 +46,6 @@ class Ajax extends Base
             }
         }
         
-        
         $template = null;
         if ($action_info && !empty($action_info[1])) {
             $action = $action_info[1];
@@ -79,6 +59,7 @@ class Ajax extends Base
         } elseif (isset($_POST['_ajax_controller'])) {
             $action = $_POST['_ajax_controller'];
         } else {
+            fx::log('ret nul');
             return null;
         }
         
@@ -112,5 +93,30 @@ class Ajax extends Base
             }
         }
         return $res ? $res : true;
+    }
+    
+    public function handleRedraw()
+    {
+        $redraw = fx::input('post', '_ajax_redraw');
+        if (!$redraw) {
+            return;
+        }
+        $res = [];
+        foreach ($redraw as $ib_id => $params) {
+            $ib = fx::data('infoblock', $ib_id);
+            if (!$ib) {
+                continue;
+            }
+            if (isset($params['controller_params'])) {
+                $ib->override(array('params' => $params['controller_params']));
+            }
+
+            if (isset($params['container'])) {
+                $ib->bindLayoutContainerProps( $params['container'] );
+            }
+
+            $res[$ib_id] = $ib->render();
+        }
+        return $res;
     }
 }

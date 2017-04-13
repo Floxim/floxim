@@ -12,8 +12,11 @@ class Infoblock extends Admin
 {
 
 
-    public function getAvailableBlocks($page, $area_meta = null)
+    public function getAvailableBlocks($page = null, $area_meta = null, $debug_com = false)
     {
+        if (is_null($page)) {
+            $page = fx::env('page');
+        }
         $controllers = fx::collection();
         $coms = fx::data('component')->all();
         foreach ($coms as $c) {
@@ -64,12 +67,19 @@ class Infoblock extends Admin
         );
         
         foreach ($controllers as $c) {
-            if (fx::config()->isBlockDisabled($c['keyword'])) {
+            $keyword = $c['keyword'];
+            $debug = $debug_com === true || $debug_com === $keyword;
+            if ($debug) {
+                fx::debug('checking', $keyword);
+            }
+            if (fx::config()->isBlockDisabled($keyword)) {
+                if ($debug) {
+                    fx::debug('skip disabled');
+                }
                 continue;
             }
             
             $type = $c['type'];
-            $keyword = $c['keyword'];
             
             $result['controllers'] [$keyword]= array(
                 'name'     => $c['name'],
@@ -79,20 +89,33 @@ class Infoblock extends Admin
             try {
                 $ctrl = fx::controller($keyword);
             } catch (\Exception $e) {
-                fx::log('faild ctr loading', $e);
+                if ($debug) {
+                    fx::debug('skip failed controller', $e);
+                }
                 continue;
             }
             $actions = $ctrl->getActions();
             
             foreach ($actions as $action_code => $action_info) {
+                
+                if ($debug) {
+                    fx::debug('check action', $action_code);
+                }
+                
                 // do not show actions starting with "_"
                 if (preg_match("~^_~", $action_code)) {
+                    if ($debug) {
+                        fx::debug('skip by prefix _');
+                    }
                     continue;
                 }
                 
                 $com = fx::component($c['keyword']);
                 
                 if ( ($com && !$com->isBlockAllowed($action_code)) ) {
+                    if ($debug) {
+                        fx::debug('skip not allowed by com');
+                    }
                     continue;
                 }
                 
@@ -103,6 +126,9 @@ class Infoblock extends Admin
                 if (isset($action_info['check_context'])) {
                     $is_avail = call_user_func($action_info['check_context'], $page);
                     if (!$is_avail) {
+                        if ($debug) {
+                            fx::debug('skip unavail by context');
+                        }
                         continue;
                     }
                 }
@@ -111,6 +137,9 @@ class Infoblock extends Admin
                 $act_templates = $act_ctr->getAvailableTemplates(fx::env('theme_id'), $area_meta);
                 
                 if (count($act_templates) == 0) {
+                    if ($debug) {
+                        fx::debug('skip no templates');
+                    }
                     continue;
                 }
                 

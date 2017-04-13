@@ -45,10 +45,15 @@ class File extends \Floxim\Floxim\Component\Field\Entity
             return $this->value;
         }
         $res = '';
+        
+        $move = null;
+        $drop = null;
+        
         if (!empty($this->value)) {
             $c_val = fx::path()->abs($this->value);
             if (file_exists($c_val) && is_file($c_val)) {
                 $file_name = fx::path()->fileName($c_val);
+                
                 $path = fx::path(
                     '@content_files/' . 
                     $content['site_id'].'/'.
@@ -56,16 +61,33 @@ class File extends \Floxim\Floxim\Component\Field\Entity
                     $this['keyword'].'/'.
                     $file_name
                 );
+                
                 $path = fx::files()->getPutFilePath($path);
-                fx::files()->move($c_val, $path);
+                
                 $res = fx::path()->removeBase(fx::path()->http($path));
+
+                $move = [$c_val, $path];
             }
         }
-        if (!empty($old_value)) {
+        if (!empty($old_value) && $old_value !== $res) {
             $old_value = fx::path()->abs($old_value);
             if (file_exists($old_value) && is_file($old_value)) {
-                fx::files()->rm($old_value);
+                $drop = $old_value;
             }
+        }
+        // move / drop files only after entity is saved
+        if ($drop || $move) {
+            fx::listen('after_save', function($e) use ($content, $move, $drop) {
+                if ($e['entity'] !== $content) {
+                    return;
+                }
+                if ($move) {
+                    fx::files()->move($move[0], $move[1]);
+                }
+                if ($drop) {
+                    fx::files()->rm($drop);
+                }
+            });
         }
         return $res;
     }
