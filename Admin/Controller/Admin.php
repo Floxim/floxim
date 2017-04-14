@@ -62,7 +62,6 @@ class Admin extends System\Controller
 
     public function process()
     {
-
         $input = $this->input;
         $action = $this->action;
 
@@ -76,8 +75,9 @@ class Admin extends System\Controller
         if (!$action || !is_callable(array($this, $action))) {
             die("Error! Class:" . get_class($this) . ", action:" . htmlspecialchars($action));
         }
-
+        
         $this->response = new FxAdmin\Response($input);
+        
         $result = $this->$action($input);
         if (is_string($result)) {
             return $result;
@@ -96,6 +96,7 @@ class Admin extends System\Controller
         if (isset($result['fields']) && is_array($result['fields'])) {
             $result['fields'] = array_values($result['fields']);
         }
+        
         return $result;
         /*
         if ($this->process_do_return) {

@@ -22,10 +22,10 @@ class Manager
 
     protected $routers = array();
 
-    public function register($router, $name = null, $priority = null)
+    public function register($router, $name = null, $priority = null, $closure_type = 'router')
     {
         if ($router instanceof \Closure) {
-            $router = Closure::create($router);
+            $router = Closure::create($router, $closure_type);
         }
         if (is_null($name)) {
             $name = get_class($router);
@@ -41,7 +41,12 @@ class Manager
             $this->reorderRouters();
         }
     }
-
+    
+    public function registerPathClosure($router, $name, $priority)
+    {
+        $this->register($router, $name, $priority, 'path');
+    }
+    
     protected function reorderRouters()
     {
         uasort($this->routers, function ($a, $b) {
@@ -67,8 +72,11 @@ class Manager
             $env_site = fx::env('site');
             $context['site_id'] = $env_site ? $env_site['id'] : null;
         }
+        
         foreach ($this->routers as $router_key => $r) {
+            
             $result = $r['router']->route($url, $context);
+            
             if ($result !== null && $result !== false) {
                 $log_option = fx::config('dev.log_routes');
                 if (

@@ -43,9 +43,12 @@ class Env
         if (isset($this->current['url'])) {
             return $this->current['url'];
         }
+        /*
         if ( ($page = $this->getPage() ) ) {
             return $page['url'];
         }
+         * 
+         */
         return fx::path()->removeBase($_SERVER['REQUEST_URI']);
     }
     
@@ -54,6 +57,9 @@ class Env
     }
     
     public function getPath() {
+        if (isset($this->current['path'])) {
+            return $this->current['path'];
+        }
         static $path_cache = [];
         $url = $this->getUrl();
         if (!isset($path_cache[$url])) {
@@ -78,8 +84,10 @@ class Env
         $request_uri = $c_url['scheme'].'://'.$c_url['host'].$c_url['path'].($c_url['query'] ? '?'.$c_url['query'] : '');
         $_SERVER['REQUEST_URI'] = $request_uri;
         $path = fx::router()->getPath( $url );
+        
         if ($path) {
             $this->setPage($path->last());
+            $this->set('path', $path);
         } else {
             $this->setPage(fx::router('error')->getErrorPage());
         }
@@ -137,6 +145,11 @@ class Env
         if (isset($this->current['page'])) {
             return $this->current['page'];
         }
+        $path = $this->getPath();
+        if ($path) {
+            return $path->last();
+        }
+        /*
         if (isset($this->current['url'])) {
             $page = fx::data('floxim.main.page', $this->current['url']);
             if ($page) {
@@ -144,10 +157,17 @@ class Env
                 return $page;
             }
         }
+         * 
+         */
     }
 
     public function getPageId()
     {
+        $page = $this->getPage();
+        if ($page) {
+            return $page['id'];
+        }
+        /*
         if (isset($this->current['page']) && is_object($this->current['page'])) {
             return $this->current['page']->get('id');
         }
@@ -155,6 +175,8 @@ class Env
             $this->current['page'] = fx::data('floxim.main.page', $this->current['page_id']);
             return $this->current['page_id'];
         }
+         * 
+         */
         return null;
     }
 

@@ -54,7 +54,10 @@ class Finder extends System\Finder
     public function getForPath($path)
     {
         $current_page = $path->last();
-        $this->where('site_id', $current_page['site_id']);
+        $level_with_site = $path->findOne('site_id');
+        if ($level_with_site) {
+            $this->where('site_id', $level_with_site['site_id']);
+        }
         $this->whereOr(
             array('scope_type', array('all_pages', 'custom')),
             array(

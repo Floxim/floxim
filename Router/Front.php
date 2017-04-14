@@ -22,6 +22,8 @@ class Front extends Base
                 return;
             }
         }
+        
+        fx::env('path', $path);
 
         $page = $path->last();
         
@@ -33,7 +35,7 @@ class Front extends Base
          * @todo: check if the URL is canonical and add <link rel="canonical" /> to header if required
          */
         
-        fx::env('page', $page);
+        //fx::env('page', $page);
         fx::http()->status('200');
         
         
@@ -48,12 +50,18 @@ class Front extends Base
     
     public function normalizeUrl($url)
     {
+        if (!is_string($url)) {
+            fx::log($url, debug_backtrace());
+        }
         //$url = preg_replace("~^/~", '', $url);
         $url = urldecode($url);
         return $url;
     }
     
-    public function getPath($url, $site_id) {
+    public function getPath($url, $site_id = null) {
+        if (is_null($site_id)) {
+            $site_id = fx::env('site_id');
+        }
         $url = $this->normalizeUrl($url);
         $page = fx::data('floxim.main.page')->getByUrl($url, $site_id);
         if (!$page) {
@@ -64,11 +72,12 @@ class Front extends Base
 
     protected $_ib_cache = array();
 
-    public function  getPageInfoblocks($page_id = null, $theme_id = null)
+    public function  getPageInfoblocks() // $page_id = null, $theme_id = null)
     {
-        if (is_null($theme_id)) {
-            $theme_id = fx::env('theme_id');
-        }
+        
+        $theme_id = fx::env('theme_id');
+        $path = fx::env('path');
+        /*
         if (is_null($page_id)) {
             $page_id = fx::env('page_id');
         }
@@ -76,14 +85,16 @@ class Front extends Base
         if (isset($this->_ib_cache[$cache_key])) {
             return $this->_ib_cache[$cache_key];
         }
-
-        $c_page = $page_id === fx::env('page_id') ? fx::env('page') : fx::data('floxim.main.page', $page_id);
         
+        $c_page = $page_id === fx::env('page_id') ? fx::env('page') : fx::data('floxim.main.page', $page_id);
+        */
         $infoblocks = fx::data('infoblock')
-            ->getForPage($c_page)
+            //->getForPage($c_page)
+            ->getForPath($path)
             ->find(function ($ib) {
                 return !$ib->isLayout();
             });
+        
         $areas = fx::collection();
         $visual = fx::data('infoblock_visual')->
                     with('template_variant')->
@@ -119,7 +130,7 @@ class Front extends Base
             }
             $areas[$c_area][] = $ib;
         }
-        $this->_ib_cache[$cache_key] = $areas;
+        //$this->_ib_cache[$cache_key] = $areas;
         return $areas;
     }
     
@@ -144,7 +155,8 @@ class Front extends Base
         if (!is_object($page)) {
             fx::log(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
         }
-        $path = $page->getPath()->copy()->reverse();
+        //$path = $page->getPath()->copy()->reverse();
+        $path = fx::env('path')->copy()->reverse();
         foreach ($path as $c_page){
             if (method_exists($c_page, 'getLayoutInfoblock')) {
                 $layout_ib = $c_page->getLayoutInfoblock();

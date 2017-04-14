@@ -9,7 +9,6 @@ class Fonts {
     
     public static function getLoaderJS($fonts)
     {
-        fx::log($fonts);
         static $is_loaded = false;
         if (count($fonts) === 0) {
             return '';

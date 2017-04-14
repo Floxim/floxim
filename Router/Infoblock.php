@@ -11,7 +11,7 @@ class Infoblock extends Base
         if (!fx::isAdmin()) {
             return null;
         }
-        if (!preg_match("~^/\~ib/(\d+|fake(?:\-\d+)?)@(\d+)~", $url, $ib_info)) {
+        if (!preg_match("~^/\~ib/(\d+|fake(?:\-\d+)?)~", $url, $ib_info)) {
             return null;
         }
         
@@ -19,14 +19,10 @@ class Infoblock extends Base
         fx::env()->forceUrl($c_url);
         
         $ib_id = $ib_info[1];
-        $page_id = $ib_info[2];
-        if (!fx::env('page') && $page_id) {
-            $page = fx::data('floxim.main.content', $page_id);
-            fx::env('page', $page);
-        }
+        
         fx::env('ajax', true);
 
-        $page_infoblocks = fx::router('front')->getPageInfoblocks($page_id);
+        $page_infoblocks = fx::router('front')->getPageInfoblocks();
         fx::page()->setInfoblocks($page_infoblocks);
         
         // import layout template to recreate real env

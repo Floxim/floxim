@@ -7,7 +7,6 @@ if (!defined('EMERGENCY_CONSOLE') || !EMERGENCY_CONSOLE) {
 }
 
 
-
 define("LOGS_HOME", preg_replace("~\?.*$~", '', $_SERVER['REQUEST_URI']));
 
 ob_start();

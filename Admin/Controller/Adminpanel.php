@@ -14,6 +14,7 @@ class Adminpanel extends Admin
     
     public static function getMainMenu()
     {
+        
         $adm = fx::config('path.admin');
         
         $main_menu = array(
@@ -54,6 +55,7 @@ class Adminpanel extends Admin
 
     static public function panelHtml()
     {
+        
         $data = array(
             'main_menu' => self::getMainMenu(),
             'more_menu' => self::getMoreMenu(),
@@ -75,6 +77,7 @@ class Adminpanel extends Admin
                  */
             )
         );
+        
         
         $profile_items = array();
         
@@ -104,7 +107,10 @@ class Adminpanel extends Admin
                 'children' => $profile_items
         );
         $data['is_front'] =  $_SERVER['REQUEST_URI'] !== fx::config('path.admin');
-        $res = fx::template('@admin:panel')->render($data);
+        
+        $tpl = fx::template('@admin:panel');
+        
+        $res = $tpl->render($data);
         return $res;
     }
 
@@ -121,17 +127,7 @@ class Adminpanel extends Admin
                 'content_id'   => $c_page['id']
             )
         );
-        /*
-        $more_menu['layout_settings'] = array(
-            'name'   => fx::alang('Layout settings', 'system'),
-            'button' => array(
-                'entity'  => 'infoblock',
-                'action'  => 'layout_settings',
-                'page_id' => fx::env('page_id')
-            )
-        );
-         * 
-         */
+        
         $more_menu['theme_settings']= array(
             'name' => fx::alang('Theme settings', 'system'),
             'button' => array(
