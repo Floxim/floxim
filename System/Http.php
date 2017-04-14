@@ -182,9 +182,9 @@ class Http
         return $this->getLastHeaders();
     }
     
-    
-    public function post($url, $data, $headers = array(), $context_options = array())
+    public function request($url, $method = 'get', $headers = [], $data = null, $context_options = [])
     {
+        
         $has_content_type = false;
         $header_string = '';
         $serialize_type = 'urlencode';
@@ -203,32 +203,40 @@ class Http
             $header_string .= "Content-type: application/x-www-form-urlencoded\r\n";
         }
         
-        if (!is_scalar($data)) {
-            if ($serialize_type === 'urlencode') {
-                foreach ($data as $k => $v) {
-                    if (!is_scalar($v)) {
-                        $data[$k] = json_encode($v);
-                    }
-                }
-                $data = http_build_query($data, null, '&');
-            } else {
-                $data = json_encode($data);
-            }
-        }
-        
         $options = array(
             'http' => array_merge(
                 array(
                     'header'  => $header_string,
-                    'method'  => 'POST',
-                    'content' => $data
+                    'method'  => strtoupper($method)
                 ),
                 $context_options
             )
         );
+        
+        if (!is_null($data)) {
+            if (!is_scalar($data)) {
+                if ($serialize_type === 'urlencode') {
+                    foreach ($data as $k => $v) {
+                        if (!is_scalar($v)) {
+                            $data[$k] = json_encode($v);
+                        }
+                    }
+                    $data = http_build_query($data, null, '&');
+                } else {
+                    $data = json_encode($data);
+                }
+            }
+            $options['http']['content'] = $data;
+        }
+        
         $context  = stream_context_create($options);
         $result = @ file_get_contents($url, false, $context);
         $this->last_response_headers = $http_response_header;
         return $result;
+    }
+    
+    public function post($url, $data, $headers = array(), $context_options = array())
+    {
+        return $this->request($url, 'post', $headers, $data, $context_options);
     }
 }
