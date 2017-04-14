@@ -401,12 +401,13 @@ class Layout extends Admin
         if (isset($input['source_vars'])) {
             $less_vars = $style_variant['less_vars'];
             foreach ($input['source_vars'] as $k => $v) {
-                if (isset($less_vars[$k])) {
+                if (isset($less_vars[$k]) || true) { // ???
                     $less_vars[$k] = $v;
                 }
             }
             $style_variant['less_vars'] = $less_vars;
         }
+        
         
         $input['style'] = preg_replace("~_variant_[^_]+$~", '', $input['style']);
         
