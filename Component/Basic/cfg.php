@@ -44,6 +44,14 @@ $component_infoblocks = fx::data('infoblock')->getContentInfoblocks($component['
 
 return array(
     'actions' => array(
+        '*record' => array(
+            'name' => 'Поля '. $component->getItemName('of'),
+            'check_context' => function($page) use ($component) {
+                $res = $page['type'] === $component['keyword'];
+                return $res;
+            },
+            'scope_type' => 'infoblock_pages'
+        ),
         '*list*' => array(
             'settings' => array(
                 'limit' => array(

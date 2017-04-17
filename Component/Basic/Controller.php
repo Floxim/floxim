@@ -142,6 +142,14 @@ class Controller extends \Floxim\Floxim\Controller\Frontoffice {
         return preg_match("~^list|record~", $this->action);
     }
     
+    public function doRecord()
+    {
+        $page = fx::env('page');
+        $this->assign('item', $page);
+        $this->trigger('result_ready');
+    }
+
+    
     public function getTemplateAvailForTypeField()
     {
         if (!$this->hasTypedAction()) {
