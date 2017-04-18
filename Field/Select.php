@@ -19,7 +19,6 @@ class Select extends \Floxim\Floxim\Component\Field\Entity
     
     public function getJsField($content)
     {
-
         $res = parent::getJsField($content);
 
         $res['values'] = $this->getSelectValues();
@@ -33,6 +32,9 @@ class Select extends \Floxim\Floxim\Component\Field\Entity
             $res['type'] = 'select';
         }
         $res['value'] = $content[$this['keyword']];
+        $res['types'] = [
+            []
+        ];
         //if (!$content['id'] || !$res['value']) {
         if (!$res['value']) {
             $res['value'] = $this['default'];
@@ -82,6 +84,10 @@ class Select extends \Floxim\Floxim\Component\Field\Entity
             // existing value
             if (is_numeric($val_id)) {
                 $old = $old_vals->findOne('id', $val_id);
+                if (!$old) {
+                    fx::log('no old', $old_vals, $this, $new_vals, $format);
+                    continue;
+                }
                 $old->set($val);
                 $new_vals []= $old;
             } else {
@@ -96,6 +102,17 @@ class Select extends \Floxim\Floxim\Component\Field\Entity
 
     public function formatSettings()
     {
+        
+        
+        $types = [
+            [
+                'name' => 'Вариант',
+                'name_add' => 'Вариант',
+                'keyword' => 'select_value',
+                'content_type_id' => 'select_value'
+            ]
+        ];
+        
         if ($this['parent_field_id']) {
             $values = $this->getAvailableValues();
             foreach ($values as &$val) {
@@ -121,13 +138,16 @@ class Select extends \Floxim\Floxim\Component\Field\Entity
                 ),
                 'without_delete' => true,
                 'without_add' => true,
-                'values' => $values
+                'values' => $values,
+                'types' => [$types]
             );
         } else {
             $values = $this['select_values'];
             $f_values = $values->getValues(function($v) {
                 $res = $v->get(array('name', 'keyword', 'description'));
-                $res['_index'] = $v['id'];
+                $res['_meta'] = [
+                    'id' => $v['id']
+                ];
                 return $res;
             });
             $fields['select_values'] = array(
@@ -137,12 +157,12 @@ class Select extends \Floxim\Floxim\Component\Field\Entity
                     array('name' => 'keyword', 'type' => 'string'),
                     array('name' => 'name', 'type' => 'string')
                 ),
-                //'values' => $this['format']['values'] ? $this['format']['values'] : array(),
                 'values' => $f_values,
                 'labels' => array(
                     fx::alang('Keyword', 'system'), 
                     fx::alang('Name', 'system')
-                )
+                ),
+                'types' => [$types]
             );
         }
         $render_variants = $this->getRenderVariants();

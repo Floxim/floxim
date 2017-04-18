@@ -94,6 +94,7 @@ abstract class Finder
             $this->limit($limit);
         }
         $this->calcFoundRows(true);
+        
         $items = $this->all();
         if (!$items) {
             return;

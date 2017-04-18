@@ -363,9 +363,8 @@ class Content extends Admin
         $this->response->addFormButton(array('key' => 'save', 'class' => 'delete', 'label' => fx::alang('Delete')));
         if (isset($input['delete_confirm']) && $input['delete_confirm']) {
             $response = array('status' => 'ok');
-            $c_page = fx::env('page');
-            if ($c_page) {
-                $c_path = $c_page->getPath();
+            $c_path = fx::env('path');
+            if ($c_path) {
                 $content_in_path = $c_path->findOne('id', $content['id']);
                 if ($content_in_path) {
                     $response['reload'] = $content_in_path['parent'] ? $content_in_path['parent']['url'] : '/';

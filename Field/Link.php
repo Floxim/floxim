@@ -99,6 +99,7 @@ class Link extends \Floxim\Floxim\Component\Field\Entity
         if (isset($content['site_id'])) {
             if (
                 $finder instanceof \Floxim\Floxim\Component\Basic\Finder &&
+                ! ($finder instanceof \Floxim\User\User\Finder) && 
                 $finder->create()->hasField('site_id')
             ) {
                 $finder->where('site_id', $content['site_id']);
