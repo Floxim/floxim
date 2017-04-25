@@ -1106,4 +1106,15 @@ class Util
         next($array);
         return $result;
     }
+    
+    /**
+     * execute shell command and return output
+     * @todo implement timeout-safe exec with proc_open / stream_select / etc.
+     * @param string $cmd
+     * @param int $timeout timeout in seconds
+     */
+    public function exec($cmd, $timeout = null)
+    {
+        return shell_exec($cmd);
+    }
 }

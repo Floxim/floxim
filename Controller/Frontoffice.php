@@ -64,7 +64,15 @@ class Frontoffice extends System\Controller
     {
         return isset($this->_meta[$key]) ? $this->_meta[$key] : null;
     }
-
+    
+    public function is($template)
+    {
+        $keyword = fx::getComponentNameByClass(get_class($this));
+        $keyword .= ':'.fx::util()->camelToUnderscore($this->getAction());
+        $template = str_replace('\*', '.*', '~^'.preg_quote($template).'$~');
+        return preg_match($template, $keyword);
+    }
+    
     public function process()
     {
         $profiler = $this->getProfiler();
@@ -78,6 +86,15 @@ class Frontoffice extends System\Controller
         if ($result === null) {
             $result = array();
         }
+        
+        $reloadables = (array) fx::config('reloadable');
+        
+        foreach ($reloadables as $rtpl) {
+            if ($this->is($rtpl)) {
+                $this->setAjaxAccess(true);
+            }
+        }
+        
         if (is_array($result) || $result instanceof \ArrayAccess) {
             $result = array_merge_recursive($result, $this->_result);
             if (!isset($result['_meta'])) {

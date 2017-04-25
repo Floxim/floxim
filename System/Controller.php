@@ -185,20 +185,8 @@ class Controller
      */
     public function getAvailableTemplates($theme_id = null, $area_meta = null)
     {
+        
         $area_size = Template\Suitable::getSize($area_meta['size']);
-        /*
-        $layout_defined = !is_null($layout_name);
-        if (is_numeric($layout_name)) {
-            fx::log($layout_name, debug_backtrace());
-            $layout_names = array(fx::data('theme', $layout_name)->get('layout'));
-        } elseif (is_null($layout_name)) {
-            $layout_names = fx::data('theme')->all()->getValues('layout');
-        } elseif (is_string($layout_name)) {
-            $layout_names = array($layout_name);
-        } elseif (is_array($layout_name)) {
-            $layout_names = $layout_name;
-        }
-        */
         
         $theme = is_null($theme_id) ? fx::env('theme') : fx::data('theme', $theme_id);
         $layout_names = array($theme['layout']);

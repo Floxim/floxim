@@ -77,7 +77,7 @@ class Controller extends \Floxim\Floxim\Controller\Frontoffice {
         if ($com->getFieldByKeyword('site_id', true)) {
             $finder->where('site_id', fx::env('site_id'));
         }
-        if (!fx::isAdmin()) {
+        if (!fx::isAdmin() && $finder instanceof \Floxim\Main\Content\Finder) {
             $finder
                 ->where('is_published', 1)
                 ->where('is_branch_published', 1);
@@ -144,7 +144,12 @@ class Controller extends \Floxim\Floxim\Controller\Frontoffice {
     
     public function doRecord()
     {
-        $page = fx::env('page');
+        $path = clone fx::env('path');
+        $path = $path->reverse();
+        $com = $this->getComponent();
+        
+        $page = $path->findOne('type', $com['keyword']);
+        //$page = fx::env('page');
         $this->assign('item', $page);
         $this->trigger('result_ready');
     }
@@ -234,7 +239,11 @@ class Controller extends \Floxim\Floxim\Controller\Frontoffice {
                 }
             });
         }
-        $this->doList();
+        try {
+            $this->doList();
+        } catch(\Exception $e) {
+            fx::log($e);
+        }
     }
     
     public function doList()

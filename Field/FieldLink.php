@@ -5,7 +5,7 @@ namespace Floxim\Floxim\Field;
 use Floxim\Floxim\System;
 use Floxim\Floxim\System\Fx as fx;
 
-class Link extends \Floxim\Floxim\Component\Field\Entity
+class FieldLink extends \Floxim\Floxim\Component\Field\Entity
 {
 
     public function validateValue($value)

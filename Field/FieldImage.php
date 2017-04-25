@@ -4,7 +4,7 @@ namespace Floxim\Floxim\Field;
 
 use \Floxim\Floxim\System\Fx as fx;
 
-class Image extends \Floxim\Floxim\Field\File
+class FieldImage extends \Floxim\Floxim\Field\FieldFile
 {
 
     public function getJsField($content)

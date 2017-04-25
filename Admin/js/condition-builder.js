@@ -128,9 +128,16 @@ window.condition_builder = function(params) {
                     type_hash = 'livesearch_type';
                 
                 if (field_props.content_type) {
-                    field.conditions = [ [null, field_props.content_type, 'is'] ];
-                    type_hash += '_'+field_props.content_type;
+                    var cond_type = [field_props.content_type],
+                        extras = field_props.extra_types || [];
+                    
+                    for (var i =0 ; i < extras.length; i++) {
+                        cond_type.push(extras[i]);
+                    }
+                    field.conditions = [ [null, cond_type, 'is'] ];
+                    type_hash += '_'+ cond_type.join('|');
                 }
+                console.log(field_props, type_hash);
                 if (value && value.length) {
                     field.value = value;
                     field.ajax_preload = true;
@@ -197,6 +204,7 @@ window.condition_builder = function(params) {
             params.ajax_preload = true;
             params.value = value;
         }
+        console.log(value, params);
         var $control = $fx_fields.livesearch(params, 'input');
         $control.data('value_type_hash', type_hash);
         return $control;
@@ -507,6 +515,7 @@ window.condition_builder = function(params) {
         if (ops.length === 0) {
             return;
         }
+        
         for (var i = 0; i < ops.length; i++) {
             var op = $.extend({}, ops[i], {id:ops[i].keyword, children:[]});
             if (op.test && !op.test(current_field)) {
@@ -560,11 +569,11 @@ window.condition_builder = function(params) {
         $container.append($control);
         
         if (vals.length) {
+            var has_many_vals = vals.length > 1 || vals.length === 1 && vals[0].children;
             if (vals.length < 1 || vals[0].name !== '') {
                 $cond.addClass(cl+'-cond_has-op');
-                
             } 
-            if (vals.length === 1 && vals[0].name !== '') {
+            if (!has_many_vals && vals[0].name !== '') {
                 $container.append('<span class="'+cl+'-cond__op-name">'+vals[0].name+'</span>');
                 $control.css('display', 'none');
             }

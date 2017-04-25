@@ -4,7 +4,7 @@ namespace Floxim\Floxim\Field;
 
 use Floxim\Floxim\System\Fx as fx;
 
-class String extends \Floxim\Floxim\Component\Field\Entity
+class FieldString extends \Floxim\Floxim\Component\Field\Entity
 {
 
     

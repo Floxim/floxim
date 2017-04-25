@@ -5,7 +5,7 @@ namespace Floxim\Floxim\Field;
 use Floxim\Floxim\System;
 use Floxim\Floxim\System\Fx as fx;
 
-class File extends \Floxim\Floxim\Component\Field\Entity
+class FieldFile extends \Floxim\Floxim\Component\Field\Entity
 {
 
     protected $_to_delete_id = 0;

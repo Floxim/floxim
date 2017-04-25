@@ -575,8 +575,6 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
         
         $params = self::extractCollectionParams($collection);
         
-        fx::cdebug($collection, $params);
-        
         if (!$params) {
             return;
         }

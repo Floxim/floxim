@@ -2,7 +2,7 @@
 
 namespace Floxim\Floxim\Field;
 
-class Datetime extends \Floxim\Floxim\Component\Field\Entity
+class FieldDatetime extends \Floxim\Floxim\Component\Field\Entity
 {
 
     protected $day = '', $month = '', $year = '', $hours = '', $minutes = '', $seconds = '';

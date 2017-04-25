@@ -3,7 +3,7 @@ namespace Floxim\Floxim\Field;
 
 use Floxim\Floxim\System\Fx as fx;
 
-class Icon extends \Floxim\Floxim\Component\Field\Entity
+class FieldIcon extends \Floxim\Floxim\Component\Field\Entity
 {
     
     public function getJsField($content)

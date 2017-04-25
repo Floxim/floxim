@@ -2,7 +2,7 @@
 
 namespace Floxim\Floxim\Field;
 
-class Int extends \Floxim\Floxim\Component\Field\Entity
+class FieldInt extends \Floxim\Floxim\Component\Field\Entity
 {
 
     public function validateValue($value)

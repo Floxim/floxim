@@ -230,7 +230,7 @@ class Http
         }
         
         $context  = stream_context_create($options);
-        $result = @ file_get_contents($url, false, $context);
+        $result = file_get_contents($url, false, $context);
         $this->last_response_headers = $http_response_header;
         return $result;
     }

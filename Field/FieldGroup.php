@@ -4,7 +4,7 @@ namespace Floxim\Floxim\Field;
 
 use Floxim\Floxim\System\Fx as fx;
 
-class Group extends \Floxim\Floxim\Component\Field\Entity
+class FieldGroup extends \Floxim\Floxim\Component\Field\Entity
 {
     public function getJsField($content) {
         $res = parent::getJsField($content);

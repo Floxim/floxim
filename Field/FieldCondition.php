@@ -4,7 +4,7 @@ namespace Floxim\Floxim\Field;
 
 use Floxim\Floxim\System\Fx as fx;
 
-class Condition extends \Floxim\Floxim\Component\Field\Entity 
+class FieldCondition extends \Floxim\Floxim\Component\Field\Entity 
 {
     public function getSqlType()
     {

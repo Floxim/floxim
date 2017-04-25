@@ -461,8 +461,8 @@ class Entity extends System\Entity
         return empty($item_name) ? $this['name'] : $item_name;
     }
     
-    public function getFieldForFilter($keyword) {
-        return array(
+    public function getFieldForFilter($keyword, $extra_coms = []) {
+        $res = array(
             'keyword' => $keyword,
             'name' => fx::util()->ucfirst($this->getItemName()),
             'type' => 'entity',
@@ -470,8 +470,36 @@ class Entity extends System\Entity
             'content_type' => $this['keyword'],
             'children' => $this->getFieldsForFilter($keyword),
             'has_types' => count ( $this->getAllVariants() ) > 1,
-            'has_tree' => $this->isInstanceOfComponent('floxim.main.content')
+            'has_tree' => $this->isInstanceOfComponent('floxim.main.content'),
+            'extra_types' => []
         );
+        
+        foreach ($extra_coms as $child_com) {
+            
+            $child_com_prefix = 'entity:'.str_replace('.', ':', $child_com['keyword']);
+            $child_com_fields = $child_com->getFieldsForFilter($child_com_prefix, 1, true);
+            // temporary remove relation fields
+            // @todo: implement queries like $f->where('[floxim.blog.news'].tags', $tag_id)
+            $child_com_fields_with_no_links = array();
+            foreach ( $child_com_fields as $child_com_field) {
+                if (!in_array($child_com_field['type'], array('entity'))) {
+                    $child_com_fields_with_no_links []= $child_com_field;
+                }
+            }
+            if (count($child_com_fields_with_no_links) > 0) {
+                $res_f = array(
+                    'type' => 'subtype',
+                    'collapsed' => true,
+                    'children' => $child_com_fields_with_no_links,
+                    'name' => '['.fx::util()->ucfirst($child_com->getItemName('one')).']',
+                    'id' => $child_com_prefix,
+                    'disabled' => true
+                );
+                $res['children'][]= $res_f;
+            }
+            $res['extra_types'][]= $child_com['keyword'];
+        }
+        return $res;
     }
     
     public function getFieldsForFilter($prefix = 'entity', $c_level = 0, $own_only = false) {
@@ -575,6 +603,10 @@ class Entity extends System\Entity
             case '0':
                 return false;
             case 'listed':
+                // allow forms
+                if (!preg_match("~^list~", $block_type)) {
+                    return true;
+                }
                 $listed = fx::dig($this, 'settings.allowed_blocks');
                 return is_array($listed) && in_array($block_type, $listed);
             case 'auto':

@@ -44,6 +44,285 @@ class Entity extends \Floxim\Floxim\System\Entity {
         return $finder;
     }
     
+    public function getPageFinders()
+    {
+        $conds = $this->getConditions();
+        $res = $this->groupCondsByType($conds);
+        $finders = [];
+        foreach ($res as $type => $conds) {
+            
+            $finder = fx::data($type);
+            
+            $conds = self::fixCondsForType($conds, $type);
+            if (count($conds)) {
+                $finder->applyConditions($conds);
+            }
+            $finders []= $finder;
+        }
+        return $finders;
+    }
+    
+    public function checkScope($params = []) 
+    {
+        $finders = $this->getPageFinders();
+        
+        $pages = fx::collection();
+        $has_current_page = false;
+        $current_page = fx::env('page');
+        
+        $total = 0;
+        
+        $params = array_merge(
+            [
+                'limit' => 10
+            ],
+            $params
+        );
+        
+        foreach ($finders as $finder) {
+            if ($finder instanceof \Floxim\Main\Page\Finder) {
+                $finder->where('site_id', fx::env('site_id'));
+            }
+            $limit = $params['limit'];
+            if ($limit) {
+                $finder->calcFoundRows();
+                $finder->limit($limit);
+            }
+            $finder_res = $finder->all();
+            $finder_total = $limit ? $finder->getFoundRows() : count($finder_res);
+            $total += $finder_total;
+            
+            $pages = $pages->concat($finder_res);
+            
+            if ($current_page->isInstanceOf($finder->getType())) {
+                $has_current_page = $finder_res->findOne('id', $current_page['id']);
+                if (!$has_current_page && $limit && $finder_total > $limit) {
+                    $has_current_page = (bool) $finder->where('id', $current_page['id'])->one();
+                }
+            }
+        }
+        
+        $pages = $pages->getValues(function($p) {
+            return array(
+                'name' => $p['name'],
+                'type' => $p['type'],
+                'type_name' => $p->getComponent()->getItemName(),
+                'url' => $p['url']
+            );
+        });
+        
+        return [
+            'pages' => $pages,
+            'total' => $total,
+            'has_current_page' => $has_current_page
+        ];
+    }
+    
+    protected static function fixCondsForType($conds, $type)
+    {
+        if (count($conds) > 1) {
+            $conds = [
+                'type' => 'group',
+                'logic' => 'OR',
+                'values' => $conds
+            ];
+        } elseif (count($conds) === 1) {
+            $conds = $conds[0];
+        }
+        $walk = function ($cond) use ($type, &$walk) {
+            if ($cond['type'] === 'group') {
+                $sub_res = [];
+                foreach ($cond['values'] as $sub_cond) {
+                    $sub_cond = $walk($sub_cond, $type);
+                    if (count($sub_cond)) {
+                        $sub_res []= $sub_cond;
+                    }
+                }
+                if (count($sub_res) === 0) {
+                    return [];
+                }
+                if (count($sub_res) === 1) {
+                    return $sub_res[0];
+                }
+                $cond['values'] = $sub_res;
+                return $cond;
+            }
+            if ($cond['type'] === 'has_type' && $cond['inverted'] === false) {
+                $fixed_val = [];
+                foreach ($cond['value'] as $cond_com) {
+                    if ($cond_com === $type) {
+                        continue;
+                    }
+                    $cond_com_chain = fx::component($cond_com)->getChain()->getValues('keyword');
+                    if (!in_array($type, $cond_com_chain)) {
+                        continue;
+                    }
+                    $fixed_val []= $cond_com;
+                }
+                if (count($fixed_val) === 0) {
+                    return  [];
+                }
+                $cond['value'] = $fixed_val;
+                return $cond;
+            }
+            $field = self::parseFieldFromCond($cond);
+            if ($field['base'] === 'entity' && $field['type'] === $type) {
+                $cond['field'] = 'entity.'.$field['field'];
+            }
+            return $cond;
+        };
+        $res = $walk($conds);
+        return $res;
+    }
+    
+    protected static function groupCondsByType($cond)
+    {
+        $res = [];
+        if ($cond['type'] === 'group') {
+            $sub_results = [];
+            $sub_types = [];
+            foreach ($cond['values'] as $sub) {
+                $sub_res = self::groupCondsByType($sub);
+                $sub_results []= $sub_res;
+                if (count($sub_res) > 0) {
+                    $sub_types []= array_keys($sub_res);
+                }
+            }
+            
+            $all_types = call_user_func_array('array_merge', $sub_types);
+            $common_types = self::getCommonTypeRoots($all_types);
+            
+            if ($cond['logic'] === 'AND') {
+                
+                if (count($common_types) > 1 && count($sub_types) > 1) {
+                    $valid_commons = [];
+                    foreach ($common_types as $common_type) {
+                        $chain = fx::component($common_type)->getChain()->getValues('keyword');
+                        $is_valid = true;
+                        foreach ($sub_types as $sub_type) {
+                            if ( count(array_intersect($sub_type, $chain)) === 0) {
+                                $is_valid = false;
+                                break;
+                            }
+                        }
+                        if ($is_valid) {
+                            $valid_commons []= $common_type;
+                        }
+                    }
+                    $common_types = $valid_commons;
+                }
+            }
+            
+            foreach ($common_types as $common_type) {
+                $type_conds = [];
+                $chain = fx::component($common_type)->getChain()->getValues("keyword");
+                foreach ($sub_results as $sub_group) {
+                    foreach ($sub_group as $sub_type_key => $sub_conds) {
+                        if (in_array($sub_type_key, $chain)) {
+                            $type_conds = array_merge($type_conds, $sub_conds);
+                        }
+                    }
+                }
+                if (count($type_conds) === 1 || $cond['logic'] === 'OR') {
+                    $res[$common_type] = $type_conds;
+                } else {
+                    $res[$common_type] = [
+                        [
+                            'type' => 'group',
+                            'logic' => 'AND',
+                            'values' => $type_conds
+                        ]
+                    ];
+                }
+            }
+        } else {
+            $cond_types = self::getCondContentTypes($cond);
+            $cond_roots = self::getCommonTypeRoots($cond_types);
+            foreach ($cond_roots as $rtype) {
+                $res[$rtype] = [$cond];
+            }
+        }
+        return $res;
+    }
+    
+    public static function getCommonTypeRoots($types)
+    {
+        if (count($types) < 2) {
+            return $types;
+        }
+        $coms = fx::component()->find('keyword', $types);
+        $res = [];
+        $tree = [];
+        foreach ($coms as $com) {
+            $chain = $com->getChain()->getValues('keyword');
+            $ctree =& $tree;
+            foreach ($chain as $level) {
+                if (!isset($ctree[$level])) {
+                    $ctree[$level] = [];
+                }
+                $ctree =& $ctree[$level];
+            }
+        }
+        $walk = function($arr) use (&$res, &$walk) {
+            foreach ($arr as $k => $items) {
+                if (count($items) === 1) {
+                    $walk($items);
+                } else {
+                    $res []= $k;
+                }
+            }
+        };
+        $walk($tree);
+        return $res;
+    }
+    
+    public static function getGroupContentTypes($group)
+    {
+        
+        if ($group['type'] !== 'group') {
+            return self::getCondContentTypes($group);
+        }
+        $res = [];
+        foreach ($group['values'] as $sub) {
+            $types = self::getGroupContentTypes($sub);
+            $res = array_merge($res, $types);
+        }
+        return $res;
+    }
+    
+    public static function getCondContentTypes($cond)
+    {
+        if ($cond['type'] === 'has_type') {
+            return $cond['value'];
+        }
+        $field = self::parseFieldFromCond($cond);
+        return [empty($field['type']) ? 'floxim.main.page' : $field['type']];
+        /*
+        $field = $cond['field'];
+        $parts = explode(".", $field);
+        $base = explode(":", array_shift($parts));
+        $base_type = array_shift($base);
+        if (count($base) > 0) {
+            return [join('.', $base)];
+        }
+        return $base_type === 'entity' ? ['floxim.main.page'] : [];
+         * 
+         */
+    }
+    
+    protected static function parseFieldFromCond($cond)
+    {
+        $field = $cond['field'];
+        $parts = explode(".", $field);
+        $base = explode(":", array_shift($parts));
+        $base_type = array_shift($base);
+        return [
+            'base' => $base_type,
+            'type' => join('.', $base),
+            'field' => $parts[0]
+        ];
+    }
+    
     public static function checkCondition(&$cond, $path = null) 
     {
         if (is_null($path)) {

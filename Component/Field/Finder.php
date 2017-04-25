@@ -67,7 +67,7 @@ class Finder extends System\Finder
             $field_type = isset($data['type']) ? $data['type'] : 'text';
         }
         
-        $type = ucfirst($field_type);
+        $type = 'Field'.ucfirst($field_type);
         $class_name = '\\Floxim\\Floxim\\Field\\' . $type;
         return $class_name;
     }

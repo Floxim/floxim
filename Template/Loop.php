@@ -99,8 +99,13 @@ class Loop implements \ArrayAccess
 
     public function offsetExists($offset)
     {
-        return isset($this->$offset) || method_exists($this, $offset) ||
-        $offset == $this->current_key || $offset == $this->current_alias;
+        
+        $res = 
+            isset($this->$offset) || 
+            method_exists($this, $offset) ||
+            $offset == $this->current_key || 
+            $offset == $this->current_alias;
+        return $res;
     }
 
     public function offsetUnset($offset)

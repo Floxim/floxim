@@ -3,10 +3,9 @@
 namespace Floxim\Floxim\Field;
 
 use Floxim\Floxim\System;
-use Floxim\Floxim\Component\Field;
 use Floxim\Floxim\System\Fx as fx;
 
-class Multilink extends \Floxim\Floxim\Component\Field\Entity
+class FieldMultilink extends \Floxim\Floxim\Component\Field\Entity
 {
     public function getSqlType()
     {

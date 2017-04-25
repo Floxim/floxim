@@ -2,7 +2,7 @@
 
 namespace Floxim\Floxim\Field;
 
-class Float extends \Floxim\Floxim\Component\Field\Entity
+class FieldFloat extends \Floxim\Floxim\Component\Field\Entity
 {
     public function getJsField($content)
     {

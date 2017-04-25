@@ -4,7 +4,7 @@ namespace Floxim\Floxim\Field;
 
 use Floxim\Floxim\System\Fx as fx;
 
-class Select extends \Floxim\Floxim\Component\Field\Entity
+class FieldSelect extends \Floxim\Floxim\Component\Field\Entity
 {
 
     protected function getRenderVariants()

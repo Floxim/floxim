@@ -396,5 +396,46 @@ class Test extends Admin {
         );
         return array('fields' => [$f]);
     }
-            
+    
+    public function scope($input)
+    {
+        $pageable = (array) fx::config('pageable');
+        
+        if (count($pageable)) {
+            $pageable = fx::component()->find('keyword', $pageable);
+        }
+        
+        $value = isset($input['conds']) ? json_decode($input['conds'],true) : null;
+        
+        $cond_field = array(
+            'name' => 'conds',
+            'type' => 'condition',
+            'fields' => array(
+                fx::component('floxim.main.page')->getFieldForFilter('entity', $pageable),
+            ),
+            'types' => fx::data('component')->getTypesHierarchy(),
+            'value' => $value,
+            'label' => false,
+            'pageable' => $pageable->getValues('keyword')
+        );
+        
+        $output = ['type' => 'html'];
+        if ($value) {
+            ob_start();
+            $scope = fx::data('scope')->create(['conditions' => $value]);
+            fx::debug($scope->checkScope());
+            $output['value'] = ob_get_clean();
+        }
+        
+        $this->response->addFormButton('save');
+        return [
+            'show_result' => true,
+            'fields' => [
+                $cond_field,
+                $output,
+                ['type' => 'hidden', 'name' => 'entity', 'value' => 'test'],
+                ['type' => 'hidden', 'name' => 'action', 'value' => 'scope']
+            ]
+        ];
+    }       
 }

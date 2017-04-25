@@ -2,7 +2,7 @@
 
 namespace Floxim\Floxim\Field;
 
-class Bool extends \Floxim\Floxim\Component\Field\Entity
+class FieldBool extends \Floxim\Floxim\Component\Field\Entity
 {
     public function getSqlType()
     {

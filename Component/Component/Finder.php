@@ -132,7 +132,7 @@ class Finder extends System\Finder
 
     public function getTree()
     {
-        $items = $this->all();
+        $items = clone $this->all();
         return $items->makeTree('parent_id', 'children');
     }
 
@@ -211,8 +211,15 @@ class Finder extends System\Finder
     }
     
     public function processConditionIs($field, $value) {
-        $com = fx::getComponentByKeyword($value);
-        $ids = $com->getAllVariants()->getValues('id');
+        $value = (array) $value;
+        $ids = [];
+        foreach ($value as $kw) {
+            $com = fx::getComponentByKeyword($kw);
+            $cids = $com->getAllVariants()->getValues('id');
+            foreach ($cids as $id) {
+                $ids []= $id;
+            }
+        }
         return array('id', $ids);
     }
 }

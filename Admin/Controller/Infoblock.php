@@ -836,44 +836,28 @@ class Infoblock extends Admin
             $scope['conditions'] = $input['conditions'];
         }
         
-        /*
-        $path = fx::env()->getPath(); 
-        $scope_page_id = $scope->getScopePageId($path);
-        $q_field = array(
-            'type' => 'radio_facet',
-            'label' => 'Быстрый выбор',
-            'name' => 'scope[page_id]',
-            'values' => $path->getValues(function($v) {
-                return array($v['id'], $v->getName());
-            }),
-            'value' => $scope_page_id
-        );
-            
-        if ($has_type_field) {
-            $q_field['parent'] = array(
-                array('type', 'custom')
-            );
-        }
-            
-        //$fields []= $q_field;
-         * 
-         */
-        
         $fields []= array(
             'name' => 'scope[id]',
             'type' => 'hidden',
             'value' => $scope['id']
         );
         
+        $pageable = (array) fx::config('pageable');
+        
+        if (count($pageable)) {
+            $pageable = fx::component()->find('keyword', $pageable);
+        }
+        
         $cond_field = array(
             'name' => 'scope[conditions]',
             'type' => 'condition',
             'fields' => array(
-                fx::component('floxim.main.page')->getFieldForFilter('entity')
+                fx::component('floxim.main.page')->getFieldForFilter('entity', $pageable),
             ),
             'types' => fx::data('component')->getTypesHierarchy(),
             'value' => $scope['conditions'],
-            'label' => false
+            'label' => false,
+            'pageable' => $pageable->getValues('keyword')
         );
         
         if ($has_type_field) {
@@ -896,44 +880,11 @@ class Infoblock extends Admin
                 'conditions' => $input['conditions']
             )
         );
-        $finder = $scope->getPageFinder();
-        $finder->where('site_id', fx::env('site_id'));
         
-        $finder->limit(10);
-        $finder->calcFoundRows();
         
-        $pages = $finder->all();
-        if (count($pages) === 0) {
-            $count = 0;
-            $has_current_page = false;
-        } else {
-            $count = $finder->getFoundRows();
-            
-            
-            $c_page_id = fx::env('page_id');
-            
-            $c_page_in_found = $pages->findOne('id', $c_page_id);
-            
-            if ($c_page_in_found) {
-                $has_current_page = true;
-            } else {
-                if (count($pages) === $count) {
-                    $has_current_page = false;
-                } else {
-                    $has_current_page = (bool) $finder->where('id', $c_page_id)->one();
-                }
-            }
-        }
+        $res = $scope->checkScope();
         
-        $pages = $pages->getValues(function($p) {
-            return array(
-                'name' => $p['name'],
-                'type' => $p['type'],
-                'type_name' => $p->getComponent()->getItemName(),
-                'url' => $p['url']
-            );
-        });
-        
+        $count = $res['total'];
         
         if ($count === 0) {
             $total_readable = 'Не нашлось <b>ни одной</b> подходящей страницы';
@@ -952,8 +903,8 @@ class Infoblock extends Admin
         $res = array(
             'total_readable' => $total_readable,
             'total' => $count,
-            'pages' => $pages,
-            'has_current_page' => $has_current_page
+            'pages' => $res['pages'],
+            'has_current_page' => $res['has_current_page']
         );
         return $res;
     }
