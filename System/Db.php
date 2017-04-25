@@ -62,7 +62,7 @@ class Db extends \PDO
         }
     }
 
-    public function prepare($str)
+    public function prepare($str, $options = null)
     {
         return $this->escape($str);
     }

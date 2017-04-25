@@ -7,7 +7,7 @@ use \Floxim\Floxim\System\Fx as fx;
 
 class File extends Base
 {
-    public function route($url, $ctx)
+    public function route($url = null, $ctx = null)
     {
         /*
         if ($url === '/favicon.ico') {

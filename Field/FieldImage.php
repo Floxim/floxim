@@ -36,7 +36,7 @@ class FieldImage extends \Floxim\Floxim\Field\FieldFile
         return $res;
     }
 
-    public function fakeValue()
+    public function fakeValue($entity = null)
     {
         static $num = 1;
         $num = $num === 1 ? 2 : 1;

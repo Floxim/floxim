@@ -45,7 +45,7 @@ class FieldText extends \Floxim\Floxim\Component\Field\Entity
         return "MEDIUMTEXT";
     }
     
-    public function fakeValue() 
+    public function fakeValue($entity = null) 
     {
         $lorem = array(
             'Чувство регрессийно аннигилирует дискретный полиряд.',

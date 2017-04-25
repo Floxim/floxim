@@ -595,7 +595,7 @@ class Controller
         return;
     }
     
-    public function checkTemplateAvailForType()
+    public function checkTemplateAvailForType($tv)
     {
         return true;
     }
