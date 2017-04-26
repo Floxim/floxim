@@ -2378,7 +2378,7 @@ class Compiler
     
     protected function makeSolveCode($variants, $variant_id) {
         $code = '';
-        $code .= 'public function solve_'.$variant_id."(\$context, \$tags = null) {\n";
+        $code .= 'public static function solve_'.$variant_id."(\$context, \$tags = null) {\n";
         $code .= "\$count_tags = \$tags ? count(\$tags) : null;\n";
         foreach ($variants as &$v) {
             $t = $v['_token'];

@@ -1117,4 +1117,18 @@ class Util
     {
         return shell_exec($cmd);
     }
+    
+    public function exportComponents($components)
+    {
+        $components = (array) $components;
+        $coms = [];
+        foreach ($components as $com) {
+            if (is_string($com)) {
+                $com = fx::getComponentByKeyword($com);
+            }
+            $coms []= $com;
+        }
+        $res = \Floxim\Floxim\System\Export::exportComponents($coms);
+        fx::debug(json_encode($res));        
+    }
 }

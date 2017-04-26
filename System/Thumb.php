@@ -422,7 +422,7 @@ class Thumb
     protected function addCountedCrop($st, $width, $height)
     {
         $has_all = true;
-        foreach ( split(',', 'x,y,width,height') as $prop) {
+        foreach ( explode(',', 'x,y,width,height') as $prop) {
             if (!isset($st['crop-'.$prop])) {
                 $has_all = false;
                 break;

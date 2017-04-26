@@ -29,7 +29,7 @@ class Closure extends Base {
         }
     }
     
-    public function getPath()
+    public function getPath($url)
     {
         if ($this->route_type === 'path') {
             return call_user_func_array($this->route_closure, func_get_args());
