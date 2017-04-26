@@ -2383,7 +2383,8 @@ class Compiler
         foreach ($variants as &$v) {
             $t = $v['_token'];
             if (!($prior = $t->getProp('priority'))) {
-                $prior = $t->getProp('test') ? 0.5 : 0;
+                $test_val = $t->getProp('test');
+                $prior = $test_val && $test_val !== 'true' ? 0.5 : 0;
             }
             if ($v['is_imported']) {
                 $prior -= 0.2;
@@ -2393,7 +2394,7 @@ class Compiler
             }
             $v['_priority'] = $prior;
         }
-
+        
         @ usort($variants, function ($a, $b) {
             $ap = $a['_priority'];
             $bp = $b['_priority'];
