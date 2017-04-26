@@ -64,7 +64,7 @@ class Entity extends System\Entity
         return true;
     }
 
-    public function getSavestring()
+    public function getSavestring($content)
     {
         return $this->value;
     }

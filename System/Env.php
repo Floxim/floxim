@@ -56,6 +56,11 @@ class Env
         $this->current['url'] = $url;
     }
     
+    public function getHttps()
+    {
+        return isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
+    }
+    
     public function getPath() {
         if (isset($this->current['path'])) {
             return $this->current['path'];

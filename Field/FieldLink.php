@@ -224,7 +224,6 @@ class FieldLink extends \Floxim\Floxim\Component\Field\Entity
     public function getSavestring($content)
     {
         if (is_array($this->value) && isset($this->value['title'])) {
-            fx::log($this);
             $title = $this->value['title'];
             $entity_params = array(
                 'name' => $title
@@ -251,7 +250,6 @@ class FieldLink extends \Floxim\Floxim\Component\Field\Entity
             $entity = fx::data($entity_type)->create($entity_params);
             $entity_prop_name = $this['format']['prop_name'];
             $content[$entity_prop_name] = $entity;
-            fx::log($content, $entity_prop_name, fx::debug()->backtrace());
             return false;
         }
         return parent::getSavestring();

@@ -36,7 +36,7 @@ class FieldFile extends \Floxim\Floxim\Component\Field\Entity
         );
     }
 
-    public function getSavestring(System\Entity $content = null)
+    public function getSavestring($content = null)
     {
         $old_value = $content[$this['keyword']];
         $old_path = FX_BASE_URL.$old_value;

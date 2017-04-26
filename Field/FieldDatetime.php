@@ -67,7 +67,7 @@ class FieldDatetime extends \Floxim\Floxim\Component\Field\Entity
         }
     }
 
-    public function getSavestring()
+    public function getSavestring($content)
     {
         $v = $this->value;
         if (empty($v)) {

@@ -163,7 +163,7 @@ class Admin extends System\Controller
             $path_floxim . '/lib/js/jquery.json-2.3.js',
             $path_floxim . '/lib/js/ajaxfileupload.js',
             $path_floxim . '/Admin/js-templates/jstx.js',
-            'http://' . getenv("HTTP_HOST") . fx::path()->http($path_floxim).'/Admin/js-templates/compile.php',
+            'http'. (fx::env('https') ? 's' : '').'://' . getenv("HTTP_HOST") . fx::path()->http($path_floxim).'/Admin/js-templates/compile.php',
             $path_floxim . '/Admin/js/lib.js',
             $path_floxim . '/Admin/js/sort.js',
             $path_floxim . '/Admin/js/front.js',
