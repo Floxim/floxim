@@ -14,7 +14,7 @@ use \Floxim\Floxim\System\Fx as fx;
 class Output extends \Less_Output
 {
     protected $chunks = array();
-    public function add($chunk)
+    public function add($chunk, $fileInfo = null, $index = 0, $mapLines = null)
     {
         $this->chunks []= $chunk;
     }
