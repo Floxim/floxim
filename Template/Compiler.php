@@ -55,7 +55,6 @@ class Compiler
      */
     public function compile($tree, $class_name)
     {
-        fx::cdebug($tree);
         $code = $this->makeCode($tree, $class_name);
         $code = self::addTabs($code);
         if (fx::config('templates.check_php_syntax')) {
@@ -1979,9 +1978,106 @@ class Compiler
         return $code;
     }
     
-    protected function cssBundleToCode($token)
+    protected function bundleToCode($token)
     {
         
+        $lines = [];
+
+        $after_var = false;
+        foreach ($token->getChildren() as $child) {
+            if ($child->name === 'code') {
+                $val = $child->getProp('value');
+                $parts = preg_split("~\s*[\n\r]+\s*~", $val);
+                foreach ($parts as $p) {
+                    if (empty($p)) {
+                        continue;
+                    }
+                    if ($after_var) {
+                        $lines[ count($lines) - 1][]= $p;
+                        $after_var = false;
+                    } else {
+                        $lines []= $p;
+                    }
+                }
+            } elseif ($child->name === 'var') {
+                $ep = self::getExpressionParser();
+                $token_is_visual = $child->getProp('var_type') == 'visual';
+                $expr_token = $ep->parse( ($token_is_visual ? '%' : '$') . $child->getProp('id') );
+                $expr = $ep->compile($expr_token);
+                $li = count($lines) - 1;
+                $lv = (array) $lines[$li];
+                $lv []= [$expr];
+                $lines[$li] = $lv;
+                $after_var = true;
+            }
+        }
+        
+        $items = [];
+        
+        $from = $token->getProp('from');
+        
+        if ($from) {
+            $prefix = "'".\Floxim\Floxim\Template\Loader::nameToPath($from).DIRECTORY_SEPARATOR."'";
+            $namespace = self::nameToBemNamespace($from);
+        } else {
+            $prefix = 'DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$template_dir';
+            $namespace = $this->getBemNamespace();
+        }
+        
+        foreach ($lines as $l) {
+            if (is_string($l)) {
+                if (preg_match("~^[A-Z_]+$~", $l)) {
+                    $items []= $l;
+                    continue;
+                }
+                if (in_array($l[0], ['@','/'])) {
+                    $items []= "'". fx::path()->abs($l)."'";
+                    continue;
+                }
+                $parts = preg_split("~\s+from\s+~", $l);
+                if (count($parts) === 1) {
+                    $items []= $prefix.".'".$l."'";
+                    continue;
+                }
+                $line_from = trim($parts[1]);
+                $items []= "'".\Floxim\Floxim\Template\Loader::nameToPath($line_from).'/'.$parts[0]."'";
+            } else {
+                $expr = [];
+                foreach ($l as $lp) {
+                    $expr []= is_string($lp) ? "'".$lp."'" : $lp[0];
+                }
+                $items []= $prefix.".".join(".", $expr);
+            }
+        }
+        
+        
+        $type = $token->name;
+        
+        $bundle_params = [];
+        if ($type === 'css' && $namespace) {
+            $bundle_params['namespace'] = $namespace;
+        }
+        
+        if ( ($to = $token->getProp('to')) ) {
+            $bundle_params['to'] = $to;
+        }
+        
+        $bundle_params = var_export(
+            $bundle_params, 
+            true
+        );
+        
+        
+        $code = "fx::page()->add".ucfirst($type)."(\n";
+        $code .= "[\n".join(",\n", $items)."\n],\n";
+        $code .= $bundle_params."\n";
+        $code .= ");\n";
+        
+        return $code;
+
+        fx::debug($lines, $items, $code);
+        
+        return '';
         $code = "ob_start();\n";
         // add extra \n to each text child
         foreach ($token->getChildren() as $child) {
@@ -2009,19 +2105,20 @@ class Compiler
             true
         );
         
+        $type = ucfirst($token->name);
         //$bundle_params = var_export(array('name' => $token->getProp('bundle'), 'namespace' => $this->getBemNamespace()), true);
-        $code .= 'fx::page()->addCssBundleFromString(ob_get_clean(), '.$dir.', '.$bundle_params.');'."\n";
+        $code .= 'fx::page()->add'.$type.'BundleFromString(ob_get_clean(), '.$dir.', '.$bundle_params.');'."\n";
         return $code;
     }
 
     protected function tokenHeadfileToCode($token, $type)
     {
         $code = "<?php\n";
-        if (!$token->getProp('bundle') && $type === 'css') {
+        if (!$token->getProp('bundle')) {
             $token->setProp('bundle', 'auto');
         }
         if ( ($token->getProp('bundle') && $token->getProp('bundle') !== 'false') || $token->getProp('extend')) {
-            $code .= $this->cssBundleToCode($token);
+            $code .= $this->bundleToCode($token);
         } else {
             $media = $token->getProp('media');
             if ($media) {

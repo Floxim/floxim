@@ -9,17 +9,26 @@ class Fonts {
     
     public static function getLoaderJS($fonts)
     {
-        static $is_loaded = false;
+        if (fx::isAdmin()) {
+            $fonts []= 'Roboto';
+        }
         if (count($fonts) === 0) {
             return '';
         }
         ob_start();
+        /*
         if (!$is_loaded) {
             $is_loaded = true;
             ?>
             <script src="<?= fx::path()->http('@floxim_js') ?>/webfont.js"></script>
             <?php
         }
+         * 
+         */
+        fx::page()->addJs([fx::path('@floxim_js/webfont.js')]);
+        
+        $fonts = array_unique($fonts);
+        
         $avail_google = self::getGoogleFonts();
         $google = [];
         foreach ($fonts as $font) {
@@ -32,7 +41,7 @@ class Fonts {
         $theme_fonts = fx::env('theme')->getThemeFonts();
         foreach ($theme_fonts as $theme_font) {
             if (isset($theme_font['css'])) {
-                fx::page()->addCssBundle(array($theme_font['css']));
+                fx::page()->addCss(array($theme_font['css']));
             }
         }
         ?>

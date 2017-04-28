@@ -112,7 +112,7 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
             }
         }
         $res = array(
-            'declarations' => $declarations,
+            //'declarations' => $declarations,
             'styles' => $styles,
             'blocks' => $blocks
         );

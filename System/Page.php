@@ -10,7 +10,7 @@ class Page
     
     protected $all_css;
     
-    protected $files_js;
+    protected $files_js = [];
     
     protected $files_css = array();
 
@@ -79,16 +79,6 @@ class Page
         $this->getBundleManager()->addToBundle($files, $bundle_keyword);
     }
 
-    public function addFile($file)
-    {
-        if (preg_match("~\.(?:less|css)$~", $file)) {
-            return $this->addCssFile($file);
-        }
-        if (substr($file, strlen($file) - 3) == '.js') {
-            return $this->addJsFile($file);
-        }
-    }
-
     protected $inline_styles = array();
 
     public function addInlineStyles($styles, $selector = null)
@@ -133,52 +123,6 @@ class Page
         return $res;
     }
 
-    public function addCssFile($file, $params = array())
-    {
-        if (preg_match("~\.less$~", $file)) {
-
-            $file_hash = strtolower(trim(preg_replace("~[^a-z0-9_-]+~i", '_', fx::path()->http($file)), '_'));
-
-            $target_path = fx::path()->http('@files/asset_cache/' . $file_hash . '.css');
-            $full_target_path = fx::path()->abs($target_path);
-            $full_source_path = fx::path()->abs($file);
-
-
-            if (!file_exists($full_source_path)) {
-                return;
-            }
-
-            if (!file_exists($full_target_path) || filemtime($full_source_path) > filemtime($full_target_path)) {
-                
-                $http_base = fx::path()->http(preg_replace("~[^/]+$~", '', $file));
-
-                $less = $this->getLessCompiler();
-                $less->setImportDir(dirname($full_source_path));
-
-                $file_content = file_get_contents($full_source_path);
-                $file_content = $this->cssUrlReplace($file_content, $http_base);
-                
-                $file_content = $less->compile($file_content);
-                fx::files()->writefile($full_target_path, $file_content);
-            }
-            if (count($params) > 0) {
-                $file = array_merge($params, array('file' => $target_path));
-            } else {
-                $file = $target_path;
-            }
-            $this->files_css[] = $file;
-            $this->all_css[] = $target_path;
-            return;
-        }
-        if (!preg_match("~^https?://~", $file)) {
-            $file = fx::path()->http($file);
-        }
-        if (count($params) > 0) {
-            $file = array_merge($params, array('file' => $file));
-        }
-        $this->files_css[] = $file;
-    }
-
     public function clearFiles()
     {
         $this->files_css = array();
@@ -186,75 +130,49 @@ class Page
         $this->all_js = array();
     }
     
-    public function addCssBundleFromString($string, $template_dir, $params = array())
+    public function getCssBundle($name)
     {
-        $lines = explode("\n", $string);
-        $files = array();
-        if (is_string($template_dir)) {
-            $template_dir = array($template_dir);
+        static $added = [];
+        $bundle = fx::assets('css', $name);
+        if (!in_array($name, $added)) {
+            $this->files_css []= $bundle;
+            $added[]= $name;
         }
-        foreach ($lines as $l) {
-            $l = trim($l);
-            if (empty($l)) {
-                continue;
-            }
-            if (preg_match("~^https?://~i", $l)) {
-                $this->addCssFile($l);
-                continue;
-            }
-            if (!preg_match("~^(/|https?://)~", $l)) {
-                foreach ($template_dir as $c_dir) {
-                    $files[]= fx::path()->abs($c_dir.$l);
-                }
-            } else {
-                $files []= $l;
-            }
-        }
-        if ($params['name'] === 'auto') {
-            $params['name'] = md5(join(',', $files));
-        }
-        $bundle = fx::assets('css', $params['name'], array('namespace' => $params['namespace']));
-        $bundle->push($files);
-        $main_bundle = $this->getDefaultCssBundle();
-        $main_bundle->push( array($bundle) );
-    }
-
-    public function addCssBundle($files, $params = array())
-    {
-        if (!isset($params['name'])) {
-            $params['name'] = md5(join($files));
-        }
-        $bundle_name = $params['name'];
-        if ($bundle_name === 'auto') {
-            $bundle_name = fx::env('css_bundle');
-        }
-        
-        if ($bundle_name === 'none') {
-            return;
-        }
-        
-        $manager = $this->getBundleManager();
-        $bundle = $manager->getBundle('css', $bundle_name);
-        $bundle->push($files);
-        if (!in_array($bundle, $this->files_css)) {
-            $this->files_css[]= $bundle;
-        }
-    }
-
-    protected function lessImportUrlReplace($file_contents, $http_base) 
-    {
-        $http_base = preg_replace("~^/~", '', $http_base);
-        $res = preg_replace_callback(
-            "~@import (.+?);~", 
-            function ($matches) use ($http_base) {
-                $file = trim($matches[1], '"\'');
-                return '@import "'.$http_base.$file.'";';
-            },
-            $file_contents
-        );
-        return $res;
+        return $bundle;
     }
     
+    public function getJsBundle($name)
+    {
+        static $added = [];
+        $bundle = fx::assets('js', $name);
+        if (!in_array($name, $added)) {
+            $this->files_js []= $bundle;
+            $added[]= $name;
+        }
+        return $bundle;
+    }
+    
+    public function addCss($files, $params = [])
+    {
+        $to = isset($params['to']) ? $params['to'] : 'default';
+        $namespace = isset($params['namespace']) ? $params['namespace'] : '';
+        
+        $name = isset($params['name']) ? $params['name'] : md5(join(':',$files));
+        
+        $bundle = fx::assets('css', $name, ['namespace' => $namespace]);
+        $bundle->push($files);
+        
+        $target = $this->getCssBundle($to);
+        $target->push([$bundle]);
+    }
+    
+    public function addJs($files, $params = [])
+    {
+        $to = isset($params['to']) ? $params['to'] : 'default';
+        $target = $this->getJsBundle($to);
+        $target->push($files);
+    }
+
     protected function cssUrlReplace($file, $http_base)
     {
         $file = preg_replace_callback(
@@ -274,95 +192,7 @@ class Page
     // both simple scripts & scripts from bundles
     protected $all_js = array();
 
-    public function addJsFile($file)
-    {
-        if (empty($file)) {
-            return;
-        }
-        if (!preg_match("~^https?://~", $file)) {
-            $file = fx::path()->http($file);
-        }
-        if (!in_array($file, $this->all_js)) {
-            $this->files_js[] = $file;
-            $this->all_js[] = $file;
-        }
-    }
-
-    protected $_file_aliases = array();
-
-    public function hasFileAlias($alias, $type, $set = null)
-    {
-        $key = $alias . '_' . $type;
-        if ($set === null) {
-            return isset($this->_file_aliases[$key]) && $this->_file_aliases[$key];
-        }
-        $this->_file_aliases[$key] = (bool)$set;
-    }
-
-    public function addJsBundle($files, $params = array())
-    {
-        // for dev mode
-        if (fx::config('dev.on')) {
-            foreach ($files as $f) {
-                $this->addJsFile($f);
-            }
-            return;
-        }
-        if (!isset($params['name'])) {
-            $params['name'] = md5(join($files));
-        }
-        $params['name'] .= '.js.gz';
-
-        $http_path = fx::path()->http('@files/asset_cache/' . $params['name']);
-        $full_path = fx::path()->abs($http_path);
-
-        $http_files = array();
-        foreach ($files as $f) {
-            if (!empty($f)) {
-                $http_files[] = fx::path()->http($f);
-            }
-        }
-        $this->all_js = array_merge($this->all_js, $http_files);
-
-        if (!file_exists($full_path)) {
-            $bundle_content = '';
-            foreach ($files as $i => $f) {
-                if (!preg_match("~^http://~i", $f)) {
-                    $f = fx::path()->abs($f);
-                }
-                $file_content = file_get_contents($f);
-                if (!preg_match("~\.min~", $f)) {
-                    $minified = \JSMin::minify($file_content);
-                    $file_content = $minified;
-                }
-                $bundle_content .= $file_content . ";\n";
-            }
-
-            $plain_path = preg_replace("~\.js\.gz$~", ".js", $full_path);
-            fx::files()->writefile($plain_path, $bundle_content);
-
-            $fh = gzopen($full_path, 'wb5');
-            gzwrite($fh, $bundle_content);
-            gzclose($fh);
-
-        }
-        if (!$this->acceptGzip()) {
-            $http_path = preg_replace("~\.js\.gz$~", ".js", $http_path);
-        }
-        $this->files_js[] = $http_path;
-    }
-
-    protected function acceptGzip()
-    {
-        if (!isset($_SERVER['HTTP_ACCEPT_ENCODING'])) {
-            return false;
-        }
-        if (!fx::config('cache.gzip_bundles')) {
-            return false;
-        }
-        return in_array('gzip', explode(",", $_SERVER['HTTP_ACCEPT_ENCODING']));
-    }
-
+    
     public function addDataJs($keyword, $values)
     {
         $this->_data_js[$keyword] = $values;
@@ -383,12 +213,6 @@ class Page
         return $this->_js_text;
     }
 
-    public function setNumbers($block_number = 1, $field_number = 1)
-    {
-        $this->block_number = intval($block_number);
-        $this->field_number = intval($field_number);
-    }
-
     protected $after_body = array();
     public function setAfterBody($txt)
     {
@@ -407,10 +231,20 @@ class Page
                 $css_res []= $set;
             }
         }
+        
+        $js_res = [];
+        
+        foreach ($this->files_js as $f) {
+            if ($f instanceof \Floxim\Floxim\Asset\JsBundle) {
+                $f->save();
+                
+            }
+        }
+        
         $response = array(
             'format' => 'fx-response',
             'response' => $result,
-            'js' => $this->files_js,
+            //'js' => $this->files_js,
             'css' => $css_res,
             'request' => $_POST
         );
@@ -480,9 +314,7 @@ class Page
         
         $res = \Floxim\Floxim\Template\Loader::nameToPath($namespace).DIRECTORY_SEPARATOR.$last_name.'_style_filter.js';
         
-        $this->addJsFile($res);
-        
-        //fx::log('asf', $block, $res, file_exists($res));
+        $this->addJs([$res], ['to' => 'admin']);
         $added[$block] = true;
     }
     
@@ -575,9 +407,15 @@ class Page
         }
         
         if ($this->files_js) {
-            $files_js = array_unique($this->files_js);
+            //$files_js = array_unique($this->files_js);
+            
+            $files_js = $this->files_js;
 
             foreach ($files_js as $v) {
+                if ($v instanceof \Floxim\Floxim\Asset\Bundle) {
+                    $v->save();
+                    $v = fx::path()->http($v->getFilePath());
+                }
                 $r .= '<script type="text/javascript" src="' . $v . '" ></script>' . PHP_EOL;
             }
         }
@@ -666,7 +504,7 @@ class Page
             $r .= '<meta name="keywords" content="'
                 . strip_tags($this->metatags['seo_keywords']) . '" />' . PHP_EOL;
         }
-        $r .= '<base href="'.(is_null($this->base_url) ? FX_BASE_URL : $this->base_url).'/" />';
+        // $r .= '<base href="'.(is_null($this->base_url) ? FX_BASE_URL : $this->base_url).'/" />';
         
         $this->setAfterBody( 
             \Floxim\Floxim\Asset\Fonts::getLoaderJS(

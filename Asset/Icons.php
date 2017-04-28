@@ -28,7 +28,9 @@ class Icons extends \Floxim\Floxim\Asset\Bundle {
         );
         
         if (!isset($added_styles[$set])) {
-            fx::page()->addCssFile($set_files[$set]);
+            if (isset($set_files[$set])) {
+                fx::page()->addCss([$set_files[$set]]);
+            }
             $added_styles[$set] = true;
         }
         

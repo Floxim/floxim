@@ -179,6 +179,7 @@ abstract class Bundle {
             if (!$this->has_new_files) {
                 $this->has_new_files = true;
                 $this->is_fresh = false;
+                fx::log('pushd new', $file);
             }
             $this->files[] = $file;
         }

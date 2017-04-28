@@ -367,7 +367,7 @@ class Debug
      */
     public function log()
     {
-        if (!fx::config('dev.on') && (!defined("FX_ALLOW_DEBUG") || !FX_ALLOW_DEBUG)) {
+        if (!fx::config('dev.on') && !fx::config('dev.log') && (!defined("FX_ALLOW_DEBUG") || !FX_ALLOW_DEBUG)) {
             return;
         }
         if ($this->disabled) {
@@ -406,10 +406,16 @@ class Debug
     
     public function addAssets()
     {
-        fx::page()->addCssFile(fx::path('@floxim/Admin/style/debug.less'));
-        fx::page()->addJsFile(FX_JQUERY_PATH);
-        fx::page()->addJsFile(fx::path('@floxim/Admin/js/fxj.js'));
-        fx::page()->addJsFile(fx::path('@floxim/Admin/js/debug.js'));
+        fx::page()->addCss([fx::path('@floxim/Admin/style/debug.less')],['to'=>'admin']);
+        
+        fx::page()->addJs(
+            [
+                FX_JQUERY_PATH,
+                fx::path('@floxim/Admin/js/fxj.js'),
+                fx::path('@floxim/Admin/js/debug.js')
+            ],
+            ['to' => 'admin']
+        );
         register_shutdown_function(function () {
             if (!fx::env()->get('complete_ok') && !fx::env('ajax')) {
                 echo fx::page()->getAssetsCode();
