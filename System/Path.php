@@ -7,22 +7,53 @@ class Path
 
     protected $root = '';
     protected $ds_rex = null;
-    protected $root_rex = null;
-
+    
     public function __construct()
     {
-        $this->root = DOCUMENT_ROOT;
+        //$this->root = defined("APP_ROOT") ? APP_ROOT : DOCUMENT_ROOT;
         $this->ds_rex = "[" . preg_quote('\/') . "]";
-        $this->root_rex = preg_quote($this->root);
-        $this->root_len = mb_strlen($this->root);
+        $this->registerHttpResolver(
+            DOCUMENT_ROOT, 
+            function($path, $prefix, $tail) {
+                return $tail;
+            }
+        );
+        $this->registerAbsResolver(
+            '/', 
+            function($path, $prefix, $tail) {
+                return DOCUMENT_ROOT.'/'.$tail;
+            }
+        );
+        if (defined("APP_ROOT")) {
+            $this->registerAbsResolver(
+                APP_ROOT, 
+                function($path, $prefix, $tail) {
+                    return $path;
+                }    
+            );
+        } else {
+            $this->registerAbsResolver(
+                DOCUMENT_ROOT, 
+                function($path, $prefix, $tail) {
+                    return $path;
+                }    
+            );
+        }
     }
     
     public function removeBase($url) {
+        return $url;
         $url = preg_replace('~^https?://[^/]+~', '', $url);
         return mb_substr($url, mb_strlen(FX_BASE_URL));
     }
 
     protected $registry = array();
+    
+    public function aliasExists($alias) 
+    {
+        $alias = preg_replace("~^@~", '', $alias);
+        return isset($this->registry[$alias]);
+    }
 
     public function register($key, $path)
     {
@@ -36,7 +67,8 @@ class Path
             $this->registry[$key] = $path;
         }
         
-        $this->registry = array_map(array($this, "http"), $this->registry);
+        //$this->registry = array_map(array($this, "http"), $this->registry);
+        $this->registry = array_map(array($this, "resolve"), $this->registry);
     }
 
     /**
@@ -52,11 +84,19 @@ class Path
         
         $parts = preg_split("~^(@)([^\\\\/]+)~", $path, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
         
-        if (!isset($this->registry[$parts[1]])) {
-            throw new \Exception('Alias @'.$parts[1].' is not registered');
+        $alias = $parts[1];
+        
+        if (!isset($this->registry[$alias])) {
+            throw new \Exception('Alias @'.$alias.' is not registered');
         }
-        $res = $this->registry[$parts[1]]. (isset($parts[2]) ? $parts[2] : '');
-        $res = preg_replace("~/{2,}~", '/', $res);
+        
+        $alias_value = $this->registry[$alias];
+        if (is_array($alias_value)) {
+            $alias_value  = fx::util()->circle($this->registry[$alias]);
+        }
+        
+        $res = $alias_value. (isset($parts[2]) ? $parts[2] : '');
+        //$res = preg_replace("~/{2,}~", '/', $res);
         return $res;
     }
 
@@ -100,9 +140,19 @@ class Path
     
     protected function processAbs($value)
     {
-        $value = str_replace("/", DIRECTORY_SEPARATOR, trim($value));
-        if (mb_substr($value, 0, $this->root_len) !== $this->root) {
-            $value = $this->root . DIRECTORY_SEPARATOR . trim($value, DIRECTORY_SEPARATOR);
+        $value = preg_replace("~^(http://|https://|//)[^/]+~", '', $value);
+        
+        foreach ($this->abs_resolvers as $resolver) {
+            if (mb_substr($value, 0, $resolver['length']) === $resolver['prefix']) {
+                $tail = mb_substr($value, $resolver['length']);
+                $value = call_user_func(
+                    $resolver['resolver'],
+                    $value,
+                    $resolver['prefix'],
+                    $tail
+                );
+                break;
+            }
         }
         
         $value = preg_replace("~" . preg_quote(DIRECTORY_SEPARATOR) . "+~", DIRECTORY_SEPARATOR, $value);
@@ -111,11 +161,59 @@ class Path
         return $value;
     }
     
+    protected $abs_resolvers = [];
+    
+    public function registerAbsResolver($prefix, $resolver)
+    {
+        $this->abs_resolvers[]= [
+            'prefix' => $prefix,
+            'length' => mb_strlen($prefix),
+            'resolver' => $resolver
+        ];
+        if (count($this->abs_resolvers) > 1) {
+            uasort(
+                $this->abs_resolvers, 
+                function($a, $b) {
+                    return $b['length'] - $a['length'];
+                }
+            );
+        }
+    }
+    
+    protected $http_resolvers = [];
+    
+    public function registerHttpResolver($prefix, $resolver)
+    {
+        $this->http_resolvers[]= [
+            'prefix' => $prefix,
+            'length' => mb_strlen($prefix),
+            'resolver' => $resolver
+        ];
+        if (count($this->http_resolvers) > 1) {
+            uasort(
+                $this->http_resolvers, 
+                function($a, $b) {
+                    return $b['length'] - $a['length'];
+                }
+            );
+        }
+    }
+    
     protected function processHttp($value)
     {
         $value = preg_replace("~^https?://[^/]+~", '', $value);
-        if (mb_substr($value, 0, $this->root_len) === $this->root) {
-            $value = mb_substr($value, $this->root_len);
+        
+        foreach ($this->http_resolvers as $resolver) {
+            if (mb_substr($value, 0, $resolver['length']) === $resolver['prefix']) {
+                $tail = mb_substr($value, $resolver['length']);
+                $value = call_user_func(
+                    $resolver['resolver'],
+                    $value,
+                    $resolver['prefix'],
+                    $tail
+                );
+                break;
+            }
         }
         
         if (DIRECTORY_SEPARATOR !== '/') {
@@ -125,19 +223,38 @@ class Path
         if (!preg_match("~^/~", $value)) {
             $value = '/' . $value;
         }
-        $value = preg_replace("~/+~", '/', $value);
+        //$value = preg_replace("~/+~", '/', $value);
         return $value;
     }
+    
+    public function trimHost($path)
+    {
+        return preg_replace("~^(http://|https://|//)[^/]+~", '', $path);
+    }
 
-    public function http($path)
+    public function http($path, $trim_host = false)
     {
         if (is_array($path)) {
             $path = array_map(array($this, "resolve"), $path);
             $path = array_map(array($this, 'processHttp'), $path);
+            if ($trim_host) {
+                $path = array_map(array($this, 'trimHost'), $path);
+            }
         } else {
             $path = $this->processHttp( $this->resolve($path) );
+            if ($trim_host) {
+                $path = $this->trimHost($path); 
+            }
         }
         return $path;
+    }
+    
+    public function storable($abs) 
+    {
+        if ( ($closure = fx::config('content_files.store_path_closure'))) {
+            return $closure($abs);
+        }
+        return $this->http($abs, true);
     }
 
     public function exists($path)

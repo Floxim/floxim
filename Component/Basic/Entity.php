@@ -62,7 +62,7 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
             if (!is_string($new_val) || !preg_match("~^https?://~", $new_val)) {
                 continue;
             }
-            $file = fx::files()->saveRemoteFile($new_val, 'upload');
+            $file = fx::files()->saveRemoteFile($new_val, fx::path('@upload'));
             if (!$file) {
                 continue;
             }
@@ -287,6 +287,13 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
                     $cf->getJsField($this)
                 );
             }
+            if ($cf['type'] === 'image' || $cf['type'] === 'file') {
+                $value = $this[$field_keyword];
+                $http = fx::path()->http($value);
+                if ($value && $http !== $value) {
+                    $field_meta['http'] = $http;
+                }
+            }
         }
         return $field_meta;
     }
@@ -384,7 +391,7 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
             $l->delete();
         }
     }
-    
+    /*
     protected function afterUpdate() {
         parent::afterUpdate();
         // modified image fields
@@ -402,6 +409,7 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
             }
         }
     }
+    */
     
     public function addTemplateRecordMeta($html, $collection, $index, $is_subroot)
     {
@@ -687,10 +695,139 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
         if ($rel_priority === false) {
             return;
         }
+        
+        // 1 2 3 |4| 5 6 7 < 8 9    forward, before 8
+        // 1 2 3  5  6 7 4   8 9
+        
+        // 1 2 3 |4| 5 6 7 8 > 9    forward, after 8
+        // 1 2 3  5  6 7 8 4   9
+        
+        // > 1 2 3 |4| 5 6 7 8 9    backward, before 1
+        //   4 1 2  3  5 6 7 8 9
+        
+        // 1 < 2 3 |4| 5 6 7 8 9    backward, after 1
+        // 1   4 2  3  5 6 7 8 9
+        
+        $old_priority = $this['priority'];
+        
+        $dir = !$this['id'] ? 'new' : ($old_priority < $rel_priority ? 'forward' : 'backward');
+        
+        $modifier = ($dir === 'backward' || $dir === 'new') ? '+' : '-';
+        
+        switch ($dir.':'.$rel_dir) {
+            case 'forward:before':
+                $this['priority'] = $rel_priority - 1;
+                $modified = [' > '.$old_priority, ' < '.$rel_priority];
+                break;
+            case 'forward:after':
+                $this['priority'] = $rel_priority;
+                $modified = [' > '.$old_priority, ' <= '.$rel_priority];
+                break;
+            case 'backward:before':
+                $this['priority'] = $rel_priority;
+                $modified = [' >= '.$rel_priority, ' < '.$old_priority];
+                break;
+            case 'backward:after':
+                $this['priority'] = $rel_priority + 1;
+                $modified = [' > '.$rel_priority, ' < '.$old_priority];
+                break;
+            case 'new:before':
+                $this['priority'] = $rel_priority;
+                $modified = [' >= '.$rel_priority];
+                break;
+            case 'new:after':
+                $this['priority'] = $rel_priority + 1;
+                $modified = [' > '.$rel_priority];
+                break;
+        }
+        
+        $q_params = array();
+        
+        $q = 'update {{'.$table.'}} ' .
+            'set priority = ( IF(priority IS NULL, 0, priority %s 1) ) ' .
+            'where ';
+        $q_params []= $modifier;
+        
+        if ($this->hasField('parent_id') && isset($this['parent_id'])) {
+            $q .= 'parent_id = %d and ';
+            $q_params []= $this['parent_id'];
+        }
+        
+        if ($this->hasField('infoblock_id') && isset($this['infoblock_id'])) {
+            $q .= 'infoblock_id = %d and ';
+            $q_params []= $this['infoblock_id'];
+        }
+
+        foreach ($modified as $mnum => $mval) {
+            $q .= 'priority %s ';
+            $q_params []= $mval;
+            if ($mnum !== count($modified) - 1) {
+                $q .= ' and ';
+            }
+        }
+        
+        if ($this['id']) {
+            $q .= ' and id != %d';
+            $q_params []= $this['id'];
+        }
+        
+        
+        array_unshift($q_params, $q);
+        /*
+        fx::log(
+            $this['id'].' goes '.$this['priority'],
+            'old: '.$old_priority, 
+            'rel: '.$rel_priority, 
+            $dir.':'.$rel_dir,
+            fx::db()->prepareQuery($q_params) 
+        );
+         * 
+         */
+        fx::db()->query($q_params);
+    }
+    
+    public function _handleMove()
+    {
+        if (!$this->hasField('priority')) {
+            return;
+        }
+        $rel_item_id = null;
+        
+        $finder = $this->getSiblingFinder();
+        
+        $table = current($finder->getTables());
+        
+        if (isset($this['__move_before'])) {
+            $rel_item_id = $this['__move_before'];
+            $rel_dir = 'before';
+        } elseif (isset($this['__move_after'])) {
+            $rel_item_id = $this['__move_after'];
+            $rel_dir = 'after';
+        }
+        
+        if (!$rel_item_id) {
+            return;
+        }
+        
+        $rel_item = $finder->where('id', $rel_item_id)->one();
+        if (!$rel_item) {
+            return;
+        }
+        $rel_priority = fx::db()->getVar(array(
+            'select priority from {{'.$table.'}} where id = %d',
+            $rel_item_id
+        ));
+        
+        if ($rel_priority === false) {
+            return;
+        }
         // 1 2 3 |4| 5 6 7 (8) 9 10
         $old_priority = $this['priority'];
         $this['priority'] = $rel_dir == 'before' ? $rel_priority : $rel_priority + 1;
         $q_params = array();
+        
+        
+        
         $q = 'update {{'.$table.'}} ' .
             'set priority = ( IF(priority IS NULL, 0, priority + 1) ) ' .
             'where ';
@@ -717,7 +854,6 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
             $q_params [] = $old_priority;
         }
         array_unshift($q_params, $q);
-
         fx::db()->query($q_params);
     }
     

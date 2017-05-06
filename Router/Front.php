@@ -77,23 +77,14 @@ class Front extends Base
         
         $theme_id = fx::env('theme_id');
         $path = fx::env('path');
-        /*
-        if (is_null($page_id)) {
-            $page_id = fx::env('page_id');
-        }
-        $cache_key = $page_id . '.' . $theme_id;
-        if (isset($this->_ib_cache[$cache_key])) {
-            return $this->_ib_cache[$cache_key];
-        }
         
-        $c_page = $page_id === fx::env('page_id') ? fx::env('page') : fx::data('floxim.main.page', $page_id);
-        */
         $infoblocks = fx::data('infoblock')
-            //->getForPage($c_page)
             ->getForPath($path)
             ->find(function ($ib) {
                 return !$ib->isLayout();
             });
+            
+        
         
         $areas = fx::collection();
         $visual = fx::data('infoblock_visual')->
@@ -113,11 +104,6 @@ class Front extends Base
             } elseif ($ib->getVisual()->get('is_stub')) {
                 fx::log('suitable?!!', $ib);
                 throw new \Exception('No more suitable');
-                /*
-                $suitable = new Template\Suitable();
-                $suitable->suit($infoblocks, $layout_id);
-                 * 
-                 */
             }
 
             if (($visual_area = $ib->getPropInherited('visual.area'))) {
@@ -130,7 +116,6 @@ class Front extends Base
             }
             $areas[$c_area][] = $ib;
         }
-        //$this->_ib_cache[$cache_key] = $areas;
         return $areas;
     }
     

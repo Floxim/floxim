@@ -510,6 +510,11 @@ class Files
         }
 
         $result = 0;
+        
+        $event_res = fx::trigger('before_unlink', ['file' => $local_filename]);
+        if ($event_res === false) {
+            return 0;
+        }
 
         if (is_dir($local_filename)) {
 
@@ -929,10 +934,14 @@ class Files
      * @todo: we should refactor this code to make it safer
      * it's better to fetch and check headers before getting file contents
      */
-    public function saveRemoteFile($file, $dir = 'content', $name = null)
+    public function saveRemoteFile($file, $dir = null, $name = null)
     {
         if (!preg_match("~^https?://~", $file)) {
             return;
+        }
+        
+        if (is_null($dir)) {
+            $dir = fx::path('@upload');
         }
         
         $file_data = fx::http()->get($file, array(), array('timeout' => 10));
@@ -958,7 +967,7 @@ class Files
         }
         
         $put_file = $this->getPutFilename($dir, $file_name);
-        $full_path = fx::path('@files/' . $dir . '/' . $put_file);
+        $full_path = fx::path( $dir . '/' . $put_file );
         $this->writefile($full_path, $file_data);
         return $full_path;
     }
@@ -984,8 +993,11 @@ class Files
         return $result;
     }
 
-    public function saveFile($file, $dir = '', $name = null)
+    public function saveFile($file, $dir = null, $name = null)
     {
+        if (is_null($dir)) {
+            $dir = fx::path('@upload');
+        }
         // normal $_FILES
         if (is_array($file)) {
             $filename = $file['name'];
@@ -996,8 +1008,8 @@ class Files
                 return;
             }
             
-            $full_path = fx::path('@files/' . $dir . '/' . $put_file);
-            $this->mkdir(fx::path('@files/' . $dir));
+            $full_path = fx::path($dir . '/' . $put_file);
+            $this->mkdir( fx::path($dir) );
             $res = move_uploaded_file($file['tmp_name'], $full_path);
             if (!$res) {
                 return;
@@ -1030,13 +1042,13 @@ class Files
         $name = trim($name, "_");
         $name = preg_replace("~_+~", "_", $name);
 
-        $path = fx::path('@files/' . $dir . '/' . $name);
+        $path = fx::path( $dir . '/' . $name);
 
         $try = 0;
         while (fx::path()->exists($path)) {
             $c_name = preg_replace("~(\.[^\.]+)$~", "_" . $try . "\$1", $name);
             $try++;
-            $path = fx::path('@files/' . $dir . '/' . $c_name);
+            $path = fx::path( $dir . '/' . $c_name);
         }
         return fx::path()->fileName($path);
     }

@@ -52,4 +52,13 @@ class Manager {
             return preg_match("~\.(less|css)$~", $f) ? 'css' : 'js';
         }
     }
+    
+    public function deleteAll()
+    {
+        foreach ($this->bundles as $type => $bundles) {
+            foreach ($bundles as $bundle) {
+                $bundle->delete();
+            }
+        }
+    }
 }

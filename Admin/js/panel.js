@@ -55,9 +55,10 @@
 
         this.init_top_bar = function(params) {
             var $top_bar = $('<div class="fx-top-panel"></div>');
-            $top_bar.css({height:'1px', 'visibility':'hidden'}).mod('overflow', null);
+            $top_bar.css({height:'1px', display:'block', 'visibility':'hidden'}); //.mod('overflow', null);
             $top_bar.show();
-            $top_bar.mod('style', params.current_panel_style);
+            //$top_bar.mod('style', params.current_panel_style);
+            $top_bar.addClass('fx-top-panel_style_'+params.current_panel_style);
             $('#fx_admin_control').append($top_bar);
             params.$container = $top_bar;
             
@@ -488,7 +489,11 @@
             }
             
             if (panel_height > 0) {
-                $top_bar.mod('overflow', form_height <= panel_height ? 'hidden' : null);
+                // @fixme!
+                
+                var overflow_class = 'fx-top-panel_overflow_hidden';
+                $top_bar.toggleClass(overflow_class, form_height <= panel_height)
+                //$top_bar.mod('overflow', form_height <= panel_height ? 'hidden' : null);
             }
             
             $form.css({'box-sizing':'border-box', 'width': '101%'});

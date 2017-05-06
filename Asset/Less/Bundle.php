@@ -27,7 +27,7 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
     public function getCommonLessFiles()
     {
         return $this->keyword === 'admin' ? array() : array(
-            fx::path('/theme/Floxim/Basic/vars.less')
+            fx::path('@theme/Floxim/Basic/vars.less')
         );
     }
     
@@ -35,7 +35,7 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
     {
         $options = array_merge(
             array(
-                'cache_dir' => fx::path('@files/less_cache'),
+                'cache_dir' => fx::path( fx::config('less.cache_dir') ),
                 'compress' => fx::config('dev.css.minify'),
                 'sourceMap' => fx::config('dev.css.source_map')
             ),
@@ -67,12 +67,17 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
         }
         
         foreach ($files as $f) {
+            if (self::getSubBundle($f)) {
+                continue;
+            }
             if (is_array($f) && isset($f['source'])) {
                 $parser->parse($f['source']);
             } else {
                 $dir = fx::path()->http(dirname($f));
                 if (file_exists($f)) {
                     $parser->parseFile($f, $dir);
+                } else {
+                    //fx::log('no file', $f, $this);
                 }
             }
         }
@@ -98,7 +103,7 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
                 } catch (\Exception $e) {
                     fx::log('adm output error', $sub_bundle, $e);
                 }
-                //$res .= $sub_bundle->getAdminOutput();
+                
                 if (!isset($declarations[$keyword])) {
                     $declarations[$keyword] = $sub_bundle->getDeclarationOutput();
                 }
@@ -112,7 +117,7 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
             }
         }
         $res = array(
-            //'declarations' => $declarations,
+            'declarations' => $declarations,
             'styles' => $styles,
             'blocks' => $blocks
         );
@@ -177,7 +182,12 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
                 }
                 $sub_file = $sub_bundle->getFilePath();
                 if (file_exists($sub_file)) {
-                    $res .= file_get_contents($sub_file);
+                    
+                    $sub_contents = file_get_contents($sub_file);
+                    $res .= $sub_contents;
+                    if (mb_strlen($sub_contents) === 0) {
+                        //fx::log('empty sub', $sub_file, $sub_bundle);
+                    }
                 } else {
                     fx::log('no file', $this, $sub_file, $sub_bundle, debug_backtrace());
                 }

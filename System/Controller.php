@@ -101,9 +101,10 @@ class Controller
         $this->forced_params_loaded = true;
         
         $sig = str_replace(":", '__', $this->getSignature());
-        $cache_file = fx::path('@files/cache/ctr_defaults_' . $sig . '.php');
+        $cache_dir = fx::config('controller.cache_dir');
+        $cache_file = fx::path($cache_dir.'/ctr_defaults_' . $sig . '.php');
 
-        if (!fx::path()->exists($cache_file)) {
+        if (!file_exists($cache_file)) {
             $action = fx::util()->camelToUnderscore($this->action);
             $forced = array();
             $cfg = $this->getConfig();

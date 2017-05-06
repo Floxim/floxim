@@ -9,7 +9,7 @@ class File extends Admin
 
     public function uploadSave($input)
     {
-        $path = 'upload';
+        $path = fx::path('@upload');
         $result = fx::files()->saveFile($input['file'], $path);
         if (!$result) {
             $result = array(
@@ -41,6 +41,7 @@ class File extends Admin
         }
         $res['format'] = \Floxim\Floxim\System\Thumb::readConfig($format);
         $res['formatted_value'] = fx::image($file, $format);
+        $res['http'] = fx::path()->http($file);
         return $res;
     }
     

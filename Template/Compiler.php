@@ -2020,7 +2020,7 @@ class Compiler
             $prefix = "'".\Floxim\Floxim\Template\Loader::nameToPath($from).DIRECTORY_SEPARATOR."'";
             $namespace = self::nameToBemNamespace($from);
         } else {
-            $prefix = 'DOCUMENT_ROOT.DIRECTORY_SEPARATOR.$template_dir';
+            $prefix = '$template_dir.DIRECTORY_SEPARATOR';
             $namespace = $this->getBemNamespace();
         }
         
@@ -2074,41 +2074,6 @@ class Compiler
         $code .= ");\n";
         
         return $code;
-
-        fx::debug($lines, $items, $code);
-        
-        return '';
-        $code = "ob_start();\n";
-        // add extra \n to each text child
-        foreach ($token->getChildren() as $child) {
-            if ($child->name == 'code') {
-                $child->setProp('value', "\n ".$child->getProp('value')." \n");
-            } elseif ($child->name == 'var'){
-                $child->setProp('editable', 'false');
-            }
-        }
-        $code .= $this->childrenToCode($token)."\n";
-        
-        if ( ($from = $token->getProp('from')) ) {
-            $dir = "\\Floxim\\Floxim\\Template\\Loader::nameToPath('".$from."').DIRECTORY_SEPARATOR";
-            $namespace = self::nameToBemNamespace($from);
-        } else {
-            $dir = "\$template_dir";
-            $namespace = $this->getBemNamespace();
-        }
-        
-        $bundle_params = var_export(
-            array(
-                'name' => $token->getProp('bundle'), 
-                'namespace' => $namespace
-            ), 
-            true
-        );
-        
-        $type = ucfirst($token->name);
-        //$bundle_params = var_export(array('name' => $token->getProp('bundle'), 'namespace' => $this->getBemNamespace()), true);
-        $code .= 'fx::page()->add'.$type.'BundleFromString(ob_get_clean(), '.$dir.', '.$bundle_params.');'."\n";
-        return $code;
     }
 
     protected function tokenHeadfileToCode($token, $type)
@@ -2117,8 +2082,12 @@ class Compiler
         if (!$token->getProp('bundle')) {
             $token->setProp('bundle', 'auto');
         }
+        $code .= $this->bundleToCode($token);
+        $code .= "\n?>";
+        return $code;
+        /*
         if ( ($token->getProp('bundle') && $token->getProp('bundle') !== 'false') || $token->getProp('extend')) {
-            $code .= $this->bundleToCode($token);
+            
         } else {
             $media = $token->getProp('media');
             if ($media) {
@@ -2164,8 +2133,8 @@ class Compiler
                 }
             }
         }
-        $code .= "\n?>";
-        return $code;
+         * 
+         */
     }
 
     protected function getTokenCode($token, $parent)
@@ -2435,11 +2404,14 @@ class Compiler
         if ($is_preset) {
             $code .= "\$this->context->push(array(), array('transparent' => true));\n";
         }
-            
+        
+        /*
         $template_dir = preg_replace("~[^/]+$~", '', $tpl_props['file']);
         $template_dir = preg_replace("~^".fx::path()->http('@home')."~", '', $template_dir);
-        
-        $code .= "\$template_dir = FX_BASE_URL . '" . $template_dir . "';\n";
+        */
+        $template_dir = dirname($tpl_props['file']);
+        //$code .= "\$template_dir = FX_BASE_URL . '" . $template_dir . "';\n";
+        $code .= "\$template_dir = '".$template_dir."';\n";
         $code .= "\$this->current_template_dir = \$template_dir;\n";
         
         $has_meta_var = strstr($children_code, "\$_is_wrapper_meta");

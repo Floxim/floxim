@@ -507,6 +507,7 @@ fx_edit_in_place.prototype.start = function(meta) {
                 meta,
                 {real_value:{path: meta.real_value || ''}}
             );
+            
             this.add_panel_field(
                 field_meta
             ).on('fx_change_file', function(e) {
@@ -759,6 +760,11 @@ fx_edit_in_place.prototype.add_panel_field = function(meta) {
     if (meta.real_value && meta.type !== 'livesearch') {
         meta.value = meta.real_value;
     }
+    if (meta.type === 'image' || meta.type === 'file') {
+        if (meta.http) {
+            meta.real_value.http = meta.http;
+        }
+    }
     meta = $.extend({}, meta);
 
     if (meta.var_type === 'visual') {
@@ -802,7 +808,7 @@ fx_edit_in_place.prototype.add_panel_field = function(meta) {
         $panel.show();
     }
 
-
+    
     var $field_node = $fx_form.draw_field(meta, $field_container);
     $field_node.data('meta', meta);
     this.panel_fields.push($field_node);

@@ -50,6 +50,7 @@ class Page
         return fx::assets();
     }
     
+    /*
     public function getDefaultCssBundle()
     {
         static $bundle_added = false;
@@ -61,7 +62,7 @@ class Page
         }
         return $bundle;
     }
-    
+    */
     public function getTempCssBundle()
     {
         static $bundle_added = false;
@@ -136,6 +137,7 @@ class Page
         $bundle = fx::assets('css', $name);
         if (!in_array($name, $added)) {
             $this->files_css []= $bundle;
+            $bundle->collect_pushed_files = true;
             $added[]= $name;
         }
         return $bundle;
@@ -328,7 +330,7 @@ class Page
         
         $bundle_keyword = $block.'_'.$value;
         $bundle = fx::assets('style', $bundle_keyword, $params);
-        $this->getDefaultCssBundle()->push( array($bundle) );
+        $this->getCssBundle('default')->push( array($bundle) );
         
         if ( $bundle_is_temp ) {
             $export_file = $bundle->getTempExportFile();
@@ -340,6 +342,7 @@ class Page
     
     public function getCssFilesFinal() 
     {
+        //fx::log($this->files_css);
         $res = array();
         foreach ($this->files_css as $f) {
             if ($f instanceof \Floxim\Floxim\Asset\Less\Bundle) {
@@ -374,6 +377,7 @@ class Page
     {
         $r = '';
         $files_css = $this->getCssFilesFinal();
+        //fx::log('css', $files_css);
         foreach ($files_css as $file => $file_info) {
             if (isset($file_info['file'])) {
                 $r .= '<link rel="stylesheet" type="text/css" href="' . $file . '" ';
@@ -391,7 +395,9 @@ class Page
                     foreach ($file_info['blocks'] as $block) {
                         $r .= '<style type="text/css"';
                         $r .= ' id="'.$block['style_class'].'"';
-                        $r .= ' data-file="'.$block['file'].'"';
+                        if (isset($block['file'])) {
+                            $r .= ' data-file="'.$block['file'].'"';
+                        }
                         $r .= ' data-filemtime="'.$block['filemtime'].'"';
                         $r .= ' data-declaration="'.$block['declaration_keyword'].'">'."\n";
                         $r .= $block['css'];

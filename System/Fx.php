@@ -75,6 +75,10 @@ class Fx
             }
         }
         if ($db === false) {
+            
+            echo "<pre>";
+            print_r(debug_backtrace());
+            
             throw new \Exception("Database is not available");
         }
         return $db;
@@ -1046,11 +1050,12 @@ class Fx
     
     public static function image($value, $format)
     {
+        //fx::log('fx::image("'.$value.'", "'. $format.'")');
         try {
             $thumber = new Thumb($value, $format);
             $res = $thumber->getResultPath();
         } catch (\Exception $e) {
-            fx::log('img exception', $e->getMessage(), fx::debug()->backtrace(false));
+            fx::log('img exception', func_get_args(), $e->getMessage(), fx::debug()->backtrace(false));
             $res = '';
         }
         return $res;
@@ -1116,6 +1121,18 @@ class Fx
 
     public static function debug($what = null)
     {
+        if (func_num_args() > 0 && fx::config('dev.debug_light')) {
+            echo '<div style="border:1px solid #CCC; padding:5px; margin:15px 0;"> ';
+            echo '<div style="background:#EEE; padding:3px;">'.self::getDebugger()->getBacktraceSource().'</div>';
+            $args = func_get_args();
+            foreach ($args as $n => $arg) {
+                echo '<pre style="'.($n === count($args) - 1 ? '' :  'border-bottom:1px dashed #DDD;').' padding:10px 0;">';
+                echo print_r($arg,1).'</pre>';
+            }
+            echo "</div>";
+            return;
+        }
+        
         if (!fx::config('dev.on') && func_num_args() > 0) {
             return;
         }

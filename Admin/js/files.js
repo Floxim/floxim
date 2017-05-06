@@ -1,4 +1,4 @@
-(function() {
+(function($) {
 
 
 function fc($node, params) {
@@ -194,7 +194,7 @@ function load_cropper($inp) {
 
 function create_cropper($inp, meta) {
     var format = $inp.data('format_modifier'),
-        src = $inp.val(),
+        src = meta.http || $inp.val(),
         parsed_format = meta.format,
         current_crop = meta.current ? meta.current.crop : {},
         aspect_ratio = null,
@@ -404,4 +404,4 @@ function create_cropper($inp, meta) {
     });
 }
 
-})();
+})($fxj);

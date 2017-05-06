@@ -1,4 +1,4 @@
-(function() {
+(function($) {
     
 function less_tweaker(params) {
     $.extend(this, params);
@@ -557,7 +557,7 @@ less_tweaker.edit_style_variant = function(params) {
             }
         }
     );
-}
+};
 
 less_tweaker.init_style_select = function($monosearch) {
     var ls = $monosearch.data('livesearch');
@@ -599,7 +599,7 @@ less_tweaker.init_style_select = function($monosearch) {
 
 less_tweaker.init_style_group = function($g) {
     var json = $g.data('source_json');
-    if (!json.tweaker) {
+    if (!json || !json.tweaker) {
         return;
     }
     var tweaker = new less_tweaker(

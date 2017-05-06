@@ -130,11 +130,11 @@ class Loader
             $ns = fx::getComponentNamespace($name);
             $ns = explode("\\", trim($ns, "\\"));
             if ($ns[0] === 'Theme') {
-                $ns[0] = 'theme';
+                $ns[0] = '@theme';
             } else {
-                array_unshift($ns, 'module');
+                array_unshift($ns, '@module');
             }
-            $res = fx::path()->abs('@home/' . join("/", $ns));
+            $res = fx::path()->abs( join("/", $ns) );
         } else {
             $res = fx::path()->abs('@floxim/Component/'.fx::util()->underscoreToCamel($name));
         }

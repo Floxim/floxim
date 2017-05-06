@@ -23,6 +23,9 @@ abstract class Base
     
     public function registerUrlFromPost()
     {
+        $c_url = fx::input()->fetchGetPost('_ajax_base_url');
+        fx::env()->forceUrl($c_url);
+        /*
         $base_url = fx::input()->fetchPost('_base_url');
         if ($base_url) {
             fx::env()->setUrl(fx::path()->removeBase($base_url));
@@ -32,5 +35,7 @@ abstract class Base
             }
         }
         return $base_url;
+         * 
+         */
     }
 }

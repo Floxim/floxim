@@ -41,4 +41,12 @@ class JsBundle extends Bundle {
         
         return $res;
     }
+    /*
+    public function push($files)
+    {
+        parent::push($files);
+        fx::log('js pushed', $this->getFilePath(), $files, fx::debug()->backtrace(), join("\n", $this->files));
+    }
+     * 
+     */
 }

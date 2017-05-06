@@ -10,6 +10,7 @@
 if (jQuery) {
     $fxj = jQuery;
     
+    /*
     jQuery.fn.extend({
         onElem: function(event, elem_name, callback) {
             var block_class = jQuery.BEM.getBlockClass(this),
@@ -23,7 +24,8 @@ if (jQuery) {
             return this;
         }
     });
-    
+    */
+   
     $fxj.valHooks.input = {
         get: function( elem ) {
             if (elem.getAttribute('data-json-val') !== 'true') {

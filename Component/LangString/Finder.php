@@ -68,6 +68,11 @@ class Finder extends System\Finder
         }
         return array_key_exists($string, $this->loaded[$dict][$this->lang]);
     }
+    
+    protected static function getCacheDir()
+    {
+        return fx::path(fx::config('lang.cache_dir'));
+    }
 
     public function getDictFile($dict)
     {
@@ -75,12 +80,13 @@ class Finder extends System\Finder
         if (!isset($this->lang)) {
             $this->setLang();
         }
-        return fx::path('@files/php_dictionaries/' . $this->lang . '.' . $dict . '.php');
+        $res = self::getCacheDir().'/' . $this->lang . '.' . $dict . '.php';
+        return $res;
     }
 
     public function dropDictFiles($dict)
     {
-        $files = glob(fx::path('@files/php_dictionaries/*.' . $dict . '.php'));
+        $files = glob(self::getCacheDir().'/*.' . $dict . '.php');
         if (!$files) {
             return;
         }

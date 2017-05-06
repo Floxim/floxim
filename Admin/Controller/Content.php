@@ -429,36 +429,6 @@ class Content extends Admin
         }
         
         $content->save();
-        return;
-        
-        $next_id = isset($input['next_id']) ? $input['next_id'] : false;
-        
-
-        $neighbours = fx::data('floxim.main.content')
-                        ->where('parent_id', $content['parent_id'])
-                        ->where('infoblock_id', $content['infoblock_id'])
-                        ->where('id', $content['id'], '!=')
-                        ->order('priority')
-                        ->all();
-        $nn = $neighbours->find('id', $next_id);
-
-        $c_priority = 1;
-        $next_found = false;
-        foreach ($neighbours as $n) {
-            if ($n['id'] == $next_id) {
-                $content['priority'] = $c_priority;
-                $content->save();
-                $c_priority++;
-                $next_found = true;
-            }
-            $n['priority'] = $c_priority;
-            $n->save();
-            $c_priority++;
-        }
-        if (!$next_found) {
-            $content['priority'] = $c_priority;
-            $content->save();
-        }
     }
 
     /**

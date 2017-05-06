@@ -31,6 +31,7 @@ class FieldFile extends \Floxim\Floxim\Component\Field\Entity
         }
         return array(
             'path'     => $val,
+            'http'     => fx::path()->http($val),
             'filename' => fx::path()->fileName($abs),
             'size'     => fx::files()->readableSize($abs)
         );
@@ -64,7 +65,7 @@ class FieldFile extends \Floxim\Floxim\Component\Field\Entity
                 
                 $path = fx::files()->getPutFilePath($path);
                 
-                $res = fx::path()->removeBase(fx::path()->http($path));
+                $res = fx::path()->storable($path);
 
                 $move = [$c_val, $path];
             }
@@ -75,6 +76,7 @@ class FieldFile extends \Floxim\Floxim\Component\Field\Entity
                 $drop = $old_value;
             }
         }
+        
         // move / drop files only after entity is saved
         if ($drop || $move) {
             fx::listen('after_save', function($e) use ($content, $move, $drop) {

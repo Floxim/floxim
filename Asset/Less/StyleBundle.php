@@ -39,7 +39,7 @@ class StyleBundle extends Bundle {
     
     
     public function getDirPath() {
-        $res = self::getCacheDir();
+        $res = $this->getCacheDir();
         switch ($this->meta['type']) {
             case 'default': default:
                 $res .=  '/'.$this->getHash()
@@ -60,13 +60,6 @@ class StyleBundle extends Bundle {
     }
     
     protected $meta_updated = false;
-    
-    public function isFresh($file = null) {
-        if ($file !== null) {
-            return parent::isFresh($file);
-        }
-        return parent::isFresh();
-    }
     
     public static function getDefaultValue($var)
     {
@@ -232,7 +225,7 @@ class StyleBundle extends Bundle {
     
     public static function deleteForVisual($visual_id)
     {
-        $dir = self::getCacheDir().'/inline/'.$visual_id;
+        $dir = fx::assets('css')->getCacheDir().'/inline/'.$visual_id;
         if (!file_exists($dir)) {
             return false;
         }
@@ -242,7 +235,7 @@ class StyleBundle extends Bundle {
     
     public static function deleteForTemplateVariant($variant_id)
     {
-        $dir = self::getCacheDir().'/tv/'.$variant_id;
+        $dir = fx::assets('css')->getCacheDir().'/tv/'.$variant_id;
         if (!file_exists($dir)) {
             return false;
         }
@@ -340,7 +333,7 @@ class StyleBundle extends Bundle {
                 throw new \Exception('style bundle error');
             }
             $res['css'] = file_get_contents($css_file);
-            $res['file'] = fx::path()->http($css_file);
+            //$res['file'] = fx::path()->http($css_file);
             $res['filemtime'] = date('d, H:i:s', filemtime($css_file));
         }
         return $res;

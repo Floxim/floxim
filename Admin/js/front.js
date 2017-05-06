@@ -3139,7 +3139,7 @@ fx_front.prototype.show_infoblock_settings_form = function(data, $ib_node, tab) 
                 
                 $form.data('last_data', $form.formToHash());
                 var update_timeout = null;
-
+                
                 $form.on('change.fx_front', function(e) {
                     if (e.target.name === 'livesearch_input' || e.target.name === 'scope[type]') {
                         return;

@@ -881,6 +881,7 @@ abstract class Finder
             }
             $objs[] = $v;
         }
+        
         $collection = new Collection($objs);
         $collection->finder = $this;
         if (is_array($this->order)) {

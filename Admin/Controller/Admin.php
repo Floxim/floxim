@@ -147,88 +147,10 @@ class Admin extends System\Controller
 
     public static function addAdminFiles()
     {
-        /*
-        $path_floxim = fx::path('@floxim');
-        $lang = fx::config('lang.admin');
-        $js_files = array(
-            FX_JQUERY_PATH,
-            $path_floxim . '/lib/js/jquery.bem.js', // https://github.com/zenwalker/jquery-bem
-            $path_floxim . '/lib/js/promise.min.js',
-            //$path_floxim . '/lib/js/md5.min.js',
-            $path_floxim . '/Admin/js/fxj.js',
-            $path_floxim . '/Admin/js/fx.js',
-            $path_floxim . '/Admin/js/js-dictionary-' . $lang . '.js',
-            FX_JQUERY_UI_PATH,
-            $lang === 'en' ? null : $path_floxim.'/lib/js/jquery.datepicker.'.$lang.'.js',
-            $path_floxim . '/lib/js/jquery.ba-hashchange.min.js',
-            $path_floxim . '/lib/js/jquery.json-2.3.js',
-            $path_floxim . '/lib/js/ajaxfileupload.js',
-            $path_floxim . '/Admin/js-templates/jstx.js',
-            'http'. (fx::env('https') ? 's' : '').'://' . getenv("HTTP_HOST") . fx::path()->http($path_floxim).'/Admin/js-templates/compile.php',
-            $path_floxim . '/Admin/js/lib.js',
-            $path_floxim . '/Admin/js/sort.js',
-            $path_floxim . '/Admin/js/front.js',
-            $path_floxim . '/Admin/js/container.js',
-            $path_floxim . '/Admin/js/adder.js',
-            $path_floxim . '/Admin/js/buttons.js',
-            $path_floxim . '/Admin/js/form.js',
-            $path_floxim . '/Admin/js/debug.js',
-            $path_floxim . '/lib/js/clipboard.min.js',
-            $path_floxim . '/Admin/js/livesearch.js',
-            $path_floxim . '/Admin/js/suggest.js',
-            $path_floxim . '/Admin/js/fields.js',
-            $path_floxim . '/Admin/js/files.js',
-            $path_floxim . '/Admin/js/measures.js',
-            $path_floxim . '/Admin/js/edit-in-place.js',
-            $path_floxim . '/Admin/js/panel.js',
-            $path_floxim . '/Admin/js/popup.js',
-            $path_floxim . '/Admin/js/admin.js',
-            $path_floxim . '/Admin/js/nav.js',
-            $path_floxim . '/lib/editors/redactor/redactor.patched.js',
-            $lang === 'en' ? null : $path_floxim.'/lib/editors/redactor/langs/'.$lang.'.js',
-            $path_floxim . '/lib/editors/redactor/fontcolor.js',
-            $path_floxim . '/lib/codemirror/codemirror.all.min.js',
-            $path_floxim . '/lib/spectrum/spectrum.js',
-            $path_floxim . '/lib/cropper/cropper.min.js',
-            $path_floxim . '/lib/js/jquery.form.js',
-            $path_floxim . '/lib/js/jquery.cookie.js',
-            $path_floxim . '/lib/js/jquery.ba-resize.min.js',
-            $path_floxim . '/lib/js/jquery.scrollTo.js',
-            $path_floxim . '/lib/js/autosize.min.js',
-            $path_floxim . '/Admin/js/map.js',
-            $path_floxim . '/Admin/js/node-panel.js',
-            $path_floxim . '/Admin/js/condition-builder.js',
-            $path_floxim . '/Admin/js/infoblock.js',
-            $path_floxim . '/Admin/js/styles.js',
-            $path_floxim . '/lib/lessjs/less.min.js',
-            $path_floxim . '/lib/tinycolor/tinycolor.js',
-            $path_floxim . '/Admin/js/colorset.js',
-            $path_floxim . '/Admin/js/number-slider.js',
-            $path_floxim . '/Admin/js/angle.js',
-            $path_floxim . '/Admin/js/css-background.js',
-            $path_floxim . '/Admin/js/css-shadow.js',
-            $path_floxim . '/Admin/js/css-font.js',
-            $path_floxim . '/Admin/js/font-preview.js',
-            $path_floxim . '/Admin/js/bem-less.js',
-            $path_floxim . '/Admin/js/iconpicker.js',
-            $path_floxim . '/lib/js/html2canvas.js'
-        );
-        */
-        
         $page = fx::page();
         $path_floxim = fx::path('@floxim');
         $js_files = self::getAdminJsFiles();
         $page->addJs($js_files, array('to' => 'admin'));
-        
-        //$page->addCssFile('https://fonts.googleapis.com/css?family=Roboto:400,500,400italic,500italic,700,700italic&subset=latin,cyrillic');
-        
-        /*
-        // todo: need fix path for css - now used server path
-        $page->addCssFile( $path_floxim . '/lib/editors/redactor/redactor.css' );
-        
-        $page->addCssFile( $path_floxim . '/lib/spectrum/spectrum.css' );
-        $page->addCssFile( $path_floxim . '/lib/cropper/cropper.min.css' );
-        */
         
         $page->addCss(
             array(
@@ -268,7 +190,6 @@ class Admin extends System\Controller
             fx::page()->addJsText("\$fx.init(" . $js_config->getConfig() . ");");
             fx::page()->addLayoutVars();
         } else {
-            fx::log('authing');
             $auth_form = fx::controller('floxim.user.user:auth_form')->render('floxim.user.user:auth_form');
 
             $recover_form = fx::controller(

@@ -75,6 +75,7 @@ class Env
     
     public function forceUrl($url)
     {
+        
         if (!$url) {
             return;
         }
@@ -86,8 +87,12 @@ class Env
             ],
             parse_url($url)
         );
-        $request_uri = $c_url['scheme'].'://'.$c_url['host'].$c_url['path'].($c_url['query'] ? '?'.$c_url['query'] : '');
+        
+        $url = $c_url['path'].($c_url['query'] ? '?'.$c_url['query'] : '');
+        
+        $request_uri = $c_url['scheme'].'://'.$c_url['host'].$url;
         $_SERVER['REQUEST_URI'] = $request_uri;
+        
         $path = fx::router()->getPath( $url );
         
         if ($path) {
@@ -187,6 +192,9 @@ class Env
 
     public function getSiteId()
     {
+        if (isset($this->current['site_id'])) {
+            return $this->current['site_id'];
+        }
         $site = $this->getSite();
         return $site ? $site->get('id') : null;
     }
@@ -229,11 +237,17 @@ class Env
 
     public function getIsAdmin()
     {
+        if (isset($this->current['is_admin'])) {
+            return $this->current['is_admin'];
+        }
         return ($user = $this->getUser()) ? $user->isAdmin() : false;
     }
     
     public function getThemeId()
     {
+        if (isset($this->current['theme_id'])) {
+            return $this->current['theme_id'];
+        }
         return $this->getSite()->get('theme_id');
     }
     

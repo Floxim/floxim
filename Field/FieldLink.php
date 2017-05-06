@@ -252,7 +252,7 @@ class FieldLink extends \Floxim\Floxim\Component\Field\Entity
             $content[$entity_prop_name] = $entity;
             return false;
         }
-        return parent::getSavestring();
+        return parent::getSavestring($content);
     }
     
     public function fakeValue($entity = null) {

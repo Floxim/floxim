@@ -2,6 +2,7 @@
 <?
 var value_obj = _c.value || {};
 var c_value = value_obj.path;
+var c_http = value_obj.http || value_obj.path;
 var value_is_emtpy = !c_value || ($fx && $fx.front && c_value === $fx.front.image_stub);
 ?>
 <div class="fx_image_field" data-field_type="<?=_c.type?>">
@@ -37,7 +38,7 @@ var value_is_emtpy = !c_value || ($fx && $fx.front && c_value === $fx.front.imag
         </div>
         <div class="fx_preview_block">
             <? if (_c.type == 'image') {?>
-                <img <?=(c_value ? ' src="'+c_value+'"' : ' style="display:none;"')?> />
+                <img <?=(c_http ? ' src="'+c_http+'"' : ' style="display:none;"')?> />
             <? } ?>
             <span class="fx_file_info">
                 <?

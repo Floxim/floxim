@@ -90,12 +90,13 @@ fx_admin.prototype.get_action = function () {
 };
 
 $(function() {
-    var $block = $('.fx-backend-login');
+    var cl = 'fx-backend-login';
+    var $block = $('.'+cl);
     if ($block.length === 0) {
         return;
     }
-    var $auth = $block.elem('auth');
-    var $recover = $block.elem('recover');
+    var $auth = $block.find('.'+cl+'__auth');
+    var $recover = $block.find('.'+cl+'__recover');
     
     function show_recover() {
         $auth.hide();
@@ -106,8 +107,8 @@ $(function() {
         $recover.hide();
     }
     $block
-        .onElem('click', 'recover-link', show_recover)
-        .onElem('click', 'login-link', show_login);
+        .on('click', '.'+cl+'__recover-link', show_recover)
+        .on('click', '.'+cl+'__login-link', show_login);
     
     if ( $('.fx_form_sent', $recover).length > 0) {
         show_recover();

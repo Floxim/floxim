@@ -15,8 +15,7 @@ class Ajax extends Base
         
         fx::env('ajax', true);
         
-        $c_url = fx::input()->fetchGetPost('_ajax_base_url');
-        fx::env()->forceUrl($c_url);
+        $this->registerUrlFromPost();
         
         // import layout template to recreate real env
         fx::router('front')->importLayoutTemplate();
@@ -91,6 +90,9 @@ class Ajax extends Base
             if ($tpl) {
                 $res = $tpl->render($res);
             }
+        }
+        if (!fx::env('ajax')) {
+            $res = fx::page()->postProcess($res);
         }
         return $res ? $res : true;
     }

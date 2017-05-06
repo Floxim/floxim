@@ -1,13 +1,12 @@
 <?php
 
-require_once realpath($_SERVER['DOCUMENT_ROOT']).'/boot.php';
-
 if (!defined('EMERGENCY_CONSOLE') || !EMERGENCY_CONSOLE) {
     die();
 }
 
-
-define("LOGS_HOME", preg_replace("~\?.*$~", '', $_SERVER['REQUEST_URI']));
+if (!defined("LOGS_HOME")) {
+    define("LOGS_HOME", preg_replace("~\?.*$~", '', $_SERVER['REQUEST_URI']));
+}
 
 ob_start();
 ?>
@@ -93,8 +92,13 @@ function show_index() {
     foreach ($index as $item) {
         ?>
         <tr>
-            <td><a href="?id=<?= $item['id']?>"><?=$item['id']?></a></td>
-            <td><?= fx::date($item['start']) ?></td>
+            <td>
+                <a href="?id=<?= $item['id']?>"><?=$item['id']?></a>
+                <div style="font-size:12px;"><?= $item['method'] ?> <?= $item['url'] ?></div>
+            </td>
+            <td>
+                <?= fx::date($item['start']) ?>
+            </td>
         </tr>
         <?php
     }

@@ -638,15 +638,31 @@ class Thumb
         $res = join('.', $res);
         return $res;
     }
+    
+    public static function getThumbDir($rel_path, $folder_name)
+    {
+        $trimmed = fx::path()->trimHost($rel_path);
+        $rel_path = fx::path()->http($trimmed, true);
+        //fx::debug($trimmed, $rel_path);
+        if ( ($thumb_path_closure = fx::config('thumbs.path_closure'))) {
+            $full_path = call_user_func($thumb_path_closure, $folder_name, $rel_path);
+        } else {
+            $full_path = fx::path('@thumbs/' . $folder_name . '/' . $rel_path);
+        }
+        return $full_path;
+    }
+            
 
     public function getResultPath()
     {
     	$rel_path = $this->source_http_path;
-
+        
+        
         $folder_name = $this->getConfigHash();
         
-        $rel_path = $folder_name . '/' . $rel_path;
-        $full_path = fx::path('@thumbs/' . $rel_path);
+        $full_path = self::getThumbDir($rel_path, $folder_name);
+        
+        //fx::debug($this->source_http_path, $rel_path, $folder_name, $full_path);
         
         $is_forced = $this->config['async'] === 'force';
         $is_async = $this->config['async'] === true;
@@ -677,20 +693,18 @@ class Thumb
     {
         $res = array();
         $rel_path = fx::path()->http($source_path);
-        $dir = glob(fx::path('@thumbs') . '/*');
-
-
-        if (!$dir) {
-            return $res;
-        }
-        foreach ($dir as $sub) {
-            if (is_dir($sub)) {
-                $check_path = fx::path()->abs($sub . $rel_path);
-                if (fx::path()->isFile($check_path)) {
-                    $res [] = $check_path;
-                }
+        
+        $dir = self::getThumbDir($rel_path, '*');
+        
+        $found = glob($dir);
+        $res = [];
+        
+        foreach ($found as $item) {
+            if (is_file($item)) {
+                $res []= $item;
             }
         }
+        
         return $res;
     }
 

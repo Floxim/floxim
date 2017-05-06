@@ -95,16 +95,26 @@ class Config
         fx::path()->register('log', fx::path('@files/log'));
         fx::path()->register('thumbs', fx::path('@files/fx_thumbs'));
         fx::path()->register('content_files', fx::path('@files/content'));
+        fx::path()->register('upload', '@files/upload');
+        
+        
+        $this->config['lang.cache_dir'] = '@files/php_dictionaries';
+        $this->config['less.cache_dir'] = '@files/less_cache';
+        
+        $this->config['asset.cache_dir'] = '@files/asset_cache';
         
         $this->config['path.admin'] = fx::path()->http('@home/'.$this->config['path.admin_dir_name'].'/');
+        
+        
 
         $this->config['path.jquery'] = fx::path('@floxim/lib/js/jquery-1.11.3.min.js');
         $this->config['path.jquery.http'] = fx::path()->http($this->config['path.jquery']);
         
-        //$this->config['path.jquery-ui'] = fx::path('@floxim/lib/js/jquery-ui.min.js');
         $this->config['path.jquery-ui'] = fx::path('@floxim/lib/js/jquery-ui.min.js');
         
         $this->config['templates.cache_dir'] = fx::path('@files/compiled_templates');
+        
+        $this->config['controller.cache_dir'] = fx::path('@files/cache');
 
         $this->config['console.commands'] = array(
             'module'    => '\\Floxim\\Floxim\\Console\\Command\\Module',
@@ -135,7 +145,29 @@ class Config
         if (isset($config['disable'])) {
             $config['disable'] = $this->prepareDisableConfig($config['disable']);
         }
-        $this->config = array_merge($this->config, $config);
+        
+        if (isset($config['path.alias'])) {
+            foreach ($config['path.alias'] as $alias => $value) {
+                fx::path()->register($alias, $value);
+            }
+        }
+        
+        if (isset($config['path.http'])) {
+            $resolvers = (array) $config['path.http'];
+            foreach ($resolvers as $prefix => $resolver) {
+                fx::path()->registerHttpResolver($prefix, $resolver);
+            }
+        }
+        
+        if (isset($config['path.abs'])) {
+            $resolvers = (array) $config['path.abs'];
+            foreach ($resolvers as $prefix => $resolver) {
+                fx::path()->registerAbsResolver($prefix, $resolver);
+            }
+        }
+        
+        //$this->config = array_merge($this->config, $config);
+        $this->config = fx::util()->fullMerge($this->config, $config);
         if (!$loaded) {
             if (!$this->config['dev.on'] && !defined("FX_ALLOW_DEBUG")) {
                 define("FX_ALLOW_DEBUG", false);
@@ -154,6 +186,7 @@ class Config
             define('FX_JQUERY_PATH_HTTP', $this->config['path.jquery.http']);
             define('FX_JQUERY_UI_PATH', $this->config['path.jquery-ui']);
         }
+        
         ini_set('date.timezone', $this->config['date.timezone']);
         fx::template()->registerSource('admin', fx::path('@floxim/Admin/templates'));
         

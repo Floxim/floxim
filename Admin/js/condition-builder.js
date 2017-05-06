@@ -1,4 +1,4 @@
-(function() {
+(function($) {
     
 window.condition_builder = function(params) {
     var that = this;
@@ -137,7 +137,6 @@ window.condition_builder = function(params) {
                     field.conditions = [ [null, cond_type, 'is'] ];
                     type_hash += '_'+ cond_type.join('|');
                 }
-                console.log(field_props, type_hash);
                 if (value && value.length) {
                     field.value = value;
                     field.ajax_preload = true;
@@ -253,6 +252,7 @@ window.condition_builder = function(params) {
         var value = this.getValue();
         var string_value = JSON.stringify(value);
         if (string_value !== prev_value) {
+            console.log('trigch', this.$input);
             this.$input.val(string_value).trigger('change');
         }
     };
@@ -871,4 +871,4 @@ window.condition_builder = function(params) {
     });
 };
 
-})(jQuery);
+})($fxj);

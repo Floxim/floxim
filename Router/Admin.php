@@ -16,6 +16,8 @@ class Admin extends Base
             fx::http()->redirect( fx::config('path.admin'), 301);
         }
         
+        
+        
         if ($url !== $adm_path) {
             return null;
         }

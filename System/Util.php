@@ -788,7 +788,7 @@ class Util
                 }
             }
         };
-        $walker(DOCUMENT_ROOT);
+        $walker(defined("APP_ROOT") ? APP_ROOT : DOCUMENT_ROOT);
         
         foreach ($repo_dirs as $rd) {
             chdir($rd);
@@ -854,6 +854,10 @@ class Util
             }
         );
         
+        if (function_exists('fx_get_cache_map')) {
+            $map = array_merge($map, fx_get_cache_map());
+        }
+        
         if ($what === null) {
             $what = array_keys($map);
         } elseif (is_string($what)) {
@@ -870,7 +874,11 @@ class Util
             if (is_callable($dir)) {
                 call_user_func($dir);
             } else {
-                fx::files()->rm($dir);
+                $dirs = (array) $dir;
+                foreach ($dirs as $dir) {
+                    fx::debug('rm '.$dir);
+                    fx::files()->rm($dir);
+                }
             }
         }
     }
@@ -955,15 +963,19 @@ class Util
 
         foreach ($image_fields as $com_id => $com_fields) {
             $com = fx::component($com_id);
-            $q = fx::data($com['keyword']);
-            foreach ($com_fields as $f) {
-                $q->where($f['keyword'], '', '!=');
-            }
-            $data = $q->all();
-            foreach ($data as $entity) {
+            try {
+                $q = fx::data($com['keyword']);
                 foreach ($com_fields as $f) {
-                    $all_pics []= $entity[$f['keyword']];
+                    $q->where($f['keyword'], '', '!=');
                 }
+                $data = $q->all();
+                foreach ($data as $entity) {
+                    foreach ($com_fields as $f) {
+                        $all_pics []= $entity[$f['keyword']];
+                    }
+                }
+            } catch (\Exception $e ) {
+                
             }
         }
         

@@ -16,16 +16,7 @@ class Fonts {
             return '';
         }
         ob_start();
-        /*
-        if (!$is_loaded) {
-            $is_loaded = true;
-            ?>
-            <script src="<?= fx::path()->http('@floxim_js') ?>/webfont.js"></script>
-            <?php
-        }
-         * 
-         */
-        fx::page()->addJs([fx::path('@floxim_js/webfont.js')]);
+        fx::page()->addJs([fx::path('@floxim/lib/js/webfont.js')]);
         
         $fonts = array_unique($fonts);
         

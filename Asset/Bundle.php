@@ -67,19 +67,27 @@ abstract class Bundle {
         return join(".", $parts);
     }
     
-    public static function getCacheDir()
+    public function getCacheDir()
     {
-        static $dir = null;
-        if (is_null($dir)) {
-            $dir = fx::path('@files/asset_cache');
+        $kw = $this->keyword;
+        $alias = 'asset_'.$this->type.'_'.$kw;
+        if ($kw && fx::path()->aliasExists($alias) ) {
+            $res = fx::path('@'.$alias);
+        } else {
+            $res = fx::path( fx::config('asset.cache_dir') );
         }
-        return $dir;
+        return $res;
+    }
+    
+    public function getPublicUrl()
+    {
+        return fx::path()->http( $this->getFilePath() );
     }
     
     public function getDirPath()
     {
         $hash = $this->getHash();
-        return self::getCacheDir().'/'. ( $hash ? $hash.'/' : '').$this->keyword;
+        return $this->getCacheDir().'/'. ( $hash ? $hash.'/' : '').$this->keyword;
     }
     
     public function getMetaPath()
@@ -115,6 +123,7 @@ abstract class Bundle {
     
     public function isFresh($file = null)
     {
+        
         $saved_time = (int) $this->version;
         if ($file !== null) {
             return file_exists($file) && filemtime($file) < $saved_time;
@@ -179,7 +188,6 @@ abstract class Bundle {
             if (!$this->has_new_files) {
                 $this->has_new_files = true;
                 $this->is_fresh = false;
-                fx::log('pushd new', $file);
             }
             $this->files[] = $file;
         }

@@ -479,8 +479,8 @@ window.$fx = {
         
         error_callback = error_callback || function() {};
         
-        if (!post_data._base_url) {
-            post_data._base_url = document.location.href.replace(/#.*$/, '');
+        if (!post_data._ajax_base_url) {
+            post_data._ajax_base_url = document.location.href.replace(/#.*$/, '');
         }
         if (!callback) {
             callback = function() {};

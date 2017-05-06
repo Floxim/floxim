@@ -63,9 +63,6 @@ class Debug
             $file_name = $this->getFileName();
             $this->file = fx::files()->open($file_name, 'w');
             register_shutdown_function(array($this, 'stopLog'));
-            if (count($_POST) > 0) {
-                //$this->log('$_POST', $_POST);
-            }
         }
     }
     
@@ -421,6 +418,26 @@ class Debug
                 echo fx::page()->getAssetsCode();
             }
         });
+    }
+    
+    public function getBacktraceSource()
+    {
+        $backtrace = debug_backtrace();
+        $skip = [
+            //'Floxim\Floxim\System\Fx::debug',
+            'Floxim\Floxim\System\Debug::getBacktraceSource'
+        ];
+        $n = 0;
+        while (count($backtrace) > 0 && $n < 100) {
+            $n++;
+            $item = array_shift($backtrace);
+            $sig = $item['class'].'::'.$item['function'];
+            if (in_array($sig, $skip)) {
+                continue;
+            }
+            break;
+        }
+        return $item['file'] .' @ '.$item['line'];
     }
 
     protected function entry()
