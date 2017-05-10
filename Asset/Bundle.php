@@ -186,6 +186,7 @@ abstract class Bundle {
                 continue;
             }
             if (!$this->has_new_files) {
+                fx::log('new with', $file);
                 $this->has_new_files = true;
                 $this->is_fresh = false;
             }
@@ -245,6 +246,7 @@ abstract class Bundle {
         if (!$this->is_new) {
             $this->delete();
         }
+        fx::log('saving', $this);
         fx::files()->mkdir($this->getDirPath());
         $content = $this->getBundleContent();
         

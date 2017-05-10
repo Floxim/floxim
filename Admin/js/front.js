@@ -784,6 +784,16 @@ fx_front.prototype.get_page_id = function() {
     return $('body').data('fx_page_id');
 };
 
+
+fx_front.prototype.get_base_url = function($node) {
+    var $node_with_base_url = $node.closest('[data-fx_ajax_base_url]');
+    
+    if ($node_with_base_url.length > 0) {
+        return $node_with_base_url.attr('data-fx_ajax_base_url');
+    }
+    return document.location.href;
+};
+
 /**
  * Function to show controller selection dialog
  */
@@ -810,7 +820,8 @@ fx_front.prototype.add_infoblock_select_controller = function($node, $rel_node, 
         page_id:$fx.front.get_page_id(),
         container_infoblock_id: container_infoblock ? container_infoblock.id : null,
         area:area_meta,
-        fx_admin:true
+        fx_admin:true,
+        _ajax_base_url: $fx.front.get_base_url($node)
     };
     
     form_data = $.extend(place_params, form_data);
@@ -3254,7 +3265,8 @@ fx_front.prototype.show_infoblock_settings = function($ib_node, tab) {
             action:'select_settings',
             id:ib_meta.id,
             page_id: $fx.front.get_page_id(),
-            area:area_meta
+            area:area_meta,
+            _ajax_base_url: $fx.front.get_base_url($ib_node)
         }, 
         function(res) {
             $fx.front.show_infoblock_settings_form(res, $ib_node, tab);
@@ -3540,7 +3552,7 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
     var xhr = $.ajax({
         type:'post',
         data:post_data,
-        url: document.baseURI+'~ib/'+real_infoblock_id+'@'+page_id,
+        url: '/~ib/'+real_infoblock_id+'@'+page_id,
         success:function(res) {
             $fx.front.c_hover = null;
             $infoblock_node.off('click.fx_fake_click');

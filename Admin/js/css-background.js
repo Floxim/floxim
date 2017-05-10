@@ -587,8 +587,13 @@ background_level.linear.prototype.count_lightness = function() {
     
     for (var i = 0; i < points.length; i++) {
         var $p = points[i],
-            color = $p.find('.fx-palette__value').data('rgb-value'),
-            info = bg.get_color_info(color);
+            color = $p.find('.fx-palette__value').data('rgb-value');
+        
+        if (!color) {
+            continue;
+        }
+            
+        var info = bg.get_color_info(color);
         
         res.brightness += info.brightness;
         res.opacity += info.opacity;

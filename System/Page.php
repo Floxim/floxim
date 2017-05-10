@@ -171,8 +171,16 @@ class Page
     public function addJs($files, $params = [])
     {
         $to = isset($params['to']) ? $params['to'] : 'default';
+        $non_http = [];
+        foreach ($files as $f) {
+            if (preg_match("~^(https?://|//)~", $f)) {
+                $this->files_js []= $f;
+            } else {
+                $non_http []= $f;
+            }
+        }
         $target = $this->getJsBundle($to);
-        $target->push($files);
+        $target->push($non_http);
     }
 
     protected function cssUrlReplace($file, $http_base)
@@ -342,7 +350,6 @@ class Page
     
     public function getCssFilesFinal() 
     {
-        //fx::log($this->files_css);
         $res = array();
         foreach ($this->files_css as $f) {
             if ($f instanceof \Floxim\Floxim\Asset\Less\Bundle) {
@@ -377,7 +384,6 @@ class Page
     {
         $r = '';
         $files_css = $this->getCssFilesFinal();
-        //fx::log('css', $files_css);
         foreach ($files_css as $file => $file_info) {
             if (isset($file_info['file'])) {
                 $r .= '<link rel="stylesheet" type="text/css" href="' . $file . '" ';

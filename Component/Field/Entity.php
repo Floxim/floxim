@@ -367,7 +367,7 @@ class Entity extends System\Entity
         if (!$type) {
             fx::log( debug_backtrace() );
         }
-        $classname = 'Floxim\\Floxim\\Field\\' . ucfirst($type);
+        $classname = 'Floxim\\Floxim\\Field\\Field' . ucfirst($type);
         $field = new $classname();
         return $field->getSqlType();
     }

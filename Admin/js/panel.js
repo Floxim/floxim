@@ -97,14 +97,14 @@
             if (!data.fields) {
                 data.fields = [];
             }
-            
+            /*
             for (var i = 0; i < data.fields.length; i++) {
                 if (data.fields[i].name === 'action') {
                     data.fields.push({type:'hidden', name:'_base_url', value:document.location.href});
                     break;
                 }
             }
-            
+            */
             c_panel.current_panel_type = 'side';
             c_panel.current_panel_style = params.style;
             
@@ -581,9 +581,11 @@
             this.is_moving =  false;
         };
         this.load_form = function(form_options, params) {
+            /*
             if (form_options._base_url === undefined) {
                 form_options._base_url = document.location.href;
             }
+            */
             $fx.post(
                 form_options, 
                 function(json) {

@@ -843,10 +843,7 @@ class Infoblock extends Admin
         );
         
         $pageable = (array) fx::config('pageable');
-        
-        if (count($pageable)) {
-            $pageable = fx::component()->find('keyword', $pageable);
-        }
+        $pageable = fx::component()->find('keyword', $pageable);
         
         $cond_field = array(
             'name' => 'scope[conditions]',

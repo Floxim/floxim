@@ -158,6 +158,7 @@ class Path
         $value = preg_replace("~" . preg_quote(DIRECTORY_SEPARATOR) . "+~", DIRECTORY_SEPARATOR, $value);
         
         $value = $this->resolveParents($value, DIRECTORY_SEPARATOR);
+        $value = preg_replace("~/$~", '', $value);
         return $value;
     }
     

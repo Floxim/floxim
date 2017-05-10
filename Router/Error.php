@@ -9,11 +9,33 @@ class Error extends Front
     public function route($url = null, $context = null)
     {
         $site_id = isset($context['site_id']) ? $context['site_id'] : fx::env('site_id');
-        if (preg_match("~\.(jpg|jpeg|gif|png|ico)$~", preg_replace("~\?.*$~", '', $url))) {
-            fx::http()->status('404');
-            header("Content-type: image/gif");
-            return base64_decode('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
+        $url_path = preg_replace("~\?.*$~", '', $url);
+        
+        $type_map = [
+            [
+                ['jpg', 'jpeg', 'gif', 'png', 'ico'],
+                'image/gif',
+                base64_decode('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7')
+            ],
+            [
+                ['css'],
+                'text/css',
+                ''
+            ],
+            [
+                ['js'],
+                'text/javascript',
+                ''
+            ]
+        ];
+        $extension = fx::path()->fileExtension($url_path);
+        foreach ($type_map as $type) {
+            if (in_array($extension, $type[0])) {
+                header("Content-type: ".$type[1]);
+                return $type[2];
+            }
         }
+        
         $error_page = $this->getErrorPage($site_id);
         if ($error_page) {
             $res = fx::router('front')->route($error_page, $context);

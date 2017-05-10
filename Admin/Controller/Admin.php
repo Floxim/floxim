@@ -95,6 +95,9 @@ class Admin extends System\Controller
         // force numeric indexes for fields to preserve order
         if (isset($result['fields']) && is_array($result['fields'])) {
             $result['fields'] = array_values($result['fields']);
+            if (isset($input['_ajax_base_url']) ) {
+                $result['fields'][]= $this->ui->hidden('_ajax_base_url', $input['_ajax_base_url']);
+            }
         }
         
         return $result;

@@ -2026,6 +2026,10 @@ class Compiler
         
         foreach ($lines as $l) {
             if (is_string($l)) {
+                if (preg_match("~^(https?://|//)~", $l)) {
+                    $items []= "'".$l."'";
+                    continue;
+                }
                 if (preg_match("~^[A-Z_]+$~", $l)) {
                     $items []= $l;
                     continue;
@@ -2518,7 +2522,7 @@ class Compiler
         }
         
         $tpl_props['id'] =  $tpl_id;
-        $tpl_props['file'] = fx::path()->http($this->current_source_file);
+        $tpl_props['file'] = fx::path()->abs($this->current_source_file);
         $tpl_props['is_imported'] = $this->current_source_is_imported;
         $i_level = $this->current_source_import_level;
         $tpl_props['import_level'] = $i_level;

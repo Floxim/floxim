@@ -13,7 +13,7 @@ class FieldFloat extends \Floxim\Floxim\Component\Field\Entity
     }
     
     public function getSavestring($content) {
-        $val = parent::getSavestring();
+        $val = parent::getSavestring($content);
         $val = (float) str_replace(",", '.', $val);
         return $val;
     }

@@ -1226,6 +1226,7 @@ fx_edit_in_place.prototype.destroy_wysiwyg = function() {
     }
 };
 
+/*
 $(function() {
     for (var i = 0; i < document.styleSheets.length; i++) {
         var sheet = document.styleSheets[i];
@@ -1244,6 +1245,7 @@ $(function() {
             }
             if (rule.selectorText.match(/\.redactor\-editor/)) {
                 var new_css = rule.cssText.replace(/\.redactor\-editor/g, '.redactor_fx_wysiwyg');
+                console.log('fix css', new_css);
                 sheet.deleteRule(j);
                 sheet.insertRule(
                     new_css,
@@ -1255,6 +1257,7 @@ $(function() {
         }
     }
 });
+*/
 
 var smart_date_format = function(format, timestamp) {
     var ru_month = function(date, placeholder) {
