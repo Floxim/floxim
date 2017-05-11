@@ -100,7 +100,7 @@ abstract class Bundle {
         return substr($file, 0, 7) === 'bundle:';
     }
     
-    protected static function getSubBundle($file)
+    public static function getSubBundle($file)
     {
         if (!self::isSubBundle($file)) {
             return;
