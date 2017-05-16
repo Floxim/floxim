@@ -394,6 +394,9 @@ abstract class Entity implements \ArrayAccess, Template\Entity
 
     public function digSet($path, $value)
     {
+        if (is_array($path)) {
+            $path = join(".", $path);
+        }
         $parts = explode(".", $path, 2);
         if (count($parts) == 1) {
             $this->offsetSet($path, $value);

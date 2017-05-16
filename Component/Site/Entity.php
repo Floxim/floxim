@@ -107,19 +107,5 @@ class Entity extends System\Entity
             }
         }
         return $this->getMainHost();
-        /*
-        $is_loc = preg_match("~\.loc$~", $_SERVER['HTTP_HOST']);
-        if (!$is_loc) {
-            return $this['domain'];
-        }
-        $hosts = $this->getAllHosts();
-        foreach ($hosts as $host) {
-            if (preg_match("~\.loc$~", $host)) {
-                return $host;
-            }
-        }
-        return $this['domain'];
-         * 
-         */
     }
 }

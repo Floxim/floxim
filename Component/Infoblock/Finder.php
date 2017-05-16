@@ -53,6 +53,10 @@ class Finder extends System\Finder
     
     public function getForPath($path)
     {
+        $res = fx::collection();
+        if (!$path) {
+            return $res;
+        }
         $current_page = $path->last();
         $level_with_site = $path->findOne('site_id');
         if ($level_with_site) {
@@ -79,7 +83,7 @@ class Finder extends System\Finder
         );
         $this->with('scope_entity');
         $blocks = $this->all();
-        $res = fx::collection();
+        
         foreach ($blocks as $block) {
             if ($block['scope_type'] === 'custom' && !$block['scope_entity']->checkPath($path)) {
                 continue;
