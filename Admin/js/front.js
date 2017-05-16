@@ -3526,8 +3526,10 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
     var ib_parent = $infoblock_node.parent();
     var meta = $infoblock_node.data('fx_infoblock');
     var page_id = $fx.front.get_page_id();
+    
     var post_data = {
-        _ajax_base_url: $infoblock_node.data('fx_ajax_base_url') || document.location.href,
+        //_ajax_base_url: $infoblock_node.data('fx_ajax_base_url') || document.location.href,
+        _ajax_base_url: $fx.front.get_base_url($infoblock_node),
         content_parent_props: JSON.stringify(content_parent_props)
     };
     extra_data = extra_data || {};
