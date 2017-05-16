@@ -55,6 +55,16 @@ class FieldFile extends \Floxim\Floxim\Component\Field\Entity
             if (file_exists($c_val) && is_file($c_val)) {
                 $file_name = fx::path()->fileName($c_val);
                 
+                if (mb_strlen($file_name) > 50) {
+                    $file_name = preg_replace_callback(
+                        "~^[^\.]+~",
+                        function($m) {
+                            return md5($m[0]);
+                        },
+                        $file_name
+                    );
+                }
+                
                 $path = fx::path(
                     '@content_files/' . 
                     $content['site_id'].'/'.

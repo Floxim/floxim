@@ -176,7 +176,7 @@ public function getModuleFields()
         $modules = array();
         foreach ($vendors as $vendor_val) {
             $v =  $vendor_val[0];
-            $path = fx::path()->abs('/module/' . $v) . '/*';
+            $path = fx::path()->abs('@module/' . $v) . '/*';
             $module_dirs = glob($path);
             
             if ($v === 'Floxim') {

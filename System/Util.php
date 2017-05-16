@@ -936,6 +936,74 @@ class Util
         return $res;
     }
     
+    
+    public static function traverseImages(
+        $callback, 
+        $path_regexp = "~(/floxim_files[^\\\"]+)~"
+    )
+    {
+        $paths = array(
+            'infoblock_visual.template_visual',
+            'infoblock_visual.wrapper_visual',
+            'template_variant.params',
+            'style_variant.less_vars'
+        );
+        
+        foreach ($paths as $path) {
+            
+            list($com, $field) = explode('.', $path);
+            $items = fx::data($com)->all();
+            
+            foreach ($items as $entity) {
+                $entity->traverseProp(
+                    $field, 
+                    function($val, $path) use (&$callback, $path_regexp, $entity, $field) {
+                        $found_path = null;
+                        if ( preg_match($path_regexp, $val, $found_path)) {
+                            $full_path = array_merge([$field], $path);
+                            call_user_func(
+                                $callback, 
+                                $found_path[1], 
+                                $full_path,
+                                $entity
+                            );
+                        }
+                    }, 
+                    false
+                );
+            }
+        }
+        
+        $image_fields = fx::data('field')->where('type', 'image')->all()->group('component_id');
+
+        foreach ($image_fields as $com_id => $com_fields) {
+            $com = fx::component($com_id);
+            try {
+                $q = fx::data($com['keyword']);
+                $where = [];
+                foreach ($com_fields as $f) {
+                    $where []= [$f['keyword'], '', '!='];
+                }
+                $data = $q->where([$where, null,'or'])->all();
+                foreach ($data as $entity) {
+                    foreach ($com_fields as $f) {
+                        $v = $entity[$f['keyword']];
+                        if ($v) {
+                            call_user_func(
+                                $callback,
+                                $v,
+                                [$f['keyword']],
+                                $entity
+                            );
+                        }
+                    }
+                }
+            } catch (\Exception $e ) {
+                
+            }
+        }
+    }
+    
     public static function findUsedPics()
     {
         $all_pics = [];
@@ -1142,5 +1210,82 @@ class Util
         }
         $res = \Floxim\Floxim\System\Export::exportComponents($coms);
         fx::debug(json_encode($res));        
+    }
+    
+    /**
+     * @todo test me please!
+     */
+    public function convert($entity, $new_component_keyword, $map = [])
+    {
+        if ($entity['type'] === $new_component_keyword) {
+            return $entity;
+        }
+        $props = $entity->get();
+        foreach ($map as $k => $v) {
+            if ($v instanceof \Closure) {
+                $new_prop = call_user_func($v, $entity);
+            } else {
+                $new_prop = $entity[$v];
+            }
+            $props[$k] = $new_prop;
+        }
+        unset($props['type']);
+        unset($props['id']);
+        $eid = $entity['id'];
+        $new_entity = fx::data($new_component_keyword)->create($props);
+        $new_entity['id'] = $eid;
+        
+        $old_tables = fx::data($entity['type'])->getTables();
+        $new_tables = fx::data($new_component_keyword)->getTables();
+        
+        $lost_tables = array_diff($old_tables, $new_tables);
+        $new_tables = array_diff($new_tables, $old_tables);
+        foreach ($lost_tables as $lt) {
+            fx::db()->query('delete from {{'.$lt.'}} where id = '.$eid);
+        }
+        foreach ($new_tables as $nt) {
+            fx::db()->query('insert into {{'.$nt.'}} (id) values( '.$eid.')');
+        }
+        $new_entity->save();
+        return $new_entity;
+    }
+    
+    public function convertInfoblock($ib, $new_component_keyword, $map = [])
+    {
+        if (!is_object($ib)) {
+            $ib = fx::data('infoblock', $ib);
+        }
+        if ($ib['action'] !== 'list_infoblock') {
+            return;
+        }
+        $old_type = $ib['controller'];
+        $entities = fx::data($old_type)->where('infoblock_id', $ib['id'])->all();
+        foreach ($entities as $e) {
+            $this->convert($e, $new_component_keyword, $map);
+        }
+        $ib['controller'] = $new_component_keyword;
+        $ib->save();
+    }
+    
+    public function remountInfoblock($ib, $new_parent_id)
+    {
+        if (!is_object($ib)) {
+            $ib = fx::data('infoblock', $ib);
+        }
+        if ($ib['action'] !== 'list_infoblock' || $ib['scope_type'] !== 'one_page') {
+            return;
+        }
+        $type = $ib['controller'];
+        $entities = fx::data($type)->where('infoblock_id', $ib['id'])->all();
+        
+        $ib['page_id'] = $new_parent_id;
+        $ib->digSet('params.parent_id', $new_parent_id);
+        
+        foreach ($entities as $e) {
+            $e->set('parent_id', $new_parent_id)->save();
+        }
+        $ib->save();
+        return true;
+        //fx::debug($ib);
     }
 }
