@@ -12,7 +12,7 @@
         "floxim/module-form" : "*",
         "floxim/module-contacts" : "*",
         "floxim/cache" : "*",
-        "oyejorge/less.php": "~1.5",
+        "oyejorge/less.php": "~1.7",
         "phpmailer/phpmailer": "5.2.8",
         "linkorb/jsmin-php": "dev-master",
         "symfony/yaml": "~2.8"
