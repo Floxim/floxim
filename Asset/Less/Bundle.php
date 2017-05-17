@@ -76,8 +76,6 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
                 $dir = fx::path()->http(dirname($f));
                 if (file_exists($f)) {
                     $parser->parseFile($f, $dir);
-                } else {
-                    //fx::log('no file', $f, $this);
                 }
             }
         }
@@ -194,7 +192,6 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
             }
         }
         $res = self::minifyLess($res);
-        //fx::log($this, $res);
         return $res;
     }
     
