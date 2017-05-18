@@ -128,6 +128,11 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
     }
     
     public function getBundleContent() {
+        
+        $pcre_jit_value = ini_get('pcre.jit');
+        
+        ini_set('pcre.jit', 0);
+        
         $is_admin = $this->keyword === 'admin';
         //$is_default = $this->keyword === 'default';
         $is_default = $this->isDefaultBundle();
@@ -192,6 +197,8 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
             }
         }
         $res = self::minifyLess($res);
+        
+        ini_set('pcre.jit', $pcre_jit_value);
         return $res;
     }
     
