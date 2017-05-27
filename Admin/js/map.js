@@ -10,26 +10,15 @@ window.init_google_maps.listeners = [];
 (function($) {
     window.fx_google_map_field = function($field, params) {
         var $map_container = $('.map_container', $field);
-            
-    
-        /*
-        var popup = new $fx.popup({
-            target:$('.map_link', $field),
-            ok_button:false
-        });
-        */
-       
+        
         if (params.name.match(/\]$/)) {
             params.lat_field = params.name.replace(/\[[^\]]+\]$/, '[' + params.lat_field + ']');
             params.lon_field = params.name.replace(/\[[^\]]+\]$/, '[' + params.lon_field + ']');
         }
         
-        //popup.$body.append($map_container);
-        //$field.append(popup.$node);
-        
         // validate google
         function init_gmap() {
-            var init_center = new google.maps.LatLng("-37.81411", "144.96328"),
+            var init_center = new google.maps.LatLng("55.75", "37.6176"),
                 map = new google.maps.Map(
                     $map_container[0],
                     {
@@ -51,7 +40,7 @@ window.init_google_maps.listeners = [];
                 marker = new google.maps.Marker({
                     draggable: true,
                     raiseOnDrag: true,
-                    position:init_center,
+                    // position:init_center,
                     map: map
                 }),
                 geocoder = new google.maps.Geocoder();
@@ -91,18 +80,7 @@ window.init_google_maps.listeners = [];
                 });
                 
             });
-            $field.on('click', '.map_link', function() {
-                /*
-                if (popup.$node.is(':visible')) {
-                    popup.hide();
-                } else {
-                    popup.position();
-                    google.maps.event.trigger(map, 'resize');
-                    var position = marker.getPosition();
-                    map.setCenter( new google.maps.LatLng( position.lat(), position.lng()));
-                }
-                */
-            });
+
             var init_lat = $lat_input.val(),
                 init_lon = $lon_input.val();
         

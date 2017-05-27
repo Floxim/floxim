@@ -95,10 +95,22 @@ class Compiler
     protected $templates = array();
 
     protected $_code_context = 'text';
+    
+    protected $nows_stack = [];
+    
+    protected function tokenNowsToCode($token)
+    {
+        $this->nows_stack []= $token->getProp('value') !== 'false';
+        $res = $this->childrenToCode($token, false);
+        array_pop($this->nows_stack);
+        return $res;
+    }
 
     protected function tokenCodeToCode($token)
     {
-        return $token->getProp('value');
+        $nows = count($this->nows_stack)  ? end($this->nows_stack) : false;
+        $val = $token->getProp('value');
+        return $nows ? trim($val) : $val;
     }
     
     protected function tokenExecToCode($token)
@@ -2205,7 +2217,7 @@ class Compiler
         return $code;
     }
 
-    protected function childrenToCode(Token $token)
+    protected function childrenToCode(Token $token, $exit_php = true)
     {
         $parts = array();
         $param_parts = array();
@@ -2226,7 +2238,10 @@ class Compiler
         if (count($parts) == 0) {
             return '';
         }
-        $code = '?>' . join("", $param_parts).join("", $parts) . "<?php ";
+        $code = join("", $param_parts).join("", $parts);
+        if ($exit_php) {
+            $code = '?>' . $code . "<?php ";
+        }
         return $code;
     }
     
@@ -2654,6 +2669,12 @@ class Compiler
         if (!$is_preset && !in_array($token->name, array('template', 'use')) ) {
             return;
         }
+        $nows = null;
+        if ($token->getProp('nows')) {
+            $nows = $token->getProp('nows') !== 'false';
+            $this->nows_stack []= $nows;
+        }
+        
         if (!$is_preset && !$token->getProp('subroot')) {
             $apply_token = null;
             foreach ($token->getChildren() as $child) {
@@ -2701,6 +2722,9 @@ class Compiler
             $this->templates[$tpl_id]['_variants'][] = $tpl_props;
         } else {
             $this->templates[$tpl_id] = $tpl_props;
+        }
+        if (!is_null($nows)) {
+            array_pop($this->nows_stack);
         }
     }
 

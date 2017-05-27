@@ -129,7 +129,7 @@ name="<?=_c.name?>" id="<?=_c.name || _c.id?>"
 <span class="fx_input__type_html"><?=_c.value?></span>
                 
 <!--[input ? _c.type == 'hidden']-->
-<input <?=$t.field_id_name(_c)?> value="<?=_c.value === false ? '' : $t.clear(_c.value)?>" type="hidden" />
+<input <?=$t.field_id_name(_c)?> value="<?=_c.value === false || _c.value === null ? '' : $t.clear(_c.value)?>" type="hidden" />
 
 
 <!--[input ? (_c.field_type == 'textarea' || (_c.type === 'text' && _c.wysiwyg) ) ]-->

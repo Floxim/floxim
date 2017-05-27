@@ -31,7 +31,7 @@
 {template id="panel"}
 <div class="fx-progress-line"></div>
 <div fx:b="fx-admin-panel" class="fx_overlay">
-    <div fx:e="logo"><div class="fx_preloader"></div></div>
+    <a href="https://floxim.ru/" title="Перейти на floxim.ru" target="_blank" fx:e="logo"><div class="fx_preloader"></div></a>
     <div fx:if="$panel_title" fx:e="title">{$panel_title}</div>
     <div id="fx_admin_main_menu" class="fx_button_group">
         <div class="fx_main_menu_expander"></div>

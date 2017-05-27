@@ -266,7 +266,8 @@ class Token
                 'param',
                 'preset',
                 'use',
-                'first'
+                'first',
+                'nows'
             )
         ),
         'preset'  => array(
@@ -387,6 +388,10 @@ class Token
         'bem_element' => array(
             'type'     => 'double',
             'contains' => array('code', 'var', 'lang', 'call', 'if', 'elseif', 'else')
+        ),
+        'nows'        => array(
+            'type'    => 'double',
+            'contains' => array('code', 'template', 'area', 'var', 'lang', 'call', 'each', 'if', 'elseif', 'else', 'separator', 'bem_block', 'bem_element')
         ),
         'with_each' => array(
             'type'     => 'double',

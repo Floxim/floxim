@@ -13,6 +13,18 @@ class HtmlToken
     public $offset;
     
     public $end_offset;
+    
+    protected $payload = [];
+    
+    public function setPayload($k, $v) 
+    {
+        $this->payload[$k] = $v;
+    }
+    
+    public function getPayload($k) 
+    {
+        return isset($this->payload[$k]) ? $this->payload[$k] : null;
+    }
 
     /*
      * Create html-token from source
@@ -362,11 +374,14 @@ class HtmlToken
     }
 
 
-    public function apply($callback)
+    public function apply($callback, $post_callback = null)
     {
         call_user_func($callback, $this);
         foreach ($this->getChildren() as $child) {
-            $child->apply($callback);
+            $child->apply($callback, $post_callback);
+        }
+        if ($post_callback) {
+            call_user_func($post_callback, $this);
         }
     }
 }
