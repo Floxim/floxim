@@ -24,7 +24,7 @@ class Admin extends Base
         return trim($c_url['path'],'/') === trim(self::getAdminUrl(), '/');
     }
     
-    protected function getAdminUrl()
+    protected static function getAdminUrl()
     {
         return '/'.fx::config('path.admin_dir_name').'/';
     }
