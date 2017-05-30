@@ -155,24 +155,29 @@ class Admin extends System\Controller
         $js_files = self::getAdminJsFiles();
         $page->addJs($js_files, array('to' => 'admin'));
         
+        $css_files = array(    
+            $path_floxim . '/lib/editors/redactor/redactor.css',
+            $path_floxim . '/lib/spectrum/spectrum.css',
+            $path_floxim . '/lib/cropper/cropper.min.css',
+
+            $path_floxim . '/Admin/style/mixins.less',
+            $path_floxim . '/Admin/style/main.less',
+            $path_floxim . '/Admin/style/backoffice.less',
+            $path_floxim . '/Admin/style/forms.less',
+            $path_floxim . '/Admin/style/front.less',
+            $path_floxim . '/Admin/style/livesearch.less',
+            $path_floxim . '/Admin/style/debug.less',
+            $path_floxim . '/Admin/style/measures.less',
+            $path_floxim . '/lib/codemirror/codemirror.css',
+            $path_floxim . '/Admin/style/condition-builder.less'
+        );
+        
+        foreach (\Floxim\Floxim\Asset\Icons::getAllIconSets() as $icon_path) {
+            $css_files []= $icon_path;
+        }
+        
         $page->addCss(
-            array(
-                
-                $path_floxim . '/lib/editors/redactor/redactor.css',
-                $path_floxim . '/lib/spectrum/spectrum.css',
-                $path_floxim . '/lib/cropper/cropper.min.css',
-                
-                $path_floxim . '/Admin/style/mixins.less',
-                $path_floxim . '/Admin/style/main.less',
-                $path_floxim . '/Admin/style/backoffice.less',
-                $path_floxim . '/Admin/style/forms.less',
-                $path_floxim . '/Admin/style/front.less',
-                $path_floxim . '/Admin/style/livesearch.less',
-                $path_floxim . '/Admin/style/debug.less',
-                $path_floxim . '/Admin/style/measures.less',
-                $path_floxim . '/lib/codemirror/codemirror.css',
-                $path_floxim . '/Admin/style/condition-builder.less'
-            ), 
+            $css_files, 
             array(
                 'to' => 'admin'
             )

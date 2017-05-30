@@ -7,15 +7,47 @@ use Floxim\Floxim\System\Fx as fx;
 
 class Admin extends Base
 {
+    
+    protected static function isAdminUrl($url)
+    {
+        if (!$url) {
+            return;
+        }
+        $c_url = array_merge(
+            [
+                'scheme' => 'http',
+                'query' => '',
+                'path' => '/'
+            ],
+            parse_url($url)
+        );
+        return trim($c_url['path'],'/') === trim(self::getAdminUrl(), '/');
+    }
+    
+    protected function getAdminUrl()
+    {
+        return '/'.fx::config('path.admin_dir_name').'/';
+    }
+    
+    public function registerUrlFromPost() 
+    {
+        $c_url = fx::input()->fetchGetPost('_ajax_base_url');
+        if (!self::isAdminUrl($c_url)) {
+            parent::registerUrlFromPost();
+        }
+    }
 
     public function route($url = null, $context = null)
     {
-        $adm_path = '/'.fx::config('path.admin_dir_name').'/';
-        
-        if (trim($url, '/') === trim($adm_path, '/') && $url !== $adm_path) {
-            fx::http()->redirect( fx::config('path.admin'), 301);
+        if (!self::isAdminUrl($url)) {
+            return;
         }
         
+        $adm_path = self::getAdminUrl();
+        
+        if ($url !== $adm_path) {
+            fx::http()->redirect( $adm_path, 301);
+        }
         
         
         if ($url !== $adm_path) {
@@ -23,6 +55,7 @@ class Admin extends Base
         }
         
         fx::env('css_bundle', 'admin');
+        
         $input = fx::input()->makeInput();
 
         $entity = fx::input()->fetchPost('entity');

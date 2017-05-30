@@ -866,6 +866,16 @@ abstract class Entity implements \ArrayAccess, Template\Entity
         unset ( $this->modified [array_search($field, $this->modified)]);
         return $this;
     }
+    
+    public function setIsModified($field)
+    {
+        if ($this->isModified($field)) {
+            return $this;
+        }
+        $this->modified[]= $field;
+        $this->modified_data[$field] = $this[$field];
+        return $this;
+    }
 
     public function getOld($field)
     {

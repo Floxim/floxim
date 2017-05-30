@@ -10,6 +10,25 @@ class Icons extends \Floxim\Floxim\Asset\Bundle {
         return '';
     }
     
+    public static function getAllIconSets()
+    {
+        static $res = null;
+        if (is_null($res)) {
+            $res = array_map(
+                function($v) {
+                    return fx::path($v);
+                },
+                [
+                    'fa' => '@floxim/lib/icons/fontawesome/css/font-awesome.css',
+                    'gmdi' => '@floxim/lib/icons/gmdi/gmdi.css',
+                    'lnr' => '@floxim/lib/icons/linearicons/style.css',
+                    'ti' => '@floxim/lib/icons/themify/themify.css'
+                ]
+            );
+        }
+        return $res;
+    }
+    
     public static function getClass($icon_val) 
     {
         $icon_val = trim($icon_val);
@@ -20,12 +39,7 @@ class Icons extends \Floxim\Floxim\Asset\Bundle {
         
         static $added_styles = array();
         
-        static $set_files = array(
-            'fa' => '@floxim/lib/icons/fontawesome/css/font-awesome.css',
-            'gmdi' => '@floxim/lib/icons/gmdi/gmdi.css',
-            'lnr' => '@floxim/lib/icons/linearicons/style.css',
-            'ti' => '@floxim/lib/icons/themify/themify.css'
-        );
+        $set_files = self::getAllIconSets();
         
         if (!isset($added_styles[$set])) {
             if (isset($set_files[$set])) {
