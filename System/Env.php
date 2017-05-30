@@ -144,7 +144,6 @@ class Env
 
     public function setPage($page)
     {
-        fx::log('set page', debug_backtrace());
         if (is_numeric($page)) {
             $page = fx::data('floxim.main.page', $page);
         }
