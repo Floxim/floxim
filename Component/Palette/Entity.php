@@ -75,7 +75,9 @@ class Entity extends \Floxim\Floxim\System\Entity {
             if ($group === 'colors') {
                 foreach ( $vals as $color_type => $color_props) {
                     foreach ($color_props['vals'] as $color_index => $color_rgb) {
-                        $res['color-'.$color_type.'-'.$color_index] = $color_rgb;
+                        if ($color_rgb) {
+                            $res['color-'.$color_type.'-'.$color_index] = $color_rgb;
+                        }
                     }
                 }
             }

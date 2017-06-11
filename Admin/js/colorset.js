@@ -1,3 +1,4 @@
+(function($) {
 $fx.colorset = function($field, params) {
     var cl = 'fx-colorset',
         that = this;
@@ -462,3 +463,4 @@ $fx.colorset.prototype = {
         return res;
     }
 };
+})($fxj);
