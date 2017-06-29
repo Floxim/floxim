@@ -28,14 +28,6 @@ class Admin extends Base
     {
         return '/'.fx::config('path.admin_dir_name').'/';
     }
-    
-    public function registerUrlFromPost() 
-    {
-        $c_url = fx::input()->fetchGetPost('_ajax_base_url');
-        if (!self::isAdminUrl($c_url)) {
-            parent::registerUrlFromPost();
-        }
-    }
 
     public function route($url = null, $context = null)
     {
@@ -66,7 +58,9 @@ class Admin extends Base
             return new Controller\Admin();
         }
         
-        $this->registerUrlFromPost();
+        if (!self::isAdminUrl($this->getUrlFromPost())) {
+            $this->registerUrlFromPost();
+        }
         
         fx::env('ajax', true);
 
