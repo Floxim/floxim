@@ -635,6 +635,72 @@ class Util
 	}
     }
     
+    public function numerize($word, $number, $format = [])
+    {
+        if (is_string($word)) {
+            if (strstr($word, '%d')) {
+                if (is_bool($format)) {
+                    $format = ['thousands_sep' => $format ? ' '  : ''];
+                } elseif (is_string($format)) {
+                    $format = ['thousands_sep' => $format];
+                }
+                $format = array_merge(
+                    [
+                        'decimals' => 0,
+                        'dec_point' => '.',
+                        'thousands_sep' => ' '
+                    ],
+                    $format
+                );
+                $formatted = number_format($number, $format['decimals'], $format['dec_point'], $format['thousands_sep']);
+                $word = str_replace('%d', $formatted, $word);
+            }
+            $parts = preg_split("~(?<=[а-я])/~ui", $word);
+            $r = array_shift($parts);
+            if ($r == '') {
+                $word = $parts;
+                if (!isset($word[2])) {
+                    $word[2] = $parts[1];
+                }
+            } else {
+                $count_parts = count($parts);
+                // кенгуру
+                $word = array($r, $r, $r);
+                switch ($count_parts) {
+                    case 1:
+                        // hour/s
+                        $word[1] .= $parts[0];
+                        $word[2] .= $parts[0];
+                        break;
+                    case 2:
+                        // час/а/ов
+                        // глаз/а/
+                        $word[1] .= $parts[0];
+                        $word[2] .= $parts[1];
+                        break;
+                    case 3: 
+                        // комментари/й/я/ев
+                        $word[0] .= $parts[0];
+                        $word[1] .= $parts[1];
+                        $word[2] .= $parts[2];
+                        break;
+                }
+            }
+	}
+	$number = $number % 100;
+	if ($number > 19) {
+            $number = $number % 10;
+	}
+	switch ($number) {
+            case 1:
+                return($word[0]);
+            case 2: case 3: case 4:  
+                return($word[1]);
+            default: 
+                return($word[2]);
+	}
+    }
+    
     public function dump()
     {
         ob_start();

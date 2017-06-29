@@ -1223,7 +1223,7 @@ abstract class Finder
      * @param array $data data entity'and
      * @return string
      */
-    public function getEntityClassName()
+    public function getEntityClassName($data = [])
     {
         return preg_replace("~[^\\\\]+$~", "Entity", get_class($this));
     }

@@ -8,7 +8,7 @@ use Floxim\Floxim\System\Fx as fx;
 class Finder extends System\Finder 
 {
     
-    public function getEntityClassName($data) 
+    public function getEntityClassName($data = []) 
     {
         $parts = explode('.', $data['keyword']);
         list($vendor, $module) = $parts;
