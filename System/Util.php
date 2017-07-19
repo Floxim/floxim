@@ -942,7 +942,6 @@ class Util
             } else {
                 $dirs = (array) $dir;
                 foreach ($dirs as $dir) {
-                    fx::debug('rm '.$dir);
                     fx::files()->rm($dir);
                 }
             }
