@@ -123,7 +123,7 @@ class Infoblock extends Admin
                     continue;
                 }
                 
-                if (isset($action_info['check_context'])) {
+                if (isset($action_info['check_context']) && $action_info['check_context'] !== false) {
                     $is_avail = call_user_func($action_info['check_context'], $page);
                     if (!$is_avail) {
                         if ($debug) {

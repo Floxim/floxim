@@ -1265,13 +1265,17 @@ class Util
     
     public function exportComponents($components)
     {
-        $components = (array) $components;
-        $coms = [];
-        foreach ($components as $com) {
-            if (is_string($com)) {
-                $com = fx::getComponentByKeyword($com);
+        if ($components instanceof Collection) {
+            $coms = $components->getValues();
+        } else {
+            $components = (array) $components;
+            $coms = [];
+            foreach ($components as $com) {
+                if (is_string($com)) {
+                    $com = fx::getComponentByKeyword($com);
+                }
+                $coms []= $com;
             }
-            $coms []= $com;
         }
         $res = \Floxim\Floxim\System\Export::exportComponents($coms);
         fx::debug(json_encode($res));        
