@@ -78,7 +78,7 @@ class Path
     public function resolve($path)
     {
         
-        if ($path[0] !== '@') {
+        if (!isset($path[0]) || $path[0] !== '@') {
             return $path;
         }
         
