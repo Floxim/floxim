@@ -772,7 +772,7 @@ abstract class Entity implements \ArrayAccess, Template\Entity
             return;
         }
         
-        if ($offset_exists && !is_null($this->data[$offset]) && $this->data[$offset] == $value) {
+        if ($offset_exists && isset($this->data[$offset]) && $this->data[$offset] == $value) {
             return;
         }
 

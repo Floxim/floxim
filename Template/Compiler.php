@@ -2285,19 +2285,12 @@ class Compiler
         if (!isset($props['type']) && isset($props['values'])) {
             $props['type'] = 'select';
         }
-        if ($props['type'] === 'select' && !preg_match("~^`~", $props['values'])) {
+        if (isset($props['type']) && $props['type'] === 'select' && !preg_match("~^`~", $props['values'])) {
             $props['values'] = self::parseCssLikeProps($props['values']);
             if (!isset($props['default'])) {
                 $props['default'] = current(array_keys($props['values']));
             }
         }
-        
-        /*if (isset($props['source'])) {
-            $props = array_merge(
-                $props,
-                call_user_func($props['source'])
-            );
-        }*/
         
         unset($props['name']);
         

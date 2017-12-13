@@ -1480,8 +1480,8 @@ abstract class Finder
                 return $res;
             }
         }
-        $value = $cond['value'];
-        
+
+        $value = isset($cond['value']) ? $cond['value'] : null;
         
         if ($op_type === 'context') {
             $value = preg_replace("~^context\.~", '', $value);

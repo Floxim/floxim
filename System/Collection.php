@@ -740,9 +740,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
                 $res_key = $k;
             }
             if (
-                (is_array($v) || $v instanceof \ArrayAccess) 
-                // we add NULL anyway, so skip isset() for better performance
-                //&& isset($v[$field])
+                (is_array($v) && isset($v[$field])) || $v instanceof \ArrayAccess
             ) {
                 $result[$res_key] = $v[$field];
             } elseif (is_object($v) && isset($v->$field)) {
