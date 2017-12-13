@@ -169,7 +169,7 @@ class ContextFlex extends Context {
             if (isset($this->misses[$i][$name])) {
                 continue;
             }
-            if (!is_array($this->stack[$i])) {
+            if (!isset($this->stack[$i]) || !is_array($this->stack[$i])) {
                 continue;
             }
             if (isset($this->stack[$i][$name])) {
