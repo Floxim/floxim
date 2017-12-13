@@ -51,12 +51,12 @@ class Console extends Admin
         if ($input['console_text']) {
             ob_start();
             $code = $input['console_text'];
-            
-            fx::env('console', true);
+
             fx::env('css_bundle', 'none');
             fx::env('console_buffer', '');
             fx::config('dev.on', true);
             $code = self::preProcess($code);
+            fx::env('console', true);
             eval($code);
             $res = ob_get_clean();
             $buffer = fx::env('console_buffer');

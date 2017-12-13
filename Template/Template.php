@@ -151,9 +151,15 @@ class Template
             $data['value'] = \Floxim\Floxim\Field\Image::prepareValue($data['value']);
         }
         if (isset($this->template_params[$name])) {
+            /*
             $this->template_params[$name] = array_merge(
                 $data,
                 $this->template_params[$name]
+            );
+            */
+            $this->template_params[$name] = \Floxim\Floxim\System\Util::fullMerge(
+                $this->template_params[$name],
+                $data
             );
         } else {
             $this->template_params[$name] = $data;

@@ -107,6 +107,12 @@
         .fx_admin_form__tab_data {
             display:inline-block;
         }
+        .fx_admin_form__body {
+            display:flex;
+            & > .field {
+              flex-shrink:0;
+            }
+        }
     }
     
     .fx_admin_form__header {
@@ -432,6 +438,12 @@
         display:block;
         min-height:16px;
     }
+}
+
+.fx_form_horizontal .fx_admin_form__body .field_set {
+    margin-top: -15px;
+    margin-bottom: 0;
+    margin-left: 0;
 }
 
 .fx_form_horizontal, .fx_form_vertical {

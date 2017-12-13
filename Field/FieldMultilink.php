@@ -21,32 +21,36 @@ class FieldMultilink extends \Floxim\Floxim\Component\Field\Entity
         }
         switch ($render_type) {
             case 'livesearch':
-                $res['type'] = 'livesearch';
-                $res['is_multiple'] = true;
-                $res['params'] = array(
-                    'content_type' => $this->getEndDataType()
+                $m2m_field = $this->getM2MField();
+                $res = array_merge(
+                    $res,
+                    [
+                        'type' => 'livesearch',
+                        'is_multiple' => true,
+                        'params' => [
+                            'content_type' => $m2m_field->getTargetName(),
+                            'relation_field_id' => $this['id']
+                        ],
+                        'value' => $content[$this['keyword']]->getValues($m2m_field['keyword'])
+                    ]
                 );
-                $rel = $this->getRelation();
-                $related_relation = fx::data($rel[1])->relations();
-                $linker_field = $related_relation[$rel[3]][2];
-                $res['name_postfix'] = $linker_field;
-                if (isset($content[$this['keyword']])) {
-                    $res['value'] = array();
-                    $linkers = $content[$this['keyword']]->linkers;
-                    foreach ($content[$this['keyword']] as $num => $v) {
-                        $res['value'] [] = array(
-                            'id'       => $v['id'],
-                            'name'     => $v['name'],
-                            'value_id' => $linkers[$num]['id']
-                        );
-                    }
-                }
                 break;
             case 'table':
                 $res = $this->getJsFieldTable($content, $res);
                 break;
         }
         return $res;
+    }
+
+    public function getM2MField()
+    {
+        $f = $this['format'];
+        $prop = 'livesearch_m2m_field';
+        if (!isset($f[$prop]) || !$f[$prop]) {
+            return;
+        }
+        $m2m_field = fx::data('field', $f[$prop]);
+        return $m2m_field;
     }
     
     protected function getJsFieldTable($content, $res)
@@ -266,12 +270,18 @@ class FieldMultilink extends \Floxim\Floxim\Component\Field\Entity
         );
         
         $all_fields = array();
+
+        $m2m_fields = [];
         
         foreach ($com_values as $com_value) {
             $c_com = fx::getComponentById($com_value[0]);
-            //$c_com_variants = $c_com->getChain()->getValues('id');
-            
             $c_com_fields = $c_com->getAllFieldsWithChildren();
+
+            $c_com_fields->apply(function($f)  use (&$m2m_fields) {
+                if ($f instanceof FieldLink && !in_array($f, $m2m_fields)) {
+                    $m2m_fields []= $f;
+                }
+            });
             foreach ($c_com_fields as $c_com_field) {
                 $c_id = $c_com_field['id'];
                 if (isset($all_fields[$c_id])) {
@@ -285,7 +295,7 @@ class FieldMultilink extends \Floxim\Floxim\Component\Field\Entity
                 );
             }
         }
-        
+
         $fields []= array(
             'name' => 'render_type',
             'type' => 'livesearch',
@@ -314,16 +324,54 @@ class FieldMultilink extends \Floxim\Floxim\Component\Field\Entity
             'name' => 'list_fields',
             'type' => 'livesearch',
             'is_multiple' => true,
-            'parent' => 'format[list_fields_type] != all',
+            'parent' => 'format[render_type] != livesearch && format[list_fields_type] != all',
             'values' => array_values($all_fields),
             'values_filter' => 'format[linking_component_id] in this.components'
         );
+
+        $m2m_vals = [];
+        foreach ($m2m_fields as $m2m_field) {
+            $m2m_field_com = $m2m_field['component'];
+            $m2m_field_id = $m2m_field['id'];
+            $m2m_vals [$m2m_field_id]= [
+                'id' => $m2m_field_id,
+                'name' => $m2m_field_com['name'] . ' - '. $m2m_field['name'],
+                'component_id' => $m2m_field['component_id'],
+                'components' => $m2m_field_com->getAllVariants()->getValues('id')
+            ];
+        }
+        $fields []= [
+            'name' => 'livesearch_m2m_field',
+            'type' => 'livesearch',
+            'label' => 'Что искать?',
+            'values' => array_values($m2m_vals),
+            'parent' => 'format[render_type] == livesearch',
+            'values_filter' => 'format[linking_component_id] in this.components && format[linking_field_id] != this.id'
+        ];
+        $m2m_field = $this->getM2MField();
+        if ($m2m_field) {
+            $m2m_field_com_keyword = $m2m_field->getTargetName();
+            $cond_field = array(
+                'name' => 'livesearch_m2m_cond',
+                'type' => 'condition',
+                'fields' => array(
+                    fx::component($m2m_field_com_keyword)->getFieldForFilter('entity'),
+                ),
+                'types' => fx::data('component')->getTypesHierarchy(),
+                // 'value' => $value,
+                'label' => 'Условия',
+                'parent' => 'format[render_type] == livesearch'
+                // 'pageable' => $pageable->getValues('keyword')
+            );
+            $fields[] = $cond_field;
+        }
 
         return $fields;
     }
 
     public function setValue($value)
     {
+        //fx::log('sval', $value, $this['keyword'], debug_backtrace());
         parent::setValue($value);
     }
 
@@ -347,13 +395,34 @@ class FieldMultilink extends \Floxim\Floxim\Component\Field\Entity
     {
         $rel = $this->getRelation();
         $is_mm = $rel[0] == System\Finder::MANY_MANY;
-        
+        $has_mm_field = $this->getM2MField();
         if ($is_mm) {
             $res = $this->appendManyMany($content);
+        } elseif ($has_mm_field) {
+            $res = $this->appendWithM2MField($content);
         } else {
             $res = $this->appendHasMany($content);
         }
         return $res;
+    }
+
+    protected function appendWithM2MField($content)
+    {
+        $m2mf = $this->getM2MField();
+        $old_val = $content[$this['keyword']];
+        $new_raw_vals = $this->value;
+        $new_val = fx::collection();
+        $target = $this->getTargetName();
+        foreach ($new_raw_vals as $item_id) {
+            $linker = $old_val->findOne($m2mf['keyword'], $item_id);
+            if (!$linker) {
+                $linker = fx::data($target)->create([
+                    $m2mf['keyword'] => $item_id
+                ]);
+            }
+            $new_val[]= $linker;
+        }
+        return $new_val;
     }
 
     /*

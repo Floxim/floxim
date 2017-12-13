@@ -280,9 +280,13 @@ class Context {
         
         $res = 'fx-block ';
         
-        $apply_to_self = array('lightness');
+        $apply_to_self = array('lightness', 'hover-lightness');
+        $do_not_inherit = ['hover-lightness'];
         
         foreach ($last as $p => $v) {
+            if (in_array($p, $do_not_inherit)) {
+                continue;
+            }
             if ($p === 'rel-width') {
                 continue;
             }
@@ -300,6 +304,12 @@ class Context {
         }
         if ($current_props) {
             foreach ($current_props as $k => $v) {
+                if (in_array($k, $do_not_inherit)) {
+                    if ($v !== 'none') {
+                        $res .= ' fx-block_'.$p.'_'.$v;
+                    }
+                    continue;
+                }
                 if ($v !== 'none') {
                     $res .= ' fx-block_has-'.$k;
                     $res .= ' fx-block_own-'.$k.'_'.$v;

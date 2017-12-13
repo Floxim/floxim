@@ -261,6 +261,7 @@ class Page
         if ($redrawn) {
             $response['redraw'] = $redrawn;
         }
+        header("Content-type: text/json; charset=utf-8");
         return json_encode($response);
     }
     

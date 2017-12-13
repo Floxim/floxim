@@ -44,7 +44,8 @@ class FieldLink extends \Floxim\Floxim\Component\Field\Entity
             array('site', 'Site'),
             array('component', 'Component'),
             array('infoblock', 'Infoblock'),
-            array('lang', 'Language')
+            array('lang', 'Language'),
+            array('field', 'Field')
         ));
         $fields['target'] = array(
             'label'  => fx::alang('Links to', 'system'),

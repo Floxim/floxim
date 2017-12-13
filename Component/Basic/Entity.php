@@ -193,7 +193,6 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
             if ($field->validateValue($value)) {
                 $field->setValue($value);
                 $this[$field_keyword] = $field->getSavestring($this);
-                //fx::log($field, $value, $this);
             } else {
                 $field->setError();
                 $result['status'] = 'error';
@@ -859,7 +858,7 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
     
     public function getBoxFields()
     {
-        return array();
+        return [];
     }
     
     public function _getShortType()

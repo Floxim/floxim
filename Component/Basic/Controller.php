@@ -295,6 +295,7 @@ class Controller extends \Floxim\Floxim\Controller\Frontoffice {
         if ($limit == 0) {
             return;
         }
+        $this->setAjaxAccess(true);
         $finder = clone $this->getFinder();
         $finder
             ->order(null)

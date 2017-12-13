@@ -367,12 +367,14 @@ class StyleBundle extends Bundle {
             $this->generateExportFile();
             $errors = ob_get_clean();
             if ($errors !== '') {
-                fx::log('hm ers', $errors, fx::debug()->backtrace(), $parser, $less_vars, $less_call);
+                fx::log('hm ers', $errors, fx::debug()->backtrace(), $less_vars, $less_call);
             }
         } catch (\Less_Exception_Compiler $e) {
-            fx::log($e, fx::debug()->backtrace(), $parser, $less_vars, $less_call);
+            $warnings = ob_get_clean();
+            fx::log($e, $less_vars, $less_call, $warnings);
         } catch (\Less_Exception_Parser $e) {
-            fx::log('parser ex', $e, $e->getTrace(), fx::debug()->backtrace(), $parser, $less_vars, $less_call);
+            $warnings = ob_get_clean();
+            fx::log('parser ex', $e, $e->getTrace(), $warnings, fx::debug()->backtrace(), $less_vars, $less_call);
         }
         $res = self::minifyLess($res);
         return $res;

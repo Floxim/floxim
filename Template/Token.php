@@ -21,7 +21,7 @@ class Token
     /**
      * to create a token from source
      * @param string $source
-     * @return fx_template_token
+     * @return Token
      */
     public static function create($source)
     {

@@ -3554,6 +3554,7 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
     var xhr = $.ajax({
         type:'post',
         data:post_data,
+        dataType: 'html',
         url: '/~ib/'+real_infoblock_id+'@'+page_id,
         success:function(res) {
             $fx.front.c_hover = null;
@@ -3652,7 +3653,10 @@ fx_front.prototype.reload_infoblock = function(infoblock_node, callback, extra_d
             } else {
                 finish();
             }
-       }
+        },
+        error: function (jxhr, error_code, error) {
+            console.log('ib reload faild', error);
+        }
     });
     return xhr;
 };

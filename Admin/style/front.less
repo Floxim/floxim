@@ -1439,21 +1439,12 @@ span.fx_area_marker {
         cursor:inherit;
     }
     
-    /*
-    &:first-child {
-        padding-left:20px;
-    }
-    */
-    
     &__title, &__controls {
         display:inline-block;
         vertical-align:middle;
     }
     
     &__controls {
-        //transition: all 0.8s ease;
-        //max-width:1px;
-        //opacity:0.2;
         width:1px;
         white-space: nowrap;
         
@@ -1494,6 +1485,18 @@ span.fx_area_marker {
     &-active &__label {
         border:none;
         color:#000;
+    }
+    
+    @media (max-width:800px) {
+        padding-left:10px;
+        padding-right:15px;
+        background-size:10%;
+        &__icon {
+            display:none;
+        }
+        &__label {
+            font-size:13px;
+        }
     }
 }
 

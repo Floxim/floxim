@@ -10,7 +10,7 @@ window.$fx = {
             dataFilter: function(data, type)  {
                 var json = null;
                 try {
-                    json = $.parseJSON(data);
+                    json = typeof data === 'string' ? $.parseJSON(data) : $.extend(true, {}, data);
                 } catch (e) {
                     return data;
                 }
@@ -65,45 +65,7 @@ window.$fx = {
                                 $('head').append('<link type="text/css" rel="stylesheet" href="'+asset+'" />');
                             }
                         } else if (typeof asset === 'object') {
-                            if (asset.declarations) {
-                                if (typeof $fx.less_block_declarations === 'undefined') {
-                                    $fx.less_block_declarations = {};
-                                }
-                                $.each(asset.declarations, function(k,v) {
-                                    $fx.less_block_declarations[k] = v;
-                                });
-                            }
-                            if (asset.styles) {
-                                for (var j = 0; j < asset.styles.length; j++) {
-                                    var style = asset.styles[j];
-                                    if ($('link[href="'+style+'"]').length === 0) {
-                                        $('head').append('<link type="text/css" rel="stylesheet" href="'+style+'" />');
-                                    }
-                                }
-                            }
-                            if (asset.blocks) {
-                                for (var j = 0 ; j < asset.blocks.length; j++) {
-                                    var block = asset.blocks[j];
-                                    var $ss = $('style#'+block.style_class);
-                                    
-                                    if (!$ss.length) {
-                                        $ss = $('<style type="text/css" id="'+block.style_class+'"></style>');
-                                        $ss.attr('data-declaration', block.declaration_keyword);
-                                        
-                                        $('head').append($ss);
-                                        has_updates = true;
-                                    }
-                                    //if (true || !$ss.data('is_tweaked')) {
-                                    
-                                    if ($ss.text() !== block.css || $ss.data('file') !== block.file) {
-                                        has_updates = true;
-                                        $ss.data('created_by', 'ajax');
-                                        $ss.data('file', block.file);
-                                        $ss.data('filemtime', block.filemtime);
-                                        $ss.text(block.css);
-                                    }
-                                }
-                            }
+                            has_updates = $fx.handleCssAsset(asset) || has_updates;
                         }
                     }
                     if (has_updates) {
@@ -313,6 +275,49 @@ window.$fx = {
             }
             $fx.admin.load();
         }
+    },
+
+    handleCssAsset: function (asset) {
+        var has_updates = false;
+        if (asset.declarations) {
+            if (typeof $fx.less_block_declarations === 'undefined') {
+                $fx.less_block_declarations = {};
+            }
+            $.each(asset.declarations, function(k,v) {
+                $fx.less_block_declarations[k] = v;
+            });
+        }
+        if (asset.styles) {
+            for (var j = 0; j < asset.styles.length; j++) {
+                var style = asset.styles[j];
+                if ($('link[href="'+style+'"]').length === 0) {
+                    $('head').append('<link type="text/css" rel="stylesheet" href="'+style+'" />');
+                }
+            }
+        }
+        if (asset.blocks) {
+            for (var j = 0 ; j < asset.blocks.length; j++) {
+                var block = asset.blocks[j];
+                var $ss = $('style#'+block.style_class);
+
+                if (!$ss.length) {
+                    $ss = $('<style type="text/css" id="'+block.style_class+'"></style>');
+                    $ss.attr('data-declaration', block.declaration_keyword);
+
+                    $('head').append($ss);
+                    has_updates = true;
+                }
+
+                if ($ss.text() !== block.css || $ss.data('file') !== block.file) {
+                    has_updates = true;
+                    $ss.data('created_by', 'ajax');
+                    $ss.data('file', block.file);
+                    $ss.data('filemtime', block.filemtime);
+                    $ss.text(block.css);
+                }
+            }
+        }
+        return has_updates
     },
         
     parse_hash: function() {

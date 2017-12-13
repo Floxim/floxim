@@ -56,11 +56,16 @@
         
         $form.ajaxSubmit({
             success: function(data) {
-                try {
-                    data = $.parseJSON( data );
+                var res;
+                if (typeof data === 'object') {
                     res = data.result;
-                } catch (e) {
-                    var res = data;
+                } else {
+                    try {
+                        data = $.parseJSON( data );
+                        res = data.result;
+                    } catch (e) {
+                        var res = data;
+                    }
                 }
                 append_result(res);
             },

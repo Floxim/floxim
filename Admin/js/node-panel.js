@@ -201,7 +201,8 @@ function node_panel($node, params) {
         }
         
         if ($fx.front.is_fixed($node)) {
-            css.top -= doc_scroll;
+            // @todo what was the idea???
+            // css.top -= doc_scroll;
             css.position = 'fixed';
         }
         

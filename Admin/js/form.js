@@ -127,7 +127,7 @@ fx_form = {
         var use_tabs = settings.tabs && !settings.ignore_cols;
 
         settings.fields = $fx.form.init_joins(settings.fields);
-        
+
         if (use_tabs) {
             $fx_form.init_tabs(settings, $form, $form_body);
         }
@@ -580,71 +580,93 @@ fx_form = {
         if (typeof filter !== 'string' || json.type !== 'livesearch') {
             return;
         }
-        
-        
-        var cond_parts = filter.split(/\s*?(==|!=|>|<|>=|<=|!~|~|\sin\s)\s*/);
-        if (cond_parts.length !== 3) {
-            return;
-        }
-        
-        var cond = {
-            operator: cond_parts[1].replace(/^\s+|\s+$/g, '')
-        };
-        
-        if (cond_parts[0].match(/^this\./)) {
-            cond.value_prop = cond_parts[0].replace(/^this\./, '');
-            cond.field = cond_parts[2];
-            cond.order = 'direct';
-        } else {
-            cond.value_prop = cond_parts[2].replace(/^this\./, '');
-            cond.field = cond_parts[0];
-            cond.order = 'inverted';
+
+        var cond_groups = filter.split(/\s&&\s/);
+        var conds = [];
+
+        for (var i = 0; i < cond_groups.length; i++) {
+            var cg = cond_groups[i];
+            var cond_parts = cg.split(/\s*?(==|!=|>|<|>=|<=|!~|~|\sin\s)\s*/);
+            if (cond_parts.length !== 3) {
+                return;
+            }
+
+            var cond = {
+                operator: cond_parts[1].replace(/^\s+|\s+$/g, '')
+            };
+
+            if (cond_parts[0].match(/^this\./)) {
+                cond.value_prop = cond_parts[0].replace(/^this\./, '');
+                cond.field = cond_parts[2];
+                cond.order = 'direct';
+            } else {
+                cond.value_prop = cond_parts[2].replace(/^this\./, '');
+                cond.field = cond_parts[0];
+                cond.order = 'inverted';
+            }
+            conds.push(cond)
         }
         
         var $livesearch = $field.find('.livesearch'),
             ls = $livesearch.data('livesearch');
         
         function handle() {
-            var $compare_field = $field.closest('form').find('[name="'+cond.field+'"]'),
-                compare_val = $compare_field.val();
-        
+            var compare_vals = {}
+            for (var i = 0; i < conds.length; i++) {
+                var $compare_field = $field.closest('form').find('[name="' + conds[i].field + '"]'),
+                    compare_val = $compare_field.val();
+                compare_vals[i] = compare_val;
+            }
+
+
+            var test = $field.is('.field_name__format--livesearch_content_type');
+
             var new_values = [];
-            
+
             for (var i = 0; i < all_values.length; i++) {
                 var cv = all_values[i],
-                    own_val = cv[cond.value_prop];
-            
-                switch (cond.operator) {
-                    case '==':
-                        if (own_val == compare_val) {
-                            new_values.push(cv);
-                        }
+                    matched = true;
+
+                for (var j = 0 ; j < conds.length; j++) {
+                    var cond = conds[j],
+                        own_val = cv[cond.value_prop],
+                        cond_matched = false,
+                        compare_val = compare_vals[j];
+
+                    switch (cond.operator) {
+                        case '==':
+                            cond_matched = own_val == compare_val
+                            break;
+                        case '!=':
+                            cond_matched = own_val != compare_val;
+                            break;
+                        case 'in':
+                            if (cond.order === 'inverted') {
+                                $.each(own_val, function (j, c_own_val) {
+                                    if (c_own_val == compare_val) {
+                                        cond_matched = true;
+                                        return false;
+                                    }
+                                });
+                            } else {
+                                $.each(compare_val, function (j, c_compare_val) {
+                                    if (c_compare_val == own_val) {
+                                        cond_matched = true;
+                                        return false;
+                                    }
+                                });
+                            }
+                            break;
+                    }
+                    if (!cond_matched) {
+                        matched = false;
                         break;
-                    case 'in':
-                        var found = false;
-                        if (cond.order === 'inverted') {
-                            $.each(own_val, function(j, c_own_val) {
-                                if (c_own_val == compare_val) {
-                                    found = true;
-                                    return false;
-                                }
-                            });
-                        } else {
-                            $.each(compare_val, function(j, c_compare_val) {
-                                if (c_compare_val == own_val) {
-                                    found = true;
-                                    return false;
-                                }
-                            });
-                        }
-                        if (found) {
-                            new_values.push(cv);
-                        }
-                        break;
+                    }
                 }
-                
+                if (matched) {
+                    new_values.push(cv);
+                }
             }
-            
             ls.updatePresetValues(new_values);
         }
         

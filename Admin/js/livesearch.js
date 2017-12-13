@@ -3,7 +3,7 @@
 window.fx_livesearch = function (node, params) {
     
     this.$node = $(node);
-    
+
     if (!params){
         console.log('nopars');
         console.trace();

@@ -30,6 +30,54 @@ class Test extends Admin {
         );
         $this->response->addFields($fields);
     }
+    
+    public function setf()
+    {
+        $f = [
+            'filters' => [
+                'type' => 'set',
+                'without_delete' => true,
+                'tpl' => [
+                    [
+                        'name' => 'field',
+                        'type' => 'text',
+                        'disabled' => true
+                    ],
+                    [
+                        'name' => 'title',
+                        'type' => 'html'
+                    ],
+                    [
+                        'name' => 'on',
+                        'type' => 'checkbox'
+                    ]
+                ],
+                'labels' => [
+                    '',
+                    'Поле',
+                    'Вкл'
+                ],
+                'values' => [
+                    [
+                        'field' => 'price',
+                        'title' => 'Цена',
+                        'on' => false
+                    ],
+                    [
+                        'field' => 'section',
+                        'title' => 'Раздел',
+                        'on' => true
+                    ],
+                    [
+                        'field' => 'country',
+                        'title' => 'Страна',
+                        'on' => false
+                    ]
+                ]
+            ]
+        ];
+        $this->response->addFields($f);
+    }
 
     public function font()
     {

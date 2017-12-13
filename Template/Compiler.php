@@ -774,7 +774,7 @@ class Compiler
             } else {
                 $res_val = isset($vals[$val]) ? $vals[$val] : 'none';
             }
-            if ($var === 'lightness') {
+            if ($var === 'lightness' || $var === 'hover-lightness') {
                 if (preg_match("~^[^,]+~", $res_val, $lightness)) {
                     $res_val = preg_replace("~^custom_~", '', $lightness[0]);
                 }
@@ -2189,12 +2189,20 @@ class Compiler
         return '';
     }
     
-    protected function tokenLinkToCode($token)
+    protected function tokenLinkToCode(Token $token)
     {
         $lid = $token->getProp('lid');
         $param_name = 'link_info';
-        
+
         $param = Token::create('{@'.$param_name.' source="\Floxim\Ui\Box\Box::getLinkParam" /}');
+
+        $props = [];
+        if ($token->hasChildren()) {
+            $props = self::parseCssLikeProps($token->getFirstChild()->getProp('value'));
+            foreach ($props as $prop_key => $prop_val) {
+                $param->setProp($prop_key, $prop_val);
+            }
+        }
         
         $code = $this->tokenParamToCode($param);
         
@@ -2320,6 +2328,9 @@ class Compiler
         $code .= "if (\$_is_admin ) {\n";
 
         foreach ($props as $k => $v) {
+            if ($k === 'source') {
+                continue;
+            }
             $c_prop = "'".$k."' => ";
             if (!is_string($v)) {
                 $c_prop .= var_export($v, 1);
@@ -2332,7 +2343,7 @@ class Compiler
         }
         $_param_props = "array(".join(", ", $exported_props).")";
         if (isset($props['source'])) {
-            $_param_props = 'array_merge('.$_param_props.', call_user_func("'.$props['source'].'", $context))';
+            $_param_props = 'array_merge(call_user_func("'.$props['source'].'", $context), '.$_param_props.')';
         }
         $code .= "\$this->registerParam('".$name."',  ".$_param_props.");\n";
         $code .= "}\n";
