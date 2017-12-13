@@ -1525,7 +1525,7 @@ class Compiler
             $code .= "'".$id."'";
         } elseif ($has_info) {
             if ($raw_value !== null) {
-                $code .= isset($style_info['id']) ? $style_info['id'] : $default_id;
+                $code .= isset($style_info['id']) ? "'".$style_info['id']."'" : $default_id;
             } else {
                 $code .=  '( isset('.$_style_info."['id']) ? ".$_style_info."['id'] : ".$default_id.")";
             }
