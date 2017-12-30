@@ -321,7 +321,7 @@ html.find('textarea.fx_code').each( function(){
 
         if (opt_name !== null) {
             var is_selected = opt_val == _c.value || ( _c.value instanceof Array  && $.inArray(opt_val, _c.value) > -1);
-            ?><option value="<?=opt_val?>"<?=is_selected ? ' selected="selected"':  ''?>><?=opt_name?></option><?
+            ?><option value="<?=$t.clear(opt_val)?>"<?=is_selected ? ' selected="selected"':  ''?>><?=opt_name?></option><?
         }
     }?>
 </select>

@@ -363,15 +363,35 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
         return isset($fields[$field_keyword]);
     }
     
-    public function getField($field_keyword) {
+    public function getField($field_keyword)
+    {
+        if ($field_keyword && $field_keyword[0] === ':') {
+            $field_keyword = mb_substr($field_keyword, 1);
+            $path = explode('.', $field_keyword);
+            if (count($path) > 1) {
+                $real_prop = end($path);
+                $real_owner = $this->dig(array_slice($path, 0, -1));
+                if ($real_owner && $real_owner instanceof \Floxim\Floxim\System\Entity) {
+                    return $real_owner->getField($real_prop);
+                }
+                return null;
+            }
+        }
         $fields = $this->getFields();
         if (!isset($fields[$field_keyword])) {
+            $boxFields = $this->getBoxFields();
+            foreach ($boxFields as $boxField) {
+                if ($boxField['keyword'] === $field_keyword) {
+                    return $boxField;
+                }
+            }
             return null;
         }
         return $fields[$field_keyword];
     }
     
-    protected function afterDelete() {
+    protected function afterDelete()
+    {
         parent::afterDelete();
         // delete images and files when deleting content
         $image_fields = $this->getFields()->find('type', array(

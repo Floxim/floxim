@@ -79,13 +79,17 @@ class Env
         if (!$url) {
             return;
         }
+        $url_parts = parse_url($url);
+        if (!$url_parts) {
+            $url_parts = [];
+        }
         $c_url = array_merge(
             [
                 'scheme' => 'http',
                 'query' => '',
                 'path' => '/'
             ],
-            parse_url($url)
+            $url_parts
         );
         
         $url = $c_url['path'].($c_url['query'] ? '?'.$c_url['query'] : '');

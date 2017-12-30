@@ -84,7 +84,7 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
         $tables = array();
         $com = static::getComponent();
         if (!$com) {
-            fx::log('no com', $this);
+            fx::log('no com', get_called_class());
             return [];
         }
         $chain = $com->getChain();

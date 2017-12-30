@@ -345,55 +345,5 @@ class Controller extends \Floxim\Floxim\Controller\Frontoffice {
             $res['next'] = $links[$c_page + 1]['url'];
         }
         return $res;
-        
-        return $total_pages;
-        /* ---- */
-        return;
-        $param_value = $this->getParam('pagination');
-        if (!$param_value || $param_value === 'undefined' || $param_value === '0') {
-            return null;
-        }
-        $total_rows = $this->getFinder()->getFoundRows();
-        
-        if ($total_rows == 0) {
-            return null;
-        }
-        $limit = $this->getParam('limit');
-        if ($limit == 0) {
-            return null;
-        }
-        $total_pages = ceil($total_rows / $limit);
-        if ($total_pages == 1) {
-            return null;
-        }
-        $links = array();
-        $url_tpl = $this->getPaginationUrlTemplate();
-        $base_url = preg_replace('~##.*?##~', '', $url_tpl);
-        $url_tpl = str_replace("##", '', $url_tpl);
-        $c_page = $this->getCurrentPageNumber();
-        foreach (range(1, $total_pages) as $page_num) {
-            $links[$page_num] = array(
-                'active' => $page_num == $c_page,
-                'page'   => $page_num,
-                'url'    =>
-                    $page_num == 1 ?
-                        $base_url :
-                        //sprintf($url_tpl, $page_num)
-                        str_replace("%d", $page_num, $url_tpl)
-            );
-        }
-        $res = array(
-            'links'        => fx::collection($links),
-            'total_pages'  => $total_pages,
-            'total_items'  => $total_rows,
-            'current_page' => $c_page
-        );
-        if ($c_page != 1) {
-            $res['prev'] = $links[$c_page - 1]['url'];
-        }
-        if ($c_page != $total_pages) {
-            $res['next'] = $links[$c_page + 1]['url'];
-        }
-        return $res;
     }
 }
