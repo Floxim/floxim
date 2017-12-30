@@ -19,6 +19,7 @@ class AttrParser extends HtmlTokenizer
     }
 
     protected $_count_injections = 0;
+    protected $c_quote = null;
 
     protected function addAtt()
     {
