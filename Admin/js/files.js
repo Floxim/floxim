@@ -104,7 +104,8 @@ fc.prototype.init = function() {
         $.ajaxFileUpload({
             url: $fx.settings.action_link,
             secureuri:false,
-            fileElementId:inp_id,
+            //fileElementId:inp_id,
+            input: this,
             dataType: 'json',
             data: { entity:'file', fx_admin:1, action:'upload_save', format:format },
             success: function ( data ) {
