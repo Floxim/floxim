@@ -613,6 +613,10 @@ class Fx
         }
         
         self::loadComponents();
+
+        if (self::isAdmin()) {
+            \Floxim\Floxim\Admin\Controller\Admin::addAdminFiles();
+        }
         
         // init modules
         self::$module_manager = new Modules();

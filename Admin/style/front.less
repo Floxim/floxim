@@ -1093,8 +1093,10 @@ span.fx_area_marker {
     
     &_overlap_on {
         width: 40%;
-        min-width:500px;    
-        right: -42%;
+        min-width:500px;
+        &.fx-side-panel_side_right {
+          right: -42%;
+        }
     }
     
     &.fx-side-panel_overlap_off {
@@ -1151,7 +1153,9 @@ span.fx_area_marker {
     
     &_style_alert {
         top:100px;
-        right:40px;
+        &, &.fx-side-panel_overlap_on {
+          right: 40px;
+        }
         min-width:450px;
         width:auto;
         z-index:2;

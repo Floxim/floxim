@@ -7,7 +7,7 @@ use Floxim\Floxim\System\Fx as fx;
 class JsBundle extends Bundle {
     protected $type = 'js';
     protected $extension = 'js';
-    
+
     public function getBundleContent() {
         $files = $this->getUniqueFiles();
         $res = '';

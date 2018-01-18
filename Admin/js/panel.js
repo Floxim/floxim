@@ -346,7 +346,7 @@
                 $sidebar = c_panel.$container;
             
             $sidebar.show();
-            
+
             switch (style) {
                 case 'default':
                     var c_params = c_panel.current_params,

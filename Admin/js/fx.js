@@ -79,10 +79,13 @@ window.$fx = {
                 }
                 
                 if (json.redraw) {
-                    $.each(json.redraw, function(ib_id, html) {
-                        var $old = $('.fx_infoblock_'+ib_id);
-                        Floxim.updateInfoblock($old, html);
-                    });
+                    setTimeout(function() {
+                        $.each(json.redraw, function (ib_id, html) {
+                            var $old = $('.fx_infoblock_' + ib_id);
+                            console.log('fx redraing')
+                            Floxim.updateInfoblock($old, html);
+                        });
+                    }, 100);
                 }
                 
                 var response = json.response;

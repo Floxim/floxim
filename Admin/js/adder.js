@@ -556,7 +556,11 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
             bottom_edge = $(document).height() - plus_size;
         
         function place_button(e, $entity) {
-            
+            // entity was removed from DOM after mouse event but before timeout
+            if ($entity && !$entity.closest('html').length) {
+                hide_button($button);
+            }
+
             if (!is_sortable) {
                 var node_offset = $node.offset(),
                     panel_height = $('.fx-admin-panel').height(),
