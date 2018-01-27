@@ -421,7 +421,10 @@ class Html
                 $styled_call = sprintf($styled_call, 'element="'.$el_name.'"');
                 $el_value .= $styled_call;
             }
-            $n->addClass('{bem_element'. ($tpl_id ? ' is_template="true"' : '').'}'.$el_value.'{/bem_element}');
+            $n->addClass(
+                '{bem_element'. ($tpl_id ? ' is_template="true"' : '').'}'.$el_value.'{/bem_element}',
+                true
+            );
             $n->removeAttribute('fx:e');
         }
 
@@ -429,11 +432,28 @@ class Html
             $b_value = $n->getAttribute('fx:b');
             if ($styled_call) {
                 $block_parts = explode(" ", trim($b_value));
-                $block_name = $block_parts[0];
+                $block_name = array_shift($block_parts);
                 $styled_call = sprintf($styled_call, 'block="'.$block_name.'"');
-                $b_value .= $styled_call;
+                /*
+                 * put style_call after block name but before any modifiers,
+                 * to make vars from style export are available
+                 */
+                $b_value = $block_name .' '.$styled_call.' '.implode(' ', $block_parts);
             }
-            $n->addClass('{bem_block '.($container_hash ? 'container="1"' : '').'}'.$b_value.'{/bem_block}');
+            $bb_class = '{bem_block '.($container_hash ? 'container="1"' : '').'}'.$b_value.'{/bem_block}';
+            $c_class = $n->getAttribute('class');
+            $end_of_el = '{/bem_element}';
+            // add bem_block after bem_element
+            if (strstr($c_class, $end_of_el)) {
+                $n->setAttribute(
+                    'class',
+                    str_replace($end_of_el, $end_of_el.' '.$bb_class, $c_class)
+                );
+            }
+            // or to the beginning of classname
+            else {
+                $n->addClass($bb_class, false);
+            }
             $n->removeAttribute('fx:b');
             $n->parent->addChildAfter(HtmlToken::create('<?php $this->bemStopBlock(); ?>'), $n);
         }

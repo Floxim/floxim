@@ -68,7 +68,7 @@ name="<?=_c.name?>" id="<?=_c.name || _c.id?>"
 <!--[input]-->
     <?
     var type_att = ['password','number'].indexOf(_c.type) < 0 ? 'text' : _c.type;
-    var units = _c.type === 'number' && _c.units ? _c.units : null;
+    var units = (_c.type === 'number' || _c.type === 'float') && _c.units ? _c.units : null;
     var show_units = _c.show_units || false;
     var extra_class = '';
     if (_c.type === 'number' && _c.max) {

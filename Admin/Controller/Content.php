@@ -187,7 +187,6 @@ class Content extends Admin
         if (isset($input['data_sent']) && $input['data_sent']) {
             $res['is_new'] = !$content['id'];
             $set_res = $content->setFieldValues($input['content']);
-            
             if (is_array($set_res) && isset($set_res['status']) && $set_res['status'] === 'error') {
                 $res['status'] = 'error';
                 $res['errors'] = $set_res['errors'];

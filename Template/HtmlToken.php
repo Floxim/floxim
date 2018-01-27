@@ -331,7 +331,7 @@ class HtmlToken
         $this->attributes_modified = true;
     }
 
-    public function addClass($class)
+    public function addClass($class, $first = false)
     {
         if (!($c_class = $this->getAttribute('class'))) {
             $this->setAttribute('class', $class);
@@ -341,7 +341,11 @@ class HtmlToken
         if (in_array($class, $c_class)) {
             return;
         }
-        $this->setAttribute('class', join(" ", $c_class) . " " . $class);
+        $c_class = implode(" ", $c_class);
+        $this->setAttribute(
+            'class',
+            $first ? $class.' '.$c_class : $c_class . " " . $class
+        );
     }
 
     public function removeAttribute($att_name)

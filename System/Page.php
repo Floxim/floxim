@@ -324,7 +324,7 @@ class Page
         $namespace = join(".", $parts);
         
         $res = \Floxim\Floxim\Template\Loader::nameToPath($namespace).DIRECTORY_SEPARATOR.$last_name.'_style_filter.js';
-        
+
         $this->addJs([$res], ['to' => 'admin']);
         $added[$block] = true;
     }

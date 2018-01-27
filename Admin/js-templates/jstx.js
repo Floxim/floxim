@@ -12,7 +12,21 @@ window.$t = {
                 return res;
             }
             if ( ! (mods instanceof Array ) ) {
-                mods = mods.split(/[,\s]+/);
+                if (typeof mods === 'string') {
+                    mods = mods.split(/[,\s]+/);
+                } else if (typeof mods === 'object') {
+                    var res_mods = [];
+                    $.each(mods, function(prop, value) {
+                        if (typeof value === 'boolean') {
+                            if (value) {
+                                res_mods.push(prop);
+                            }
+                        } else {
+                            res_mods.push(prop+'_'+value);
+                        }
+                    })
+                    mods = res_mods;
+                }
             }
             var base = res;
             for (var i = 0; i < mods.length; i++) {

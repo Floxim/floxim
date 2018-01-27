@@ -220,7 +220,7 @@
     
     .fx_input {
         font-family: Roboto, Tahoma, sans-serif;
-        display: block;
+        display: inline-block;
         //margin: 0 0 30px 0;
         box-sizing:border-box;
         -moz-box-sizing:border-box;
@@ -1335,9 +1335,21 @@ select.fx_input {
 
 .fx-field-group {
     
-    &__fields {
+    &_view_collapsable > &__fields {
         display:none;
         padding-top:20px;
+    }
+
+    &_view_line > &__fields {
+      display: flex;
+      & > .field {
+        &, & .input_container {
+          margin-bottom: 0;
+        }
+        &:not(:last-child) {
+          margin-right: 15px;
+        }
+      }
     }
     
     margin-bottom:20px;
@@ -1388,7 +1400,7 @@ select.fx_input {
         }
     }
     
-    &_expanded &__fields {
+    &_expanded > &__fields {
         display:block;
     }
     

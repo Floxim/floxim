@@ -1,22 +1,36 @@
-<!--[input ? _c.type === 'group']-->
+<!--[input ? _c.type === 'group' && (!_c.render_type || _c.render_type === 'collapsable')]-->
 <?
 var b = 'fx-field-group',
     kw = _c.keyword || _c.name,
     style = _c.style || 'default',
-    exp = _c.is_expanded ? 'fx-field-group_expanded' : '';
+    exp = _c.is_expanded ? 'fx-field-group_expanded' : '',
+    mods = {style: style, keyword: kw, expanded: _c.is_expanded, view: 'collapsable'},
+    cl = $t.getBem(b)
 ?>
-<div class="<?=b?> <?=b?>_keyword_<?=kw?> <?=b?>_style_<?=style?> <?= exp ?>">
+<div class="<?= cl(null, mods)?>">
     <? if (_c.label && style !== 'transparent' ) { ?>
-        <div class="<?=b?>__title" tabindex="0">
-            <div class="<?=b?>__name"><?= _c.label ?></div>
+        <div class="<?=cl('title')?>" tabindex="0">
+            <div class="<?=cl('name')?>"><?= _c.label ?></div>
             <?if (_c.description) {?>
-                <div class="<?=b?>__description"><?= _c.description ?> </div>
+                <div class="<?=cl('description')?>"><?= _c.description ?> </div>
             <?}?>
-            <div class="<?=b?>__expander"></div>
+            <div class="<?=cl('expander')?>"></div>
         </div>
     <? } ?>
-    <div class="<?=b?>__fields"></div>
+    <div class="<?= cl('fields')?>"></div>
 </div>
 
 <!--[label ? _c.type === 'group']-->
 <span></span>
+
+<!--[input ? _c.type === 'group' && _c.render_type === 'line']-->
+<?
+var b = 'fx-field-group',
+    kw = _c.keyword || _c.name,
+    style = _c.style || 'default',
+    cl = $t.getBem(b),
+    mods = {style: style, keyword: kw, view: 'line'};
+?>
+<div class="<?=cl(null, mods)?>">
+    <div class="<?=cl('fields')?>"></div>
+</div>

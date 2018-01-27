@@ -46,7 +46,7 @@ class FieldMultilink extends \Floxim\Floxim\Component\Field\Entity
     {
         $f = $this['format'];
         $prop = 'livesearch_m2m_field';
-        if (!isset($f[$prop]) || !$f[$prop]) {
+        if (!isset($f[$prop]) || !$f[$prop] || $f['render_type'] !== 'livesearch') {
             return;
         }
         $m2m_field = fx::data('field', $f[$prop]);

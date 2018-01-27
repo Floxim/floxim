@@ -5,6 +5,27 @@ namespace Floxim\Floxim\Field;
 class FieldInt extends \Floxim\Floxim\Component\Field\Entity
 {
 
+    public function getJsField($content)
+    {
+        $res = parent::getJsField($content);
+        $units = $this->getFormat('units');
+        $res['type'] = 'number';
+        if ($units) {
+            $res['units'] = $units;
+            $res['show_units'] = true;
+        }
+        return $res;
+    }
+
+    public function formatSettings()
+    {
+        return [
+            'units' => [
+                'label' => 'Единицы измерения'
+            ]
+        ];
+    }
+
     public function validateValue($value)
     {
         if (!parent::validateValue($value)) {

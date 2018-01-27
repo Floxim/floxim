@@ -190,7 +190,8 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
                 continue;
             }
 
-            if ($field->validateValue($value)) {
+            $is_valid = $field->validateValue($value);
+            if ($is_valid) {
                 $field->setValue($value);
                 $this[$field_keyword] = $field->getSavestring($this);
             } else {
