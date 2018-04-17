@@ -146,7 +146,7 @@ c_val = $t.clear(c_val);
     class="<?=
         _c.wysiwyg ? 'fx_wysiwyg redactor_editor_styled ' : 'fx_input'
         ?> <?=
-        _c.code ? 'fx_code fx_code_'+_c.code : ''?>"
+        _c.code ? 'fx_code fx_code_'+_c.code +(_c.eager ? ' fx_code_eager' : '') : ''?>"
         ><?=c_val?></textarea>
 </div>
 
@@ -292,6 +292,11 @@ html.find('textarea.fx_code').each( function(){
             $textarea.trigger('change');
         }
     });
+    if ($textarea.hasClass('fx_code_eager')) {
+        cCodeMirror.on('keyup', function(cm, e) {
+            $textarea.trigger('change');
+        })
+    }
 });
 
 <!--[input ? _c.type == 'select']-->

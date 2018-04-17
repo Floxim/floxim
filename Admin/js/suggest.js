@@ -163,9 +163,9 @@ window.fx_suggest = function(params) {
             }
         });
 
-        setTimeout(function() {
+        Suggest.createBox();
 
-            Suggest.createBox();
+        setTimeout(function() {
 
             var $scrollable = $(window),
                 $parents = Suggest.input.parents();
@@ -269,7 +269,6 @@ window.fx_suggest = function(params) {
                 selected_node = Suggest.box.find('.search_item').first();
             }
             Suggest.Select(selected_node);
-
         } else {
             Suggest.hideBox(false);
         }
@@ -282,7 +281,6 @@ window.fx_suggest = function(params) {
 
     this.getResults = function(term, params) {
         params = params || {};
-
         if (this.preset_values && this.preset_values.length) {
             this.Unlock();
             return this.getResultsFromPreset(term);
@@ -369,6 +367,10 @@ window.fx_suggest = function(params) {
 
         item[cache_key_term]=res;
         fx_suggest.cache[cache_key_data]=$.extend({},fx_suggest.cache[cache_key_data] || {},item);
+    };
+
+    this.clearCache = function () {
+        fx_suggest.cache = {};
     };
 
     this.getCacheData = function(requestParams,term) {

@@ -184,17 +184,32 @@ fx_buttons.prototype.handle = function ( button, button_data ) {
         if (!skip_confirm && !confirm('Are you sure?')) {
             return;
         }
-        
+
+        var ids = [];
+        $.each(sel, function() {
+            var $node = $(this);
+            var cid = $node.data('id')
+            ids.push(cid.name || cid)
+        })
+
+        /*
         var cid = sel.data('id');
         if (cid.name) {
             cid = cid.name;
         }
+        */
         var opts = {
             entity:sel.data('entity'),
             action:'delete',
-            id:cid,
             posting:true
         };
+        if (ids.length === 0) {
+            opts.id = ids[0]
+        } else {
+            opts.ids = ids;
+            //opts.action = 'delete_many';
+        }
+        console.log(opts);
         if (button.params) {
             opts = $.extend({}, opts, button.params);
         }

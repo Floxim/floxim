@@ -292,7 +292,7 @@ class Entity extends \Floxim\Floxim\System\Entity {
     
     public static function getCondContentTypes($cond)
     {
-        if ($cond['type'] === 'has_type') {
+        if ($cond['type'] === 'has_type' && !$cond['inverted']) {
             return $cond['value'];
         }
         $field = self::parseFieldFromCond($cond);
@@ -319,7 +319,7 @@ class Entity extends \Floxim\Floxim\System\Entity {
         return [
             'base' => $base_type,
             'type' => join('.', $base),
-            'field' => $parts[0]
+            'field' => isset($parts[0]) ? $parts[0] : null
         ];
     }
     
@@ -379,7 +379,7 @@ class Entity extends \Floxim\Floxim\System\Entity {
                 $value = fx::env()->get($tested_parts[1]);
             }
         }
-        
+
         switch ($cond['type']) {
             default:
                 
@@ -397,6 +397,8 @@ class Entity extends \Floxim\Floxim\System\Entity {
                     $tested_value = fx::timestamp($tested_value);
                     if (is_scalar($value)) {
                         $value = fx::timestamp($value);
+                    } else {
+                        $value = \Floxim\Floxim\System\Finder::processDateValue($value, true);
                     }
                 }
                 $res = $cond['type'] === 'less' ? $tested_value < $value  : $tested_value > $value;

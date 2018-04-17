@@ -84,19 +84,42 @@ less_tweaker.prototype.load_less = function() {
 less_tweaker.prototype.get_data = function() {
     var res = {},
         that = this;
+
+    if (typeof this.var_meta_cache === 'undefined') {
+        this.var_meta_cache = {}
+    }
     
     for (var i = 0; i < this.vars.length; i++) {
         var name = this.vars[i],
             inp_name = that.base_name ? that.base_name + '['+name+']' : name,
             $inp = that.$form.find(':input[name="'+inp_name+'"]');
-        
-        var value = $inp.val(),
-            units = $inp.data('units');
-        if (units) {
-            value += units;
+
+        if (!this.var_meta_cache.hasOwnProperty(inp_name)) {
+            this.var_meta_cache[inp_name] = $inp.closest('.field').data('source_json');
         }
-        if (value === '') {
-            value = 'none';
+
+        var meta = this.var_meta_cache[inp_name] || {},
+            value = $inp.val(),
+            units = $inp.data('units');
+
+        if (meta.code === true) {
+            value = '{' + value + '}';
+            var $label = $inp.closest('.field').find('label'),
+                errcl = 'fx-less-field-error'
+            $label.find('.'+errcl).remove();
+            less.parse('html ' + value, function (e) {
+                if (e) {
+                    value = '""';
+                    $label.append('<span class="'+errcl+'"></span>');
+                }
+            });
+        } else {
+            if (units) {
+                value += units;
+            }
+            if (value === '') {
+                value = 'none';
+            }
         }
         res[name] = value;
     }

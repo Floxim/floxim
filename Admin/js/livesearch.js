@@ -23,7 +23,7 @@ window.fx_livesearch = function (node, params) {
     }
     
     $.extend(this, params);
-    
+
     var bl = this.is_multiple ? 'multisearch' : 'monosearch';
     
     if (!this.allow_empty) {
@@ -155,9 +155,10 @@ window.fx_livesearch = function (node, params) {
         values = fx_livesearch.vals_to_obj(values);
         this.preset_values = values;
         this.Suggest.preset_values = values;
+        this.count_show = values.length;
+        this.Suggest.count_show = values.length;
         var set_old_res = this.setValue(c_value);
         if (!set_old_res && values.length > 0) {
-            //this.setValue(values[0].id);
             this.selectFirstValue();
         }
     };
@@ -636,7 +637,7 @@ window.fx_livesearch = function (node, params) {
         livesearch.$proto_node.html(v);
         var extra_right = 10; // 20
         var width = livesearch.$proto_node.outerWidth() + extra_right;
-        livesearch.$input.css({width:width+'px'});
+        livesearch.$input.css({width:width+'px', 'min-width': width+'px'});
     };
     
     this.Init = function() {
@@ -651,18 +652,30 @@ window.fx_livesearch = function (node, params) {
             minTermLength:0,
             preset_values: this.preset_values,
             onRender: function($res, res) {
-                if (livesearch.allow_new && $fx && $fx.front) {
+                var allowNew = livesearch.allow_new
+                if (allowNew && $fx && $fx.front) {
                     var $adder = livesearch.Suggest.renderItem({
-                        name:'Добавить'
+                        name:'Создать'
                     });
+                    if (typeof allowNew !== 'object') {
+                        allowNew = {content_type: res.content_type}
+                    }
                     $res = $res.add( $adder );
                     $adder.click(function() {
                         livesearch.triggerBlur();
                         $fx.front.show_edit_form({
-                            content_type: res.content_type,
-                            onfinish: function(res) {
+                            //content_type: res.content_type,
+                            content_type: allowNew.content_type,
+                            onfinish: allowNew.onfinish || function(res) {
+                                if (livesearch.onafteradd) {
+                                    livesearch.onafteradd(res)
+                                }
                                 var saved_id = res.saved_id;
                                 livesearch.loadValues(saved_id);
+                                livesearch.Suggest.clearCache();
+                                livesearch.$node.one('livesearch_value_loaded', function() {
+                                    livesearch.$node.trigger('change');
+                                });
                             }
                         });
                         return false;
@@ -843,7 +856,7 @@ window.fx_livesearch = function (node, params) {
                 }
                 return false;
             }
-            if (input_value && livesearch.allow_new) {
+            if (input_value && livesearch.allow_new && false) {
                 livesearch.addValue({id:false, name:input_value});
             } else {
                 livesearch.removeValue( livesearch.getValueNode() );
@@ -874,7 +887,7 @@ window.fx_livesearch = function (node, params) {
             var vals = this.value || [],
                 ids = [],
                 has_raw = false;
-            
+
             for (var i = 0; i < vals.length; i++) {
                 var v = vals[i];
                 if (!this.preset_values.length) {

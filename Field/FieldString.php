@@ -19,6 +19,9 @@ class FieldString extends \Floxim\Floxim\Component\Field\Entity
                 $res['nl2br'] = true;
             }
         }
+        if ($this->getFormat('multiline')) {
+            $res['type'] = 'textarea';
+        }
         return $res;
     }
     
@@ -29,7 +32,13 @@ class FieldString extends \Floxim\Floxim\Component\Field\Entity
                 'type'  => 'checkbox',
                 'name'  => 'html',
                 'label' => fx::alang('allow HTML tags', 'system')
-            )
+            ),
+            [
+                'type' => 'checkbox',
+                'name' => 'multiline',
+                'label' => 'Многострочное',
+                'parent' => ['format[html]' => '!=1']
+            ]
         );
         return $fields;
     }

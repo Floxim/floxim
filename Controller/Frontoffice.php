@@ -108,6 +108,10 @@ class Frontoffice extends System\Controller
         return $result;
     }
 
+    /**
+     * @param null $form
+     * @return \Floxim\Form\Form\Entity
+     */
     public function ajaxForm($form = null)
     {
         if (!$form) {

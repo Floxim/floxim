@@ -2,6 +2,7 @@
 
 namespace Floxim\Floxim\Template;
 
+use Floxim\Floxim\System\Collection;
 use \Floxim\Floxim\System\Fx as fx;
 
 class HtmlToken
@@ -9,6 +10,11 @@ class HtmlToken
     public $type;
     public $name;
     public $source;
+
+    /**
+     * @var Token
+     */
+    public $parent;
     
     public $offset;
     
@@ -275,6 +281,11 @@ class HtmlToken
         return $this->children;
     }
 
+    public function hasChildren()
+    {
+        return isset($this->children) && count($this->children) > 0;
+    }
+
     protected static $attr_parser = null;
 
     protected function parseAttributes()
@@ -375,6 +386,122 @@ class HtmlToken
                 $this->setAttribute($k, $v);
             }
         }
+    }
+
+    /**
+     * @param null|callable $selectorCallback
+     * @return null|Token
+     */
+    public function getNextSibling($selectorCallback = null)
+    {
+        if (!$this->parent) {
+            return;
+        }
+        $ownIndex = $this->parent->getChildIndex($this);
+        if ($selectorCallback === null) {
+            return $this->parent->getChild($ownIndex + 1);
+        }
+        $neighbours = $this->parent->getChildren();
+        foreach ($neighbours as $i => $n) {
+            if ($i <= $ownIndex) {
+                continue;
+            }
+            if ($selectorCallback($n)) {
+                return $n;
+            }
+        }
+    }
+
+    /**
+     * @param null|callable $selectorCallback
+     * @return \Floxim\Floxim\System\Collection
+     */
+    public function getNextSiblings($selectorCallback = null)
+    {
+        if (!$this->parent) {
+            return;
+        }
+        $ownIndex = $this->parent->getChildIndex($this);
+        $res = fx::collection();
+        $neighbours = $this->parent->getChildren();
+        foreach ($neighbours as $i => $n) {
+            if ($i <= $ownIndex) {
+                continue;
+            }
+            if ($selectorCallback === null || $selectorCallback($n)) {
+                $res []= $n;
+            }
+        }
+        return $res;
+    }
+
+    /**
+     * @param null|callable $selectorCallback
+     */
+    public function getPreviousSibling($selectorCallback = null)
+    {
+        if (!$this->parent) {
+            return;
+        }
+        $ownIndex = $this->parent->getChildIndex($this);
+        if ($selectorCallback === null) {
+            return $this->parent->getChild($ownIndex - 1);
+        }
+        $neighbours = $this->parent->getChildren();
+        for ($i = $ownIndex - 1; $i >= 0; $i--) {
+            $n = $neighbours[$i];
+            if ($selectorCallback($n)) {
+                return $n;
+            }
+        }
+    }
+
+    public function getChild($index)
+    {
+        $children = $this->getChildren();
+        return isset($children[$index]) ? $children[$index] : null;
+    }
+
+    public function getTextContent()
+    {
+        if ($this->name === 'text') {
+            return $this->source;
+        }
+        if (!$this->hasChildren()) {
+            return '';
+        }
+        $res = [];
+        foreach ($this->getChildren() as $child) {
+            $res []= $child->getTextContent();
+        }
+        return implode('', $res);
+    }
+
+    public function closest($selectorCallback)
+    {
+        if ($selectorCallback($this)) {
+            return $this;
+        }
+        if ($this->parent) {
+            return $this->parent->closest($selectorCallback);
+        }
+    }
+
+    public function find($selectorCallback, $asCollection = true)
+    {
+        if (!$this->hasChildren()) {
+            return $asCollection ? fx::collection() : [];
+        }
+        $res = [];
+        foreach($this->getChildren() as $child) {
+            if ($selectorCallback($child)) {
+                $res []= $child;
+            }
+            foreach ($child->find($selectorCallback, false) as $foundInChild) {
+                $res []= $foundInChild;
+            }
+        }
+        return $asCollection ? fx::collection($res) : $res;
     }
 
 

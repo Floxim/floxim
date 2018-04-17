@@ -171,10 +171,17 @@ class Submenu
         } else {
             $this->title = $component['name'];
             $this->backlink = 'component.all';
-            $cid = $component['id'];
             // print the main sections
             $submenu_items = Controller\Component::getComponentSubmenu($component);
             foreach ($submenu_items as $item) {
+                $item = array_merge(
+                    [
+                        'url' => null,
+                        'parent' => null,
+                        'code' => ''
+                    ],
+                    $item
+                );
                 $this->menu[] = $this->addNode($item['code'], $item['title'], $item['url'], $item['parent']);
             }
         }

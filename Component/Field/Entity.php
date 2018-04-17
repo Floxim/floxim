@@ -106,7 +106,10 @@ class Entity extends System\Entity
             $res = false;
         }
 
-        $modified = $this->modified_data['keyword'] && $this->modified_data['keyword'] != $this->data['keyword'];
+        $modified =
+            isset($this->modified_data['keyword']) &&
+            $this->modified_data['keyword'] &&
+            $this->modified_data['keyword'] !== $this->data['keyword'];
         
         
 
@@ -217,7 +220,7 @@ class Entity extends System\Entity
     }
     
     /**
-     * Get field variants wich were inherited from the new field's parent
+     * Get field variants which were inherited from the new field's parent
      * and their parent should be replaced by the current field
      * e.g. news.name <- page.name becomes news.name <- publication.name 
      * @return \Floxim\Floxim\System\Collection;
@@ -280,11 +283,19 @@ class Entity extends System\Entity
         if ($this->isReal()) {
             $type = self::getSqlTypeByType($this['type']);
             if ($type) {
-                if ($this->modified_data['keyword'] && $this->modified_data['keyword'] != $this->data['keyword']) {
+                if (
+                    isset($this->modified_data['keyword']) &&
+                    $this->modified_data['keyword'] &&
+                    $this->modified_data['keyword'] != $this->data['keyword']
+                ) {
                     fx::db()->query("ALTER TABLE `{{" . $this->getTable() . "}}`
                     CHANGE `" . $this->modified_data['keyword'] . "` `" . $this->data['keyword'] . "` " . $type);
                 } else {
-                    if ($this->modified_data['type'] && $this->modified_data['type'] != $this->data['type']) {
+                    if (
+                        isset($this->modified_data['type']) &&
+                        $this->modified_data['type'] &&
+                        $this->modified_data['type'] != $this->data['type']
+                    ) {
                         fx::db()->query("ALTER TABLE `{{" . $this->getTable() . "}}`
                     MODIFY `" . $this->data['keyword'] . "` " . $type);
                     }

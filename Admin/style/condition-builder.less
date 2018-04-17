@@ -155,3 +155,26 @@
         }
     }
 }
+
+.fx-date-offset-control {
+  &, &__now {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+  &__type {
+    margin-right:10px;
+  }
+  &_mode_val &__now, &_mode_now &__val {
+    display: none;
+  }
+  &__now > .livesearch {
+    margin-right:10px;
+  }
+}
+
+.fx-time-control {
+  & > .fx_input_number {
+    width:50px !important;
+  }
+}

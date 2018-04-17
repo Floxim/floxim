@@ -241,6 +241,9 @@ class Entity extends System\Entity implements Template\Entity
 
     public function isAvailableOnPage($page)
     {
+        if (!isset($page['site_id'])) {
+            fx::cdebug('owtf', $page, debug_backtrace());
+        }
         if ($this['site_id'] != $page['site_id']) {
             return;
         }

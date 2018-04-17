@@ -109,12 +109,24 @@ fx_form = {
         }
         for (var i = 0; i < fields_with_lost_group.length; i++) {
             var cf = fields_with_lost_group[i];
-            cf.group_priority = groups[cf.group].priority;
+            cf.group_priority = (groups[cf.group] || {}).priority;
         }
         var res = fields.sort(function(a, b) {
             return get_priority(a) - get_priority(b);
         });
         return res;
+    },
+    has_locked_fields: function (fields) {
+        fields = fields || []
+        for (var i = 0; i < fields.length; i++) {
+            var f = fields[i]
+            if (f.hasOwnProperty('locked')) {
+                return true
+            }
+            if (f.fields && this.has_locked_fields(f.fields)) {
+                return true;
+            }
+        }
     },
     draw_fields: function(settings, $form_body) {
         
@@ -127,6 +139,10 @@ fx_form = {
         var use_tabs = settings.tabs && !settings.ignore_cols;
 
         settings.fields = $fx.form.init_joins(settings.fields);
+
+        if (this.has_locked_fields(settings.fields)) {
+            settings.lockable = true;
+        }
 
         if (use_tabs) {
             $fx_form.init_tabs(settings, $form, $form_body);
@@ -463,7 +479,7 @@ fx_form = {
         if (json.form_is_lockable && json.type !== 'hidden') {
 
             var $lock_group = $(
-                    '<div class="fx_lock_group">'+
+                    '<div class="fx_lock_group fx_lock_group_field-type_'+json.type+'">'+
                         '<div class="fx_lock_control"></div>'+
                         '<div class="fx_lock_container"></div>'+
                     '</div>');
@@ -576,6 +592,8 @@ fx_form = {
         
         var filter = json.values_filter,
             all_values = json.values;
+
+        var test = $field.is('.field_name__format--group_by');
         
         if (typeof filter !== 'string' || json.type !== 'livesearch') {
             return;
@@ -583,6 +601,8 @@ fx_form = {
 
         var cond_groups = filter.split(/\s&&\s/);
         var conds = [];
+
+        // test && console.log(cond_groups)
 
         for (var i = 0; i < cond_groups.length; i++) {
             var cg = cond_groups[i];
@@ -619,10 +639,8 @@ fx_form = {
             }
 
 
-            var test = $field.is('.field_name__format--livesearch_content_type');
-
             var new_values = [];
-
+            // test && console.log(all_values, conds);
             for (var i = 0; i < all_values.length; i++) {
                 var cv = all_values[i],
                     matched = true;
@@ -632,7 +650,6 @@ fx_form = {
                         own_val = cv[cond.value_prop],
                         cond_matched = false,
                         compare_val = compare_vals[j];
-
                     switch (cond.operator) {
                         case '==':
                             cond_matched = own_val == compare_val
@@ -859,7 +876,6 @@ fx_form = {
         var that = this;
         
         conds = this.make_conditions(conds);
-        
         var handled_input_names = {};
         for (var i = 0; i < conds.length; i++ ) {
             handled_input_names[ conds[i][0] ] = true;
@@ -888,7 +904,7 @@ fx_form = {
     add_parent_condition: function(conds, $field, $container) {
         
         if (typeof conds === 'string') {
-            
+            var cond_split_rex = /\s*?(==|!=|>|<|>=|<=|!~|~)\s*/
             var cond_string = conds;
             conds = [];
             
@@ -898,13 +914,17 @@ fx_form = {
             
                 var c_cond = cond_groups[i];
 
-                var cond_parts = c_cond.split(/\s*?(==|!=|>|<|>=|<=|!~|~)\s*/);
+                if (!cond_split_rex.test(c_cond)) {
+                    c_cond = c_cond  + ' !='
+                }
+
+                var cond_parts = c_cond.split(cond_split_rex);
                 if (cond_parts.length === 3) {
                     var handled_name = cond_parts[0],
                         own_name = $field.find('[name]').first().attr('name');
                 
                     if (!own_name) {
-                        console.log($field);
+                        // console.log($field);
                     } else {
                         if (own_name.match(/\]$/) && !handled_name.match(/\]$/)) {
                             handled_name = $fx_fields.replace_last_name(own_name, handled_name);
@@ -915,7 +935,6 @@ fx_form = {
                 }
             }
         }
-        
         var that = this;
         $container = $container.closest('form');
         var handler = this.bind_conditions(

@@ -3,9 +3,9 @@
     _c.value = _c.value || '';
     var cl = $t.getBem('fx-shadow-control');
 ?>
-<div class="<?=cl()?>">
+<div class="<?=cl()?> <?=cl()?>_type_<?=(_c.shadowType || 'box')?>">
     <textarea name="<?= _c.name ?>" class="<?=cl('value')?>"><?=_c.value?></textarea>
-    <div class="<?=cl('handler')?>"></div>
+    <div class="<?=cl('handler')?>"><? if (_c.shadowType === 'text'){?><span></span><? } ?></div>
     <div class="<?=cl('popup')?>">
         <div class="<?=cl('close')?>">&times;</div>
         <div class="<?=cl('levels')?>">

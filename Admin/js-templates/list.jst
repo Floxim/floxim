@@ -3,12 +3,15 @@
 <?if (_c.filter && _c.values && _c.values.length > 10) {?>
 	<div class="fx_list_filter"><label><?=$fx.lang('Find')?>:<input type="text" /></label></div>
 <?}
+var chb = _c.multiselect ? '<td><input type="checkbox" /></td>' : '';
+chb = '';
 ?>
 <input type="hidden" <?=$t.field_id_name(_c)?> class="list_value_input"/>
 <table class="fx_list_table">
 <?
 if (_c.labels !== undefined && _c.values ) {?>
     <tr class="fx_list_labels">
+        <?=chb?>
         <?$.each(_c.labels, function(name, label){?>
             <td>
                 <?=typeof label == 'object' ? label.label : label?>
@@ -51,6 +54,7 @@ if (_c.values) {
             <?=$t.data_attr(value)?>
             <?=value.row_id ? ' id="'+value.row_id+'" ' : ''?>
         >
+            <?=chb?>
             <?
             print($t.list_field_row(value, {labels:_c.labels}));
             ?>
@@ -61,7 +65,8 @@ if (_c.values) {
 ?>
 </table>
        
-<? if (_c.pager) { ?>
+<? if (_c.pager && Object.keys(_c.pager.pages).length > 1) {
+    ?>
     <div class="fx_pager">
         <? if (_c.pager.previous_page) { ?>
             <a class="fx_pager__link fx_pager__link-previous" href="<?=_c.pager.previous_page?>">&lt;</a>

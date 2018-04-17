@@ -13,9 +13,12 @@ class Token
     public $name = null;
     public $type = null;
     public $props = array();
+    public $rawProps = [];
     
     public $stack_extra = null;
     public $need_type = null;
+
+    public $children = [];
 
 
     /**
@@ -185,6 +188,7 @@ class Token
             $props['as'] = $item_alias;
             $props['key'] = $item_key;
         }
+
         return new self($name, $type, $props);
     }
 
@@ -454,7 +458,7 @@ class Token
         ),
         'set' => array(
             'type' => 'both',
-            'contains' => array('code', 'var', 'lang', 'call', 'apply', 'if', 'elseif', 'else', 'each', 'with')
+            'contains' => array('code', 'var', 'lang', 'call', 'apply', 'if', 'elseif', 'else', 'each', 'with', 'link')
         ),
         'first' => array(
             'type' => 'double',
@@ -485,7 +489,34 @@ class Token
     {
         $this->name = $name;
         $this->type = $type;
-        $this->props = $props;
+        foreach ($props as $propKey => $propValue) {
+            if ($propKey[0] === ':') {
+                $propKey = substr($propKey, 1);
+                $this->rawProps[$propKey] = true;
+            }
+            $this->props[$propKey] = $propValue;
+        }
+        // $this->props = $props;
+    }
+
+    public function exportProp($name)
+    {
+        if (!isset($this->props[$name])) {
+            return 'null';
+        }
+        if (isset($this->rawProps[$name])) {
+            return $this->props[$name];
+        }
+        $val  = $this->props[$name];
+        if (is_numeric($val)) {
+            return $val;
+        }
+        return "'".addcslashes($val, "'")."'";
+    }
+
+    public function isRawProp($name)
+    {
+        return isset($this->rawProps[$name]);
     }
 
     public function addChild(Token $token)

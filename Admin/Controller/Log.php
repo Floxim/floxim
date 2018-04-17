@@ -32,7 +32,7 @@ class Log extends Admin
         $index = fx::collection($index)->concat($lost);
 
         foreach ($index as $item) {
-            $url = preg_replace("~^http://[^/]+~", '', $item['url']);
+            $url = isset($item['url']) ? preg_replace("~^http://[^/]+~", '', $item['url']) : '';
             $day_part = date('d.m.Y ', $item['start']);
             if ($day_part == date('d.m.Y ')) {
                 $day_part = '';
@@ -44,7 +44,7 @@ class Log extends Admin
                     'url'  => '#admin.log.show(' . $item['id'] . ')'
                 ),
                 'request' => '[' . $item['method'] . '] ' . $item['host'] . $url,
-                'time'    => sprintf('%.5f', $item['time']),
+                'time'    => isset($item['time']) ? sprintf('%.5f', $item['time']) : '',
                 'entries' => $item['count_entries']
             );
 

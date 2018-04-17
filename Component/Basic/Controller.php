@@ -83,6 +83,7 @@ class Controller extends \Floxim\Floxim\Controller\Frontoffice {
                 ->where('is_branch_published', 1);
         }
         $show_pagination = $this->getParam('pagination');
+        $limit_offset = max($this->getParam('limit_offset', 1) - 1, 0);
         $c_page = $this->getCurrentPageNumber();
         $limit = $this->getParam('limit');
         if ($show_pagination && $limit) {
@@ -91,11 +92,11 @@ class Controller extends \Floxim\Floxim\Controller\Frontoffice {
         if ($limit) {
             if ($show_pagination && $c_page != 1) {
                 $finder->limit(
-                    $limit * ($c_page - 1),
+                    $limit * ($c_page - 1) + $limit_offset,
                     $limit
                 );
             } else {
-                $finder->limit($limit);
+                $finder->limit($limit_offset, $limit);
             }
         }
         if (($sorting = $this->getParam('sorting'))) {

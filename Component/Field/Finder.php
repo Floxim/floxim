@@ -48,7 +48,7 @@ class Finder extends System\Finder
     {
         parent::__construct();
         $this->json_encode = array('format');
-        $this->order = 'priority';
+        $this->order('priority');
     }
 
     public function getByComponent($component_id)

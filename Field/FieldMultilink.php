@@ -26,12 +26,13 @@ class FieldMultilink extends \Floxim\Floxim\Component\Field\Entity
                     $res,
                     [
                         'type' => 'livesearch',
+                        'allow_new' => true,
                         'is_multiple' => true,
                         'params' => [
                             'content_type' => $m2m_field->getTargetName(),
                             'relation_field_id' => $this['id']
                         ],
-                        'value' => $content[$this['keyword']]->getValues($m2m_field['keyword'])
+                        'value' => $content[$this['keyword']]->find($m2m_field['keyword'])->getValues($m2m_field['keyword'])
                     ]
                 );
                 break;
@@ -136,10 +137,34 @@ class FieldMultilink extends \Floxim\Floxim\Component\Field\Entity
         });
         
         $fields_by_com = array();
+
+        $group_field_keyword = null;
+        if (($group_by = $this->getFormat('group_by'))) {
+            $group_field = fx::data('field', $group_by);
+            if ($group_field && $group_field instanceof FieldLink) {
+                $group_field_keyword = $group_field['keyword'];
+                $groups_finder = $group_field->getTargetFinder($content);
+                $group_values = $groups_finder->all();
+                $res['group_by'] = [
+                    'field' => $group_field['keyword'],
+                    'type' => $groups_finder->getType(),
+                    'values' => $group_values->getValues(function($item) {
+                        return [
+                            $item['id'],
+                            $item['name']
+                        ];
+                    }),
+                    'allow_new' => $this->getFormat('group_by_allow_new')
+                ];
+            }
+        }
         
         
         foreach ($all_fields as $field) {
             if ($field['keyword'] == $rel[2]) {
+                continue;
+            }
+            if ($field['keyword'] === $group_field_keyword) {
                 continue;
             }
             if ($field['keyword'] === 'is_published') {
@@ -164,7 +189,7 @@ class FieldMultilink extends \Floxim\Floxim\Component\Field\Entity
             }
             $res['tpl'][]= $c_form_field;
         }
-        
+
         if (isset($content[$this['keyword']])) {
             if ($rel[0] === System\Finder::HAS_MANY) {
                 $linkers = $content[$this['keyword']];
@@ -172,31 +197,32 @@ class FieldMultilink extends \Floxim\Floxim\Component\Field\Entity
                 $linkers = $content[$this['keyword']]->linkers;
             }
             foreach ($linkers as $linker) {
-                
+
                 $val_array = array();
                 $val_array['_meta'] = array(
                     'id' => $linker['id'],
                     'type' => $linker->getType(),
                     'type_id' => $linker->getComponent()->get('id')
                 );
-                
+
+                if ($group_field_keyword) {
+                    $val_array['_meta']['group_by_value'] = $linker[$group_field_keyword];
+                }
+
                 $linker_fields = $linker->getFormFields();
-                
+
                 foreach ($all_fields as $field) {
                     $field_keyword = $field['keyword'];
+                    if ($field_keyword === $group_field_keyword) {
+                        continue;
+                    }
                     if ($field_keyword === 'type') {
                         $val_array[$field_keyword] = $linker->getComponent()->getItemName();
                         continue;
                     }
                     $linker_field = $linker_fields->findOne('name', $field_keyword);
                     if ($linker_field) {
-                        /*
-                        $val_array[$field_keyword] = $linker_field['type'] === 'livesearch' ?
-                                        $linker_field : 
-                                        $linker_field['value'];
-                         * 
-                         */
-                        $val_array[$field_keyword] = $linker_field['value'];
+                        $val_array[$field_keyword] = isset($linker_field['value']) ? $linker_field['value'] : null;
                     } else {
                         $val_array[$field_keyword] = $linker[$field_keyword];
                     }
@@ -204,8 +230,12 @@ class FieldMultilink extends \Floxim\Floxim\Component\Field\Entity
                 $res['values'] [] = $val_array;
             }
         }
-        
+
         return $res;
+    }
+
+    public function generateValues ($items) {
+
     }
 
     public function formatSettings()
@@ -291,7 +321,8 @@ class FieldMultilink extends \Floxim\Floxim\Component\Field\Entity
                     'id' => $c_id,
                     'name' => $c_com_field['name'],
                     'component_id' => $c_com_field['component_id'],
-                    'components' => $c_com_field['component']->getAllVariants()->getValues('id')
+                    'components' => $c_com_field['component']->getAllVariants()->getValues('id'),
+                    'type' => $c_com_field['type']
                 );
             }
         }
@@ -328,6 +359,44 @@ class FieldMultilink extends \Floxim\Floxim\Component\Field\Entity
             'values' => array_values($all_fields),
             'values_filter' => 'format[linking_component_id] in this.components'
         );
+
+        $avail_link_fields = array_filter(
+            $all_fields,
+            function  ($f) {
+                return $f['type'] === 'link';
+            }
+        );
+        $avail_link_components = [];
+        foreach ($avail_link_fields as $alf) {
+            $avail_link_components = array_merge($avail_link_components, $alf['components']);
+        }
+        $avail_link_components = array_unique($avail_link_components);
+
+        $fields []= [
+            'name' => 'group_by',
+            'type' => 'livesearch',
+            'label' => 'Группировать',
+            'values' => array_values(
+                array_merge(
+                    [
+                        [
+                            'id' => '',
+                            'name' => '- нет -',
+                            'components' => $avail_link_components
+                        ]
+                    ],
+                    $avail_link_fields
+                )
+            ),
+            'values_filter' => 'format[linking_component_id] in this.components'
+        ];
+
+        $fields []= [
+            'name' => 'group_by_allow_new',
+            'type' => 'checkbox',
+            'label' => 'Можно создавать новые группы?',
+            'parent' => 'format[group_by]'
+        ];
 
         $m2m_vals = [];
         foreach ($m2m_fields as $m2m_field) {

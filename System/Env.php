@@ -413,7 +413,7 @@ class Env
     }
     
     public function getContextProp($prop) {
-        $parts = explode(".", $prop);
+        $parts = is_array($prop) ? $prop : explode(".", $prop);
         $obj_key = array_shift($parts);
         $obj = $this->get($obj_key);
         if (!$obj) {
@@ -426,6 +426,13 @@ class Env
             }
             $obj = $obj[$part];
         }
+        return $obj;
+    }
+
+    public function getContextPropTarget($prop) {
+        $parts = explode(".", $prop);
+        $obj_key = array_shift($parts);
+        $obj = $this->get($obj_key);
         return $obj;
     }
     

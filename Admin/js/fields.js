@@ -113,7 +113,6 @@ window.$fx_fields = {
             type = 'default';
         }
         
-        //var source_json = JSON.parse(JSON.stringify(json));
         var source_json = $.extend(true, {}, json);
         
         var $node = this[type](json);
@@ -799,7 +798,11 @@ window.$fx_fields = {
     },
 
     file: function (json, template) {
-        var $row =  $t.jQuery('form_row', json);
+        var $row =  $t.jQuery('form_row', json),
+            $field = $row.find('.fx_image_field');
+
+        new fx_file_control($field);
+        return template === 'input' ? $field : $row;
     },
 
     image: function ( json , template) {
@@ -810,9 +813,11 @@ window.$fx_fields = {
         return template === 'input' ? $field : $row;
     },
 
-    textarea: function(json) {
+    textarea: function(json, template) {
         json.field_type = 'textarea';
-        return $t.jQuery('form_row', json);
+        var $row = $t.jQuery('form_row', json),
+            $field = $row.find('.fx_textarea_container');
+        return template === 'input' ? $field : $row;
     },
 
     select: function(json) {
@@ -1051,195 +1056,7 @@ window.$fx_fields = {
     },
     
     init_fieldset: function(html, _c) {
-        $('tbody.fx_fieldset_rows', html).sortable({
-            handle:'>td:first-child'
-        });
-
-        var fs = $('.fx_fieldset', html);
-
-        if (!_c.values) {
-            _c.values = _c.value || [];
-        }
-        if (!_c.name) {
-            _c.name = '';
-        }
-        var set_path = _c.name.replace(/\]$/,'').split(/\]?\[/);
-        
-        $.each(_c.values, function(row, val) {
-            var inputs = [];
-            var row_meta = val._meta || {},
-                row_index = row_meta.id || row;
-            
-            //console.log(row_meta, );
-            
-            $.each(_c.tpl, function(tpl_index, tpl_props) {
-                var c_val  = val[tpl_props.name];
-                if (
-                    typeof c_val !== 'object' || 
-                    (c_val && typeof c_val.value === 'undefined')
-                ) {
-                    c_val = {value: c_val};
-                }
-                var inp_props = $.extend(
-                    {}, 
-                    tpl_props, 
-                    {
-                        name:_c.name+'['+row_index+']['+tpl_props.name+']'
-                    },
-                    c_val
-                );
-                if (tpl_props.type === 'radio' && !tpl_props.values) {
-                    inp_props.$input_node = $('<input type="radio" name="'+_c.name+'['+tpl_props.name+']" value="'+row_index+'" />');
-                    if (tpl_props.value == row_index) {
-                        inp_props.$input_node.attr('checked', 'checked');
-                    }
-                }
-                inputs.push(inp_props);
-            });
-            var $row = $t.jQuery('fieldset_row', inputs, {index:row, set_field: _c});
-            $row.data('row_meta', row_meta);
-            
-            if (row_meta.type_id) {
-                if ($fx.front) {
-                    $fx.front.bind_content_form($row, row_meta.type_id, row_meta.id);
-                }
-            }
-            $('.fx_fieldset_rows', html).append($row);
-            
-        });
-        
-        function append_row_values(vals, $row) {
-            var row_meta = $row.data('row_meta') || {},
-                row_index = row_meta.id;
-            
-            $.each(vals, function(prop, val) {
-                var c_name = _c.name+'['+row_index+']['+prop+']',
-                    $c_inp = $row.find('[name="'+c_name+'"]');
-
-                if ($c_inp.length === 0) {
-                    $c_inp = $('<input type="hidden" name="'+c_name+'" />');
-                    $row.append($c_inp);
-                }
-                
-                $fx_fields.set_value($c_inp, val);
-            });
-        }
-        
-        
-        html.on('click', '.fx_icon-type-edit', function(e) {
-            var $row = $(e.target).closest('.fx_fieldset_row'),
-                row_meta = $row.data('row_meta') || {},
-                content_id = !row_meta.id || (row_meta.id+'').match(/^new/) ? null : row_meta.id,
-                c_vals = $row.formToHash();
-                
-            for (var j = 0; j < set_path.length; j++) {
-                c_vals = c_vals[set_path[j]];
-            }
-
-            c_vals = c_vals[row_meta.id];
-            
-            var edit_form_params = {
-                content_id: content_id,
-                content_type: row_meta.type,
-                entity_values: c_vals,
-                onsubmit: function(e) {
-                    var $form = $(e.target),
-                        new_vals = $form.formToHash();
-
-                    append_row_values(new_vals.content, $row);
-
-                    $fx.front_panel.hide();
-                    return false;
-                }
-            };
-            
-            if (_c.relation) {
-                edit_form_params.relation = JSON.stringify(_c.relation);
-            }
-            
-            edit_form_params.parent_form_data = JSON.stringify($row.closest('form').formToHash());
-            $fx.front.show_edit_form(edit_form_params);
-            
-        });
-        
-        function remove_row($row) {
-            var $next_row = $row.next('.fx_fieldset_row');
-            $row.remove();
-            if ($next_row.length > 0) {
-                $next_row.find(':input, .fx_fieldset_remove').first().focus();
-            } else {
-                $('.fx_fieldset_add', fs).focus();
-            }
-        }
-        
-        function add_row(type) {
-            var inputs = [],
-                index = $('.fx_fieldset_row', fs).length + 1,
-                id = 'new_'+index,
-                row_meta = {
-                    type_id: type.content_type_id,
-                    type: type.keyword,
-                    id: id
-                };
-            
-            for (var i = 0; i < _c.tpl.length; i++) {
-                var input_props = {
-                    name:_c.name+'['+id+']['+_c.tpl[i].name+']'
-                };
-                if (_c.tpl[i].name === 'type') {
-                    input_props.value = type.name;
-                }
-                inputs.push( 
-                    $.extend(
-                        {}, 
-                        _c.tpl[i],
-                        input_props
-                    )
-                );
-            }
-            var $new_row = $t.jQuery('fieldset_row', inputs, {index:index, set_field: _c});
-            $new_row.data(
-                'row_meta', 
-                row_meta
-            );
-            $('.fx_fieldset_rows', fs).append($new_row);
-            $new_row.find(':input:visible').first().focus();
-            if (row_meta.type) {
-                $new_row.append(
-                    '<input type="hidden" name="'+_c.name+'['+id+'][type]" value="'+row_meta.type+'" />'
-                );
-            }
-            
-            if (row_meta.type_id && $fx.front) {
-                $fx.front.bind_content_form($new_row, row_meta.type_id, row_meta.id);
-            }
-        }
-        
-        fs.on('click', '.fx_fieldset_remove', function() {
-            remove_row($(this).closest('.fx_fieldset_row'));
-        });
-        fs.on('keydown', '.fx_fieldset_remove', function(e) {
-            if (e.which === 32 || e.which === 13) {
-                remove_row($(this).closest('.fx_fieldset_row'));
-                return false;
-            }
-        });
-        var $adders = $('.fx_fieldset__add a', fs),
-            addable_types = _c.types;
-        
-        $adders.click( function(e) {
-            var $btn = $(e.target),
-                index = $adders.index( $btn ),
-                type_meta = addable_types  && index !== -1 && addable_types[index] ? addable_types[index] : {};
-            
-            add_row(type_meta);
-        }).on('keydown', function(e) {
-            if (e.which === 32 || e.which === 13) {
-                //add_row();
-                $(this).click();
-                return false;
-            }
-        });
+        return fieldset(html, _c);
     }
 };
 

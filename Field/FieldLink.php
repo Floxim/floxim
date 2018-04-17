@@ -19,8 +19,7 @@ class FieldLink extends \Floxim\Floxim\Component\Field\Entity
         if (is_array($value) && isset($value['title']) && $value['title'] != '') {
             return true;
         }
-        if ($value && ($value != strval(intval($value)))) {
-            fx::log('value should be INT or NULL', $value, $this);
+        if ($value && ($value !== (string) (int) $value)) {
             $this->error = sprintf(FX_FRONT_FIELD_INT_ENTER_INTEGER, $this['description']);
             return false;
         }
@@ -51,7 +50,7 @@ class FieldLink extends \Floxim\Floxim\Component\Field\Entity
             'label'  => fx::alang('Links to', 'system'),
             'type'   => 'select',
             'values' => $comp_values,
-            'value'  => $this['format']['target'] ? $this['format']['target'] : ''
+            'value'  => isset($this['format']['target']) && $this['format']['target'] ? $this['format']['target'] : ''
         );
         $fields['prop_name'] = array(
             'label' => fx::alang('Key name for the property', 'system'),
@@ -60,7 +59,7 @@ class FieldLink extends \Floxim\Floxim\Component\Field\Entity
         $fields['cascade_delete']= array(
             //'label' => fx::alang('Cascade delete', 'system'),
             'label' => 'Удалять '.$this['component']->getItemName('add').' при удалении объекта, на который ведет ссылка',
-            'value' => $this['format']['cascade_delete'],
+            'value' => isset($this['format']['cascade_delete']) ? $this['format']['cascade_delete'] : null,
             'type' => 'checkbox'
         );
         $fields['render_type'] = array(
@@ -69,9 +68,9 @@ class FieldLink extends \Floxim\Floxim\Component\Field\Entity
             'values' => array(
                 'livesearch' => fx::alang('Live search', 'system'),
                 'select'     => fx::alang('Simple select', 'system'),
-                'group'    => 'Field group'
+                'group'    => fx::alang('Field group', 'system')
             ),
-            'value'  => $this['format']['render_type']
+            'value'  => isset($this['format']['render_type']) ? $this['format']['render_type'] : null
         );
         $fields['allow_new'] = array(
             'label' => 'Можно добавлять значения',
@@ -84,7 +83,7 @@ class FieldLink extends \Floxim\Floxim\Component\Field\Entity
 
     public function getPropertyName()
     {
-        if ($this['format']['prop_name']) {
+        if (isset($this['format']['prop_name']) && $this['format']['prop_name']) {
             return $this['format']['prop_name'];
         }
         if ($this['keyword']) {

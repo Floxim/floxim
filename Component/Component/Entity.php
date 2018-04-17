@@ -234,6 +234,10 @@ class Entity extends System\Entity
     }
 
     protected $all_fields = null;
+
+    /**
+     * @return System\Collection
+     */
     public function getAllFields()
     {
         if (is_null($this->all_fields)) {
@@ -623,5 +627,19 @@ class Entity extends System\Entity
                 }
                 return true;
         }
+    }
+
+    public function getSetting ($prop)
+    {
+        return fx::dig($this['settings'], $prop);
+    }
+
+    public function getPrefferedAddMode($entity)
+    {
+        $mode = fx::dig($this['settings'], 'preffered_add_mode');
+        if (!$mode || $mode === 'auto') {
+            $mode = method_exists($entity, 'hasPage') && $entity->hasPage() ? 'form' : 'inline';
+        }
+        return $mode;
     }
 }

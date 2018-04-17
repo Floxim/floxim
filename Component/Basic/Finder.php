@@ -523,14 +523,10 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
             return false;
         }
         $order = $order[0];
-        if (!preg_match("~desc$~i", $order)) {
+        if ($order['direction'] !== 'desc') {
             return false;
         }
-        $keywords = 'date|created';
-        if (preg_match("~`".$keywords."~i", $order) || preg_match("~".$keywords."`~i", $order)) {
-            return true;
-        }
-        return false;
+        return preg_match("~date|created~i", $order['field']);
     }
     
     public function removeAdderPlaceholder($collection)
@@ -543,6 +539,7 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
         });
     }
 
+
     /**
      * 
      * @param \Floxim\Floxim\System\Collection $collection
@@ -550,12 +547,12 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
      */
     public function createAdderPlaceholder($collection)
     {
-        $params = array();
+        fx::cdebug($collection);
         if ($this->limit && $this->limit['count'] == 1 && count($collection) > 0) {
             return;
         }
         $replace_last = $this->limit && $this->limit['count'] === count($collection);
-        
+
         $collection->findRemove(function($e)  {
             if (!$e instanceof Entity) {
                 return false;
@@ -570,13 +567,24 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
             return $this->createLinkerAdderPlaceholder($collection);
         }
         
+        $params = self::extractCollectionParams($collection);
+
+        $placeholder_target = self::extractPlaceholderTarget($collection);
+
+        if (!$params) {
+            if ($placeholder_target && ($entity = $collection->first()) instanceof \Floxim\Floxim\System\Entity) {
+                list($targetEntity, $targetField) = $placeholder_target;
+                $entity->addForcedEditableField($targetEntity->getFieldMeta($targetField));
+                fx::cdebug($entity, $targetEntity, $targetField);
+            }
+            return;
+        }
+
         // OH! My! God!
         $add_to_top = $this->isCollectionInverted($collection);
-        
-        $params = self::extractCollectionParams($collection);
-        
-        if (!$params) {
-            return;
+
+        if ($placeholder_target) {
+            $params['_target'] = $placeholder_target;
         }
         
         $param_variants = array();
@@ -652,34 +660,61 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
                 if ($avail_types && !in_array($com_key, $avail_types)) {
                     continue;
                 }
-                if (!isset($placeholder_variants[$com_key])) {
-                    $placeholder_params = array();
-                    foreach ($c_params as $c_prop => $c_vals) {
-                        if ($c_vals[1] === Collection::FILTER_EQ) {
-                            $placeholder_params[$c_prop] = $c_vals[0];
-                        }
-                    }
-                    $placeholder = fx::data($com_key)->create($placeholder_params);
-                    $placeholder_meta = array(
-                        'placeholder' => $placeholder_params + array('type' => $com_key),
-                        'placeholder_name' => $com_type->getItemName('add')
-                    );
-                    if ($add_to_top) {
-                        $placeholder_meta['add_to_top'] = true;
-                    }
-                    
-                    if ($replace_last) {
-                        $placeholder_meta['replace_last'] = true;
-                    }
-                    
-                    $placeholder['_meta'] = $placeholder_meta;
-                    
-                    $placeholder->isAdderPlaceholder(true);
-                    $collection[] = $placeholder;
-                    $placeholder_variants[$com_key] = $placeholder;
+                if (isset($placeholder_variants[$com_key])) {
+                    continue;
                 }
+                $placeholder_params = array();
+                $set_props = [];
+                foreach ($c_params as $c_prop => $c_vals) {
+                    if ($c_vals[1] === Collection::FILTER_EQ) {
+                        $placeholder_params[$c_prop] = $c_vals[0];
+                        $set_props[]= $c_prop;
+                    }
+                }
+                $placeholder = fx::data($com_key)->create($placeholder_params);
+
+                $placeholder_meta = array(
+                    'placeholder' => $placeholder_params + array('type' => $com_key),
+                    'placeholder_name' => $com_type->getItemName('add')
+                );
+                if (isset($c_params['_target'])) {
+                    list($targetEntity, $targetField) = $c_params['_target'];
+                    $placeholder_meta['placeholder_target'] = [
+                        'type' => $targetEntity->getType(),
+                        'id' => $targetEntity['id'],
+                        'field' => $targetField,
+                        'meta' => $targetEntity->getFieldMeta($targetField)
+                    ];
+                }
+                if ($add_to_top) {
+                    $placeholder_meta['add_to_top'] = true;
+                }
+
+                if ($replace_last) {
+                    $placeholder_meta['replace_last'] = true;
+                }
+
+                $placeholder['_meta'] = $placeholder_meta;
+
+                $placeholder->isAdderPlaceholder(true);
+                $collection[] = $placeholder;
+                $placeholder_variants[$com_key] = $placeholder;
             }
         }
+    }
+
+    /*
+     * placeholder for empty link field (e.g. news.author)
+     */
+    public function createLinkAdderPlaceholders ($entity, $field)
+    {
+        $res = fx::collection();
+        // [$valueTarget, $valueField]
+        $res->placeholder_target = [$entity, $field];
+        $relFinder = $this->getDefaultRelationFinder($this->getRelation($field));
+        $res->finder = $relFinder;
+        $relFinder->createAdderPlaceholder($res);
+        return $res;
     }
     
     public function createLinkerAdderPlaceholder($collection)
@@ -746,7 +781,7 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
     public function fake($props = array(), $level = 0)
     {
         $com_kw = $this->getComponent()['keyword'];
-        if (is_null(self::$fake_variants[$com_kw])) {
+        if (!isset(self::$fake_variants[$com_kw]) || is_null(self::$fake_variants[$com_kw])) {
             self::$fake_variants[$com_kw] = $this->getComponent()->getAllVariants()->find('is_abstract', 0)->getValues();
         }
         $com = fx::util()->circle(self::$fake_variants[$com_kw]);
@@ -756,13 +791,38 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
         $content->set($props);
         return $content;
     }
+
+    protected static function extractPlaceholderTarget ($collection)
+    {
+        if (isset($collection->placeholder_target)) {
+            return $collection->placeholder_target;
+        }
+        /*
+         * Make placeholder to be appended into relation
+         * if it has been found with expression like
+         * "person who is the author of the current page"
+         * (person -> is.context -> current_page.author)
+         */
+        $appliedConditions = $collection->finder->getAppliedConditions();
+        foreach ($appliedConditions as $appliedCondition) {
+            if ($appliedCondition['type'] === 'is_in.context' && $appliedCondition['field'] === 'entity') {
+                $valueParts = explode(".", $appliedCondition['value']);
+                $valueField = array_pop($valueParts);
+                $valueTarget = fx::env()->getContextProp(
+                    array_slice($valueParts,1)
+                );
+                if ($valueTarget && $valueField) {
+                    return [$valueTarget, $valueField];
+                }
+            }
+        }
+    }
     
     protected static function extractCollectionParams($collection, $skip_linkers = true)
     {
         $params = array();
         if ($collection->finder && $collection->finder instanceof Finder) {
             foreach ($collection->finder->where() as $cond) {
-                
                 if ($cond[2] === 'AND') {
                     $conds = $cond[0];
                     if (
@@ -773,10 +833,14 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
                         $cond = $conds[0];
                     }
                 }
-                
-                
+
                 // original field
-                $field = isset($cond[3]) ? $cond[3] : null;
+                // $field = isset($cond[3]) ? $cond[3] : null;
+                if (!isset($cond[3])) {
+                    $cond[3] = null;
+                }
+                list ($expression, $value, $op, $field) = $cond;
+
                 // collection was found by id, adder is impossible
                 if ($field === 'id') {
                     if ($skip_linkers) {
@@ -784,9 +848,17 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
                     }
                     continue;
                 }
-                //fx::cdebug($cond, $field);
-                if (!preg_match("~\.~", $field) && $cond[2] == '=' && is_scalar($cond[1])) {
-                    $params[$field] = array($cond[1], Collection::FILTER_EQ);
+
+                if ($op === 'IN' && is_array($value) && count($value) === 1) {
+                    $value = current($value);
+                }
+
+                if (
+                    ($op === '=' || $op === 'IN') &&
+                    is_scalar($value) &&
+                    !preg_match("~\.~", $field)
+                ) {
+                    $params[$field] = array($value, Collection::FILTER_EQ);
                 }
             }
             $params['_component'] = $collection->finder->getComponent()->get('keyword');
@@ -816,5 +888,17 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
             }
         }
         return $this;
+    }
+
+    public function isSortable()
+    {
+        if (!is_array($this->order) || !isset($this->order[0])) {
+            return false;
+        }
+        $field = $this->order[0]['field'];
+        if ($this->getComponent()->getFieldByKeyword($field) instanceof \Floxim\Floxim\Field\FieldPriority) {
+            return $field;
+        }
+        return false;
     }
 }

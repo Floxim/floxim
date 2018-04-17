@@ -11,7 +11,7 @@ use Floxim\Floxim\Component\Field;
  * This is a basic Entity class for all models handled by Component subsystem
  */
 abstract class Entity extends \Floxim\Floxim\System\Entity {
-    protected $available_offsets_cache = null;
+    protected $available_offsets_cache = [];
     //protected $available_offset_keys_cache = null;
     
     public function __construct($data = array(), $component_id = null)
@@ -19,7 +19,6 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
         $this->component_id = $component_id;
         $this->available_offsets_cache = fx::getComponentById($component_id)->getAvailableEntityOffsets();
         parent::__construct($data);
-        return $this;
     }
     
     public function getCascadeLinkingEntities()
@@ -55,7 +54,7 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
         $modified = $this->getModified();
         foreach ($modified as $field_keyword) {
             $field = $this->getField($field_keyword);
-            if (!$field instanceof \Floxim\Floxim\Field\File) {
+            if (!$field instanceof \Floxim\Floxim\Field\FieldFile) {
                 continue;
             }
             $new_val = $this[$field_keyword];
@@ -249,6 +248,8 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
                     $offset_meta = $offsets[$field_keyword];
                     if ($offset_meta['type'] === self::OFFSET_SELECT) {
                         $cf = $fields[$offset_meta['real_offset']];
+                    } elseif ($offset_meta['type'] === self::OFFSET_RELATION) {
+                        $cf = $fields[$offset_meta['relation'][2]];
                     }
                 }
                 if (!$cf) {
@@ -457,8 +458,15 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
         return $html;
     }
 
+    protected $customForcedEditableFields = [];
+
     public function getForcedEditableFields() {
-        return array();
+        return [];
+    }
+
+    public function addForcedEditableField($field)
+    {
+        $this->customForcedEditableFields []= $field;
     }
     
     public function isVisible()
@@ -474,18 +482,24 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
         );
         
         $linkers = null;
-        if (is_object($collection) && $collection->linkers) {
-            $linkers = $collection->linkers;
-            if (isset($collection->linkers[$index])) {
-                $linker = $linkers[$index];
-                $entity_meta[] = $linker['id'];
-                $entity_meta[] = $linker['type'];
+        $entity_atts = [];
+        if (is_object($collection)) {
+            if ($collection->linkers) {
+                $linkers = $collection->linkers;
+                if (isset($collection->linkers[$index])) {
+                    $linker = $linkers[$index];
+                    $entity_meta[] = $linker['id'];
+                    $entity_meta[] = $linker['type'];
+                }
+            }
+            $sortable = $collection->is_sortable;
+            if ($sortable) {
+                $entity_atts['data-fx_sortable'] = $sortable;
             }
         }
-        $entity_atts = array(
-            'data-fx_entity' => $entity_meta,
-            'class'          => 'fx_entity' . (is_object($collection) && $collection->is_sortable ? ' fx_sortable' : '')
-        );
+        $entity_atts['data-fx_entity'] = $entity_meta;
+        $entity_atts['class'] = 'fx_entity';
+        //$entity_atts['class'] = 'fx_entity' . (is_object($collection) && $collection->is_sortable ? ' fx_sortable' : '')
         
         if (isset($this['url'])) {
             $url = $this['url'];
@@ -514,6 +528,9 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
             $c_meta = $this['_meta'];
             if ($is_placeholder) {
                 $c_meta['has_page'] = $this->hasPage();
+                if ($com->getPrefferedAddMode($this) === 'form') {
+                    $c_meta['prefer_form'] = true;
+                }
                 $c_meta['publish'] = $this->getDefaultPublishState();
             }
             $entity_atts['data-fx_entity_meta'] = $c_meta;
@@ -522,11 +539,12 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
         // fields to edit in panel
         $att_fields = array();
         
-        $forced = $this->getForcedEditableFields();
+        $forced = array_merge($this->getForcedEditableFields(), $this->customForcedEditableFields);
+        $this->customForcedEditableFields = [];
         
         if (is_array($forced) && count($forced)) {
             foreach ($forced as $field_keyword) {
-                $field_meta = $this->getFieldMeta($field_keyword);
+                $field_meta = is_array($field_keyword) ? $field_keyword : $this->getFieldMeta($field_keyword);
                 if (!is_array($field_meta)) {
                     continue;
                 }
@@ -679,8 +697,32 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
     {
         return $this->getFinder();
     }
+
+    public function handleMove ()
+    {
+        if (!isset($this['__move_field'])) {
+            return;
+        }
+        $field = $this->getField($this['__move_field']);
+        if (!$field || !$field instanceof \Floxim\Floxim\Field\FieldPriority) {
+            return;
+        }
+        $relId = null;
+        $dir = null;
+        foreach (['before', 'after'] as $dir) {
+            $relId = $this['__move_'.$dir];
+            if ($relId) {
+                break;
+            }
+        }
+        if (!$relId || !$dir) {
+            return;
+        }
+        //$field->moveEntity($this['id'], $relId, $dir);
+        $this[$field['keyword']] = $field->getNewValue($this, $relId, $dir);
+    }
     
-    public function handleMove()
+    public function _handleMove_()
     {
         if (!$this->hasField('priority')) {
             return;
@@ -793,16 +835,6 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
         
         
         array_unshift($q_params, $q);
-        /*
-        fx::log(
-            $this['id'].' goes '.$this['priority'],
-            'old: '.$old_priority, 
-            'rel: '.$rel_priority, 
-            $dir.':'.$rel_dir,
-            fx::db()->prepareQuery($q_params) 
-        );
-         * 
-         */
         fx::db()->query($q_params);
     }
     
@@ -886,5 +918,10 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
     {
         preg_match("~[^\.]+$~", $this['type'], $short_type);
         return $short_type[0];
+    }
+
+    public function getAdderPlaceholders($field)
+    {
+        return $this->getFinder()->createLinkAdderPlaceholders($this, $field);
     }
 }

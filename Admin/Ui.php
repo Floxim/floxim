@@ -49,6 +49,9 @@ class Ui
         if (is_null($value)) {
             $value = '';
         }
+        if (is_array($value)) {
+            $value = json_encode($value);
+        }
         $ret = array('name' => $name, 'value' => $value, 'type' => 'hidden');
         return $ret;
     }

@@ -5,7 +5,7 @@ var cl = 'fx-radio-facet',
     cnt = 0;
 ?>
 <div class="<?= cl ?>">
-    <input type="hidden" <?=$t.field_id_name(_c)?> value="<?=_c.value?>" />
+    <input type="hidden" <?=$t.field_id_name(_c)?> value="<?=_c.value || _c.default?>" />
     <?
         $.each(_c.values, function(i, v) {
             var title = null;

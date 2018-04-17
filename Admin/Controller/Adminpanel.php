@@ -121,10 +121,19 @@ class Adminpanel extends Admin
         $more_menu['edit_current_page'] = array(
             'name'   => fx::alang('Edit current page', 'system'),
             'button' => array(
+                'fx_front'     => [
+                    'edit_current_page',
+                    [
+                        'content_type' => $c_page['type'],
+                        'content_id'   => $c_page['id']
+                    ]
+                ]
+                /*
                 'entity'       => 'content',
                 'action'       => 'add_edit',
                 'content_type' => $c_page['type'],
                 'content_id'   => $c_page['id']
+                */
             )
         );
         

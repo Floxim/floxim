@@ -5,7 +5,7 @@ window.$fx = {
     KEYCODE_ESC: 27,
         
     init: function(options) {
-        
+
         $.ajaxSetup({
             dataFilter: function(data, type)  {
                 var json = null;
@@ -166,6 +166,7 @@ window.$fx = {
                             $dd
                         );
                         $dd.data('closer', closer);
+                        $dd.off('click.closer').on('click.closer', closer)
                     }
                     return false;
                 })
@@ -175,10 +176,14 @@ window.$fx = {
                 .on('click.fx', '.fx_menu_item[data-button]', function() {
                     var $item = $(this),
                         button_data = $item.data('button');
-                        
+                    if (button_data.fx_front) {
+                        $fx.front[button_data.fx_front[0]](button_data.fx_front[1])
+                        return false;
+                    }
                      $fx.post(
                         button_data,
                         function(json) {
+                            console.log(json);
                             $fx.front_panel.show_form(
                                 json, 
                                 {

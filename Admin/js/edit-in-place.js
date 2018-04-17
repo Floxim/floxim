@@ -29,6 +29,7 @@ $.fn.edit_in_place = function(command) {
 
 window.fx_eip = {
     vars: {},
+    forcedVars: {},
     get_var_hash: function(meta) {
         return meta.id+'.'+meta.var_type+'.'+meta.content_id+'.'+meta.content_type_id;
     },
@@ -38,6 +39,9 @@ window.fx_eip = {
             res.push(this);
         });
         return res;
+    },
+    add_var: function ($node, meta, value) {
+        this.forcedVars[this.get_var_hash(meta)] = [$node, meta, value];
     },
     fix: function() {
         var vars = this.get_edited_vars();
@@ -84,6 +88,13 @@ window.fx_eip = {
                 });
             }
         });
+        $.each(this.forcedVars, function(k, v) {
+            vars.push({
+                node: v[0],
+                'var': v[1],
+                value: v[2]
+            })
+        })
         return vars;
     },
     stop: function() {
@@ -91,6 +102,7 @@ window.fx_eip = {
             $(this).data('edit_in_place').stop();
         });
         this.vars = {};
+        this.forcedVars = {};
     },
     append_value: function($node, meta, value, formatted_value) {
         if (!meta.target_type && meta.inatt) {
@@ -526,6 +538,7 @@ fx_edit_in_place.prototype.start = function(meta) {
         case 'link':
         case 'label':
         case 'icon':
+        case 'fx-box-format':
             var field_meta =$.extend({}, meta);
             if (stored_value !== null) {
                 field_meta.value = stored_value;
@@ -540,6 +553,15 @@ fx_edit_in_place.prototype.start = function(meta) {
                 $field.on('change', function(e) {
                     fx_iconpicker.set_class(edit_in_place.node, e.target.value);
                 });
+            }
+            if (meta.type === 'livesearch') {
+                var livesearch  = $field.find('.livesearch').data('livesearch');
+                livesearch.onafteradd = function (res) {
+                    var newId = res.saved_id
+                    fx_eip.add_var(edit_in_place.node, meta, newId);
+                    fx_eip.save();
+                    $fx.front.unfreeze();
+                }
             }
             break;
         case 'string': case 'html': case '': case 'text': case 'int': case 'float':

@@ -54,7 +54,7 @@ class Config
 
     public function __construct()
     {
-        error_reporting(E_ALL & ~(E_NOTICE | E_STRICT));
+        // error_reporting(E_ALL & ~(E_NOTICE | E_STRICT));
 
         ini_set("session.auto_start", "0");
         ini_set("session.use_trans_sid", "0");
