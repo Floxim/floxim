@@ -575,7 +575,6 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
             if ($placeholder_target && ($entity = $collection->first()) instanceof \Floxim\Floxim\System\Entity) {
                 list($targetEntity, $targetField) = $placeholder_target;
                 $entity->addForcedEditableField($targetEntity->getFieldMeta($targetField));
-                fx::cdebug($entity, $targetEntity, $targetField);
             }
             return;
         }
@@ -896,7 +895,7 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
             return false;
         }
         $field = $this->order[0]['field'];
-        if ($this->getComponent()->getFieldByKeyword($field) instanceof \Floxim\Floxim\Field\FieldPriority) {
+        if ($this->getComponent()->getFieldByKeyword($field, true) instanceof \Floxim\Floxim\Field\FieldPriority) {
             return $field;
         }
         return false;

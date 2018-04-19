@@ -214,7 +214,7 @@ class Config
     
     public function isBlockDisabled($component, $action = null)
     {
-        $disabled = $this->config['disable'];
+        $disabled = isset($this->config['disable']) ? $this->config['disable'] : [];
         if (!$disabled || !is_array($disabled)) {
             return false;
         }

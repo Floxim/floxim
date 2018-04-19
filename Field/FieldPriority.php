@@ -55,8 +55,8 @@ class FieldPriority extends \Floxim\Floxim\Component\Field\Entity
         }
 
         $map = [
-            'before' => ['<', -1, 'asc'],
-            'after' => ['>', 1, 'desc']
+            'before' => ['<', -1, 'desc'],
+            'after' => ['>', 1, 'asc']
         ];
 
         list ($op, $multiplier, $sortDir) = $map[$dir];
@@ -68,9 +68,24 @@ class FieldPriority extends \Floxim\Floxim\Component\Field\Entity
         $relValue = $relEntity[$field];
         $nextValue = $nextEntity ? $nextEntity[$field] : $relValue + 1 * $multiplier;
         $res = ($relValue + $nextValue ) / 2;
-        fx::log('move', $entity, $dir, $relId, $currentValue, $nextValue, $relValue, $res);
+        /*
+        fx::log(
+            fx::data($type)
+                ->order($field, $sortDir)
+                ->where($field, $relEntity[$field], $op)
+                ->where('id', [$entity['id'], $relId], 'NOT IN')->showQuery(),
+            'move',
+            'e: '. $entity['id'] .' / '.  $entity['name']. ' / '.$currentValue,
+            'ne: '.($nextEntity ? $nextEntity['id'].' / '.$nextEntity['name'] : null).' / '.$nextValue,
+            're: '.$relEntity['id']. '/' . $relEntity['name'].' / '.$relValue,
+            $dir,
+            $currentValue,
+            $nextValue,
+            $relValue,
+            $res,
+            $multiplier
+        );
+        */
         return $res;
-        //
-        return $currentValue;
     }
 }
