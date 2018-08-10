@@ -752,10 +752,12 @@ window.$fx_fields = {
                     return false;
                 }
             });
-            
-        if (json.fields && json.fields.length > 0) {       
+
+        if (json.fields && json.fields.length > 0) {
+            // console.log('hgro', json, $row[0], $fields[0])
             $row.one('fx_field_attached', function(e) {
                 $fx_form.draw_fields(json, $fields);
+                // console.log('hgrodro', json, $row[0], $fields[0])
             });
         }
         return $row;
@@ -767,6 +769,55 @@ window.$fx_fields = {
 
     input: function(json) {
         return $t.jQuery('form_row', json);
+    },
+
+    sort_picker: function(json) {
+        var val = json.value || {}
+        var res = {
+            type: 'group',
+            name: json.name,
+            fields: [
+                {
+                    label: 'Сортировка',
+                    type: 'livesearch',
+                    name: json.name+'[field]',
+                    values: json.sorter_options.sortable_fields,
+                    value: val.field
+                },
+                {
+                    label: 'Направление',
+                    type: 'livesearch',
+                    name: json.name+'[dir]',
+                    values: [
+                        {id:'asc', name: 'Прямой'},
+                        {id:'desc',name: 'Обратный'}
+                    ],
+                    value: val.dir
+                },
+                {
+                    type:'hidden',
+                    name:json.name + '[sortable]',
+                    value: val.sortable || false
+                }
+            ],
+            style: "transparent"
+        }
+
+        var $res =  this.group(res);
+        var handle_sortable = function() {
+            var $sortable = $res.find('[name="'+json.name+'[sortable]"]')
+            var $field = $res.find('.field_name__' + json.name + '--field .livesearch')
+            var ls = $field.data('livesearch');
+            if (ls) {
+                var fv = ls.getFullValue()
+                var sortable = fv && fv.sortable ? fv.id : ""
+                $sortable.val(sortable)
+                console.log(fv, $sortable.val(), $sortable)
+            }
+        }
+
+        $res.on('change', handle_sortable);
+        return $res;
     },
     
     control: function(json) {

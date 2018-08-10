@@ -20,7 +20,9 @@ class FieldLink extends \Floxim\Floxim\Component\Field\Entity
             return true;
         }
         if ($value && ($value !== (string) (int) $value)) {
-            $this->error = sprintf(FX_FRONT_FIELD_INT_ENTER_INTEGER, $this['description']);
+            fx::log('wtaaaff?', $value, $this, $_POST);
+            //$this->error = sprintf(FX_FRONT_FIELD_INT_ENTER_INTEGER, $this['description']);
+            $this->error = 'тут раньше было чото про FX_FRONT_FIELD_INT_ENTER_INTEGER';
             return false;
         }
         return true;
@@ -115,19 +117,21 @@ class FieldLink extends \Floxim\Floxim\Component\Field\Entity
     public function getJsField($content)
     {
         $res = parent::getJsField($content);
-        //$target_com_keyword = $this->getTargetName();
+        $target_com_keyword = $this->getTargetName();
 
         $finder = $this->getTargetFinder($content);
 
         $render_type = $this['format']['render_type'];
+        $res['prop_name'] = $this->getFormat('prop_name');
         
         if ($render_type == 'livesearch') {
             $res['type'] = 'livesearch';
             $res['allow_new'] = (bool) $this->getFormat('allow_new');
             $res['params'] = array(
-                //'content_type' => $target_com_keyword
+                'content_type' => $target_com_keyword,
                 'relation_field_id' => $this['id'],
                 'entity_id' => $content['id'],
+                'linking_entity_type' => $content->getType(),
                 'send_form' => true,
                 'hidden_on_one_value' => true
             );
@@ -157,14 +161,15 @@ class FieldLink extends \Floxim\Floxim\Component\Field\Entity
             }
             $fields = $linked_entity->getFormFields()->getValues();
 
-            if ($linked_entity['id']) {
+            //if ($linked_entity['id']) {
                 $fields[]= array(
                     'name' => 'id',
                     'id' => 'id',
                     'type' => 'hidden',
                     'value' => $linked_entity['id']
                 );
-            }
+            //}
+            // fx::log('group fields', $fields, $linked_entity);
 
             $base_name = $this->getPropertyName();
             foreach ($fields as &$f) {

@@ -849,8 +849,10 @@ public function getModuleFields()
 
         $es = $this->entity_type;
         $result = array('status' => 'ok');
-
-        $ids = $input['id'];
+        if (!isset($input['ids'])) {
+            return $result;
+        }
+        $ids = $input['ids'];
         if (!is_array($ids)) {
             $ids = array($ids);
         }
@@ -858,7 +860,9 @@ public function getModuleFields()
         foreach ($ids as $id) {
             try {
                 $component = fx::data($es, $id);
-                $component->delete();
+                if ($component) {
+                    $component->delete();
+                }
             } catch (\Exception $e) {
                 $result['status'] = 'error';
                 $result['text'][] = $e->getMessage();

@@ -461,6 +461,19 @@
     margin-top: -15px;
     margin-bottom: 0;
     margin-left: 0;
+    margin-right:0;
+    .fx_fieldset {
+      &__footer {
+        margin-top:0;
+        padding-left: 0;
+      }
+      &__add {
+        margin-left:0;
+      }
+      &_row__controls {
+        width:auto;
+      }
+    }
 }
 
 .fx_form_horizontal, .fx_form_vertical {
@@ -661,14 +674,15 @@
         border:1px solid #ececec;
         border-radius:2px;
         display:inline-block;
+        white-space:nowrap;
         a {
             cursor:pointer;
         }
     }
     
     .fx_file_killer, .fx_remote_file_block, .fx_file_uploader, .fx_image_cropper {
-        display:block;
-        float:left;
+        display:inline-block;
+        // float:left;
         padding:2px 12px;
         &:last-child {
             border-right:none;
@@ -686,7 +700,7 @@
     
     .fx_preview_filled {
         .fx_file_killer, .fx_image_cropper {
-            display:block;
+            display:inline-block;
         }
         .fx_remote_file_block {
             border-right:1px solid #ececec;
@@ -741,7 +755,7 @@
             margin:0;
         }
     }
-    .fx_fieldset_row & {
+    .fx_fieldset_row td > & {
         //.fx_file_name {
         .fx_file_info {
             display:none;
@@ -753,7 +767,7 @@
             margin-top:0;
         }
     }
-    .fx_fieldset_row td:hover & .fx_preview_filled .fx_file_controls {
+    .fx_fieldset_row td:hover > & .fx_preview_filled .fx_file_controls {
         display:inline-flex;
         position:absolute;
         right:0;
@@ -1475,6 +1489,21 @@ select.fx_input {
     }
 }
 
+.fx_fieldset_row > td > .field_group {
+  &, &:first-child, &:last-child {
+    margin: 0;
+  }
+  .form_label {
+    display: none;
+  }
+  .fx-field-group {
+    margin: 0;
+    &__fields {
+      padding: 0;
+    }
+  }
+}
+
 .fx_toggler {
     &__control {
         display:inline-block;
@@ -1552,6 +1581,7 @@ select.fx_input {
     .fx_lock_control {
         width:30px;
         height:20px;
+        height: 1px;
         float:left;
         position:relative;
         top:-8px;

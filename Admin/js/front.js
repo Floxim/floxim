@@ -986,19 +986,26 @@ fx_front.prototype.is_selectable = function(node) {
 };
 
 fx_front.prototype.is_var_bound_to_entity = function($node) {
+    var test = $node.text() === 'Фотоотчет'
+    var log = function() {test && console.log.apply(console, arguments)}
+    log('chckgn!')
     if ($node.hasClass('fx_var_bound_to_entity')) {
+        log('skip 1')
         return true;
     }
     if (!$node.is(':visible')) {
+        log('skip 2')
         return false;
     }
     if ($node.is('.fx_entity')) {
+        log('skip 3')
         return false;
     }
     
     var $entity = $node.closest('.fx_entity');
     
     if ($entity.length === 0) {
+        log('skip 4')
         return false;
     }
     
@@ -1006,11 +1013,13 @@ fx_front.prototype.is_var_bound_to_entity = function($node) {
         $entity_ib = $entity.closest('.fx_infoblock');
     
     if (!$node_ib[0] || !$entity_ib[0] || $node_ib[0] !== $entity_ib[0]) {
+        log('skip 5')
         return false;
     }
     
     if ($('.fx_template_var:visible, .fx_template_var_in_att:visible', $entity).length === 1) {
         $node.addClass('fx_var_bound_to_entity');
+        log('skip 6', $entity)
         return true;
     }
     
@@ -1018,6 +1027,7 @@ fx_front.prototype.is_var_bound_to_entity = function($node) {
         !$node.is(':visible') || 
         ($node.is('.fx_template_var') && $('.fx_template_var', $entity).length > 1)
     ) {
+        log('skip 7')
         return false;
     }
     
@@ -2232,6 +2242,7 @@ fx_front.prototype.show_edit_form = function(params) {
             entity_values: entity_values
         }
     );
+    console.log('params', params)
     var side = 'right';
     if (params.side) {
         side = params.side;
@@ -2359,6 +2370,26 @@ fx_front.prototype.clearSuggestCache = function () {
     (new fx_suggest({})).clearCache();
 }
 
+function handleCopyToClipboard($node, text)  {
+    if (!window.Clipboard) {
+        console.log('no clipboard')
+    }
+    var id = 'cb-'+ Math.round(Math.random()*100000);
+    $node.attr('data-clipboard-target', '#'+id);
+    $node.on('mousedown', function() {
+        var $tempNode = $(
+                '<div style="position:fixed; left:-10000px;" id="'+id+'">'+text+'</div>'
+            ),
+            $body = $(document.body);
+        $body.append($tempNode);
+
+        var clipboard = new Clipboard($node[0]);
+        clipboard.on('success', function () {
+            $tempNode.remove();
+        });
+    });
+}
+
 fx_front.prototype.select_content_entity = function($entity, $from_field) {
     // if true, child field is actually selected
     $from_field = $from_field || false;
@@ -2387,11 +2418,15 @@ fx_front.prototype.select_content_entity = function($entity, $from_field) {
     if (ce_id) {
         var $entity_label = entity_panel.add_label( $entity.data('fx_entity_name') );
         $entity_label.addClass('fx_node_panel__item-button-label');
-        
+        $entity_label.attr('title', '#'+ce_id);
+
         $entity_label.click(function() {
-            var $test = $('.floxim--ui--box--value__value', $entity).first();
-            $fx.front.select_item($test);
+            var $valueField = $('.floxim--ui--box--value__value', $entity);
+            if ($valueField.length) {
+                $fx.front.select_item($valueField);
+            }
         });
+        handleCopyToClipboard($entity_label, ce_id);
         
         entity_panel.add_button(
             {

@@ -80,6 +80,8 @@ abstract class Finder
         }
     }
 
+    protected function beforeLivesearch() {}
+
     public function livesearch($term = '', $limit = null, $id_field = 'id')
     {
         if (!isset($term)) {
@@ -95,7 +97,8 @@ abstract class Finder
             $this->limit($limit);
         }
         $this->calcFoundRows(true);
-        
+
+        $this->beforeLivesearch();
         $items = $this->all();
         if (!$items) {
             return;

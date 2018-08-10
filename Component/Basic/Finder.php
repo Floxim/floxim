@@ -710,12 +710,24 @@ abstract class Finder extends \Floxim\Floxim\System\Finder {
         $res = fx::collection();
         // [$valueTarget, $valueField]
         $res->placeholder_target = [$entity, $field];
-        $relFinder = $this->getDefaultRelationFinder($this->getRelation($field));
+        $rel = $this->getRelation($field);
+        if (!$rel) {
+            return;
+        }
+        $relFinder = $this->getDefaultRelationFinder($rel);
         $res->finder = $relFinder;
         $relFinder->createAdderPlaceholder($res);
         return $res;
     }
-    
+
+    public function getDefaultRelationFinder($rel)
+    {
+        $finder = fx::data($rel[1]);
+        $finder->orderDefault();
+        // fx::log('lurk for rel', $rel);
+        return $finder;
+    }
+
     public function createLinkerAdderPlaceholder($collection)
     {
         if (!isset($collection->linkers)) {

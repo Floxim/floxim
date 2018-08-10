@@ -686,7 +686,7 @@ fx_edit_in_place.prototype.start_content_editable = function(meta) {
             "position:static !important;"+
         "}"+
         ".fx_editable_empty p {"+
-            "position:absolute;"+
+            "display:inline-block;"+
             "min-width:10px;"+
         "}"+
     "</style>").appendTo( $('head') );

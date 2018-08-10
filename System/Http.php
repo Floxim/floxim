@@ -10,7 +10,8 @@ class Http
         301 => 'Moved Permanently',
         302 => 'Moved Temporarily',
         403 => 'Forbidden',
-        404 => 'Not Found'
+        404 => 'Not Found',
+        500 => 'Server error'
     );
     
     protected $last_response_headers = null;

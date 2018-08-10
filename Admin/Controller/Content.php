@@ -88,7 +88,9 @@ class Content extends Admin
         if (isset($input['preset_params'])) {
             $fields []= $this->ui->hidden('preset_params', $input['preset_params']);
         }
-        
+
+        $relation_field = null;
+
         if (isset($input['entity_values'])) {
             $entity_values = $input['entity_values'];
             if (is_string($entity_values)) {
@@ -96,6 +98,12 @@ class Content extends Admin
             }
             $content->setFieldValues($entity_values, array_keys($entity_values));
             $fields []= $this->ui->hidden('entity_values', json_encode($entity_values));
+            foreach ($entity_values as $entity_field_name => $entity_field_value) {
+                $c_entity_field = $content->getField($entity_field_name);
+                if ($c_entity_field instanceof \Floxim\Floxim\Field\FieldLink && $entity_field_value) {
+                    $relation_field = $c_entity_field;
+                }
+            }
         }
         
         if (
@@ -148,13 +156,13 @@ class Content extends Admin
                 }
             }
         }
-        
+
         if (isset($input['parent_form_data']) && isset($input['relation'])) {
             $parent_form_data = json_decode($input['parent_form_data'], true);
             $relation = json_decode($input['relation'], true);
             
             $related_entity_type = $parent_form_data['content_type'];
-            $related_entity_id = $parent_form_data['content_id'];
+            $related_entity_id = isset($parent_form_data['content_id']) ? $parent_form_data['content_id'] : false;
             if ($related_entity_id) {
                 $related_entity = fx::data($related_entity_type, $related_entity_id);
             } else {
@@ -195,6 +203,17 @@ class Content extends Admin
             ];
             return true;
         });
+
+        if ($relation_field !== null) {
+            $content_fields->apply(function(&$f) use ($relation_field) {
+                if (isset($f['id']) && $f['id'] === $relation_field['keyword'] && isset($f['value']) && $f['value']) {
+                    $f['type'] = 'hidden';
+                    if (is_array($f['value']) && isset($f['value']['id'])) {
+                        $f['value'] = $f['value']['id'];
+                    }
+                }
+            });
+        }
 
         if (count($res['tabs']) > 0) {
             $res['tabs'] = array_merge(

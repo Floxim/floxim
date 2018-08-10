@@ -388,17 +388,7 @@ window.$fx = {
     clear_additional_text: function ( ) {
         $("#fx_admin_additionl_text").html('');
     },
-          
-    /*
-    key_down: function ( e ) {
-        if ( e.keyCode === 46 ) {
-            e.stopPropagation();
-        }
 
-        return true;
-    },
-    */
-   
     alert: function(data, status, expire) {
         var b = 'fx-admin-alert',
             $body = $('body'),
@@ -447,12 +437,13 @@ window.$fx = {
     },
     
     show_error: function(json) {
+        console.log(json)
         var errors = [];
         if (!json.errors) {
             errors.push(json.text || "unknown error");
         } else {
             $.each(json.errors, function(i, e) {
-                errors.push(typeof e === 'string' ? e : e.text);
+                errors.push(typeof e === 'string' ? e : e.text || e.error);
             });
         }
         $fx.show_status_text(errors.join("<br />"), 'error');

@@ -189,6 +189,7 @@ class FieldMultilink extends \Floxim\Floxim\Component\Field\Entity
             }
             $res['tpl'][]= $c_form_field;
         }
+        // fx::log($this['keyword'], $all_fields, $res, $this);
 
         if (isset($content[$this['keyword']])) {
             if ($rel[0] === System\Finder::HAS_MANY) {
@@ -222,7 +223,19 @@ class FieldMultilink extends \Floxim\Floxim\Component\Field\Entity
                     }
                     $linker_field = $linker_fields->findOne('name', $field_keyword);
                     if ($linker_field) {
-                        $val_array[$field_keyword] = isset($linker_field['value']) ? $linker_field['value'] : null;
+                        if ($linker_field['type'] === 'group') {
+                            fx::cdebug($linker_field);
+                            $c_vals = [];
+                            foreach ($linker_field['fields'] as $linker_sub_field) {
+                                $c_vals[$linker_sub_field['name']] = $linker_sub_field['value'];
+                            }
+                            $val_array[$field_keyword] = [
+                                'field_meta' => $linker_field['field_meta'],
+                                'values' => $c_vals
+                            ];
+                        } else {
+                            $val_array[$field_keyword] = isset($linker_field['value']) ? $linker_field['value'] : null;
+                        }
                     } else {
                         $val_array[$field_keyword] = $linker[$field_keyword];
                     }

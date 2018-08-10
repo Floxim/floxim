@@ -236,7 +236,6 @@ fx_front.prototype.handle_choose_entity = function ($placeholder_mark, placehold
     });
     $control.on('change', function () {
         var value = $control.data('livesearch').getValue();
-        console.log('changd', value);
         fx_eip.add_var($placeholder_mark, placeholder_target.meta, value);
         fx_eip.save();
         $fx.front.unfreeze();

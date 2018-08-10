@@ -982,7 +982,8 @@ class Files
             'filename' => fx::path()->fileName($full_path),
             'fullpath' => $full_path,
             'raw_size' => $raw_size,
-            'size'     => $this->readableSize($raw_size)
+            'size'     => $this->readableSize($raw_size),
+            'extension' => fx::path()->fileExtension($full_path)
         );
         $img_size = $this->getImageSize($full_path);
         if ($img_size) {
@@ -1037,7 +1038,7 @@ class Files
 
     protected function getPutFilename($dir, $name)
     {
-        $name = fx::util()->strToLatin($name);
+        $name = fx::util()->strToLatin(urldecode($name));
         $name = preg_replace("~[^a-z0-9_\.-]~i", '_', $name);
         $name = trim($name, "_");
         $name = preg_replace("~_+~", "_", $name);

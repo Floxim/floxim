@@ -40,7 +40,8 @@ if ($component->getFieldByKeyword('priority', true)) {
 
 $sort_fields_with_manual = $sort_fields;
 
-$content_exists = fx::data($component['keyword'])->contentExists();
+// $content_exists = fx::data($component['keyword'])->contentExists();
+$content_exists = true;
 $is_new_infoblock = !$this->getParam('infoblock_id');
 
 $component_infoblocks = fx::data('infoblock')->getContentInfoblocks($component['keyword']);

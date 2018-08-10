@@ -175,7 +175,9 @@ abstract class Entity implements \ArrayAccess, Template\Entity
             foreach ($this->modified as $v) {
                 $data[$v] = isset($this->data[$v]) ? $this->data[$v] : null;
             }
-            $this->getFinder()->update($data, array($pk => $this->data[$pk]));
+            if (count($data) > 0) {
+                $this->getFinder()->update($data, array($pk => $this->data[$pk]));
+            }
             $this->saveMultiLinks();
             $this->afterUpdate();
         } // insert

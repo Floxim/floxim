@@ -102,20 +102,43 @@ var fieldset = function(html, _c) {
 
             $.each(_c.tpl, function (tpl_index, tpl_props) {
                 var c_val = val[tpl_props.name];
-                if (
-                    typeof c_val !== 'object' ||
-                    (c_val && typeof c_val.value === 'undefined')
-                ) {
-                    c_val = {value: c_val};
+                if (tpl_props.type === 'group') {
+                    var inp_props = $.extend(
+                        {},
+                        tpl_props,
+                        {
+                            field_meta: c_val.field_meta,
+                            fields: tpl_props.fields.map(function (f) {
+                                var input_name = _c.name + '[' + row_index + '][' + tpl_props.prop_name + ']' +
+                                    '[' + (f.name.match(/\[(.+)\]$/)||['', f.name])[1] + ']'
+                                return $.extend(
+                                    {},
+                                    f,
+                                    {
+                                        value: c_val.values[f.name],
+                                        name: input_name
+                                    }
+                                );
+                            }),
+                            render_type: 'line'
+                        }
+                    );
+                } else {
+                    if (
+                        typeof c_val !== 'object' ||
+                        (c_val && typeof c_val.value === 'undefined')
+                    ) {
+                        c_val = {value: c_val};
+                    }
+                    var inp_props = $.extend(
+                        {},
+                        tpl_props,
+                        {
+                            name: _c.name + '[' + row_index + '][' + tpl_props.name + ']'
+                        },
+                        c_val
+                    );
                 }
-                var inp_props = $.extend(
-                    {},
-                    tpl_props,
-                    {
-                        name: _c.name + '[' + row_index + '][' + tpl_props.name + ']'
-                    },
-                    c_val
-                );
                 if (tpl_props.type === 'radio' && !tpl_props.values) {
                     inp_props.$input_node = $('<input type="radio" name="' + _c.name + '[' + tpl_props.name + ']" value="' + row_index + '" />');
                     if (tpl_props.value == row_index) {
@@ -206,6 +229,10 @@ var fieldset = function(html, _c) {
     }
 
     function updateAdderLivesearch () {
+        if (!$adderLivesearch) {
+            console.log('no adder livesearch')
+            return;
+        }
         var values = [defaultAdderLivesearchValue]
         $.each(group_values, function(i, v) {
             var $c_group_header = $fs.find('[data-group_key="'+v[0]+'"]');
@@ -352,13 +379,46 @@ var fieldset = function(html, _c) {
             if (_c.tpl[i].name === 'type') {
                 input_props.value = type.name;
             }
-            inputs.push(
-                $.extend(
-                    {},
-                    _c.tpl[i],
-                    input_props
-                )
-            );
+
+            /*
+            {
+                            field_meta: c_val.field_meta,
+                            fields: tpl_props.fields.map(function (f) {
+                                return $.extend(
+                                    {},
+                                    f,
+                                    {value: c_val.values[f.name]}
+                                );
+                            }),
+                            render_type: 'line'
+                        }
+             */
+            input_props = $.extend(
+                {},
+                _c.tpl[i],
+                input_props
+            )
+
+            if (input_props.type === 'group') {
+                input_props.render_type = 'line'
+                console.log(input_props)
+                if (input_props.fields) {
+                    input_props.fields = input_props.fields.map(function(f) {
+                        var input_name = _c.name + '[' + id + '][' + input_props.prop_name + ']' +
+                            '[' + (f.name.match(/\[(.+)\]$/)||['', f.name])[1] + ']';
+                        var res_field = $.extend(
+                            {},
+                            f,
+                            {
+                                name: input_name
+                            }
+                        )
+                        return res_field
+                    })
+                }
+            }
+
+            inputs.push(input_props);
         }
         var $new_row = $t.jQuery('fieldset_row', inputs, {index: index, set_field: _c});
         $new_row.data(

@@ -986,6 +986,9 @@ class Compiler
             if ($linebreaks || $token_is_visual) {
                 $token->setProp('linebreaks', $linebreaks);
             }
+        } elseif ($token->getProp('linebreaks') === 'false') {
+            $token->setProp('linebreaks', false);
+            fx::log('nobrks');
         }
 
         // e.g. "name" or "image_".$context->get('id')

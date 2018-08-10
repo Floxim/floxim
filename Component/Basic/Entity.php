@@ -65,6 +65,7 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
             if (!$file) {
                 continue;
             }
+            $field->setNewFileOrigin($new_val, $this);
             $field->setValue($file);
             $this[$field_keyword] = $field->getSavestring($this);
         }
@@ -150,7 +151,11 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
      */
     public function setFieldValues($values = array(), $save_fields = null)
     {
-        if (count($values) == 0) {
+        if (!is_array($values) && !($values instanceof System\Collection)) {
+            fx::log('wtf val not ar!', $values, $save_fields, $this);
+            return;
+        }
+        if (count($values) === 0) {
             return;
         }
         $fields = $save_fields ? $this->getFields()->find('keyword', $save_fields) : $this->getFields();
@@ -169,13 +174,14 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
                     }
                     $linked_entity_props = $values[$prop_name];
                     $linked_entity_type = $field->getTargetName();
-                    if (isset($linked_entity_props['id'])) {
+                    if (isset($linked_entity_props['id']) && $linked_entity_props['id']) {
                         $linked_entity = fx::data($linked_entity_type, $linked_entity_props['id']);
                     } else {
                         $linked_entity = fx::data($linked_entity_type)->create();
                     }
                     $linked_entity->setFieldValues($linked_entity_props);
                     $this[$prop_name] = $linked_entity;
+                    fx::log('setval', $linked_entity_props, $this, $prop_name, $linked_entity);
                     unset($val_keys[$prop_name]);
                     continue;
                 } else {
@@ -718,7 +724,6 @@ abstract class Entity extends \Floxim\Floxim\System\Entity {
         if (!$relId || !$dir) {
             return;
         }
-        //$field->moveEntity($this['id'], $relId, $dir);
         $this[$field['keyword']] = $field->getNewValue($this, $relId, $dir);
     }
     
