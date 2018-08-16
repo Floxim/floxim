@@ -72,6 +72,21 @@ class Env
         }
         return $path_cache[$url];
     }
+
+    public function isInPath($entity)
+    {
+        foreach ($this->getPath() as $pi) {
+            if ($entity['id'] === $pi['id']) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function isCurrentPage($entity)
+    {
+        return $entity['id'] === $this->getPageId();
+    }
     
     public function forceUrl($url)
     {
