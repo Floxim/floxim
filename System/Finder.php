@@ -21,6 +21,7 @@ abstract class Finder
 
     protected $with = array();
     protected $name_field = null;
+    protected $having = [];
 
     const BELONGS_TO = 0;
     const HAS_MANY = 1;
@@ -351,8 +352,9 @@ abstract class Finder
             if (in_array($field, $this->getMultiLangFields())) {
                 $field = $field.'_'.fx::env()->getLang();
             }
-            $field = '{{' . $table . '}}.' . $field;
-            
+            if ($table) {
+                $field = '{{' . $table . '}}.' . $field;
+            }
         }
         if (is_array($value) && count($value) == 1 && ($type == '=' || $type == 'IN')) {
             $value = current($value);
@@ -373,6 +375,18 @@ abstract class Finder
         
         $this->where []= call_user_func_array( array($this, 'prepareCondition'), func_get_args() );
         
+        return $this;
+    }
+
+    public function having($field = null, $value = null, $type = '=')
+    {
+        $num_args = func_num_args();
+        if ($num_args === 0) {
+            return $this->having;
+        }
+
+        $this->having []= call_user_func_array( array($this, 'prepareCondition'), func_get_args() );
+
         return $this;
     }
     
@@ -611,6 +625,13 @@ abstract class Finder
         if (count($this->group) > 0) {
             $q .= "\n GROUP BY " . join(", ", $this->group);
         }
+        if (count($this->having) > 0) {
+            $conds = [];
+            foreach ($this->having as $cond) {
+                $conds []= $this->makeCond($cond, $base_table);
+            }
+            $q .= "\n HAVING ".join("\n AND ", $conds);
+        }
         if (is_string($this->order)) {
             $this->order = [['expression' => $this->order, 'dir' => 'asc']];
         }
@@ -780,6 +801,7 @@ abstract class Finder
                 }
                 break;
         }
+        return $this;
     }
 
     protected function makeCond($cond, $base_table)

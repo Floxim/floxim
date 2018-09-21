@@ -594,6 +594,13 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         return $this;
     }
 
+    public function rsort()
+    {
+        call_user_func_array(array($this, 'sort'), func_get_args());
+        return $this->reverse();
+    }
+
+
 
     /*
      * Find elemenets and remove them from the collection
