@@ -396,6 +396,7 @@ window.fx_suggest = function(params) {
                     found.results = that.skipByIds(found.results,requestParams.skip_ids);
                     found.results = that.sliceShowLimit(found.results,requestParams.count_show);
                     found_res = found;
+                    found_res = $.extend({}, res, found);
                     return false;
                 }
             }

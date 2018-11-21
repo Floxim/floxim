@@ -130,6 +130,10 @@ class Input
 
     }
 
+    public function fetchPostJson() {
+        return json_decode(file_get_contents('php://input'), true);
+    }
+
     public function fetchCookie($item = "")
     {
 
