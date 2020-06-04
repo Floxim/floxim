@@ -15,6 +15,16 @@ class Fx
     {
 
     }
+
+    public static function stop($what)
+    {
+        foreach (range(0, 20) as $n) {
+            ob_get_clean();
+        }
+        fx::log('stopd', debug_backtrace());
+        fx::debug($what);
+        die();
+    }
     
     public static $counters = array();
     public static function count($key) {
@@ -22,6 +32,13 @@ class Fx
             self::$counters[$key] = 0;
         }
         self::$counters[$key]++;
+    }
+
+    protected static $delayedTasks = [];
+
+    public static function delay($task)
+    {
+        self::$delayedTasks []= $task;
     }
 
     /**
@@ -39,6 +56,17 @@ class Fx
             } else {
                 echo(json_encode($data));
             }
+        }
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        }
+        session_write_close();
+        foreach (self::$delayedTasks as $task) {
+            if (is_callable($task)) {
+                $task();
+            }
+        }
+        if (!is_null($data)) {
             die();
         }
     }
@@ -423,7 +451,7 @@ class Fx
             fx::debug(func_get_args(), fx::debug()->backtrace());
             die("Failed loading controller class " . $c_class);
         }
-        fx::log(func_get_args(), fx::debug()->backtrace());
+        fx::log(func_get_args(), fx::debug()->backtrace(), debug_backtrace());
         throw new \Exception("Failed loading class controller " . $controller);
     }
 
@@ -707,6 +735,11 @@ class Fx
     public static function getComponentByKeyword($keyword)
     {
         return isset(self::$components_by_keyword[$keyword]) ? self::$components_by_keyword[$keyword] : null;
+    }
+
+    public static function void()
+    {
+        return null;
     }
 
     public static function lang($string = null, $dict = null)
@@ -1059,7 +1092,7 @@ class Fx
             $thumber = new Thumb($value, $format);
             $res = $thumber->getResultPath();
         } catch (\Exception $e) {
-            fx::log('img exception', func_get_args(), $e->getMessage(), fx::debug()->backtrace(false));
+            // fx::log('img exception', func_get_args(), $e->getMessage(), fx::debug()->backtrace(false));
             $res = '';
         }
         return $res;

@@ -109,19 +109,19 @@ class Debug
         $res = array();
         foreach ($trace as $l) {
             $str = '';
-            if ($l['file']) {
+            if (isset($l['file']) && $l['file']) {
                 $file = fx::path()->http($l['file']);
                 $str .= $file . '@' . $l['line'];
             }
-            if ($l['class']) {
+            if (isset($l['class']) && $l['class']) {
                 $str .= ' ' . $l['class'] . $l['type'];
             }
-            if ($l['function']) {
+            if (isset($l['function']) && $l['function']) {
                 $str .= $l['function'];
             }
             $res [] = $str;
         }
-        return join("\n", $res);
+        return implode("\n", $res);
     }
 
     /**

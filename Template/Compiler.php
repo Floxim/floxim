@@ -986,6 +986,9 @@ class Compiler
             if ($linebreaks || $token_is_visual) {
                 $token->setProp('linebreaks', $linebreaks);
             }
+        } elseif ($token->getProp('linebreaks') === 'false') {
+            $token->setProp('linebreaks', false);
+            fx::log('nobrks');
         }
 
         // e.g. "name" or "image_".$context->get('id')
@@ -1630,6 +1633,10 @@ class Compiler
                     $_block_name.', '.$_bundle_id.', '.$_bundle_params.
                 ') ) ) {'."\n";
         $code .= 'require( $export_style_file );'."\n";
+        $code .= 'if (isset($block_container_props) && isset($block_container_props["lightness"]) ';
+        $code .= ' && $block_container_props["lightness"] === "none" && isset($style_info["lightness_image"])) { '."\n";
+        $code .= ' $block_container_props["lightness"] = \Floxim\Floxim\System\Thumb::getLightness(fx::path()->abs($style_info["lightness_image"]));'."\n";
+        $code .= "}\n";
         $code .= "}\n";
         
         $code .= " echo ' style_'.".$_mod_value.";\n";
@@ -1784,6 +1791,9 @@ class Compiler
             $value_with_meta = $this->parseExpressionWithMeta($token->getProp('value'));
             list($value, $meta) = $value_with_meta;
         } else {
+            if (!isset($token->children)) {
+                fx::cdebug($token);
+            }
             if (count($token->children) === 1 && $token->children[0]->name === 'code') {
                 $value = $token->children[0]->getProp('value');
                 if ($format === 'yaml') {
@@ -2285,7 +2295,7 @@ class Compiler
         if (!isset($props['type']) && isset($props['values'])) {
             $props['type'] = 'select';
         }
-        if (isset($props['type']) && $props['type'] === 'select' && !preg_match("~^`~", $props['values'])) {
+        if (isset($props['type']) && $props['type'] === 'select' && !$token->isRawProp('values')) {
             $props['values'] = self::parseCssLikeProps($props['values']);
             if (!isset($props['default'])) {
                 $props['default'] = current(array_keys($props['values']));
@@ -2304,8 +2314,8 @@ class Compiler
         
         if (isset($props['default'])) {
             // handle computable defaults
-            $default_val = "'".$props['default']."'";
-            
+            // $default_val = "'".$props['default']."'";
+            $default_val = $token->exportProp('default');
         }
         if (isset($default_val)) {
             $code .= "if (".$val_is_null.") {\n";
@@ -2327,11 +2337,16 @@ class Compiler
             $c_prop = "'".$k."' => ";
             if (!is_string($v)) {
                 $c_prop .= var_export($v, 1);
-            } elseif (preg_match("~^\`.+\`$~s", $v)) {
+            } else {
+                $c_prop .= $token->exportProp($k);
+            }
+            /*} elseif (preg_match("~^\`.+\`$~s", $v)) {
                 $c_prop .= trim($v, '`');
             } else {
                 $c_prop .= "'".addslashes($v)."'";
             }
+            */
+
             $exported_props []= $c_prop;
         }
         $_param_props = "array(".join(", ", $exported_props).")";

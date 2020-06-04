@@ -9,44 +9,6 @@ use Floxim\Floxim\System\Fx as fx;
 class Field extends Admin
 {
     
-    public function cond() {
-        
-        $entity_type = 'floxim.blog.news';
-        $com = fx::component($entity_type);
-        $context = fx::env()->getFieldsForFilter();
-        $fields = array(
-            array(
-                'keyword' => 'entity',
-                'name' => fx::util()->ucfirst($com->getItemName()),
-                'type' => 'entity',
-                'entity_type' => $com['keyword'],
-                'children' => $com->getFieldsForFilter()
-            )
-        );
-        foreach ($context as $ctx) {
-            $fields []= $ctx;
-        }
-        $field = array(
-            'label' => 'Conds',
-            'type' => 'condition',
-            'context' => $context,
-            'fields' => $fields
-        );
-        fx::log('test', $field);
-        return array('fields' => array(
-            $field,
-            array(
-                'label' => 'ls',
-                'type' => 'livesearch',
-                'values' => array(
-                    array(1, 'foo tob sd'),
-                    array(2, 'baa taz sd'),
-                    array(3, 'olo trolo popaka')
-                )
-            )
-        ));
-    }
-
     public function items($input)
     {
         $component = $input['entity'];
@@ -136,6 +98,8 @@ class Field extends Admin
             $f_keyword['disabled'] = true;
         }
         $fields[]= $f_keyword;
+
+        $hasParent = (bool) $parent_field;
         
         $fields[] = array(
             'name' => 'name',
@@ -212,6 +176,12 @@ class Field extends Admin
             'value' => !$parent_field && !$field['id'] ? true : $field['is_editable']
         );
 
+        if (!$hasParent) {
+            foreach ($fields as &$cf) {
+                unset($cf['locked']);
+            }
+        }
+
         $fields[] = $this->ui->hidden('posting');
         $fields[] = $this->ui->hidden('action', 'add');
         $fields[] = $this->ui->hidden('entity', 'field');
@@ -221,11 +191,11 @@ class Field extends Admin
     public function addSave($input)
     {
         
-        $params = array('format', 'type', 'default', 'is_editable', 'is_required');
+        $params = array('format', 'type', 'default', 'is_editable', 'is_required', 'group_id');
         $data['keyword'] = trim($input['keyword']);
         $data['name'] = trim($input['name']);
         foreach ($params as $v) {
-            $data[$v] = $input[$v];
+            $data[$v] = isset($input[$v]) ? $input[$v] : null;
         }
         $data['checked'] = 1;
         $data['component_id'] = $input['component_id'];
@@ -281,7 +251,7 @@ class Field extends Admin
             $field_id = (int) $input['field_id'];
         } else {
             $field_id = null;
-            $params['type'] = $input['type'];
+            $params['type'] = isset($input['type']) ? $input['type'] : null;
         }
         $res = fx::data('field')->getFieldImplementation(
             $field_id, 
@@ -371,6 +341,12 @@ class Field extends Admin
             $params []= 'keyword';
             $params []= 'type';
         }
+        if (!isset($input['keyword'])) {
+            $input['keyword'] = $field['keyword'];
+        }
+        if (!isset($input['name'])) {
+            $input['name'] = $field['name'];
+        }
         
         $input['keyword'] = trim($input['keyword']);
         $input['name'] = trim($input['name']);
@@ -381,7 +357,7 @@ class Field extends Admin
             if (!array_key_exists($v, $input)) {
                 continue;
             }
-            if ($input[$v.$lock_postfix]) {
+            if (isset($input[$v.$lock_postfix]) && $input[$v.$lock_postfix]) {
                 $field->set($v, null);
             } else {
                 $field->set($v, $input[$v]);
@@ -409,7 +385,7 @@ class Field extends Admin
         } else {
             $result = array('status' => 'ok');
             $field->save();
-            if ($input['entity_id'] && $input['entity_id'] !== 'null') {
+            if (isset($input['entity_id']) && $input['entity_id'] && $input['entity_id'] !== 'null') {
                 $entity = fx::data($input['entity_type'], $input['entity_id']);
                 $result['new_json'] = $entity->getFormField($field['keyword']);
                 $result['new_json']['name'] = 'content['.$result['new_json']['name'].']';
@@ -449,7 +425,7 @@ class Field extends Admin
         $es = $this->entity_type;
         $result = array('status' => 'ok');
 
-        $ids = $input['id'];
+        $ids = isset($input['id']) ? $input['id'] : (isset($input['ids']) ? $input['ids'] : []);
         if (!is_array($ids)) {
             $ids = array($ids);
         }

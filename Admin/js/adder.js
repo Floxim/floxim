@@ -126,17 +126,38 @@ fx_front.prototype.create_inline_entity_adder = function($node) {
         $placeholder_mark = $([]);
     }
     
-    var $placeholder_mark_td = $('td', $placeholder_mark); 
-    
+    var $placeholder_mark_td = $('td', $placeholder_mark);
+
     if ($placeholder_mark.length) {
-        var add_text = '. '+ $fx.lang('You can add %s here') + '.';
+        $placeholder_mark.html('')
+        $placeholder_mark_td.html('')
+
+
+        var placeholder_target = ($placeholders.first().data('fx_entity_meta') || {}).placeholder_target
+        if (placeholder_target) {
+            var add_text = $fx.lang('You can [choose] or add %s here').replace(
+                /\[(.+?)\]/,
+                function(full, word) {
+                    return '<span class="fx_adder_choose_link">'+word+'</span>'
+                }
+            );
+        } else {
+            var add_text = $fx.lang('You can add %s here');
+        }
+        add_text += '.';
         add_text = add_text.replace(/\%s/, '<span class="fx_adder_variants"></span>');
+        add_text = '<span class="fx_adder_wrapper">' + add_text + '</span>';
         if ($placeholder_mark_td.length) {
             $placeholder_mark_td.append(add_text);
         } else {
             $placeholder_mark.append(add_text);
         }
         var $text_variants = $('.fx_adder_variants', $placeholder_mark);
+        var $choose_link = $placeholder_mark.find('.fx_adder_choose_link');
+        $choose_link.on('click', function() {
+            $fx.front.handle_choose_entity($placeholder_mark, placeholder_target)
+            return false;
+        });
     } else {
         var $entities = $('>.fx_entity', $node).not('.fx_entity_adder_placeholder'),
             button_scope = $node.is('.columns') ? 'infoblock' : 'entity';
@@ -195,6 +216,31 @@ fx_front.prototype.create_inline_entity_adder = function($node) {
 
 fx_front.prototype.destroy_inline_entity_adder = function($node) {
     
+};
+
+fx_front.prototype.handle_choose_entity = function ($placeholder_mark, placeholder_target) {
+    var $control = $fx_fields.livesearch(placeholder_target.meta, 'input');
+    var $wrapper = $placeholder_mark.find('.fx_adder_wrapper');
+    var $form = $('<div class="fx_adder_choose_form"></div>');
+    var $button = $('<button class="fx_button fx_button_class_cancel">Отмена</button>');
+    $form.append($control);
+    $form.append($button);
+    $wrapper.hide();
+    $wrapper.parent().append($form);
+    this.freeze();
+    $control.find('.livesearch__control_arrow').trigger('click');
+    $button.on('click', function() {
+        $form.remove();
+        $wrapper.show();
+        $fx.front.unfreeze();
+    });
+    $control.on('change', function () {
+        var value = $control.data('livesearch').getValue();
+        fx_eip.add_var($placeholder_mark, placeholder_target.meta, value);
+        fx_eip.save();
+        $fx.front.unfreeze();
+    })
+    return false;
 };
 
 fx_front.prototype.recount_adder_overlaps = function() {
@@ -266,7 +312,7 @@ fx_front.prototype.create_inline_adder = function($node, $entities, title, scope
         return $existing_button;
     }
     
-    var is_sortable = scope === 'infoblock' || scope === 'infoblock_placer' || $entities.filter('.fx_sortable').length > 0;
+    var is_sortable = scope === 'infoblock' || scope === 'infoblock_placer' || $entities.filter('[data-fx_sortable]').length > 0;
     
     var $overlay = this.get_front_overlay(),
         $adder_overlay = $('.fx_inline_adder_overlay', $overlay);

@@ -21,6 +21,7 @@ abstract class Finder
 
     protected $with = array();
     protected $name_field = null;
+    protected $having = [];
 
     const BELONGS_TO = 0;
     const HAS_MANY = 1;
@@ -59,6 +60,7 @@ abstract class Finder
     
     public function livesearchApplyConditions($conds) 
     {
+        fx::log('lsconds', $conds);
         foreach ($conds as $cond_field => $cond_val) {
             if (is_numeric($cond_field) && is_array($cond_val)) {
                 $op = isset($cond_val[2]) ? $cond_val[2] : '=';
@@ -79,6 +81,8 @@ abstract class Finder
         }
     }
 
+    protected function beforeLivesearch() {}
+
     public function livesearch($term = '', $limit = null, $id_field = 'id')
     {
         if (!isset($term)) {
@@ -94,7 +98,8 @@ abstract class Finder
             $this->limit($limit);
         }
         $this->calcFoundRows(true);
-        
+
+        $this->beforeLivesearch();
         $items = $this->all();
         if (!$items) {
             return;
@@ -347,12 +352,16 @@ abstract class Finder
             if (in_array($field, $this->getMultiLangFields())) {
                 $field = $field.'_'.fx::env()->getLang();
             }
-            $field = '{{' . $table . '}}.' . $field;
-            
+            if ($table) {
+                $field = '{{' . $table . '}}.' . $field;
+            }
         }
         if (is_array($value) && count($value) == 1 && ($type == '=' || $type == 'IN')) {
             $value = current($value);
             $type = '=';
+        }
+        if ($type === 'IN' && is_scalar($value)) {
+            $value = [$value];
         }
         return array($field, $value, $type, $original_field);
     }
@@ -366,6 +375,18 @@ abstract class Finder
         
         $this->where []= call_user_func_array( array($this, 'prepareCondition'), func_get_args() );
         
+        return $this;
+    }
+
+    public function having($field = null, $value = null, $type = '=')
+    {
+        $num_args = func_num_args();
+        if ($num_args === 0) {
+            return $this->having;
+        }
+
+        $this->having []= call_user_func_array( array($this, 'prepareCondition'), func_get_args() );
+
         return $this;
     }
     
@@ -442,22 +463,32 @@ abstract class Finder
             $this->order = array();
             return $this;
         }
+        /*
         if (is_string($this->order)) {
             $this->order = empty($this->order) ? array() : array($this->order);
         }
+
         if (!preg_match("~asc|desc~i", $direction)) {
             $direction = 'ASC';
         }
+        */
+        $direction = strtolower($direction);
+        if (!in_array($direction, ['desc', 'asc'])) {
+            $direction = 'asc';
+        }
+        $orderEntry = ['field' => $field, 'direction' => $direction];
         if (strstr($field, '.')) {
-            $this->order [] = $this->prepareComplexField($field, 'left') . ' ' . $direction;
+            $expression = $this->prepareComplexField($field, 'left') . ' ' . $direction;
         } else {
             $table = $this->getColTable($field);
             if ($table) {
-                $this->order [] = "{{" . $table . "}}.`" . $field . "` " . $direction;
+                $expression = "{{" . $table . "}}.`" . $field . "` " . $direction;
             } else {
-                $this->order []= "`".$field."` ".$direction;
+                $expression = "`".$field."` ".$direction;
             }
         }
+        $orderEntry['expression'] = $expression;
+        $this->order []= $orderEntry;
         return $this;
     }
     
@@ -594,11 +625,27 @@ abstract class Finder
         if (count($this->group) > 0) {
             $q .= "\n GROUP BY " . join(", ", $this->group);
         }
+        if (count($this->having) > 0) {
+            $conds = [];
+            foreach ($this->having as $cond) {
+                $conds []= $this->makeCond($cond, $base_table);
+            }
+            $q .= "\n HAVING ".join("\n AND ", $conds);
+        }
         if (is_string($this->order)) {
-            $this->order = array($this->order);
+            $this->order = [['expression' => $this->order, 'dir' => 'asc']];
         }
         if (is_array($this->order) && count($this->order) > 0) {
-            $q .= "\n ORDER BY " . join(", ", $this->order);
+            $orderExpressions = array_map(
+                function ($orderEntry) {
+                    if (!isset($orderEntry['expression'])) {
+                        fx::log($orderEntry, fx::debug()->backtrace());
+                    }
+                    return $orderEntry['expression'];
+                },
+                $this->order
+            );
+            $q .= "\n ORDER BY " . implode(", ", $orderExpressions);
         }
         if ($this->limit) {
             $q .= "\n LIMIT " . $this->limit['offset'].', '.$this->limit['count'];
@@ -754,6 +801,7 @@ abstract class Finder
                 }
                 break;
         }
+        return $this;
     }
 
     protected function makeCond($cond, $base_table)
@@ -883,16 +931,17 @@ abstract class Finder
         }
         
         $collection = new Collection($objs);
+        $collection->is_sortable = $this->isSortable();
         $collection->finder = $this;
-        if (is_array($this->order)) {
-            foreach ($this->order as $sorting) {
-                if (preg_match("~priority~", $sorting)) {
-                    $collection->is_sortable = true;
-                    break;
-                }
-            }
-        }
         return $collection;
+    }
+
+    public function isSortable()
+    {
+        return
+            is_array($this->order) &&
+            isset($this->order[0]) &&
+            preg_match('~priority~', $this->order[0]['field']);
     }
 
     /*
@@ -1450,13 +1499,32 @@ abstract class Finder
             fx::db()->query($q);
         }
     }
+
+    public static function processDateValue ($value, $timestamp = false) {
+        if (!is_array($value) || count($value) !== 3 || $value[0] !== 'now') {
+            return $value;
+        }
+        $now = time();
+        $offset = $value[2] * ($value[1] === 'plus' ? 1 : -1);
+        $date = $now + $offset;
+        return $timestamp ? $date : fx::date($date);
+    }
+
+    protected static function getBooleanCondition ($is_true)
+    {
+        return [
+            null,
+            $is_true ? '1' : '0',
+            'RAW'
+        ];
+    }
     
     public function processCondition($cond) {
         $op_parts = explode(".", $cond['type']);
         $op = $op_parts[0];
         $op_type = isset($op_parts[1]) ? $op_parts[1] : 'value';
         
-        if ( ($op === 'is_in' || $op === 'is_not_in') && $cond['real_field']) {
+        if ( ($op === 'is_in' || $op === 'is_not_in') && isset($cond['real_field']) && $cond['real_field']) {
             $cond['field'] = $cond['real_field'];
         }
         
@@ -1472,11 +1540,7 @@ abstract class Finder
             }
             if ($scope === 'context') {
                 $is_true = \Floxim\Floxim\Component\Scope\Entity::checkCondition($cond);
-                $res = array(
-                    null,
-                    $is_true ? '1' : '0',
-                    'RAW'
-                );
+                $res = self::getBooleanCondition($is_true);
                 return $res;
             }
         }
@@ -1488,6 +1552,10 @@ abstract class Finder
             $value = fx::env()->getContextProp($value);
         } elseif ($op_type === 'expression') {
             $value = fx::env()->getContextProp($value);
+        }
+
+        if ($op_type === 'value') {
+            $value = self::processDateValue($value);
         }
         
         $res = null;
@@ -1511,31 +1579,26 @@ abstract class Finder
                 if ($value instanceof \Floxim\Floxim\System\Entity) {
                     $value = $value['id'];
                 }
-                /*
-                $res = array(
-                    $field,
-                    $value,
-                    'IN'
-                );
-                */
-                
-                $res = array(
-                    array(
+                if (is_null($value)) {
+                    $res = self::getBooleanCondition(false);
+                } else {
+                    $res = array(
                         array(
-                            $field,
-                            $value,
-                            'IN'
+                            array(
+                                $field,
+                                $value,
+                                'IN'
+                            ),
+                            array(
+                                $field,
+                                null,
+                                'IS NOT NULL'
+                            )
                         ),
-                        array(
-                            $field,
-                            null,
-                            'IS NOT NULL'
-                        )
-                    ),
-                    null,
-                    'AND'
-                );
-
+                        null,
+                        'AND'
+                    );
+                }
                 break;
             case 'is_true':
                 $res = array(
@@ -1607,16 +1670,28 @@ abstract class Finder
         }
         return $res;
     }
+
+    protected $appliedConditions = [];
     
-    public function applyConditions($conds) {
+    public function applyConditions ($conds) {
+        if (!$conds) {
+            return $this;
+        }
         if ($conds['type'] === 'group' && $conds['logic'] === 'AND') {
             foreach ($conds['values'] as $cond) {
                 $this->where( $this->processCondition($cond) );
+                $this->appliedConditions []= $cond;
             }
             return $this;
         }
         $this->where( $this->processCondition($conds));
+        $this->appliedConditions []= $conds;
         return $this;
+    }
+
+    public function getAppliedConditions ()
+    {
+        return $this->appliedConditions;
     }
     
     public function conditionIs($type)

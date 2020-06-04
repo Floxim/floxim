@@ -293,7 +293,7 @@ class ContextFlex extends Context {
             };
         }
         for ($i = $this->level; $i >= 0; $i--) {
-            if ($check_callback($this->stack[$i])) {
+            if (isset($this->stack[$i]) && $check_callback($this->stack[$i])) {
                 return $this->stack[$i];
             }
         }

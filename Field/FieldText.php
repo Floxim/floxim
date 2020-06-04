@@ -29,12 +29,12 @@ class FieldText extends \Floxim\Floxim\Component\Field\Entity
             'html' => array(
                 'type'  => 'checkbox',
                 'label' => fx::alang('allow HTML tags', 'system'),
-                'value' => $this['format']['html']
+                'value' => isset($this['format']['html']) ? $this['format']['html'] : null
             ),
             'nl2br' => array(
                 'type'  => 'checkbox',
                 'label' => fx::alang('replace newline to br', 'system'),
-                'value' => $this['format']['nl2br']
+                'value' => isset($this['format']['nl2br']) ? $this['format']['nl2br'] : null
             )
         );
         return $fields;

@@ -20,7 +20,6 @@ class Entity extends \Floxim\Floxim\Component\Basic\Entity
     }
     
     public function beforeSave() {
-        if ($t)
         parent::beforeSave();
     }
 }

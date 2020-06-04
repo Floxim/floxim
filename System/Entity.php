@@ -173,9 +173,11 @@ abstract class Entity implements \ArrayAccess, Template\Entity
             // updated only fields that have changed
             $data = array();
             foreach ($this->modified as $v) {
-                $data[$v] = $this->data[$v];
+                $data[$v] = isset($this->data[$v]) ? $this->data[$v] : null;
             }
-            $this->getFinder()->update($data, array($pk => $this->data[$pk]));
+            if (count($data) > 0) {
+                $this->getFinder()->update($data, array($pk => $this->data[$pk]));
+            }
             $this->saveMultiLinks();
             $this->afterUpdate();
         } // insert
@@ -438,7 +440,7 @@ abstract class Entity implements \ArrayAccess, Template\Entity
 
     public function delete()
     {
-        if ($this->isGenerated()) {
+        if ($this->isGenerated() || !$this->isSaved()) {
             return;
         }
         $pk = $this->getPk();
@@ -644,7 +646,7 @@ abstract class Entity implements \ArrayAccess, Template\Entity
             if (!empty($this->data[$lang_offset])) {
                 return $this->data[$lang_offset];
             }
-            return $this->data[$offset . '_en'];
+            return isset($this->data[$offset . '_en']) ? $this->data[$offset . '_en'] : null;
         }
         
         // relation lazy-loading

@@ -10,17 +10,27 @@ class Content extends Admin
     public function addEdit($input)
     {
         if (!isset($input['content_type'])) {
-            return false;
+            $currentPage = fx::env('page');
+            if (!$currentPage) {
+                return false;
+            }
+            $input['content_type'] = $currentPage->getType();
+            $input['content_id'] = $currentPage['id'];
         }
         $content_type = $input['content_type'];
         
         $linker = null;
         $linker_field = null;
-        
-        if (isset($input['placeholder_linker']) && is_string($input['placeholder_linker'])) {
-            $input['placeholder_linker'] = unserialize($input['placeholder_linker']);
+
+
+        foreach (['placeholder_linker', 'placeholder_target'] as $complexProp) {
+            if (isset($input[$complexProp]) && is_string($input[$complexProp])) {
+                $input[$complexProp] = json_decode($input[$complexProp], true);
+            }
         }
-        
+
+        $placeholderTarget = isset($input['placeholder_target']) ? $input['placeholder_target'] : null;
+
         // get the edited object
         if (isset($input['content_id']) && $input['content_id']) {
             $content = fx::data($content_type, $input['content_id']);
@@ -68,13 +78,19 @@ class Content extends Admin
         );
         
         if ($linker) {
-            $fields[]= $this->ui->hidden('placeholder_linker', serialize($input['placeholder_linker']));
+            $fields[]= $this->ui->hidden('placeholder_linker', $input['placeholder_linker']);
+        }
+
+        if ($placeholderTarget) {
+            $fields []= $this->ui->hidden('placeholder_target', $placeholderTarget);
         }
         
         if (isset($input['preset_params'])) {
             $fields []= $this->ui->hidden('preset_params', $input['preset_params']);
         }
-        
+
+        $relation_field = null;
+
         if (isset($input['entity_values'])) {
             $entity_values = $input['entity_values'];
             if (is_string($entity_values)) {
@@ -82,6 +98,12 @@ class Content extends Admin
             }
             $content->setFieldValues($entity_values, array_keys($entity_values));
             $fields []= $this->ui->hidden('entity_values', json_encode($entity_values));
+            foreach ($entity_values as $entity_field_name => $entity_field_value) {
+                $c_entity_field = $content->getField($entity_field_name);
+                if ($c_entity_field instanceof \Floxim\Floxim\Field\FieldLink && $entity_field_value) {
+                    $relation_field = $c_entity_field;
+                }
+            }
         }
         
         if (
@@ -123,28 +145,24 @@ class Content extends Admin
         
         
 
-        $move_meta = null;
-        $move_variants = array('__move_before', '__move_after');
-        foreach ($move_variants as $rel_prop) {
-            if (isset($input[$rel_prop]) && $input[$rel_prop]) {
-                $rel_item = fx::content($input[$rel_prop]);
-                if ($rel_item) {
+        //$move_meta = null;
+        if (isset($input['__move_field'])) {
+            $move_variants = array('__move_before', '__move_after');
+            $fields [] = $this->ui->hidden('__move_field', $input['__move_field']);
+            foreach ($move_variants as $rel_prop) {
+                if (isset($input[$rel_prop]) && $input[$rel_prop]) {
                     $fields [] = $this->ui->hidden($rel_prop, $input[$rel_prop]);
-                    $move_meta = array(
-                        'item' => $rel_item,
-                        'type' => preg_replace("~^__move_~", '', $rel_prop)
-                    );
+                    break;
                 }
-                break;
             }
         }
-        
+
         if (isset($input['parent_form_data']) && isset($input['relation'])) {
             $parent_form_data = json_decode($input['parent_form_data'], true);
             $relation = json_decode($input['relation'], true);
             
             $related_entity_type = $parent_form_data['content_type'];
-            $related_entity_id = $parent_form_data['content_id'];
+            $related_entity_id = isset($parent_form_data['content_id']) ? $parent_form_data['content_id'] : false;
             if ($related_entity_id) {
                 $related_entity = fx::data($related_entity_type, $related_entity_id);
             } else {
@@ -162,7 +180,7 @@ class Content extends Admin
         if (isset($input['content_id'])) {
             $fields [] = $this->ui->hidden('content_id', $input['content_id']);
         } else {
-            $fields [] = $this->ui->hidden('infoblock_id', $input['infoblock_id']);
+            $fields [] = $this->ui->hidden('infoblock_id', isset($input['infoblock_id']) ? $input['infoblock_id'] : null);
         }
 
         $this->response->addFields($fields);
@@ -172,6 +190,51 @@ class Content extends Admin
         }
         
         $content_fields = fx::collection($content->getFormFields());
+
+        $res['tabs'] = [];
+
+        $content_fields->findRemove(function($f) use (&$res) {
+            if (!isset($f['render_type']) || $f['render_type'] !== 'tab') {
+                return false;
+            }
+            $res['tabs'][$f['keyword']] = [
+                'label' => $f['label'],
+                'key' => $f['keyword']
+            ];
+            return true;
+        });
+
+        if ($relation_field !== null) {
+            $content_fields->apply(function(&$f) use ($relation_field) {
+                if (isset($f['id']) && $f['id'] === $relation_field['keyword'] && isset($f['value']) && $f['value']) {
+                    $f['type'] = 'hidden';
+                    if (is_array($f['value']) && isset($f['value']['id'])) {
+                        $f['value'] = $f['value']['id'];
+                    }
+                }
+            });
+        }
+
+        if (count($res['tabs']) > 0) {
+            $res['tabs'] = array_merge(
+              [
+                  'default_tab' => [
+                      'label' => 'Основное',
+                      'key' => 'default_tab'
+                  ],
+              ],
+              $res['tabs']
+            );
+            $content_fields->apply(function (&$f) use ($res) {
+                if (isset($f['group']) && isset($res['tabs'][$f['group']])) {
+                    $f['tab'] = $f['group'];
+                    unset($f['group']);
+                } elseif (!isset($f['tab'])) {
+                    $f['tab'] = 'default_tab';
+                }
+            });
+        }
+
         $this->response->addFields($content_fields, '', 'content');
         
         $is_backoffice = isset($input['mode']) && $input['mode'] == 'backoffice';
@@ -191,11 +254,14 @@ class Content extends Admin
                 $res['status'] = 'error';
                 $res['errors'] = $set_res['errors'];
             } else {
-                foreach ($move_variants as $rel_prop) {
-                    if (isset($input[$rel_prop])) {
-                        $moved_entity = $linker ? $linker : $content;
-                        $moved_entity[$rel_prop] = $input[$rel_prop];
+                if (isset($input['__move_field'])) {
+                    $moved_entity = $linker ? $linker : $content;
+                    foreach ($move_variants as $rel_prop) {
+                        if (isset($input[$rel_prop])) {
+                            $moved_entity[$rel_prop] = $input[$rel_prop];
+                        }
                     }
+                    $moved_entity['__move_field'] = $input['__move_field'];
                 }
                 try {
                     if (isset($input['mode']) && $input['mode'] === 'sync_fields') {
@@ -233,6 +299,14 @@ class Content extends Admin
                         $linker[$linker_field] = $content['id'];
                         $linker->save();
                     }
+                    if ($placeholderTarget) {
+                        $targetEntity = fx::data($placeholderTarget['type'], $placeholderTarget['id']);
+                        if ($targetEntity) {
+                            $targetEntity[$placeholderTarget['field']] = $content;
+                            $targetEntity->save();
+                        }
+                    }
+                    $res['saved_entity'] = $content->get();
                     $res['status'] = 'ok';
                 }  catch (\Exception $e) {
                     $res['status'] = 'error';
@@ -245,6 +319,7 @@ class Content extends Admin
             $res['resume'] = true;
         }
         $res['content_type_id'] = $content->getComponent()->get('id');
+        $res['content_id'] = $content['id'];
         $this->response->addFormButton('save');
         fx::trigger(
             'content_form_ready', 
@@ -256,18 +331,32 @@ class Content extends Admin
         return $res;
     }
 
+    public function deleteManySave ($input) {
+        fx::log('deltng', $input);
+    }
+
     public function deleteSave($input)
     {
         if (!isset($input['content_type'])) {
             return;
         }
         $content_type = $input['content_type'];
-        $id = isset($input['content_id']) ? $input['content_id'] : (isset($input['id']) ? $input['id'] : false);
-        if (!$id) {
+        if (isset($input['ids'])) {
+            $ids = is_string($input['ids']) ? explode(',', $input['ids']) : $input['ids'];
+        } else {
+            $id = isset($input['content_id']) ? $input['content_id'] : (isset($input['id']) ? $input['id'] : false);
+            if (!$id) {
+                return;
+            }
+            $ids = [$id];
+        }
+        if (count($ids) === 0) {
             return;
         }
-        $content = fx::data($content_type, $id);
-        if (!$content) {
+
+        $items = fx::data($content_type)->where('id', $ids)->all();
+        $content = count($items) === 1 ? $items[0] : null;
+        if (count($items) < 1) {
             return;
         }
         $fields = array(
@@ -279,7 +368,8 @@ class Content extends Admin
             $this->ui->hidden('entity', 'content'),
             $this->ui->hidden('action', 'delete_save'),
             $this->ui->hidden('content_id', $content['id']),
-            $this->ui->hidden('fx_admin', true)
+            $this->ui->hidden('fx_admin', true),
+            $this->ui->hidden('ids', implode(',', $ids))
         );
         if (isset($input['content_type'])) {
             $fields[] = $this->ui->hidden('content_type', $input['content_type']);
@@ -292,7 +382,7 @@ class Content extends Admin
          */
         $alert = '';
         
-        $is_linker = $content->isInstanceOf('floxim.main.linker');
+        $is_linker = $content &&  $content->isInstanceOf('floxim.main.linker');
         
         $delete_impossible = false;
         
@@ -320,7 +410,7 @@ class Content extends Admin
             }
             
             $alert .= '</p>';
-        } elseif ($content->isInstanceOf('floxim.main.content')) {
+        } elseif ($content && $content->isInstanceOf('floxim.main.content')) {
             $site = fx::env('site');
             if ($site && $site['index_page_id'] === $content['id']) {
                 $delete_impossible = true;
@@ -358,18 +448,20 @@ class Content extends Admin
             $this->response->addFormButton('cancel');
             return;
         }
-        
+        $this->response->addFormButton(['key' => 'cancel', 'class' => 'cancel']);
         $this->response->addFormButton(array('key' => 'save', 'class' => 'delete', 'label' => fx::alang('Delete')));
         if (isset($input['delete_confirm']) && $input['delete_confirm']) {
             $response = array('status' => 'ok');
             $c_path = fx::env('path');
-            if ($c_path) {
+            if ($c_path && $content) {
                 $content_in_path = $c_path->findOne('id', $content['id']);
                 if ($content_in_path) {
                     $response['reload'] = $content_in_path['parent'] ? $content_in_path['parent']['url'] : '/';
                 }
             }
-            $content->delete();
+            foreach ($items as $item) {
+                $item->delete();
+            }
             return $response;
         }
         $component = fx::data('component', $content_type);
@@ -390,6 +482,9 @@ class Content extends Admin
             $header .= ' &laquo;' . $content_name . '&raquo;';
         } elseif ($is_linker) {
             $header .= ' '.fx::alang('from this list');
+        }
+        if (count($ids) > 1) {
+            $header .= ' ('.count($ids).' шт.)';
         }
         $header .= "?";
         $res = array('header' => $header);
@@ -412,14 +507,19 @@ class Content extends Admin
         if (!$content) {
             return;
         }
+
+        $move_field = isset($input['field']) ? $input['field'] : 'priority';
+        $content['__move_field'] = $move_field;
         
         if (isset($input['next_id']) && $input['next_id']) {
             $content['__move_before'] = $input['next_id'];
-        } else {
+        } elseif (isset($input['prev_id']) && $input['prev_id']) {
+            $content['__move_after'] = $input['prev_id'];
+        } {
             $last_item = $content
                 ->getFinder()
                 ->whereSamePriorityGroup($content)
-                ->order('priority', 'desc')
+                ->order($move_field, 'desc')
                 ->one();
             if (!$last_item) {
                 return;
@@ -443,7 +543,8 @@ class Content extends Admin
             'values' => array(),
             'labels' => array('id' => 'ID'),
             'entity' => 'content',
-            'confirm_delete' => false
+            'confirm_delete' => false,
+            'multiselect' => true
         );
         
         if ($content_type === 'content') {
@@ -462,6 +563,9 @@ class Content extends Admin
         $fields->findRemove(function ($f) {
             if ($f['keyword'] === 'parent_id' || $f['keyword'] === 'type' || $f['keyword'] === 'site_id') {
                 return false;
+            }
+            if ($f['type'] === 'group') {
+                return true;
             }
             return $f['is_editable'] == 0;
         });
@@ -523,7 +627,8 @@ class Content extends Admin
                         }
                         break;
                     case 'multilink':
-                        $val = fx::alang('%d items', 'system', count($val));
+                        //$val = fx::alang('%d items', 'system', count($val));
+                        $val = count($val) ? count($val) . '&nbsp;шт.' : '&mdash;';
                         break;
                 }
 

@@ -11,7 +11,6 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
 
     public function __construct($keyword, $params = array())
     {
-        
         if (isset($params['namespace'])) {
             $this->meta['namespace'] = $params['namespace'];
             unset($params['namespace']);
@@ -51,7 +50,7 @@ class Bundle extends \Floxim\Floxim\Asset\Bundle {
                 $options
             );
         }
-        
+
         $parser = new \Less_Parser($options);
         if (isset($options['files'])) {
             $files = $options['files'];

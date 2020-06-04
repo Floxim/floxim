@@ -601,6 +601,22 @@ body:not(.fx_mode_edit) .fx_entity_hidden {
     .fx_adder_variant {
         .fx_adder_link();
     }
+    .fx_adder_choose_link {
+        .fx_adder_link();
+    }
+}
+
+.fx_adder_choose_form {
+  .fx_button {
+    padding: 8px 20px;
+    vertical-align: middle;
+    margin-left:10px;
+  }
+  .livesearch {
+    display: inline-block;
+    min-width:120px;
+    vertical-align: middle;
+  }
 }
 
 .fx_editable_empty:after, .fx_var_editable:empty:after {
@@ -1356,7 +1372,7 @@ span.fx_area_marker {
             vertical-align:middle;
         }
         &__body, &__footer, &__buttons {
-            display: inline-block;
+            display: inline-block !important;
             vertical-align: middle;
             padding:0;
         }

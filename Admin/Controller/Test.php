@@ -439,10 +439,16 @@ class Test extends Admin {
     {
         $f=  array(
             'type' => 'css-shadow',
-            'label' => 'Тень',
+            'label' => 'Тень для бокса',
             'value' => 'outer 0 -20 2 10 alt 1 1, inset 20 0 2 10 third 2 0.48'
         );
-        return array('fields' => [$f]);
+        $text = [
+            'type' => 'css-shadow',
+            'shadowType' => 'text',
+            'label' => 'Тень для текста',
+            'value' => '0 -20 10 alt 1 1, 20 0 10 third 2 0.48'
+        ];
+        return array('fields' => [$f, $text]);
     }
     
     public function scope($input)
@@ -451,6 +457,8 @@ class Test extends Admin {
         
         if (count($pageable)) {
             $pageable = fx::component()->find('keyword', $pageable);
+        } else {
+            $pageable = fx::collection();
         }
         
         $value = isset($input['conds']) ? json_decode($input['conds'],true) : null;
@@ -485,5 +493,18 @@ class Test extends Admin {
                 ['type' => 'hidden', 'name' => 'action', 'value' => 'scope']
             ]
         ];
-    }       
+    }
+
+    public function format($input) {
+        return [
+            'fields' => [
+                [
+                    'type' => 'fx-box-format',
+                    'label' => 'Формат',
+                    'value' => ['foo', 'bar'],
+                    'fixedLabel' => 'значение'
+                ]
+            ]
+        ];
+    }
 }

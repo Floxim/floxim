@@ -19,9 +19,10 @@ class FieldLink extends \Floxim\Floxim\Component\Field\Entity
         if (is_array($value) && isset($value['title']) && $value['title'] != '') {
             return true;
         }
-        if ($value && ($value != strval(intval($value)))) {
-            fx::log('value should be INT or NULL', $value, $this);
-            $this->error = sprintf(FX_FRONT_FIELD_INT_ENTER_INTEGER, $this['description']);
+        if ($value && ($value !== (string) (int) $value)) {
+            fx::log('wtaaaff?', $value, $this, $_POST);
+            //$this->error = sprintf(FX_FRONT_FIELD_INT_ENTER_INTEGER, $this['description']);
+            $this->error = 'тут раньше было чото про FX_FRONT_FIELD_INT_ENTER_INTEGER';
             return false;
         }
         return true;
@@ -51,7 +52,7 @@ class FieldLink extends \Floxim\Floxim\Component\Field\Entity
             'label'  => fx::alang('Links to', 'system'),
             'type'   => 'select',
             'values' => $comp_values,
-            'value'  => $this['format']['target'] ? $this['format']['target'] : ''
+            'value'  => isset($this['format']['target']) && $this['format']['target'] ? $this['format']['target'] : ''
         );
         $fields['prop_name'] = array(
             'label' => fx::alang('Key name for the property', 'system'),
@@ -60,7 +61,7 @@ class FieldLink extends \Floxim\Floxim\Component\Field\Entity
         $fields['cascade_delete']= array(
             //'label' => fx::alang('Cascade delete', 'system'),
             'label' => 'Удалять '.$this['component']->getItemName('add').' при удалении объекта, на который ведет ссылка',
-            'value' => $this['format']['cascade_delete'],
+            'value' => isset($this['format']['cascade_delete']) ? $this['format']['cascade_delete'] : null,
             'type' => 'checkbox'
         );
         $fields['render_type'] = array(
@@ -69,9 +70,9 @@ class FieldLink extends \Floxim\Floxim\Component\Field\Entity
             'values' => array(
                 'livesearch' => fx::alang('Live search', 'system'),
                 'select'     => fx::alang('Simple select', 'system'),
-                'group'    => 'Field group'
+                'group'    => fx::alang('Field group', 'system')
             ),
-            'value'  => $this['format']['render_type']
+            'value'  => isset($this['format']['render_type']) ? $this['format']['render_type'] : null
         );
         $fields['allow_new'] = array(
             'label' => 'Можно добавлять значения',
@@ -84,7 +85,7 @@ class FieldLink extends \Floxim\Floxim\Component\Field\Entity
 
     public function getPropertyName()
     {
-        if ($this['format']['prop_name']) {
+        if (isset($this['format']['prop_name']) && $this['format']['prop_name']) {
             return $this['format']['prop_name'];
         }
         if ($this['keyword']) {
@@ -116,19 +117,21 @@ class FieldLink extends \Floxim\Floxim\Component\Field\Entity
     public function getJsField($content)
     {
         $res = parent::getJsField($content);
-        //$target_com_keyword = $this->getTargetName();
+        $target_com_keyword = $this->getTargetName();
 
         $finder = $this->getTargetFinder($content);
 
         $render_type = $this['format']['render_type'];
+        $res['prop_name'] = $this->getFormat('prop_name');
         
         if ($render_type == 'livesearch') {
             $res['type'] = 'livesearch';
             $res['allow_new'] = (bool) $this->getFormat('allow_new');
             $res['params'] = array(
-                //'content_type' => $target_com_keyword
+                'content_type' => $target_com_keyword,
                 'relation_field_id' => $this['id'],
                 'entity_id' => $content['id'],
+                'linking_entity_type' => $content->getType(),
                 'send_form' => true,
                 'hidden_on_one_value' => true
             );
@@ -158,14 +161,15 @@ class FieldLink extends \Floxim\Floxim\Component\Field\Entity
             }
             $fields = $linked_entity->getFormFields()->getValues();
 
-            if ($linked_entity['id']) {
+            //if ($linked_entity['id']) {
                 $fields[]= array(
                     'name' => 'id',
                     'id' => 'id',
                     'type' => 'hidden',
                     'value' => $linked_entity['id']
                 );
-            }
+            //}
+            // fx::log('group fields', $fields, $linked_entity);
 
             $base_name = $this->getPropertyName();
             foreach ($fields as &$f) {

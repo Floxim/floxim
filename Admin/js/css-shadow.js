@@ -5,6 +5,10 @@ function shadow($container, params) {
     this.$popup = $container.find(shadow.el('popup'));
     this.$input = $container.find(shadow.el('value'));
     this.$handler = $container.find(shadow.el('handler'));
+    if (!params.shadowType) {
+        params.shadowType = 'box';
+    }
+    this.isBox = params.shadowType === 'box';
     this.params = params;
     this.init();
 }
@@ -19,7 +23,7 @@ var cls = function() {
 
 shadow.el = $t.getBemElementFinder(shadow.cl());
 
-shadow.parse_value = function(v) {
+shadow.parse_value = function(v, isBox) {
     if (v === 'none' || !v) {
         return [];
     }
@@ -29,10 +33,12 @@ shadow.parse_value = function(v) {
     function int(v) {
         return Math.round( parseFloat(v) );
     }
-    
     for (var i = 0; i < parts.length; i++) {
         var p = parts[i],
-            color = p[5] && p[6] && p[7] ? p[5] + ' ' + p[6] + ' ' + p[7] : '',
+            color,
+            level;
+        if (isBox) {
+            color = p[5] && p[6] && p[7] ? p[5] + ' ' + p[6] + ' ' + p[7] : '';
             level = {
                 type: p[0],
                 x: int(p[1]),
@@ -41,16 +47,24 @@ shadow.parse_value = function(v) {
                 spread: int(p[4]),
                 color: color
             };
+        } else {
+            color = p[3] && p[4] && p[5] ? p[3] + ' ' + p[4] + ' ' + p[5] : '';
+            level = {
+                x: int(p[0]),
+                y: int(p[1]),
+                blur: int(p[2]),
+                color: color
+            };
+        }
         res.push(level);
     }
-    
     return res;
 };
 
 
 shadow.prototype.init = function() {
     var raw_value = this.params.value,
-        value = shadow.parse_value(raw_value),
+        value = shadow.parse_value(raw_value, this.isBox),
         $levels = this.$popup.find(shadow.el('levels')),
         that = this;
 
@@ -87,13 +101,15 @@ shadow.prototype.init = function() {
         that.closer(e);
         return false;
     });
+
+    var isBox = that.params.shadowType === 'box';
     
     $levels.append(
         '<div' + cls('level')+'>'+
             '<div></div>'+
-            '<div>Внутри?</div>'+
+            (isBox ? '<div>Внутри?</div>' : '')+
             '<div>Цвет</div>'+
-            '<div>Рамер</div>'+
+            (isBox ? '<div>Рамер</div>' : '')+
             '<div>Размытие</div>'+
             '<div>Расстояние</div>'+
             '<div>Угол</div>'+
@@ -101,7 +117,7 @@ shadow.prototype.init = function() {
     );
     
     for (var i =0 ; i < value.length; i++) {
-        var level = shadow_level.create(value[i]);
+        var level = shadow_level.create(value[i], that.params.shadowType);
         level.draw($levels);
     }
     
@@ -116,7 +132,7 @@ shadow.prototype.init = function() {
     });
     
     this.$popup.on('click', shadow.el('add'), function() {
-        var level = shadow_level.create();
+        var level = shadow_level.create(undefined, that.params.shadowType);
         level.draw($levels);
         that.update();
     });
@@ -142,14 +158,15 @@ shadow.prototype.get_levels = function() {
 shadow.prototype.get_value = function() {
     var res = [];
     var levels = this.get_levels();
+    var isBox = this.isBox;
     for (var i = 0; i < levels.length; i++) {
         var level = levels[i];
         var v = level.get_value(),
-            level_string =  v.type + ' ' + 
+            level_string =  (isBox ? v.type + ' ' : '') +
                             v.x +' '+
                             v.y +' '+
                             v.blur +' '+
-                            v.spread + ' '+
+                            (isBox ? v.spread + ' ' : '')+
                             v.color;
                     
         res.push(level_string);
@@ -181,7 +198,7 @@ shadow.prototype.update_handle = function() {
     }
     
     var res = css.join(', ');
-    this.$handler.css('box-shadow', res);
+    this.$handler.css(this.isBox ? 'box-shadow' : 'text-shadow', res);
 };
 
 shadow.prototype.place_popup = function() {
@@ -201,12 +218,13 @@ shadow.prototype.hide_popup = function() {
     this.$popup.hide();
 };
 
-function shadow_level(value) {
+function shadow_level(value, shadowType) {
     this.value = value || shadow_level.default_value();
+    this.shadowType = shadowType;
 };
 
-shadow_level.create = function(v) {
-    return new shadow_level(v);
+shadow_level.create = function(v, shadowType) {
+    return new shadow_level(v, shadowType);
 };
 
 
@@ -240,14 +258,15 @@ shadow_level.prototype.get_distance = function() {
 };
 
 shadow_level.prototype.draw = function($target) {
+    var isBox = this.shadowType === 'box'
     this.$node = $(
         '<div' + cls('level', 'type_'+this.type) + '>'+
             '<div'+cls('level-controls')+'>'+
                 '<span '+cls('level-drop')+'>&times</span>'+
             '</div>'+
-            '<div'+cls('level-type')+'"></div>'+
+            (isBox ? '<div'+cls('level-type')+'"></div>' : '')+
             '<div'+cls('level-color')+'"></div>'+
-            '<div'+cls('level-spread')+'"></div>'+
+            (isBox ? '<div'+cls('level-spread')+'"></div>' : '')+
             '<div'+cls('level-blur')+'"></div>'+
             '<div'+cls('level-distance')+'"></div>'+
             '<div'+cls('level-angle')+'"></div>'+
@@ -336,9 +355,11 @@ shadow_level.prototype.get_value = function() {
     res.y = Math.round(y);
     
     res.blur = this.$blur.val() * 1;
-    res.spread = this.$spread.val() * 1;
-            
-    res.type = this.$type.val()*1 === 1 ? 'inset' : 'outer';
+
+    if (this.shadowType === 'box') {
+        res.spread = this.$spread.val() * 1;
+        res.type = this.$type.val() * 1 === 1 ? 'inset' : 'outer';
+    }
     
     res.color = this.$color.data('palette').val() || 'main 0 0.5';
     
@@ -352,9 +373,16 @@ shadow_level.prototype.get_css = function() {
     // box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
     var v = this.value,
         color = this.$color.data('palette').get_color();
-    var css = (v.type === 'inset' ? 'inset ' : '') +
-              v.x+'px '+v.y+'px '+v.blur+'px ' + v.spread + 'px '+color;
-    
+    var css = '',
+        isBox = this.shadowType === 'box';
+    if (isBox) {
+        css += (v.type === 'inset' ? 'inset ' : '')
+    }
+    css += v.x+'px '+v.y+'px '+v.blur+'px ';
+    if (isBox) {
+        css += v.spread + 'px ';
+    }
+    css += color;
     return css;
 };
 

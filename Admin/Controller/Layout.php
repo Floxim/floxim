@@ -357,7 +357,7 @@ class Layout extends Admin
     
     protected function prepareStyleVar($props)
     {
-        if ($props['units'] && $props['value']) {
+        if (isset($props['units']) && $props['units'] && isset($props['value']) && $props['value']) {
             $props['value'] = preg_replace("~[^\-\d\.]+~", '', $props['value']);
         }
         return $props;
@@ -481,7 +481,7 @@ class Layout extends Admin
         
         $res = [];
         
-        if ($style['tabs']) {
+        if (isset($style['tabs']) && $style['tabs']) {
             $res['tabs'] = $style['tabs'];
         } else {
             $res['tabs'] = array('_default' => 'Стиль');
@@ -542,7 +542,7 @@ class Layout extends Admin
         
         $res['tweaker'] = array(
             'tweaker_file' => $bundle->getTweakerLessFile(),
-            'rootpath' => fx::path()->http( dirname($style['file']) ) . '/',
+            'rootpath' => (isset($style['file']) ? fx::path()->http( dirname($style['file']) ) : ''). '/',
             'tweaked_vars' => array_keys($style['vars']),
             'mixin_name' => $mixin_name,
             'style_class' => $style_variant['block'].'_style_default'. 

@@ -22,7 +22,6 @@ class StyleBundle extends Bundle {
     protected $extension = 'css';
     
     public function __construct($keyword, $params = array()) {
-        
         $this->meta = array_merge($this->meta, self::parseKeyword($keyword));
         
         if (isset($params['visual_path'])) {
@@ -256,7 +255,7 @@ class StyleBundle extends Bundle {
         try {
             $parser->getCss();
         } catch (Exception $ex) {
-            
+
         }
         return $vars;
     }
@@ -348,6 +347,10 @@ class StyleBundle extends Bundle {
         if (!$meta) {
             return $res;
         }
+
+        $less_vars = $this->getLayoutVars();
+        $less_call = $this->generateCallLess();
+
         $parser = $this->startParser(
             array(
                 'plugins' => array(
@@ -355,14 +358,11 @@ class StyleBundle extends Bundle {
                 )
             )
         );
-
-        $less_vars = $this->getLayoutVars();
-        $less_call = $this->generateCallLess();
         
         try {
             ob_start();
             $parser->parse( $less_call );
-            $parser->ModifyVars($less_vars);    
+            $parser->ModifyVars($less_vars);
             $res = $parser->getCss();
             $this->generateExportFile();
             $errors = ob_get_clean();
@@ -370,11 +370,15 @@ class StyleBundle extends Bundle {
                 fx::log('hm ers', $errors, fx::debug()->backtrace(), $less_vars, $less_call);
             }
         } catch (\Less_Exception_Compiler $e) {
+            // fx::stop($e);
             $warnings = ob_get_clean();
             fx::log($e, $less_vars, $less_call, $warnings);
         } catch (\Less_Exception_Parser $e) {
+            // fx::stop($e);
             $warnings = ob_get_clean();
             fx::log('parser ex', $e, $e->getTrace(), $warnings, fx::debug()->backtrace(), $less_vars, $less_call);
+        } catch (\Exception $e) {
+            fx::log($e);
         }
         $res = self::minifyLess($res);
         return $res;
@@ -478,6 +482,18 @@ class StyleBundle extends Bundle {
                 $var_value = isset($variant_vars[$var_key]) ? $variant_vars[$var_key] : $var_meta['value'];
                 if (empty($var_value)) {
                     $var_value = 'none';
+                } elseif (isset($var_meta['code'])) {
+                    if ($var_value === '') {
+                        $var_value = '""';
+                    } else {
+                        try {
+                            $subp = new \Less_Parser();
+                            $var_value = '{' . $var_value . '}';
+                            $subp->parse('html ' . $var_value);
+                        } catch (\Exception $e) {
+                            $var_value = '""';
+                        }
+                    }
                 }
                 $res .= "\n    @".$var_key.":".$var_value.";";
             }
@@ -703,7 +719,7 @@ class StyleBundle extends Bundle {
             'tweaker' => array(
                 'tweaker_file' => $this->getTweakerLessFile(),
                 'rootpath' => $this->getRootPath(),
-                'vars' => array_keys($style['vars']),
+                'vars' => array_keys(isset($style['vars']) && is_array($style['vars']) ? $style['vars'] : []),
                 'mixin_name' => substr($this->getMixinName(), 1),
                 'container' => isset($style['container']) ? $style['container'] : array()
             )

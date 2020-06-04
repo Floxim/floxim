@@ -178,7 +178,7 @@ class Infoblock extends Admin
   	$groups = $data['groups'];
         
         foreach ($data['actions'] as $a) {
-            if ($a['subgroup']) {
+            if (isset($a['subgroup']) && $a['subgroup']) {
                 $group_keyword = $a['group'].':'.$a['subgroup'];
             } else {
                 $group_keyword = $a['group'];
@@ -355,6 +355,7 @@ class Infoblock extends Admin
             $controller_val = $controller.':'.$action;
             $i2l = $infoblock->getVisual();
         } else {
+            fx::log($input);
             // Create a new type and ID of the controller received from the previous step
             $controller_val = $input['controller'];
             list($controller, $action) = explode(":", $controller_val);
@@ -362,9 +363,9 @@ class Infoblock extends Admin
             $infoblock = fx::data("infoblock")->create(array(
                 'controller'             => $controller,
                 'action'                 => $action,
-                'page_id'                => $input['page_id'],
+                'page_id'                => isset($input['page_id']) ? $input['page_id'] : null,
                 'site_id'                => $site_id,
-                'container_infoblock_id' => $input['container_infoblock_id']
+                'container_infoblock_id' => isset($input['container_infoblock_id']) ? $input['container_infoblock_id'] : null
             ));
             $i2l = fx::data('infoblock_visual')->create(array(
                 'area'      => $area_meta['id'],
@@ -529,6 +530,12 @@ class Infoblock extends Admin
             $infoblock['params'] = $action_params;
             
             foreach (array('template','wrapper') as $template_type) {
+                if (!isset($input['visual'][$template_type])) {
+                    $input['visual'][$template_type] = null;
+                }
+                if (!isset($input['visual'][$template_type.'_visual'])) {
+                    $input['visual'][$template_type.'_visual'] = null;
+                }
                 $template_val = $input['visual'][$template_type];
                 $vis_props = (array) $input['visual'][$template_type.'_visual'];
                 if (is_numeric($template_val)) {
@@ -635,7 +642,7 @@ class Infoblock extends Admin
 
         $infoblocks = fx::page()->getInfoblocks();
 
-        if ($input['data_sent']) {
+        if (isset($input['data_sent']) && $input['data_sent']) {
             foreach ($infoblocks as $ib) {
                 $ib_data = fx::dig($input, ['infoblocks', $ib['id']]);
                 if (isset($ib_data['area'])) {
@@ -643,13 +650,6 @@ class Infoblock extends Admin
                     $vis['area'] = $ib_data['area'];
                     $vis->save();
                 }
-                /*
-                if (isset($input['visibility'][$ib['id']])) {
-                    $ib->digSet('scope.visibility', $input['visibility'][$ib['id']]);
-                    $ib->save();
-                }
-                 * 
-                 */
             }
             return;
         }
@@ -1324,7 +1324,7 @@ class Infoblock extends Admin
                 $var = $c_var['var'];
                 $value = $c_var['value'];
                 $var['id'] = preg_replace("~\#new_id\#$~", $new_id, $var['id']);
-                $visual_set = $var['template_is_wrapper'] ? 'wrapper_visual' : 'template_visual';
+                $visual_set = isset($var['template_is_wrapper']) && $var['template_is_wrapper'] ? 'wrapper_visual' : 'template_visual';
                 if ($value == 'null') {
                     $value = null;
                 }
@@ -1498,10 +1498,10 @@ class Infoblock extends Admin
                 'class' => 'delete'
             )
         );
-        if ($input['delete_confirm']) {
+        if (isset($input['delete_confirm']) && $input['delete_confirm']) {
             $this->response->setStatusOk();
             if ($ib_content) {
-                if ($input['content_handle'] == 'delete') {
+                if (isset($input['content_handle']) && $input['content_handle'] == 'delete') {
                     foreach ($ib_content as $ci) {
                         $ci->delete();
                     }

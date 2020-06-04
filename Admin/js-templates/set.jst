@@ -2,44 +2,26 @@
 <div class="fx_fieldset_container">
     <div class="fx_fieldset">
         <table id="fx_fieldset_<?=_c.name?>">
-            <thead>
-                <tr class="fx_fieldset_label">
-                <?if (!_c.without_delete) {?>
-                    <td></td>
-                <?}?>
-                <?for(var i = 0; i < _c.labels.length; i++) {
-                    if (typeof _c.labels[i] != 'string') {
-                        continue;
-                    }
-                    ?><td><label><?=_c.labels[i]?></label></td><?
-                }?>
-                </tr>
-            </thead>
+            <? if (!_c.no_table_header) { ?>
+                <thead>
+                    <tr class="fx_fieldset_label">
+                    <?if (!_c.without_delete) {?>
+                        <td></td>
+                    <?}?>
+                    <?for(var i = 0; i < _c.labels.length; i++) {
+                        if (typeof _c.labels[i] != 'string') {
+                            continue;
+                        }
+                        ?><td><label><?=_c.labels[i]?></label></td><?
+                    }?>
+                    </tr>
+                </thead>
+            <? } ?>
             <tbody class="fx_fieldset_rows">
 
             </tbody>
         </table>
-        <?if ( _c.types && _c.without_add === undefined ) {
-            ?>
-            <div class="fx_fieldset__add"><?
-            if (_c.types.length < 2) {
-                ?>
-                <a tabindex="0"><?=$fx.lang('Add')?></a>
-                <?
-            } else {
-                ?>
-                    <span><?= $fx.lang('Add')?>:</span>
-                <?
-                for (var i = 0; i < _c.types.length; i++) {
-                    var c_type = _c.types[i];
-                    ?>
-                    <a tabindex="0"><?= c_type.name_add ?></a>
-                    <?
-                }
-            }
-            ?></div><?
-        }?>
-        <br style="clear:both;" />
+        <div class="fx_fieldset__footer"></div>
     </div>
 </div>
 
@@ -52,7 +34,9 @@ window.$fx_fields.init_fieldset(html, _c);
         ?>
         <td class="fx_fieldset_row__controls">
             <a class="fx_icon fx_icon-type-delete fx_fieldset_remove" title="<?= $fx.lang('Delete') ?>"></a>
+            <?if (!_o.set_field.without_edit) {?>
             <a class="fx_icon fx_icon-type-edit"></a>
+            <?}?>
         </td>
     <?
     }
@@ -65,5 +49,10 @@ window.$fx_fields.init_fieldset(html, _c);
 <!--jquery-->
 for (var i = 0; i< _c.length; i++) {
     var $input_node = _c[i].$input_node || $fx_fields.control(_c[i]);
-    $('.input_cell_'+i, html).append( $input_node  );
+    try {
+        $('.input_cell_'+i, html).append( $input_node  );
+        $input_node.trigger('fx_field_attached');
+    } catch (e) {
+        console.log('no input nod', $input_node, _c, e)
+    }
 }

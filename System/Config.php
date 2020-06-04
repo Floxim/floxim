@@ -54,7 +54,7 @@ class Config
 
     public function __construct()
     {
-        error_reporting(E_ALL & ~(E_NOTICE | E_STRICT));
+        // error_reporting(E_ALL & ~(E_NOTICE | E_STRICT));
 
         ini_set("session.auto_start", "0");
         ini_set("session.use_trans_sid", "0");
@@ -214,7 +214,7 @@ class Config
     
     public function isBlockDisabled($component, $action = null)
     {
-        $disabled = $this->config['disable'];
+        $disabled = isset($this->config['disable']) ? $this->config['disable'] : [];
         if (!$disabled || !is_array($disabled)) {
             return false;
         }

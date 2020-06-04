@@ -5,7 +5,7 @@ var b = 'fx-field-group',
     style = _c.style || 'default',
     exp = _c.is_expanded ? 'fx-field-group_expanded' : '',
     mods = {style: style, keyword: kw, expanded: _c.is_expanded, view: 'collapsable'},
-    cl = $t.getBem(b)
+    cl = $t.getBem(b);
 ?>
 <div class="<?= cl(null, mods)?>">
     <? if (_c.label && style !== 'transparent' ) { ?>

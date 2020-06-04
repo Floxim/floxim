@@ -27,7 +27,8 @@ class FieldGroup extends \Floxim\Floxim\Component\Field\Entity
                 'type' => 'livesearch',
                 'values' => [
                     ['collapsable', 'Раскрывашка'],
-                    ['line', 'Строка']
+                    ['line', 'Строка'],
+                    ['tab', 'Вкладка']
                 ]
             ]
         ];

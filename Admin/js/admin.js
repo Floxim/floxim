@@ -60,12 +60,39 @@ fx_admin.prototype.load_page = function ( data ) {
     var $container = $('#fx_admin_content');
     $container.fx_create_form(data);
     $container.trigger('fx_render');
+    $container.off('fx_form_cancel').on('fx_form_cancel', function() {
+        $(window).hashchange();
+    });
     function set_admin_content_height() {
         $('#fx_admin_content').height(
                 $(window).height() - $("#fx_admin_content").offset().top
         );
+        document.documentElement.scrollTop = 0;
         document.body.scrollTop = 0;
     }
+    var html = document.documentElement;
+    function fixScrollTop() {
+        if (html.scrollTop > 0) {
+            console.log('jumper!')
+            html.scrollTop = 0;
+        }
+        requestAnimationFrame(fixScrollTop)
+    }
+    fixScrollTop();
+    /*
+    var root = document.documentElement,
+        st = root.scrollTop;
+    Object.defineProperty(root, 'scrollTop', {
+        get: function () {
+            console.log('lurked st', st)
+            return st
+        },
+        set: function (v) {
+            console.log('set st xxx', v, typeof v)
+            st = v
+        }
+    });
+    */
     setTimeout(
         set_admin_content_height,
         100

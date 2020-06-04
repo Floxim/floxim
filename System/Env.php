@@ -72,6 +72,21 @@ class Env
         }
         return $path_cache[$url];
     }
+
+    public function isInPath($entity)
+    {
+        foreach ($this->getPath() as $pi) {
+            if ($entity['id'] === $pi['id']) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function isCurrentPage($entity)
+    {
+        return $entity['id'] === $this->getPageId();
+    }
     
     public function forceUrl($url)
     {
@@ -413,7 +428,7 @@ class Env
     }
     
     public function getContextProp($prop) {
-        $parts = explode(".", $prop);
+        $parts = is_array($prop) ? $prop : explode(".", $prop);
         $obj_key = array_shift($parts);
         $obj = $this->get($obj_key);
         if (!$obj) {
@@ -426,6 +441,13 @@ class Env
             }
             $obj = $obj[$part];
         }
+        return $obj;
+    }
+
+    public function getContextPropTarget($prop) {
+        $parts = explode(".", $prop);
+        $obj_key = array_shift($parts);
+        $obj = $this->get($obj_key);
         return $obj;
     }
     

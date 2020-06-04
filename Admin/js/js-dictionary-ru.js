@@ -25,6 +25,7 @@
         'or' : 'или',
         'Create' : 'Создать',
         'You can add %s here' : 'Можно добавить %s',
+        'You can [choose] or add %s here': 'Можно [выбрать] или добавить %s',
         'reloading': 'Обновляем страницу',
         'All?':'все',
         'Infoblock': 'Блок',

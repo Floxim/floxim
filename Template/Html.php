@@ -323,7 +323,8 @@ class Html
             );
             $_href = '$'.$link_uid.'_href';
             $_target = '$'.$link_uid.'_target';
-            $n->setAttribute('fx:element-name', '<?= '.$_href .' ? "a" : "div" ?>' );
+            $default_tag = $n->name === 'fx:elem' ? 'dev' : $n->name;
+            $n->setAttribute('fx:element-name', '<?= '.$_href .' ? "a" : "'.$default_tag.'" ?>' );
             $n->setAttribute(
                 '#inj300', 
                 '<?php if ('.$_href.') { echo \'href="\'.'.$_href.'.\'"\';} ?>'
@@ -430,13 +431,15 @@ class Html
 
         if ($n->hasAttribute('fx:b')) {
             $b_value = $n->getAttribute('fx:b');
+            $b_value = trim($b_value);
+            $b_value = preg_replace("~[\n\r]~", ' ', $b_value);
             if ($styled_call) {
-                $block_parts = explode(" ", trim($b_value));
+                $block_parts = explode(" ", $b_value);
                 $block_name = array_shift($block_parts);
                 $styled_call = sprintf($styled_call, 'block="'.$block_name.'"');
                 /*
                  * put style_call after block name but before any modifiers,
-                 * to make vars from style export are available
+                 * to make vars from style export available
                  */
                 $b_value = $block_name .' '.$styled_call.' '.implode(' ', $block_parts);
             }
@@ -482,7 +485,7 @@ class Html
         return $res;
     }
 
-    public function makeTree($tokens)
+    public function makeTree($tokens, $ignore_errors = false)
     {
         $root = new HtmlToken();
         $root->name = 'root';
@@ -498,7 +501,13 @@ class Html
                     $stack [] = $token;
                     break;
                 case 'close':
+                    if ($ignore_errors && count($stack) === 1) {
+                        continue 2;
+                    }
                     $closed_tag = array_pop($stack);
+                    if ($ignore_errors && $closed_tag->name != $token->name) {
+                        continue 2;
+                    }
                     if ($closed_tag->name != $token->name) {
                         $start_offset = $closed_tag->offset[0];
                         $end_offset = $token->offset[0];
@@ -509,7 +518,7 @@ class Html
                             "start tag " . $closed_tag->source .
                             " (line " . $start_line . ") " .
                             "doesn't match end tag </" . $token->name . '> (line ' . $end_line . ')';
-                        
+                        fx::debug($closed_tag, $token);
                         $e = new \Exception($msg);
                         $e->html = $this->_string;
                         throw $e;

@@ -15,7 +15,7 @@ $sort_fields = $component
                             || in_array(
                                     $f['keyword'], 
                                 array(
-                                    'priority',
+                                    // 'priority',
                                     'is_published',
                                     'is_branch_published', 
                                     'type',
@@ -30,14 +30,18 @@ $sort_fields = $component
                         return true;
                     })
                     ->getValues(fx::isAdmin() ? 'name' : 'id', 'keyword');
-                    
+/*
 if ($component->getFieldByKeyword('priority', true)) {
     $sort_fields_with_manual = array( array('manual', fx::alang('Manual', 'controller_component') ) ) + $sort_fields;
 } else {
     $sort_fields_with_manual = $sort_fields;
 }
+*/
 
-$content_exists = fx::data($component['keyword'])->contentExists();
+$sort_fields_with_manual = $sort_fields;
+
+// $content_exists = fx::data($component['keyword'])->contentExists();
+$content_exists = true;
 $is_new_infoblock = !$this->getParam('infoblock_id');
 
 $component_infoblocks = fx::data('infoblock')->getContentInfoblocks($component['keyword']);
@@ -57,6 +61,12 @@ return array(
                 'limit' => array(
                     'label' => fx::alang('Count entries','controller_component'),
                     'class_name' => 'fx_field_limit'
+                ),
+                'limit_offset' => array(
+                    'label' => 'начиная с',
+                    'type' => 'number',
+                    'value' => 1 // ,
+                    // 'parent' => array('limit' =>  '!=')
                 ),
                 'pagination' => array(
                     'label' => fx::alang('Paginate?','controller_component'),

@@ -11,7 +11,7 @@ class Finder extends System\Finder
     public function __construct()
     {
         parent::__construct();
-        $this->order[] = 'priority asc';
+        $this->order('priority', 'asc');
     }
     
     public function relations()

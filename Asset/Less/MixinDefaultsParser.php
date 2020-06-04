@@ -73,6 +73,9 @@ class MixinDefaultsParser {
                     $c_var['units'] = $parts[1];
                 }
             }
+            if (isset($c_var['code']) && $value === '""') {
+                $value = '';
+            }
             $c_var['value'] = $value;
         }
     }

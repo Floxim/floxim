@@ -175,7 +175,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         $res = array();
         if ($compare_type == self::FILTER_EQ) {
             foreach ($this->data as $key => $item) {
-                if ($item[$field] == $prop) {
+                if (isset($item[$field]) && $item[$field] == $prop) {
                     $res [$key] = $item;
                 }
             }
@@ -220,7 +220,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         }
         if ($compare_type == self::FILTER_CALLBACK) {
             foreach ($this->data as $key => $item) {
-                if (call_user_func($field, $item)) {
+                if (call_user_func($field, $item, $key)) {
                     $res [$key] = $item;
                 }
             }
@@ -359,6 +359,18 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         if (is_null($field) && $this->first() instanceof Entity) {
             $field = 'id';
         }
+
+        if ($field instanceof \Closure) {
+            foreach ($this->data as $index => $item) {
+                $key = $field($item, $index);
+                $res[$key] = $item;
+            }
+            return fx::collection($res);
+            /*
+            $this->data = $res;
+            return $this;
+            */
+        }
         if (!is_null($field)) {
             foreach ($this->data as $item) {
                 $res[$item[$field]] = $item;
@@ -376,6 +388,7 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
      * Sorts the current collection
      * $c->sort('id')
      * $c->sort(function($a,$b) {})
+     * @return \Floxim\Floxim\System\Collection
      */
     public function sort($sorter)
     {
@@ -540,13 +553,22 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
     /*
      * Apply a function to all elements
      */
-    public function apply($callback)
+    public function apply($callback, $args = [])
     {
         $initial_key = key($this->data);
-        foreach ($this->data as $dk => &$di) {
-            $res = call_user_func_array($callback, array(&$di, $dk));
-            if (!is_null($res)) {
-                $this->data[$dk] = $res;
+        if (is_string($callback) && $callback[0] === '.') {
+            $callback = mb_substr($callback, 1);
+            foreach ($this->data as $dk => $item) {
+                if (is_object($item) && method_exists($item, $callback)) {
+                    call_user_func_array(array($item, $callback), $args);
+                }
+            }
+        } else {
+            foreach ($this->data as $dk => &$di) {
+                $res = call_user_func_array($callback, array(&$di, $dk));
+                if (!is_null($res)) {
+                    $this->data[$dk] = $res;
+                }
             }
         }
         $this->setPosition($initial_key);
@@ -572,6 +594,13 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
         return $this;
     }
 
+    public function rsort()
+    {
+        call_user_func_array(array($this, 'sort'), func_get_args());
+        return $this->reverse();
+    }
+
+
 
     /*
      * Find elemenets and remove them from the collection
@@ -589,6 +618,12 @@ class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
     public function column($field, $key_field = null, $as_collection = true)
     {
         return $this->getValues($field, $key_field, $as_collection);
+    }
+
+    public function map($callback)
+    {
+        $res = $this->getValues($callback, null, false);
+        return fx::collection(array_values($res));
     }
     
     /**

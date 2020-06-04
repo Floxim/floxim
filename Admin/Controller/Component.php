@@ -49,7 +49,7 @@ class Component extends Admin
 
                 $r['buttons'] = array();
                 foreach ($submenu as $submenu_item_key => $submenu_item) {
-                    if (!$submenu_item['parent']) { // && $submenu_item_key != 'fields') {
+                    if (!isset($submenu_item['parent']) || !$submenu_item['parent']) { // && $submenu_item_key != 'fields') {
                         if (in_array($submenu_item_key, ['fields', 'parent', 'templates','children'])) {
                             continue;
                         }
@@ -278,7 +278,7 @@ public function getModuleFields()
             $fields [] = $mf;
         }
         
-        $fields[] = $this->ui->hidden('source', $input['source']);
+        $fields[] = $this->ui->hidden('source', isset($input['source']) ? $input['source'] : null);
         $fields[] = $this->ui->hidden('posting');
         $fields[] = $this->getParentComponentField();
         
@@ -649,6 +649,8 @@ public function getModuleFields()
 
     public function settings($component)
     {
+        $settings = $component['settings'];
+
         $fields[] = array(
             'label'    => fx::alang('Keyword:', 'system'),
             'disabled' => 'disabled',
@@ -666,6 +668,25 @@ public function getModuleFields()
             'type' => 'checkbox',
             'value' => $component['is_abstract']
         );
+
+        $fields []= array(
+            'label' => 'Компонент-связь?',
+            'name' => 'settings[is_mm_link]',
+            'type' => 'checkbox',
+            'value' => isset($settings['is_mm_link']) && $settings['is_mm_link']
+        );
+
+        $fields []= [
+            'label' => 'Инлайн-добавление',
+            'name' => 'settings[preffered_add_mode]',
+            'type' => 'livesearch',
+            'values' => [
+                'auto' => 'Авто',
+                'inline' => 'Инлайн',
+                'form' => 'Форма'
+            ],
+            'value' => $component->getSetting('preffered_add_mode')
+        ];
         
         $block_types = [
             ['list_infoblock', 'Новые данные'], 
@@ -673,7 +694,7 @@ public function getModuleFields()
             ['list_selected', 'Данные, отобранные вручную']
         ];
         
-        $settings = $component['settings'];
+
         
         $fields []= array(
             'label' => 'Можно создавать блоки такого типа?',
@@ -828,8 +849,10 @@ public function getModuleFields()
 
         $es = $this->entity_type;
         $result = array('status' => 'ok');
-
-        $ids = $input['id'];
+        if (!isset($input['ids'])) {
+            return $result;
+        }
+        $ids = $input['ids'];
         if (!is_array($ids)) {
             $ids = array($ids);
         }
@@ -837,7 +860,9 @@ public function getModuleFields()
         foreach ($ids as $id) {
             try {
                 $component = fx::data($es, $id);
-                $component->delete();
+                if ($component) {
+                    $component->delete();
+                }
             } catch (\Exception $e) {
                 $result['status'] = 'error';
                 $result['text'][] = $e->getMessage();

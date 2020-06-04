@@ -86,7 +86,7 @@ class FieldFile extends \Floxim\Floxim\Component\Field\Entity
                 $drop = $old_value;
             }
         }
-        
+
         // move / drop files only after entity is saved
         if ($drop || $move) {
             fx::listen('after_save', function($e) use ($content, $move, $drop) {
@@ -101,7 +101,25 @@ class FieldFile extends \Floxim\Floxim\Component\Field\Entity
                 }
             });
         }
+        if ($move) {
+            $content->setPayload('new_file_path_'.$this['keyword'], $move[0]);
+        }
         return $res;
+    }
+
+    public function getNewFilePath($entity)
+    {
+        return $entity->getPayload('new_file_path_'.$this['keyword']);
+    }
+
+    public function getNewFileOrigin($entity)
+    {
+        return $entity->getPayload('new_file_origin_'.$this['keyword']);
+    }
+
+    public function setNewFileOrigin($value, $entity)
+    {
+        $entity->setPayload('new_file_origin_'.$this['keyword'], $value);
     }
 
     public function getSqlType()

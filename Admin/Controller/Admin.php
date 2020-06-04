@@ -244,6 +244,7 @@ class Admin extends System\Controller
             $path_floxim . '/Admin/js/livesearch.js',
             $path_floxim . '/Admin/js/suggest.js',
             $path_floxim . '/Admin/js/fields.js',
+            $path_floxim . '/Admin/js/fieldset.js',
             $path_floxim . '/Admin/js/files.js',
             $path_floxim . '/Admin/js/measures.js',
             $path_floxim . '/Admin/js/edit-in-place.js',

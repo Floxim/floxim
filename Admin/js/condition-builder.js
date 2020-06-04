@@ -65,8 +65,8 @@ window.condition_builder = function(params) {
             'less'
         ],
         datetime: [
-            ['greater', {value_type:'datetime', get_value: get_date_value}],
-            ['less', {value_type:'datetime', get_value: get_date_value}]
+            ['greater', {value_type:date_offset_control, get_value: get_date_offset_value}],
+            ['less', {value_type:date_offset_control, get_value: get_date_offset_value}]
         ],
         bool:['is_true'],
         image:['defined'],
@@ -203,7 +203,7 @@ window.condition_builder = function(params) {
             params.ajax_preload = true;
             params.value = value;
         }
-        console.log(value, params);
+        // console.log(value, params);
         var $control = $fx_fields.livesearch(params, 'input');
         $control.data('value_type_hash', type_hash);
         return $control;
@@ -870,5 +870,134 @@ window.condition_builder = function(params) {
         return false;
     });
 };
+
+function dateOffsetControl (value) {
+    console.log(value)
+    this.draw(value);
+}
+
+dateOffsetControl.prototype.cl = 'fx-date-offset-control'
+
+dateOffsetControl.prototype.draw = function (value) {
+    var cl = this.cl;
+    if (typeof value === 'undefined') {
+        value = ['now', 'plus', 0]
+    }
+    this.$node = $('<div class="'+cl+'"></div>');
+    this.$type = $fx_fields.livesearch(
+        {
+            values: [
+                {id:'now', name:'Сейчас'},
+                {id:'val', name:'Выбрать'}
+            ],
+            value: (typeof value === 'string' ? 'val' : 'now')
+        },
+        'input'
+    );
+    this.$type.addClass(cl+'__type');
+    this.$val = $fx_fields.datetime({type:'datetime'}, 'input');
+    this.$val.addClass(cl+'__val');
+    this.$now = $('<div class="'+cl+'__now"></div>');
+
+    this.$op = $fx_fields.livesearch(
+        {
+            values: [
+                {id:'plus', name:'плюс'},
+                {id:'minus', name:'минус'}
+            ],
+            value: (typeof value === 'string' ? 'plus' : value[1])
+        },
+        'input'
+    );
+
+    this.$now.append(this.$op);
+
+    var tc = new timeControl(typeof value === 'string' ? 0 : value[2]);
+    this.time = tc;
+
+    this.$now.append(tc.$node);
+
+    var that = this;
+    this.$type.on('change', function() {
+        that.updateVisibility()
+    });
+
+    this.$node.append(this.$type);
+    this.$node.append(this.$val);
+    this.$node.append(this.$now);
+
+    this.$node.data('dateoffsetcontrol', this);
+
+    this.updateVisibility();
+}
+
+dateOffsetControl.prototype.getValue = function() {
+    var type = this.$type.data('livesearch').getValue();
+    if (type === 'val') {
+        return this.$val.find('.date_input').val()
+    }
+    var res = [
+        'now',
+        this.$op.data('livesearch').getValue(),
+        this.time.getValue()
+    ];
+
+    return res;
+}
+
+dateOffsetControl.prototype.updateVisibility = function() {
+    var cv = this.$type.data('livesearch').getValue();
+    var cl = this.cl;
+    this.$node.removeClass(cl+'_mode_now '+cl+'_mode_val');
+    this.$node.addClass(cl+'_mode_'+cv);
+}
+
+function timeControl (value) {
+    this.draw();
+    this.setValue(value)
+}
+
+timeControl.prototype.setValue = function(secs) {
+    var days = Math.floor(secs / (60 * 60 * 24) )
+    secs = secs - (days * 60 * 60 * 24);
+    var hours = Math.floor(secs / (60 * 60));
+    secs = secs - (hours * 60 * 60);
+    var minutes = Math.floor(secs / 60);
+    this.$days.val(days)
+    this.$hours.val(hours)
+    this.$minutes.val(minutes)
+}
+
+timeControl.prototype.draw = function() {
+    this.$node = $('<div class="fx-time-control"></div>');
+    this.$node.data('timecontrol', this);
+    var inps = [
+        ['days', $fx_fields.number({min:0, max:100, step:1, units: 'д', show_units: true}, 'input')],
+        ['hours', $fx_fields.number({min:0, max:24, step:1, units: 'ч', show_units: true}, 'input')],
+        ['minutes', $fx_fields.number({min:0, max:59, step:1, units: 'м', show_units: true}, 'input')]
+    ];
+    var that =  this;
+    $.each(inps, function(i, inp) {
+        var prop = inp[0],
+            $node = inp[1],
+            $inp = $node.filter('input');
+        that.$node.append($node);
+        that['$'+prop] = $inp;
+    });
+}
+
+timeControl.prototype.getValue = function () {
+    return this.$days.val() * 60*60*24 + this.$hours.val() * 60 * 60 + this.$minutes.val() * 60;
+}
+
+
+function date_offset_control(fp, value) {
+    var doc = new dateOffsetControl(value);
+    return doc.$node;
+}
+
+function get_date_offset_value($control) {
+    return $control.data('dateoffsetcontrol').getValue()
+}
 
 })($fxj);
