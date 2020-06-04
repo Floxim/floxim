@@ -99,7 +99,10 @@ window.fx_eip = {
     },
     stop: function() {
         this.get_edited_nodes().each(function() {
-            $(this).data('edit_in_place').stop();
+            const cEip = $(this).data('edit_in_place');
+            if (cEip) {
+              cEip.stop();
+            }
         });
         this.vars = {};
         this.forcedVars = {};
