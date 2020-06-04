@@ -3,16 +3,16 @@
 
 $.fn.edit_in_place = function(command) {
     var $nodes = this;
-    
+
     if ($fx.front.is_frozen) {
         return;
     }
-    
+
     $nodes.each(function() {
         var $node = $(this);
 
         var eip = $node.data('edit_in_place');
-        
+
         if (!eip || !eip.panel_fields.length) {
             eip = new fx_edit_in_place($node);
         }
@@ -183,9 +183,9 @@ window.fx_eip = {
             console.log('eip is busy!');
             return;
         }
-        
+
         this.is_saving = true;
-        
+
         var vars = [],
             $node = null;
 
@@ -303,8 +303,10 @@ window.fx_eip = {
         var $edited = $('.fx_edit_in_place');
         $edited.each(function() {
             var c_eip = $(this).data('edit_in_place');
-            c_eip.stop();
-            c_eip.restore();
+            if (c_eip) {
+              c_eip.stop();
+              c_eip.restore();
+            }
         });
         $fx.front.deselect_item();
     },
@@ -344,7 +346,7 @@ window.fx_eip = {
 
 function fx_edit_in_place( node ) {
     this.uid = $fx.uid();
-    
+
     this.node = node;
 
     node.data('edit_in_place', this);
@@ -386,7 +388,7 @@ function fx_edit_in_place( node ) {
         });
     }
     var $selected_entity = this.node.closest('.fx_entity');
-    
+
     $(this.node)
     .closest('.fx_selected')
     //.off('fx_deselect.edit_in_place')
@@ -507,7 +509,7 @@ fx_edit_in_place.prototype.start = function(meta) {
                 meta,
                 {real_value:{path: meta.real_value || ''}}
             );
-            
+
             this.add_panel_field(
                 field_meta
             ).on('fx_change_file', function(e) {
@@ -808,7 +810,7 @@ fx_edit_in_place.prototype.add_panel_field = function(meta) {
         $panel.show();
     }
 
-    
+
     var $field_node = $fx_form.draw_field(meta, $field_container);
     $field_node.data('meta', meta);
     this.panel_fields.push($field_node);
